@@ -135,6 +135,10 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "032_content_publish_pipeline",
         sql: include_str!("../../../migrations/runtime/032_content_publish_pipeline.sql"),
     },
+    Migration {
+        id: "033_mock_and_journey_runtime",
+        sql: include_str!("../../../migrations/runtime/033_mock_and_journey_runtime.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {

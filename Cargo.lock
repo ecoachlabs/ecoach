@@ -202,9 +202,11 @@ dependencies = [
 name = "ecoach-games"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "ecoach-substrate",
  "rusqlite",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -280,9 +282,11 @@ dependencies = [
 name = "ecoach-premium"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "ecoach-substrate",
  "rusqlite",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

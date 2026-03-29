@@ -25,6 +25,15 @@ pub struct CoachMissionMemory {
     pub review_status: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlanRewriteResult {
+    pub previous_plan_id: i64,
+    pub new_plan_id: i64,
+    pub reason: String,
+    pub carryover_topic_ids: Vec<i64>,
+    pub pending_review_count: i64,
+}
+
 pub struct PlanEngine<'a> {
     conn: &'a Connection,
 }
@@ -123,6 +132,94 @@ impl<'a> PlanEngine<'a> {
         ))?;
 
         Ok(plan_id)
+    }
+
+    pub fn rewrite_active_plan(
+        &self,
+        student_id: i64,
+        reason: &str,
+    ) -> EcoachResult<PlanRewriteResult> {
+        let context = self.load_latest_plan_context(student_id)?;
+        let carryover_topic_ids = self.load_plan_carryover_topic_ids(student_id, 5)?;
+        let pending_review_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM coach_mission_memories
+                 WHERE student_id = ?1 AND review_status = 'pending'",
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.conn
+            .execute(
+                "UPDATE coach_plans
+                 SET status = 'stale', updated_at = datetime('now')
+                 WHERE student_id = ?1 AND status = 'active'",
+                [student_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let new_plan_id = self.generate_plan(
+            student_id,
+            &context.exam_target,
+            &context.exam_date,
+            context.daily_budget_minutes,
+        )?;
+        let carryover_minutes = pending_review_count * 10 + (carryover_topic_ids.len() as i64 * 5);
+        self.conn
+            .execute(
+                "UPDATE coach_plan_days
+                 SET carryover_minutes = ?1,
+                     target_minutes = target_minutes + ?1
+                 WHERE id = (
+                    SELECT cpd.id
+                    FROM coach_plan_days cpd
+                    INNER JOIN coach_plans cp ON cp.id = cpd.plan_id
+                    WHERE cp.id = ?2
+                    ORDER BY cpd.date ASC, cpd.id ASC
+                    LIMIT 1
+                 )",
+                params![carryover_minutes, new_plan_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let plan_data_json = serde_json::to_string(&serde_json::json!({
+            "rewrite_reason": reason,
+            "previous_plan_id": context.plan_id,
+            "carryover_topic_ids": carryover_topic_ids,
+            "pending_review_count": pending_review_count,
+            "daily_budget_minutes": context.daily_budget_minutes,
+        }))
+        .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        self.conn
+            .execute(
+                "UPDATE coach_plans
+                 SET plan_data_json = ?1, updated_at = datetime('now')
+                 WHERE id = ?2",
+                params![plan_data_json, new_plan_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.append_runtime_event(DomainEvent::new(
+            "plan.rewritten",
+            new_plan_id.to_string(),
+            serde_json::json!({
+                "student_id": student_id,
+                "previous_plan_id": context.plan_id,
+                "reason": reason,
+                "carryover_topic_ids": carryover_topic_ids,
+                "pending_review_count": pending_review_count,
+            }),
+        ))?;
+
+        Ok(PlanRewriteResult {
+            previous_plan_id: context.plan_id,
+            new_plan_id,
+            reason: reason.to_string(),
+            carryover_topic_ids,
+            pending_review_count,
+        })
     }
 
     pub fn generate_today_mission(&self, student_id: i64) -> EcoachResult<i64> {
@@ -398,6 +495,83 @@ impl<'a> PlanEngine<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         serde_json::from_str::<Vec<String>>(raw.as_deref().unwrap_or("[]"))
             .map_err(|err| EcoachError::Serialization(err.to_string()))
+    }
+
+    fn load_latest_plan_context(&self, student_id: i64) -> EcoachResult<PlanContext> {
+        self.conn
+            .query_row(
+                "SELECT id,
+                        COALESCE(exam_target, 'BECE'),
+                        COALESCE(exam_date, date('now', '+30 day')),
+                        daily_budget_minutes
+                 FROM coach_plans
+                 WHERE student_id = ?1 AND status IN ('active', 'stale')
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [student_id],
+                |row| {
+                    Ok(PlanContext {
+                        plan_id: row.get(0)?,
+                        exam_target: row.get(1)?,
+                        exam_date: row.get(2)?,
+                        daily_budget_minutes: row.get(3)?,
+                    })
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_plan_carryover_topic_ids(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<i64>> {
+        let mut topic_ids = Vec::new();
+
+        let mut blocker_statement = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT topic_id
+                 FROM coach_blockers
+                 WHERE student_id = ?1 AND resolved_at IS NULL
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let blocker_rows = blocker_statement
+            .query_map(params![student_id, limit as i64], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for row in blocker_rows {
+            let topic_id = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if !topic_ids.contains(&topic_id) {
+                topic_ids.push(topic_id);
+            }
+        }
+
+        if topic_ids.len() < limit {
+            let remaining = (limit - topic_ids.len()) as i64;
+            let mut priority_statement = self
+                .conn
+                .prepare(
+                    "SELECT topic_id
+                     FROM student_topic_states
+                     WHERE student_id = ?1
+                     ORDER BY priority_score DESC, gap_score DESC, id DESC
+                     LIMIT ?2",
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let priority_rows = priority_statement
+                .query_map(params![student_id, remaining], |row| row.get::<_, i64>(0))
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            for row in priority_rows {
+                let topic_id = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+                if !topic_ids.contains(&topic_id) {
+                    topic_ids.push(topic_id);
+                }
+            }
+        }
+
+        Ok(topic_ids)
     }
 
     fn ensure_active_plan_day(
@@ -701,6 +875,14 @@ struct MissionContext {
     subject_id: Option<i64>,
     topic_id: Option<i64>,
     activity_type: String,
+}
+
+#[derive(Debug)]
+struct PlanContext {
+    plan_id: i64,
+    exam_target: String,
+    exam_date: String,
+    daily_budget_minutes: i64,
 }
 
 fn phase_for_remaining_days(total_days: i64) -> &'static str {
