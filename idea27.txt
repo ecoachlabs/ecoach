@@ -1,0 +1,4273 @@
+
+
+
+
+i have a content problem and i want to create a RAG system within my application that anytime i am online , it can quietly behind the scenes with some inbuilt capabilities or let's say openclaw acivities  it can dothe right research and pull the needed information to enrich our db and enrich our core source , i want this to be truly intelligent system that helps our content system improve all the time , so anytime you using the app you get good great content fresh 
+
+I’m mapping this into an always-improving content intelligence layer: ingestion, research, trust scoring, enrichment, and guarded publishing. I’m also checking whether “openclaw” refers to a specific tool or whether you meant a web-crawling/research capability.
+
+I’ve confirmed “OpenClaw” is a real agent framework, and it can be paired with web tools like Firecrawl for search/crawl/extract workflows. The bigger issue is not whether an agent can fetch content, but how you stop noisy, stale, or unsafe material from contaminating your core knowledge base.
+
+The shape is clear now: you do not want a chatbot that answers from static documents. You want a living knowledge refinery that notices content gaps, researches them, verifies them, improves them, and only then feeds your user-facing brain.
+
+Thought for 2m 14s
+What you need is not a basic RAG layer. You need a continuous content intelligence system: a system that notices what your app is missing, researches it while online, normalizes it, verifies it, enriches your internal knowledge base, and only then serves it back through retrieval. Modern RAG stacks are moving beyond single-query vector lookup toward better content preparation, hybrid retrieval, and agentic multi-query retrieval for complex needs. 
+
+If you want to use OpenClaw in that loop, use it as a research worker or orchestration surface, not as the foundation of your knowledge system. OpenClaw is an agent gateway, and its Firecrawl integration can act as a web search provider, explicit search/scrape tool, or fallback extractor. But self-hosted OpenClaw should be treated carefully: Microsoft’s security guidance says it can ingest untrusted text, download and execute skills from external sources, and act with assigned credentials, so it should run only in an isolated environment with non-privileged identities and tightly restricted access. 
+
+The right shape
+Build this as five layers.
+
+1. Source of truth layer
+This is your internal academic spine. Not the web. Not the crawler. The spine should be your curriculum graph:
+subject → level → term → topic → subtopic → concept → skill → formula → misconception → question type.
+
+Everything new that comes in must attach itself to this spine. If a document cannot be mapped to that structure, it stays in staging and does not contaminate your production corpus.
+
+2. Acquisition layer
+This is where new material enters the system from:
+
+curriculum uploads
+
+syllabus uploads
+
+scanned textbooks
+
+worksheets and past questions
+
+approved web sources
+
+teacher notes
+
+student mistakes and weak areas
+
+app usage signals
+
+This layer should work quietly whenever the user is online, but under strict policy:
+
+only approved domains or trusted source classes
+
+rate-limited background jobs
+
+no direct publish to user-facing content
+
+stop when device/network conditions are poor
+
+3. Refinement layer
+Every incoming item goes through:
+
+extraction
+
+OCR / layout parsing
+
+image and figure understanding
+
+equation detection
+
+chunking by semantic section, not blind fixed size
+
+deduplication
+
+topic alignment
+
+concept tagging
+
+difficulty tagging
+
+provenance stamping
+
+For PDFs, images, and scanned content, your prep pipeline must be able to handle OCR, image analysis, and document extraction before retrieval. Good RAG performance depends heavily on this content-prep stage. 
+
+4. Knowledge synthesis layer
+This is where the intelligence lives. It should not merely store chunks. It should create structured learning objects such as:
+
+topic notes
+
+glossary entries
+
+key definitions
+
+worked examples
+
+formula cards
+
+misconception cards
+
+diagram explanations
+
+question seeds
+
+test blueprints
+
+revision summaries
+
+The system should also enrich old content when new evidence arrives. So if a textbook comes in after a syllabus, the textbook should not sit separately. It should improve the existing topic nodes already built from the syllabus.
+
+5. Retrieval and delivery layer
+This is what the student sees. Retrieval should be:
+
+hybrid: semantic + keyword
+
+metadata-aware: class, subject, topic, exam, difficulty, content type
+
+reranked before final use
+
+citation-aware
+
+freshness-aware
+
+user-context-aware
+
+Hybrid retrieval and second-stage reranking are standard ways to improve relevance in RAG because semantic search alone can miss exact terminology, and reranking works best after an initial retrieval pass. 
+
+The online enrichment loop
+This is the exact behavior I would build behind the scenes.
+
+When the app is online, a Gap Detector runs in the background.
+
+It checks:
+
+which syllabus topics have weak or missing notes
+
+which topics lack worked examples
+
+which glossary entries are thin
+
+which concepts have poor student performance
+
+which question types are underrepresented
+
+which materials are stale
+
+which topics have contradictions between sources
+
+That detector emits research intents, for example:
+
+“Find better worked examples for quadratic equations, SHS 2”
+
+“Need three trustworthy definitions and two diagrams for osmosis”
+
+“Topic exists but lacks misconceptions and exam-style questions”
+
+“Past question family is rich, but explanation coverage is poor”
+
+A Research Planner then decides the acquisition mode:
+
+search internal corpus first
+
+search uploaded documents second
+
+search approved external sources third
+
+use crawler only when internal coverage is insufficient
+
+This is where OpenClaw or a quieter crawler worker can operate. But it should be given a narrow mission, such as:
+
+collect 5 candidate sources
+
+extract only relevant sections
+
+return structured evidence
+
+do not write to production
+
+do not browse outside allowlist
+
+do not execute arbitrary tools
+
+Then a Refiner turns the results into normalized evidence blocks:
+
+claim
+
+explanation
+
+formula
+
+example
+
+source URL / source doc
+
+source class
+
+extraction confidence
+
+timestamp
+
+curriculum mapping
+
+similarity to existing content
+
+Then a Verifier compares the evidence against:
+
+current internal notes
+
+curriculum wording
+
+trusted source classes
+
+other corroborating sources
+
+Only after that does a Synthesizer produce improved topic assets.
+
+Do not let the web write directly into your brain
+This is the most important rule.
+
+Your system should have four content zones:
+
+Raw zone
+Exactly what came in.
+
+Parsed zone
+Cleaned and chunked, but not trusted yet.
+
+Verified zone
+Mapped, corroborated, scored, and ready.
+
+Published zone
+What the user-facing app can retrieve.
+
+That separation is what keeps your app from slowly becoming noisy, contradictory, or full of hallucinated summaries.
+
+How the intelligence should score content
+I would give every content object a Quality Score and a Freshness Score.
+
+A practical quality formula could be:
+
+quality = authority + syllabus_alignment + corroboration + extraction_confidence + pedagogic_value - contradiction_penalty - duplication_penalty
+
+And I would define publish rules like:
+
+must map to a curriculum node
+
+must have provenance
+
+must pass contradiction scan
+
+must exceed minimum quality threshold
+
+must have at least one trusted source, or two medium-trust corroborations
+
+must not reduce the quality of an existing higher-scored asset
+
+For your domain, source trust should be tiered:
+
+Tier A
+Official curriculum bodies, exam councils, approved academic publishers
+
+Tier B
+Teacher-authored internal materials, school-approved notes, high-quality textbooks
+
+Tier C
+Well-structured external explainers, educational sites, reputable tutorials
+
+Tier D
+General web content, low-authority blogs, weakly structured pages
+
+Tier D can help discovery. It should almost never publish directly.
+
+Make it syllabus-first, not document-first
+This matters a lot for education.
+
+Most systems dump documents into a vector store and hope retrieval works. That is too loose for your app.
+
+Your system should start from the syllabus and ask:
+
+what should exist for this topic?
+
+what already exists?
+
+what quality is it?
+
+what is missing?
+
+what needs reinforcement because students are weak here?
+
+That flips the system from passive search to active academic coverage.
+
+So for each topic node, maintain a coverage matrix:
+
+definitions
+
+explanations
+
+formulae
+
+proofs
+
+worked examples
+
+diagrams
+
+misconceptions
+
+glossary
+
+objective questions
+
+theory questions
+
+timed questions
+
+revision notes
+
+audio explanation
+
+parent summary
+
+coach interventions
+
+Then the enrichment engine works against that matrix.
+
+How this connects to your coach brain
+Your coach brain should not search the entire corpus blindly every time. It should query topic packs and evidence bundles already prepared by the content intelligence layer.
+
+That means the coach can ask for:
+
+a beginner explanation pack
+
+a weak-area rescue pack
+
+a timed-practice pack
+
+a misconception-correction pack
+
+a glossary reinforcement pack
+
+a parent briefing pack
+
+So the brain is no longer improvising from random chunks. It is composing from refined academic assets.
+
+Retrieval strategy for the user-facing app
+Use two retrieval modes.
+
+Mode 1: fast answer retrieval
+For quick question answering and note lookup:
+
+hybrid retrieval
+
+metadata filtering
+
+reranking
+
+citations
+
+small context windows
+
+Mode 2: agentic retrieval
+For more complex tasks:
+
+“teach this topic”
+
+“build a rescue plan”
+
+“generate a diagnostic”
+
+“compare two concepts”
+
+“find why this student keeps failing this area”
+
+Agentic retrieval uses query planning and subqueries, which is especially useful for multi-part or conversational academic requests. 
+
+Evaluation is not optional
+A living RAG system gets worse if you do not measure it.
+
+Track these continuously:
+
+groundedness
+
+completeness
+
+utilization
+
+relevance
+
+correctness
+
+citation coverage
+
+source diversity
+
+contradiction rate
+
+stale-content rate
+
+student outcome lift after enrichment
+
+Microsoft’s RAG evaluation guidance explicitly recommends using metrics like groundedness, completeness, utilization, relevance, and correctness together, and emphasizes that RAG evaluation is ongoing because collections and user queries change over time. LangChain’s LangSmith docs also treat RAG evaluation and LLM-as-judge workflows as standard practice for measuring quality. 
+
+The build I would recommend
+For your app, I would build this as:
+
+A. Content Registry Service
+Tracks sources, trust class, freshness policy, ownership, and crawl permissions.
+
+B. Ingestion Workers
+Uploads, PDFs, scans, textbook parsers, past-question ingestors, web research workers.
+
+C. Normalization Service
+OCR, structure extraction, equation/image interpretation, semantic sectioning, dedupe.
+
+D. Curriculum Graph Service
+Maps all content to subject/topic/concept/skill.
+
+E. Enrichment Engine
+Gap detection, research planning, synthesis, comparison, update proposals.
+
+F. Quality Gate Service
+Scoring, contradiction scan, publish decisions, rollback.
+
+G. Retrieval Service
+Hybrid search, rerank, citations, user-context filters.
+
+H. Evaluation Service
+Offline benchmark sets, production traces, feedback loops.
+
+I. Content Snapshot Service
+Lets offline users query the last verified snapshot while new enrichment waits for connectivity.
+
+The safest OpenClaw role
+If you want OpenClaw in this design, this is the right place for it:
+
+isolated worker box
+
+non-privileged credentials
+
+approved tools only
+
+approved domains only
+
+no direct DB write access to published corpus
+
+outputs written to staging queue only
+
+every action logged
+
+every fetched item stamped with provenance
+
+That gives you the “quietly behind the scenes” behavior you want without letting an autonomous agent poison the core source. 
+
+Bottom line
+The winning model is:
+
+Syllabus-first knowledge graph
+
+background acquisition while online
+
+strict staging and verification
+
+hybrid retrieval with reranking
+
+continuous evaluation
+
+agentic research only inside guardrails
+
+That is how you make the app feel like it always has rich, fresh, relevant content without turning it into a messy web-scraped archive.
+
+The next move is to turn this into a build-grade architecture: services, queues, schemas, job types, quality rules, and how it plugs into your existing coach brain and content system.
+
+
+not openclaw person but a type that is so intelligent it can go online and pull what it needs to feed the system and conduct the right research 
+
+Thought for 4s
+Got it. You are not asking for a named tool. You are asking for an intelligent research agent type inside your system.
+
+What you want is a Content Research Agent or more precisely an Autonomous Knowledge Acquisition Agent.
+
+But for your application, one agent is not enough. The right design is a research swarm with distinct roles, so the system does not just “go online and pull stuff,” but pulls the right stuff, for the right reason, at the right quality level.
+
+The kind of agent you need
+The best type is not a generic crawler.
+
+It is a goal-driven research agent with these traits:
+
+understands what the system is missing
+
+knows what kind of information is needed
+
+knows where to look
+
+can judge source quality
+
+can compare multiple sources
+
+can extract structured knowledge
+
+can enrich existing content instead of duplicating it
+
+can stop weak content from entering your core DB
+
+So the type is:
+
+Autonomous Research-and-Enrichment Agent
+
+or even better for your app:
+
+Curriculum-Aware Research Agent
+
+Because your system is educational, the agent must not research like a normal web bot. It must research through the lens of:
+
+syllabus
+
+curriculum
+
+topic coverage
+
+student weaknesses
+
+exam style
+
+knowledge gaps
+
+freshness needs
+
+The actual agent family you need
+I would break it into these agent types.
+
+1. Gap Detection Agent
+This agent detects what is missing.
+
+It asks:
+
+which topics are thin?
+
+which topics have no worked examples?
+
+which concepts have weak glossary support?
+
+which subjects have poor question diversity?
+
+which areas are stale?
+
+which weak student areas need more content?
+
+This is the brain that decides why research is needed.
+
+Without this, your system will just fetch random information.
+
+2. Research Planner Agent
+This agent decides what to search for and how.
+
+For example:
+
+“Need better explanation for osmosis, JHS level”
+
+“Need 10 fresh exam-style objective questions for quadratic equations”
+
+“Need diagram-supported explanation for photosynthesis”
+
+“Need misconceptions for simultaneous equations”
+
+It translates content gaps into research missions.
+
+3. Source Scout Agent
+This agent goes online and finds candidate sources.
+
+It is not yet extracting deeply.
+It is scouting.
+
+It checks:
+
+official curriculum sites
+
+trusted educational domains
+
+textbooks or reference libraries you approve
+
+past paper sources
+
+structured educational sources
+
+topic-specific academic pages
+
+Its job is to return candidates, not publish content.
+
+4. Evidence Extractor Agent
+This agent opens the sources and pulls what matters.
+
+It extracts:
+
+definitions
+
+explanations
+
+formulae
+
+worked examples
+
+diagrams and captions
+
+steps in a process
+
+misconceptions
+
+exam-style patterns
+
+references
+
+It should be able to understand:
+
+normal web pages
+
+PDFs
+
+scanned books
+
+images
+
+math notation
+
+tables
+
+diagrams
+
+5. Verifier Agent
+This is one of the most important agents.
+
+It checks:
+
+is this correct?
+
+is this aligned to the syllabus?
+
+does this contradict trusted content?
+
+is it too advanced for this level?
+
+is it duplicated already?
+
+is the source trustworthy?
+
+is the extraction confidence high enough?
+
+This agent protects your core source.
+
+6. Synthesizer Agent
+This agent takes verified evidence and converts it into your internal content formats.
+
+For example it creates:
+
+topic notes
+
+glossary cards
+
+formula cards
+
+worked examples
+
+concept summaries
+
+misconception packs
+
+objective questions
+
+theory questions
+
+revision summaries
+
+This is where raw research becomes usable academic content.
+
+7. Enrichment Agent
+This agent does not create content from scratch.
+It improves what already exists.
+
+For example:
+
+adds better examples to a topic note
+
+adds diagrams to a weak explanation
+
+adds more precise glossary definitions
+
+upgrades question quality
+
+merges better evidence into existing topic packs
+
+This is what makes your system feel like it is always growing smarter.
+
+8. Quality Gate Agent
+This agent decides whether enriched content is allowed into production.
+
+It checks:
+
+quality threshold
+
+trust threshold
+
+freshness threshold
+
+duplication threshold
+
+pedagogical usefulness
+
+readability
+
+curriculum fit
+
+Only approved content reaches the live student-facing DB.
+
+The real intelligence
+The special thing is this:
+
+The agent must not search because “internet exists.”
+
+It must search because:
+
+a topic is incomplete
+
+students are failing in a concept
+
+an explanation is weak
+
+a question bank is thin
+
+the glossary is poor
+
+a newer/better source is needed
+
+the curriculum has changed
+
+the system needs examples, not just theory
+
+So the agent is not just a browser.
+It is a purpose-aware research system.
+
+The mindset it should have
+Your agent should think like this:
+
+What exactly is missing?
+
+What kind of content would solve that gap?
+
+What level is this for?
+
+What source types are acceptable?
+
+What evidence already exists internally?
+
+What must be fetched externally?
+
+How do I verify it?
+
+How do I merge it cleanly?
+
+Should I improve existing content or create a new object?
+
+Is this good enough to publish?
+
+That is the intelligence layer.
+
+What to call this inside your architecture
+You could name this subsystem:
+
+Research Brain
+
+Knowledge Miner
+
+Content Intelligence Engine
+
+Autonomous Content Enrichment Engine
+
+Curriculum Research Engine
+
+Living Knowledge Engine
+
+Academic Discovery Engine
+
+For your kind of platform, the strongest names are:
+
+Curriculum Research Engine
+or
+Content Intelligence Engine
+
+Because those names reflect structure, not just crawling.
+
+The internal mode of operation
+This system should run in two modes.
+
+Mode A: Passive background enrichment
+Whenever online, it quietly:
+
+detects gaps
+
+plans research
+
+scouts sources
+
+stages evidence
+
+enriches topic packs
+
+waits for verification
+
+updates freshness scores
+
+Mode B: Triggered research
+When a user action exposes a missing area, it immediately responds.
+
+Examples:
+
+user opens a topic with weak notes
+
+coach needs more exam questions
+
+glossary lacks entries
+
+a student repeatedly fails a concept
+
+a parent asks for a simplified explanation
+
+Then it launches a focused research mission.
+
+Important warning
+Do not make one giant free-roaming agent.
+
+That becomes:
+
+noisy
+
+expensive
+
+hard to control
+
+risky
+
+inconsistent
+
+difficult to debug
+
+Instead, make it a controlled agent chain:
+Gap → Plan → Scout → Extract → Verify → Synthesize → Enrich → Publish
+
+That is what makes it truly intelligent.
+
+The exact type of intelligence you are describing
+The best description is:
+
+A curriculum-aware, gap-driven, autonomous research and content enrichment agent system.
+
+That is the real answer.
+
+Not just a crawler.
+Not just a RAG tool.
+Not just a search bot.
+
+A system that knows:
+
+what is missing
+
+what to fetch
+
+how to research it
+
+how to verify it
+
+how to refine it
+
+how to improve your core source continuously
+
+What this means for your RAG
+Your RAG should not retrieve directly from random web content.
+
+Instead:
+
+the agent researches online
+
+content goes into staging
+
+the verifier and synthesizer refine it
+
+only then it enters the core knowledge base
+
+then RAG retrieves from that refined internal source
+
+So the online intelligence feeds the knowledge base, and the RAG serves from that trusted base.
+
+That is the right architecture.
+
+The next thing to define is the full build-grade structure of this agent system:
+its modules, job flow, queues, scoring rules, DB tables, and how it plugs into your coach brain.
+
+
+proceed
+
+I’m turning this into a build-grade subsystem now: agents, pipelines, quality gates, storage layers, and how it plugs into your coach/content stack. I’m also grounding it in current RAG and agentic-retrieval patterns so the design matches what actually works today.
+
+Thought for 34s
+Good. Let’s define it properly.
+
+What you need is a Content Intelligence Engine that sits behind your app and keeps your knowledge base improving whenever the app has connectivity. It should not behave like a loose crawler. It should behave like a goal-driven academic research system that detects gaps, plans research, acquires evidence, verifies it, refines it, and only then updates the core content store. For modern RAG, the strongest baseline is still: good content prep, hybrid retrieval, metadata filtering, reranking, and agentic multi-query retrieval only when the task is complex. OCR, image/PDF extraction, semantic chunking, metadata filters, and reranking all materially improve grounding and retrieval quality. 
+
+1) The subsystem you are actually building
+Call it:
+
+Content Intelligence Engine (CIE)
+
+Its mission is:
+
+keep curriculum/topic coverage complete
+
+detect weak or stale areas
+
+research what is missing
+
+enrich internal source material
+
+protect production from low-quality material
+
+feed your RAG from a refined internal knowledge base, not directly from random web pages
+
+The key design principle is this:
+
+The web is a research surface, not your source of truth.
+Your source of truth is your curated internal academic graph.
+
+2) The core architecture
+The cleanest architecture is 8 layers.
+
+Layer A. Curriculum Graph
+This is the spine of the whole system.
+
+Everything should attach to:
+
+curriculum
+
+level/class
+
+term/unit
+
+subject
+
+topic
+
+subtopic
+
+concept
+
+skill
+
+misconception
+
+question family
+
+content asset type
+
+This is what prevents the engine from becoming a dumping ground.
+
+A topic is not “some chunks.”
+A topic is a node with expected academic coverage.
+
+For every topic node, maintain a coverage profile:
+
+definition coverage
+
+concept explanation coverage
+
+formula coverage
+
+worked example coverage
+
+diagram coverage
+
+glossary coverage
+
+misconception coverage
+
+question coverage
+
+exam-style coverage
+
+audio summary coverage
+
+parent summary coverage
+
+remediation coverage
+
+Layer B. Ingestion Layer
+This is where material enters the system.
+
+Inputs:
+
+curriculum documents
+
+syllabus
+
+scanned textbooks
+
+past questions
+
+worksheets
+
+teacher notes
+
+answer keys
+
+mark schemes
+
+student interactions
+
+weak performance signals
+
+approved external web sources
+
+This layer only receives and registers.
+It does not publish.
+
+Layer C. Parsing and Normalization Layer
+This layer turns raw material into structured evidence.
+
+Functions:
+
+OCR for scans
+
+PDF extraction
+
+layout understanding
+
+section segmentation
+
+image understanding
+
+formula/equation extraction
+
+table extraction
+
+semantic chunking
+
+deduplication
+
+metadata stamping
+
+Document prep matters a lot in RAG quality. Current guidance is explicit that strong chunking and multimodal preprocessing for PDFs, images, tables, and layout-heavy documents significantly improves retrieval outcomes. 
+
+Layer D. Research and Acquisition Layer
+This is the online intelligence layer.
+
+It should activate when:
+
+a topic is incomplete
+
+a topic is stale
+
+the coach needs missing assets
+
+student performance reveals a weak area
+
+internal resources are insufficient
+
+a new curriculum item appears
+
+a user triggers a topic needing better support
+
+This layer should search in this order:
+
+internal corpus
+
+uploaded institutional materials
+
+trusted external academic sources
+
+broader web only when needed
+
+Layer E. Verification Layer
+This protects quality.
+
+Checks include:
+
+source authority
+
+curriculum alignment
+
+level appropriateness
+
+corroboration across sources
+
+contradiction against trusted content
+
+duplication risk
+
+extraction confidence
+
+pedagogical usefulness
+
+freshness
+
+Layer F. Synthesis and Enrichment Layer
+This is where evidence becomes actual academic assets.
+
+Outputs include:
+
+topic notes
+
+glossary entries
+
+concept explainers
+
+formula cards
+
+worked examples
+
+misconception packs
+
+revision summaries
+
+question seeds
+
+exam-style questions
+
+answer explanations
+
+simplified child-friendly explanations
+
+parent-facing summaries
+
+Layer G. Publishing and Snapshot Layer
+This decides what becomes live.
+
+Content states:
+
+raw
+
+parsed
+
+staged
+
+verified
+
+published
+
+deprecated
+
+archived
+
+The app should only retrieve from published and optionally verified preview content.
+
+Layer H. Retrieval Layer
+This powers the live app.
+
+Use:
+
+hybrid retrieval
+
+metadata filters
+
+reranking
+
+citations
+
+topic-aware search
+
+agentic retrieval for multi-step needs only
+
+Hybrid plus reranking is still one of the clearest ways to improve RAG relevance, and metadata filters are important for restricting retrieval by structured context like class, subject, topic, or source. 
+
+3) The agent system inside the engine
+Do not build one giant autonomous agent.
+
+Build a controlled swarm.
+
+1. Gap Detector
+Finds what is missing.
+
+Inputs:
+
+curriculum graph
+
+coverage matrix
+
+student performance
+
+coach requests
+
+retrieval failures
+
+stale topic flags
+
+Outputs:
+
+gap tickets
+
+Example gap tickets:
+
+“JHS science / osmosis / glossary coverage weak”
+
+“SHS algebra / quadratic equations / no timed question set”
+
+“Photosynthesis / diagrams absent”
+
+“Fractions / misconceptions under-covered for Basic 5”
+
+2. Research Planner
+Transforms a gap ticket into a research mission.
+
+It decides:
+
+what type of content is needed
+
+which source classes are allowed
+
+what level/depth is correct
+
+whether internal-only search is enough
+
+whether external web research is required
+
+3. Source Scout
+Searches for candidate sources.
+
+It should return:
+
+URL or document reference
+
+source class
+
+source authority estimate
+
+topic relevance estimate
+
+content type
+
+freshness
+
+licensing/usage policy
+
+4. Evidence Extractor
+Pulls only the useful academic content.
+
+Evidence units:
+
+claim
+
+explanation
+
+example
+
+formula
+
+diagram description
+
+misconception
+
+solution pattern
+
+question pattern
+
+5. Comparator / Corroborator
+Compares evidence against:
+
+trusted internal notes
+
+official curriculum wording
+
+existing published assets
+
+other candidate sources
+
+6. Verifier
+Scores whether the evidence is safe to use.
+
+7. Synthesizer
+Builds your internal content objects from verified evidence.
+
+8. Enrichment Agent
+Improves existing assets instead of duplicating them.
+
+9. Quality Gate
+Accepts or rejects publication.
+
+4) The workflow end to end
+Here is the exact pipeline.
+
+Step 1. Detect need
+The system notices a gap:
+
+weak topic
+
+stale topic
+
+poor exam coverage
+
+poor explanation coverage
+
+poor student outcomes
+
+Step 2. Create research mission
+A mission is opened with:
+
+topic ID
+
+grade level
+
+asset types needed
+
+urgency
+
+allowed source tiers
+
+max budget
+
+freshness target
+
+Step 3. Search internal first
+The system checks:
+
+current topic pack
+
+uploaded textbooks
+
+uploaded past questions
+
+existing notes
+
+glossary
+
+archived materials
+
+Step 4. Go external if needed
+Only if internal coverage is insufficient.
+
+Step 5. Extract evidence
+Break candidates into evidence blocks.
+
+Step 6. Verify and score
+Every evidence block gets scored.
+
+Step 7. Synthesize update proposal
+Create a proposed update to:
+
+topic pack
+
+glossary pack
+
+question pack
+
+misconception pack
+
+formula pack
+
+Step 8. Run quality gate
+If score passes threshold, publish.
+Otherwise keep in staging.
+
+Step 9. Re-index and refresh retrieval
+Update the search layer and embeddings.
+
+Step 10. Track impact
+Measure:
+
+retrieval hit quality
+
+student outcomes
+
+content utilization
+
+correction rate
+
+contradiction rate
+
+RAG systems should be evaluated continuously, not once, because both the corpus and the queries change over time. Common evaluation dimensions include groundedness, relevance, correctness, completeness, and utilization. 
+
+5) The data model you should create
+Here is the practical database structure.
+
+A. Core academic structure
+curricula
+
+id
+
+name
+
+country
+
+board
+
+version
+
+effective_date
+
+status
+
+subjects
+
+id
+
+curriculum_id
+
+name
+
+level_group
+
+topics
+
+id
+
+subject_id
+
+parent_topic_id
+
+name
+
+code
+
+grade_level
+
+expected_asset_profile_json
+
+canonical_definition
+
+status
+
+concepts
+
+id
+
+topic_id
+
+name
+
+concept_type
+
+difficulty_band
+
+skills
+
+id
+
+topic_id
+
+skill_name
+
+measurable_flag
+
+misconceptions
+
+id
+
+topic_id
+
+misconception_text
+
+severity
+
+correction_pattern
+
+B. Source registry
+sources
+
+id
+
+source_type
+
+title
+
+source_uri
+
+source_tier
+
+publisher
+
+author
+
+publication_date
+
+license_type
+
+ingestion_status
+
+trust_score
+
+freshness_score
+
+parse_status
+
+source_segments
+
+id
+
+source_id
+
+section_title
+
+raw_text
+
+normalized_text
+
+markdown_text
+
+image_refs_json
+
+equation_refs_json
+
+page_range
+
+checksum
+
+semantic_hash
+
+C. Evidence layer
+evidence_blocks
+
+id
+
+source_segment_id
+
+topic_id
+
+concept_id
+
+evidence_type
+
+claim_text
+
+supporting_text
+
+extraction_confidence
+
+corroboration_score
+
+contradiction_score
+
+pedagogy_score
+
+freshness_score
+
+final_quality_score
+
+status
+
+D. Content assets
+content_assets
+
+id
+
+topic_id
+
+asset_type
+
+title
+
+body_markdown
+
+audience_type
+
+version
+
+provenance_json
+
+quality_score
+
+freshness_score
+
+publish_status
+
+generated_by_job_id
+
+Asset types:
+
+note
+
+glossary
+
+formula_card
+
+worked_example
+
+misconception_card
+
+objective_questions
+
+theory_questions
+
+revision_sheet
+
+parent_summary
+
+coach_brief
+
+E. Research orchestration
+gap_tickets
+
+id
+
+topic_id
+
+trigger_type
+
+trigger_context_json
+
+severity
+
+required_asset_types_json
+
+status
+
+created_at
+
+research_missions
+
+id
+
+gap_ticket_id
+
+mission_type
+
+scope_json
+
+allowed_source_tiers_json
+
+search_plan_json
+
+status
+
+started_at
+
+completed_at
+
+mission_candidates
+
+id
+
+research_mission_id
+
+source_id
+
+relevance_score
+
+authority_score
+
+freshness_score
+
+status
+
+F. Publishing and feedback
+publish_decisions
+
+id
+
+content_asset_id
+
+decision
+
+reason_json
+
+decided_by
+
+decided_at
+
+retrieval_logs
+
+id
+
+user_query
+
+resolved_topic_id
+
+retrieved_asset_ids_json
+
+rerank_scores_json
+
+answer_quality_feedback
+
+grounded_flag
+
+success_flag
+
+learning_feedback
+
+id
+
+student_id
+
+topic_id
+
+asset_id
+
+usage_type
+
+comprehension_signal
+
+improvement_signal
+
+6) The queues and background jobs
+Use queues heavily. This should not be synchronous.
+
+Core queues:
+
+ingest_queue
+For raw uploads and discovered sources.
+
+parse_queue
+OCR, extraction, segmentation, markdown conversion.
+
+classify_queue
+Topic mapping, concept tagging, source typing.
+
+gap_queue
+Coverage-gap detection jobs.
+
+research_queue
+External and internal search missions.
+
+verify_queue
+Authority, contradiction, level fit, corroboration.
+
+synthesis_queue
+Asset generation and asset upgrades.
+
+publish_queue
+Final quality gate and index refresh.
+
+reindex_queue
+Embedding refresh, hybrid index updates, metadata refresh.
+
+evaluation_queue
+Groundedness, completeness, relevance, correctness checks.
+
+Job types should include:
+
+topic_backfill
+
+topic_refresh
+
+weak_area_rescue
+
+glossary_enrichment
+
+exam_question_expansion
+
+misconception_mining
+
+diagram_hunt
+
+formula_support_refresh
+
+retrieval_failure_repair
+
+7) The scoring model
+You need explicit scoring. Otherwise the system becomes vibes-based.
+
+Source score
+Score each source by:
+
+authority
+
+curriculum relevance
+
+pedagogic clarity
+
+freshness
+
+extraction quality
+
+structural cleanliness
+
+corroboration potential
+
+Example:
+
+source_score = 0.30 authority + 0.20 curriculum_fit + 0.15 clarity + 0.15 freshness + 0.10 extraction_quality + 0.10 corroboration
+
+Evidence score
+evidence_score = 0.25 source_score + 0.20 extraction_confidence + 0.20 corroboration + 0.15 pedagogy + 0.10 level_fit + 0.10 freshness - contradiction_penalty
+
+Asset publish score
+publish_score = 0.35 evidence_strength + 0.20 topic_alignment + 0.15 readability + 0.15 completeness + 0.10 freshness + 0.05 usage_confidence
+
+Hard publish rules
+An asset cannot publish if:
+
+no topic mapping
+
+no provenance
+
+contradiction above threshold
+
+level mismatch
+
+quality below floor
+
+duplicate of stronger existing asset
+
+unlicensed or disallowed source
+
+8) The retrieval model for the live app
+Use two retrieval paths.
+
+Path 1. Fast academic retrieval
+For:
+
+“show me notes”
+
+“explain this term”
+
+“give me examples”
+
+“test me”
+
+Use:
+
+hybrid retrieval
+
+metadata filter
+
+rerank top K
+
+citation-preserving answer generation
+
+This is the default path.
+
+Path 2. Agentic retrieval
+For:
+
+“teach me this topic properly”
+
+“build a recovery plan”
+
+“compare diffusion and osmosis”
+
+“why do I keep failing this”
+
+“generate a timed rescue drill using my weak areas”
+
+Modern agentic retrieval patterns explicitly use LLM decomposition into subqueries and then run keyword/vector/hybrid retrieval with semantic reranking before synthesis, which is useful for more complex academic flows. 
+
+9) How it plugs into your coach brain
+This is important.
+
+Your coach should not query raw chunks.
+It should query prepared academic packs.
+
+The coach brain asks the Content Intelligence Engine for specific pack types:
+
+Concept Rescue Pack
+
+Weak Area Pack
+
+Exam Sprint Pack
+
+Glossary Reinforcement Pack
+
+Misconception Repair Pack
+
+Parent Update Pack
+
+Teacher Insight Pack
+
+Each pack is assembled from verified assets and evidence.
+
+Example
+Student is weak in “simultaneous equations.”
+
+Coach asks for:
+
+beginner explanation
+
+3 worked examples
+
+common mistakes
+
+speed drill
+
+accuracy drill
+
+10 objective questions
+
+parent explanation
+
+The engine returns a structured pack, not just nearest chunks.
+
+So the relationship is:
+
+Coach Brain decides strategy
+Content Intelligence Engine supplies trusted content primitives
+
+10) Online behavior in the app
+When the app is online, run three quiet loops.
+
+Loop 1. Coverage loop
+Checks:
+
+which topics are under-covered
+
+which topics are stale
+
+which asset types are missing
+
+Loop 2. Performance loop
+Checks:
+
+what students are failing
+
+what misconceptions are recurring
+
+where retrieval is poor
+
+where generated explanations underperform
+
+Loop 3. Refresh loop
+Checks:
+
+source freshness windows
+
+curriculum updates
+
+newly uploaded materials
+
+contradictions introduced by new materials
+
+These loops should produce missions, not direct writes.
+
+11) Freshness logic
+Not all content needs the same refresh policy.
+
+Set freshness classes.
+
+Class A: volatile
+
+curriculum updates
+
+exam policy
+
+new mark schemes
+
+assessment format changes
+
+Class B: semi-stable
+
+worked examples
+
+revision notes
+
+web-based explainers
+
+Class C: stable
+
+basic definitions
+
+formulas
+
+classical concepts
+
+Each asset should have:
+
+freshness class
+
+last verified date
+
+next review date
+
+stale flag
+
+review trigger count
+
+12) The safety and governance rules
+This engine needs hard guardrails.
+
+Allowed source policy
+Maintain source tiers:
+
+Tier 1
+official curriculum bodies, exam authorities, approved publishers
+
+Tier 2
+institution-approved notes, trusted teacher content, verified textbooks
+
+Tier 3
+reputable educational websites
+
+Tier 4
+general web discovery sources
+
+Tier 4 can inspire or suggest, but should rarely publish directly.
+
+Content contamination policy
+External content must never bypass:
+
+verification
+
+provenance
+
+contradiction scan
+
+level fit check
+
+duplication check
+
+Rollback policy
+Every publish event should be reversible.
+Maintain asset versions and snapshot IDs.
+
+13) Evaluation framework
+You need two forms of evaluation.
+
+Offline benchmark set
+Curate topic-based academic benchmark prompts:
+
+explain concept
+
+define term
+
+solve example
+
+generate questions
+
+compare terms
+
+remediate weak learner
+
+For each, grade:
+
+correctness
+
+groundedness
+
+completeness
+
+citation fidelity
+
+level fit
+
+Production evaluation
+Track live:
+
+retrieval success rate
+
+citation coverage
+
+answer acceptance
+
+student improvement after using asset
+
+regeneration frequency
+
+contradiction complaints
+
+stale-content hits
+
+Evaluation guidance for RAG today emphasizes groundedness, relevance, correctness, completeness, and retrieval utilization as the core measurement dimensions. 
+
+14) Suggested service map
+A practical service decomposition would look like this:
+
+content-registry-service
+Sources, policies, trust tiers, freshness rules.
+
+document-intelligence-service
+OCR, parse, segmentation, equations, tables, image descriptions.
+
+curriculum-graph-service
+Topic graph, concept graph, expected coverage.
+
+gap-detection-service
+Coverage analysis, performance gap detection.
+
+research-orchestrator-service
+Mission planning, search execution, candidate routing.
+
+verification-service
+Authority, corroboration, contradiction, scoring.
+
+asset-synthesis-service
+Generate notes, examples, question seeds, summaries.
+
+publish-gate-service
+Thresholds, approvals, rollback, snapshots.
+
+retrieval-service
+Hybrid search, filters, rerank, agentic query mode.
+
+evaluation-service
+Offline and online quality measurement.
+
+15) The first version I would implement
+Do not start with everything at once.
+
+Start with this minimum serious version:
+
+Phase 1
+curriculum graph
+
+source registry
+
+ingestion pipeline
+
+parse + chunk + metadata
+
+internal-only retrieval
+
+content assets store
+
+gap tickets
+
+manual publish gate
+
+Phase 2
+external source scout
+
+evidence extractor
+
+contradiction checks
+
+enrichment jobs
+
+automatic reranking
+
+weak-area-driven missions
+
+Phase 3
+agentic retrieval for coach workflows
+
+quality scoring automation
+
+freshness scheduling
+
+production evaluation dashboard
+
+self-healing retrieval failure loop
+
+16) The simplest mental model
+The system should think like this:
+
+What is missing?
+What kind of asset would fix it?
+Do we already have enough internally?
+If not, where is the best place to research it?
+What evidence is trustworthy?
+How should that evidence improve the current topic pack?
+Is the result strong enough to publish?
+Did it actually help users?
+
+That is the engine.
+
+Not a bot that scrapes the web.
+A disciplined academic refinery.
+
+17) My recommended final naming structure
+If you want a clean architecture name set:
+
+Content Intelligence Engine — whole subsystem
+
+Curriculum Graph — academic spine
+
+Research Orchestrator — mission planner
+
+Evidence Pipeline — extraction and verification
+
+Asset Foundry — synthesis layer
+
+Publish Gate — quality barrier
+
+Knowledge Retrieval Layer — live RAG interface
+
+That naming is strong, scalable, and clear.
+
+The next step is to convert this into a full technical architecture spec with API contracts, queue payloads, scoring schemas, and exact job definitions.
+
+
+proceed
+
+I’m taking the next step into implementation detail now: services, API contracts, job payloads, storage schemas, and how the research engine and live RAG layer talk to each other. I’m grounding the design in current retrieval, reranking, and evaluation guidance so it stays buildable, not theoretical.
+
+I’ve got the shape now. I’m pinning down the exact contracts next: what creates a mission, what evidence looks like, what gets published, and how the coach asks for prepared topic packs instead of raw chunks.
+
+Thought for 33s
+Let’s turn it into a build-grade system.
+
+The right target is a two-plane architecture:
+
+a Knowledge Refinery Plane that researches, parses, verifies, enriches, and publishes
+
+a Live Learning Plane that retrieves only from approved assets and serves the app
+
+That separation is what keeps the online intelligence useful without letting it pollute the student-facing corpus. It also lines up with current RAG practice: strong document prep for PDFs/images/layout-heavy files, hybrid retrieval plus reranking for the live path, and agentic multi-query retrieval only when the task is complex enough to justify it. 
+
+1. System boundary
+The engine should sit behind these product surfaces:
+
+super admin content portal
+
+coach brain
+
+student app
+
+parent reporting layer
+
+diagnostics, glossary, past questions, teach mode, memory mode
+
+Only the super admin and refinery services can create or upgrade content. The student app should never read from raw web content or unverified crawler output. That is a policy decision, not just an implementation detail.
+
+2. Runtime topology
+Use these major runtime components:
+
+A. API Gateway
+Routes internal service calls and app traffic.
+
+B. Orchestrator
+Creates and coordinates jobs and missions.
+
+C. Queue Bus
+Handles asynchronous ingestion, parsing, research, verification, synthesis, publishing, indexing, and evaluation.
+
+D. Object Store
+Stores raw files, screenshots, scans, extracted artifacts, diagrams, and version snapshots.
+
+E. Relational Store
+Stores curriculum graph, missions, assets, provenance, scores, policies, and audit logs.
+
+F. Search/Retrieval Store
+Stores dense, sparse, and metadata-indexed retrieval records for live RAG. Hybrid plus rerank is the right default because it preserves exact term matching while also capturing semantic relevance. 
+
+G. Evaluation Store
+Keeps benchmark prompts, retrieved contexts, scores, groundedness results, and regression history.
+
+3. Core services
+Build these as separate services.
+
+3.1 curriculum-graph-service
+Owns:
+
+curricula
+
+subjects
+
+levels
+
+topics
+
+subtopics
+
+concepts
+
+skills
+
+misconceptions
+
+expected coverage definitions
+
+Key endpoints:
+
+POST /curricula
+
+POST /topics
+
+GET /topics/:topicId
+
+GET /topics/:topicId/coverage
+
+POST /topics/:topicId/coverage-template
+
+This service answers one key question:
+What should exist for this topic?
+
+3.2 source-registry-service
+Owns:
+
+source records
+
+source class/tier
+
+licensing policy
+
+freshness policy
+
+crawl allowlist
+
+provenance rules
+
+Endpoints:
+
+POST /sources/register
+
+GET /sources/:id
+
+POST /sources/:id/policy
+
+POST /sources/discover
+
+3.3 document-intelligence-service
+Owns:
+
+OCR
+
+PDF extraction
+
+layout analysis
+
+image verbalization
+
+equation extraction
+
+semantic chunking
+
+dedupe fingerprints
+
+This is important because current guidance explicitly treats OCR, image analysis, document extraction, and chunking as core RAG prep functions for PDFs, images, and long documents. 
+
+Endpoints:
+
+POST /documents/ingest
+
+POST /documents/:id/parse
+
+POST /documents/:id/chunk
+
+GET /documents/:id/segments
+
+3.4 gap-detection-service
+Owns:
+
+missing coverage analysis
+
+stale content analysis
+
+underperforming topic detection
+
+retrieval failure detection
+
+weak-area driven triggers
+
+Endpoints:
+
+POST /gaps/scan/topic
+
+POST /gaps/scan/global
+
+GET /gaps
+
+POST /gaps/:id/close
+
+3.5 research-orchestrator-service
+Owns:
+
+research mission planning
+
+internal-first vs external escalation
+
+source scouting
+
+mission budget/time policies
+
+candidate routing
+
+Endpoints:
+
+POST /missions
+
+GET /missions/:id
+
+POST /missions/:id/start
+
+POST /missions/:id/cancel
+
+GET /missions/:id/candidates
+
+3.6 evidence-service
+Owns:
+
+evidence extraction
+
+evidence normalization
+
+corroboration grouping
+
+contradiction analysis
+
+evidence scoring
+
+Endpoints:
+
+POST /evidence/extract
+
+POST /evidence/corroborate
+
+POST /evidence/score
+
+GET /evidence/:id
+
+3.7 asset-foundry-service
+Owns:
+
+note generation
+
+glossary generation
+
+worked examples
+
+misconception cards
+
+question sets
+
+revision packs
+
+coach packs
+
+parent packs
+
+Endpoints:
+
+POST /assets/build
+
+POST /assets/upgrade
+
+GET /assets/:id
+
+POST /packs/build
+
+3.8 publish-gate-service
+Owns:
+
+publish decisions
+
+rollback
+
+snapshot generation
+
+deprecation
+
+promotions from staged to published
+
+Endpoints:
+
+POST /publish/review
+
+POST /publish/approve
+
+POST /publish/reject
+
+POST /publish/rollback
+
+GET /snapshots/:id
+
+3.9 retrieval-service
+Owns:
+
+hybrid retrieval
+
+metadata filtering
+
+reranking
+
+citation assembly
+
+agentic retrieval mode
+
+pack retrieval
+
+Hybrid retrieval, metadata filtering, and reranking are directly aligned with current retrieval guidance; agentic retrieval should be reserved for more complex, conversational, or multi-part academic requests rather than every simple query. 
+
+Endpoints:
+
+POST /retrieve/search
+
+POST /retrieve/answer-context
+
+POST /retrieve/agentic
+
+POST /retrieve/packs
+
+3.10 evaluation-service
+Owns:
+
+offline benchmark runs
+
+groundedness
+
+relevance
+
+correctness
+
+completeness
+
+retrieval quality
+
+production regression tracking
+
+Current evaluation guidance centers on groundedness, relevance, correctness, completeness, and related RAG-specific evaluators. 
+
+Endpoints:
+
+POST /eval/run
+
+POST /eval/regression
+
+GET /eval/reports/:runId
+
+4. Queue design
+Use queues, not synchronous chaining.
+
+Topics:
+
+ingest.raw
+
+parse.requested
+
+parse.completed
+
+classify.requested
+
+gap.detected
+
+mission.created
+
+mission.candidate-found
+
+evidence.requested
+
+evidence.ready
+
+verification.requested
+
+verification.passed
+
+verification.failed
+
+asset.build.requested
+
+asset.build.completed
+
+publish.requested
+
+publish.completed
+
+index.refresh.requested
+
+evaluation.requested
+
+evaluation.completed
+
+5. Canonical job payloads
+5.1 gap ticket
+{
+  "gap_id": "gap_9f12",
+  "topic_id": "topic_quadratic_equations_jhs3",
+  "trigger_type": "coverage_missing",
+  "severity": "high",
+  "required_asset_types": [
+    "worked_example",
+    "objective_questions",
+    "misconception_card"
+  ],
+  "reason": {
+    "coverage_score": 0.41,
+    "student_failure_rate": 0.58,
+    "freshness_flag": false
+  },
+  "created_at": "2026-03-28T21:18:00Z"
+}
+5.2 research mission
+{
+  "mission_id": "mis_20a1",
+  "gap_id": "gap_9f12",
+  "topic_id": "topic_quadratic_equations_jhs3",
+  "scope": {
+    "grade_level": "JHS 3",
+    "asset_goal": ["worked_example", "objective_questions"],
+    "depth": "exam_ready",
+    "language": "en"
+  },
+  "search_policy": {
+    "internal_first": true,
+    "external_allowed": true,
+    "allowed_source_tiers": ["T1", "T2", "T3"],
+    "max_candidates": 20
+  },
+  "status": "created"
+}
+5.3 evidence block
+{
+  "evidence_id": "ev_b81",
+  "mission_id": "mis_20a1",
+  "source_id": "src_551",
+  "topic_id": "topic_quadratic_equations_jhs3",
+  "concept_id": "concept_factorization",
+  "evidence_type": "worked_example",
+  "claim_text": "Factorization can solve quadratic equations when the expression decomposes cleanly into linear factors.",
+  "support_text": "x^2 + 5x + 6 = 0 can be rewritten as (x + 2)(x + 3) = 0.",
+  "provenance": {
+    "uri": "https://example.edu/algebra/factorization",
+    "section": "Solving by factorization"
+  },
+  "scores": {
+    "source_authority": 0.82,
+    "extraction_confidence": 0.93,
+    "corroboration": 0.77,
+    "level_fit": 0.91,
+    "freshness": 0.78
+  },
+  "status": "staged"
+}
+5.4 content asset
+{
+  "asset_id": "asset_221",
+  "topic_id": "topic_quadratic_equations_jhs3",
+  "asset_type": "worked_example",
+  "audience": "student",
+  "title": "Solving Quadratic Equations by Factorization",
+  "body_markdown": "...",
+  "provenance": [
+    {
+      "evidence_id": "ev_b81",
+      "source_id": "src_551"
+    }
+  ],
+  "quality_score": 0.88,
+  "freshness_score": 0.78,
+  "publish_status": "verified"
+}
+6. Data model
+Use PostgreSQL or another relational store for control data.
+
+Main tables:
+
+curricula
+
+subjects
+
+topics
+
+concepts
+
+skills
+
+misconceptions
+
+coverage_templates
+
+coverage_scores
+
+sources
+
+source_policies
+
+documents
+
+document_segments
+
+missions
+
+mission_candidates
+
+evidence_blocks
+
+evidence_links
+
+content_assets
+
+asset_versions
+
+publish_decisions
+
+retrieval_logs
+
+evaluation_runs
+
+evaluation_scores
+
+feedback_signals
+
+Keep raw binaries in object storage, not in the relational store.
+
+7. Coverage model
+For each topic, compute:
+
+definition_coverage
+
+explanation_coverage
+
+formula_coverage
+
+worked_example_coverage
+
+diagram_coverage
+
+misconception_coverage
+
+question_coverage
+
+exam_style_coverage
+
+audio_coverage
+
+remediation_coverage
+
+Then compute:
+
+topic_coverage_score =
+0.10*definition +
+0.15*explanation +
+0.10*formula +
+0.15*worked_example +
+0.05*diagram +
+0.15*misconception +
+0.20*question +
+0.05*audio +
+0.05*remediation
+That formula is your policy, not an industry standard. Adjust weights by subject and level.
+
+8. Source policy
+Define source tiers:
+
+T1 official curriculum boards, exam authorities, approved publishers
+
+T2 institution-approved notes, verified teacher materials, licensed textbooks
+
+T3 reputable educational sites
+
+T4 broad web discovery sources
+
+Policy:
+
+T4 can suggest
+
+T1/T2 can publish more easily
+
+T3 needs stronger corroboration
+
+T4 should rarely publish directly
+
+9. Verification contract
+Every evidence block must pass these checks:
+
+topic alignment
+
+level fit
+
+source tier validity
+
+contradiction scan
+
+duplication scan
+
+extraction confidence
+
+pedagogic clarity
+
+provenance completeness
+
+Verifier response:
+
+{
+  "evidence_id": "ev_b81",
+  "decision": "pass",
+  "scores": {
+    "topic_alignment": 0.94,
+    "level_fit": 0.91,
+    "authority": 0.82,
+    "contradiction_penalty": 0.04,
+    "duplication_penalty": 0.07,
+    "pedagogy": 0.88
+  },
+  "final_quality": 0.87,
+  "reasons": []
+}
+Hard-fail conditions:
+
+no provenance
+
+source disallowed
+
+severe contradiction
+
+low level fit
+
+extraction confidence below threshold
+
+duplicate of stronger existing asset
+
+10. Retrieval contracts
+10.1 standard retrieval
+Use for simple tasks:
+
+“define osmosis”
+
+“show examples of fractions”
+
+“give me questions on algebra”
+
+This path should do:
+
+metadata filter
+
+hybrid retrieval
+
+rerank
+
+assemble citations
+
+That approach is consistent with current guidance on metadata filters, lexical+semantic retrieval, and reranking for higher RAG quality. 
+
+Request:
+
+{
+  "query": "show me worked examples for simultaneous equations",
+  "filters": {
+    "grade_level": "JHS 2",
+    "subject": "Mathematics",
+    "asset_type": ["worked_example"],
+    "publish_status": "published"
+  },
+  "top_k": 20,
+  "rerank_top_n": 8
+}
+10.2 agentic retrieval
+Use for complex tasks:
+
+“teach me this from beginner to exam level”
+
+“why do I keep failing this topic”
+
+“compare photosynthesis and respiration”
+
+“build a rescue plan for my weak areas”
+
+This path decomposes one request into focused subqueries and then retrieves across them, which is exactly what current agentic retrieval systems are designed for. 
+
+Request:
+
+{
+  "task": "build_topic_rescue_pack",
+  "input": {
+    "topic_id": "topic_photosynthesis_jhs2",
+    "student_profile_id": "stu_91"
+  },
+  "subtasks": [
+    "identify weak subskills",
+    "retrieve beginner explanation",
+    "retrieve worked examples",
+    "retrieve misconceptions",
+    "retrieve timed drills"
+  ]
+}
+11. Pack API for the coach brain
+The coach should ask for prepared packs, not raw chunks.
+
+Endpoint:
+POST /packs/build
+
+Pack types:
+
+concept_rescue_pack
+
+weak_area_pack
+
+glossary_reinforcement_pack
+
+exam_sprint_pack
+
+misconception_repair_pack
+
+parent_update_pack
+
+teacher_insight_pack
+
+Example:
+
+{
+  "pack_type": "weak_area_pack",
+  "student_id": "stu_91",
+  "topic_id": "topic_photosynthesis_jhs2",
+  "constraints": {
+    "duration_minutes": 25,
+    "difficulty": "adaptive",
+    "include_audio": true
+  }
+}
+Response:
+
+{
+  "pack_id": "pack_702",
+  "sections": [
+    {"type": "explanation", "asset_id": "asset_1"},
+    {"type": "worked_example", "asset_id": "asset_2"},
+    {"type": "misconception_card", "asset_id": "asset_3"},
+    {"type": "objective_questions", "asset_id": "asset_4"}
+  ],
+  "estimated_duration_minutes": 24
+}
+12. Publish gate logic
+States:
+
+raw
+
+parsed
+
+staged
+
+verified
+
+published
+
+deprecated
+
+archived
+
+Publish flow:
+
+asset.build.completed
+
+publish.requested
+
+publish gate checks:
+
+quality threshold
+
+freshness threshold
+
+topic coverage impact
+
+provenance completeness
+
+duplicate/replace/merge decision
+
+if pass, new version is published
+
+index refresh event emitted
+
+Decision types:
+
+approve_new
+
+approve_upgrade
+
+merge_into_existing
+
+reject
+
+deprecate_existing_then_publish
+
+13. Freshness policy
+Not all content refreshes equally.
+
+Use three freshness classes.
+
+F1 volatile
+
+curriculum changes
+
+exam formats
+
+mark schemes
+
+official guidance
+
+F2 semi-stable
+
+examples
+
+revision notes
+
+tutorial explainers
+
+F3 stable
+
+core definitions
+
+base formulae
+
+classical concepts
+
+Store:
+
+last_verified_at
+
+review_due_at
+
+freshness_class
+
+stale_flag
+
+14. Evaluation design
+You need two loops.
+
+14.1 pre-publish evaluation
+Runs before content goes live:
+
+groundedness
+
+correctness
+
+completeness
+
+level fit
+
+citation coverage
+
+14.2 production evaluation
+Runs on real traffic:
+
+retrieval success
+
+answer acceptance
+
+contradiction reports
+
+student improvement signal
+
+asset utilization
+
+stale-hit rate
+
+These line up with current RAG evaluation practice, which emphasizes groundedness, relevance, correctness, completeness, and system-level evaluation of responses built from retrieved context. 
+
+15. Suggested stack for your environment
+Given your wider architecture preferences, a good split is:
+
+Rust for deterministic scoring workers, parsers that need speed, and any sensitive policy/quality gate logic
+
+Go for orchestration APIs, mission control, queue consumers, background workers, and service glue
+
+TypeScript for admin portal and internal tooling
+
+Recommended operational split:
+
+Postgres for metadata/control plane
+
+object storage for raw and derived files
+
+one retrieval index that supports hybrid search and metadata filters
+
+queue system for all background jobs
+
+Redis only for caching and short-lived coordination, not as the system of record
+
+16. Rollout order
+Phase 1
+curriculum graph
+
+source registry
+
+ingestion
+
+parsing
+
+standard retrieval
+
+manual publish gate
+
+Phase 2
+gap detection
+
+research missions
+
+evidence scoring
+
+asset foundry
+
+automatic reindexing
+
+Phase 3
+agentic retrieval for coach workflows
+
+freshness automation
+
+production evaluation dashboards
+
+self-healing retrieval failure loop
+
+17. The one rule that must never be broken
+External research may inform the knowledge base, but it must never directly become the knowledge base.
+
+The app should retrieve from:
+
+published internal assets
+
+verified evidence-backed packs
+
+curated structured notes
+
+Not from random scraped pages.
+
+That is the difference between a noisy online bot and a true academic content intelligence system.
+
+The next clean step is to draft the full PRD-style technical spec for this engine, including exact database schemas, service responsibilities, state machines, and endpoint definitions in one coherent build document.
+
+
+proceed
+
+I’m converting the architecture into a single coherent build document now: responsibilities, state machines, DB tables, APIs, queues, and the exact flow from “gap detected” to “published asset.” I’ll keep it tight around implementation so it can serve as the actual spec you build from.
+
+Thought for 19s
+Below is the build document.
+
+Content Intelligence Engine
+Purpose: continuously improve academic content behind the scenes, using online research only as a controlled enrichment mechanism, then serve the app from verified internal knowledge assets.
+
+This design assumes a modern RAG baseline: document-aware content preparation for PDFs/images, hybrid retrieval with metadata filters and reranking for the default path, and agentic multi-query retrieval only for harder composite tasks. Those patterns remain the strongest practical foundation today. 
+
+1. Product intent
+The engine exists to solve five problems:
+
+Your content base is never complete.
+
+Your content quality will drift unless it is continuously checked.
+
+New materials arrive in many formats: curriculum docs, scans, past questions, notes, web sources.
+
+Students expose content gaps through performance and usage.
+
+Live retrieval should answer from trusted academic assets, not raw web fragments.
+
+So the engine must do this:
+
+detect missing or weak content
+
+research only what is needed
+
+parse and normalize new evidence
+
+verify correctness and curriculum fit
+
+synthesize improved assets
+
+publish only after quality checks
+
+refresh the retrieval layer
+
+measure whether the enrichment actually helped
+
+2. Core principle
+There are two distinct planes.
+
+A. Knowledge Refinery Plane
+This is where content is ingested, researched, verified, synthesized, and published.
+
+B. Live Learning Plane
+This is where the student app, coach brain, glossary, diagnostics, memory mode, teach mode, and past-question systems retrieve content.
+
+Rule: the Live Learning Plane can only retrieve from published internal assets and, if you allow it, verified preview assets. It must never retrieve directly from raw crawl output.
+
+3. Scope of the engine
+The engine covers:
+
+curriculum and syllabus ingestion
+
+textbook and scan ingestion
+
+past-question ingestion
+
+approved-source research
+
+topic coverage analysis
+
+weak-area-driven enrichment
+
+content asset generation
+
+question support generation
+
+glossary and formula enrichment
+
+publish gating
+
+retrieval indexing
+
+RAG evaluation
+
+freshness management
+
+It does not directly own:
+
+student session logic
+
+UI rendering
+
+live coaching strategy
+
+payment or user auth
+
+parent dashboard presentation
+
+Those consume the engine’s outputs.
+
+4. Canonical content model
+Everything must attach to the curriculum graph.
+
+Hierarchy:
+
+Curriculum
+
+Subject
+
+Level / Class
+
+Term / Unit
+
+Topic
+
+Subtopic
+
+Concept
+
+Skill
+
+Misconception
+
+Question family
+
+Asset type
+
+Every topic has an expected coverage model.
+
+Example expected coverage for a topic:
+
+definition
+
+explanation
+
+worked examples
+
+formula support
+
+common misconceptions
+
+objective questions
+
+theory questions
+
+revision summary
+
+glossary terms
+
+audio summary
+
+parent summary
+
+remediation pack
+
+This means a topic is not a blob of chunks.
+A topic is a structured academic unit with measurable completeness.
+
+5. Service architecture
+5.1 curriculum-graph-service
+Owns the academic spine.
+
+Responsibilities:
+
+create and version curricula
+
+define topic hierarchy
+
+define expected coverage templates
+
+map concepts and skills to topics
+
+store misconceptions and relationships
+
+Key endpoints:
+
+POST /curricula
+
+POST /subjects
+
+POST /topics
+
+GET /topics/:topicId
+
+GET /topics/:topicId/coverage-template
+
+GET /topics/:topicId/coverage-score
+
+5.2 source-registry-service
+Owns source identity and policy.
+
+Responsibilities:
+
+register sources
+
+classify source tiers
+
+store licensing info
+
+manage freshness class
+
+manage allowlist / denylist policy
+
+store provenance rules
+
+Endpoints:
+
+POST /sources/register
+
+GET /sources/:sourceId
+
+POST /sources/:sourceId/policy
+
+POST /sources/discover
+
+5.3 document-intelligence-service
+Owns extraction and normalization.
+
+Responsibilities:
+
+OCR
+
+PDF extraction
+
+layout analysis
+
+markdown conversion
+
+table extraction
+
+equation extraction
+
+image verbalization
+
+semantic segmentation
+
+deduplication fingerprints
+
+This layer matters because RAG quality improves significantly when PDFs, images, tables, and structured layouts are preprocessed properly and chunked semantically instead of blindly. 
+
+Endpoints:
+
+POST /documents/ingest
+
+POST /documents/:id/parse
+
+POST /documents/:id/segment
+
+GET /documents/:id/segments
+
+5.4 gap-detection-service
+Owns gap identification.
+
+Responsibilities:
+
+detect missing topic coverage
+
+detect stale assets
+
+detect weak-performing topics
+
+detect retrieval failures
+
+detect underused or low-impact assets
+
+Endpoints:
+
+POST /gaps/scan/topic
+
+POST /gaps/scan/global
+
+GET /gaps/open
+
+GET /gaps/:gapId
+
+5.5 research-orchestrator-service
+Owns research mission planning and execution.
+
+Responsibilities:
+
+create missions from gaps
+
+internal-first search planning
+
+external escalation only when justified
+
+candidate source scouting
+
+mission status tracking
+
+cost and policy controls
+
+Endpoints:
+
+POST /missions
+
+GET /missions/:missionId
+
+POST /missions/:missionId/start
+
+POST /missions/:missionId/cancel
+
+GET /missions/:missionId/candidates
+
+5.6 evidence-service
+Owns extracted evidence.
+
+Responsibilities:
+
+extract evidence blocks
+
+classify evidence type
+
+score extraction confidence
+
+compare with existing evidence
+
+detect contradictions
+
+group corroborating evidence
+
+Endpoints:
+
+POST /evidence/extract
+
+POST /evidence/corroborate
+
+POST /evidence/compare
+
+POST /evidence/score
+
+5.7 asset-foundry-service
+Owns academic asset construction.
+
+Responsibilities:
+
+build notes
+
+build glossary cards
+
+build formula cards
+
+build worked examples
+
+build misconception cards
+
+build question sets
+
+build revision packs
+
+build coach packs
+
+upgrade existing assets
+
+Endpoints:
+
+POST /assets/build
+
+POST /assets/upgrade
+
+POST /packs/build
+
+GET /assets/:assetId
+
+5.8 publish-gate-service
+Owns publishing decisions.
+
+Responsibilities:
+
+apply quality thresholds
+
+approve/reject/merge/replace
+
+version assets
+
+create snapshots
+
+rollback bad publishes
+
+trigger reindexing
+
+Endpoints:
+
+POST /publish/review
+
+POST /publish/approve
+
+POST /publish/reject
+
+POST /publish/rollback
+
+GET /snapshots/:snapshotId
+
+5.9 retrieval-service
+Owns live retrieval.
+
+Responsibilities:
+
+hybrid search
+
+metadata filtering
+
+reranking
+
+citation assembly
+
+pack retrieval
+
+agentic retrieval for composite tasks
+
+Hybrid search, metadata filtering, and two-stage reranking remain among the simplest and most effective ways to improve retrieval relevance in RAG systems. Agentic retrieval is better reserved for complex or conversational tasks where decomposing the query into focused subqueries improves coverage. 
+
+Endpoints:
+
+POST /retrieve/search
+
+POST /retrieve/context
+
+POST /retrieve/agentic
+
+POST /retrieve/packs
+
+5.10 evaluation-service
+Owns quality measurement.
+
+Responsibilities:
+
+offline benchmark runs
+
+groundedness checks
+
+relevance checks
+
+correctness checks
+
+completeness checks
+
+retrieval quality analysis
+
+regression alerts
+
+RAG systems should be evaluated continuously using dimensions like groundedness, relevance, and completeness rather than only relying on intuition or one-off spot checks. 
+
+Endpoints:
+
+POST /eval/run
+
+POST /eval/regression
+
+GET /eval/reports/:runId
+
+6. Data stores
+Relational DB
+Use for:
+
+curricula
+
+topics
+
+missions
+
+evidence metadata
+
+asset metadata
+
+publish decisions
+
+feedback
+
+audit logs
+
+Object storage
+Use for:
+
+uploaded files
+
+scanned docs
+
+extracted markdown
+
+images
+
+diagrams
+
+snapshot bundles
+
+archived versions
+
+Retrieval index
+Use for:
+
+dense vectors
+
+sparse/lexical support
+
+metadata fields
+
+rerank candidates
+
+citation record pointers
+
+Cache / coordination
+Use for:
+
+mission locks
+
+short-lived orchestration state
+
+throttling
+
+dedupe windows
+
+7. Main database schema
+academic tables
+curricula
+
+subjects
+
+levels
+
+topics
+
+topic_relationships
+
+concepts
+
+skills
+
+misconceptions
+
+coverage_templates
+
+coverage_scores
+
+source tables
+sources
+
+source_policies
+
+source_versions
+
+documents
+
+document_segments
+
+segment_embeddings
+
+segment_metadata
+
+mission tables
+gap_tickets
+
+research_missions
+
+mission_candidates
+
+mission_events
+
+evidence tables
+evidence_blocks
+
+evidence_links
+
+evidence_scores
+
+evidence_conflicts
+
+asset tables
+content_assets
+
+asset_versions
+
+asset_provenance
+
+pack_definitions
+
+pack_instances
+
+publish tables
+publish_decisions
+
+publish_snapshots
+
+rollback_events
+
+retrieval/eval tables
+retrieval_logs
+
+retrieval_feedback
+
+evaluation_runs
+
+evaluation_scores
+
+benchmark_cases
+
+8. State machines
+8.1 source state machine
+registered -> ingested -> parsed -> segmented -> classified -> usable -> archived
+
+Failure branches:
+
+parse_failed
+
+policy_blocked
+
+corrupt
+
+duplicate
+
+8.2 gap ticket state machine
+detected -> scored -> mission_created -> in_progress -> resolved -> closed
+
+Failure branch:
+
+dismissed
+
+8.3 mission state machine
+created -> scouting -> candidate_ready -> evidence_extracting -> verifying -> synthesizing -> publish_review -> completed
+
+Failure branches:
+
+blocked_by_policy
+
+insufficient_candidates
+
+verification_failed
+
+synthesis_failed
+
+8.4 evidence state machine
+staged -> corroborating -> verified -> rejected
+
+8.5 asset state machine
+draft -> staged -> verified -> published -> deprecated -> archived
+
+9. Queue design
+Topics:
+
+ingest.raw
+
+parse.requested
+
+parse.completed
+
+segment.requested
+
+classify.requested
+
+gap.detected
+
+mission.created
+
+mission.scout.requested
+
+mission.candidates.ready
+
+evidence.extract.requested
+
+evidence.verify.requested
+
+evidence.verified
+
+asset.build.requested
+
+asset.review.requested
+
+asset.published
+
+index.refresh.requested
+
+eval.requested
+
+eval.completed
+
+This must be asynchronous.
+Do not chain all of this inside synchronous API calls.
+
+10. Canonical payloads
+gap ticket
+{
+  "gap_id": "gap_001",
+  "topic_id": "topic_osmosis_jhs2",
+  "trigger_type": "coverage_missing",
+  "severity": "high",
+  "required_asset_types": [
+    "worked_example",
+    "misconception_card",
+    "objective_questions"
+  ],
+  "reason": {
+    "coverage_score": 0.39,
+    "student_failure_rate": 0.61
+  }
+}
+research mission
+{
+  "mission_id": "mis_001",
+  "gap_id": "gap_001",
+  "topic_id": "topic_osmosis_jhs2",
+  "scope": {
+    "level": "JHS 2",
+    "subject": "Science",
+    "asset_goal": [
+      "worked_example",
+      "misconception_card",
+      "objective_questions"
+    ],
+    "depth": "exam_ready"
+  },
+  "search_policy": {
+    "internal_first": true,
+    "external_allowed": true,
+    "allowed_source_tiers": ["T1", "T2", "T3"],
+    "max_candidates": 15
+  },
+  "status": "created"
+}
+evidence block
+{
+  "evidence_id": "ev_001",
+  "mission_id": "mis_001",
+  "source_id": "src_004",
+  "topic_id": "topic_osmosis_jhs2",
+  "concept_id": "concept_water_movement",
+  "evidence_type": "explanation",
+  "claim_text": "Osmosis is the movement of water molecules from a region of higher water potential to lower water potential through a selectively permeable membrane.",
+  "support_text": "This usually occurs when two solutions of different concentration are separated by a membrane.",
+  "provenance": {
+    "uri": "https://approved-source.example/biology/osmosis",
+    "section": "Definition and process"
+  },
+  "scores": {
+    "source_authority": 0.88,
+    "extraction_confidence": 0.94,
+    "corroboration": 0.80,
+    "level_fit": 0.91
+  },
+  "status": "staged"
+}
+content asset
+{
+  "asset_id": "asset_001",
+  "topic_id": "topic_osmosis_jhs2",
+  "asset_type": "worked_example",
+  "audience": "student",
+  "title": "Understanding Osmosis with Salt Water and Fresh Water",
+  "body_markdown": "...",
+  "provenance": [
+    {
+      "evidence_id": "ev_001",
+      "source_id": "src_004"
+    }
+  ],
+  "quality_score": 0.89,
+  "publish_status": "verified"
+}
+11. Coverage scoring
+For each topic, compute component coverage:
+
+definition
+
+explanation
+
+formula
+
+worked_example
+
+diagram
+
+misconception
+
+glossary
+
+objective_questions
+
+theory_questions
+
+revision_summary
+
+remediation
+
+audio
+
+Example policy formula:
+
+topic_coverage_score =
+0.10*definition +
+0.15*explanation +
+0.05*formula +
+0.15*worked_example +
+0.05*diagram +
+0.10*glossary +
+0.15*misconception +
+0.15*objective_questions +
+0.05*theory_questions +
+0.03*revision_summary +
+0.01*audio +
+0.01*remediation
+This formula is yours to tune by subject.
+Math and science will likely weight worked examples and misconceptions more heavily.
+
+12. Source policy
+Use source tiers.
+
+T1
+Official curriculum bodies, exam authorities, licensed publishers.
+
+T2
+Institution-approved notes, verified teacher materials, approved textbooks.
+
+T3
+Reputable educational websites.
+
+T4
+General discovery sources.
+
+Policy:
+
+T1 and T2 can publish with fewer corroboration requirements.
+
+T3 requires stronger corroboration.
+
+T4 may help discovery but should almost never publish directly.
+
+13. Verification model
+Each evidence block gets a verification pass:
+
+topic alignment
+
+level fit
+
+authority
+
+extraction confidence
+
+contradiction penalty
+
+duplication penalty
+
+pedagogy score
+
+freshness score
+
+Example final quality formula:
+
+evidence_quality =
+0.22*topic_alignment +
+0.18*level_fit +
+0.18*authority +
+0.14*extraction_confidence +
+0.12*corroboration +
+0.10*pedagogy +
+0.06*freshness -
+contradiction_penalty -
+duplication_penalty
+Hard-fail rules:
+
+no provenance
+
+disallowed source tier
+
+severe contradiction
+
+low level fit
+
+extraction confidence below threshold
+
+duplicate of stronger evidence already linked to the same topic
+
+14. Asset publish logic
+A built asset must pass:
+
+minimum quality threshold
+
+provenance completeness
+
+topic mapping
+
+no severe contradiction
+
+readability threshold
+
+curriculum-fit threshold
+
+coverage-impact test
+
+Possible publish outcomes:
+
+approve_new
+
+approve_upgrade
+
+merge_into_existing
+
+reject
+
+deprecate_and_replace
+
+15. Retrieval design
+Standard retrieval path
+For:
+
+define this term
+
+show examples
+
+give me questions
+
+explain this topic
+
+Flow:
+
+apply metadata filters
+
+run hybrid retrieval
+
+rerank top results
+
+assemble citations
+
+pass context to answer layer
+
+Recommended metadata filters:
+
+curriculum
+
+level
+
+subject
+
+topic
+
+asset_type
+
+audience
+
+publish_status
+
+language
+
+Agentic retrieval path
+For:
+
+teach me this from beginner to exam level
+
+compare two concepts
+
+explain why I keep failing this
+
+build a rescue pack for my weak areas
+
+Flow:
+
+decompose task into subqueries
+
+retrieve per subquery
+
+rerank per subquery
+
+merge evidence
+
+construct pack or response
+
+This use of agentic retrieval for complex multi-part tasks is exactly where it adds value; it is not necessary for every simple note lookup. 
+
+16. Coach Brain integration
+The coach must request packs, not raw chunks.
+
+Pack types:
+
+concept_rescue_pack
+
+weak_area_pack
+
+glossary_reinforcement_pack
+
+exam_sprint_pack
+
+misconception_repair_pack
+
+parent_update_pack
+
+teacher_insight_pack
+
+Example request:
+
+{
+  "pack_type": "weak_area_pack",
+  "student_id": "stu_001",
+  "topic_id": "topic_osmosis_jhs2",
+  "constraints": {
+    "duration_minutes": 20,
+    "difficulty": "adaptive",
+    "include_audio": true
+  }
+}
+Example response:
+
+{
+  "pack_id": "pack_001",
+  "sections": [
+    {"type": "explanation", "asset_id": "asset_003"},
+    {"type": "worked_example", "asset_id": "asset_010"},
+    {"type": "misconception_card", "asset_id": "asset_014"},
+    {"type": "objective_questions", "asset_id": "asset_021"}
+  ],
+  "estimated_duration_minutes": 19
+}
+17. Freshness model
+Use freshness classes.
+
+F1 volatile
+curriculum changes
+
+official mark schemes
+
+exam format changes
+
+policy or syllabus updates
+
+F2 semi-stable
+examples
+
+revision sheets
+
+notes from approved external sources
+
+F3 stable
+definitions
+
+formulas
+
+enduring concepts
+
+Fields:
+
+freshness_class
+
+last_verified_at
+
+review_due_at
+
+stale_flag
+
+18. Evaluation framework
+Pre-publish evaluation
+Before an asset is published:
+
+groundedness
+
+correctness
+
+completeness
+
+level fit
+
+citation integrity
+
+Production evaluation
+After publish:
+
+retrieval success rate
+
+asset utilization
+
+student improvement signal
+
+contradiction complaints
+
+stale-hit rate
+
+answer acceptance rate
+
+Groundedness and completeness are particularly useful because groundedness checks whether the response stays inside the supporting context, while completeness checks whether critical information was omitted. 
+
+19. Security and governance
+Hard rules:
+
+external research cannot publish directly
+
+all publishes must be versioned
+
+all evidence must keep provenance
+
+mission actions must be auditable
+
+source policies must be enforceable at orchestrator level
+
+rollback must be one command away
+
+Audit everything:
+
+who created the mission
+
+what sources were searched
+
+what evidence was accepted
+
+what asset was changed
+
+what snapshot was published
+
+20. Suggested implementation split
+For your broader stack preference, the clean split is:
+
+Rust
+Use for:
+
+scoring engine
+
+deterministic publish gate logic
+
+high-performance parsing helpers where useful
+
+critical verification and policy checks
+
+Go
+Use for:
+
+service APIs
+
+orchestration
+
+queue workers
+
+mission runner
+
+retrieval gateway
+
+evaluation runner
+
+admin-facing internal APIs
+
+TypeScript
+Use for:
+
+super admin portal
+
+content review tools
+
+mission monitor
+
+evaluation dashboard
+
+internal editorial UI
+
+21. Rollout plan
+Phase 1
+curriculum graph
+
+source registry
+
+ingestion
+
+parsing/segmenting
+
+internal-only retrieval
+
+manual review and publish
+
+Phase 2
+gap detection
+
+research missions
+
+evidence scoring
+
+asset foundry
+
+automated index refresh
+
+Phase 3
+coach pack builder
+
+freshness automation
+
+production evaluation
+
+retrieval failure repair loop
+
+agentic retrieval for complex tasks
+
+22. The single most important rule
+Online research is an enrichment input, not the live content layer.
+
+That one rule is what makes this a true content intelligence system instead of a noisy web-fed RAG.
+
+The next move is to turn this into the database schema file and service contract spec in implementation format, one module at a time.
+
+
+
+

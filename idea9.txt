@@ -1,0 +1,8238 @@
+
+
+
+
+Question types , here we are not talking about multiple choice , fill in the blanks etc per say , we are talking about reasoning questions, questions are that thought provoking ,recall questions , memory questions , and the likes so come up with the list of question types
+
+Thought for 12s
+Good. So this is not answer format.
+This is cognitive question type — the kind of mental work the question forces the student to do.
+
+A strong educational system should have a question-type taxonomy like this:
+
+1. Pure Recall Questions
+Pull a fact, formula, definition, date, rule, or term straight from memory.
+
+2. Recognition Questions
+The student does not generate the answer from scratch but must identify the correct idea, concept, or statement when they see it.
+
+3. Memory Reconstruction Questions
+The student must rebuild a forgotten idea from fragments, clues, related concepts, or partial prompts.
+
+4. Retrieval Under Pressure Questions
+Same as recall, but under time pressure, repetition, or rapid-fire conditions to test mental sharpness.
+
+5. Concept Understanding Questions
+Tests whether the student truly understands what something means, not just whether they memorized it.
+
+6. Explanation Questions
+The student must explain a concept, process, or answer in their own words.
+
+7. Reasoning Questions
+The student must think through why something is true, false, correct, or possible.
+
+8. Logical Deduction Questions
+The answer must be reached by step-by-step logic from given facts or conditions.
+
+9. Inference Questions
+The student must derive what is implied, even if it is not directly stated.
+
+10. Application Questions
+Use a known principle, formula, method, or rule in a new but familiar situation.
+
+11. Transfer Questions
+Use what was learned in one context to solve a different-looking problem.
+
+12. Multi-Step Problem Solving Questions
+The student must go through several reasoning or calculation stages before reaching the answer.
+
+13. Strategy Selection Questions
+The student must decide how to solve the problem before solving it.
+
+14. First-Step Questions
+Instead of solving the whole problem, the student identifies the best first move.
+
+15. Next-Step Questions
+The student is shown a partially solved problem and must determine what should happen next.
+
+16. Error Detection Questions
+The student spots the mistake in a worked solution, statement, argument, or process.
+
+17. Correction Questions
+The student not only spots the error but fixes it properly.
+
+18. Misconception Exposure Questions
+Designed to reveal common misunderstandings and trap shallow thinking.
+
+19. Compare-and-Contrast Questions
+The student must identify similarities, differences, boundaries, or distinctions between ideas.
+
+20. Classification Questions
+The student places an item, example, event, or idea into the right category, group, or concept family.
+
+21. Matching Principle-to-Case Questions
+The student must connect the right rule, theorem, concept, law, or method to the right scenario.
+
+22. Cause-and-Effect Questions
+Tests whether the student understands what leads to what, and why.
+
+23. Sequence / Order Questions
+The student arranges ideas, events, steps, or processes in the correct order.
+
+24. Prediction Questions
+Given a situation, the student predicts the likely outcome, next event, or result.
+
+25. Estimation Questions
+The student gives a sensible approximate answer using reasoning rather than exact computation.
+
+26. Pattern Recognition Questions
+The student identifies trends, structures, relationships, or hidden regularities.
+
+27. Rule Discovery Questions
+The student is not given the rule directly; they must infer the rule from examples.
+
+28. Abstraction Questions
+The student must move from a concrete example to a general principle or deeper idea.
+
+29. Example Generation Questions
+The student creates their own valid example of a concept, rule, structure, or phenomenon.
+
+30. Non-Example Questions
+The student identifies or creates something that looks close, but does not satisfy the concept.
+
+31. Justification Questions
+The student must defend an answer with reasoning, evidence, or steps.
+
+32. Evidence Selection Questions
+The student chooses which fact, data point, theorem, or clue best supports a conclusion.
+
+33. Claim Evaluation Questions
+The student decides whether a statement is valid, weak, exaggerated, unsupported, or false.
+
+34. Counterexample Questions
+The student disproves a claim by producing a valid exception.
+
+35. Decision-Making Questions
+The student chooses the best option among several and explains why it is best.
+
+36. Prioritization Questions
+The student decides which factor, step, variable, or issue matters most.
+
+37. Synthesis Questions
+The student combines multiple ideas or topics to form one answer.
+
+38. Connection-Making Questions
+The student links ideas across topics, chapters, or subjects.
+
+39. Interpretation Questions
+The student must interpret a diagram, graph, passage, experiment, data set, or scenario.
+
+40. Representation Conversion Questions
+The student converts one form of knowledge into another:
+word to equation, equation to graph, graph to explanation, diagram to rule.
+
+41. Visualization Questions
+The student must mentally picture shape, motion, arrangement, structure, or process.
+
+42. Mental Manipulation Questions
+The student rotates, rearranges, transforms, simplifies, or tracks things in the mind.
+
+43. Attention Control Questions
+These test whether the student can stay alert and avoid traps, distractions, or overlooked details.
+
+44. Precision Questions
+The student must answer carefully with exactness, correct wording, correct unit, or strict logical boundary.
+
+45. Speed Fluency Questions
+Measures how quickly the student can retrieve or process well-known material accurately.
+
+46. Deep Thinking Questions
+These are deliberately thought-provoking and require reflection, layered reasoning, or insight.
+
+47. Open-Ended Reasoning Questions
+There may be more than one acceptable path, but the reasoning must be strong.
+
+48. Real-World Scenario Questions
+The concept is embedded inside a realistic situation so the student must think beyond textbook wording.
+
+49. Judgment Questions
+The student must evaluate quality, validity, efficiency, fairness, plausibility, or correctness.
+
+50. Reflection / Metacognitive Questions
+The student thinks about their own thinking:
+Why did I choose this?
+Where did I get stuck?
+What confused me?
+
+51. Confidence Calibration Questions
+The student answers and also indicates how sure they are, helping detect guessing vs mastery.
+
+52. Mastery Check Questions
+Questions designed not just to see if they can answer once, but whether the knowledge is stable and repeatable.
+
+53. Retention Check Questions
+Used after time has passed to see whether knowledge actually stayed in memory.
+
+54. Recovery Questions
+Given when memory is fading, to revive old knowledge and rebuild weak recall pathways.
+
+55. Adaptive Difficulty Questions
+The question adjusts based on the learner’s current strength, weakness, speed, and memory profile.
+
+56. Challenge / Stretch Questions
+Within the syllabus, but harder, deeper, trickier, or more layered for elite learners.
+
+57. Rescue Questions
+Simplified but intelligent questions meant to rebuild confidence and re-enter understanding when a learner is struggling badly.
+
+58. Diagnostic Questions
+Questions whose main purpose is to discover what exactly the student does or does not understand.
+
+59. Threshold Questions
+These determine whether the student is ready to move to the next level, topic, or skill.
+
+60. Capstone Questions
+Bigger, richer questions that combine many subskills and show full command.
+
+A cleaner grouped structure
+You can also group them into 8 major families inside the app:
+
+A. Memory Questions
+Pure Recall
+
+Recognition
+
+Memory Reconstruction
+
+Retention Check
+
+Recovery
+
+Retrieval Under Pressure
+
+B. Understanding Questions
+Concept Understanding
+
+Explanation
+
+Example Generation
+
+Non-Example
+
+Compare-and-Contrast
+
+Classification
+
+C. Reasoning Questions
+Reasoning
+
+Deduction
+
+Inference
+
+Justification
+
+Claim Evaluation
+
+Counterexample
+
+D. Problem-Solving Questions
+Application
+
+Transfer
+
+Multi-Step Solving
+
+Strategy Selection
+
+First-Step
+
+Next-Step
+
+Decision-Making
+
+E. Accuracy Questions
+Error Detection
+
+Correction
+
+Misconception Exposure
+
+Precision
+
+Attention Control
+
+F. Pattern and Structure Questions
+Pattern Recognition
+
+Rule Discovery
+
+Sequence
+
+Cause-and-Effect
+
+Prediction
+
+Abstraction
+
+G. Expression and Interpretation Questions
+Interpretation
+
+Representation Conversion
+
+Visualization
+
+Synthesis
+
+Connection-Making
+
+H. Growth-Control Questions
+Diagnostic
+
+Mastery Check
+
+Threshold
+
+Adaptive Difficulty
+
+Rescue
+
+Stretch
+
+Reflection
+
+Confidence Calibration
+
+Important principle for your app
+The same question can have:
+
+one format: multiple choice, short answer, drag-and-drop
+
+but a different question type underneath: recall, reasoning, inference, error detection
+
+So your engine should store both:
+
+format type
+
+cognitive question type
+
+That is where the real intelligence comes from.
+
+Recommended core set to build first
+For your educational app, I would start with these 12 as the foundation:
+
+Recall
+
+Memory Reconstruction
+
+Concept Understanding
+
+Explanation
+
+Reasoning
+
+Application
+
+Multi-Step Problem Solving
+
+Error Detection
+
+Misconception Exposure
+
+Transfer
+
+Diagnostic
+
+Retention Check
+
+These 12 alone can power memory mode, knowledge gap mode, elite mode, and mental pressure mode.
+
+I can turn this next into a full app-ready taxonomy table with:
+question type, purpose, how it works, when to use it, what it diagnoses, and example prompts for each.
+
+
+proceed , also we want to be generating these types of questions in our question factory which is hidden under the hood , our question engine so show us how to be able to generate these questions , the logic that makes it possible 
+
+I’m mapping this as an engine problem rather than a UI problem: the key is to define what raw ingredients a question needs, then the transformation rules that turn one concept into many cognitive question types. I’ll lay out the generation pipeline, the logic per type, and the data structures that let the factory keep producing fresh but controlled questions.
+
+Thought for 21s
+Yes — this is the right next layer.
+
+A question factory cannot generate strong cognitive question types by “just writing questions.”
+It has to operate like a structured transformation engine.
+
+The core idea is this:
+
+Every question is generated from a knowledge object plus a cognitive demand plus a delivery condition.
+
+So if the system knows:
+
+what the learner should know
+
+what kind of thinking you want to force
+
+how hard, fast, tricky, or diagnostic it should be
+
+then it can generate many question types reliably.
+
+1. The hidden truth behind question generation
+Your engine should not begin from “write a question.”
+
+It should begin from:
+
+What is the target knowledge or skill?
+
+What mental action do I want to force?
+
+What proof will convince me the learner truly has it?
+
+What variant of this proof fits this learner right now?
+
+That means your question factory needs 5 foundational layers:
+
+A. Knowledge Layer
+Stores what is to be learned.
+
+B. Cognitive Demand Layer
+Stores what kind of thinking to force.
+
+C. Transformation Layer
+Turns knowledge into different question types.
+
+D. Surface Layer
+Wraps the question in wording, format, media, timing, and context.
+
+E. Validation Layer
+Checks that the generated question is valid, fair, clear, and diagnostically useful.
+
+2. What raw material the question factory must store
+This is the real fuel.
+
+If your content is weak here, the generator will be weak.
+
+For every topic or concept, the engine should store a Concept Record.
+
+Concept Record structure
+Each concept should contain things like:
+
+concept_id
+
+topic
+
+subtopic
+
+skill
+
+difficulty band
+
+concept statement
+
+definition
+
+core facts
+
+rules / laws / formulae
+
+steps / procedure
+
+examples
+
+non-examples
+
+common misconceptions
+
+causes
+
+effects
+
+prerequisites
+
+related concepts
+
+representation forms
+
+verbal
+
+symbolic
+
+numeric
+
+diagrammatic
+
+graphical
+
+edge cases / tricky boundaries
+
+application contexts
+
+proof signals
+
+what would count as evidence of mastery?
+
+error signatures
+
+what kinds of wrong answers reveal what misunderstanding?
+
+So the engine is not storing just “the answer.”
+
+It is storing the structure of understanding.
+
+3. The real unit of generation: evaluative intent
+Before generating any question, the engine must decide:
+
+What exactly am I trying to prove about this learner?
+
+That is the evaluative intent.
+
+Examples:
+
+Can the student recall the formula?
+
+Can the student recognize it when seen?
+
+Can the student rebuild it from clues?
+
+Can the student apply it to a familiar case?
+
+Can the student transfer it to a disguised case?
+
+Can the student detect an error in its use?
+
+Can the student justify why it applies?
+
+Can the student hold it under time pressure?
+
+Can the student retain it after delay?
+
+This means one concept can generate many question families.
+
+Example:
+
+Concept: Photosynthesis
+
+Possible evaluative intents:
+
+recall raw materials
+
+explain process
+
+infer effect of no sunlight
+
+distinguish from respiration
+
+detect misconception
+
+apply in a greenhouse scenario
+
+reconstruct missing step
+
+answer under pressure
+
+That is how one concept becomes a whole question ecosystem.
+
+4. The master formula
+A generated question can be thought of as:
+
+Q
+=
+f
+(
+K
+,
+C
+,
+D
+,
+S
+,
+L
+)
+Q=f(K,C,D,S,L)
+Where:
+
+K = knowledge object
+
+C = cognitive type
+
+D = difficulty settings
+
+S = student state
+
+L = delivery layer (format, timing, context)
+
+Expanded:
+
+Q
+=
+S
+u
+r
+f
+a
+c
+e
+(
+T
+r
+a
+n
+s
+f
+o
+r
+m
+(
+K
+,
+C
+,
+D
+,
+S
+)
+,
+L
+)
+Q=Surface(Transform(K,C,D,S),L)
+Meaning:
+
+take the concept
+
+apply a cognitive transformation
+
+adjust by difficulty and learner state
+
+render into actual question wording and format
+
+5. The core generation pipeline
+This is how the hidden question factory should work.
+
+Stage 1: Select target
+Choose:
+
+concept
+
+subskill
+
+mastery goal
+
+learner need
+
+Example:
+
+topic: Algebra
+
+concept: solving linear equations
+
+student weakness: errors when moving terms
+
+goal: detect reasoning weakness
+
+Stage 2: Choose cognitive question type
+Pick question type based on what the engine wants to test.
+
+Example:
+
+not “application”
+
+instead “error detection”
+
+Stage 3: Pull concept primitives
+Retrieve:
+
+valid method
+
+common mistakes
+
+worked steps
+
+equivalent forms
+
+edge cases
+
+Stage 4: Apply transformation operator
+The engine transforms the same concept differently depending on the type.
+
+Examples:
+
+recall operator = hide target fact
+
+reasoning operator = present condition, ask why
+
+misconception operator = insert tempting false logic
+
+next-step operator = stop halfway and ask what follows
+
+memory reconstruction operator = give clues, require rebuild
+
+Stage 5: Adjust difficulty
+Difficulty can be modified by:
+
+reducing or increasing cues
+
+adding distractors
+
+disguising the surface form
+
+changing representation
+
+increasing step count
+
+adding time pressure
+
+using closer misconceptions
+
+requiring explanation not just answer
+
+Stage 6: Render surface
+Now convert to actual item:
+
+multiple choice
+
+short response
+
+oral rapid-fire
+
+drag-and-order
+
+diagram label
+
+step-by-step
+
+timed mental burst
+
+Stage 7: Validate
+Check:
+
+single intended answer or allowed answer range
+
+diagnostic meaning of wrong answers
+
+clarity
+
+curriculum fit
+
+difficulty consistency
+
+no accidental ambiguity
+
+explanation available
+
+Stage 8: Log and learn
+After student answers, record:
+
+correctness
+
+latency
+
+confidence
+
+error type
+
+hesitation pattern
+
+whether hints were needed
+
+whether later retention held
+
+This feeds future generation.
+
+6. The transformation logic behind question types
+This is the most important part.
+
+A cognitive question type is generated by applying a specific transformation pattern to a concept.
+
+Below is the core logic.
+
+A. Recall questions
+Purpose
+Test direct retrieval from memory.
+
+Generation logic
+Take an atomic fact, formula, term, rule, label, or step and hide it.
+
+Operator
+ASK_DIRECT(K.fact)
+
+Example transformation
+Knowledge:
+
+“Chlorophyll helps absorb light energy.”
+
+Generated recall:
+
+“What pigment absorbs light energy in plants?”
+
+Difficulty controls
+easier: exact classroom wording
+
+harder: paraphrase wording
+
+harder still: no context cue
+
+B. Recognition questions
+Purpose
+Test whether the learner can identify the correct idea when shown possibilities.
+
+Generation logic
+Place the target among near neighbors.
+
+Operator
+SELECT_TRUE(target, distractors_close_to_target)
+
+Difficulty controls
+weak distractors = easy
+
+semantically close distractors = harder
+
+all options plausible = hardest
+
+C. Memory reconstruction questions
+Purpose
+Test whether the learner can rebuild memory from fragments.
+
+Generation logic
+Do not ask directly.
+Provide connected cues, partial structures, linked concepts, or incomplete patterns.
+
+Operator
+REBUILD(target) FROM clues/prerequisites/associations
+
+Example
+Instead of:
+
+“State the formula for area of a triangle.”
+
+Ask:
+
+“A triangle is half of what familiar shape’s area model?”
+
+then derive toward the formula
+
+Useful when
+The learner has partial memory but weak retrieval strength.
+
+D. Reasoning questions
+Purpose
+Force the learner to connect cause, logic, and principle.
+
+Generation logic
+Present a condition or claim and require the underlying why.
+
+Operator
+GIVEN premise -> infer principle / explanation
+
+Example
+“Why does increasing surface area speed up dissolving?”
+
+This is not recall of a sentence.
+It forces a causal chain.
+
+Harder versions
+remove obvious cues
+
+use novel case
+
+ask which explanation is strongest
+
+ask which assumption must be true
+
+E. Thought-provoking / deep thinking questions
+Purpose
+Force layered reflection, not surface memory.
+
+Generation logic
+Create tension, anomaly, contrast, unexpected result, or conflicting evidence.
+
+Operator
+CREATE cognitive conflict -> require resolution
+
+Example
+“A plant has water and carbon dioxide but is kept in darkness. It stays alive for some time but does not grow well. Explain why.”
+
+This works because it is not a plain textbook sentence.
+It creates a mental puzzle.
+
+Recipe
+Deep questions often come from:
+
+exception
+
+tension
+
+hidden assumption
+
+boundary case
+
+conflicting evidence
+
+comparison of close ideas
+
+F. Application questions
+Purpose
+See if the learner can use knowledge in a case.
+
+Generation logic
+Take concept and wrap it inside a scenario.
+
+Operator
+MAP principle -> scenario
+
+Example
+Concept: density
+Question: “Why does oil float on water in a spill?”
+
+Harder versions
+reduce explicit mention of concept
+
+use unfamiliar context
+
+mix with irrelevant details
+
+G. Transfer questions
+Purpose
+Test whether the student can use the same idea in a different-looking context.
+
+Generation logic
+Keep same underlying principle, change the surface drastically.
+
+Operator
+PRESERVE deep structure; CHANGE surface form
+
+Example
+A student learned ratio from recipes.
+Transfer question uses map scale or gear teeth.
+
+This is one of the best mastery tests.
+A learner who only memorized classroom patterns often fails here.
+
+H. Multi-step problem-solving questions
+Purpose
+Test chained reasoning.
+
+Generation logic
+Build a path of dependent sub-decisions.
+
+Operator
+Solve = Step1 -> Step2 -> Step3 -> final
+
+Difficulty controls
+number of steps
+
+branch points
+
+distractor steps
+
+hidden intermediate values
+
+representation changes across steps
+
+Important
+The engine should store not only the final answer, but the solution graph.
+
+Without that, it cannot generate:
+
+first-step questions
+
+next-step questions
+
+error diagnosis
+
+partial credit
+
+thinking maps
+
+I. First-step questions
+Purpose
+Test whether the learner knows how to begin.
+
+Generation logic
+Generate a full solvable problem, but ask only for the best opening move.
+
+Operator
+STOP before solving; ASK initial strategic action
+
+Example
+“What should you do first to solve this equation?”
+
+This is excellent for diagnosing whether students are lost at entry, not just at execution.
+
+J. Next-step questions
+Purpose
+Test continuity of thinking.
+
+Generation logic
+Show partial work or partial reasoning, then freeze and ask what should follow.
+
+Operator
+PARTIAL_STATE -> ASK next valid move
+
+Best use
+Math, science processes, grammar transformations, experiment reasoning.
+
+K. Error detection questions
+Purpose
+Check whether the learner can spot wrong reasoning.
+
+Generation logic
+Generate a correct worked path, then intentionally corrupt one step.
+
+Operator
+INSERT_ERROR(solution_path, misconception_type)
+
+Example error types
+arithmetic slip
+
+wrong theorem selection
+
+illegal algebraic move
+
+false generalization
+
+reversed cause and effect
+
+definition confusion
+
+Hidden power
+This lets the engine diagnose what kind of wrongness the student understands.
+
+L. Correction questions
+Purpose
+Go beyond spotting error to fixing it.
+
+Generation logic
+Same as error detection, but require repaired reasoning.
+
+Operator
+DETECT(error) + REPAIR(path)
+
+Stronger than detection
+Because some learners know “something is wrong” but cannot rebuild the correct path.
+
+M. Misconception exposure questions
+Purpose
+Reveal specific false beliefs.
+
+Generation logic
+Use known misconception patterns as distractor magnets.
+
+Operator
+TRIGGER misconception M deliberately
+
+Example
+Misconception:
+
+“Heavier things fall faster.”
+
+Question:
+
+set up situation where this false idea feels tempting
+
+Requirement
+Your engine must maintain a misconception library per concept.
+
+Without this, it cannot generate strong diagnostic questions.
+
+N. Compare-and-contrast questions
+Purpose
+Test conceptual boundaries.
+
+Generation logic
+Choose two close ideas and ask the learner to distinguish.
+
+Operator
+SELECT adjacent concepts -> ask boundary differences
+
+Example
+evaporation vs boiling
+
+mass vs weight
+
+speed vs velocity
+
+This is important because real understanding often sits at boundaries.
+
+O. Classification questions
+Purpose
+See whether the student knows where examples belong.
+
+Generation logic
+Provide cases and ask which concept, category, or principle they instantiate.
+
+Operator
+CASE -> CATEGORY
+
+Harder version
+Use hybrid or deceptive examples.
+
+P. Cause-and-effect questions
+Purpose
+Test causal understanding.
+
+Generation logic
+Store causal graph and ask forward or backward.
+
+Operators
+CAUSE -> EFFECT
+
+EFFECT -> possible CAUSE
+
+REMOVE cause -> predict change
+
+Example
+“What happens to transpiration if humidity rises?”
+
+Q. Prediction questions
+Purpose
+Test dynamic understanding.
+
+Generation logic
+Start from a situation and simulate what follows.
+
+Operator
+STATE + rule -> future outcome
+
+Strong version
+Ask not just “what” but “why.”
+
+R. Pattern recognition questions
+Purpose
+See whether the learner notices regularity.
+
+Generation logic
+Generate instances that share hidden structure.
+
+Operator
+FIND invariant / relation across examples
+
+Examples
+number patterns
+
+experimental trends
+
+grammar patterns
+
+sequence logic
+
+S. Rule discovery questions
+Purpose
+Learner infers the rule instead of being given it.
+
+Generation logic
+Provide carefully chosen examples and non-examples.
+
+Operator
+EXAMPLES + NONEXAMPLES -> infer governing rule
+
+This is one of the strongest engines for deeper learning.
+T. Example generation questions
+Purpose
+Test productive understanding.
+
+Generation logic
+Ask learner to produce an original valid instance.
+
+Operator
+CONCEPT -> generate valid instance
+
+Important
+The engine must know validity constraints to score this properly.
+
+U. Non-example questions
+Purpose
+Test boundary understanding.
+
+Generation logic
+Ask learner to identify or create something that fails the concept.
+
+Operator
+CONCEPT -> produce near miss
+
+This is very powerful for conceptual clarity.
+
+V. Justification questions
+Purpose
+Test whether the student can defend reasoning.
+
+Generation logic
+Require answer plus supporting logic, principle, or evidence.
+
+Operator
+ANSWER + justify with rule/evidence/step
+
+Stronger version
+Require:
+
+claim
+
+evidence
+
+reasoning link
+
+W. Interpretation questions
+Purpose
+Test whether learner can read meaning from data/graphs/diagrams/scenarios.
+
+Generation logic
+Store one concept in multiple representational forms and convert across them.
+
+Operator
+REPRESENTATION_A -> infer meaning
+
+Example
+graph -> verbal explanation
+
+X. Representation conversion questions
+Purpose
+See if knowledge survives form change.
+
+Generation logic
+Convert same concept across forms.
+
+Operator
+text -> equation
+
+equation -> graph
+
+graph -> verbal
+
+process -> diagram
+
+This is great for real mastery.
+
+Y. Retrieval under pressure / mental questions
+Purpose
+Test recall speed and mental sharpness.
+
+Generation logic
+Take retrieval items and deliver them in timed burst sequences.
+
+Operator
+RECALL + reduced response window + streak structure
+
+Important
+Pressure itself becomes part of the question condition.
+
+Difficulty can rise by:
+
+shorter time
+
+more items in sequence
+
+mixed topics
+
+no pause between items
+
+interruption recovery
+
+Z. Retention and recovery questions
+Purpose
+Check memory stability after delay, then rebuild weak paths.
+
+Generation logic
+Reuse concept later with changed phrasing, changed form, or lower cue level.
+
+Operators
+DELAYED_RECALL
+
+DELAYED_TRANSFER
+
+RECOVERY_FROM_CUES
+
+Hidden power
+These questions are not only about correctness.
+They help estimate memory strength.
+
+7. The universal generation operators
+Instead of coding each question type from scratch, your engine can rely on reusable transformation operators.
+
+These are the real building blocks.
+
+Core operators
+Hide: remove the target fact/step/conclusion
+
+Mask: partially conceal parts of a known structure
+
+Paraphrase: change wording while preserving meaning
+
+Reorder: shuffle sequence or logic
+
+Perturb: change values/context but preserve deep structure
+
+Insert Error: place misconception or invalid step
+
+Contrast: place adjacent ideas side by side
+
+Transfer: move principle to new context
+
+Compress Time: force quick response
+
+Expand Explanation: require justification
+
+Switch Representation: graph/text/equation/diagram conversion
+
+Reduce Cues: make retrieval harder
+
+Add Distractors: increase discrimination demand
+
+Fragment: turn full knowledge into clues
+
+Chain: combine steps
+
+Gate: ask for first step, next step, or threshold proof only
+
+Delay: resurface after time for retention testing
+
+Wrap in Scenario: embed in real-life context
+
+Introduce Conflict: create anomaly or tension
+
+Mirror Misconception: bait common wrong belief
+
+Reverse Reasoning: go from result back to cause or rule
+
+Once these operators exist, the engine can generate many families systematically.
+
+8. The concept graph is what makes this scalable
+A great question factory needs a concept graph.
+
+Each concept should connect to:
+
+prerequisites
+
+subskills
+
+linked concepts
+
+common confusions
+
+examples
+
+non-examples
+
+representations
+
+applications
+
+misconceptions
+
+solution procedures
+
+mastery evidence
+
+Example:
+
+Fractions
+
+linked to division
+
+part-whole understanding
+
+ratio
+
+equivalent fractions
+
+addition rules
+
+common error: adding numerator and denominator directly
+
+Now the engine can generate:
+
+recall
+
+reasoning
+
+misconception exposure
+
+compare/contrast
+
+application
+
+transfer
+
+recovery
+
+error detection
+
+without starting from zero each time.
+
+9. Difficulty control logic
+Difficulty is not one thing.
+
+Your engine should treat difficulty as a vector.
+
+D
+i
+f
+f
+i
+c
+u
+l
+t
+y
+=
+d
+1
++
+d
+2
++
+d
+3
++
+d
+4
++
+.
+.
+.
+Difficulty=d 
+1
+​
+ +d 
+2
+​
+ +d 
+3
+​
+ +d 
+4
+​
+ +...
+Possible components:
+
+concept difficulty
+
+step count
+
+abstractness
+
+representation complexity
+
+distractor closeness
+
+cue reduction
+
+context unfamiliarity
+
+time pressure
+
+reasoning depth
+
+language complexity
+
+A more useful formula is:
+
+Q
+d
+i
+f
+f
+i
+c
+u
+l
+t
+y
+=
+B
+c
++
+S
+l
++
+A
+b
++
+D
+s
++
+R
+s
++
+T
+p
++
+C
+u
+Q 
+difficulty
+​
+ =B 
+c
+​
+ +S 
+l
+​
+ +A 
+b
+​
+ +D 
+s
+​
+ +R 
+s
+​
+ +T 
+p
+​
+ +C 
+u
+​
+ 
+Where:
+
+B
+c
+B 
+c
+​
+  = base concept difficulty
+
+S
+l
+S 
+l
+​
+  = solution length
+
+A
+b
+A 
+b
+​
+  = abstraction load
+
+D
+s
+D 
+s
+​
+  = distractor strength
+
+R
+s
+R 
+s
+​
+  = representation shift load
+
+T
+p
+T 
+p
+​
+  = time pressure
+
+C
+u
+C 
+u
+​
+  = context unfamiliarity
+
+This lets you make a recall question easy or hard, and a reasoning question medium or elite.
+
+10. Fresh question generation without losing control
+A major issue is freshness.
+
+You want new questions, but not random nonsense.
+
+The right way is controlled variation.
+
+Freshness methods
+1. Parameter variation
+Change numbers, names, objects, cases.
+
+2. Surface paraphrase
+Different wording, same intent.
+
+3. Context recasting
+Same deep structure, different scenario.
+
+4. Representation shift
+Same idea in table, graph, story, symbolic form.
+
+5. Step slicing
+Ask first step, middle step, full step, or repair step.
+
+6. Distractor mutation
+Swap misconception bait.
+
+7. Cue adjustment
+More or fewer hints.
+
+8. Difficulty band shift
+Same family, different strength.
+
+9. Time condition shift
+Untimed, lightly timed, pressure mode.
+
+10. Memory distance shift
+Immediate, 2-day, 1-week, 1-month resurfacing.
+
+So freshness is not chaos.
+It is structured recombination.
+
+11. The student model must influence generation
+The question factory should never generate in a vacuum.
+
+It should generate against a learner state model.
+
+For each concept, store estimates like:
+
+mastery probability
+
+memory strength
+
+retrieval speed
+
+misconception risk
+
+confidence calibration
+
+recent error pattern
+
+stability over time
+
+pressure tolerance
+
+representation preference weakness
+
+transfer strength
+
+Example:
+
+Student profile for concept:
+
+understands when untimed
+
+poor under speed
+
+confuses evaporation and boiling
+
+fails graph-based versions
+
+retains for 2 days but not 2 weeks
+
+Now the engine can choose:
+
+more pressure retrieval questions
+
+more compare/contrast
+
+more graph interpretation
+
+delayed retention resurfacing
+
+This is where your app becomes intelligent.
+
+12. How to decide which question type to generate
+Your selection logic should depend on the goal.
+
+If goal is memory building
+Prefer:
+
+recall
+
+recognition
+
+reconstruction
+
+retrieval under pressure
+
+retention check
+
+recovery
+
+If goal is understanding
+Prefer:
+
+explanation
+
+compare/contrast
+
+example/non-example
+
+classification
+
+interpretation
+
+If goal is weakness diagnosis
+Prefer:
+
+misconception exposure
+
+error detection
+
+first-step
+
+next-step
+
+justification
+
+threshold questions
+
+If goal is mastery
+Prefer:
+
+transfer
+
+multi-step solving
+
+representation conversion
+
+application in novel context
+
+thought-provoking reasoning
+
+capstone synthesis
+
+If goal is elite challenge
+Prefer:
+
+stretch problems
+
+hidden-structure problems
+
+anomaly resolution
+
+mixed-topic transfer
+
+speed + reasoning hybrids
+
+13. The misconception engine is a hidden superpower
+A serious question factory needs a separate Misconception Engine.
+
+For every concept, store:
+
+misconception_id
+
+false belief
+
+what causes it
+
+what wrong answer it usually produces
+
+how to bait it
+
+how to diagnose it
+
+how to repair it
+
+Example:
+
+Concept: adding fractions
+Misconception: add numerator and denominator directly
+Wrong answer pattern: 
+1
+2
++
+1
+3
+=
+2
+5
+2
+1
+​
+ + 
+3
+1
+​
+ = 
+5
+2
+​
+ 
+
+Now the engine can generate:
+
+bait question
+
+error detection question
+
+correction question
+
+compare correct vs incorrect method
+
+recovery sequence
+
+Without misconception modeling, your generator will look smart but diagnose poorly.
+
+14. The solution graph is what makes thinking questions possible
+For every non-trivial question family, the engine should store a solution graph, not just one linear answer.
+
+Why?
+
+Because the engine needs to know:
+
+valid first move
+
+acceptable alternative paths
+
+common invalid branches
+
+intermediate checkpoints
+
+explanation anchors
+
+step dependencies
+
+This is what powers:
+
+first-step questions
+
+next-step questions
+
+partial credit
+
+hint generation
+
+error diagnosis
+
+reasoning map drawing
+
+A solution graph might look like:
+
+Problem
+  -> Identify relevant rule
+  -> Simplify expression
+  -> Isolate variable
+  -> Check solution
+Invalid branch:
+
+Problem
+  -> Move term incorrectly
+  -> Sign error
+  -> false answer
+This gives the engine true intelligence about process.
+
+15. Example: one concept, many question types
+Let’s make it concrete.
+
+Concept: Evaporation
+
+Stored knowledge:
+
+evaporation is liquid changing to gas at the surface
+
+happens at temperatures below boiling point
+
+faster with heat, wind, and larger surface area
+
+misconception: evaporation only happens when liquid is hot
+
+compare concept: boiling
+
+Now see the transformations.
+
+Recall
+“What is evaporation?”
+
+Recognition
+“Which process describes liquid changing to gas at the surface?”
+
+Memory reconstruction
+“A puddle disappears even though it never boiled. What process explains this?”
+
+Explanation
+“Why do clothes dry faster on a windy day?”
+
+Reasoning
+“A tray of water and a cup of water are placed in the same room. Which loses water faster and why?”
+
+Compare/contrast
+“How is evaporation different from boiling?”
+
+Misconception exposure
+“True or false: water only evaporates when it becomes very hot.”
+
+Error detection
+“A student says clothes dry because the water boils out of them. What is wrong with this explanation?”
+
+Application
+“Why do people spread grains out thinly under the sun?”
+
+Transfer
+“Why does sweat cool the body even when it does not boil?”
+
+Prediction
+“What happens to evaporation rate if humidity is high?”
+
+Retention check
+Ask a week later in a different form:
+“Why might a shallow dish of perfume lose smell faster than a sealed bottle?”
+
+That is the same concept.
+The engine is simply applying different evaluative intents.
+
+16. The architecture your hidden question factory should have
+Here is the clean architecture.
+
+1. Knowledge Core
+Stores concept records, rules, examples, misconceptions, representations, prerequisites.
+
+2. Question Family Library
+Defines how each cognitive type is generated.
+
+Example:
+
+recall family
+
+reconstruction family
+
+transfer family
+
+error-detection family
+
+stretch family
+
+3. Transformation Engine
+Applies operators to knowledge objects.
+
+4. Variant Composer
+Changes numbers, wording, contexts, representations, cue levels, timing.
+
+5. Distractor / Misconception Engine
+Creates plausible wrong options and wrong worked solutions.
+
+6. Difficulty Controller
+Computes and adjusts difficulty.
+
+7. Student Model Engine
+Chooses what type to generate based on learner state.
+
+8. Validator
+Checks correctness, clarity, fairness, curriculum fit, intended diagnostic power.
+
+9. Delivery Adapter
+Renders same underlying question into:
+
+MCQ
+
+short answer
+
+oral mental mode
+
+stepwise
+
+drag sequence
+
+explanation prompt
+
+10. Analytics / Learning Loop
+Updates learner model based on performance.
+
+17. The generation algorithm
+Here is a clean pseudocode version.
+
+def generate_question(student, concept, goal):
+    learner_state = get_learner_state(student, concept)
+    cognitive_type = select_cognitive_type(goal, learner_state, concept)
+    family = get_question_family(concept, cognitive_type)
+
+    primitives = fetch_concept_primitives(concept)
+    misconceptions = fetch_misconceptions(concept)
+    representations = fetch_representations(concept)
+
+    difficulty = compute_target_difficulty(student, concept, goal)
+    variant_plan = build_variant_plan(cognitive_type, difficulty, learner_state)
+
+    raw_item = transform(
+        family=family,
+        primitives=primitives,
+        misconceptions=misconceptions,
+        representations=representations,
+        variant_plan=variant_plan
+    )
+
+    rendered_item = render_surface(
+        raw_item,
+        format=choose_format(cognitive_type, learner_state, goal),
+        timing=choose_timing(goal, learner_state),
+        language_level=student.language_level
+    )
+
+    validated_item = validate(rendered_item, concept, cognitive_type)
+
+    return validated_item
+That is the general engine.
+
+18. How the engine selects question type
+Here is a simple decision model.
+
+if learner_state.memory_strength < threshold_low:
+    use recall / recognition / reconstruction / recovery
+
+elif learner_state.misconception_risk high:
+    use misconception exposure / error detection / compare-contrast
+
+elif learner_state.knows_basics_but_cannot_use:
+    use application / first-step / next-step / multi-step solving
+
+elif learner_state.correct_but_shallow:
+    use explanation / justification / transfer / representation conversion
+
+elif learner_state.high_mastery:
+    use stretch / elite / mixed transfer / timed reasoning / capstone
+This is how the engine becomes strategic.
+
+19. How to store a question family
+A question family should define:
+
+family_id
+
+concept coverage
+
+cognitive type
+
+evaluative intent
+
+source primitives needed
+
+transformation rules
+
+allowed formats
+
+scoring method
+
+explanation generator
+
+misconception mappings
+
+difficulty knobs
+
+freshness knobs
+
+validation rules
+
+Example:
+
+Family: ErrorDetection_LinearEquation
+Intent: Detect whether learner can spot illegal algebraic move
+Needs:
+- valid worked path
+- common sign errors
+- common balancing errors
+Transforms:
+- insert one controlled wrong step
+Scoring:
+- identify wrong step
+- explain why wrong
+- optionally repair it
+That is much stronger than “just make an algebra question.”
+
+20. Question generation should be hybrid, not purely generative
+This is important.
+
+For a serious educational product, the strongest approach is usually:
+
+Deterministic pedagogical core
+This handles:
+
+concept graph
+
+solution logic
+
+misconception targeting
+
+difficulty control
+
+answer validation
+
+sequencing
+
+scoring
+
+Language generation layer
+This handles:
+
+varied wording
+
+cleaner phrasing
+
+scenario dressing
+
+freshness in expression
+
+In other words:
+
+Do not let raw language generation decide the pedagogy.
+Let the pedagogy engine decide the intent; language generation only surfaces it.
+
+That prevents random low-quality questions.
+
+21. What makes “thought-provoking” questions possible
+You asked specifically about reasoning and thought-provoking types.
+
+These come from 7 patterns:
+
+1. Anomaly pattern
+Something surprising happens. Explain it.
+
+2. Conflict pattern
+Two claims appear to disagree. Resolve them.
+
+3. Boundary pattern
+Case sits at the edge of a rule. Decide whether rule still applies.
+
+4. Hidden assumption pattern
+A conclusion seems right until the missing assumption is exposed.
+
+5. Counterexample pattern
+Disprove a sweeping claim.
+
+6. Reverse reasoning pattern
+Given the outcome, infer the cause or missing condition.
+
+7. Multiple-path pattern
+Two methods seem possible. Which is better and why?
+
+If your engine explicitly stores these patterns, it can generate real thinking questions rather than just hard textbook questions.
+
+22. How to know if a question truly confirms memory
+This matters for your Memory mode.
+
+A learner answering correctly once does not prove stable memory.
+
+The engine should treat memory as confirmed only when the learner passes multiple retrieval conditions.
+
+For example:
+
+M
+e
+m
+o
+r
+y
+S
+t
+r
+e
+n
+g
+t
+h
+(
+c
+)
+=
+w
+1
+R
++
+w
+2
+S
++
+w
+3
+D
++
+w
+4
+T
++
+w
+5
+V
+MemoryStrength(c)=w 
+1
+​
+ R+w 
+2
+​
+ S+w 
+3
+​
+ D+w 
+4
+​
+ T+w 
+5
+​
+ V
+Where:
+
+R = retrieval accuracy
+
+S = retrieval speed
+
+D = delayed recall success
+
+T = transfer to changed form
+
+V = variance stability across attempts
+
+So real memory evidence might require:
+
+correct now
+
+correct later
+
+correct in reworded form
+
+correct under moderate time pressure
+
+not obviously guessed
+
+That is how the system avoids false mastery.
+
+23. The hidden scoring logic after answer submission
+The answer should update more than “right” or “wrong.”
+
+Store:
+
+correctness
+
+response time
+
+hint usage
+
+confidence
+
+misconception triggered
+
+recovery after failure
+
+persistence under pressure
+
+consistency over time
+
+representation-specific weakness
+
+This lets the factory generate the right next question.
+
+For example:
+
+right but slow -> fluency questions next
+
+right but low confidence -> reinforcement questions
+
+wrong in same misconception twice -> targeted repair sequence
+
+right in recall but wrong in transfer -> deeper understanding gap
+
+24. Minimal build order for your question factory
+To make this actually buildable, do not start with all 60 types at once.
+
+Start with a strong core.
+
+Phase 1 — build first
+recall
+
+recognition
+
+explanation
+
+reasoning
+
+application
+
+error detection
+
+misconception exposure
+
+first-step
+
+next-step
+
+retention check
+
+recovery
+
+retrieval under pressure
+
+Phase 2
+transfer
+
+compare/contrast
+
+classification
+
+prediction
+
+representation conversion
+
+justification
+
+Phase 3
+thought-provoking
+
+rule discovery
+
+example/non-example
+
+synthesis
+
+capstone
+
+elite stretch
+
+That gives you a buildable path.
+
+25. The hidden engine in one sentence
+Your question factory should work like this:
+
+Model the knowledge deeply, choose the proof you want, transform the concept into that proof form, wrap it in the right surface, validate it, and learn from the student’s response.
+
+That is the whole system.
+
+26. Recommended internal model for every generated question
+Every question object should carry metadata like:
+
+question_id
+concept_id
+topic_id
+subskill_id
+cognitive_type
+evaluative_intent
+difficulty_score
+format_type
+time_mode
+misconception_target
+solution_graph_id
+representation_type
+freshness_signature
+prerequisite_ids
+expected_evidence_of_mastery
+scoring_logic
+explanation_logic
+retry_logic
+This metadata is what makes your engine controllable.
+
+27. The most important design principle
+Do not define question generation as:
+
+“make many questions from a topic”
+
+Define it as:
+
+“generate precise evidence of a learner’s mental state from a concept”
+
+That shift changes everything.
+
+Because then:
+
+recall questions test memory
+
+reasoning questions test logic
+
+misconception questions test false beliefs
+
+pressure questions test retrieval sharpness
+
+retention questions test stability
+
+transfer questions test deep mastery
+
+Now the generator is not a content machine.
+It becomes an evidence engine.
+
+28. Final distilled framework
+Your hidden question engine needs these seven truths:
+
+1.
+Every concept must be stored as structured knowledge, not plain text.
+
+2.
+Every question must begin from evaluative intent.
+
+3.
+Every cognitive type is generated by a transformation operator.
+
+4.
+Difficulty must be multi-dimensional.
+
+5.
+Misconceptions must be explicit and reusable.
+
+6.
+Student state must guide question selection.
+
+7.
+Validation must protect quality before delivery.
+
+The next best move is for me to turn this into a full app-ready question factory specification with:
+
+the database/entities
+
+the engine modules
+
+the generation rules for each major question type
+
+the validation rules
+
+the learner-state update logic
+
+and the end-to-end flow from concept → generated question → answer → adaptation.
+
+
+proceed
+
+Thought for 7s
+Good. Let’s now turn it into a build-grade internal specification for the hidden Question Factory / Question Engine inside eCoach.
+
+This will answer six things clearly:
+
+what data the engine must store
+
+what modules the factory must have
+
+how each module works
+
+how different cognitive question types are generated
+
+how the learner model feeds the engine
+
+the end-to-end flow from concept to question to diagnosis to adaptation
+
+1. What the Question Factory really is
+The Question Factory is not just a generator.
+
+It is a pedagogical intelligence system whose job is to create questions that reveal specific truths about a learner.
+
+Its job is to answer questions like:
+
+does the learner truly remember this?
+
+do they only recognize it but cannot produce it?
+
+do they understand the idea but fail to apply it?
+
+are they trapped in a specific misconception?
+
+are they slow, shaky, guessing, or actually solid?
+
+can they still retrieve it after time has passed?
+
+can they use it under pressure?
+
+can they transfer it to a disguised context?
+
+So the Question Factory sits beneath:
+
+Memory Mode
+
+Knowledge Gap Mode
+
+Mental Mode
+
+Journey Mode
+
+Elite Mode
+
+DNA / diagnostic testing
+
+customized test preparation
+
+It is the hidden engine that powers all of them.
+
+2. The architecture at a glance
+The full engine can be thought of as 10 connected layers:
+
+Layer 1 — Curriculum and Knowledge Layer
+Defines the syllabus, topics, subtopics, skills, concepts, prerequisites, and learning objectives.
+
+Layer 2 — Concept Intelligence Layer
+Stores the internal structure of each concept: facts, rules, steps, examples, misconceptions, representations, and proof signals.
+
+Layer 3 — Question Family Layer
+Defines the possible cognitive question types that can be produced from a concept.
+
+Layer 4 — Transformation Layer
+Applies the logic that turns concept data into recall, reasoning, application, transfer, error detection, and other question families.
+
+Layer 5 — Difficulty and Variant Layer
+Controls hardness, freshness, cues, disguise level, distractor strength, timing, and novelty.
+
+Layer 6 — Surface Rendering Layer
+Turns the internal question into an actual student-facing question format.
+
+Layer 7 — Validation Layer
+Checks correctness, ambiguity, fairness, curriculum fit, answerability, and diagnostic clarity.
+
+Layer 8 — Delivery Layer
+Sends the question into the right mode: standard session, rapid fire, retention resurfacing, elite challenge, etc.
+
+Layer 9 — Response Analysis Layer
+Interprets not only right/wrong, but time, hesitation, confidence, error type, recovery behavior, and stability.
+
+Layer 10 — Learner State and Adaptation Layer
+Updates the student model and decides what kind of question should come next.
+
+3. The key internal entities
+Now let us define the internal database or knowledge entities the engine needs.
+
+3.1 CurriculumNode
+This defines the educational structure.
+
+Fields:
+
+curriculum_node_id
+
+curriculum_id
+
+subject_id
+
+grade_level
+
+strand
+
+topic
+
+subtopic
+
+objective
+
+learning outcome
+
+term / unit
+
+sequence_order
+
+prerequisite_node_ids
+
+curriculum version
+
+active flag
+
+This ties all content to the official learning structure.
+
+3.2 Concept
+This is the most important object in the whole engine.
+
+A concept is not just a topic label. It is a unit of understanding.
+
+Fields:
+
+concept_id
+
+curriculum_node_id
+
+title
+
+canonical statement
+
+short explanation
+
+long explanation
+
+concept category
+
+difficulty baseline
+
+mastery threshold
+
+prerequisite concept ids
+
+related concept ids
+
+contrast concept ids
+
+concept tags
+
+Example:
+
+concept_id: BIO_JHS2_CELL_DIFFUSION
+
+title: Diffusion
+
+contrast concepts: osmosis, active transport
+
+prerequisite concepts: particles, concentration gradient
+
+3.3 ConceptPrimitive
+This stores the internal parts of a concept.
+
+Fields:
+
+primitive_id
+
+concept_id
+
+primitive_type
+
+primitive_value
+
+importance weight
+
+difficulty weight
+
+notes
+
+Primitive types may include:
+
+definition
+
+fact
+
+rule
+
+formula
+
+law
+
+step
+
+condition
+
+cause
+
+effect
+
+example
+
+non_example
+
+representation
+
+edge_case
+
+application_context
+
+clue
+
+keyword
+
+memory hook
+
+Example:
+For “evaporation”:
+
+definition: liquid changing to gas at the surface
+
+factor: higher temperature speeds it up
+
+factor: larger surface area speeds it up
+
+misconception clue: it does not require boiling
+
+3.4 MisconceptionRecord
+This is critical.
+
+Fields:
+
+misconception_id
+
+concept_id
+
+misconception_statement
+
+cause_type
+
+wrong_reasoning_pattern
+
+common_wrong_answer_pattern
+
+confidence_trap_level
+
+correction_logic
+
+repair_sequence_id
+
+Examples:
+
+“Heavier objects fall faster”
+
+“Evaporation only happens when water is hot”
+
+“When adding fractions, add numerator and denominator directly”
+
+This object lets the engine generate diagnostic traps and targeted repairs.
+
+3.5 RepresentationRecord
+A concept should be stored in many forms.
+
+Fields:
+
+representation_id
+
+concept_id
+
+representation_type
+
+content
+
+conversion_targets
+
+difficulty
+
+notes
+
+Representation types:
+
+text explanation
+
+diagram
+
+symbolic equation
+
+graph
+
+table
+
+real-world scenario
+
+worked example
+
+audio prompt
+
+visual cue
+
+This is what powers interpretation and representation-conversion questions.
+
+3.6 ExampleRecord
+Fields:
+
+example_id
+
+concept_id
+
+example_type
+
+description
+
+explanation
+
+validity conditions
+
+similarity score to canonical form
+
+Types:
+
+canonical example
+
+tricky example
+
+disguised example
+
+real-world example
+
+borderline example
+
+non-example
+
+This supports example generation, classification, and boundary questions.
+
+3.7 SolutionGraph
+This stores how a problem is solved.
+
+Fields:
+
+solution_graph_id
+
+concept_id
+
+question_family_id
+
+start_state
+
+valid_nodes
+
+valid_transitions
+
+common_invalid_transitions
+
+terminal states
+
+hint anchors
+
+explanation anchors
+
+This is necessary for:
+
+first-step questions
+
+next-step questions
+
+step ordering
+
+error detection
+
+correction questions
+
+partial credit
+
+process diagnosis
+
+Without this, the system only knows final answers, not thinking.
+
+3.8 QuestionFamily
+This defines the cognitive type logic.
+
+Fields:
+
+question_family_id
+
+family_name
+
+cognitive_type
+
+evaluative_intent
+
+required_primitive_types
+
+allowed_formats
+
+difficulty_dimensions
+
+transformation_rules
+
+scoring_mode
+
+explanation_mode
+
+validation_rules
+
+Examples:
+
+Recall_Fact
+
+Recognition_CloseDistractors
+
+Reconstruction_FromClues
+
+Reasoning_Causal
+
+ErrorDetection_SingleFault
+
+Transfer_DisguisedScenario
+
+Pressure_RapidRetrieval
+
+3.9 QuestionTemplate
+This is not the whole engine, but a controlled surface scaffold.
+
+Fields:
+
+template_id
+
+question_family_id
+
+format_type
+
+template_text
+
+slot_definitions
+
+slot_constraints
+
+language_level
+
+tone
+
+allowed_context_types
+
+Templates help keep output consistent and safe, especially in early versions.
+
+3.10 GeneratedQuestion
+This stores the actual question instance created.
+
+Fields:
+
+generated_question_id
+
+concept_id
+
+question_family_id
+
+cognitive_type
+
+format_type
+
+difficulty_score
+
+variant_signature
+
+surface_text
+
+media_payload
+
+answer_key
+
+explanation_key
+
+misconception_target_id
+
+timing_profile
+
+freshness_hash
+
+validation_status
+
+generation_metadata
+
+3.11 StudentConceptState
+This is the learner model at concept level.
+
+Fields:
+
+student_id
+
+concept_id
+
+mastery_estimate
+
+memory_strength
+
+retrieval_speed
+
+recognition_strength
+
+reconstruction_strength
+
+reasoning_strength
+
+transfer_strength
+
+misconception_risk_scores
+
+confidence_calibration
+
+pressure_tolerance
+
+retention_decay_rate
+
+recent_attempt_count
+
+recent_success_rate
+
+last_seen_at
+
+next_review_due_at
+
+This is what makes the engine adaptive.
+
+3.12 AttemptRecord
+Stores every answer event.
+
+Fields:
+
+attempt_id
+
+student_id
+
+generated_question_id
+
+concept_id
+
+timestamp
+
+correctness
+
+response_time_ms
+
+hints_used
+
+confidence_rating
+
+final_answer
+
+selected_option
+
+detected_error_type
+
+misconception_triggered
+
+partial_credit
+
+recovery_after_error
+
+mode_context
+
+device_context
+
+This feeds analytics and adaptation.
+
+4. The engine modules
+Now let us define the actual modules that operate on these entities.
+
+4.1 Curriculum Mapper
+This module maps syllabus items into structured concept objects.
+
+Its work:
+
+ingest curriculum
+
+break topics into concepts
+
+define prerequisites
+
+define learning objectives
+
+map each concept to difficulty band
+
+version all curriculum changes
+
+This is what makes the factory syllabus-aware.
+
+4.2 Concept Builder
+This module enriches a concept.
+
+Its work:
+
+attach facts, rules, steps, examples, non-examples
+
+attach representations
+
+attach misconceptions
+
+attach causal relations
+
+attach proof signals
+
+attach edge cases
+
+attach contrast concepts
+
+This is how raw educational content becomes usable by the engine.
+
+4.3 Question Intent Selector
+This decides what kind of evidence the system wants right now.
+
+Input:
+
+mode
+
+concept
+
+learner state
+
+session goal
+
+Output:
+
+evaluative intent
+
+candidate cognitive type
+
+Examples:
+
+if memory weak, select recall or reconstruction
+
+if misconception risk high, select error detection or compare/contrast
+
+if student seems strong but shallow, select transfer or justification
+
+if in Mental Mode, select retrieval-under-pressure or speed fluency
+
+if in DNA, select diagnostic branching family
+
+This module is strategic.
+
+4.4 Family Resolver
+This converts intent into a specific question family.
+
+Example:
+Intent: “prove whether learner confuses osmosis and diffusion”
+
+Possible family:
+
+CompareContrast_CloseConcepts
+
+MisconceptionTrap_ConceptBoundary
+
+Classification_BiologicalTransportCase
+
+It chooses the most suitable family based on:
+
+concept structure
+
+student history
+
+available representations
+
+desired difficulty
+
+allowed mode constraints
+
+4.5 Primitive Extractor
+This fetches the right content pieces from the concept record.
+
+Example:
+For error detection:
+
+fetch valid rule
+
+fetch worked path
+
+fetch common invalid step
+
+fetch misconception mapping
+
+For recall:
+
+fetch one atomic fact, definition, formula, or label
+
+For reasoning:
+
+fetch cause-effect pair, rule basis, or explanation anchors
+
+4.6 Transformation Engine
+This is the beating heart.
+
+It applies question operators to concept primitives.
+
+Core operators:
+
+hide
+
+mask
+
+fragment
+
+paraphrase
+
+contrast
+
+reorder
+
+perturb
+
+insert_error
+
+switch_representation
+
+reduce_cues
+
+wrap_in_scenario
+
+reverse_reasoning
+
+add_distractors
+
+chain_steps
+
+delay_retrieval
+
+induce_conflict
+
+This engine does not just generate text.
+It generates the cognitive challenge structure.
+
+4.7 Variant Composer
+This handles freshness and diversity.
+
+It decides:
+
+wording variation
+
+scenario variation
+
+number/value variation
+
+representation shift
+
+distractor variation
+
+cue strength
+
+step slicing
+
+timing condition
+
+context disguise
+
+Its role is to prevent repetition without breaking pedagogy.
+
+4.8 Difficulty Controller
+This computes and shapes the item’s hardness.
+
+Difficulty dimensions:
+
+concept baseline
+
+cue level
+
+distractor closeness
+
+step depth
+
+novelty of context
+
+abstraction load
+
+representation shift
+
+timing pressure
+
+explanation demand
+
+This is much better than a single “easy/medium/hard” tag.
+
+4.9 Surface Renderer
+This turns the internal structure into student-facing form.
+
+Possible output formats:
+
+multiple choice
+
+short answer
+
+spoken/audio prompt
+
+drag and order
+
+hotspot / diagram label
+
+two-column matching
+
+step continuation
+
+explain in your own words
+
+quick burst rapid fire
+
+The same cognitive type can appear in different surface forms.
+
+Example:
+Reasoning can appear as:
+
+MCQ with strong explanation options
+
+open short response
+
+oral pressure prompt
+
+“pick the best explanation” card
+
+4.10 Validator
+Before a generated question is allowed, this module checks:
+
+is the question answerable?
+
+is the intended answer actually correct?
+
+are distractors plausible but not broken?
+
+is the language clear?
+
+is the concept alignment valid?
+
+is the difficulty in band?
+
+does the misconception trap map correctly?
+
+is there accidental ambiguity?
+
+is there explanation support?
+
+is it curriculum safe?
+
+This validator is essential.
+Without it, generated content becomes unreliable.
+
+4.11 Response Analyzer
+This interprets what happened after the learner answers.
+
+It should analyze:
+
+correctness
+
+time
+
+hesitation
+
+confidence
+
+whether answer pattern matches known misconception
+
+whether the learner improved after a hint
+
+whether the learner collapsed under pressure
+
+whether the learner can answer in one representation but not another
+
+The Response Analyzer turns responses into meaning.
+
+4.12 Learner Model Updater
+This updates StudentConceptState.
+
+It modifies:
+
+mastery estimate
+
+memory strength
+
+retention decay
+
+misconception risk
+
+pressure tolerance
+
+transfer readiness
+
+confidence calibration
+
+This is what makes the next question smarter than the previous one.
+
+5. The main cognitive question families and how each is generated
+Now let us specify the families more formally.
+
+5.1 Recall Family
+Goal
+Test direct retrieval.
+
+Needed primitives
+definition
+
+fact
+
+term
+
+formula
+
+label
+
+rule
+
+Transform
+Hide one atomic target and ask for it directly.
+
+Examples of generation patterns
+ask for a definition
+
+ask for a name
+
+ask for a formula
+
+ask for a step
+
+ask for a cause
+
+Difficulty knobs
+cue richness
+
+wording closeness to textbook
+
+degree of paraphrasing
+
+whether context clue is present
+
+Best used for
+Memory Mode
+
+early mastery building
+
+resurfacing forgotten concepts
+
+rapid-fire Mental Mode
+
+5.2 Recognition Family
+Goal
+Test whether the learner can identify the right answer among alternatives.
+
+Needed primitives
+target fact or concept
+
+close distractors
+
+misconception-linked distractors
+
+Transform
+Present target mixed with plausible alternatives.
+
+Difficulty knobs
+semantic closeness of distractors
+
+number of options
+
+similarity of phrasing
+
+strength of wrong-but-attractive options
+
+Best used for
+low-confidence learners
+
+early re-entry after struggle
+
+first pass screening before deeper tasks
+
+5.3 Memory Reconstruction Family
+Goal
+Test whether the learner can rebuild memory from fragments.
+
+Needed primitives
+concept clues
+
+prerequisite anchors
+
+partial structure
+
+memory hooks
+
+Transform
+Do not ask for the answer directly.
+Give connected hints and require rebuild.
+
+Example generation logic
+partial formula completion
+
+sentence stem with critical piece missing
+
+clue chain from related concepts
+
+incomplete process with one missing piece
+
+Best used for
+learners with fading memory
+
+recovery after forgetting
+
+strengthening associative recall
+
+5.4 Concept Understanding Family
+Goal
+Check whether the learner grasps meaning, not just wording.
+
+Needed primitives
+concept explanation
+
+examples and non-examples
+
+contrast concepts
+
+conceptual boundaries
+
+Transform
+Ask for meaning, identification of valid cases, or detection of incorrect interpretations.
+
+Best used for
+shallow memorizers
+
+knowledge-gap diagnosis
+
+foundation building
+
+5.5 Explanation Family
+Goal
+Force the learner to express why or how.
+
+Needed primitives
+explanation anchors
+
+causal chain
+
+concept rule basis
+
+correct reasoning path
+
+Transform
+Ask “why,” “how,” or “explain in your own words.”
+
+Scoring
+Should not be scored only on exact wording.
+Use rubric anchors:
+
+essential idea present
+
+causal logic present
+
+no major misconception
+
+enough specificity
+
+Best used for
+deeper understanding
+
+oral coaching
+
+parent-facing “doctor-like” diagnosis
+
+5.6 Reasoning Family
+Goal
+Test whether the learner can connect principle to conclusion.
+
+Needed primitives
+premise
+
+rule
+
+valid inference path
+
+alternative false path
+
+Transform
+Present a condition and ask the learner to infer, explain, or justify.
+
+Types
+causal reasoning
+
+conditional reasoning
+
+inferential reasoning
+
+reverse reasoning
+
+anomaly resolution
+
+Best used for
+DNA diagnostic
+
+elite challenge
+
+real mastery checks
+
+5.7 Application Family
+Goal
+Test use of knowledge in a case.
+
+Needed primitives
+concept
+
+application contexts
+
+valid mapping rule
+
+Transform
+Embed concept in a scenario and ask the learner to apply it.
+
+Difficulty knobs
+familiarity of context
+
+amount of irrelevant detail
+
+whether concept is named or hidden
+
+number of steps before application point
+
+Best used for
+Journey Mode
+
+customized exam prep
+
+after concept understanding is established
+
+5.8 Transfer Family
+Goal
+Test whether the learner recognizes the same deep structure in a different surface form.
+
+Needed primitives
+deep principle
+
+alternate context
+
+disguised case
+
+Transform
+Change the skin completely while preserving the underlying logic.
+
+Best used for
+mastery verification
+
+elite mode
+
+anti-cramming detection
+
+5.9 First-Step Family
+Goal
+Check whether the learner knows how to begin.
+
+Needed primitives
+full solvable problem
+
+solution graph
+
+Transform
+Present the whole problem, but ask only for the best first move.
+
+Best used for
+students who freeze at the start
+
+math
+
+science processes
+
+grammar transformations
+
+5.10 Next-Step Family
+Goal
+Check whether the learner can continue a process correctly.
+
+Needed primitives
+partial solution state
+
+solution graph
+
+valid next moves
+
+Transform
+Freeze problem midway and ask what should come next.
+
+Best used for
+stepwise learning
+
+process diagnosis
+
+multi-stage procedural subjects
+
+5.11 Error Detection Family
+Goal
+Check whether the learner can spot wrong reasoning.
+
+Needed primitives
+correct solution path
+
+one known invalid move
+
+misconception mapping
+
+Transform
+Inject controlled fault into the path.
+
+Common injected faults
+wrong arithmetic
+
+wrong sign
+
+wrong concept selection
+
+false cause
+
+incorrect comparison
+
+misread graph
+
+invalid generalization
+
+Best used for
+DNA
+
+misconception diagnosis
+
+stronger students who need precision sharpening
+
+5.12 Correction Family
+Goal
+See whether the learner can repair wrong thinking.
+
+Needed primitives
+invalid worked path
+
+correct path anchor
+
+repair logic
+
+Transform
+Show error and require correction.
+
+Best used for
+remediation
+
+post-error recovery
+
+teacher-style coaching mode
+
+5.13 Misconception Exposure Family
+Goal
+Reveal specific false beliefs.
+
+Needed primitives
+misconception record
+
+trigger context
+
+trap answer options
+
+repair path
+
+Transform
+Generate a scenario where the misconception feels attractive.
+
+Best used for
+diagnostic mode
+
+knowledge gap mode
+
+building precise remediation plans
+
+5.14 Compare-and-Contrast Family
+Goal
+Test conceptual boundary clarity.
+
+Needed primitives
+concept A
+
+concept B
+
+overlaps
+
+differences
+
+typical confusion points
+
+Transform
+Ask learner to distinguish, separate, or choose between close concepts.
+
+Best used for
+biology
+
+grammar
+
+social studies
+
+math distinctions
+
+confusion-heavy topics
+
+5.15 Classification Family
+Goal
+See whether learner can assign instances to correct categories.
+
+Needed primitives
+categories
+
+cases
+
+boundary examples
+
+non-examples
+
+Transform
+Present one or more cases and ask where they belong.
+
+Best used for
+taxonomy-heavy subjects
+
+grammar
+
+science
+
+concept sorting drills
+
+5.16 Cause-and-Effect Family
+Goal
+Test whether learner understands what leads to what.
+
+Needed primitives
+cause graph
+
+effect graph
+
+modifiers or conditions
+
+Transform
+Ask forward, backward, or removal-based causal questions.
+
+Best used for
+science
+
+geography
+
+economics
+
+history
+
+5.17 Prediction Family
+Goal
+Test dynamic understanding of how change affects outcome.
+
+Needed primitives
+system rule
+
+current state
+
+condition change
+
+predicted outcome path
+
+Transform
+Alter one condition and ask what happens.
+
+Best used for
+processes
+
+experiments
+
+equations
+
+trends
+
+systems thinking
+
+5.18 Pattern Recognition Family
+Goal
+Test whether learner can see structure.
+
+Needed primitives
+sequences
+
+examples with invariant relation
+
+potential false patterns
+
+Transform
+Present structured cases and ask learner to identify the rule, continuation, or grouping logic.
+
+Best used for
+math
+
+language patterns
+
+scientific trends
+
+logic
+
+5.19 Rule Discovery Family
+Goal
+Test inferential discovery rather than mere use.
+
+Needed primitives
+examples
+
+non-examples
+
+hidden rule
+
+validation condition
+
+Transform
+Give enough cases for learner to infer the underlying principle.
+
+Best used for
+deeper learning
+
+elite mode
+
+concept-building sessions
+
+5.20 Representation Conversion Family
+Goal
+Test whether knowledge survives change of form.
+
+Needed primitives
+paired representations of same concept
+
+Transform
+Ask learner to convert:
+
+text to equation
+
+equation to graph
+
+graph to sentence
+
+scenario to diagram
+
+process to ordered steps
+
+Best used for
+mastery
+
+interpretation training
+
+non-rote learning
+
+5.21 Retrieval Under Pressure Family
+Goal
+Test sharpness and fluency under time constraints.
+
+Needed primitives
+short retrieval-ready items
+
+timing profile
+
+streak or chain logic
+
+Transform
+Deliver quick-burst questions with shrinking time or no waiting.
+
+Best used for
+Mental Mode
+
+sharpening
+
+fluency building
+
+preparation for pressured environments
+
+5.22 Retention Check Family
+Goal
+Check whether knowledge remains after time delay.
+
+Needed primitives
+previously seen concept
+
+alternate wording or representation
+
+delayed resurfacing rule
+
+Transform
+Re-ask concept later, but not in identical form.
+
+Best used for
+Memory Mode
+
+Journey Mode
+
+long-term mastery detection
+
+5.23 Recovery Family
+Goal
+Rebuild access to fading memory.
+
+Needed primitives
+weakened concept
+
+cues
+
+clue ladders
+
+prerequisite reminders
+
+partial reconstructions
+
+Transform
+Start with support and gradually remove support as memory returns.
+
+Best used for
+forgotten topics
+
+spaced review
+
+“bring the learner back” moments
+
+5.24 Stretch / Elite Family
+Goal
+Push already strong learners deeper while staying within syllabus.
+
+Needed primitives
+edge cases
+
+mixed concepts
+
+hidden traps
+
+multi-layer reasoning
+
+unusual but valid contexts
+
+Transform
+Make the learner think harder without leaving syllabus boundaries.
+
+Best used for
+Elite Mode
+
+top performers
+
+anti-boredom experience
+
+6. How difficulty should be modeled
+Do not use a crude easy-medium-hard system alone.
+
+Each generated question should get a structured difficulty profile.
+
+Difficulty dimensions
+Concept difficulty
+How intrinsically hard is the concept?
+
+Retrieval difficulty
+How much must be recalled with little support?
+
+Distractor difficulty
+How close are wrong options to the truth?
+
+Representation difficulty
+How hard is the form in which the concept is presented?
+
+Process difficulty
+How many steps or logical transitions are needed?
+
+Context difficulty
+How disguised or unfamiliar is the scenario?
+
+Explanation difficulty
+How much articulation is required?
+
+Pressure difficulty
+How much time stress is present?
+
+Trap difficulty
+How strong is the misconception bait?
+
+A sample internal model:
+
+difficulty_profile = {
+  concept: 0.55,
+  retrieval: 0.80,
+  distractor: 0.30,
+  representation: 0.40,
+  process: 0.20,
+  context: 0.10,
+  explanation: 0.00,
+  pressure: 0.75,
+  trap: 0.25
+}
+This lets the system create, for example:
+
+an easy concept but hard pressure question
+
+a medium concept with elite-level transfer disguise
+
+a low-step question with very strong misconception bait
+
+That is much more intelligent.
+
+7. How freshness should work
+Freshness must be controlled.
+
+The system should never simply “rewrite randomly.”
+
+Use structured freshness operations:
+
+7.1 Surface paraphrase
+Change wording, preserve meaning.
+
+7.2 Context recast
+Use a different scenario for same principle.
+
+7.3 Parameter mutation
+Change names, values, variables, objects.
+
+7.4 Representation shift
+Ask same idea in graph, text, table, or verbal form.
+
+7.5 Distractor mutation
+Swap misconception bait or plausible wrong option family.
+
+7.6 Cue shift
+More support or fewer clues.
+
+7.7 Step slice shift
+Ask full problem, first step, next step, or repair step.
+
+7.8 Time condition shift
+Untimed today, rapid tomorrow.
+
+7.9 Contrast shift
+Compare with a different close concept.
+
+Each generated question should have a freshness signature so near-duplicates can be avoided.
+
+8. How the learner model controls generation
+This is where the engine becomes truly adaptive.
+
+For each concept, the system should estimate different dimensions of learner state.
+
+8.1 Mastery estimate
+General competence on the concept.
+
+8.2 Memory strength
+How reliably it can be retrieved.
+
+8.3 Recognition strength
+Can the learner recognize it even if they cannot produce it?
+
+8.4 Reconstruction strength
+Can they rebuild it from clues?
+
+8.5 Reasoning strength
+Can they explain why and derive consequences?
+
+8.6 Transfer strength
+Can they use it in disguised contexts?
+
+8.7 Pressure tolerance
+Can they still perform under time pressure?
+
+8.8 Misconception risk
+Which false beliefs are most likely active?
+
+8.9 Retention decay rate
+How quickly this concept slips away.
+
+8.10 Confidence calibration
+Do they know when they know, or do they overguess?
+
+Now the engine can make better decisions.
+
+Examples:
+
+If memory_strength is low:
+
+use recall, recognition, reconstruction, recovery
+
+If misconception_risk for “osmosis vs diffusion” is high:
+
+use compare-and-contrast, misconception trap, classification
+
+If mastery is decent but transfer_strength is weak:
+
+use disguised application and representation conversion
+
+If pressure_tolerance is weak:
+
+gradually introduce timed retrieval
+
+If concept is decaying:
+
+issue delayed resurfacing and recovery ladders
+
+9. End-to-end generation flow
+Now let us describe the full runtime flow.
+
+Step 1 — Session goal arrives
+A mode requests a question.
+
+Examples:
+
+Memory Mode wants to verify retention
+
+DNA wants to diagnose a weakness
+
+Mental Mode wants pressure retrieval
+
+Elite Mode wants in-syllabus challenge
+
+Journey Mode wants next best instructional item
+
+Step 2 — Target concept selection
+The engine selects a concept based on:
+
+curriculum plan
+
+learner weakness
+
+spaced review schedule
+
+session objective
+
+prior attempt history
+
+Step 3 — Learner state lookup
+The engine checks StudentConceptState.
+
+Step 4 — Intent selection
+The system decides what truth it wants to reveal now.
+
+Example:
+
+“Does the learner truly remember this?”
+
+“Do they confuse these two concepts?”
+
+“Can they continue a solution correctly?”
+
+“Can they still do this under speed?”
+
+Step 5 — Family selection
+The system chooses the best question family.
+
+Step 6 — Primitive extraction
+The engine fetches the relevant concept building blocks.
+
+Step 7 — Transformation
+The engine applies operators to create the internal challenge structure.
+
+Step 8 — Variant composition
+The engine adjusts freshness, disguise, cues, and difficulty.
+
+Step 9 — Surface rendering
+The question becomes student-facing text, visuals, or timing logic.
+
+Step 10 — Validation
+The question is checked before release.
+
+Step 11 — Delivery
+The student receives the item in the proper mode.
+
+Step 12 — Response capture
+The system records answer, time, confidence, hint use, and error pattern.
+
+Step 13 — Response analysis
+The engine infers what the attempt means.
+
+Step 14 — Learner model update
+The concept-level state is updated.
+
+Step 15 — Next-step decision
+The system decides whether to:
+
+reinforce
+
+deepen
+
+repair
+
+revisit later
+
+increase pressure
+
+move forward
+
+branch into prerequisite repair
+
+10. The branching logic after student response
+This is crucial. The engine should not respond to “wrong” with the same generic behavior.
+
+Instead:
+
+If correct and fast
+Increase fluency confidence and optionally increase difficulty or move to transfer.
+
+If correct but slow
+Knowledge may be present but not fluent.
+Queue speed or lighter pressure questions later.
+
+If correct but confidence low
+Treat as fragile knowledge.
+Schedule confirmation and reinforcement.
+
+If wrong with misconception pattern
+Launch targeted misconception repair.
+
+If wrong but close
+Possibly conceptual understanding exists but retrieval is weak.
+Move to reconstruction or cue-supported recovery.
+
+If wrong at first-step stage
+The learner likely cannot initiate the process.
+Repair entry strategy, not just whole-problem practice.
+
+If right on recognition but wrong on recall
+The learner knows the answer when shown it but cannot produce it independently.
+That means memory not yet stable.
+
+If right on recall but wrong on transfer
+Knowledge is memorized but not deeply understood.
+
+If right untimed but wrong under pressure
+Pressure tolerance, not raw knowledge, is the issue.
+
+This is where the engine begins to feel alive.
+
+11. How this powers the different eCoach modes
+Now let us tie it directly to your product.
+
+Memory Mode
+Primary families:
+
+recall
+
+recognition
+
+reconstruction
+
+retention check
+
+recovery
+
+delayed representation shift
+
+What it measures:
+
+memory strength
+
+recall latency
+
+decay rate
+
+cue dependence
+
+Knowledge Gap Mode
+Primary families:
+
+diagnostic
+
+misconception exposure
+
+concept understanding
+
+classification
+
+explanation
+
+first-step
+
+compare-and-contrast
+
+What it measures:
+
+what learner does not know
+
+what learner only partially understands
+
+what false beliefs exist
+
+Mental Mode
+Primary families:
+
+retrieval under pressure
+
+rapid recall
+
+quick classification
+
+fast compare/contrast
+
+fast next-step
+
+What it measures:
+
+sharpness
+
+focus
+
+mental agility
+
+pressure tolerance
+
+error under compression
+
+Journey Mode
+Primary families:
+
+prerequisite checks
+
+understanding
+
+application
+
+transfer
+
+retention resurfacing
+
+threshold checks
+
+What it measures:
+
+readiness to move on
+
+weak zones
+
+real learning progression
+
+Elite Mode
+Primary families:
+
+stretch problems
+
+multi-step reasoning
+
+anomaly resolution
+
+high-disguise transfer
+
+justification
+
+mixed-concept synthesis
+
+What it measures:
+
+depth
+
+flexibility
+
+precision
+
+non-boredom challenge within syllabus
+
+DNA / Diagnostic Test
+Primary families:
+
+branching diagnostic questions
+
+misconception exposure
+
+first-step
+
+next-step
+
+compare-and-contrast
+
+threshold questions
+
+explanation probes
+
+What it measures:
+
+exactly where the learner breaks
+
+whether weakness is memory, understanding, process, or misconception
+
+subskill-by-subskill strength profile
+
+12. The validator rules you absolutely need
+Before a question goes live, validate:
+
+Semantic correctness
+The question actually matches the concept truth.
+
+Diagnostic integrity
+If a distractor is meant to represent a misconception, it must truly map to that misconception.
+
+Ambiguity check
+There must not be two equally acceptable answers unless the question is built for open-ended scoring.
+
+Level appropriateness
+Language and concept load must match learner level.
+
+Curriculum alignment
+The generated question must stay within what the syllabus expects.
+
+Solution traceability
+There must be a valid explanation path and answer justification available.
+
+Duplicate protection
+Do not serve near-duplicates too often.
+
+Mode suitability
+A long reasoning prompt should not accidentally enter rapid-fire Mental Mode.
+
+13. The scoring system should not be binary only
+For strong analytics, score multiple dimensions.
+
+Each attempt can produce:
+
+correctness score
+
+speed score
+
+confidence score
+
+explanation quality score
+
+misconception likelihood score
+
+process quality score
+
+retention evidence score
+
+pressure stability score
+
+This gives you much richer diagnosis.
+
+Example:
+A learner may get 1/1 correctness but still have:
+
+low speed
+
+low confidence
+
+poor explanation quality
+
+That should not count as full mastery.
+
+14. Recommended implementation order
+Do not try to build the final giant engine in one shot.
+
+Build it in layers.
+
+Phase 1 — Foundation
+Build:
+
+CurriculumNode
+
+Concept
+
+ConceptPrimitive
+
+MisconceptionRecord
+
+QuestionFamily
+
+GeneratedQuestion
+
+StudentConceptState
+
+AttemptRecord
+
+Also build first families:
+
+recall
+
+recognition
+
+explanation
+
+application
+
+error detection
+
+misconception exposure
+
+retention check
+
+This already gives you major power.
+
+Phase 2 — Process intelligence
+Build:
+
+SolutionGraph
+
+first-step
+
+next-step
+
+correction
+
+compare-and-contrast
+
+classification
+
+This improves diagnostics and stepwise coaching.
+
+Phase 3 — Advanced mastery
+Build:
+
+transfer
+
+representation conversion
+
+prediction
+
+rule discovery
+
+recovery ladders
+
+retrieval under pressure
+
+This powers Memory Mode, Mental Mode, and stronger Journey behavior.
+
+Phase 4 — Premium intelligence
+Build:
+
+anomaly reasoning
+
+stretch/elite family
+
+deep justification scoring
+
+capstone mixed-concept challenges
+
+richer explanation analysis
+
+cross-topic synthesis
+
+This becomes your premium differentiation.
+
+15. A simple internal pseudocode sketch
+Here is the hidden pipeline in simple form:
+
+def request_question(student_id, mode, concept_pool):
+    target_concept = select_target_concept(student_id, mode, concept_pool)
+    learner_state = load_student_concept_state(student_id, target_concept)
+
+    evaluative_intent = choose_intent(mode, learner_state, target_concept)
+    question_family = resolve_family(evaluative_intent, target_concept, learner_state)
+
+    primitives = extract_primitives(target_concept, question_family)
+    variant_plan = compose_variant(learner_state, mode, question_family, target_concept)
+
+    internal_question = transform(primitives, question_family, variant_plan)
+    surfaced_question = render_surface(internal_question, mode, learner_state)
+
+    validated_question = validate_question(surfaced_question)
+    save_generated_question(validated_question)
+
+    return validated_question
+And after answering:
+
+def process_attempt(student_id, generated_question_id, response):
+    question = load_generated_question(generated_question_id)
+    analysis = analyze_response(question, response)
+
+    update_attempt_record(student_id, generated_question_id, analysis)
+    update_student_concept_state(student_id, question.concept_id, analysis)
+
+    next_action = decide_next_action(student_id, question.concept_id, analysis)
+    return next_action
+16. The hidden philosophy that will make this engine great
+The strongest principle is this:
+
+A question is not content.
+A question is an instrument for extracting evidence.
+
+That means your factory should always ask:
+
+what evidence of learning do I want?
+
+what kind of mental move will reveal that?
+
+what form of question will force that move?
+
+what will the wrong answer tell me?
+
+what should happen next depending on that answer?
+
+Once the factory thinks like this, it stops being a random generator and becomes a real educational intelligence system.
+
+17. Final distilled specification
+Your Question Factory should be defined internally as:
+
+A syllabus-aware, learner-aware cognitive question generation system that transforms structured concept knowledge into diagnostically meaningful question families, renders them in appropriate delivery formats, validates them before use, interprets student responses beyond correctness, and continuously updates learner state to choose better next questions.
+
+That is the true engine.
+
+The next proper step is to break this into a technical schema and module contract document — meaning I define:
+
+exact tables / entities
+
+field-by-field database design
+
+module responsibilities
+
+service interfaces
+
+question generation APIs
+
+response processing APIs
+
+and how the desktop Rust backend can organize this cleanly.
+
+
+proceed
+
+Thought for 4s
+Good. Now we move from pedagogical architecture into system architecture.
+
+This section will define the technical schema and module contracts for the Question Factory so it can actually be built cleanly inside your Rust desktop backend.
+
+I will structure this in five layers:
+
+data model
+
+backend modules
+
+generation pipeline contracts
+
+response-analysis contracts
+
+suggested Rust project structure
+
+1. System role inside eCoach
+The Question Factory should live as a core backend subsystem.
+
+It should serve these major consumers:
+
+Memory Mode
+
+Knowledge Gap Mode
+
+Mental Mode
+
+Journey Mode
+
+Elite Mode
+
+DNA diagnostic engine
+
+Custom test builder
+
+Super Admin content tools
+
+So technically, it is not “a feature.”
+It is a platform service inside the app.
+
+The clean mental model is:
+
+Curriculum Engine defines what exists to be learned
+
+Learner Model Engine defines what the student currently knows
+
+Question Factory decides what evidence to extract now
+
+Mode Engines decide why that evidence is needed
+
+Analytics Engine interprets what happened and feeds it back
+
+2. Core architectural principle
+The Question Factory should be split into two major internal halves:
+
+A. Authoring / Knowledge Preparation Side
+This is where concepts, misconceptions, examples, solution graphs, templates, and mappings are stored and curated.
+
+B. Runtime Generation Side
+This is where the engine receives a student + mode + target scope and produces a valid question instance.
+
+This separation matters because it prevents runtime logic from becoming messy or dependent on raw curriculum text.
+
+3. Database / persistence model
+Since this is a Rust desktop app, you will likely have:
+
+local SQLite for offline storage
+
+optional sync layer later
+
+strongly typed Rust models over the DB
+
+versioned schema with migrations
+
+The schema should be separated into domains:
+
+curriculum domain
+
+concept domain
+
+question-family domain
+
+generated-question domain
+
+learner-state domain
+
+attempts / analytics domain
+
+4. Core tables
+I will define this as if you are using SQLite with Rust structs on top.
+
+4.1 curricula
+Stores curriculum versions.
+
+Fields
+id TEXT PRIMARY KEY
+
+name TEXT NOT NULL
+
+country TEXT
+
+education_level TEXT
+
+subject_family TEXT
+
+version_label TEXT
+
+effective_from TEXT
+
+effective_to TEXT NULL
+
+is_active INTEGER NOT NULL DEFAULT 1
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Allows multiple curriculum versions and future updates.
+
+4.2 curriculum_nodes
+Stores strand/topic/subtopic/objective hierarchy.
+
+Fields
+id TEXT PRIMARY KEY
+
+curriculum_id TEXT NOT NULL
+
+parent_id TEXT NULL
+
+node_type TEXT NOT NULL
+
+strand
+
+sub_strand
+
+topic
+
+subtopic
+
+objective
+
+skill
+
+code TEXT NULL
+
+title TEXT NOT NULL
+
+description TEXT NULL
+
+grade_level TEXT NULL
+
+sequence_order INTEGER NOT NULL DEFAULT 0
+
+difficulty_band REAL NULL
+
+is_terminal INTEGER NOT NULL DEFAULT 0
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Foreign keys
+curriculum_id -> curricula.id
+
+parent_id -> curriculum_nodes.id
+
+Purpose
+This is the official learning map.
+
+4.3 concepts
+Stores the actual instructional concept units.
+
+Fields
+id TEXT PRIMARY KEY
+
+curriculum_node_id TEXT NOT NULL
+
+slug TEXT NOT NULL UNIQUE
+
+title TEXT NOT NULL
+
+canonical_statement TEXT NOT NULL
+
+short_explanation TEXT NULL
+
+long_explanation TEXT NULL
+
+concept_category TEXT NULL
+
+baseline_difficulty REAL NOT NULL DEFAULT 0.5
+
+mastery_threshold REAL NOT NULL DEFAULT 0.8
+
+is_active INTEGER NOT NULL DEFAULT 1
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Represents the smallest useful knowledge object for question generation.
+
+4.4 concept_links
+Stores graph relationships between concepts.
+
+Fields
+id TEXT PRIMARY KEY
+
+source_concept_id TEXT NOT NULL
+
+target_concept_id TEXT NOT NULL
+
+link_type TEXT NOT NULL
+
+prerequisite
+
+related
+
+contrast
+
+depends_on
+
+extension_of
+
+often_confused_with
+
+weight REAL NOT NULL DEFAULT 1.0
+
+created_at TEXT NOT NULL
+
+Purpose
+Supports transfer, contrast, prerequisite repair, and knowledge-graph navigation.
+
+4.5 concept_primitives
+Stores internal pieces of a concept.
+
+Fields
+id TEXT PRIMARY KEY
+
+concept_id TEXT NOT NULL
+
+primitive_type TEXT NOT NULL
+
+definition
+
+fact
+
+rule
+
+formula
+
+law
+
+condition
+
+cause
+
+effect
+
+step
+
+clue
+
+explanation_anchor
+
+boundary_case
+
+memory_hook
+
+application_hint
+
+label TEXT NULL
+
+content TEXT NOT NULL
+
+importance_weight REAL NOT NULL DEFAULT 1.0
+
+difficulty_weight REAL NOT NULL DEFAULT 0.5
+
+sequence_order INTEGER NULL
+
+metadata_json TEXT NULL
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Raw fuel used by transformation logic.
+
+4.6 misconception_records
+Stores known misconception models.
+
+Fields
+id TEXT PRIMARY KEY
+
+concept_id TEXT NOT NULL
+
+title TEXT NOT NULL
+
+misconception_statement TEXT NOT NULL
+
+cause_type TEXT NULL
+
+overgeneralization
+
+memorization_without_understanding
+
+visual_confusion
+
+language_confusion
+
+step_confusion
+
+false analogy
+
+wrong_reasoning_pattern TEXT NULL
+
+wrong_answer_pattern TEXT NULL
+
+confidence_trap_level REAL NOT NULL DEFAULT 0.5
+
+correction_logic TEXT NULL
+
+repair_sequence_ref TEXT NULL
+
+metadata_json TEXT NULL
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Critical for diagnostic, error-detection, and repair generation.
+
+4.7 representation_records
+Stores different forms of the same concept.
+
+Fields
+id TEXT PRIMARY KEY
+
+concept_id TEXT NOT NULL
+
+representation_type TEXT NOT NULL
+
+text
+
+equation
+
+graph
+
+table
+
+diagram
+
+scenario
+
+worked_example
+
+audio_prompt
+
+title TEXT NULL
+
+content TEXT NOT NULL
+
+difficulty REAL NOT NULL DEFAULT 0.5
+
+metadata_json TEXT NULL
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Powers interpretation and representation conversion.
+
+4.8 example_records
+Stores examples and non-examples.
+
+Fields
+id TEXT PRIMARY KEY
+
+concept_id TEXT NOT NULL
+
+example_type TEXT NOT NULL
+
+canonical
+
+tricky
+
+disguised
+
+real_world
+
+borderline
+
+non_example
+
+title TEXT NULL
+
+description TEXT NOT NULL
+
+explanation TEXT NULL
+
+validity_conditions TEXT NULL
+
+similarity_score REAL NOT NULL DEFAULT 0.5
+
+metadata_json TEXT NULL
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Supports classification, concept understanding, transfer, and rule discovery.
+
+4.9 solution_graphs
+Stores solution structures for process-based questions.
+
+Fields
+id TEXT PRIMARY KEY
+
+concept_id TEXT NOT NULL
+
+question_family_id TEXT NULL
+
+title TEXT NOT NULL
+
+start_state_json TEXT NOT NULL
+
+nodes_json TEXT NOT NULL
+
+transitions_json TEXT NOT NULL
+
+invalid_transitions_json TEXT NULL
+
+terminal_states_json TEXT NOT NULL
+
+hint_anchors_json TEXT NULL
+
+explanation_anchors_json TEXT NULL
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Needed for first-step, next-step, correction, partial credit, process tracing.
+
+4.10 question_families
+Defines cognitive family logic.
+
+Fields
+id TEXT PRIMARY KEY
+
+family_name TEXT NOT NULL UNIQUE
+
+cognitive_type TEXT NOT NULL
+
+evaluative_intent TEXT NOT NULL
+
+description TEXT NULL
+
+required_primitives_json TEXT NOT NULL
+
+allowed_formats_json TEXT NOT NULL
+
+difficulty_dimensions_json TEXT NULL
+
+transformation_rules_json TEXT NOT NULL
+
+scoring_mode TEXT NOT NULL
+
+validation_rules_json TEXT NULL
+
+is_active INTEGER NOT NULL DEFAULT 1
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Stores the reusable generation logic type.
+
+4.11 question_templates
+Optional but very useful early on.
+
+Fields
+id TEXT PRIMARY KEY
+
+question_family_id TEXT NOT NULL
+
+format_type TEXT NOT NULL
+
+template_text TEXT NOT NULL
+
+slot_definitions_json TEXT NOT NULL
+
+slot_constraints_json TEXT NULL
+
+language_level TEXT NULL
+
+tone TEXT NULL
+
+is_active INTEGER NOT NULL DEFAULT 1
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+Purpose
+Gives control over wording and reduces chaos in early versions.
+
+4.12 generated_questions
+Stores fully generated instances.
+
+Fields
+id TEXT PRIMARY KEY
+
+concept_id TEXT NOT NULL
+
+question_family_id TEXT NOT NULL
+
+mode_context TEXT NOT NULL
+
+cognitive_type TEXT NOT NULL
+
+format_type TEXT NOT NULL
+
+difficulty_score REAL NOT NULL
+
+difficulty_profile_json TEXT NOT NULL
+
+variant_signature TEXT NOT NULL
+
+surface_text TEXT NOT NULL
+
+media_payload_json TEXT NULL
+
+answer_key_json TEXT NOT NULL
+
+explanation_key_json TEXT NULL
+
+misconception_target_id TEXT NULL
+
+representation_source_id TEXT NULL
+
+solution_graph_id TEXT NULL
+
+timing_profile_json TEXT NULL
+
+freshness_hash TEXT NOT NULL
+
+validation_status TEXT NOT NULL
+
+generation_metadata_json TEXT NULL
+
+created_at TEXT NOT NULL
+
+Purpose
+This is the exact question the learner saw.
+
+4.13 students
+Basic learner record.
+
+Fields
+id TEXT PRIMARY KEY
+
+display_name TEXT NOT NULL
+
+grade_level TEXT NULL
+
+profile_type TEXT NULL
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+4.14 student_concept_states
+The learner model at concept level.
+
+Fields
+id TEXT PRIMARY KEY
+
+student_id TEXT NOT NULL
+
+concept_id TEXT NOT NULL
+
+mastery_estimate REAL NOT NULL DEFAULT 0.0
+
+memory_strength REAL NOT NULL DEFAULT 0.0
+
+recognition_strength REAL NOT NULL DEFAULT 0.0
+
+reconstruction_strength REAL NOT NULL DEFAULT 0.0
+
+reasoning_strength REAL NOT NULL DEFAULT 0.0
+
+transfer_strength REAL NOT NULL DEFAULT 0.0
+
+retrieval_speed_score REAL NOT NULL DEFAULT 0.0
+
+pressure_tolerance REAL NOT NULL DEFAULT 0.0
+
+retention_decay_rate REAL NOT NULL DEFAULT 0.0
+
+confidence_calibration REAL NOT NULL DEFAULT 0.0
+
+misconception_risks_json TEXT NOT NULL DEFAULT '{}'
+
+recent_success_rate REAL NOT NULL DEFAULT 0.0
+
+recent_attempt_count INTEGER NOT NULL DEFAULT 0
+
+last_seen_at TEXT NULL
+
+next_review_due_at TEXT NULL
+
+updated_at TEXT NOT NULL
+
+Unique
+(student_id, concept_id)
+
+Purpose
+This is the adaptive core.
+
+4.15 attempt_records
+Stores answer events.
+
+Fields
+id TEXT PRIMARY KEY
+
+student_id TEXT NOT NULL
+
+generated_question_id TEXT NOT NULL
+
+concept_id TEXT NOT NULL
+
+mode_context TEXT NOT NULL
+
+timestamp TEXT NOT NULL
+
+correctness REAL NOT NULL
+
+response_time_ms INTEGER NULL
+
+hints_used INTEGER NOT NULL DEFAULT 0
+
+confidence_rating REAL NULL
+
+final_answer_json TEXT NULL
+
+selected_option_json TEXT NULL
+
+detected_error_type TEXT NULL
+
+misconception_triggered_id TEXT NULL
+
+partial_credit REAL NOT NULL DEFAULT 0.0
+
+recovery_after_error INTEGER NOT NULL DEFAULT 0
+
+analysis_json TEXT NULL
+
+Purpose
+Feeds diagnostics and state updates.
+
+4.16 review_queue
+For spaced retrieval and resurfacing.
+
+Fields
+id TEXT PRIMARY KEY
+
+student_id TEXT NOT NULL
+
+concept_id TEXT NOT NULL
+
+review_type TEXT NOT NULL
+
+retention_check
+
+recovery
+
+fluency
+
+misconception_repair
+
+transfer_check
+
+due_at TEXT NOT NULL
+
+priority REAL NOT NULL DEFAULT 0.5
+
+source_reason TEXT NULL
+
+created_at TEXT NOT NULL
+
+updated_at TEXT NOT NULL
+
+status TEXT NOT NULL DEFAULT 'pending'
+
+Purpose
+Lets the system bring concepts back at the right time.
+
+5. Rust domain model design
+Now let us convert this into Rust thinking.
+
+You should separate persistence structs from domain structs.
+
+Persistence structs
+These map closely to DB rows.
+
+Example:
+
+ConceptRow
+
+ConceptPrimitiveRow
+
+GeneratedQuestionRow
+
+Domain structs
+These are cleaner and richer.
+
+Example:
+
+Concept
+
+Misconception
+
+QuestionFamily
+
+GeneratedQuestion
+
+LearnerState
+
+This separation avoids contaminating your business logic with DB concerns.
+
+6. Suggested Rust enums
+Strong enums will help a lot.
+
+pub enum PrimitiveType {
+    Definition,
+    Fact,
+    Rule,
+    Formula,
+    Law,
+    Condition,
+    Cause,
+    Effect,
+    Step,
+    Clue,
+    ExplanationAnchor,
+    BoundaryCase,
+    MemoryHook,
+    ApplicationHint,
+}
+pub enum CognitiveType {
+    Recall,
+    Recognition,
+    Reconstruction,
+    ConceptUnderstanding,
+    Explanation,
+    Reasoning,
+    Application,
+    Transfer,
+    FirstStep,
+    NextStep,
+    ErrorDetection,
+    Correction,
+    MisconceptionExposure,
+    CompareContrast,
+    Classification,
+    CauseEffect,
+    Prediction,
+    PatternRecognition,
+    RuleDiscovery,
+    RepresentationConversion,
+    RetrievalUnderPressure,
+    RetentionCheck,
+    Recovery,
+    Stretch,
+}
+pub enum FormatType {
+    MultipleChoice,
+    ShortAnswer,
+    OpenResponse,
+    DragOrder,
+    MatchPair,
+    DiagramLabel,
+    StepContinuation,
+    RapidFire,
+    AudioPrompt,
+}
+pub enum ModeContext {
+    Memory,
+    KnowledgeGap,
+    Mental,
+    Journey,
+    Elite,
+    DNA,
+    CustomPrep,
+}
+These enums will keep your backend precise and reduce brittle string logic.
+
+7. Module boundaries
+Here is the clean module split.
+
+7.1 curriculum module
+Responsibility
+Owns curriculum structure and concept mapping.
+
+Main services
+load curriculum
+
+fetch node tree
+
+resolve prerequisite chain
+
+map concept scope for a mode/session
+
+Contract
+It should not generate questions.
+It only answers “what knowledge objects exist?”
+
+7.2 concept module
+Responsibility
+Owns concept intelligence.
+
+Main services
+get concept by id
+
+fetch primitives
+
+fetch misconceptions
+
+fetch examples
+
+fetch representations
+
+fetch linked concepts
+
+fetch solution graphs
+
+Contract
+It provides structured knowledge to the question engine.
+
+7.3 learner_state module
+Responsibility
+Owns student concept state.
+
+Main services
+load concept state
+
+initialize missing state
+
+update state after attempt
+
+calculate review due date
+
+compute decay
+
+rank weak concepts
+
+detect misconception patterns
+
+Contract
+It answers “what does this learner currently look like with respect to this concept?”
+
+7.4 question_family module
+Responsibility
+Owns family definitions and their transformation rules.
+
+Main services
+fetch family
+
+resolve family by intent
+
+validate family supports requested format
+
+return required primitive types
+
+Contract
+This is the rulebook of the factory.
+
+7.5 intent_selector module
+Responsibility
+Chooses what truth to extract now.
+
+Inputs
+student
+
+mode
+
+concept state
+
+concept metadata
+
+session goal
+
+Outputs
+evaluative intent
+
+candidate family types
+
+priority level
+
+Example decisions
+weak memory → recall/reconstruction
+
+high misconception risk → misconception exposure/error detection
+
+strong but shallow → transfer/justification
+
+low speed but correct → fluency/pressure
+
+7.6 primitive_extractor module
+Responsibility
+Collects the raw parts required for the selected family.
+
+Inputs
+concept
+
+family
+
+learner state
+
+Outputs
+QuestionMaterialBundle
+
+This may contain:
+
+target fact
+
+distractors
+
+misconceptions
+
+examples
+
+representation
+
+solution graph
+
+explanation anchors
+
+7.7 transform_engine module
+Responsibility
+Applies the actual cognitive transformation.
+
+This is the heart.
+
+Inputs
+family
+
+material bundle
+
+difficulty plan
+
+variant plan
+
+Outputs
+InternalQuestionDraft
+
+This internal draft should include:
+
+target cognitive action
+
+expected answer structure
+
+internal distractor objects
+
+explanation trace
+
+timing requirements
+
+scoring notes
+
+This module should be deterministic as much as possible.
+
+7.8 variant_composer module
+Responsibility
+Controls freshness and diversity.
+
+It modifies:
+wording
+
+values
+
+contexts
+
+representation source
+
+cue strength
+
+trap strength
+
+step slice
+
+timing
+
+Output
+A stable variant plan and a variant signature.
+
+7.9 difficulty_engine module
+Responsibility
+Computes and tunes difficulty.
+
+Output
+DifficultyProfile
+
+Example:
+
+pub struct DifficultyProfile {
+    pub concept: f32,
+    pub retrieval: f32,
+    pub distractor: f32,
+    pub representation: f32,
+    pub process: f32,
+    pub context: f32,
+    pub explanation: f32,
+    pub pressure: f32,
+    pub trap: f32,
+    pub overall: f32,
+}
+7.10 render_engine module
+Responsibility
+Turns internal draft into student-facing content.
+
+Inputs
+internal draft
+
+format type
+
+template
+
+language level
+
+Outputs
+surface text
+
+option list
+
+response schema
+
+media payload
+
+This is where you separate internal pedagogical logic from presentation wording.
+
+7.11 validation_engine module
+Responsibility
+Checks quality before delivery.
+
+Must validate
+concept alignment
+
+answerability
+
+distractor quality
+
+ambiguity
+
+mode suitability
+
+difficulty sanity
+
+explanation presence
+
+duplicate similarity
+
+Output
+ValidatedQuestion
+
+or ValidationError
+
+7.12 delivery_engine module
+Responsibility
+Packages question for the mode runtime.
+
+It attaches
+timer rules
+
+streak logic
+
+question ordering metadata
+
+retry behavior
+
+scoring mode
+
+display hints policy
+
+This matters especially for Mental Mode and DNA.
+
+7.13 response_analyzer module
+Responsibility
+Interprets the learner’s answer beyond correctness.
+
+Inputs
+question
+
+answer payload
+
+response timing
+
+confidence
+
+hints
+
+Outputs
+correctness
+
+detected misconception
+
+likely failure type
+
+recovery recommendation
+
+performance dimensions
+
+7.14 adaptation_engine module
+Responsibility
+Decides what to do next.
+
+Possible outcomes
+reinforce same concept
+
+switch to reconstruction
+
+trigger misconception repair
+
+move to transfer
+
+queue retention review
+
+raise speed pressure
+
+revisit prerequisite
+
+This is what makes the engine intelligent across sessions.
+
+8. Core runtime contracts
+Now let us define the important structs and service-level contracts.
+
+8.1 QuestionRequest
+pub struct QuestionRequest {
+    pub student_id: String,
+    pub mode: ModeContext,
+    pub concept_scope: Vec<String>,
+    pub preferred_formats: Vec<FormatType>,
+    pub target_difficulty: Option<f32>,
+    pub session_goal: Option<String>,
+    pub force_concept_id: Option<String>,
+    pub force_family_id: Option<String>,
+}
+Purpose
+This is what any mode sends to the factory.
+
+8.2 QuestionMaterialBundle
+pub struct QuestionMaterialBundle {
+    pub concept_id: String,
+    pub primitives: Vec<ConceptPrimitive>,
+    pub misconceptions: Vec<Misconception>,
+    pub examples: Vec<ExampleRecord>,
+    pub representations: Vec<RepresentationRecord>,
+    pub solution_graph: Option<SolutionGraph>,
+    pub linked_concepts: Vec<ConceptLink>,
+}
+Purpose
+This is the raw packet the transformation engine uses.
+
+8.3 InternalQuestionDraft
+pub struct InternalQuestionDraft {
+    pub concept_id: String,
+    pub family_id: String,
+    pub cognitive_type: CognitiveType,
+    pub evaluative_intent: String,
+    pub answer_model: AnswerModel,
+    pub explanation_model: ExplanationModel,
+    pub distractor_models: Vec<DistractorModel>,
+    pub representation_source_id: Option<String>,
+    pub misconception_target_id: Option<String>,
+    pub timing_profile: Option<TimingProfile>,
+    pub metadata: serde_json::Value,
+}
+Purpose
+A non-UI draft representing the true pedagogical structure.
+
+8.4 GeneratedQuestion
+pub struct GeneratedQuestion {
+    pub id: String,
+    pub concept_id: String,
+    pub family_id: String,
+    pub mode: ModeContext,
+    pub cognitive_type: CognitiveType,
+    pub format_type: FormatType,
+    pub difficulty_profile: DifficultyProfile,
+    pub surface_text: String,
+    pub options: Option<Vec<QuestionOption>>,
+    pub answer_key: AnswerKey,
+    pub explanation_key: ExplanationKey,
+    pub timing_profile: Option<TimingProfile>,
+    pub validation_status: ValidationStatus,
+    pub variant_signature: String,
+}
+8.5 AttemptSubmission
+pub struct AttemptSubmission {
+    pub student_id: String,
+    pub question_id: String,
+    pub answer_payload: serde_json::Value,
+    pub response_time_ms: Option<u64>,
+    pub confidence_rating: Option<f32>,
+    pub hints_used: u32,
+}
+8.6 AttemptAnalysis
+pub struct AttemptAnalysis {
+    pub correctness: f32,
+    pub partial_credit: f32,
+    pub detected_error_type: Option<String>,
+    pub misconception_triggered_id: Option<String>,
+    pub retrieval_speed_score: Option<f32>,
+    pub confidence_alignment_score: Option<f32>,
+    pub reasoning_quality_score: Option<f32>,
+    pub pressure_stability_score: Option<f32>,
+    pub recommended_next_action: NextAction,
+}
+8.7 NextAction
+pub enum NextAction {
+    ReinforceSameConcept,
+    SwitchToReconstruction,
+    TriggerMisconceptionRepair,
+    AdvanceToApplication,
+    AdvanceToTransfer,
+    QueueRetentionReview,
+    RaisePressureGradually,
+    RevisitPrerequisite(String),
+    MoveOn,
+}
+9. Primary service interfaces
+9.1 QuestionFactoryService
+This is the main entry point.
+
+pub trait QuestionFactoryService {
+    fn generate_question(&self, request: QuestionRequest) -> Result<GeneratedQuestion, QuestionFactoryError>;
+}
+Internal flow
+resolve target concept
+
+load learner state
+
+choose evaluative intent
+
+choose family
+
+collect material bundle
+
+compute difficulty
+
+generate draft
+
+render
+
+validate
+
+persist
+
+return
+
+9.2 AttemptProcessingService
+pub trait AttemptProcessingService {
+    fn process_attempt(&self, submission: AttemptSubmission) -> Result<AttemptAnalysis, AttemptProcessingError>;
+}
+Internal flow
+load question
+
+compare answer payload against answer model
+
+detect misconception or wrong path
+
+compute multi-dimensional performance
+
+persist attempt
+
+update learner state
+
+create or update review queue
+
+return next action
+
+9.3 LearnerStateService
+pub trait LearnerStateService {
+    fn get_or_create_state(&self, student_id: &str, concept_id: &str) -> Result<StudentConceptState, StateError>;
+    fn update_from_attempt(&self, state: &StudentConceptState, analysis: &AttemptAnalysis) -> Result<StudentConceptState, StateError>;
+}
+9.4 ReviewQueueService
+pub trait ReviewQueueService {
+    fn schedule_review(&self, student_id: &str, concept_id: &str, review_type: ReviewType, due_at: chrono::DateTime<chrono::Utc>) -> Result<(), ReviewQueueError>;
+    fn get_due_reviews(&self, student_id: &str) -> Result<Vec<ReviewItem>, ReviewQueueError>;
+}
+10. Generation flow in contract form
+Now let us state the exact runtime pipeline more formally.
+
+Step A — receive request
+A mode sends QuestionRequest.
+
+Example:
+
+student_id = S1
+
+mode = Memory
+
+concept_scope = [fractions, decimals]
+
+preferred_formats = [MultipleChoice, ShortAnswer]
+
+Step B — target concept resolver
+The factory determines what concept to work on using:
+
+forced concept if present
+
+review queue if due
+
+weakest concept if mode is Knowledge Gap
+
+decaying concept if mode is Memory
+
+pressure-ready concept if mode is Mental
+
+high-mastery stretch concept if mode is Elite
+
+This should be a separate resolver, not mixed into generation logic.
+
+Step C — learner state fetch
+Load StudentConceptState.
+
+If missing, initialize with neutral defaults.
+
+Step D — intent selection
+Choose the evaluative question:
+
+verify direct recall
+
+test concept boundary
+
+expose misconception
+
+test reasoning depth
+
+test next-step competence
+
+test speed under pressure
+
+confirm retention after delay
+
+Step E — family resolution
+Map intent to a usable question family.
+
+This should consider:
+
+does this concept have a solution graph?
+
+does it have misconception records?
+
+does it have enough examples?
+
+does the mode allow open response?
+
+Step F — material extraction
+Gather a QuestionMaterialBundle.
+
+Step G — difficulty and freshness planning
+Compute:
+
+difficulty profile
+
+format selection
+
+representation choice
+
+variant signature
+
+cue level
+
+distractor strength
+
+time pressure
+
+Step H — transformation
+The transformation engine creates an internal draft.
+
+Example:
+
+family = ErrorDetection
+
+use solution graph
+
+choose common invalid sign step
+
+create correct path with one corruption
+
+attach misconception mapping
+
+Step I — surface rendering
+Turn it into displayed text/options/payload.
+
+Step J — validation
+Reject or repair if:
+
+broken options
+
+ambiguous key
+
+poor fit for age level
+
+duplicate similarity too high
+
+missing explanation
+
+Step K — persistence
+Persist generated_questions.
+
+Step L — return to mode engine
+The mode engine receives a clean GeneratedQuestion.
+
+11. Attempt processing flow in contract form
+Step A — receive submission
+Mode sends AttemptSubmission.
+
+Step B — load original question
+Fetch question metadata, answer model, timing profile, misconception target, scoring mode.
+
+Step C — answer evaluation
+This depends on format type.
+
+For MCQ
+compare selection
+
+detect if wrong choice maps to misconception
+
+For short answer
+compare against answer model
+
+possibly use normalized scoring rules
+
+For process questions
+compare selected next step / correction / ordering against solution graph
+
+For explanation
+use anchored rubric scoring, not simple exact match
+
+Step D — compute performance dimensions
+At minimum:
+
+correctness
+
+speed
+
+confidence alignment
+
+misconception trigger
+
+pressure stability
+
+reasoning quality if applicable
+
+Step E — create attempt record
+Persist full attempt data.
+
+Step F — update student concept state
+Adjust:
+
+mastery estimate
+
+memory strength
+
+retrieval speed
+
+misconception risks
+
+next review due date
+
+decay assumptions
+
+Step G — adaptation decision
+Produce NextAction.
+
+Step H — queue follow-up if needed
+Examples:
+
+retention check in 3 days
+
+misconception repair now
+
+transfer probe after success
+
+recovery ladder tomorrow
+
+12. Scoring and learner-state math
+Do not overcomplicate at first, but do not make it crude.
+
+A strong first version can use weighted updates.
+
+12.1 Mastery update
+Example internal logic:
+
+new_mastery =
+old_mastery * 0.75
++ correctness * 0.15
++ reasoning_quality * 0.05
++ transfer_success * 0.05
+12.2 Memory strength update
+Use:
+
+recall correctness
+
+latency
+
+delayed success
+
+cue dependence
+
+Example:
+
+correct direct recall fast → strong positive
+
+correct only with recognition → small positive
+
+correct only with clues → reconstruction stronger than memory
+
+wrong after long delay → decay increase
+
+12.3 Misconception risk update
+If a wrong option consistently maps to the same misconception, raise its risk score.
+
+misconception_risk[m] += weighted evidence
+If learner later answers repair questions correctly, gradually reduce it.
+
+12.4 Pressure tolerance update
+Compare performance under timed vs untimed conditions.
+
+If learner collapses only under time, do not lower concept mastery too harshly.
+Lower pressure tolerance instead.
+
+This distinction is very important.
+
+13. Mode-specific constraints at API level
+Each mode should influence generation rules.
+
+Memory Mode
+API-level constraints
+prefer prior concepts already seen
+
+prefer delayed resurfacing
+
+avoid excessive novelty
+
+use lower cue first, then recovery if needed
+
+Knowledge Gap Mode
+API-level constraints
+prioritize unknown or unstable concepts
+
+allow diagnostic traps
+
+allow compare-and-contrast and classification
+
+branch quickly on failure
+
+Mental Mode
+API-level constraints
+require timing profile
+
+prefer rapid-response formats
+
+prefer short items
+
+group into streak chains
+
+avoid long open explanations
+
+Elite Mode
+API-level constraints
+keep within curriculum
+
+raise disguise, reasoning depth, boundary difficulty
+
+allow multi-step and transfer-heavy families
+
+avoid boring repetition
+
+DNA Mode
+API-level constraints
+maximize diagnostic value
+
+record high-detail analytics
+
+allow branching question families
+
+emphasize misconception detection and subskill isolation
+
+14. Suggested Rust folder structure
+A clean backend structure could look like this:
+
+src/
+  app/
+    mod.rs
+    services.rs
+
+  domain/
+    curriculum/
+      mod.rs
+      entities.rs
+      repository.rs
+      service.rs
+
+    concepts/
+      mod.rs
+      entities.rs
+      repository.rs
+      service.rs
+
+    learner/
+      mod.rs
+      entities.rs
+      repository.rs
+      service.rs
+      decay.rs
+
+    question_factory/
+      mod.rs
+      entities.rs
+      request.rs
+      errors.rs
+      service.rs
+
+      intent_selector.rs
+      family_resolver.rs
+      primitive_extractor.rs
+      transform_engine.rs
+      variant_composer.rs
+      difficulty_engine.rs
+      render_engine.rs
+      validation_engine.rs
+      delivery_engine.rs
+
+    attempts/
+      mod.rs
+      entities.rs
+      repository.rs
+      analyzer.rs
+      service.rs
+
+    reviews/
+      mod.rs
+      entities.rs
+      repository.rs
+      service.rs
+
+  infrastructure/
+    db/
+      mod.rs
+      sqlite.rs
+      migrations/
+    repositories/
+      curriculum_sqlite.rs
+      concept_sqlite.rs
+      learner_sqlite.rs
+      question_sqlite.rs
+      attempt_sqlite.rs
+      review_sqlite.rs
+
+  api/
+    commands/
+      generate_question.rs
+      submit_attempt.rs
+      get_due_reviews.rs
+
+  utils/
+    ids.rs
+    time.rs
+    normalization.rs
+This keeps the system modular.
+
+15. Command layer examples
+Because it is a desktop app, your frontend may call backend commands through Tauri or a similar bridge.
+
+You can expose commands like:
+
+generate_question
+
+submit_attempt
+
+get_student_concept_state
+
+get_due_reviews
+
+get_question_explanation
+
+get_diagnostic_breakdown
+
+Example command payload:
+
+pub struct GenerateQuestionCommand {
+    pub student_id: String,
+    pub mode: String,
+    pub concept_scope: Vec<String>,
+    pub preferred_formats: Vec<String>,
+}
+The command layer should stay thin.
+It should only translate transport payloads into domain requests.
+
+16. Validation rules by question family
+You should not use one generic validator only.
+Some rules must be family-specific.
+
+Recall validator
+exactly one expected fact/rule/label target
+
+wording not misleading
+
+answer key normalized properly
+
+Recognition validator
+correct option clearly best
+
+distractors plausible but not invalid nonsense
+
+no duplicate-option meaning
+
+Error detection validator
+only one intended injected error unless explicitly multi-fault
+
+error truly corresponds to misconception or invalid transition
+
+correction path available
+
+First-step validator
+correct first move exists in solution graph
+
+alternatives do not accidentally become equally valid at this level
+
+Transfer validator
+deep structure preserved
+
+surface changed enough to count as transfer, not repetition
+
+Pressure validator
+question length appropriate for timer
+
+timing feasible for target grade
+
+no hidden reading overload
+
+This family-specific validation will matter a lot.
+
+17. Logging and observability
+Because this is a sophisticated engine, you should log every generation decision internally.
+
+For each generated question, log:
+
+selected concept
+
+learner-state snapshot
+
+chosen evaluative intent
+
+chosen family
+
+extracted primitive ids
+
+selected misconception target if any
+
+difficulty profile
+
+variant signature
+
+validation notes
+
+For each attempt, log:
+
+correctness
+
+response time
+
+misconception detection
+
+scoring breakdown
+
+state update deltas
+
+next action chosen
+
+This will help you debug the system when results feel “off.”
+
+18. Minimal build sequence for the engineering team
+Here is the smartest build order.
+
+Build 1 — storage and domain foundation
+Implement:
+
+curricula
+
+curriculum_nodes
+
+concepts
+
+concept_primitives
+
+misconception_records
+
+question_families
+
+students
+
+student_concept_states
+
+generated_questions
+
+attempt_records
+
+Also implement repositories and migrations.
+
+Build 2 — runtime generation skeleton
+Implement:
+
+QuestionRequest
+
+QuestionFactoryService
+
+intent_selector
+
+family_resolver
+
+primitive_extractor
+
+transform_engine
+
+render_engine
+
+validation_engine
+
+But start with only these families:
+
+recall
+
+recognition
+
+explanation
+
+application
+
+error detection
+
+Build 3 — response intelligence
+Implement:
+
+AttemptProcessingService
+
+response analyzer
+
+learner state updater
+
+review queue
+
+Now the system becomes adaptive.
+
+Build 4 — process and diagnostic power
+Add:
+
+solution_graphs
+
+first-step
+
+next-step
+
+correction
+
+misconception exposure
+
+compare-and-contrast
+
+This strengthens DNA and Knowledge Gap Mode.
+
+Build 5 — memory and elite intelligence
+Add:
+
+retention check
+
+recovery
+
+retrieval under pressure
+
+transfer
+
+representation conversion
+
+stretch
+
+Now Memory, Mental, and Elite modes become truly distinctive.
+
+19. The most important separation in the codebase
+Do not mix these three things:
+
+1. pedagogical logic
+Why this question exists
+
+2. rendering logic
+How this question is worded or shown
+
+3. mode orchestration logic
+When this question is requested
+
+These must remain separate.
+
+Otherwise the system becomes tangled very quickly.
+
+20. Final technical definition
+The Question Factory backend should be implemented as a domain service that consumes structured concept knowledge and learner-state data, selects an evaluative intent appropriate to the current instructional mode, resolves a compatible cognitive question family, transforms concept primitives into a question draft under controlled difficulty and freshness parameters, validates the output, persists the generated item, and then interprets learner responses to update mastery, memory, misconception risk, and review scheduling.
+
+That is the clean technical contract.
+
+The next strongest step is to define the actual question family specs one by one in implementation language — for example:
+
+Recall family spec
+
+Recognition family spec
+
+Error Detection family spec
+
+Misconception Exposure family spec
+
+First-Step family spec
+
+Retention Check family spec
+
+with for each:
+
+required inputs
+
+transformation rules
+
+output schema
+
+scoring logic
+
+validator rules
+
+state-update effects
+
+That would turn this into an engineering-ready blueprint.
+
+
+proceed
+
+I’m now dropping from system architecture into per-family implementation contracts. This is where the engine becomes buildable, because each family gets exact inputs, generation steps, scoring, validator rules, and learner-state effects.
+
+Thought for 5s
+Good. Now we define the question family specs in implementation language.
+
+This is where the Question Factory stops being conceptual and becomes something engineers can build module by module.
+
+I will define the first major families in a strict format:
+
+purpose
+
+when to use
+
+required inputs
+
+generation logic
+
+output structure
+
+scoring logic
+
+validator rules
+
+learner-state update effects
+
+common failure cases
+
+mode usage
+
+I will start with the highest-value core families:
+
+Recall
+
+Recognition
+
+Reconstruction
+
+Explanation
+
+Application
+
+Error Detection
+
+Misconception Exposure
+
+First-Step
+
+Next-Step
+
+Retention Check
+
+Recovery
+
+Retrieval Under Pressure
+
+1. Recall Family Spec
+1.1 Purpose
+To test whether the learner can retrieve a concept element directly from memory without being shown the answer.
+
+1.2 When to use
+Use Recall when the system wants to verify:
+
+direct memory access
+
+basic concept possession
+
+fluency of retrieval
+
+whether the learner knows it independently rather than only recognizing it
+
+Best used:
+
+Memory Mode
+
+Journey foundation checks
+
+after concept introduction
+
+before deeper application
+
+during spaced review
+
+1.3 Required inputs
+Required concept materials
+at least one atomic target primitive of type:
+
+definition
+
+fact
+
+rule
+
+formula
+
+term
+
+label
+
+step
+
+cause
+
+effect
+
+Optional supporting materials
+concept keywords
+
+memory hooks
+
+grade-level phrasing
+
+synonyms or acceptable answer variants
+
+Required learner inputs
+learner grade level
+
+concept state
+
+target difficulty or mode
+
+prior exposure count
+
+1.4 Generation logic
+Core transformation rule
+Select one atomic primitive and hide it entirely.
+Ask for it directly.
+
+Generator steps
+select concept
+
+choose atomic primitive with suitable importance and difficulty
+
+determine wording style:
+
+direct
+
+paraphrased
+
+lightly contextualized
+
+determine cue level:
+
+high cue
+
+medium cue
+
+low cue
+
+render question text
+
+normalize expected answer forms
+
+Example transformation
+Primitive:
+
+definition = “Evaporation is the process by which a liquid changes into gas at the surface.”
+
+Possible recall outputs:
+
+“What is evaporation?”
+
+“Which process occurs when a liquid changes to gas at the surface?”
+
+“State what evaporation means.”
+
+1.5 Output structure
+pub struct RecallQuestionPayload {
+    pub target_primitive_id: String,
+    pub expected_answer_forms: Vec<String>,
+    pub cue_level: CueLevel,
+    pub wording_style: WordingStyle,
+    pub requires_exactness: bool,
+}
+Rendered question fields:
+
+surface_text
+
+answer_key
+
+normalized_answer_forms
+
+optional timer
+
+explanation_key
+
+1.6 Scoring logic
+Binary base
+correct
+
+incorrect
+
+But also capture
+response time
+
+answer normalization distance
+
+spelling tolerance if applicable
+
+confidence rating if available
+
+Scoring notes
+exact scientific term questions may require stricter matching
+
+explanatory recall should allow acceptable paraphrase ranges
+
+formula recall may require symbolic normalization
+
+1.7 Validator rules
+target primitive must be atomic enough
+
+wording must not accidentally include the answer
+
+accepted answers list must not be too narrow
+
+question must align to grade level
+
+if exactness required, exactness must be pedagogically justified
+
+no ambiguity between multiple possible concept terms
+
+1.8 Learner-state update effects
+Positive signal
+If correct and fast:
+
+increase memory_strength strongly
+
+increase retrieval_speed_score
+
+small increase to mastery_estimate
+
+If correct but slow:
+
+moderate increase to memory_strength
+
+low increase to retrieval speed
+
+queue fluency follow-up
+
+If wrong:
+
+reduce memory_strength
+
+possibly keep recognition_strength unchanged
+
+consider reconstruction or recognition follow-up instead of assuming total ignorance
+
+1.9 Common failure cases
+learner knows the answer but phrasing mismatch causes false negative
+
+target primitive too broad
+
+“define X” prompts become explanation questions accidentally
+
+exact matching too strict for young learners
+
+1.10 Mode usage
+Memory Mode: primary
+
+Mental Mode: good in compressed form
+
+Journey Mode: useful as checkpoint
+
+DNA: useful but not enough alone
+
+Elite Mode: limited use unless combined with pressure
+
+2. Recognition Family Spec
+2.1 Purpose
+To test whether the learner can identify the correct concept or statement when shown plausible alternatives.
+
+2.2 When to use
+Use Recognition when:
+
+reintroducing a weak concept
+
+learner struggles with direct recall
+
+checking shallow familiarity
+
+screening before deeper generation
+
+building recovery ladders
+
+2.3 Required inputs
+target primitive or target concept
+
+distractor candidates
+
+optionally linked misconceptions
+
+optionally contrast concepts
+
+Distractors should preferably come from:
+
+nearby concepts
+
+common confusions
+
+misconception statements
+
+same-topic close neighbors
+
+2.4 Generation logic
+Core transformation rule
+Present the true target beside plausible but incorrect alternatives.
+
+Generator steps
+choose target primitive
+
+retrieve distractor pool
+
+rank distractors by closeness
+
+filter out broken or obviously silly distractors
+
+choose distractor strength based on difficulty
+
+render option set
+
+Distractor strategy types
+semantic neighbor distractor
+
+misconception distractor
+
+overgeneralized distractor
+
+contrast-concept distractor
+
+2.5 Output structure
+pub struct RecognitionQuestionPayload {
+    pub target_id: String,
+    pub option_set: Vec<QuestionOption>,
+    pub correct_option_id: String,
+    pub distractor_types: Vec<String>,
+    pub distractor_strength: f32,
+}
+2.6 Scoring logic
+base correctness
+
+option choice logging
+
+if wrong, map selected distractor to misconception/near-miss pattern
+
+This is more informative than ordinary MCQ scoring because wrong options have meaning.
+
+2.7 Validator rules
+exactly one best answer
+
+distractors must be plausible
+
+distractors must not be partially true unless intentionally designed and clearly inferior
+
+option wording balance should be fair
+
+correct answer should not stand out visually or linguistically
+
+no duplicate semantic options
+
+2.8 Learner-state update effects
+If correct:
+
+small to moderate increase in recognition_strength
+
+smaller increase to memory_strength than recall would give
+
+if repeated recognition success but recall failure persists, mark cue dependence
+
+If wrong:
+
+update misconception risk if wrong option maps clearly
+
+do not over-punish mastery if distractors were very close
+
+2.9 Common failure cases
+distractors too weak
+
+two options effectively correct
+
+wording cues leak answer
+
+recognition mistaken for true mastery
+
+2.10 Mode usage
+Memory Mode: useful as gentle re-entry
+
+Knowledge Gap Mode: useful early
+
+Recovery flows: very strong
+
+Mental Mode: possible in fast tap style
+
+Elite Mode: limited unless distractors are very close
+
+3. Reconstruction Family Spec
+3.1 Purpose
+To test whether the learner can rebuild knowledge from fragments, cues, or connected ideas.
+
+3.2 When to use
+Use Reconstruction when:
+
+learner fails recall but may have partial knowledge
+
+memory is fading
+
+system wants to strengthen associative memory
+
+recovery is needed without giving full answer away
+
+3.3 Required inputs
+target primitive
+
+clue primitives
+
+prerequisite concept anchors
+
+optional example/non-example
+
+optional memory hooks
+
+3.4 Generation logic
+Core transformation rule
+Do not ask directly.
+Provide partial structure or clue chain that points toward the answer.
+
+Generator steps
+choose target primitive
+
+identify 1–3 clue primitives with strong conceptual proximity
+
+choose reconstruction format:
+
+fill missing piece
+
+clue chain
+
+partial formula
+
+partial sequence
+
+incomplete explanation
+
+set support level
+
+render item
+
+Example
+Target:
+
+“photosynthesis”
+
+Clue-based reconstruction:
+
+“Plants use sunlight to make food. What is this process called?”
+
+Partial-structure reconstruction:
+
+“The process by which green plants use sunlight to make food is called ______.”
+
+3.5 Output structure
+pub struct ReconstructionQuestionPayload {
+    pub target_primitive_id: String,
+    pub clue_primitive_ids: Vec<String>,
+    pub support_level: f32,
+    pub reconstruction_format: ReconstructionFormat,
+    pub expected_answer_forms: Vec<String>,
+}
+3.6 Scoring logic
+correctness
+
+number of cues provided
+
+response time
+
+whether answer required further prompting
+
+Correct with low support should score higher than correct with heavy cues.
+
+3.7 Validator rules
+clue chain must genuinely connect to target
+
+clues must not make multiple answers equally likely
+
+support level should match mode and age
+
+reconstruction should not collapse into simple recognition
+
+3.8 Learner-state update effects
+If correct with minimal support:
+
+increase reconstruction_strength strongly
+
+moderate increase memory_strength
+
+schedule lighter recall later
+
+If correct only with heavy support:
+
+increase reconstruction_strength slightly
+
+low memory boost
+
+queue another recovery attempt soon
+
+If wrong:
+
+possible prerequisite weakness
+
+trigger concept-prerequisite analysis
+
+3.9 Common failure cases
+clue too vague
+
+clue gives answer away completely
+
+reconstruction item becomes simple recall
+
+prerequisite gap masquerades as memory gap
+
+3.10 Mode usage
+Memory Mode: very important
+
+Recovery flows: core
+
+Knowledge Gap Mode: useful for partial knowledge diagnosis
+
+Journey Mode: useful after failure
+
+DNA: can reveal whether concept exists in fragments
+
+4. Explanation Family Spec
+4.1 Purpose
+To test whether the learner can express why, how, or what something means in their own understanding.
+
+4.2 When to use
+Use Explanation when the system wants to know:
+
+whether understanding exists beyond memory
+
+whether learner can connect concept to cause or process
+
+whether correctness is shallow or genuine
+
+whether misconceptions still contaminate reasoning
+
+4.3 Required inputs
+explanation anchors
+
+causal chain or meaning chain
+
+key required ideas
+
+optional misconception exclusions
+
+scoring rubric anchors
+
+4.4 Generation logic
+Core transformation rule
+Ask the learner to articulate cause, mechanism, meaning, or reasoning in words.
+
+Generator steps
+select concept or phenomenon
+
+choose explanation type:
+
+define meaning
+
+explain process
+
+explain cause
+
+explain why answer is correct
+
+explain difference
+
+build required-idea rubric
+
+decide open response vs guided response
+
+render question
+
+Example
+“Why do clothes dry faster on a windy day?”
+
+“Explain why evaporation can happen without boiling.”
+
+“In your own words, explain what diffusion means.”
+
+4.5 Output structure
+pub struct ExplanationQuestionPayload {
+    pub prompt_type: ExplanationPromptType,
+    pub required_idea_anchors: Vec<String>,
+    pub forbidden_misconception_ids: Vec<String>,
+    pub rubric_id: String,
+    pub min_expected_depth: f32,
+}
+4.6 Scoring logic
+Explanation cannot rely on exact-match only.
+
+Use anchored scoring dimensions:
+
+essential idea present
+
+causal logic present
+
+terminology accuracy
+
+misconception absence
+
+completeness
+
+clarity
+
+Possible first-pass scoring model:
+
+0.0 no evidence
+
+0.25 fragmentary
+
+0.5 partially correct
+
+0.75 mostly correct
+
+1.0 strong explanation
+
+4.7 Validator rules
+required idea anchors must be explicit
+
+prompt must be grade-appropriate
+
+explanation should not require unrelated expressive skill beyond level
+
+rubric must accept reasonable paraphrase
+
+scoring rules must distinguish concept error from language weakness
+
+4.8 Learner-state update effects
+If strong explanation:
+
+increase reasoning_strength
+
+increase mastery_estimate
+
+reduce misconception risk
+
+If correct answer but weak explanation:
+
+mark shallow mastery
+
+keep transfer and reasoning strengths lower
+
+If explanation includes misconception:
+
+sharply raise misconception risk
+
+trigger repair sequence even if final answer looked superficially right
+
+4.9 Common failure cases
+scoring becomes too subjective
+
+language ability confuses concept ability
+
+prompt too broad
+
+open response too heavy for Mental Mode or young learner
+
+4.10 Mode usage
+Knowledge Gap Mode: strong
+
+DNA: very strong
+
+Journey Mode: strong
+
+Elite Mode: strong
+
+Memory Mode: secondary
+
+Mental Mode: generally limited
+
+5. Application Family Spec
+5.1 Purpose
+To test whether the learner can use a principle or concept in a concrete situation.
+
+5.2 When to use
+Use Application when:
+
+concept understanding has been established
+
+system wants proof of usable knowledge
+
+learner seems to know theory but not practice
+
+preparing for exam-style scenario questions
+
+5.3 Required inputs
+target concept
+
+application contexts
+
+mapping rule from concept to situation
+
+optional distractor misconceptions
+
+optional scenario representations
+
+5.4 Generation logic
+Core transformation rule
+Embed the concept in a case and require the learner to apply the correct idea.
+
+Generator steps
+choose concept
+
+choose scenario type:
+
+textbook familiar
+
+semi-real-world
+
+strongly real-world
+
+hide or reveal concept name depending on difficulty
+
+inject irrelevant details if desired
+
+render question
+
+Example
+Concept: density
+Question:
+
+“Why does oil float on water after a spill?”
+
+Concept: evaporation
+Question:
+
+“Why do people spread grains out in the sun rather than heap them in a pile?”
+
+5.5 Output structure
+pub struct ApplicationQuestionPayload {
+    pub scenario_id: Option<String>,
+    pub target_concept_id: String,
+    pub concept_visibility: ConceptVisibility,
+    pub irrelevant_detail_load: f32,
+    pub expected_mapping_rule: String,
+}
+5.6 Scoring logic
+correctness
+
+if open-ended, reasoning link between concept and situation
+
+whether learner chose right principle or wrong competing principle
+
+partial credit if principle recognized but explanation weak
+
+5.7 Validator rules
+scenario must truly instantiate the concept
+
+irrelevant details must not obscure unfairly
+
+alternative concepts must not fit equally well
+
+if multiple correct approaches exist, scoring must support them
+
+5.8 Learner-state update effects
+If correct:
+
+increase application_strength or mastery_estimate
+
+stronger positive than simple recognition
+
+modest transfer readiness boost
+
+If wrong but recall still good:
+
+indicates inert knowledge
+
+lower application-related mastery but not necessarily memory strength
+
+5.9 Common failure cases
+scenario too vague
+
+concept too explicitly named, making it shallow
+
+application question accidentally becomes recall
+
+real-world context introduces unrelated bias
+
+5.10 Mode usage
+Journey Mode: primary
+
+Custom Prep: primary
+
+DNA: useful
+
+Elite Mode: useful when disguised
+
+Memory Mode: secondary
+
+Knowledge Gap Mode: useful after foundation
+
+6. Error Detection Family Spec
+6.1 Purpose
+To test whether the learner can identify an incorrect step, invalid claim, or broken reasoning path.
+
+6.2 When to use
+Use Error Detection when:
+
+diagnosing misconceptions
+
+checking process awareness
+
+sharpening precision
+
+testing whether learner understands not just answer but method
+
+6.3 Required inputs
+valid solution path or valid reasoning chain
+
+one injectable invalid step
+
+error type classification
+
+optionally misconception mapping
+
+correction anchor
+
+6.4 Generation logic
+Core transformation rule
+Generate a correct worked path, then deliberately corrupt one point.
+
+Generator steps
+choose target concept/process
+
+fetch valid solution graph or reasoning chain
+
+choose one invalid transition
+
+inject fault
+
+choose question frame:
+
+“Which step is wrong?”
+
+“What is the mistake here?”
+
+“Why is this reasoning incorrect?”
+
+render item
+
+Example
+a math solution with one sign error
+
+a science explanation that confuses evaporation with boiling
+
+a grammar rule applied wrongly to a sentence
+
+6.5 Output structure
+pub struct ErrorDetectionQuestionPayload {
+    pub source_solution_graph_id: Option<String>,
+    pub injected_error_type: String,
+    pub injected_step_index: Option<usize>,
+    pub misconception_target_id: Option<String>,
+    pub correction_anchor: Option<String>,
+}
+6.6 Scoring logic
+Possible sub-scores:
+
+identified wrong step
+
+named why wrong
+
+optionally proposed correct alternative
+
+Can be split:
+
+detection score
+
+explanation-of-error score
+
+6.7 Validator rules
+only one intended fault unless multi-fault explicitly designed
+
+surrounding steps must remain coherent
+
+wrongness must be real, not debatable
+
+correction anchor must exist
+
+if step numbering shown, target step must be unambiguous
+
+6.8 Learner-state update effects
+If learner spots error and explains it:
+
+increase reasoning_strength
+
+reduce misconception risk for that fault
+
+increase precision-related mastery
+
+If learner misses specific error:
+
+raise linked misconception risk
+
+possible need for correction family next
+
+6.9 Common failure cases
+injected error makes later steps impossible in confusing ways
+
+multiple accidental errors
+
+learner spots wrong step but system cannot capture why
+
+poor solution graph causes low-quality items
+
+6.10 Mode usage
+DNA: very strong
+
+Knowledge Gap Mode: very strong
+
+Journey Mode: strong
+
+Elite Mode: strong
+
+Memory Mode: limited
+
+Mental Mode: only in short, sharp versions
+
+7. Misconception Exposure Family Spec
+7.1 Purpose
+To reveal whether a specific false belief is active in the learner’s mind.
+
+7.2 When to use
+Use this family when:
+
+concept has known confusion patterns
+
+engine needs precise diagnosis
+
+learner repeatedly fails in patterned ways
+
+system wants to separate ignorance from false understanding
+
+7.3 Required inputs
+misconception record
+
+trigger scenario
+
+trap response options or trap prompt
+
+correction logic
+
+optionally contrast concept
+
+7.4 Generation logic
+Core transformation rule
+Create a context where the misconception feels tempting, then observe whether learner falls for it.
+
+Generator steps
+select target misconception
+
+fetch trigger pattern from misconception record
+
+choose item form:
+
+direct statement judgment
+
+scenario trap
+
+near-neighbor multiple choice
+
+compare/contrast trap
+
+render item so misconception is attractive but not unfair
+
+Example
+Misconception:
+
+“Evaporation only happens when liquid is hot.”
+
+Generated item:
+
+“A puddle outside disappears during cool weather. Which process best explains this?”
+
+Wrong attractive option:
+
+“The water boiled away.”
+
+7.5 Output structure
+pub struct MisconceptionExposurePayload {
+    pub misconception_id: String,
+    pub trigger_pattern_id: Option<String>,
+    pub trap_strength: f32,
+    pub expected_false_choice_ids: Vec<String>,
+    pub repair_sequence_ref: Option<String>,
+}
+7.6 Scoring logic
+correct / incorrect
+
+if wrong, whether wrong answer maps exactly to target misconception
+
+misconception evidence confidence
+
+This family is more about diagnosis than raw marks.
+
+7.7 Validator rules
+misconception must be real and documented
+
+trap must not rely on trick wording alone
+
+wrong answer must be plausible specifically because of misconception, not random confusion
+
+correct answer must still be reasonably accessible
+
+7.8 Learner-state update effects
+If learner falls for the trap:
+
+increase misconception_risk[target] strongly
+
+queue repair immediately or soon
+
+possibly do not lower general mastery too harshly if error is highly localized
+
+If learner avoids trap consistently:
+
+gradually reduce misconception risk
+
+increase boundary clarity estimate
+
+7.9 Common failure cases
+trap becomes unfair trick
+
+wrong option attracts due to reading issue, not misconception
+
+same misconception repeatedly probed without repair
+
+7.10 Mode usage
+DNA: primary
+
+Knowledge Gap Mode: primary
+
+Journey Mode: strong
+
+Elite Mode: good for subtle boundary sharpening
+
+Memory Mode: limited
+
+Mental Mode: possible in fast boundary drills
+
+8. First-Step Family Spec
+8.1 Purpose
+To test whether the learner knows how to begin solving a problem or analyzing a task.
+
+8.2 When to use
+Use this family when:
+
+learner freezes at start
+
+learner often chooses wrong method
+
+full problem solving is too heavy for diagnosis
+
+system wants to isolate strategic entry knowledge
+
+8.3 Required inputs
+full solvable problem
+
+solution graph
+
+valid initial transition(s)
+
+invalid common opening moves
+
+8.4 Generation logic
+Core transformation rule
+Present the problem in full, but ask only for the best first move.
+
+Generator steps
+choose process-based concept
+
+fetch solution graph
+
+identify initial valid node(s)
+
+collect common wrong first moves
+
+choose format:
+
+multiple choice
+
+short response
+
+step selection
+
+render item
+
+Example
+Math:
+
+“What should you do first to solve 3x + 5 = 17?”
+
+Science:
+
+“What should be checked first when classifying this transport process?”
+
+8.5 Output structure
+pub struct FirstStepQuestionPayload {
+    pub solution_graph_id: String,
+    pub valid_first_step_ids: Vec<String>,
+    pub common_invalid_first_step_ids: Vec<String>,
+    pub branching_allowed: bool,
+}
+8.6 Scoring logic
+correct first move
+
+partial credit if move is not wrong but suboptimal, if your pedagogy allows
+
+capture chosen wrong entry strategy
+
+8.7 Validator rules
+valid first step must truly be first
+
+if multiple valid openings exist, scoring must reflect that
+
+distractor steps must be realistic early mistakes
+
+first-step prompt must not accidentally require solving whole problem first
+
+8.8 Learner-state update effects
+If correct:
+
+increase process_entry_strength
+
+modest increase in overall mastery
+
+If wrong:
+
+mark initiation weakness
+
+often better to repair strategy than keep giving full problems
+
+8.9 Common failure cases
+multiple equally valid first steps hidden by poor solution graph
+
+question requires too much downstream solving
+
+distractors are too obviously later steps
+
+8.10 Mode usage
+DNA: primary
+
+Knowledge Gap Mode: strong
+
+Journey Mode: strong
+
+Elite Mode: useful in advanced strategy
+
+Memory Mode: limited
+
+9. Next-Step Family Spec
+9.1 Purpose
+To test whether the learner can continue a partially completed reasoning or solution process correctly.
+
+9.2 When to use
+Use this family when:
+
+learner can start but breaks mid-process
+
+process diagnosis is needed
+
+system wants to scaffold full problem solving
+
+stepwise mastery is being trained
+
+9.3 Required inputs
+partial state from solution graph
+
+valid next transitions
+
+common invalid transitions
+
+optionally error-tagged branches
+
+9.4 Generation logic
+Core transformation rule
+Freeze the process at a defined state and ask what should happen next.
+
+Generator steps
+select solution graph
+
+choose a checkpoint state
+
+extract valid next move(s)
+
+retrieve common invalid next move(s)
+
+render item
+
+9.5 Output structure
+pub struct NextStepQuestionPayload {
+    pub solution_graph_id: String,
+    pub checkpoint_node_id: String,
+    pub valid_next_step_ids: Vec<String>,
+    pub invalid_next_step_ids: Vec<String>,
+}
+9.6 Scoring logic
+correct continuation
+
+optionally detect whether learner chose a common misconception branch
+
+partial credit possible if learner picks a later-valid but immediate-invalid move
+
+9.7 Validator rules
+checkpoint must be coherent and not ambiguous
+
+exactly what counts as “next” must be clear
+
+invalid steps must truly be invalid from this state
+
+if multiple next steps valid, score accordingly
+
+9.8 Learner-state update effects
+If correct:
+
+increase procedural continuity strength
+
+increase solution graph stability estimate
+
+If wrong:
+
+map to specific process breakdown point
+
+trigger focused correction or first-step/next-step drill around same region
+
+9.9 Common failure cases
+checkpoint state not clearly represented
+
+several valid next actions but only one scored correct
+
+missing state information causes confusion
+
+9.10 Mode usage
+DNA: primary
+
+Journey Mode: primary
+
+Knowledge Gap Mode: strong
+
+Elite Mode: useful in complex reasoning chains
+
+10. Retention Check Family Spec
+10.1 Purpose
+To verify whether previously learned knowledge remains accessible after time has passed.
+
+10.2 When to use
+Use this family when:
+
+concept has not been seen recently
+
+system suspects decay
+
+spaced review is due
+
+memory strength needs confirmation
+
+10.3 Required inputs
+previously encountered concept
+
+prior attempt history
+
+delayed review schedule
+
+alternate wording or alternate representation
+
+10.4 Generation logic
+Core transformation rule
+Re-ask an already learned concept after delay, preferably in changed surface form.
+
+Generator steps
+choose due concept from review queue or decay model
+
+inspect last seen form
+
+choose different surface form or phrasing
+
+select appropriate cognitive type:
+
+recall
+
+reconstruction
+
+lightweight application
+
+render delayed check
+
+Important:
+A retention check is not defined by its surface form alone.
+It is defined by the fact that it is asked after meaningful delay.
+
+10.5 Output structure
+pub struct RetentionCheckPayload {
+    pub target_concept_id: String,
+    pub days_since_last_seen: i64,
+    pub previous_question_refs: Vec<String>,
+    pub variation_type: RetentionVariationType,
+    pub decay_risk_level: f32,
+}
+10.6 Scoring logic
+correctness
+
+response time relative to concept history
+
+support dependence
+
+retention stability against prior history
+
+A learner getting it right after 10 days in changed form is much stronger evidence than getting it right immediately after lesson.
+
+10.7 Validator rules
+concept must have meaningful prior exposure
+
+variation should not be identical repetition unless intentional
+
+difficulty shift should be controlled
+
+delayed check should still reflect same concept evidence
+
+10.8 Learner-state update effects
+If correct after delay:
+
+increase memory_strength strongly
+
+reduce retention_decay_rate
+
+strengthen stable mastery estimate
+
+If wrong after delay:
+
+increase decay estimate
+
+queue recovery sequence
+
+do not treat it the same as first-time ignorance
+
+10.9 Common failure cases
+asking too soon and calling it retention
+
+repeating same wording exactly
+
+using a much harder representation and misattributing failure to decay
+
+10.10 Mode usage
+Memory Mode: primary
+
+Journey Mode: strong
+
+Knowledge Gap Mode: useful
+
+Mental Mode: can be used in rapid resurfacing
+
+DNA: useful for historical stability, not first-pass diagnosis
+
+11. Recovery Family Spec
+11.1 Purpose
+To rebuild access to weakening or partially lost knowledge.
+
+11.2 When to use
+Use Recovery when:
+
+retention check failed
+
+memory appears fragmentary
+
+learner once knew concept but now struggles
+
+system wants to repair rather than restart from zero
+
+11.3 Required inputs
+weakened concept
+
+clue ladder
+
+prerequisite anchors
+
+target primitive
+
+support gradient
+
+prior failure history
+
+11.4 Generation logic
+Core transformation rule
+Start with supported access and gradually reduce support as learner re-approaches the concept.
+
+Generator steps
+choose weakened concept
+
+estimate support level needed
+
+build clue ladder:
+
+strong cue
+
+moderate cue
+
+light cue
+
+direct retrieval
+
+choose current recovery rung
+
+render question
+
+This can be single-item or mini-sequence based.
+
+11.5 Output structure
+pub struct RecoveryQuestionPayload {
+    pub target_concept_id: String,
+    pub support_rung: u8,
+    pub clue_ids: Vec<String>,
+    pub recovery_path_id: Option<String>,
+    pub intended_next_rung_if_success: Option<u8>,
+}
+11.6 Scoring logic
+correctness
+
+support rung needed
+
+progression across rungs
+
+whether learner can maintain success as support reduces
+
+Recovery success is not just “got it right once.”
+It is “moved upward toward lower-support success.”
+
+11.7 Validator rules
+clue ladder must be pedagogically ordered
+
+support rungs must not skip from impossible to trivial
+
+cues must remain concept-specific
+
+recovery should not just leak the answer outright too early
+
+11.8 Learner-state update effects
+If success at current rung:
+
+increase reconstruction_strength
+
+moderate memory_strength boost
+
+advance to lighter-support follow-up
+
+If repeated failure at supported rung:
+
+possible prerequisite hole, not just decay
+
+route to foundation repair
+
+11.9 Common failure cases
+support ladder poorly designed
+
+recovery mistaken for reteaching everything from scratch
+
+engine keeps learner too long at high-support level
+
+11.10 Mode usage
+Memory Mode: primary
+
+Journey Mode: strong
+
+Knowledge Gap Mode: useful for comeback
+
+DNA: secondary
+
+12. Retrieval Under Pressure Family Spec
+12.1 Purpose
+To test recall, recognition, or quick reasoning under compressed time conditions.
+
+12.2 When to use
+Use this family when:
+
+system wants fluency and sharpness
+
+concept is already at least moderately known
+
+learner is in Mental Mode
+
+readiness under pressure matters
+
+12.3 Required inputs
+short-response-capable concept material
+
+timing profile
+
+burst length
+
+streak logic
+
+pressure escalation plan
+
+12.4 Generation logic
+Core transformation rule
+Take short cognitive items and deliver them with reduced response windows, often in chained form.
+
+Generator steps
+choose pressure-suitable concept items
+
+select question micro-family:
+
+rapid recall
+
+rapid recognition
+
+rapid compare/contrast
+
+rapid classification
+
+assign timer
+
+assign streak/chain behavior
+
+define penalty/reward behavior
+
+render burst sequence
+
+Important
+Pressure questions must be short in reading load.
+Otherwise you are measuring reading speed more than concept sharpness.
+
+12.5 Output structure
+pub struct PressureQuestionPayload {
+    pub base_family: CognitiveType,
+    pub response_window_ms: u64,
+    pub burst_position: usize,
+    pub burst_total: usize,
+    pub streak_rules: Option<StreakRules>,
+    pub escalation_profile: Option<PressureEscalationProfile>,
+}
+12.6 Scoring logic
+correctness
+
+response within window
+
+latency relative to deadline
+
+streak preservation
+
+collapse points under pressure
+
+Possible pressure score:
+
+concept correctness score
+
+timing success score
+
+pressure stability score
+
+12.7 Validator rules
+reading load appropriate to timer
+
+timer feasible for age and concept
+
+no ambiguous items under compressed conditions
+
+base family must be pressure-compatible
+
+explanation-type questions should generally be excluded
+
+12.8 Learner-state update effects
+If correct under pressure:
+
+increase retrieval_speed_score strongly
+
+increase pressure_tolerance
+
+moderate memory_strength increase
+
+If correct untimed but wrong under pressure:
+
+lower pressure_tolerance more than mastery
+
+schedule lighter timed practice rather than concept reteaching
+
+12.9 Common failure cases
+timer too harsh
+
+reading complexity too high
+
+system interprets speed failure as total concept failure
+
+too much novelty mixed with pressure
+
+12.10 Mode usage
+Mental Mode: primary
+
+Memory Mode: secondary for fluency
+
+Elite Mode: useful in advanced drills
+
+Journey Mode: selective use after mastery foundation
+
+13. Cross-family engineering note
+Each family should expose a common contract like this:
+
+pub trait QuestionFamilyGenerator {
+    fn generate(
+        &self,
+        request: &FamilyGenerationRequest,
+        materials: &QuestionMaterialBundle,
+        learner_state: &StudentConceptState,
+    ) -> Result<InternalQuestionDraft, FamilyGenerationError>;
+
+    fn validate(
+        &self,
+        draft: &InternalQuestionDraft,
+    ) -> Result<(), FamilyValidationError>;
+
+    fn analyze_attempt(
+        &self,
+        question: &GeneratedQuestion,
+        submission: &AttemptSubmission,
+    ) -> Result<FamilyAttemptAnalysis, FamilyAnalysisError>;
+}
+That is very important.
+
+Because then each family owns:
+
+how it is generated
+
+how it is validated
+
+how its answers are interpreted
+
+instead of forcing one giant generic engine to do everything badly.
+
+14. Recommended first implementation order
+Do not implement these 12 families randomly.
+
+Build in this order:
+
+Wave 1
+Recall
+
+Recognition
+
+Application
+
+Error Detection
+
+These give immediate practical value.
+
+Wave 2
+Reconstruction
+
+Explanation
+
+Misconception Exposure
+
+Retention Check
+
+These make the engine smarter.
+
+Wave 3
+First-Step
+
+Next-Step
+
+Recovery
+
+Retrieval Under Pressure
+
+These make your product distinctive.
+
+15. The hidden rule that must guide every family
+For every family, your engineers should ask:
+
+What mental act is being forced?
+
+What evidence does success provide?
+
+What does each wrong answer mean?
+
+What state dimensions should change after this?
+
+Which mode benefits from this family?
+
+What makes a generated version valid?
+
+If those answers are clear, the family is build-ready.
+
+The next best step is to define the shared scoring model and learner-state update framework so all these families feed one consistent adaptive intelligence system instead of each one updating state differently.
+
+
+
+

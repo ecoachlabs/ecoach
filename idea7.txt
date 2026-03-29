@@ -1,0 +1,4194 @@
+
+
+
+
+memory mode 
+
+
+what is memory , memory is basically what you remember , what you recall , what you know , when it comes to memory we want to get you to remember things , for things you are beginning to forget we zoom into them and try to get you back to where you are , you build your memory , memory means connecting the dots , connecting paths , if you forget one thing , it can affect your recall ability of other things so we dig deeper to get you out , we want to prevent loss of memory , memory is basically what we know you have in memory , what is standing strong in your memory and when we taking a memory test as soon as we detect a fall in memory in a subtopic or sub skill (since every question is tagged to a sub topic or skill behind the scenes, we just zoom into that level serve you similar questions , build your familiarity , trigger your senses , build your memory back up again 
+
+Thought for 17s
+This is a strong feature idea.
+
+What you are describing is not just “revision.” It is a memory recovery and reinforcement system.
+
+The core idea is this:
+
+Memory Mode is a system that detects what is fading in a student’s memory, traces the exact subtopic or micro-skill that is weakening, and intervenes fast before that weakness spreads into wider recall failure.
+
+A better way to frame it is:
+
+Memory is not just what a student once learned.
+Memory is what they can still reliably recall, connect, and use under pressure.
+
+So Memory Mode should do 5 things well:
+
+1. Define what “memory” means inside the app
+In this mode, memory is made up of:
+
+Retention — can the student still remember it?
+
+Recall speed — how quickly can they pull it out?
+
+Recall stability — do they remember it consistently over time?
+
+Connection strength — can they connect it to related ideas?
+
+Recovery ability — when they start forgetting, how quickly can they recover?
+
+So the app is not only asking:
+
+“Do you know this?”
+
+It is also asking:
+
+“Is this still strong in your mind?”
+
+“Can you recall it fast?”
+
+“Can you use it when related questions change shape?”
+
+“Is this memory isolated or connected?”
+
+That is the real power.
+
+2. The core philosophy behind Memory Mode
+Your line is important:
+
+if you forget one thing, it can affect your recall ability of other things
+
+That means the system should treat knowledge like a memory web.
+
+Each question is tagged behind the scenes to:
+
+subject
+
+topic
+
+subtopic
+
+micro-skill
+
+prerequisite concept
+
+related concepts
+
+memory family
+
+question type
+
+recall difficulty
+
+trap/misconception type
+
+So if a student begins failing in one small area, the app should not just say:
+
+“You got 2 questions wrong.”
+
+It should say:
+
+“Your memory is weakening in Fractions → Equivalent Fractions → Simplification”
+
+“That weakness is now affecting Ratio and Percentage conversion”
+
+“Your recall speed is also dropping”
+
+This makes the feature intelligent.
+
+3. The real goal of Memory Mode
+The goal is not merely to test memory.
+
+The goal is to:
+
+detect memory fade early
+
+isolate the exact weak recall node
+
+rebuild familiarity
+
+strengthen pathways again
+
+restore confidence
+
+prevent wider forgetting
+
+So the promise of Memory Mode can be:
+
+“We help you catch forgetting before it becomes failure.”
+
+Or even:
+
+“We rebuild weak memory before it breaks your performance.”
+
+4. The main engine behind Memory Mode
+This mode should have a few internal systems.
+
+A. Memory Strength Engine
+This scores how strong each subtopic is in the learner’s memory.
+
+Each subtopic gets a live score such as:
+
+Strong
+
+Stable
+
+Shaking
+
+Weak
+
+Critical
+
+Or numerical:
+
+0–100 Memory Strength Score
+
+This score can be calculated from:
+
+correctness
+
+speed
+
+repeat consistency
+
+time since last exposure
+
+success on related question variants
+
+confidence rating
+
+recent failure trend
+
+Example:
+
+Memory Strength Score =
+
+Accuracy: 35%
+
+Recall Speed: 20%
+
+Retention Over Time: 20%
+
+Variation Handling: 15%
+
+Confidence Match: 10%
+
+So a student may answer correctly but slowly and inconsistently.
+That means the memory is not truly strong yet.
+
+B. Memory Decay Detector
+This watches for falling performance over time.
+
+It looks for signals like:
+
+previously mastered concept now showing repeated slips
+
+correct answers becoming slower
+
+similar question families now causing confusion
+
+growing dependence on hints
+
+success dropping after a time gap
+
+confusion between related concepts
+
+This is where the app notices:
+
+“This student is not ignorant of the topic. Their memory is fading.”
+
+That distinction matters.
+
+C. Micro-Recall Mapper
+This is where the app zooms into the exact broken point.
+
+Example:
+
+Student is failing “solving linear equations.”
+
+But the real breakdown may be:
+
+negative sign handling
+
+inverse operation order
+
+collecting like terms
+
+transposition confusion
+
+So Memory Mode should not repair the whole topic blindly.
+It should repair the smallest broken memory unit.
+
+D. Recall Recovery Engine
+Once weakness is detected, the app starts recovery.
+
+It serves:
+
+similar questions
+
+near-similar questions
+
+reverse-form questions
+
+clue-based recall
+
+rapid-fire familiarity drills
+
+cue-triggered reminder prompts
+
+step reconstruction questions
+
+sensory reinforcement prompts
+
+The goal is to rebuild:
+
+recognition
+
+familiarity
+
+speed
+
+confidence
+
+independent recall
+
+E. Memory Connection Engine
+This is one of the most important parts.
+
+Memory is stronger when connected.
+
+So after recovery, the app should reconnect the subtopic to:
+
+earlier prerequisites
+
+nearby subtopics
+
+applied question forms
+
+mixed-topic questions
+
+exam-style combinations
+
+This ensures the student does not just relearn the item in isolation.
+
+5. The learner-facing modes inside Memory Mode
+Memory Mode should not be one flat experience.
+It should have multiple sub-modes.
+
+1. Memory Scan
+A quick diagnostic mode.
+
+Purpose:
+
+identify strong vs weak memory areas
+
+detect fading zones
+
+detect unstable recall
+
+Output:
+
+memory heatmap
+
+memory strength by subtopic
+
+“fading now” alerts
+
+recommended rescue areas
+
+2. Memory Rescue
+This is the intervention mode.
+
+Purpose:
+
+focus on subtopics showing memory decline
+
+rebuild familiarity fast
+
+stop the decay from spreading
+
+This mode should feel like:
+
+targeted
+
+short
+
+urgent
+
+effective
+
+3. Recall Builder
+This is about strengthening already-known areas.
+
+Purpose:
+
+deepen memory roots
+
+increase speed
+
+increase stability
+
+move concepts from “fragile” to “strong”
+
+4. Chain Repair
+This is when forgetting one concept has damaged connected areas.
+
+Purpose:
+
+repair prerequisite gaps
+
+reconnect broken memory paths
+
+rebuild the knowledge chain
+
+This is where the app says:
+
+“You are missing this because something earlier is weakening.”
+
+5. Rapid Recall Drill
+Fast-response memory practice.
+
+Purpose:
+
+sharpen response time
+
+improve fluency
+
+build automaticity
+
+This is especially good for:
+
+formulas
+
+definitions
+
+grammar rules
+
+mental math
+
+science facts
+
+vocabulary
+
+symbolic interpretation
+
+6. The experience flow
+A good flow could be:
+
+Step 1: Scan memory
+The app runs a short recall test.
+
+Step 2: Detect weakness
+It notices memory drop in a subtopic.
+
+Step 3: Isolate the real problem
+It maps the weakness to the exact sub-skill.
+
+Step 4: Launch rescue
+It serves similar and progressively reinforcing questions.
+
+Step 5: Trigger familiarity
+It uses repetition, variation, cues, and pattern reminders.
+
+Step 6: Reconnect memory paths
+It links the skill back to surrounding concepts.
+
+Step 7: Re-test under light pressure
+The learner proves the memory is back.
+
+Step 8: Track recovery
+The system updates the memory score and monitors relapse risk.
+
+7. What kinds of questions should Memory Mode serve?
+Not just random practice.
+
+It should serve a ladder of recall repair.
+
+Level 1: Recognition
+“Have you seen this before?”
+
+Level 2: Guided Recall
+“Can you remember it with a clue?”
+
+Level 3: Unguided Recall
+“Can you recall it without support?”
+
+Level 4: Variation Recall
+“Can you still recall it when the question changes form?”
+
+Level 5: Connected Recall
+“Can you use it inside a related problem?”
+
+Level 6: Pressure Recall
+“Can you still retrieve it quickly?”
+
+This is how memory becomes durable.
+
+8. Sensory triggers and familiarity builders
+You said:
+
+trigger your senses
+
+That is very smart.
+
+Memory Mode should use subtle reinforcement tools such as:
+
+familiar visual patterns
+
+repeated symbol layouts
+
+short audio cues for correct recovery
+
+highlight cues on recurring structures
+
+“you’ve seen this before” prompts
+
+quick pattern reminders
+
+color-coded concept families
+
+mini flash memory cards before questions
+
+visual anchors for formulas or steps
+
+The goal is to create memory handles.
+
+Not too much noise.
+Just enough to help the brain latch back on.
+
+9. The emotional layer
+Memory failure is frustrating.
+
+So this mode should protect morale.
+
+Instead of:
+
+“You are weak in this”
+
+Say:
+
+“This area is fading slightly”
+
+“Let’s rebuild this memory”
+
+“You almost had this”
+
+“Your recall is coming back”
+
+“Memory restored”
+
+“This concept is stable again”
+
+The feeling should be:
+
+recovery
+
+rescue
+
+rebuilding
+
+progress
+
+Not punishment.
+
+10. The difference between Knowledge Gap Mode and Memory Mode
+These two should work together, but they are not the same.
+
+Knowledge Gap Mode asks:
+What has the student not fully learned?
+
+What do they still not understand?
+
+Memory Mode asks:
+What did the student know before but is beginning to forget?
+
+What is becoming unstable in recall?
+
+So:
+
+Knowledge Gap = absence of understanding
+
+Memory Gap = weakening of retained knowledge
+
+That distinction makes your product much smarter.
+
+11. A possible scoring model
+You could create a Memory Stability Index (MSI).
+
+Example:
+
+MSI =
+
+accuracy consistency
+
+recall speed
+
+time-gap retention
+
+performance on close variants
+
+prerequisite stability
+
+hint independence
+
+Then each subtopic gets:
+
+85–100 = Locked In
+
+70–84 = Stable
+
+55–69 = Vulnerable
+
+40–54 = Fading
+
+0–39 = Critical Recovery Needed
+
+This becomes the engine behind:
+
+alerts
+
+rescue sessions
+
+dashboards
+
+prioritization
+
+12. Smart behaviors the system should have
+The system should automatically do things like:
+
+detect fading memory before the student notices
+
+prioritize weak memory over random revision
+
+shorten rescue sessions so they feel achievable
+
+revisit recovered memory after spaced intervals
+
+test in slightly different forms to confirm true recovery
+
+avoid over-drilling already stable areas
+
+escalate support if the same memory keeps collapsing
+
+detect whether the problem is memory, misunderstanding, or pressure
+
+That last point is very important.
+
+A student may fail because of:
+
+memory decay
+
+lack of understanding
+
+time pressure
+
+careless slips
+
+confusion with a similar concept
+
+The system should know the difference.
+
+13. Gamification ideas
+This feature can be addictive if designed well.
+
+You can add:
+
+Memory Shield — protects streak when recovering fading areas
+
+Recall Streak — consecutive restored memories
+
+Brain Spark — fast recall burst reward
+
+Memory Chain — keep connected topics strong
+
+Recovery Badge — when a critical area becomes stable again
+
+Locked-In Status — when a topic remains strong for many days
+
+Glow Map — memory heatmap that brightens as recall strengthens
+
+This will help students feel they are building a stronger mind, not just doing questions.
+
+14. The dashboard view
+The Memory Mode dashboard could show:
+
+strongest memory areas
+
+fading memory areas
+
+critical recall zones
+
+recently recovered concepts
+
+unstable chains
+
+average recall speed
+
+retention over time
+
+memory recovery streak
+
+You can visualize it like:
+
+glowing topic web
+
+strength bars
+
+recovery zones
+
+fading alerts
+
+recall map
+
+15. The best message this feature communicates
+This mode tells the student:
+
+“Forgetting is not failure. It is a signal. We catch it early and rebuild it.”
+
+That is powerful.
+
+16. What makes this feature truly special
+The breakthrough is not that it asks more questions.
+
+The breakthrough is that it understands:
+
+memory can weaken silently
+
+small memory cracks can damage larger performance
+
+memory must be monitored at subtopic level
+
+recovery should be targeted, not generic
+
+recall strength is different from initial learning
+
+That makes this a serious intelligence layer in the app.
+
+17. Clean product definition
+You can define it like this:
+
+Memory Mode is a smart recall reinforcement system that continuously tracks what a learner truly retains, detects fading memory at the subtopic and micro-skill level, and launches targeted recovery exercises to rebuild familiarity, strengthen recall pathways, and prevent performance decline.
+
+18. The tagline direction
+A few options:
+
+Keep what you’ve learned alive
+
+Catch forgetting before it spreads
+
+Rebuild weak memory fast
+
+Turn fading recall back into confidence
+
+Strengthen what’s slipping
+
+Hold knowledge in place
+
+19. The next best structure for you
+This feature should be built around 6 core components:
+
+Memory Strength Model
+
+Decay Detection Engine
+
+Micro-Skill Recall Mapper
+
+Recovery Session Engine
+
+Connection Rebuilder
+
+Memory Dashboard + Alerts
+
+That is the real skeleton.
+
+20. My direct take
+This is one of the strongest features you have mentioned because it attacks a very real problem students face:
+
+They often think:
+
+“I learned this already”
+
+But under real test conditions:
+
+recall has weakened
+
+speed has dropped
+
+connected concepts are collapsing
+
+Memory Mode fixes that exact problem.
+
+The right way to position it is not as ordinary practice.
+It is a live memory maintenance and recovery system.
+
+The next thing to do is turn this into a full frontend + backend product spec with:
+
+user flow
+
+screen breakdown
+
+scoring logic
+
+question serving logic
+
+recovery loop
+
+dashboard structure
+
+tagging model
+
+I can draft that next.
+
+
+proceed
+
+I’m turning it into a build-grade spec now: product behavior, screen flow, memory scoring, recovery logic, and the backend engines that make it work.
+
+Thought for 41s
+Below is the full product spec for Memory Mode.
+
+Memory Mode — Full Product Specification
+1. What Memory Mode is
+Memory Mode is a focused learning mode that tracks what a student has already learned, measures how strongly it still exists in memory, detects when that memory is starting to fade, and immediately launches the right recovery path before the weakness spreads.
+
+This mode is not about teaching a brand-new concept from scratch. It is about protecting, rebuilding, and strengthening what has already entered the student’s mind.
+
+The system treats memory as a living structure, not a static score. A concept can be:
+
+strong,
+
+shaky,
+
+fading,
+
+or broken.
+
+And because concepts are connected, a weakness in one small subtopic can reduce performance in neighboring areas. Memory Mode exists to catch that early.
+
+2. Core promise
+The promise to the student is:
+
+“We help you hold on to what you’ve learned, catch forgetting early, and rebuild weak memory before it damages your results.”
+
+The promise to the product is:
+
+Memory Mode should reduce silent forgetting, improve recall speed, stabilize performance over time, and strengthen cross-topic retention.
+
+3. What counts as “memory” in the system
+Inside the product, memory is not a single thing. It has six measurable dimensions.
+
+A. Retention
+Can the learner still answer correctly after time has passed?
+
+B. Recall speed
+How quickly can they pull the answer from memory?
+
+C. Recall stability
+Do they remember it consistently across multiple attempts?
+
+D. Transfer recall
+Can they still answer when the question changes form?
+
+E. Connection strength
+Can they use the concept inside related or combined questions?
+
+F. Recovery ability
+When the concept weakens, how quickly can the learner restore it?
+
+These six dimensions form the internal definition of memory.
+
+4. Knowledge model behind the scenes
+For Memory Mode to work well, every question must be tagged properly.
+
+Each question should be linked to:
+
+subject
+
+topic
+
+subtopic
+
+micro-skill
+
+prerequisite skills
+
+neighboring/related skills
+
+question family
+
+question variant type
+
+cognitive action required
+
+misconception type
+
+expected response time
+
+difficulty level
+
+memory cue type
+
+Example
+A question may be tagged like this:
+
+Subject: Mathematics
+
+Topic: Fractions
+
+Subtopic: Equivalent Fractions
+
+Micro-skill: Simplify fraction to lowest terms
+
+Prerequisite: common factors
+
+Related skills: ratio simplification, percentage reduction
+
+Variant type: multiple choice
+
+Misconception: dividing numerator only
+
+Expected time: 18 seconds
+
+This is critical because Memory Mode does not intervene at the broad topic level first. It intervenes at the smallest meaningful recall unit.
+
+5. The student memory profile
+For each learner, the system keeps a live memory profile at the micro-skill level.
+
+For every skill node, store:
+
+total attempts
+
+total correct
+
+recent correct rate
+
+average response time
+
+response time trend
+
+last seen timestamp
+
+last correct timestamp
+
+hint usage rate
+
+confidence rating history
+
+variant performance history
+
+relapse count
+
+prerequisite dependency health
+
+memory stability score
+
+current status label
+
+That means the system does not just know whether the student “knows fractions.”
+It knows whether:
+
+the memory is stable,
+
+recall is slowing,
+
+similar variants cause confusion,
+
+and which exact micro-skill is cracking.
+
+6. Main memory statuses
+Each micro-skill should have a visible status.
+
+Suggested status ladder:
+
+Locked In — strong, fast, stable
+
+Stable — good, but still should be monitored
+
+Vulnerable — beginning to weaken
+
+Fading — clear signs of memory decay
+
+Critical — active recovery needed now
+
+Rebuilding — rescue has begun but not yet proven
+
+Recovered — recently restored, monitor for relapse
+
+This gives the dashboard and the intervention engine a clean state model.
+
+7. Main scoring model
+The core metric should be the Memory Stability Index (MSI), scored from 0 to 100.
+
+Components
+Let:
+
+A = recent accuracy score
+
+S = recall speed score
+
+R = retention-over-time score
+
+V = variant transfer score
+
+I = independence score
+
+C = connection score
+
+Then:
+
+MSI = (0.30 × A) + (0.15 × S) + (0.20 × R) + (0.15 × V) + (0.10 × I) + (0.10 × C)
+
+How each component works
+A. Accuracy score
+Weighted toward recent attempts.
+
+Example:
+
+last 5 attempts weighted 60%
+
+previous 10 attempts weighted 40%
+
+B. Speed score
+Compare learner response time to expected response time.
+
+Example:
+
+if expected is 20 sec and learner averages 18 sec, speed is strong
+
+if learner averages 39 sec, memory may exist but retrieval is weak
+
+A simple normalized version:
+
+S = clamp(expected_time / actual_time, 0, 1)
+
+C. Retention score
+Measures whether the concept survives time gaps.
+
+The learner may get it right immediately after practice but fail after 4 days.
+That means true retention is weak.
+
+D. Variant transfer score
+Measures whether the learner recalls the concept when the presentation changes.
+
+Example:
+
+definition form
+
+application form
+
+reverse form
+
+mixed context form
+
+multi-step form
+
+E. Independence score
+Penalizes reliance on hints, eliminations, or guided prompts.
+
+F. Connection score
+Measures performance when the concept appears inside related problems.
+
+8. Decay detection model
+Memory Mode needs a separate system called the Decay Detection Engine.
+
+This engine watches for patterns such as:
+
+rising response time despite prior mastery
+
+recent accuracy drop after a time gap
+
+strong performance only on familiar question shapes
+
+repeated confusion between similar concepts
+
+more hint usage than before
+
+previously mastered skill now failing in mixed contexts
+
+performance collapse in dependent skills
+
+Decay Risk Score
+Create a second metric:
+
+Decay Risk = f(time_since_last_mastery, performance_drop, speed_drop, relapse_rate, dependency_damage)
+
+This score tells the system not just current strength, but likelihood of near-future forgetting.
+
+A student may still be “Stable” but have high decay risk. That is when the app should intervene early.
+
+9. The memory graph
+Memory Mode should not treat concepts as isolated islands.
+
+Every skill belongs to a graph with:
+
+prerequisites,
+
+siblings,
+
+dependents,
+
+and application edges.
+
+So if a learner forgets “LCM for denominators,” it may weaken:
+
+adding fractions,
+
+subtracting fractions,
+
+algebraic fractions,
+
+ratio normalization.
+
+This is where Memory Mode becomes special.
+
+The system should support two kinds of diagnosis:
+
+Local diagnosis
+The exact skill that is weak.
+
+Chain diagnosis
+The broader pathway being affected by that weakness.
+
+This allows the app to say:
+
+“You are not just fading in Fractions. The fading starts at common-denominator conversion, and it is now affecting comparison and addition.”
+
+10. Core engines
+Memory Mode should be powered by six main engines.
+
+10.1 Memory Strength Engine
+Maintains MSI and state for each micro-skill.
+
+10.2 Decay Detection Engine
+Detects silent forgetting and rising risk.
+
+10.3 Micro-Recall Mapper
+Finds the smallest broken unit causing the problem.
+
+10.4 Recovery Planner
+Designs the right rescue path for that learner and skill.
+
+10.5 Connection Rebuilder
+Reconnects recovered memory to related concepts.
+
+10.6 Recheck Scheduler
+Schedules spaced follow-up checks to confirm recovery is real.
+
+11. Session types inside Memory Mode
+Memory Mode should not be one single session. It should have distinct session types.
+
+11.1 Memory Scan
+A short diagnostic that identifies strong and weak memory zones.
+
+Typical size:
+
+8 to 15 questions
+
+Purpose:
+
+detect fading skills
+
+refresh memory map
+
+prioritize rescue queue
+
+Best for:
+
+daily check-in
+
+weekly scan
+
+start of study session
+
+11.2 Rescue Burst
+A short focused intervention for one fading subtopic.
+
+Typical size:
+
+6 to 10 questions
+
+Purpose:
+
+stop the slide quickly
+
+restore familiarity
+
+rebuild confidence
+
+Best for:
+
+“Fading” or “Critical” skills
+
+11.3 Deep Repair
+A longer session used when the weakness is structural.
+
+Typical size:
+
+12 to 20 questions
+
+Purpose:
+
+repair prerequisites
+
+rebuild broken chain
+
+test across multiple forms
+
+Best for:
+
+repeated relapse
+
+dependency damage
+
+poor transfer recall
+
+11.4 Recall Builder
+Used for vulnerable but not yet broken memory.
+
+Typical size:
+
+8 to 12 questions
+
+Purpose:
+
+strengthen speed
+
+deepen stability
+
+move skill toward Locked In
+
+11.5 Chain Repair
+Used when one skill is hurting neighboring skills.
+
+Typical size:
+
+10 to 18 questions
+
+Purpose:
+
+repair root skill
+
+reconnect dependent skills
+
+stabilize the knowledge path
+
+11.6 Rapid Recall Drill
+Fast, game-like recall sharpening.
+
+Typical size:
+
+30 to 90 seconds or 10 quick prompts
+
+Purpose:
+
+fluency
+
+automatic retrieval
+
+exam readiness
+
+12. Question ladder for recovery
+The recovery engine should not just throw random similar questions. It should climb a structured ladder.
+
+Stage 1: Recognition
+“Have you seen this pattern before?”
+
+Low pressure. Reawakens familiarity.
+
+Stage 2: Guided recall
+“Can you do it with a clue or partial support?”
+
+Stage 3: Unguided recall
+“Now do it independently.”
+
+Stage 4: Variant recall
+“Can you still answer when the form changes?”
+
+Stage 5: Connected recall
+“Can you use it inside a related problem?”
+
+Stage 6: Timed validation
+“Can you retrieve it quickly enough?”
+
+This progression mirrors how memory actually returns.
+
+13. Recovery logic
+When a skill becomes Fading or Critical, the flow should be:
+
+detect the broken node
+
+confirm whether it is memory weakness, understanding weakness, or pressure weakness
+
+choose session type
+
+start at the appropriate support level
+
+escalate or de-escalate based on response quality
+
+re-test using a fresh variant
+
+reconnect to related skills
+
+schedule follow-up checks
+
+Dynamic support rules
+If the learner fails two questions in a row:
+
+reduce difficulty,
+
+add a cue,
+
+show a smaller pattern,
+
+or temporarily step down to a prerequisite.
+
+If the learner succeeds three times in a row:
+
+remove cues,
+
+increase variation,
+
+introduce mixed context,
+
+then validate under time.
+
+14. Frontend product flow
+14.1 Entry point
+Memory Mode appears as a main mode on the home screen.
+
+Card copy example:
+
+“Strengthen what you already know”
+
+“Catch fading memory before it affects your score”
+
+Show:
+
+today’s fading areas
+
+strongest memory area
+
+quick scan CTA
+
+rescue CTA
+
+14.2 First-time intro
+A simple explainer screen:
+
+“Memory Mode tracks what is fading, repairs weak recall, and helps you keep knowledge alive.”
+
+Then ask:
+
+preferred session length
+
+whether they want more gentle or more challenging recovery
+
+whether they want sound feedback on or off
+
+14.3 Memory dashboard
+This is the core page.
+
+It should show:
+
+Memory Map
+
+At Risk Today
+
+Recently Recovered
+
+Strongest Zones
+
+Recall Speed Trend
+
+Memory Streak
+
+Visual model
+Use a topic web or skill tree with glow intensity:
+
+bright = strong
+
+dim = vulnerable
+
+blinking/amber = fading
+
+red = critical
+
+green pulse = recovered
+
+14.4 Memory scan screen
+Simple, clean, low-friction.
+
+Show:
+
+question card
+
+confidence toggle after each answer
+
+subtle timer
+
+progress ring
+
+optional “I’m unsure” button
+
+14.5 Rescue screen
+This should feel focused and reassuring, not punishing.
+
+Show:
+
+the subtopic being repaired
+
+current rescue stage
+
+a progress bar called “Memory rebuild”
+
+encouraging copy like “You’re rebuilding this pathway”
+
+14.6 Chain repair screen
+Display the root weak skill and the related skills being affected.
+
+Example:
+“Equivalent Fractions is weakening Addition of Fractions.”
+
+This makes the student understand why the intervention matters.
+
+14.7 Session end screen
+Show:
+
+what was repaired
+
+what is still vulnerable
+
+speed improvement
+
+memory status change
+
+next recommended check time
+
+Example:
+
+“3 skills moved from Fading to Rebuilding”
+
+“1 skill fully recovered”
+
+“Next short recheck: tomorrow”
+
+15. UX tone
+Memory Mode should sound restorative, not harsh.
+
+Avoid:
+
+“You are weak”
+
+“You failed this badly”
+
+Use:
+
+“This area is fading slightly”
+
+“Let’s rebuild this memory”
+
+“Your recall is returning”
+
+“This pathway is stronger now”
+
+The emotional effect should be:
+
+safety,
+
+momentum,
+
+recovery,
+
+control.
+
+16. Visual and sensory design
+Unlike Mental Mode, Memory Mode should feel more intelligent and restorative than intense.
+
+Use:
+
+soft pulse animations
+
+glow restoration effects
+
+memory strand visuals reconnecting
+
+subtle sound cues for restored recall
+
+calm success chimes
+
+visual anchors for repeated patterns
+
+Do not make it noisy.
+This mode should feel like the brain being repaired, not attacked.
+
+17. Backend architecture
+This can work in a cloud or offline-first system. Since your broader product has local engine ambitions, this logic can live inside the app backend locally and sync later if needed.
+
+The backend needs these services:
+
+17.1 Skill Graph Service
+Stores the concept graph and question-tag relationships.
+
+17.2 Learner Memory Profile Service
+Stores memory metrics per student per skill.
+
+17.3 Event Logger
+Captures:
+
+answer events
+
+timing
+
+hints
+
+confidence
+
+retries
+
+session outcomes
+
+17.4 Memory Scoring Engine
+Calculates MSI and status changes.
+
+17.5 Decay Detector
+Runs after every session and also periodically.
+
+17.6 Recovery Planner
+Builds rescue plans and question ladders.
+
+17.7 Question Selector
+Serves the right item, not just similar items.
+
+17.8 Scheduler
+Schedules recheck intervals based on personalized memory behavior.
+
+18. Question selection algorithm
+When the system decides to repair a skill, it should choose questions in this order:
+
+same micro-skill, familiar form
+
+same micro-skill, slightly changed form
+
+same micro-skill, different distractor style
+
+same micro-skill in applied context
+
+mixed question involving related skill
+
+timed validation item
+
+Selection constraints
+Avoid:
+
+repeating exact same stem too often
+
+over-serving already-strong skills
+
+serving five variants that are effectively identical
+
+Prefer:
+
+controlled variation
+
+misconception-aware distractors
+
+spaced repetition with freshness
+
+19. Recheck scheduling logic
+Once a skill is recovered, do not assume it is safe forever.
+
+Use adaptive follow-up checks.
+
+A basic starting pattern:
+
+1 day
+
+3 days
+
+7 days
+
+14 days
+
+30 days
+
+But personalize it based on relapse history.
+
+If a student repeatedly relapses in a skill:
+
+shorten intervals,
+
+increase variation,
+
+and strengthen prerequisite review.
+
+20. Distinguishing memory problems from understanding problems
+This is crucial.
+
+A student may fail because:
+
+they forgot,
+
+they never truly understood,
+
+they are too slow,
+
+they panic under time,
+
+or they confuse similar concepts.
+
+Memory Mode should run a lightweight classifier.
+
+Signals of memory weakness
+previously mastered, now slipping
+
+works with cue, fails without cue
+
+strong on familiar form, weak on changed form
+
+slower retrieval over time
+
+Signals of understanding weakness
+repeated failure across all forms
+
+poor logic even with cues
+
+error pattern suggests conceptual misunderstanding
+
+If understanding weakness is detected, Memory Mode should hand off to:
+
+Teach Me This Topic
+
+Fix My Weakness
+
+Guided Lesson Mode
+
+That prevents the mode from solving the wrong problem.
+
+21. Analytics and success metrics
+You should measure whether Memory Mode is actually working.
+
+Track:
+
+reduction in relapse rate
+
+increase in MSI over time
+
+average recall speed improvement
+
+recovery success rate
+
+performance lift in linked topics
+
+percentage of fading skills caught before exam failure
+
+retention after 7 and 30 days
+
+session completion rate
+
+rescue-to-recovery conversion rate
+
+These will tell you whether the feature is useful or merely interesting.
+
+22. Content requirements
+For Memory Mode to be intelligent, your content system must support:
+
+strong tagging discipline
+
+clear micro-skill breakdown
+
+question family design
+
+prerequisite mapping
+
+variant creation
+
+misconception labels
+
+expected time per question
+
+mixed-context linkage
+
+Without this, the mode becomes shallow and generic.
+
+With this, it becomes powerful.
+
+23. How it fits with your other modes
+Memory Mode
+Protects what was learned but is fading.
+
+Knowledge Gap Mode
+Finds what has not yet been fully learned.
+
+Mental Mode
+Pushes speed, sharpness, and performance under pressure.
+
+Elite Mode
+Challenges strong students inside the syllabus with harder forms and higher standards.
+
+So Memory Mode is the stability and recall preservation layer in the ecosystem.
+
+24. Best first version to build
+Start with a contained version.
+
+V1
+one subject
+
+one clean concept graph
+
+basic MSI
+
+simple scan
+
+rescue burst
+
+follow-up scheduler
+
+dashboard with 5 statuses
+
+That is enough to prove the concept.
+
+Then expand into:
+
+chain repair
+
+confidence-aware scoring
+
+mixed-skill connection rebuilding
+
+deeper personalization
+
+richer visuals
+
+25. Final product definition
+Memory Mode is a recall maintenance and recovery system that continuously tracks the strength of a learner’s retained knowledge at the subtopic and micro-skill level, detects early signs of memory decay, and delivers targeted recovery sessions that rebuild familiarity, restore recall, reconnect related concepts, and keep previously learned material alive over time.
+
+The strongest next move is to turn this into a screen-by-screen frontend spec and a technical backend/data model spec with fields, APIs, state transitions, and session payloads.
+
+
+but there is something called memory decay , things learnt previously may soon slip away , but it's not linear some things you learnt many months ago you still remember , some things you learnt last week you just forgot , how can a student learn something into memory , how do you know this one is truly in the students memory meaning you will have to shape some questions to demand a response that confirms memory and then you know the student has it in memory 
+
+I’m grounding this in the actual science of forgetting, retrieval, and long-term retention, then I’ll turn that into product logic for your app.
+
+Thought for 39s
+Yes — this is the exact deeper issue.
+
+Memory decay is not linear, and that means your app cannot assume:
+
+“learned last week = still strong”
+
+“learned six months ago = weak”
+
+That is not how memory behaves. A useful way to model it is the distinction between storage strength and retrieval strength: something may be strongly learned but temporarily hard to access, while something learned very recently may feel easy right now only because it is still highly accessible, not because it is deeply stored. Retrieval strength drops with time much faster when storage strength is still low. 
+
+The second big insight is this: you cannot prove memory from one correct answer. One correct answer may come from recognition, luck, short-term freshness, or cueing. What you really want is repeated evidence that the student can retrieve, use, and keep retrieving the idea after time has passed. Research on retrieval practice and spacing shows that long-term retention improves when students repeatedly retrieve information over time, not just restudy it, and that the best gap between reviews depends on how far into the future you want the knowledge retained. 
+
+So the product should stop asking:
+
+“Did the student get it right?”
+
+and start asking:
+
+“Did the student produce enough evidence that this knowledge is now durable?”
+
+What it means for something to be “truly in memory”
+A concept should only count as truly in memory when the student can do most of these reliably:
+
+Recall it without heavy cues
+
+Recall it again after a delay
+
+Recall it when the question changes form
+
+Use it inside a connected problem
+
+Do it with reasonable speed
+
+Survive interference from similar concepts
+
+That is the proof.
+
+Not one question.
+Not one session.
+A pattern.
+
+The key distinction your app needs
+Your app should track two separate things for every subtopic or micro-skill:
+
+1. Memory Access
+Can the student pull it out right now?
+
+This is current retrievability.
+
+2. Memory Entrenchment
+Has this concept been reinforced enough over time and across conditions that it is likely to remain?
+
+This is durable storage.
+
+That distinction matters because a student may look good today and still forget tomorrow. Bjork’s framework captures this well: recent success can reflect high retrieval strength without high storage strength, while deeply learned material may sometimes become temporarily hard to retrieve but come back quickly on relearning. 
+
+What kinds of questions actually test memory
+You need a ladder of question types, because not all questions provide the same evidence.
+
+Weak evidence of memory
+These are useful, but they do not confirm durable memory by themselves:
+
+familiar multiple-choice questions
+
+same-question repeats
+
+recognition-based matching
+
+heavily scaffolded prompts
+
+questions asked immediately after teaching
+
+These may show short-term accessibility, not durable memory.
+
+Stronger evidence of memory
+These are much more meaningful:
+
+free recall without options
+
+short-answer generation
+
+solve-the-problem-from-scratch
+
+explain-why questions
+
+reverse questions
+
+same skill in a different context
+
+mixed-topic questions where the student must identify the right concept first
+
+delayed recall questions after time has passed
+
+Research on retrieval practice shows that successful retrieval does more than reveal memory — it strengthens later recall, and repeated testing tends to help delayed recall more than repeated restudy. 
+
+The right product rule
+A skill should not be marked “in memory” after one success.
+
+It should be marked only after it passes a Memory Confirmation Sequence.
+
+Here is a strong structure.
+
+Memory Confirmation Sequence
+A student must pass 5 gates.
+
+Gate 1: Independent recall
+The student answers without answer choices or with minimal cueing.
+
+This checks whether they can retrieve, not just recognize.
+
+Gate 2: Delayed recall
+The same concept returns after a time gap.
+
+This checks whether it lasted beyond immediate exposure.
+
+Gate 3: Variant recall
+The question changes shape, wording, or surface structure.
+
+This checks whether they know the concept, not just the exact item.
+
+Gate 4: Embedded use
+The skill appears inside a larger or mixed problem.
+
+This checks whether the memory is usable.
+
+Gate 5: Stability check
+It is recalled correctly more than once across separate sessions.
+
+This checks whether the memory is stable, not accidental.
+
+Only after that should the app say:
+
+“This concept is now strongly in memory.”
+
+The best question shapes for confirming memory
+For each micro-skill, your system should build a small evidence stack.
+
+A. Pure Recall Question
+No options. No strong cues.
+
+Examples:
+
+“Write the formula for…”
+
+“Simplify…”
+
+“Define…”
+
+“Solve…”
+
+This is your cleanest retrieval check.
+
+B. Near-Transfer Variant
+Same underlying skill, different presentation.
+
+Examples:
+
+numbers changed
+
+wording changed
+
+context changed
+
+order changed
+
+symbol style changed
+
+This reveals whether they know the underlying concept or only one familiar shell.
+
+C. Interference Question
+Put similar concepts beside each other.
+
+Examples:
+
+area vs perimeter
+
+mean vs median
+
+mitosis vs meiosis
+
+adjective vs adverb
+
+This checks discrimination strength.
+
+D. Embedded Chain Question
+Hide the skill inside a multi-step problem.
+
+This checks whether the memory is connected and usable.
+
+E. Delayed Recheck
+Bring it back later.
+
+This is essential because spacing over time is one of the most reliable ways to detect and strengthen durable retention. 
+
+How the app should decide: “This is in memory”
+You need a formal rule.
+
+Here is a strong one.
+
+A skill is Memory Confirmed only if all of the following are true:
+
+the student succeeds on at least one independent recall item
+
+the student succeeds again after at least one delay
+
+the student succeeds on at least one variant form
+
+the student succeeds in at least one mixed or embedded context
+
+the student’s response time is within an acceptable range
+
+the student does not show unstable collapse on the next recheck
+
+That gives you six kinds of evidence:
+
+retrieval
+
+time
+
+transfer
+
+application
+
+fluency
+
+stability
+
+A practical scoring model
+You can implement this as a Memory Evidence Score.
+
+For each skill:
+
+Independent Recall = 25
+
+Delayed Recall = 20
+
+Variant Recall = 20
+
+Embedded Use = 15
+
+Speed Stability = 10
+
+Recheck Stability = 10
+
+Total = 100
+
+Then set states like:
+
+0–39 = Not in memory yet
+
+40–59 = Emerging
+
+60–74 = Fragile memory
+
+75–89 = Strong memory
+
+90–100 = Locked in
+
+But also add one rule:
+
+A high score in one session alone is not enough.
+There must be time-separated evidence.
+
+That is the crucial part.
+
+The most important design insight
+Your system should treat memory confirmation as a behavioral inference, not a binary fact.
+
+You never directly see memory.
+You infer it from performance under the right conditions.
+
+So the app should ask:
+
+Was recall produced, not recognized?
+
+Was it produced after delay?
+
+Did it survive variation?
+
+Did it survive interference?
+
+Could it be used in context?
+
+Did it recur across time?
+
+If yes, then you have enough evidence to say the concept is probably consolidated.
+
+How a student learns something into memory
+From a product point of view, a student learns something into memory when the app takes them through this sequence:
+
+1. Initial encoding
+They first understand or encounter the concept.
+
+2. First successful retrieval
+They pull it back from memory, not just reread it.
+
+3. Spaced re-retrieval
+They retrieve it again later, after some forgetting has begun.
+
+4. Variation exposure
+They retrieve it under changed conditions.
+
+5. Connected use
+They use it with related ideas.
+
+6. Periodic reactivation
+The app checks it again before it fades too far.
+
+Retrieval plus spacing is especially powerful here: repeated study alone often looks good in the short term, but repeated retrieval tends to produce stronger delayed recall, and optimal spacing depends on the target retention interval. 
+
+The wrong way to test memory
+Your app should avoid these traps:
+
+asking the same question again and again
+
+relying mostly on multiple choice
+
+testing immediately after teaching and calling it mastery
+
+confusing speed with memory depth
+
+confusing recognition with recall
+
+treating one correct answer as proof
+
+ignoring related-skill interference
+
+These create false confidence. In the Karpicke/Roediger work, students’ predictions of their own performance were not aligned with their actual delayed performance, which is exactly why your app should rely on evidence, not feelings of familiarity. 
+
+The right internal model for your app
+For every micro-skill, store these fields:
+
+retrieval_strength_now
+
+storage_confidence
+
+last_success_at
+
+days_since_last_recall
+
+variant_success_rate
+
+interference_success_rate
+
+embedded_use_success_rate
+
+response_time_median
+
+recovery_speed_on_relearning
+
+memory_state
+
+Then your system can say things like:
+
+“Student can still access this right now, but storage is weak.”
+
+“Student lost access, but relearned unusually fast, suggesting old storage remains.”
+
+“Student recognizes the idea but cannot independently retrieve it.”
+
+“Student has stable recall across time and variation.”
+
+That is far more intelligent than “Mastered / Not Mastered.”
+
+A sharper state model
+Use these states:
+
+Fresh but Unproven
+
+Accessible
+
+Fragile
+
+Anchoring
+
+Confirmed in Memory
+
+At Risk of Decay
+
+Faded but Recoverable
+
+Collapsed
+
+This is much closer to how memory actually behaves.
+
+The single best rule to remember
+A concept is not truly “in memory” because the student got it right once.
+
+It is truly in memory when the student can retrieve it independently, after delay, in a new form, inside a connected problem, with stable enough performance to suggest the knowledge will survive beyond the moment.
+
+That is the standard your mode should use.
+
+The product conclusion
+So the answer to your question is:
+
+You know something is truly in memory not from immediate correctness, but from durable retrieval evidence across time, variation, and context.
+
+That means Memory Mode should be built around:
+
+delayed recall checks
+
+free-recall style items
+
+variant and mixed-context questions
+
+interference testing
+
+repeated spaced confirmation
+
+That is how the app moves from:
+
+“student saw it”
+to
+
+“student can still pull it back”
+to
+
+“student has it.”
+
+The next move is to design the exact question taxonomy and memory-confirmation engine for Math, Science, and theory subjects separately, because the proof of memory should look different across those domains.
+
+
+proceed
+
+I’m mapping this into subject-specific memory proof: what counts as true memory in Math, Science, and theory-heavy subjects, and how the engine should test each one differently.
+
+Thought for 34s
+Good. Now we make it concrete.
+
+What follows is the subject-specific memory-confirmation design: how the app should prove that something is genuinely in memory for Math, Science, and theory-heavy subjects, plus the engine logic that decides when memory is truly strong.
+
+The starting principle is this:
+
+A student has not truly stored something just because they got one question right. Durable memory is inferred when they can retrieve it independently, after some delay, under changed conditions, and inside related use. That fits what research shows about retrieval strength vs storage strength, the testing effect, and spacing: immediate access is not the same thing as durable learning, and repeated retrieval over time is a stronger signal of retention than immediate restudy performance. 
+
+1. The core rule for the engine
+Your system should stop asking:
+
+“Did the student answer correctly?”
+
+and instead ask:
+
+“What kind of memory evidence did this response produce?”
+
+That means every response should be classified by diagnostic strength.
+
+Evidence tiers
+Tier 1 — Weak evidence
+These suggest exposure or familiarity, but do not confirm durable memory:
+
+repeated identical item
+
+familiar multiple choice
+
+strong cueing
+
+immediate post-lesson success
+
+Tier 2 — Moderate evidence
+These suggest the idea is accessible:
+
+short-answer recall
+
+same skill in slightly changed form
+
+low-cue guided reconstruction
+
+Tier 3 — Strong evidence
+These strongly support real memory:
+
+free recall
+
+delayed recall
+
+transfer to a new surface form
+
+discrimination against similar concepts
+
+use inside a mixed or multi-step problem
+
+Tier 4 — Durable evidence
+These support the idea that memory is becoming entrenched:
+
+repeated success across separate sessions
+
+survival after spacing
+
+stable performance despite interference
+
+adequate retrieval speed
+
+correct use without scaffolds in mixed contexts
+
+This is where “in memory” should be awarded.
+
+2. The universal memory-confirmation engine
+For every micro-skill, the app should run the same high-level pipeline.
+
+Step A — Initial encoding
+The learner is taught or encounters the concept.
+
+At this point, nothing is “confirmed in memory” yet.
+
+Step B — Immediate retrieval check
+The learner must retrieve, not just recognize.
+
+This checks whether the concept was encoded enough to be pulled back.
+
+Step C — Variation check
+The same underlying skill appears in a different form.
+
+This checks whether the learner knows the idea, not just the exact item.
+
+Step D — Delay check
+The concept comes back later.
+
+Spacing matters because a concept that looks easy immediately after learning can collapse once time passes, while well-stored knowledge is more likely to survive delayed retrieval attempts. 
+
+Step E — Embedded-use check
+The learner uses the skill inside a broader task.
+
+This checks whether memory is usable, not isolated.
+
+Step F — Stability recheck
+The concept is checked again after another interval.
+
+Only after this sequence should the engine treat the concept as truly in memory.
+
+3. The memory states the engine should use
+Each micro-skill should move through these states:
+
+Seen
+
+Encoded
+
+Accessible
+
+Fragile
+
+Anchoring
+
+Confirmed in Memory
+
+At Risk
+
+Fading
+
+Recovered
+
+Locked In
+
+This is much better than “mastered / not mastered.”
+
+Because a student may:
+
+know it today but not next week,
+
+lose easy access but recover quickly,
+
+or appear strong only when the form is familiar.
+
+That distinction is consistent with the storage-strength / retrieval-strength framework. 
+
+4. What counts as memory in Math
+Math memory is not only remembering facts.
+It has at least four layers:
+
+A. Fact memory
+Examples:
+
+multiplication facts
+
+formulas
+
+definitions
+
+standard identities
+
+B. Procedure memory
+Examples:
+
+long division steps
+
+solving linear equations
+
+simplifying fractions
+
+expanding brackets
+
+C. Decision memory
+This is critical.
+
+The student must remember:
+
+which method applies,
+
+when to use it,
+
+and why.
+
+Example:
+not just “how to solve,” but “this is a simultaneous equations problem, so substitution or elimination applies.”
+
+D. Structure memory
+The student recognizes the hidden mathematical structure when the surface changes.
+
+Example:
+they can still see ratio inside a word problem, or fraction comparison inside a visual model.
+
+That matters because procedural fluency alone can be fake if the student only succeeds on familiar templates.
+
+What proves memory in Math
+A Math skill should count as truly in memory only when the learner can do all or most of these:
+
+retrieve the rule or method without heavy cues
+
+execute the procedure correctly
+
+choose the right method when the problem is not labeled
+
+handle a changed surface form
+
+solve under light time pressure
+
+avoid confusing nearby methods
+
+That last one is important. Many math failures are not pure forgetting; they are interference failures.
+
+The best Math question taxonomy for memory proof
+Type M1 — Pure fact recall
+Examples:
+
+“What is 7 × 8?”
+
+“State the quadratic formula.”
+
+“What is the LCM of 6 and 8?”
+
+Purpose:
+tests direct retrieval
+
+Diagnostic strength:
+low to medium on its own, high when delayed
+
+Type M2 — Bare procedure recall
+Examples:
+
+“Solve 3x + 5 = 20.”
+
+“Simplify 18/24.”
+
+“Factor x² + 5x + 6.”
+
+Purpose:
+tests whether the student can perform the method
+
+Type M3 — Method-selection question
+Examples:
+
+“Which method should be used here?”
+
+“What is the first step?”
+
+“Why do we need a common denominator here?”
+
+Purpose:
+tests decision memory
+
+This is one of the most important Math memory types because it catches students who can mimic steps but cannot identify the right path.
+
+Type M4 — Variant-form question
+Same skill, different presentation:
+
+symbolic
+
+word problem
+
+table
+
+diagram
+
+reverse question
+
+Purpose:
+tests transfer and structure memory
+
+Type M5 — Interference question
+Examples:
+
+area vs perimeter
+
+mean vs median
+
+factorize vs simplify
+
+ratio vs fraction reduction
+
+Purpose:
+tests whether the memory is distinct enough not to collapse under similarity
+
+Type M6 — Embedded multi-step question
+Example:
+fraction simplification hidden inside a ratio or algebra problem
+
+Purpose:
+tests whether the skill is usable in a chain
+
+Type M7 — Timed fluency check
+A light-speed or moderate-speed version
+
+Purpose:
+tests retrieval efficiency, not just correctness
+
+Fast successful retrieval is not the whole story, but retrieval speed can help distinguish fragile access from stable access when combined with other evidence. 
+
+Math memory confirmation rule
+A Math micro-skill is Confirmed in Memory only if the learner has:
+
+1 success on bare or low-cue procedure recall
+
+1 success on method selection or first-step reasoning
+
+1 success on a variant form
+
+1 success after delay
+
+1 success in a mixed or embedded problem
+
+acceptable error-free execution
+
+That is how you know the student has more than step imitation.
+
+5. What counts as memory in Science
+Science memory is different. It has more layers.
+
+A. Term and fact memory
+Examples:
+
+osmosis
+
+mitosis
+
+valency
+
+Newton’s laws
+
+parts of a cell
+
+B. Concept memory
+The learner remembers what the idea means.
+
+Example:
+not just “diffusion,” but what diffusion actually is.
+
+C. Causal memory
+The learner remembers why something happens.
+
+Example:
+why a metal expands when heated
+why plants wilt
+why pressure changes boiling point
+
+D. Process memory
+The learner remembers a sequence or mechanism.
+
+Examples:
+
+photosynthesis process
+
+digestive pathway
+
+experimental procedure
+
+circuit behavior
+
+E. Representation memory
+The learner can move between:
+
+words
+
+diagrams
+
+equations
+
+tables
+
+graphs
+
+experiments
+
+This is huge in science.
+
+A student may “know” the concept verbally but fail when the same thing appears as a graph or labeled diagram.
+
+What proves memory in Science
+A Science concept should count as truly in memory when the learner can:
+
+recall the term or principle
+
+explain it in plain language
+
+distinguish it from similar concepts
+
+interpret it in a diagram / graph / experiment setup
+
+apply it to a new scenario
+
+recall it again after a delay
+
+That is stronger than simple definition recall.
+
+The best Science question taxonomy for memory proof
+Type S1 — Term recall
+Examples:
+
+“What is the function of the mitochondrion?”
+
+“Define evaporation.”
+
+“What is the unit of force?”
+
+Purpose:
+basic retrieval of facts and vocabulary
+
+Type S2 — Explanation recall
+Examples:
+
+“Explain why…”
+
+“Describe what happens when…”
+
+“Why does this occur?”
+
+Purpose:
+tests whether the concept has meaning, not just label memory
+
+Type S3 — Similarity discrimination
+Examples:
+
+diffusion vs osmosis
+
+mitosis vs meiosis
+
+mass vs weight
+
+voltage vs current
+
+Purpose:
+tests interference resistance
+
+Type S4 — Diagram or graph interpretation
+Examples:
+
+label a diagram
+
+infer from a graph
+
+identify a process from a pictured setup
+
+Purpose:
+tests representation memory
+
+Type S5 — Scenario transfer
+Examples:
+
+“What happens if…”
+
+“Predict the result when…”
+
+“Which principle explains this situation?”
+
+Purpose:
+tests whether the concept can travel into new contexts
+
+Type S6 — Process ordering / mechanism reconstruction
+Examples:
+
+sequence the stages
+
+fill missing steps
+
+identify what comes next and why
+
+Purpose:
+tests process memory
+
+Type S7 — Experimental reasoning
+Examples:
+
+identify variable
+
+state control
+
+interpret outcome
+
+explain source of error
+
+Purpose:
+tests whether memory is usable in scientific reasoning
+
+Science memory confirmation rule
+A Science micro-skill is Confirmed in Memory only if the learner has:
+
+1 success on direct recall
+
+1 success on explanation or causal reasoning
+
+1 success on representation shift
+
+1 success on transfer to a new scenario
+
+1 delayed success
+
+no strong confusion with the nearest similar concept
+
+That proves the learner is not merely parroting words.
+
+6. What counts as memory in theory-heavy subjects
+This applies to subjects like:
+
+History
+
+Government
+
+Religious studies
+
+Literature
+
+parts of Geography
+
+civic or social studies content
+
+These subjects often get treated as pure memorization, but true memory here has multiple layers too.
+
+A. Fact memory
+Dates, names, places, definitions, events, terms
+
+B. Relational memory
+Who is connected to what
+what happened before what
+cause and effect
+actor and consequence
+
+C. Sequence memory
+Timelines, process order, event flow
+
+D. Argument memory
+Can the student explain reasons, significance, consequences, themes?
+
+E. Retrieval-under-cue-loss
+Can the learner recall without the exact textbook wording?
+
+That last one is critical in theory subjects. Many students memorize phrasing but collapse when wording changes.
+
+What proves memory in theory subjects
+A theory concept should count as truly in memory when the learner can:
+
+recall the key fact or idea
+
+explain it in their own words
+
+connect it to causes / effects / themes / sequence
+
+distinguish it from a close alternative
+
+use it in a short response or evidence-based answer
+
+retrieve it again later
+
+The best theory-subject question taxonomy
+Type T1 — Direct fact recall
+Examples:
+
+“Who signed…”
+
+“In what year…”
+
+“State two causes of…”
+
+Purpose:
+basic factual retrieval
+
+Type T2 — Own-words explanation
+Examples:
+
+“Explain the meaning of…”
+
+“Why did…”
+
+“Summarize the idea of…”
+
+Purpose:
+tests whether the memory is semantically owned, not copied
+
+Type T3 — Cause-effect link question
+Examples:
+
+“What led to…”
+
+“What was the consequence of…”
+
+“Why did this event matter?”
+
+Purpose:
+tests relational memory
+
+Type T4 — Sequence / chronology question
+Examples:
+
+order events
+
+identify what came first
+
+reconstruct the chain
+
+Purpose:
+tests timeline stability
+
+Type T5 — Contrast / comparison question
+Examples:
+
+monarchy vs democracy
+
+direct rule vs indirect rule
+
+protagonist vs antagonist themes
+
+Purpose:
+tests interference resistance
+
+Type T6 — Evidence-use question
+Examples:
+
+“Use one example to support…”
+
+“Which event best illustrates…”
+
+“Give a reason and evidence”
+
+Purpose:
+tests usable memory
+
+Type T7 — Reworded delayed recall
+Same concept, different wording, later session
+
+Purpose:
+tests whether memory survived beyond phrasing and recency
+
+Theory-subject memory confirmation rule
+A theory micro-skill is Confirmed in Memory only if the learner has:
+
+1 success on fact recall
+
+1 success on own-words explanation
+
+1 success on relational or sequence connection
+
+1 success on comparison or discrimination
+
+1 delayed success with changed wording
+
+That proves the learner owns the idea beyond rote wording.
+
+7. Why the engine must differ by subject
+Math, Science, and theory subjects do not fail in the same way.
+
+Math failures often come from:
+procedure decay
+
+decision failure
+
+confusion between methods
+
+chain breakdown
+
+Science failures often come from:
+term memory without causal understanding
+
+concept confusion
+
+poor transfer across representations
+
+weak process reconstruction
+
+Theory-subject failures often come from:
+shallow rote wording
+
+weak chronology
+
+weak cause-effect links
+
+inability to restate or support with evidence
+
+So your engine should not use one flat proof model for all subjects.
+
+It should use one core memory framework with different subject proof templates.
+
+8. The exact engine design
+Now let’s turn this into a real product engine.
+
+Engine 1 — Memory Evidence Collector
+Every answer event gets tagged with:
+
+skill ID
+
+subject
+
+question type
+
+cue level
+
+delay since last exposure
+
+variant class
+
+whether it was mixed or isolated
+
+response time
+
+correctness
+
+confidence
+
+hint usage
+
+interference condition
+
+This lets the system know not just whether the learner was right, but what kind of memory evidence the response produced.
+
+Engine 2 — Evidence Weighting Engine
+Every response gets an evidence score.
+
+Example weights:
+
+identical-item success: 0.5
+
+familiar MCQ success: 1.0
+
+low-cue short answer: 2.0
+
+free recall: 3.0
+
+variant transfer: 3.0
+
+embedded use: 3.0
+
+delayed recall: 3.5
+
+interference success: 3.0
+
+repeated time-separated success: 4.0
+
+These are design weights, not scientific constants.
+
+The point is: not all correct answers count equally.
+
+Engine 3 — Subject Proof Template Engine
+This engine knows the required evidence stack for each subject.
+
+Math template
+Requires evidence from:
+
+procedure
+
+method selection
+
+variation
+
+delay
+
+embedded use
+
+Science template
+Requires evidence from:
+
+recall
+
+explanation
+
+representation shift
+
+transfer
+
+delay
+
+Theory template
+Requires evidence from:
+
+fact
+
+own-words explanation
+
+relation/sequence
+
+contrast
+
+delay
+
+A skill cannot become “Confirmed in Memory” until the required template is satisfied.
+
+Engine 4 — Decay Predictor
+This engine estimates risk that memory will slip soon.
+
+Inputs:
+
+days since last successful retrieval
+
+strength of past evidence
+
+relapse history
+
+response-time drift
+
+interference errors
+
+subject type
+
+confidence mismatch
+
+Because spacing effects vary with retention interval, this engine should not use fixed assumptions like “review after exactly X days for everything.” The optimal spacing depends on how long you need the knowledge to last. 
+
+Engine 5 — Recovery Planner
+When memory falls, this engine decides whether to:
+
+refresh lightly
+
+run rescue burst
+
+rebuild from prerequisite
+
+repair interference confusion
+
+restore chain connection
+
+Engine 6 — Confirmation Gate
+This is the final decision layer.
+
+A skill can only move to Confirmed in Memory if:
+
+evidence threshold is met
+
+subject proof template is satisfied
+
+there is at least one delayed success
+
+there is at least one non-identical success
+
+no unresolved severe interference remains
+
+9. The best way to schedule confirmation
+A concept should not be declared “strong memory” in one sitting.
+
+Use a confirmation cadence like this:
+
+initial retrieval
+
+short delay recheck
+
+medium delay recheck
+
+longer delay recheck
+
+The actual spacing should adapt by subject, exam distance, difficulty, and relapse history, because the best spacing interval changes with the target retention interval. 
+
+A simple starting policy:
+
+Fragile or new memory
+same day
+
+next day
+
+3 days
+
+Emerging stable memory
+7 days
+
+14 days
+
+Confirmed memory
+30 days or exam-relative refresh
+
+10. The strongest product insight
+The app should never say:
+
+“You know this.”
+
+It should say one of these:
+
+“You can currently access this.”
+
+“This is still fragile.”
+
+“You recall this in familiar form, but not yet in changed form.”
+
+“This survived delay but not interference.”
+
+“This is now confirmed in memory.”
+
+“This memory is fading.”
+
+“This concept is stored but retrieval is weakening.”
+
+That is a much more intelligent model of learning.
+
+11. The UI version of all this
+The student should never see the full technical complexity.
+They should see something simple.
+
+For each skill:
+
+Fresh
+
+Building
+
+Needs Reinforcement
+
+Strong
+
+Locked In
+
+Slipping
+
+And when tapped, the app can explain:
+
+In Math
+“You can solve this directly, but you still need to prove it in mixed problems.”
+
+In Science
+“You remember the definition, but you still need to show it in diagrams and scenarios.”
+
+In Theory subjects
+“You remember the facts, but you still need to explain them in your own words after time has passed.”
+
+That is powerful.
+
+12. The final standard
+Here is the clean rule your whole system can be built around:
+
+A concept is truly in memory when the learner has produced enough strong evidence, across time and across changing conditions, to show that the knowledge is retrievable, usable, stable, and resistant to collapse.
+That is the standard.
+
+Not one correct answer.
+Not one test.
+Not one day.
+
+A pattern of proof.
+
+The next strongest move is to build the data model and state machine for this engine: the exact fields, tables, transitions, and scoring logic your backend would need.
+
+
+proceed
+
+I’m translating the memory science into backend structure now: entities, fields, scoring records, state transitions, and the decision logic that moves a skill from fragile to confirmed.
+
+Thought for 31s
+Good. Here is the backend data model + state machine spec for Memory Mode.
+
+The design principle is this: the system should not store “memory” as a binary fact. It should store evidence about retrievability, durability, transfer, interference resistance, and time-separated recall, then infer the learner’s current memory state from that evidence. That approach matches the core distinction between current accessibility and durable learning, and it also fits what retrieval-practice and spacing research suggests about long-term retention. 
+
+1. Core architectural idea
+For every learner and every micro-skill, the system should track four separate things:
+
+Current access
+Can the student retrieve this now?
+
+Durability confidence
+How much evidence do we have that this knowledge is likely to last?
+
+Proof coverage
+What kinds of evidence have been collected so far for this skill?
+
+Decay risk
+How likely is recall to slip soon if not revisited?
+
+That separation matters because immediate performance can look strong while durable retention is still weak, and the best time gap for rechecking depends on the intended retention interval rather than a fixed universal schedule. 
+
+2. Main entities
+2.1 SkillNode
+This is the canonical learning atom.
+
+Fields:
+
+skill_id
+
+subject_id
+
+topic_id
+
+subtopic_id
+
+parent_skill_id
+
+title
+
+description
+
+skill_type
+examples: fact, procedure, concept, discrimination, process, sequence, argument
+
+default_expected_time_ms
+
+difficulty_band
+
+proof_template_id
+
+is_active
+
+created_at
+
+updated_at
+
+Optional graph fields:
+
+prerequisite_skill_ids
+
+related_skill_ids
+
+interference_skill_ids
+
+dependent_skill_ids
+
+This is what lets the engine zoom to the exact broken unit instead of staying at topic level.
+
+2.2 QuestionItem
+Each question must be diagnostically rich, not just content-rich.
+
+Fields:
+
+question_id
+
+skill_id
+
+subject_id
+
+question_family_id
+
+question_type
+examples: free_recall, mcq, short_answer, method_select, explain_why, diagram_label, process_order, mixed_problem
+
+variant_type
+examples: canonical, reworded, contextualized, reverse, mixed, diagrammatic, interference
+
+cue_level
+0 = none, 1 = light, 2 = medium, 3 = heavy
+
+diagnostic_role
+examples: independent_recall, delayed_recall, transfer_check, interference_check, embedded_use, speed_check
+
+expected_time_ms
+
+misconception_tag_ids
+
+interference_skill_ids
+
+content_hash
+
+status
+
+2.3 LearnerSkillMemory
+This is the central per-learner, per-skill memory record.
+
+Fields:
+
+learner_id
+
+skill_id
+
+State fields:
+
+memory_state
+
+state_entered_at
+
+Current-access fields:
+
+retrieval_access_score
+
+median_response_time_ms
+
+recent_accuracy
+
+recent_confidence_alignment
+
+Durability fields:
+
+durability_confidence_score
+
+time_separated_success_count
+
+successful_delay_bands
+example structure: short, medium, long
+
+relearning_speed_index
+
+Proof coverage fields:
+
+proof_independent_recall
+
+proof_variant_transfer
+
+proof_delayed_recall
+
+proof_embedded_use
+
+proof_interference_resistance
+
+proof_explanation_or_reasoning
+
+proof_representation_shift
+
+proof_sequence_or_relation
+
+proof_speed_fluency
+
+Risk fields:
+
+decay_risk_score
+
+interference_risk_score
+
+relapse_count
+
+last_relapse_at
+
+Schedule fields:
+
+last_seen_at
+
+last_success_at
+
+last_independent_recall_at
+
+next_recheck_at
+
+next_recheck_reason
+
+Counts:
+
+attempt_count_total
+
+attempt_count_recent
+
+success_count_total
+
+hint_usage_count_recent
+
+This is the “truth row” for memory state.
+
+2.4 MemoryEvidenceEvent
+Every answer generates an evidence event.
+
+Fields:
+
+event_id
+
+learner_id
+
+skill_id
+
+question_id
+
+session_id
+
+occurred_at
+
+Performance:
+
+is_correct
+
+response_time_ms
+
+confidence_self_rating
+
+hint_used
+
+attempt_index_within_session
+
+Diagnostic metadata:
+
+question_type
+
+variant_type
+
+cue_level
+
+diagnostic_role
+
+is_time_separated
+
+delay_band
+
+is_mixed_context
+
+is_interference_condition
+
+representation_mode
+examples: text, diagram, graph, symbolic, scenario
+
+Derived scoring:
+
+evidence_weight
+
+supports_independent_recall
+
+supports_variant_transfer
+
+supports_delayed_recall
+
+supports_embedded_use
+
+supports_interference_resistance
+
+supports_explanation_reasoning
+
+supports_representation_shift
+
+supports_sequence_relation
+
+supports_speed_fluency
+
+This table is your audit trail.
+
+2.5 MemorySession
+Represents one memory-oriented learning session.
+
+Fields:
+
+session_id
+
+learner_id
+
+mode_type
+scan, rescue_burst, deep_repair, chain_repair, recall_builder, fluency_drill
+
+started_at
+
+ended_at
+
+session_status
+
+primary_skill_ids
+
+secondary_skill_ids
+
+planner_version
+
+session_goal
+
+Summary fields:
+
+skills_promoted_count
+
+skills_regressed_count
+
+skills_flagged_count
+
+avg_response_time_ms
+
+avg_accuracy
+
+memory_gain_score
+
+2.6 ProofTemplate
+Defines what counts as confirmed memory for each subject/skill type.
+
+Fields:
+
+proof_template_id
+
+subject_id
+
+skill_type
+
+required_dimensions
+
+minimum_time_separated_successes
+
+minimum_distinct_variants
+
+minimum_embedded_successes
+
+maximum_allowed_interference_failures
+
+minimum_speed_score
+
+confirmation_threshold
+
+Examples:
+
+Math procedure template
+
+Science concept template
+
+Theory-sequence template
+
+2.7 RecheckSchedule
+Tracks future verification points.
+
+Fields:
+
+schedule_id
+
+learner_id
+
+skill_id
+
+scheduled_for
+
+schedule_type
+initial, short_gap, medium_gap, long_gap, exam_proximity, relapse_followup
+
+target_proof_dimension
+
+priority_score
+
+status
+
+2.8 SkillGraphEdge
+For dependency, relatedness, and interference.
+
+Fields:
+
+edge_id
+
+from_skill_id
+
+to_skill_id
+
+edge_type
+prerequisite, related, interference, dependent, representation_of
+
+weight
+
+3. Canonical memory states
+Use these states:
+
+SEEN
+
+ENCODED
+
+ACCESSIBLE
+
+FRAGILE
+
+ANCHORING
+
+CONFIRMED
+
+LOCKED_IN
+
+AT_RISK
+
+FADING
+
+REBUILDING
+
+RECOVERED
+
+COLLAPSED
+
+Meaning:
+
+SEEN
+Student encountered it, but no retrieval proof yet.
+
+ENCODED
+Initial lesson or practice happened, but recall evidence is still shallow.
+
+ACCESSIBLE
+Student can currently retrieve it in at least one low-friction context.
+
+FRAGILE
+Some evidence exists, but not enough to trust durability.
+
+ANCHORING
+Multiple evidence dimensions are filling in, but time-separated proof is incomplete.
+
+CONFIRMED
+Enough evidence exists across required dimensions and time bands.
+
+LOCKED_IN
+Confirmed plus repeated long-interval stability.
+
+AT_RISK
+Still mostly retrievable, but decay risk is rising.
+
+FADING
+Clear retrieval weakening or interference breakdown.
+
+REBUILDING
+System is actively repairing the skill.
+
+RECOVERED
+Skill came back after fading, but needs monitoring.
+
+COLLAPSED
+Recall evidence has broken badly enough that the system should not trust access.
+
+4. State transition model
+4.1 Upward transitions
+SEEN -> ENCODED
+
+learner completes instruction or first guided exposure
+
+ENCODED -> ACCESSIBLE
+
+first successful independent or lightly cued retrieval
+
+ACCESSIBLE -> FRAGILE
+
+one or more successful retrievals, but no time-separated or transfer proof yet
+
+FRAGILE -> ANCHORING
+
+at least two proof dimensions satisfied
+
+at least one distinct variant success
+
+error rate dropping
+
+ANCHORING -> CONFIRMED
+
+proof template satisfied
+
+minimum delay success satisfied
+
+interference not unresolved
+
+current access above threshold
+
+CONFIRMED -> LOCKED_IN
+
+repeated success across longer interval bands
+
+low relapse count
+
+stable speed and transfer
+
+4.2 Risk transitions
+CONFIRMED -> AT_RISK
+
+due for recheck and delay exceeded
+
+response-time drift up
+
+neighboring dependent skills slipping
+
+recent interference confusion rising
+
+AT_RISK -> FADING
+
+failed delayed recheck
+
+recent accuracy collapse
+
+repeated need for cues
+
+mixed-context failures increase
+
+FADING -> REBUILDING
+
+rescue session launched
+
+REBUILDING -> RECOVERED
+
+rescued skill regains required local evidence
+
+one short-delay success achieved
+
+RECOVERED -> CONFIRMED
+
+proof template re-satisfied with at least one time-separated success after recovery
+
+4.3 Failure transitions
+ACCESSIBLE -> COLLAPSED
+
+repeated failures even with light cues
+
+classifier says concept is not merely fading but functionally unavailable
+
+FRAGILE -> COLLAPSED
+
+high error rate across canonical, variant, and guided forms
+
+AT_RISK -> COLLAPSED
+
+complete breakdown on recheck and prerequisite chain damage
+
+REBUILDING -> COLLAPSED
+
+rescue unsuccessful and prerequisite rebuild required
+
+5. Guard conditions for promotion
+A skill should never be promoted by score alone.
+Promotion requires both:
+
+numeric threshold
+
+proof-template coverage
+
+That means CONFIRMED should require:
+
+sufficient retrieval access
+
+sufficient durability confidence
+
+required proof dimensions filled
+
+at least one time-separated success
+
+at least one non-identical success
+
+no unresolved interference block
+
+This is important because repeated testing and spaced retrieval are strong signals for long-term retention, but the system still needs subject-specific evidence that the knowledge is usable and transferable. 
+
+6. Main numeric scores
+6.1 RetrievalAccessScore
+Range: 0–100
+
+Measures:
+
+recent correctness
+
+speed against expected time
+
+cue independence
+
+confidence calibration
+
+Suggested form:
+
+RAS = 35*recent_accuracy + 20*speed_score + 20*independence_score + 15*consistency_score + 10*confidence_alignment
+
+All subcomponents normalized to 0–1.
+
+Purpose:
+Can the learner pull this out now?
+
+6.2 DurabilityConfidenceScore
+Range: 0–100
+
+Measures:
+
+time-separated success
+
+spaced survival
+
+number of distinct successful variants
+
+embedded-use success
+
+relearning speed after lapse
+
+Suggested form:
+
+DCS = 25*time_separated_score + 20*variant_score + 15*embedded_use_score + 15*interference_resistance_score + 15*recheck_stability_score + 10*relearning_efficiency
+
+Purpose:
+How much evidence says this knowledge will last?
+
+6.3 DecayRiskScore
+Range: 0–100, where higher is worse
+
+Measures:
+
+overdue recheck age
+
+response-time drift
+
+recent error drift
+
+relapse history
+
+low spacing success
+
+neighboring dependency collapse
+
+Suggested form:
+
+DRS = 25*overdue_factor + 20*accuracy_drop + 15*speed_drift + 15*relapse_factor + 15*dependency_damage + 10*interference_growth
+
+Purpose:
+How likely is slippage soon?
+
+6.4 InterferenceRiskScore
+Range: 0–100
+
+Measures confusion with similar concepts.
+
+Examples:
+
+area vs perimeter
+
+osmosis vs diffusion
+
+mitosis vs meiosis
+
+7. Proof coverage vector
+Instead of one flag, store a proof vector.
+
+Possible dimensions:
+
+independent_recall
+
+delayed_recall
+
+variant_transfer
+
+embedded_use
+
+interference_resistance
+
+explanation_reasoning
+
+representation_shift
+
+sequence_relation
+
+speed_fluency
+
+Each dimension should store:
+
+status: none / partial / satisfied
+
+evidence_count
+
+best_recent_score
+
+last_satisfied_at
+
+This is the cleanest way to enforce subject-specific confirmation.
+
+8. Subject proof templates
+8.1 Math procedure template
+Required:
+
+independent recall or bare procedure success
+
+method-selection or first-step reasoning
+
+variant transfer
+
+delayed recall
+
+embedded use
+Optional:
+
+speed fluency
+
+8.2 Science concept template
+Required:
+
+direct recall
+
+explanation or causal reasoning
+
+representation shift
+
+scenario transfer
+
+delayed recall
+
+interference resistance
+
+8.3 Theory-subject fact/relation template
+Required:
+
+factual recall
+
+own-words explanation
+
+sequence or causal relation
+
+discrimination/comparison
+
+delayed reworded recall
+
+9. Example schema sketch
+A practical relational design:
+
+create table skill_nodes (
+  skill_id uuid primary key,
+  subject_id uuid not null,
+  topic_id uuid not null,
+  subtopic_id uuid not null,
+  parent_skill_id uuid null,
+  title text not null,
+  description text,
+  skill_type text not null,
+  default_expected_time_ms int,
+  difficulty_band text,
+  proof_template_id uuid not null,
+  is_active boolean not null default true,
+  created_at timestamptz not null,
+  updated_at timestamptz not null
+);
+
+create table learner_skill_memory (
+  learner_id uuid not null,
+  skill_id uuid not null,
+  memory_state text not null,
+  state_entered_at timestamptz not null,
+  retrieval_access_score numeric(5,2) not null default 0,
+  durability_confidence_score numeric(5,2) not null default 0,
+  decay_risk_score numeric(5,2) not null default 0,
+  interference_risk_score numeric(5,2) not null default 0,
+  recent_accuracy numeric(5,2) not null default 0,
+  median_response_time_ms int,
+  relapse_count int not null default 0,
+  attempt_count_total int not null default 0,
+  success_count_total int not null default 0,
+  last_seen_at timestamptz,
+  last_success_at timestamptz,
+  last_independent_recall_at timestamptz,
+  next_recheck_at timestamptz,
+  next_recheck_reason text,
+  primary key (learner_id, skill_id)
+);
+
+create table memory_evidence_events (
+  event_id uuid primary key,
+  learner_id uuid not null,
+  skill_id uuid not null,
+  question_id uuid not null,
+  session_id uuid not null,
+  occurred_at timestamptz not null,
+  is_correct boolean not null,
+  response_time_ms int,
+  confidence_self_rating int,
+  hint_used boolean not null default false,
+  question_type text not null,
+  variant_type text not null,
+  cue_level int not null,
+  diagnostic_role text not null,
+  is_time_separated boolean not null default false,
+  delay_band text,
+  is_mixed_context boolean not null default false,
+  is_interference_condition boolean not null default false,
+  representation_mode text,
+  evidence_weight numeric(5,2) not null default 0
+);
+
+create table proof_dimension_status (
+  learner_id uuid not null,
+  skill_id uuid not null,
+  dimension_name text not null,
+  status text not null,
+  evidence_count int not null default 0,
+  best_recent_score numeric(5,2) not null default 0,
+  last_satisfied_at timestamptz,
+  primary key (learner_id, skill_id, dimension_name)
+);
+10. Event pipeline
+Every answer should run this pipeline:
+
+write MemoryEvidenceEvent
+
+update proof dimensions
+
+recompute RetrievalAccessScore
+
+recompute DurabilityConfidenceScore
+
+recompute DecayRiskScore
+
+run state machine
+
+emit transition event if changed
+
+reschedule recheck
+
+Event names:
+
+memory.evidence_recorded
+
+memory.proof_dimension_satisfied
+
+memory.state_changed
+
+memory.recheck_scheduled
+
+memory.skill_flagged_at_risk
+
+memory.rescue_required
+
+11. Transition decision logic
+Pseudo-logic:
+
+def evaluate_skill(learner_id, skill_id):
+    mem = load_memory_row(learner_id, skill_id)
+    proof = load_proof_vector(learner_id, skill_id)
+    template = load_template(skill_id)
+
+    ras = compute_ras(mem, proof)
+    dcs = compute_dcs(mem, proof)
+    drs = compute_drs(mem, proof)
+
+    template_ok = template.is_satisfied(proof)
+    has_delay = proof["delayed_recall"].status == "satisfied"
+    has_variant = any_dim_satisfied(proof, ["variant_transfer", "representation_shift"])
+    interference_block = mem.interference_risk_score > 70 and not proof["interference_resistance"].status == "satisfied"
+
+    if ras < 25 and dcs < 20:
+        new_state = "COLLAPSED"
+    elif drs > 75 and ras < 45:
+        new_state = "FADING"
+    elif current_rescue_open(skill_id, learner_id):
+        new_state = "REBUILDING"
+    elif template_ok and has_delay and has_variant and not interference_block and ras >= 70 and dcs >= 70:
+        new_state = "CONFIRMED"
+    elif template_ok and ras >= 80 and dcs >= 85 and stable_long_interval_successes(learner_id, skill_id):
+        new_state = "LOCKED_IN"
+    elif drs > 55 and ras >= 55:
+        new_state = "AT_RISK"
+    elif ras >= 55 and proof_dimensions_count(proof) >= 2:
+        new_state = "ANCHORING"
+    elif ras >= 45:
+        new_state = "FRAGILE"
+    elif ras >= 30:
+        new_state = "ACCESSIBLE"
+    else:
+        new_state = "ENCODED"
+
+    persist_state(new_state)
+12. Recheck scheduler logic
+Spacing should be adaptive, because the best review gap depends on how far out you want the knowledge to be retained; there is no single universal interval that is optimal for all goals. 
+
+Suggested scheduler:
+
+If state is FRAGILE
+same day or next day
+
+target: delayed recall
+
+If state is ANCHORING
+2–4 days
+
+target: variant transfer or embedded use
+
+If state is CONFIRMED
+7–14 days
+
+target: delayed recall in changed form
+
+If state is LOCKED_IN
+21–45 days
+
+target: fast transfer check or exam-context mixed problem
+
+If state is AT_RISK
+immediate rescue or 24h recheck
+
+If state is RECOVERED
+short delay again
+
+then medium delay
+
+then back to normal schedule
+
+The scheduler should also compress intervals as the exam date approaches.
+
+13. Evidence weighting rules
+Not all correct answers should count equally.
+
+Example weight map:
+
+identical MCQ success: 0.8
+
+familiar short-answer success: 1.5
+
+free recall success: 2.5
+
+delayed recall success: 3.0
+
+variant transfer success: 2.5
+
+embedded-use success: 2.5
+
+interference discrimination success: 2.5
+
+explanation/reasoning success: 2.0
+
+representation-shift success: 2.5
+
+long-gap recheck success: 3.5
+
+Lower cue support should earn more credit than heavy cue support, because reduced cueing is a stronger sign that retrieval is learner-generated rather than prompt-supported. That also aligns with findings that impoverished cue support can strengthen later retention. 
+
+14. Recovery planner logic
+When state becomes FADING or COLLAPSED, classify the breakdown.
+
+Possible breakdown types:
+
+PURE_DECAY
+
+INTERFERENCE_CONFUSION
+
+PREREQUISITE_BREAK
+
+SURFACE_DEPENDENCE
+
+SPEED_ONLY_WEAKNESS
+
+UNDERSTANDING_NOT_MEMORY
+
+Then choose the repair path.
+
+PURE_DECAY
+Use:
+
+independent recall
+
+short delay repeat
+
+variant transfer
+
+follow-up recheck
+
+INTERFERENCE_CONFUSION
+Use:
+
+contrast drills
+
+side-by-side discrimination
+
+interference-specific questions
+
+then delayed discrimination recheck
+
+PREREQUISITE_BREAK
+Repair root skill first.
+
+SURFACE_DEPENDENCE
+Use:
+
+changed wording
+
+changed representation
+
+mixed context
+
+reverse questions
+
+SPEED_ONLY_WEAKNESS
+Use:
+
+light fluency drills
+
+preserve concept difficulty
+
+avoid over-remediation
+
+UNDERSTANDING_NOT_MEMORY
+Do not stay in Memory Mode.
+Hand off to concept-teaching or weakness-fix mode.
+
+15. API surface
+Suggested endpoints:
+
+Read
+GET /learners/{id}/memory/overview
+
+GET /learners/{id}/memory/skills/{skillId}
+
+GET /learners/{id}/memory/at-risk
+
+GET /learners/{id}/memory/rechecks
+
+Write
+POST /memory/sessions/start
+
+POST /memory/evidence
+
+POST /memory/sessions/{id}/complete
+
+POST /memory/skills/{skillId}/rescue
+
+POST /memory/rechecks/run
+
+Internal
+POST /internal/memory/recompute/{learnerId}/{skillId}
+
+POST /internal/memory/schedule-next
+
+POST /internal/memory/run-state-machine
+
+16. Example skill lifecycle
+Math example: simplifying fractions
+Student learns skill
+State: ENCODED
+
+Student independently simplifies 18/24
+State: ACCESSIBLE
+
+Student succeeds on a reworded or embedded fraction item
+State: FRAGILE
+
+Student later succeeds after 3 days and then inside a ratio problem
+State: ANCHORING
+
+Student also succeeds on a mixed-topic item and a delayed recheck
+State: CONFIRMED
+
+No issues for 3 weeks, stable on rechecks
+State: LOCKED_IN
+
+Later response times drift and fraction-addition errors rise
+State: AT_RISK
+
+Delayed recheck fails
+State: FADING
+
+Rescue burst repairs common-denominator precursor
+State: REBUILDING
+
+Short delay success
+State: RECOVERED
+
+Medium delay success + proof template re-satisfied
+State: CONFIRMED
+
+17. Anti-gaming rules
+The system must resist fake memory signals.
+
+Rules:
+
+identical question repeats give sharply diminishing weight
+
+back-to-back same-family items capped
+
+high cue support cannot by itself satisfy independent recall
+
+immediate post-lesson success cannot confirm durability
+
+only time-separated evidence can satisfy delayed proof
+
+only distinct surface forms can satisfy transfer proof
+
+only mixed/interference items can satisfy those respective dimensions
+
+This matters because students often mistake ease and familiarity for lasting learning, and repeated restudy can inflate confidence more than delayed retention. 
+
+18. Analytics layer
+At learner level:
+
+number of skills by state
+
+rescue success rate
+
+relapse rate
+
+median time from fading to recovered
+
+strongest and weakest proof dimensions
+
+average spacing survival rate
+
+At content level:
+
+which questions produce strongest evidence
+
+which skills relapse most
+
+which interference pairs are most problematic
+
+which proof templates are too strict or too loose
+
+At system level:
+
+percentage of confirmed skills that later fade
+
+time to first decay after confirmation
+
+predictive accuracy of DecayRiskScore
+
+recovery lift after rescue sessions
+
+19. Best implementation sequence
+Build in this order:
+
+SkillNode
+
+QuestionItem tagging
+
+MemoryEvidenceEvent
+
+LearnerSkillMemory
+
+proof-dimension layer
+
+scoring engine
+
+state machine
+
+scheduler
+
+rescue planner
+
+analytics and dashboards
+
+That order gives you a working core before optimization.
+
+20. The cleanest one-line backend definition
+Memory Mode backend is an evidence-driven learner-skill state system that infers current recall strength, durability confidence, decay risk, and proof completeness from time-separated retrieval events, then uses a guarded state machine to decide when a skill is fragile, confirmed, slipping, or in recovery.
+
+The best next step is to convert this into an actual implementation package:
+
+Rust structs or Go models
+
+database migrations
+
+enum definitions
+
+state-machine code
+
+scoring functions
+
+sample JSON payloads for the frontend.
+
+
+
+

@@ -1,0 +1,6255 @@
+
+
+
+
+there should be a curriculum portal that will allow super admin to upload curriculum , you will mine the data and redesign its look to the public user . This curriculum , and syllabus will be available to the brain and all our intelligence and engines 
+
+I’m turning this into a concrete system design rather than just a feature note. The key move is to treat curriculum and syllabus as a first-class intelligence layer, not just uploaded files.
+
+Thought for 9s
+Yes. This should exist, and it should sit very close to the core of the system.
+
+What you are describing is not just a “curriculum upload page.” It is a Curriculum Intelligence Portal.
+
+Its job is to do three things at once:
+
+let super admin upload raw curriculum and syllabus materials,
+
+transform those materials into a clean, structured, student-facing public experience,
+
+feed the coach brain, question engines, glossary engine, diagnostics, mission planner, and every intelligence layer with trusted academic structure.
+
+The right way to build it is below.
+
+1. What this portal really is
+The portal should be the system’s academic source-of-truth layer.
+
+That means when curriculum or syllabus is uploaded, the system should not store it as a dead document only. It should convert it into:
+
+subject structure
+
+topic hierarchy
+
+subtopics
+
+learning objectives
+
+competencies
+
+skills
+
+key terms
+
+formulae
+
+concepts
+
+assessment expectations
+
+recommended progression order
+
+exam relevance
+
+difficulty signals
+
+cross-topic dependencies
+
+vocabulary mappings
+
+aliases and alternate phrasings
+
+So instead of the brain seeing “a PDF,” the brain sees:
+
+JHS Mathematics
+
+Term 2
+
+Algebraic Expressions
+
+learning objective: simplify algebraic expressions
+
+prerequisite: understanding variables
+
+related formula family: distributive law
+
+likely exam forms: simplify, expand, factorise, word problem
+
+common misconceptions: incorrect sign handling, combining unlike terms
+
+That is the power of this portal.
+
+2. Core principle
+Do not make curriculum a document library.
+
+Make it a mined academic intelligence graph.
+
+The uploaded syllabus is only the source.
+The real product is the structured intelligence extracted from it.
+
+3. Main layers of the Curriculum Intelligence Portal
+The system should have 5 major layers.
+
+A. Admin Upload Layer
+For super admin to upload and manage curriculum documents.
+
+B. Curriculum Mining Layer
+For parsing, extracting, cleaning, classifying, and restructuring curriculum content.
+
+C. Canonical Curriculum Model
+A normalized internal structure the whole platform can trust.
+
+D. Public Curriculum Experience
+A redesigned, beautiful, simplified version for students, parents, teachers, and general users.
+
+E. Brain + Engine Access Layer
+APIs and services that expose curriculum intelligence to all internal systems.
+
+4. Admin portal: what super admin should be able to do
+The super admin curriculum portal should not be a single upload form. It should be a full control center.
+
+4.1 Upload sources
+Super admin should be able to upload:
+
+PDF curriculum guides
+
+syllabus documents
+
+teacher handbooks
+
+curriculum frameworks
+
+subject outlines
+
+exam board content guides
+
+topic lists in Word/Docx
+
+CSV / Excel topic maps
+
+JSON imports
+
+images only if absolutely needed for scanned sources
+
+4.2 Source metadata
+Every upload should capture metadata like:
+
+country
+
+exam board
+
+curriculum family
+
+education level
+
+class / grade / form
+
+subject
+
+academic year
+
+term / semester
+
+source type
+
+official vs internal source
+
+language
+
+status: draft, parsed, reviewed, published, archived
+
+version number
+
+effective start date
+
+replacement relationship to prior version
+
+4.3 Parsing control
+Super admin should be able to choose:
+
+auto-parse
+
+manual review required
+
+merge into existing curriculum
+
+create new curriculum branch
+
+treat as amendment / supplement
+
+treat as replacement version
+
+4.4 Review workbench
+After parsing, admin needs a review interface showing:
+
+original source excerpt on left
+
+extracted structure on right
+
+detected subject
+
+detected topics
+
+detected learning objectives
+
+detected skills
+
+detected keywords
+
+low-confidence items flagged
+
+duplicate candidate matches
+
+missing hierarchy warnings
+
+publish readiness score
+
+4.5 Curriculum editor
+Admin should be able to manually fix or enrich:
+
+topic names
+
+topic order
+
+aliases
+
+objectives
+
+key terms
+
+linked formulae
+
+linked glossary entries
+
+prerequisite chains
+
+exam tags
+
+difficulty tags
+
+resource mapping
+
+public descriptions
+
+student-friendly summaries
+
+4.6 Publishing controls
+Admin should be able to:
+
+publish immediately
+
+schedule publishing
+
+unpublish
+
+archive
+
+compare versions
+
+roll back
+
+clone curriculum into another region or class as baseline
+
+5. Mining pipeline: how the data should be transformed
+This is where the real intelligence comes from.
+
+Step 1: document ingestion
+The system accepts the raw file and stores:
+
+original file
+
+extracted text
+
+page boundaries
+
+document sections
+
+headings
+
+tables
+
+list structures
+
+confidence data
+
+Step 2: structural parsing
+The system detects:
+
+title
+
+subject
+
+level
+
+term
+
+units
+
+strands
+
+sub-strands
+
+topics
+
+subtopics
+
+objectives
+
+outcomes
+
+notes
+
+examples
+
+references
+
+assessment instructions
+
+Step 3: academic entity extraction
+From the parsed content, extract:
+
+topics
+
+concepts
+
+keywords
+
+definitions
+
+formula mentions
+
+verbs in learning objectives
+
+competency signals
+
+practical skills
+
+assessment patterns
+
+example problem types
+
+cognitive levels
+
+Step 4: normalization
+Convert different wording into a canonical internal format.
+
+For example:
+
+“linear equations”
+
+“simple linear equations”
+
+“solving equations in one variable”
+
+may all map into a normalized node family, while preserving aliases.
+
+Step 5: relationship mapping
+The system should then build relationships such as:
+
+topic belongs to subject
+
+topic precedes topic
+
+topic depends on topic
+
+topic uses concept
+
+concept belongs to topic
+
+formula supports topic
+
+objective tests skill
+
+question type fits objective
+
+exam type commonly covers topic
+
+glossary entry explains concept
+
+Step 6: confidence and review flags
+Not everything should publish automatically.
+
+The system should flag:
+
+uncertain topic extraction
+
+conflicting hierarchy
+
+duplicate topic nodes
+
+empty descriptions
+
+weak objective detection
+
+suspicious parsing from scanned documents
+
+unrecognized curriculum language
+
+Step 7: canonical storage
+Once reviewed, the curriculum should be saved as structured objects in the curriculum graph.
+
+6. The canonical curriculum model
+This is the internal shape the rest of the platform uses.
+
+Think of it like this:
+
+Curriculum
+Top-level entity.
+
+Example:
+
+Ghana BECE Curriculum 2025
+
+Curriculum Track
+A scoped branch.
+
+Example:
+
+JHS Mathematics
+
+JHS Integrated Science
+
+SHS Core Mathematics
+
+Level
+Example:
+
+JHS 1
+
+JHS 2
+
+JHS 3
+
+Term / Period
+Example:
+
+Term 1
+
+Term 2
+
+Term 3
+
+Unit / Strand
+Example:
+
+Number
+
+Algebra
+
+Geometry
+
+Topic
+Example:
+
+Algebraic Expressions
+
+Subtopic
+Example:
+
+Simplifying Expressions
+
+Expanding Brackets
+
+Learning Objective
+Example:
+
+simplify algebraic expressions involving like terms
+
+Competency / Skill
+Example:
+
+symbolic manipulation
+
+pattern recognition
+
+arithmetic fluency
+
+Knowledge Atoms
+Smallest meaningful content pieces:
+
+concept
+
+definition
+
+formula
+
+theorem
+
+worked example
+
+misconception
+
+keyword
+
+visual explanation cue
+
+Assessment Mapping
+How this topic is examined:
+
+objective question
+
+structured response
+
+application question
+
+calculation
+
+diagram interpretation
+
+fill-in
+
+comparison drill
+
+Resource Mapping
+Links to:
+
+lessons
+
+videos
+
+notes
+
+drills
+
+tests
+
+missions
+
+games
+
+glossary entries
+
+7. Public redesign: how users should see it
+The public should never see the ugly raw curriculum format unless they explicitly want original documents.
+
+The system should redesign curriculum into a modern, navigable academic experience.
+
+7.1 Public experience should feel like:
+clear
+
+visual
+
+hierarchical
+
+searchable
+
+not bureaucratic
+
+not PDF-like
+
+easy for students and parents to understand
+
+7.2 Public views
+You should have multiple views of the same curriculum.
+
+Curriculum Overview
+Shows:
+
+subject summary
+
+what student will learn
+
+total topics
+
+total concepts
+
+total formulae
+
+total skills
+
+exam focus areas
+
+learning path preview
+
+Topic Tree View
+A beautiful expandable curriculum tree:
+
+Subject
+
+Term
+
+Unit
+
+Topic
+
+subtopics
+
+objectives
+
+related resources
+
+Learning Path View
+Transforms syllabus into a journey:
+
+Start here
+
+foundational topics
+
+next recommended topics
+
+advanced topics
+
+revision hotspots
+
+Competency View
+Shows what abilities the curriculum builds:
+
+calculation
+
+interpretation
+
+explanation
+
+recall
+
+application
+
+reasoning
+
+Assessment View
+Shows how topics may appear in exams:
+
+commonly tested styles
+
+question patterns
+
+likely traps
+
+linked past question families
+
+Student-Friendly Topic Cards
+Each topic gets a redesigned card with:
+
+friendly explanation
+
+why it matters
+
+what you should know first
+
+what you will be able to do after learning
+
+key terms
+
+formulae
+
+related missions
+
+related tests
+
+related glossary
+
+confidence meter when the system knows the student’s mastery
+
+Parent View
+Simple explanation:
+
+what your child is expected to learn
+
+what has been covered
+
+what is weak
+
+what needs attention next
+
+8. What the brain should use this for
+This is where it becomes powerful.
+
+The curriculum portal should feed the brain in several ways.
+
+8.1 Personal planning
+The brain should use curriculum to decide:
+
+what topic comes next
+
+what should be revised first
+
+what prerequisites are missing
+
+whether the student is ahead, on track, or behind
+
+how to sequence learning for this specific student
+
+8.2 Test generation
+The question engine should use curriculum to:
+
+generate topic-correct questions
+
+generate grade-appropriate questions
+
+balance question mix by curriculum objective
+
+ensure coverage of competencies
+
+align questions to what the student should actually know
+
+8.3 Diagnostics
+Diagnostic engine should use curriculum to check:
+
+which curriculum areas are mastered
+
+which are fragile
+
+which were never truly learned
+
+where hidden prerequisite gaps exist
+
+8.4 Mission planner
+Mission engine should use curriculum to build:
+
+weekly goals
+
+topic recovery plans
+
+exam countdown plans
+
+term-based catch-up plans
+
+objective-based mini missions
+
+8.5 Glossary intelligence
+Glossary system should use curriculum to know:
+
+what definitions matter by class
+
+which terms are core vs secondary
+
+what formula belongs where
+
+which concepts are often confused together
+
+8.6 Intervention engine
+The coach should use curriculum to trigger:
+
+definition drill
+
+formula drill
+
+worked example mode
+
+misconception attack mode
+
+speed practice
+
+concept explanation session
+
+8.7 Adaptive branching
+If a student is weak in a topic, the brain can ask:
+
+is weakness due to missing prerequisite?
+
+weak vocabulary?
+
+weak formula memory?
+
+poor exam application?
+
+slow speed under pressure?
+
+Curriculum structure helps the brain reason properly instead of guessing.
+
+9. Critical system behavior
+This is important.
+
+The curriculum portal should not just store explicit topics.
+It should also generate derived intelligence.
+
+For each topic, the system should infer:
+
+prerequisite topics
+
+adjacent topics
+
+“next best topic”
+
+dependency risk
+
+topic weight in exam prep
+
+typical cognitive demand
+
+question family types
+
+related glossary bundle
+
+likely misconceptions
+
+likely remedial strategy
+
+That derived intelligence is what makes the rest of the system feel smart.
+
+10. Knowledge graph approach
+The best internal model is a curriculum graph.
+
+Why?
+
+Because academic knowledge is relational, not flat.
+
+A graph lets you represent:
+
+topic A depends on topic B
+
+topic C uses formula D
+
+concept E is often confused with concept F
+
+objective G is tested by question types H and I
+
+student J is weak in nodes K, L, M
+
+mission N targets nodes L and M
+
+That means the curriculum portal should ultimately populate a graph-like academic intelligence layer.
+
+Even if your storage is relational underneath, your logical model should behave like a graph.
+
+11. Suggested data structure
+At minimum you need these entities:
+
+curriculum_sources
+
+curriculum_versions
+
+curriculum_tracks
+
+curriculum_levels
+
+curriculum_terms
+
+curriculum_units
+
+curriculum_topics
+
+curriculum_subtopics
+
+learning_objectives
+
+competencies
+
+knowledge_atoms
+
+formulas
+
+glossary_terms
+
+curriculum_relationships
+
+curriculum_aliases
+
+curriculum_resource_links
+
+curriculum_assessment_patterns
+
+curriculum_publish_states
+
+curriculum_parse_jobs
+
+curriculum_review_flags
+
+And these relationships matter:
+
+parent-child hierarchy
+
+prerequisite relationship
+
+related-topic relationship
+
+assessed-with relationship
+
+glossary-link relationship
+
+formula-link relationship
+
+mission-link relationship
+
+question-family relationship
+
+12. Search should be built into it
+The public curriculum should have strong search.
+
+A user should be able to search for:
+
+topic name
+
+alternate topic name
+
+formula
+
+term
+
+concept
+
+objective
+
+class level
+
+subject
+
+exam area
+
+skill
+
+And search should return a structured result, not just text matches.
+
+For example if someone searches “simultaneous equations,” result can show:
+
+subject
+
+class
+
+topic
+
+what it means
+
+prerequisites
+
+related formulas
+
+linked tests
+
+missions
+
+glossary
+
+past questions
+
+common mistakes
+
+13. Versioning is non-negotiable
+Curriculum changes over time.
+So the portal must support version history.
+
+You need:
+
+official version lineage
+
+effective dates
+
+diff viewer between versions
+
+deprecated topics
+
+merged topics
+
+renamed topics
+
+curriculum migration maps
+
+This is important because the student data and question bank may have been built under older curriculum structure.
+
+14. Review and trust model
+Because curriculum is foundational, it cannot be fully uncontrolled AI extraction.
+
+Use a trust pipeline:
+
+Source Trust
+How reliable is the uploaded source?
+
+Parse Confidence
+How certain is the parser?
+
+Academic Confidence
+How certain is the system that extracted objectives and topics are correct?
+
+Human Review Status
+Has a curriculum admin approved it?
+
+Publish State
+Is it live for public and brain use, or only internal draft?
+
+The brain should preferably use:
+
+published
+
+reviewed
+
+high-confidence curriculum data
+
+Low-confidence data can remain internal until fixed.
+
+15. Public redesign rules
+When redesigning curriculum for public users, apply these rules:
+
+Do not expose raw bureaucratic phrasing as the main experience.
+
+Instead:
+
+convert complex phrasing into student-friendly wording
+
+preserve official wording in an expandable section
+
+use visual hierarchy
+
+chunk long curriculum into digestible sections
+
+attach learning aids to each topic
+
+show progression and dependencies visually
+
+show exam relevance
+
+surface “you are here” when user is logged in
+
+So each topic page can have:
+
+official topic title
+
+simplified explanation
+
+what this topic teaches
+
+why it matters
+
+what you should learn before this
+
+common exam patterns
+
+common student mistakes
+
+linked resources
+
+related glossary
+
+mastery progress if logged in
+
+16. How this helps the entire ecosystem
+Once done well, this portal becomes the backbone for:
+
+coach planning
+
+intelligent test generation
+
+syllabus-based onboarding
+
+auto-personalized study paths
+
+glossary creation
+
+lesson structuring
+
+progress tracking
+
+topic mastery heatmaps
+
+parent explanations
+
+revision planning
+
+weakness recovery engines
+
+past question mapping
+
+concept dependency engines
+
+In other words:
+the curriculum portal feeds the intelligence, and the intelligence feeds the experience.
+
+17. Recommended system architecture
+A clean architecture could look like this:
+
+A. Curriculum Admin Service
+Handles upload, parsing jobs, review workflow, publishing.
+
+B. Curriculum Parsing Service
+Extracts text, headings, entities, objectives, structure.
+
+C. Curriculum Intelligence Service
+Builds normalized nodes, relationships, aliases, dependencies, assessment mappings.
+
+D. Curriculum Repository
+Stores canonical curriculum graph and versions.
+
+E. Curriculum Public API
+Serves student-facing curriculum views.
+
+F. Brain Context API
+Provides curriculum context to coach, diagnostics, generator, glossary, mission planner.
+
+G. Curriculum Search Service
+Search over topics, concepts, formulas, objectives, aliases.
+
+H. Curriculum Resource Mapper
+Connects curriculum nodes to questions, notes, lessons, missions, games, glossary entries.
+
+18. What happens after upload: ideal flow
+Here is the right end-to-end flow.
+
+Super admin uploads curriculum
+→ system extracts text and structure
+→ system detects subject, level, term, units, topics, objectives
+→ system builds candidate curriculum tree
+→ system extracts concepts, keywords, formulas, competencies
+→ system maps prerequisites and related topics
+→ system compares against existing curriculum for duplicates or merges
+→ admin reviews flagged issues
+→ admin edits, approves, enriches public descriptions
+→ curriculum is published
+→ public users get redesigned curriculum views
+→ coach brain and all engines can query it immediately
+
+19. Smart enrichments you should add later
+Once the base works, add these advanced layers:
+
+Curriculum-to-question mapping
+Automatically map existing question bank to curriculum nodes.
+
+Objective coverage scoring
+See which objectives are under-supported by resources.
+
+Curriculum completeness checker
+Detect where uploaded curriculum has poor extraction or missing nodes.
+
+Cross-curriculum mapper
+Map BECE curriculum to WASSCE foundation, or Ghana curriculum to another standard.
+
+Misconception mining
+Associate recurring student mistakes with each topic.
+
+Topic difficulty heatmap
+Show which topics are globally hard across user population.
+
+Learning dependency engine
+Suggest recovery path when student fails in an advanced topic.
+
+20. The most important design decision
+The most important thing is this:
+
+Do not let the brain consume raw curriculum files directly.
+
+Instead, let the brain consume a clean, structured, reviewed curriculum model.
+
+The upload is raw input.
+The canonical curriculum graph is what the brain should trust.
+
+That separation will save you a lot of pain.
+
+21. What I would call the feature
+You can name it one of these:
+
+Curriculum Intelligence Portal
+
+Curriculum Core
+
+Academic Structure Portal
+
+Syllabus Intelligence Hub
+
+Curriculum Graph Portal
+
+The best functional name is probably:
+
+Curriculum Intelligence Portal
+
+because it signals that this is more than content storage.
+
+22. My recommended implementation order
+Build it in this order:
+
+Phase 1
+Basic admin upload + manual structuring
+
+upload file
+
+define subject/class/term
+
+manually create hierarchy
+
+publish public tree
+
+Phase 2
+Automated parsing
+
+heading extraction
+
+topic/objective detection
+
+admin review tools
+
+Phase 3
+Canonical model + public redesign
+
+topic cards
+
+public curriculum explorer
+
+search
+
+resource linking
+
+Phase 4
+Brain integration
+
+coach planning
+
+diagnostics
+
+generator alignment
+
+glossary mapping
+
+Phase 5
+Deep intelligence
+
+prerequisites
+
+misconceptions
+
+assessment style mappings
+
+curriculum graph reasoning
+
+23. Final position
+So yes — this should absolutely exist.
+
+And it should not be treated as a side admin tool.
+
+It should be a core academic infrastructure layer that powers:
+
+the coach brain
+
+the test engine
+
+the glossary
+
+diagnostics
+
+missions
+
+progress logic
+
+public curriculum exploration
+
+parent understanding
+
+syllabus alignment
+
+Without this, your intelligence will remain partially blind.
+With this, your system begins to reason from official academic structure instead of scattered content.
+
+The next thing to define is the exact build-grade module structure for this feature:
+admin screens, database schema, ingestion pipeline, API contracts, and public UI behavior.
+
+
+proceed 
+
+I’m fleshing this into a build-grade blueprint: modules, data model, ingestion flow, engine hooks, and the public curriculum experience so it can actually plug into the coach brain cleanly.
+
+Thought for 9s
+Good. Let’s turn it into a build-grade system.
+
+What follows is the actual structure for the Curriculum Intelligence Portal so your team can build it as a real subsystem, not a vague feature.
+
+1. Product position
+This module should be treated as a core platform subsystem called:
+
+Curriculum Intelligence Portal
+
+It has 4 responsibilities:
+
+ingest official curriculum and syllabus materials,
+
+convert them into structured academic data,
+
+publish a redesigned public curriculum experience,
+
+expose curriculum intelligence to the coach brain and all engines.
+
+It should sit beside your question bank, glossary, diagnostics, missions, and coach orchestration layer.
+
+2. High-level architecture
+The subsystem should be split into 8 parts.
+
+2.1 Curriculum Admin App
+Used by super admin and internal academic reviewers.
+
+Handles:
+
+uploads
+
+parse review
+
+manual edits
+
+publishing
+
+versioning
+
+conflict resolution
+
+mappings
+
+health checks
+
+2.2 Curriculum Ingestion Service
+Responsible for:
+
+file intake
+
+text extraction
+
+section detection
+
+source metadata capture
+
+queueing parse jobs
+
+2.3 Curriculum Mining Engine
+Responsible for:
+
+structural parsing
+
+entity extraction
+
+topic/objective detection
+
+formula/term extraction
+
+prerequisite inference
+
+confidence scoring
+
+2.4 Curriculum Canonical Store
+The normalized academic source of truth.
+
+Stores:
+
+subjects
+
+levels
+
+strands
+
+topics
+
+subtopics
+
+objectives
+
+competencies
+
+formulas
+
+glossary links
+
+assessment mappings
+
+relationships
+
+versions
+
+2.5 Curriculum Public Experience API
+Serves the cleaned public view.
+
+Used by:
+
+students
+
+parents
+
+teachers
+
+guest users
+
+public curriculum browsing
+
+2.6 Curriculum Intelligence API
+Serves structured curriculum context to internal systems.
+
+Used by:
+
+coach brain
+
+mission planner
+
+diagnostics
+
+question generator
+
+glossary engine
+
+intervention engine
+
+analytics
+
+2.7 Curriculum Search Engine
+Supports academic search across:
+
+topics
+
+aliases
+
+objectives
+
+formulas
+
+keywords
+
+skills
+
+levels
+
+related concepts
+
+2.8 Resource Mapping Layer
+Binds curriculum nodes to:
+
+questions
+
+tests
+
+missions
+
+notes
+
+videos
+
+glossary items
+
+drills
+
+games
+
+past exam families
+
+3. User roles
+3.1 Super Admin
+Can:
+
+create curriculum families
+
+upload source documents
+
+trigger parse jobs
+
+edit extracted content
+
+publish/unpublish
+
+manage versions
+
+override mappings
+
+approve review flags
+
+view coverage and integrity reports
+
+3.2 Academic Reviewer
+Can:
+
+review parse output
+
+fix topic trees
+
+edit objectives
+
+add aliases
+
+add public descriptions
+
+approve flagged nodes
+
+validate competency mappings
+
+3.3 Content Manager
+Can:
+
+link curriculum to resources
+
+map question bank items
+
+connect glossary entries
+
+add public summaries
+
+3.4 Public User
+Can:
+
+browse curriculum
+
+search topics
+
+open topic pages
+
+view learning paths
+
+see linked study resources
+
+3.5 Brain / Internal Engine
+Can:
+
+query curriculum graph
+
+fetch prerequisite chains
+
+fetch objective bundles
+
+fetch topic difficulty metadata
+
+fetch curriculum-aligned study sequence
+
+4. Core object model
+This part matters a lot. The portal should not be document-first. It should be node-first.
+
+4.1 Main entities
+CurriculumFamily
+Top-level official framework.
+
+Examples:
+
+Ghana Basic Curriculum
+
+BECE Curriculum
+
+WASSCE Curriculum
+
+Fields:
+
+id
+
+name
+
+country
+
+authority
+
+education_stage
+
+description
+
+status
+
+created_at
+
+updated_at
+
+CurriculumVersion
+Represents a version of a curriculum family.
+
+Fields:
+
+id
+
+curriculum_family_id
+
+version_label
+
+effective_from
+
+effective_to
+
+status
+
+source_summary
+
+published_at
+
+replaced_by_version_id
+
+created_at
+
+updated_at
+
+SubjectTrack
+Represents a subject branch inside a version.
+
+Examples:
+
+Mathematics
+
+Integrated Science
+
+English Language
+
+Fields:
+
+id
+
+curriculum_version_id
+
+subject_code
+
+subject_name
+
+subject_slug
+
+public_title
+
+description
+
+display_order
+
+Level
+Represents grade/class/form.
+
+Examples:
+
+JHS 1
+
+JHS 2
+
+JHS 3
+
+Fields:
+
+id
+
+curriculum_version_id
+
+level_code
+
+level_name
+
+stage_order
+
+public_title
+
+TermPeriod
+Fields:
+
+id
+
+level_id
+
+term_code
+
+term_name
+
+sequence_no
+
+CurriculumNode
+This is the most important table.
+It represents a strand, sub-strand, topic, subtopic, concept cluster, or objective group depending on node type.
+
+Fields:
+
+id
+
+curriculum_version_id
+
+subject_track_id
+
+level_id
+
+term_id
+
+parent_node_id
+
+node_type
+
+canonical_title
+
+public_title
+
+slug
+
+official_text
+
+public_summary
+
+sequence_no
+
+depth
+
+estimated_weight
+
+exam_relevance_score
+
+difficulty_hint
+
+status
+
+review_status
+
+confidence_score
+
+Possible node_type values:
+
+strand
+
+sub_strand
+
+unit
+
+topic
+
+subtopic
+
+objective_group
+
+concept_cluster
+
+assessment_area
+
+LearningObjective
+Fields:
+
+id
+
+curriculum_node_id
+
+objective_text
+
+simplified_text
+
+cognitive_level
+
+objective_type
+
+sequence_no
+
+confidence_score
+
+review_status
+
+Possible objective_type:
+
+knowledge
+
+understanding
+
+application
+
+reasoning
+
+practical
+
+communication
+
+Competency
+Fields:
+
+id
+
+name
+
+description
+
+category
+
+Examples:
+
+recall
+
+explanation
+
+symbolic manipulation
+
+diagram interpretation
+
+measurement
+
+scientific reasoning
+
+ObjectiveCompetencyLink
+Fields:
+
+id
+
+learning_objective_id
+
+competency_id
+
+strength_score
+
+ConceptAtom
+Small knowledge unit.
+
+Fields:
+
+id
+
+curriculum_node_id
+
+concept_type
+
+canonical_term
+
+public_term
+
+description
+
+alias_group_id
+
+review_status
+
+Possible concept_type:
+
+concept
+
+keyword
+
+definition
+
+theorem
+
+principle
+
+method
+
+notation
+
+symbol
+
+FormulaAtom
+Fields:
+
+id
+
+curriculum_node_id
+
+formula_latex
+
+formula_plain
+
+formula_name
+
+explanation
+
+usage_note
+
+confidence_score
+
+MisconceptionPattern
+Fields:
+
+id
+
+curriculum_node_id
+
+title
+
+description
+
+trigger_type
+
+correction_hint
+
+severity
+
+status
+
+AssessmentPattern
+Fields:
+
+id
+
+curriculum_node_id
+
+pattern_name
+
+pattern_description
+
+question_form
+
+exam_frequency_hint
+
+common_traps
+
+scoring_focus
+
+Examples of question_form:
+
+objective
+
+structured
+
+essay
+
+fill_in
+
+comparison
+
+calculation
+
+diagram
+
+matching
+
+practical
+
+CurriculumRelationship
+This is the graph table.
+
+Fields:
+
+id
+
+from_entity_type
+
+from_entity_id
+
+relationship_type
+
+to_entity_type
+
+to_entity_id
+
+strength_score
+
+source_type
+
+confidence_score
+
+review_status
+
+Examples of relationship_type:
+
+prerequisite_of
+
+depends_on
+
+related_to
+
+commonly_confused_with
+
+uses_formula
+
+explained_by
+
+assessed_by
+
+supported_by
+
+overlaps_with
+
+leads_to
+
+part_of
+
+adjacent_to
+
+CurriculumAlias
+Fields:
+
+id
+
+entity_type
+
+entity_id
+
+alias_text
+
+alias_kind
+
+locale
+
+Examples of alias_kind:
+
+synonym
+
+exam_phrase
+
+teacher_phrase
+
+student_phrase
+
+abbreviation
+
+alternate_spelling
+
+CurriculumResourceLink
+Fields:
+
+id
+
+entity_type
+
+entity_id
+
+resource_type
+
+resource_id
+
+link_strength
+
+source
+
+review_status
+
+Possible resource_type:
+
+question
+
+test
+
+mission
+
+lesson
+
+note
+
+glossary
+
+drill
+
+video
+
+game
+
+past_exam_cluster
+
+SourceDocument
+Stores original uploads.
+
+Fields:
+
+id
+
+curriculum_family_id
+
+curriculum_version_id
+
+file_name
+
+file_type
+
+file_url
+
+checksum
+
+source_type
+
+source_authority
+
+locale
+
+uploaded_by
+
+uploaded_at
+
+status
+
+ParseJob
+Fields:
+
+id
+
+source_document_id
+
+job_status
+
+extraction_status
+
+mining_status
+
+review_required
+
+started_at
+
+completed_at
+
+error_log
+
+parser_version
+
+ReviewFlag
+Fields:
+
+id
+
+entity_type
+
+entity_id
+
+flag_type
+
+severity
+
+message
+
+suggested_fix
+
+status
+
+raised_by_system
+
+assigned_to
+
+created_at
+
+resolved_at
+
+5. Database grouping
+The schema should be grouped into 6 logical zones.
+
+Zone A: source intake
+source_documents
+
+parse_jobs
+
+parse_chunks
+
+parse_artifacts
+
+source_metadata
+
+Zone B: canonical curriculum
+curriculum_families
+
+curriculum_versions
+
+subject_tracks
+
+levels
+
+term_periods
+
+curriculum_nodes
+
+learning_objectives
+
+Zone C: knowledge atoms
+concept_atoms
+
+formula_atoms
+
+competencies
+
+misconceptions
+
+assessment_patterns
+
+aliases
+
+Zone D: graph and relationships
+curriculum_relationships
+
+prerequisite_edges
+
+related_edges
+
+assessment_edges
+
+Zone E: publication
+public_snapshots
+
+publish_logs
+
+curriculum_version_statuses
+
+Zone F: integrations
+curriculum_resource_links
+
+curriculum_question_mappings
+
+curriculum_glossary_mappings
+
+curriculum_mission_mappings
+
+6. Ingestion pipeline
+This is the full flow from upload to intelligence.
+
+Stage 1: Upload intake
+Super admin uploads document.
+
+System stores:
+
+raw file
+
+metadata
+
+uploader
+
+checksum
+
+source category
+
+related curriculum family/version
+
+Stage 2: Document extraction
+For each source:
+
+extract text
+
+detect page boundaries
+
+detect headings
+
+detect numbered lists
+
+detect tables
+
+detect section blocks
+
+preserve source references
+
+Output:
+
+raw text
+
+structural blocks
+
+page-to-text map
+
+Stage 3: Structural segmentation
+Split document into:
+
+subject heading
+
+class/level sections
+
+term sections
+
+strands
+
+sub-strands
+
+topic lists
+
+objectives
+
+notes
+
+examples
+
+assessment hints
+
+Output:
+
+parse segments with labels
+
+Stage 4: Academic mining
+Mine each segment for:
+
+topic names
+
+subtopic names
+
+learning verbs
+
+concept mentions
+
+skill hints
+
+formula expressions
+
+assessment verbs
+
+dependency hints
+
+terminology clusters
+
+Output:
+
+extracted academic candidate objects
+
+Stage 5: Normalization
+The system cleans and merges detected language:
+
+trim noise
+
+remove duplicates
+
+merge variants
+
+assign canonical names
+
+map aliases
+
+infer node type
+
+Example:
+“solve simple linear equations”
+and
+“solving equations in one unknown”
+can be linked under one canonical family but still preserve source wording.
+
+Stage 6: Relationship inference
+Infer:
+
+parent-child structure
+
+topic sequence
+
+prerequisites
+
+shared concepts
+
+formula usage
+
+assessment mapping
+
+related glossary linkage candidates
+
+Stage 7: Confidence scoring
+Every extracted object gets scores such as:
+
+title confidence
+
+node type confidence
+
+hierarchy confidence
+
+objective confidence
+
+relationship confidence
+
+Stage 8: Review queue creation
+Anything below threshold gets flagged:
+
+low-confidence topic
+
+dangling objective
+
+duplicate topic candidate
+
+missing parent node
+
+ambiguous formula extraction
+
+unclear level association
+
+Stage 9: Reviewer resolution
+Academic reviewer fixes or approves extracted content.
+
+Stage 10: Canonical write
+Approved data is written into canonical tables.
+
+Stage 11: Public shaping
+The system generates student-friendly versions:
+
+public title
+
+simplified explanation
+
+topic summary
+
+learning path position
+
+visible resource links
+
+Stage 12: Publish
+Published content becomes available to:
+
+public users
+
+logged-in learners
+
+internal intelligence services
+
+7. Mining engine internal modules
+The mining engine itself should be broken down into smaller workers.
+
+7.1 Text Extractor
+Input: PDF, DOCX, image-derived text, other sources
+Output: clean text + layout metadata
+
+7.2 Section Classifier
+Identifies:
+
+headings
+
+level headers
+
+term headers
+
+strand/topic/objective blocks
+
+7.3 Topic Miner
+Finds:
+
+topic candidates
+
+subtopic candidates
+
+unit titles
+
+strand names
+
+7.4 Objective Miner
+Detects objective statements and classifies them.
+
+7.5 Concept Miner
+Extracts:
+
+terminology
+
+definitions
+
+concept phrases
+
+symbolic references
+
+7.6 Formula Miner
+Extracts formulas and symbolic rules.
+
+7.7 Competency Miner
+Maps objectives to competencies.
+
+7.8 Relationship Builder
+Builds:
+
+parent-child
+
+prerequisite
+
+related-topic
+
+concept-to-topic
+
+formula-to-topic
+
+topic-to-assessment-type
+
+7.9 Dedupe Resolver
+Detects duplicates and near-duplicates.
+
+7.10 Public Language Rewriter
+Creates simplified public-facing explanations without changing official meaning.
+
+7.11 Quality Scorer
+Scores extraction confidence and review priority.
+
+8. Admin interface structure
+The admin side should have these screens.
+
+8.1 Curriculum Dashboard
+Shows:
+
+total curriculum families
+
+active versions
+
+pending uploads
+
+parse failures
+
+items needing review
+
+published subjects
+
+unmapped resources
+
+integrity warnings
+
+8.2 Upload Center
+Functions:
+
+upload file
+
+enter metadata
+
+assign curriculum family/version
+
+choose parse mode
+
+queue ingestion
+
+Fields:
+
+curriculum family
+
+version
+
+subject
+
+level scope
+
+term scope
+
+source authority
+
+source type
+
+language
+
+parser mode
+
+review mode
+
+8.3 Parse Jobs Screen
+Shows:
+
+file
+
+status
+
+parse stage
+
+confidence
+
+error messages
+
+review required
+
+retry
+
+compare outputs
+
+8.4 Extraction Review Workbench
+Layout:
+
+left pane: original source text/pages
+
+center pane: extracted hierarchy tree
+
+right pane: detail editor for selected node
+
+Actions:
+
+approve
+
+split
+
+merge
+
+rename
+
+attach parent
+
+change node type
+
+mark duplicate
+
+add alias
+
+flag for later
+
+8.5 Curriculum Tree Manager
+A dedicated tree editor.
+
+Capabilities:
+
+drag reorder
+
+move node under another parent
+
+create new node
+
+create strand/topic/subtopic
+
+edit public labels
+
+edit official text
+
+view linked objectives
+
+attach concepts
+
+attach formulae
+
+8.6 Objective Editor
+Functions:
+
+add/edit objectives
+
+simplify public wording
+
+assign competencies
+
+assign cognitive level
+
+assign assessment patterns
+
+8.7 Relationship Studio
+Functions:
+
+view graph links
+
+add prerequisite edges
+
+add related-topic edges
+
+resolve conflicts
+
+remove wrong inferred links
+
+8.8 Public Preview
+Shows exactly what students/parents will see.
+
+Modes:
+
+student preview
+
+parent preview
+
+teacher preview
+
+guest public preview
+
+8.9 Resource Mapping Screen
+Lets admin map nodes to:
+
+questions
+
+tests
+
+missions
+
+glossary
+
+videos
+
+notes
+
+games
+
+8.10 Publish Center
+Functions:
+
+draft snapshot
+
+compare with live
+
+publish selected subject/level
+
+rollback
+
+unpublish
+
+9. Public-facing interface
+The public experience should feel like an academic map, not a file archive.
+
+9.1 Main public entry page
+Shows:
+
+choose curriculum
+
+choose level
+
+choose subject
+
+browse by term or topic
+
+search curriculum
+
+Cards may include:
+
+Mathematics
+
+English
+
+Science
+
+Social Studies
+
+Each card shows:
+
+number of topics
+
+number of key concepts
+
+number of linked resources
+
+difficulty distribution
+
+last update
+
+9.2 Subject overview page
+Sections:
+
+subject introduction
+
+what students learn
+
+strands/units
+
+term breakdown
+
+key competencies
+
+topic explorer
+
+assessment emphasis
+
+linked study resources
+
+9.3 Term/Unit explorer
+Accordion or tree view:
+
+Term 1
+
+Strand
+
+Topic
+
+objectives
+
+key concepts
+
+formulae
+
+related drills
+
+9.4 Topic detail page
+Each topic page should contain:
+
+Official Topic
+The formal curriculum title.
+
+Simple Explanation
+A cleaner student-friendly explanation.
+
+Why This Matters
+Real value of the topic.
+
+What You Should Know First
+Prerequisites.
+
+What You Will Learn
+Objective summary.
+
+Key Concepts
+Core terms.
+
+Formulae / Rules
+Only when relevant.
+
+Common Mistakes
+Misconception patterns.
+
+How It Appears in Exams
+Assessment patterns.
+
+Related Practice
+Linked tests, questions, drills, missions.
+
+Related Topics
+Adjacent academic graph.
+
+Progress
+For logged-in users:
+
+mastery
+
+completion
+
+weak points
+
+recommended next topic
+
+9.5 Search experience
+Search should support:
+
+topic
+
+concept
+
+formula
+
+objective wording
+
+alternate teacher/student names
+
+Results should show structured cards like:
+
+result type
+
+subject
+
+level
+
+topic path
+
+short summary
+
+related resources
+
+9.6 Learning path mode
+A path-based view:
+
+foundations
+
+core topics
+
+advanced topics
+
+revision points
+
+exam hotspots
+
+This becomes very important for the coach brain.
+
+10. Internal API contracts
+These are the kinds of APIs the rest of the system should call.
+
+10.1 Admin APIs
+POST /admin/curriculum/uploads
+Upload a source document.
+
+GET /admin/curriculum/uploads/:id
+View source metadata and status.
+
+POST /admin/curriculum/parse-jobs/:id/run
+Run or rerun extraction.
+
+GET /admin/curriculum/review-queue
+List items needing review.
+
+PATCH /admin/curriculum/nodes/:id
+Edit node properties.
+
+POST /admin/curriculum/nodes/:id/approve
+Approve node.
+
+POST /admin/curriculum/publish
+Publish draft to live.
+
+GET /admin/curriculum/diff
+Compare draft and live versions.
+
+10.2 Public APIs
+GET /curriculum/families
+List available curriculum families.
+
+GET /curriculum/:family/:version/subjects
+List subjects.
+
+GET /curriculum/:family/:version/:subject
+Subject overview.
+
+GET /curriculum/:family/:version/:subject/tree
+Full topic tree.
+
+GET /curriculum/topic/:slug
+Public topic detail.
+
+GET /curriculum/search?q=
+Structured search.
+
+GET /curriculum/topic/:id/resources
+Linked resources.
+
+10.3 Brain / Internal Intelligence APIs
+GET /intelligence/curriculum/topic/:id/context
+Returns:
+
+topic data
+
+objectives
+
+concepts
+
+formulas
+
+misconceptions
+
+assessment patterns
+
+prerequisites
+
+related nodes
+
+GET /intelligence/curriculum/student/:studentId/next-best-topics
+Returns ranked recommendations.
+
+GET /intelligence/curriculum/topic/:id/prerequisites
+Returns prerequisite chain.
+
+GET /intelligence/curriculum/objective/:id/question-forms
+Returns likely question types.
+
+GET /intelligence/curriculum/topic/:id/remediation-map
+Returns suggested recovery sequence.
+
+GET /intelligence/curriculum/search?q=
+Internal academic search.
+
+POST /intelligence/curriculum/map-question
+Maps question to curriculum nodes.
+
+GET /intelligence/curriculum/coverage?subject=&level=
+Returns curriculum coverage stats against resource inventory.
+
+11. How the brain should use it
+This is where the portal becomes central.
+
+The brain should not ask:
+“Do I have a PDF for this topic?”
+
+It should ask:
+
+What curriculum node is relevant?
+
+What are the objectives under that node?
+
+What concepts and formulas are required?
+
+What should have been learned before this?
+
+What question styles are valid here?
+
+What are the likely misconceptions?
+
+What linked resources already exist?
+
+What is the student’s mastery against this node graph?
+
+11.1 Coach planning
+The coach can build:
+
+weekly plans
+
+term catch-up plans
+
+exam crash plans
+
+weakness repair plans
+
+using curriculum ordering and dependency.
+
+11.2 Question generation
+The generator can use:
+
+curriculum objective
+
+level appropriateness
+
+concept family
+
+exam form
+
+prerequisite constraints
+
+11.3 Diagnostics
+Diagnostics can determine:
+
+mastery per curriculum node
+
+fragility per objective
+
+missing prerequisites
+
+speed-vs-accuracy breakdown by topic family
+
+11.4 Intervention engine
+The system can decide:
+“Don’t just reteach the topic. Fix the missing concept atom first.”
+
+That is only possible because of structured curriculum graph data.
+
+12. Resource mapping logic
+Every curriculum node should eventually point to actual learning tools.
+
+A topic should be able to link to:
+
+saved questions
+
+topic tests
+
+glossary entries
+
+audio explanations
+
+teach mode pages
+
+missions
+
+games
+
+past exam families
+
+difference drill
+
+worked examples
+
+formula drills
+
+So for a topic like Simultaneous Equations, the system can show:
+
+38 mapped questions
+
+4 worked examples
+
+2 formula explanations
+
+1 glossary bundle
+
+1 difference drill against linear equations
+
+3 missions
+
+2 common misconception cards
+
+That is the kind of richness you want.
+
+13. Publishing model
+Do not publish directly from edits.
+Use draft/live separation.
+
+States
+Recommended entity states:
+
+draft
+
+parsed
+
+under_review
+
+approved
+
+ready_to_publish
+
+published
+
+archived
+
+superseded
+
+Publish flow
+upload
+→ parse
+→ review
+→ approve
+→ generate public snapshot
+→ publish live
+
+Use snapshots so the public and the brain query stable, consistent curriculum data.
+
+14. Versioning model
+This part is essential because curriculum changes.
+
+14.1 Version rules
+A version must be immutable once published except through controlled patching.
+
+14.2 Diff types
+The system should detect:
+
+added topic
+
+removed topic
+
+renamed topic
+
+merged topic
+
+moved topic
+
+changed objective
+
+changed ordering
+
+changed assessment emphasis
+
+14.3 Migration support
+When a new version appears, the system should help migrate:
+
+question mappings
+
+glossary links
+
+study plans
+
+topic mastery records
+
+15. Search and retrieval design
+Search should not be plain keyword match only.
+Use layered retrieval.
+
+Layer 1: lexical
+Matches exact words and aliases.
+
+Layer 2: academic normalization
+Matches equivalent phrasing.
+
+Layer 3: structural retrieval
+Matches by node relationship.
+
+Layer 4: user-intent retrieval
+Example:
+Searching “area of shapes” can return:
+
+area of rectangle
+
+area of triangle
+
+area of circle
+
+mensuration unit
+
+Search filters
+subject
+
+level
+
+term
+
+node type
+
+concept type
+
+exam relevance
+
+resource availability
+
+16. Quality and integrity checks
+The portal should continuously run integrity jobs.
+
+Checks to run
+orphan nodes
+
+duplicate aliases
+
+missing public summaries
+
+objectives without topic parents
+
+topics without resources
+
+formulas without explanations
+
+prerequisite loops
+
+empty published pages
+
+low-confidence live nodes
+
+broken resource links
+
+This should appear on the admin dashboard.
+
+17. Analytics you should track
+This module itself should have analytics.
+
+Admin analytics
+upload counts
+
+parse success rate
+
+review workload
+
+publish frequency
+
+conflict rates
+
+low-confidence extraction rate
+
+Public analytics
+most viewed subjects
+
+most searched topics
+
+failed searches
+
+bounce points
+
+topics with high revisit rates
+
+Intelligence analytics
+topics most used by coach brain
+
+topics with no sufficient resources
+
+objectives with poor assessment coverage
+
+highest weakness concentration across students
+
+18. Security and permissions
+Because curriculum is central, protect edit flow carefully.
+
+Rules
+only super admin can publish
+
+reviewer approval required for low-confidence items
+
+live content must be versioned
+
+source document must remain preserved
+
+edits must be auditable
+
+Audit logs
+Track:
+
+who uploaded
+
+who changed title
+
+who changed hierarchy
+
+who approved
+
+who published
+
+before/after values
+
+19. Recommended implementation phases
+Now let’s make this practical.
+
+Phase 1: Foundation
+Build:
+
+curriculum families
+
+versions
+
+subjects
+
+levels
+
+terms
+
+manual topic tree editor
+
+source upload
+
+basic public explorer
+
+Goal:
+Get curriculum into the platform in structured form even before full AI mining.
+
+Phase 2: Mining pipeline
+Build:
+
+document extraction
+
+structure parser
+
+topic/objective extraction
+
+review queue
+
+confidence scoring
+
+Goal:
+Reduce manual work and accelerate onboarding of curricula.
+
+Phase 3: Public redesign
+Build:
+
+curriculum explorer
+
+topic detail pages
+
+search
+
+student-friendly summaries
+
+term and learning path views
+
+Goal:
+Turn raw curriculum into a polished public experience.
+
+Phase 4: Intelligence integration
+Build:
+
+curriculum context API
+
+prerequisite chain service
+
+question mapping
+
+glossary mapping
+
+coach access endpoints
+
+Goal:
+Make curriculum usable by the brain and all engines.
+
+Phase 5: Advanced intelligence
+Build:
+
+misconception mapping
+
+assessment pattern inference
+
+next-best-topic recommendation
+
+coverage analysis
+
+curriculum-to-resource gap detection
+
+Goal:
+Make curriculum actively power reasoning and personalization.
+
+20. Suggested service boundaries in your stack
+Since your broader architecture is intelligence-heavy, keep this clean.
+
+Service: curriculum-admin
+Owns:
+
+uploads
+
+review
+
+publishing
+
+admin workflows
+
+Service: curriculum-ingestion
+Owns:
+
+extraction
+
+parsing jobs
+
+mining workers
+
+Service: curriculum-core
+Owns:
+
+canonical models
+
+graph relationships
+
+versions
+
+search index feed
+
+Service: curriculum-public
+Owns:
+
+public pages
+
+student-facing shaping
+
+topic page delivery
+
+Service: curriculum-intelligence
+Owns:
+
+prerequisite queries
+
+remediation maps
+
+topic context
+
+coverage and ranking signals for the brain
+
+21. Public UI behavior rules
+The public UX should obey these rules.
+
+Rule 1
+Never dump official syllabus text as-is as the main view.
+
+Rule 2
+Always provide both:
+
+official wording
+
+simple wording
+
+Rule 3
+Every topic page must answer:
+
+what is this?
+
+why does it matter?
+
+what should I know first?
+
+how is it tested?
+
+what should I study next?
+
+Rule 4
+Every topic page should expose resources.
+
+Rule 5
+Search results should be curriculum-aware, not generic.
+
+Rule 6
+Logged-in users should see personal overlays:
+
+your mastery
+
+your weakness
+
+next recommendation
+
+related mission
+
+22. Future extensions
+This system can grow into even more.
+
+Later you can add:
+
+Curriculum comparison
+Compare two countries or two exam boards.
+
+Coverage heatmap
+See how much of the curriculum your app truly supports.
+
+Auto-glossary generation
+Generate glossary packs from curriculum concepts.
+
+Curriculum-aware lesson builder
+Generate study notes and teaching flows by objective.
+
+Curriculum-aware parent reports
+Explain to parents exactly what has been covered and what is weak.
+
+Curriculum-aware past exam mining
+Map past questions to official objectives and show coverage depth.
+
+23. The most important implementation rule
+This is the one rule I would enforce across the team:
+
+No intelligence engine should directly depend on raw curriculum files.
+
+Everything must go through the canonical curriculum model and curriculum intelligence APIs.
+
+That keeps the system:
+
+stable
+
+explainable
+
+versioned
+
+reviewable
+
+reusable
+
+24. Final recommended build order for your team
+Here is the order I would use.
+
+Step 1
+Design the canonical schema and node model.
+
+Step 2
+Build admin CRUD for:
+
+curriculum family
+
+version
+
+subject
+
+level
+
+term
+
+node
+
+objective
+
+Step 3
+Build manual curriculum tree manager.
+
+Step 4
+Build upload + parse job infrastructure.
+
+Step 5
+Build extraction review workbench.
+
+Step 6
+Build public curriculum explorer and topic pages.
+
+Step 7
+Build intelligence APIs for coach and generator.
+
+Step 8
+Build relationship graph and prerequisite logic.
+
+Step 9
+Build resource mapping and coverage analytics.
+
+Step 10
+Connect the whole thing into the coach brain.
+
+25. Bottom line
+This portal is not a side feature.
+
+It is the academic operating spine of the platform.
+
+Once built properly, it becomes the structure that lets your system:
+
+reason academically,
+
+generate better questions,
+
+personalize correctly,
+
+explain things clearly,
+
+track mastery properly,
+
+and redesign curriculum into something far more usable than a static syllabus document.
+
+The next best move is to define the exact Postgres schema + API payload shapes + admin screen wireframes for this module.
+
+
+let's say i am tryin to build content , maybe i drop in the curriculum or syllabus , i expect it to go and form the foundation , ARIL and BRAIN start working on these , they combine with RAG and start populating topics with notes , glossaries , questions etc , then i find a text book scanned so i dump in it , it extracts all the texts, recongises the images, recongises the math , understands what is going on and then refines it but then it uses that to enrich all what is has generated already making it even more relevant . next time i get say past questions or test materials i can dump them also in it , now there must be something that also coordinating all these and ensuring we are enriching and becoming more quality , the system must check the quality and ensure unless it's quality i don't want it near me , but all this is being cooked in the super admin behind closed doors 
+
+You’re describing a hidden academic factory, not a simple content uploader. The missing piece is a central coordinator with strict quality gates, so every new source improves the whole knowledge base instead of just sitting beside it.
+
+Thought for 18s
+Yes — this should be a closed-door academic content foundry inside super admin.
+
+Not a file dump.
+Not a CMS.
+Not a plain RAG store.
+
+What you want is a self-improving curriculum-driven content production system where every new source makes the whole academic layer smarter, richer, tighter, and more accurate.
+
+The right model is this:
+
+The hidden system behind super admin
+Build an internal subsystem called something like:
+
+Academic Foundry
+or
+Content Refinery Engine
+or
+Knowledge Forge
+
+Its purpose is:
+
+take in curriculum, syllabus, textbooks, past questions, mark schemes, teacher notes, test papers
+
+mine and understand them
+
+align everything to a canonical curriculum graph
+
+let ARIL and BRAIN work on them
+
+use RAG as retrieval support, not as uncontrolled truth
+
+generate notes, glossaries, questions, examples, drills, explanations
+
+continuously refine existing content when better sources arrive
+
+reject weak output through strict quality gates
+
+only publish approved, high-quality assets to the live system
+
+That is the architecture you need.
+
+1. The core principle
+Every source you upload should do one of 4 things:
+
+seed structure
+
+add knowledge
+
+improve precision
+
+increase confidence
+
+Example:
+
+curriculum gives structure
+
+syllabus adds sequence and scope
+
+textbook adds depth, explanations, examples, diagrams, formula context
+
+past questions add exam reality, phrasing, style, traps, frequency
+
+mark schemes add expected reasoning and answer quality
+
+student performance data later adds real weakness and misconception signals
+
+So the system is not just collecting files.
+It is assembling academic truth in layers.
+
+2. The missing coordinating component
+Yes, there must be something coordinating all this.
+
+That component should exist above ARIL, BRAIN, RAG, parsing, enrichment, and publishing.
+
+Call it:
+
+Academic Orchestration Core
+or
+
+Foundry Coordinator
+or
+
+Content Governor
+This is the engine that decides:
+
+what a new source is
+
+how it should be processed
+
+what existing knowledge it should enrich
+
+what content should be regenerated
+
+what should be rejected
+
+what needs human review
+
+what is high enough quality to publish
+
+This coordinator is the “head chef” in the closed kitchen.
+
+3. Clean role split
+Here is the cleanest way to split the system.
+
+A. Intake Layer
+Accepts raw sources:
+
+curriculum
+
+syllabus
+
+textbooks
+
+scanned books
+
+past questions
+
+marking schemes
+
+worksheets
+
+examiners’ reports
+
+lesson notes
+
+B. Understanding Layer
+Extracts meaning:
+
+text extraction
+
+layout recognition
+
+image understanding
+
+math recognition
+
+table extraction
+
+diagram classification
+
+section understanding
+
+C. Canonical Academic Graph
+This becomes your internal source of truth:
+
+subject
+
+topic
+
+subtopic
+
+objective
+
+concept
+
+definition
+
+formula
+
+question family
+
+skill
+
+misconception
+
+explanation
+
+assessment style
+
+D. ARIL
+ARIL should be the academic resource intelligence layer that mines, links, retrieves, classifies, and proposes content expansions.
+
+ARIL handles:
+
+source mining
+
+topic linking
+
+concept extraction
+
+glossary seeding
+
+note seeding
+
+resource mapping
+
+question family mapping
+
+content gap detection
+
+E. BRAIN
+BRAIN should be the higher-order academic reasoning and planning engine.
+
+BRAIN handles:
+
+what should be built next
+
+what is missing
+
+what is weak
+
+what should be regenerated after enrichment
+
+what content is too shallow
+
+what topics need more examples
+
+what is good enough for live usage
+
+what learning experience to generate from the content
+
+F. RAG Layer
+RAG should retrieve from your approved and semi-approved academic memory to support:
+
+note generation
+
+glossary generation
+
+question generation
+
+explanation building
+
+refinement
+
+But RAG should not be treated as truth by itself.
+It should be a retrieval assistant, not the final authority.
+
+G. Quality Governance Layer
+This is the strict checker.
+It decides:
+
+is this accurate?
+
+is this aligned to curriculum?
+
+is this duplicated?
+
+is this too generic?
+
+is this shallow?
+
+is this contradictory?
+
+is this low-confidence?
+
+is this publishable?
+
+H. Publish Layer
+Only high-quality, approved assets make it to:
+
+public curriculum
+
+glossary
+
+notes
+
+question bank
+
+teach mode
+
+missions
+
+diagnostics
+
+4. The flow you are describing
+What you want should work like this:
+
+Step 1: You upload curriculum or syllabus
+The system:
+
+extracts structure
+
+identifies subjects, levels, topics, objectives, sequencing
+
+creates the curriculum graph foundation
+
+marks these nodes as canonical foundation nodes
+
+Then ARIL and BRAIN begin working.
+
+ARIL:
+
+identifies topic families
+
+creates initial concept maps
+
+proposes glossary seeds
+
+proposes formula seeds
+
+proposes note shells
+
+proposes question blueprint shells
+
+BRAIN:
+
+decides coverage priority
+
+decides which topics need foundational notes first
+
+decides which topics need glossary before questions
+
+decides what minimum package is needed per topic
+
+At this point the system can generate:
+
+topic summaries
+
+simple notes
+
+glossary beginnings
+
+question skeletons
+
+prerequisite maps
+
+But these are still early-stage artifacts.
+
+Step 2: You upload a scanned textbook
+Now the system does much more.
+
+It should:
+
+extract text
+
+preserve chapter structure
+
+detect headings
+
+detect diagrams/images
+
+detect tables
+
+detect worked examples
+
+detect exercises
+
+detect formulas and symbols
+
+understand image-caption relationships
+
+connect visuals to topic explanations
+
+detect definitions, rules, methods, examples, warnings
+
+Then it aligns textbook content to existing curriculum nodes.
+
+Example:
+If the textbook has a section on algebraic expressions, the system should not create a disconnected duplicate.
+It should say:
+
+this chapter maps to JHS 2 > Algebra > Algebraic Expressions
+
+this chapter adds 4 worked examples
+
+this chapter adds 2 formula explanations
+
+this chapter improves the glossary for 6 concept terms
+
+this chapter contains one diagram worth surfacing
+
+this chapter gives a better explanation than current note version
+
+Then the foundry coordinator should trigger refinement jobs.
+
+That means:
+
+revise notes for this topic
+
+expand glossary entries
+
+improve examples
+
+enrich teach-mode explanation
+
+improve question generation constraints
+
+improve misconception coverage
+
+increase evidence confidence
+
+So every new source should enrich what already exists.
+
+Step 3: You upload past questions or test materials
+Now the system gets exam realism.
+
+The system should:
+
+parse question text
+
+detect subject/topic
+
+detect question type
+
+detect assessment style
+
+detect repeated question families
+
+detect phrasing patterns
+
+detect examiner preference
+
+detect calculation style
+
+detect distractor patterns
+
+detect common tested sub-objectives
+
+Then it aligns this to the curriculum graph and to existing notes/glossary/questions.
+
+This should improve:
+
+question family intelligence
+
+exam-style note emphasis
+
+“how this appears in exams”
+
+likely traps
+
+glossary importance ranking
+
+speed-drill candidates
+
+mission recommendations
+
+diagnostic realism
+
+Now your content stops being merely academic and becomes exam-aware.
+
+5. The central operating model
+This whole system should operate on a model of:
+
+Source → Extraction → Alignment → Enrichment → Quality Check → Publish
+Every source enters the same broad pipeline, but with source-specific handlers.
+
+6. The most important architecture decision
+Do not let each source create content independently.
+
+Everything must pass through a canonical academic node layer.
+
+So if you upload:
+
+curriculum
+
+syllabus
+
+textbook
+
+past questions
+
+all of them must resolve into the same topic graph.
+
+Example target node:
+
+Subject: Mathematics
+Level: JHS 2
+Topic: Algebraic Expressions
+
+Then multiple sources attach to this same node:
+
+curriculum says what should be learned
+
+syllabus says when and where it appears
+
+textbook says how it is explained
+
+past questions say how it is tested
+
+mark scheme says what good answers look like
+
+That is how the system gets strong.
+
+7. The closed-door super admin workspace
+Yes — this should all happen behind closed doors.
+
+Meaning the public should never see:
+
+messy uploads
+
+rough extraction
+
+low-confidence content
+
+duplicate topic versions
+
+poor notes
+
+bad OCR output
+
+weak AI-generated questions
+
+incomplete glossary entries
+
+So the super admin side should have a hidden workspace with content states.
+
+Suggested states
+raw_uploaded
+
+extracted
+
+segmented
+
+mapped
+
+enriched
+
+quality_pending
+
+rejected
+
+approved_internal
+
+approved_publishable
+
+published
+
+retired
+
+This means the foundry can keep cooking internally without contaminating live content.
+
+8. ARIL’s real job
+ARIL should not just retrieve.
+It should act like an academic mining and linking intelligence layer.
+
+ARIL should do these jobs:
+
+Source mining
+extract terms
+
+classify content
+
+detect topics
+
+identify formulas
+
+detect examples
+
+classify definitions
+
+Alignment
+map source chunks to curriculum nodes
+
+map textbook sections to objectives
+
+map questions to topics and subskills
+
+Knowledge packing
+build candidate glossary entries
+
+build candidate note sections
+
+build example libraries
+
+build formula explanation packs
+
+Gap detection
+topic has no strong note
+
+topic lacks worked examples
+
+glossary too shallow
+
+no exam-style question families
+
+weak misconception coverage
+
+Retrieval support
+When BRAIN wants to generate or refine, ARIL retrieves the best aligned evidence.
+
+9. BRAIN’s real job
+BRAIN should be the content strategist and academic governor.
+
+BRAIN decides:
+
+what content package each topic should have
+
+what order to enrich topics
+
+when a topic is still weak
+
+when regeneration is needed after new evidence arrives
+
+what counts as enough quality for publication
+
+which sources are trusted more
+
+whether there is contradiction between sources
+
+whether notes are too generic or too verbose
+
+whether question generation has enough grounding
+
+whether glossary and notes are aligned
+
+BRAIN should also issue jobs like:
+
+“Rebuild note for Fractions using new textbook evidence”
+
+“Upgrade glossary for Photosynthesis with diagram support”
+
+“Regenerate 20 exam-style questions for Quadratic Equations using past-paper patterns”
+
+“Reject current note; explanation too shallow and missing worked example”
+
+“Hold publish; confidence below threshold”
+
+So BRAIN is not just a tutor brain.
+It is also a knowledge governance brain.
+
+10. The quality layer you are asking for
+This is critical.
+
+You said:
+
+unless it’s quality i don’t want it near me
+
+That means you need a Content Quality Gate System.
+
+This should be a serious subsystem, not a simple approval toggle.
+
+Call it:
+
+Quality Gatekeeper
+or
+
+Academic QA Engine
+or
+
+Content Integrity Engine
+It should score every candidate artifact before it is allowed near live surfaces.
+
+11. What quality should mean here
+Quality should be measured across several axes.
+
+A. Curriculum alignment
+Does this content actually align to the correct subject, level, topic, and objective?
+
+B. Accuracy
+Is the explanation, formula, definition, or question academically correct?
+
+C. Relevance
+Is it genuinely about the topic, or generic filler?
+
+D. Depth
+Is it substantial enough for the intended level?
+
+E. Clarity
+Is it understandable to the learner?
+
+F. Exam usefulness
+Does it reflect how the topic is actually tested?
+
+G. Internal consistency
+Do the glossary, notes, examples, and questions agree with one another?
+
+H. Evidence support
+Is it backed by enough trusted sources?
+
+I. Duplication control
+Is this just a duplicate of weaker content already present?
+
+J. Generation quality
+Does it look machine-sloppy, vague, repetitive, overlong, or low-signal?
+
+If a generated note or glossary entry fails quality, it should remain hidden.
+
+12. Strong quality workflow
+Every generated asset should go through:
+
+Stage 1: structural validation
+Checks:
+
+does it have required sections?
+
+is it attached to a real topic?
+
+does it have source provenance?
+
+is metadata complete?
+
+Stage 2: academic validation
+Checks:
+
+correctness
+
+formula sanity
+
+concept consistency
+
+level appropriateness
+
+terminology accuracy
+
+Stage 3: evidence validation
+Checks:
+
+how many strong sources support this?
+
+is it relying only on weak or partial extraction?
+
+does it contradict trusted source material?
+
+Stage 4: usefulness validation
+Checks:
+
+is it clear?
+
+too vague?
+
+too thin?
+
+too complex for level?
+
+does it actually help a student?
+
+Stage 5: publishing validation
+Checks:
+
+should it go live?
+
+does it require reviewer sign-off?
+
+should it replace current live version or stay draft?
+
+13. You need provenance everywhere
+This is non-negotiable.
+
+Every piece of generated content should know:
+
+which curriculum node it belongs to
+
+which uploaded sources informed it
+
+which source chunks supported it
+
+which textbook chapter enriched it
+
+which past questions influenced it
+
+which version produced it
+
+what confidence it has
+
+So if a note exists, you can say internally:
+
+This note was built from:
+
+curriculum version X
+
+textbook Y chapter 4
+
+past questions cluster Z
+
+formula block A
+
+glossary bundle B
+
+That gives traceability and makes quality governable.
+
+14. The system should be self-improving, not static
+This is a big point.
+
+When new content arrives, the system should not just append it.
+It should run delta enrichment.
+
+That means:
+
+New source arrives
+→ compare with existing topic assets
+→ identify what new value it adds
+→ compute affected topics
+→ regenerate only where improvement is justified
+→ quality-check new versions
+→ replace live only if better
+
+So if a textbook adds better examples for photosynthesis, the system should not rebuild the entire universe.
+It should say:
+
+Affected:
+
+note body
+
+glossary depth
+
+image explanation block
+
+diagram interpretation questions
+
+misconception hints
+
+Then only refine those.
+
+15. Suggested hidden subsystem structure
+You can break the foundry into these services.
+
+1. Source Intake Service
+Receives uploads and metadata.
+
+2. Extraction Service
+Handles:
+
+OCR/text extraction
+
+math extraction
+
+table extraction
+
+image understanding
+
+chapter segmentation
+
+3. Academic Mapping Service
+Maps extracted content to curriculum graph nodes.
+
+4. Source Enrichment Service
+Determines what the new source adds.
+
+5. Artifact Generation Service
+Generates:
+
+notes
+
+glossaries
+
+questions
+
+worked examples
+
+teach mode scripts
+
+misconception cards
+
+6. Quality Governance Service
+Scores, tests, rejects, or approves candidate artifacts.
+
+7. Version and Provenance Service
+Tracks versions, support evidence, and lineage.
+
+8. Publish Service
+Pushes approved artifacts into live systems.
+
+9. Monitoring Dashboard
+Shows content health, coverage, and quality status.
+
+16. What each source type should contribute
+This is how the system should think.
+
+Curriculum / Syllabus
+Contributes:
+
+official scope
+
+sequencing
+
+objectives
+
+topic hierarchy
+
+level expectations
+
+Textbook
+Contributes:
+
+deep explanation
+
+worked examples
+
+diagrams
+
+illustrations
+
+exercises
+
+vocabulary context
+
+teaching flow
+
+Past Questions
+Contributes:
+
+exam phrasing
+
+question families
+
+traps
+
+repetition patterns
+
+response style
+
+time pressure realism
+
+Marking Scheme
+Contributes:
+
+answer logic
+
+method expectations
+
+scoring patterns
+
+accepted forms of explanation
+
+Teacher Notes
+Contributes:
+
+simplified phrasing
+
+practical classroom explanation
+
+common learner confusion
+
+short teaching hacks
+
+Student Performance Data
+Contributes later:
+
+real weakness hotspots
+
+high-failure concepts
+
+misconception prevalence
+
+fragile objective areas
+
+17. What should be generated per topic
+For every topic, BRAIN should aim to build a minimum academic package.
+
+Core package
+topic summary
+
+prerequisite map
+
+note
+
+glossary terms
+
+key concepts
+
+formula block if needed
+
+simple examples
+
+question blueprint
+
+Enriched package
+worked examples
+
+diagram explanation
+
+misconception cards
+
+teach-mode script
+
+exam-style question families
+
+difficulty ladder
+
+audio explanation draft
+
+difference drill links
+
+intervention suggestions
+
+The system should know what is missing per topic and keep trying to improve it over time.
+
+18. The supervision model
+Even though the system is intelligent, do not let it publish everything automatically.
+
+Use a layered trust model.
+
+Auto-publish candidate
+Only if:
+
+high-confidence curriculum alignment
+
+high evidence support
+
+low contradiction risk
+
+strong quality score
+
+low academic risk
+
+Human review required
+If:
+
+formula-heavy
+
+ambiguous topic mapping
+
+scanned source is noisy
+
+conflicting textbook vs syllabus interpretation
+
+weak image understanding
+
+low confidence extraction
+
+important exam topic with insufficient support
+
+This way the hidden super admin factory remains safe.
+
+19. The admin dashboard should feel like a control room
+Your super admin should have a private dashboard showing:
+
+new uploads waiting
+
+extraction success/failure
+
+topics enriched today
+
+low-quality artifacts rejected
+
+topics missing strong notes
+
+topics with poor glossary depth
+
+topics with no diagram support
+
+topics with weak question coverage
+
+sources with low trust
+
+candidates waiting for approval
+
+published upgrades this week
+
+And for each topic, a health score.
+
+Example:
+
+Algebraic Expressions
+
+curriculum aligned: strong
+
+textbook support: strong
+
+past-question support: medium
+
+note quality: strong
+
+glossary quality: medium
+
+misconception coverage: weak
+
+publish confidence: 84
+
+action: enrich misconception pack
+
+That is the kind of system you want.
+
+20. The most important rule for RAG
+RAG should not directly create your academic truth.
+
+Use RAG for:
+
+retrieval
+
+grounding
+
+synthesis support
+
+enrichment candidate generation
+
+But let the canonical graph + quality governance decide what becomes part of the live academic layer.
+
+In other words:
+
+RAG helps build
+Quality Gate decides truth
+Canonical Graph stores truth
+BRAIN decides strategy
+ARIL gathers and aligns evidence
+
+That is the clean split.
+
+21. Recommended operating loop
+This is the loop your hidden system should run continuously.
+
+Loop
+ingest
+→ extract
+→ map to curriculum graph
+→ identify enrichment opportunities
+→ retrieve evidence via ARIL + RAG
+→ generate candidate artifacts
+→ quality-score them
+→ compare to current live version
+→ publish only if better
+→ update topic health and coverage
+
+That loop is the heart of your “content kitchen.”
+
+22. Best conceptual name for the coordinator
+If I were naming the main coordinating layer, I would choose one of these:
+
+Academic Foundry Orchestrator
+
+Knowledge Refinery Coordinator
+
+Content Governance Brain
+
+Academic Content Director
+
+Curriculum-Aware Knowledge Orchestrator
+
+The clearest one is:
+
+Academic Foundry Orchestrator
+because it captures:
+
+intake
+
+processing
+
+refinement
+
+production
+
+quality control
+
+hidden internal workflow
+
+23. Final architecture statement
+So the full model should be:
+
+Public side
+Students and parents only see polished outputs:
+
+curriculum explorer
+
+notes
+
+glossary
+
+questions
+
+missions
+
+teach mode
+
+drills
+
+Hidden super admin side
+A private academic foundry where:
+
+curriculum seeds the graph
+
+textbook deepens the graph
+
+past questions sharpen the graph
+
+ARIL mines and aligns
+
+BRAIN governs and prioritizes
+
+RAG supports retrieval and synthesis
+
+Quality Gate rejects weak content
+
+only strong content gets published
+
+That is the right system.
+
+24. Bottom line
+What you are building is essentially an internal academic operating factory.
+
+Not just upload-and-store.
+Not just generate-and-pray.
+Not just RAG.
+
+It is:
+
+curriculum-founded
+
+source-enriched
+
+graph-aligned
+
+quality-governed
+
+continuously improving
+
+closed-door internally
+
+polished externally
+
+That is exactly how to make the platform become smarter every time you feed it new material, without letting low-quality noise pollute the system.
+
+The next layer to define is the exact pipeline state machine and artifact lifecycle — meaning how a note, glossary entry, question set, formula pack, or topic explanation moves from raw generation to approved live content.
+
+
+proceed
+
+I’m taking this from concept into operating mechanics now: the state machine, artifact lifecycle, job triggers, quality gates, and how the hidden content factory keeps improving without polluting live content.
+
+Thought for 4s
+Good. Now we define the pipeline state machine and artifact lifecycle.
+
+This is the part that turns the Foundry from an idea into an operating system.
+
+Because if you do not define lifecycle properly, the system will become chaotic:
+
+duplicate notes
+
+conflicting glossary entries
+
+low-quality generated content
+
+endless regeneration loops
+
+weak textbook extraction contaminating good content
+
+past questions overriding curriculum truth
+
+no one knowing what is draft, trusted, publishable, or live
+
+So we need a disciplined internal flow.
+
+1. What exactly is moving through the pipeline?
+The system should treat every output as an artifact.
+
+An artifact is any structured academic asset the system creates, enriches, reviews, stores, or publishes.
+
+Main artifact types
+Foundation artifacts
+These create structure.
+
+curriculum tree
+
+syllabus sequence
+
+topic hierarchy
+
+learning objectives
+
+competency map
+
+prerequisite graph
+
+Knowledge artifacts
+These explain content.
+
+topic note
+
+micro note
+
+concept explanation
+
+glossary entry
+
+formula explanation
+
+worked example
+
+misconception card
+
+diagram explanation
+
+audio script
+
+Assessment artifacts
+These support testing.
+
+question item
+
+question family
+
+question variant set
+
+diagnostic question pack
+
+exam-style question pack
+
+mark scheme explanation
+
+distractor logic explanation
+
+answer walkthrough
+
+Meta artifacts
+These control or describe quality.
+
+source alignment report
+
+evidence pack
+
+coverage report
+
+quality scorecard
+
+artifact diff
+
+confidence summary
+
+topic health report
+
+So the lifecycle must work for all these, even though each artifact type has different rules.
+
+2. The core lifecycle principle
+Every artifact should move through 3 big worlds:
+
+World 1: Raw Foundry World
+Messy, experimental, internal, hidden.
+
+World 2: Governed Internal World
+Structured, tested, compared, scored, reviewable.
+
+World 3: Live Academic World
+Only trusted, approved, publishable assets.
+
+That separation is critical.
+
+3. Main artifact lifecycle states
+Here is the clean state machine I recommend.
+
+Stage 0: seed_pending
+Artifact does not yet exist but system knows it should exist.
+
+Example:
+
+topic exists but no note yet
+
+topic exists but glossary missing
+
+textbook has added new evidence so note needs regeneration
+
+This is not yet a real artifact. It is a demand signal.
+
+Stage 1: queued_for_build
+The Foundry Coordinator has decided to create or update an artifact.
+
+Example:
+
+build glossary entry for “photosynthesis”
+
+refine note for “algebraic expressions”
+
+create misconception card from new past question patterns
+
+Stage 2: building
+ARIL, BRAIN, and supporting services are actively generating or refining the artifact.
+
+Possible subactivities:
+
+retrieve aligned evidence
+
+synthesize note draft
+
+map glossary candidates
+
+create worked examples
+
+generate question pack
+
+build formula explanation
+
+Stage 3: built_raw
+A first machine-produced artifact exists, but it has not yet been validated.
+
+This is internal only.
+Never show to public.
+Usually not even visible to most admin users except advanced review modes.
+
+Stage 4: structured_validated
+The artifact passes structural rules.
+
+Checks:
+
+valid topic association
+
+correct metadata
+
+required sections present
+
+provenance attached
+
+correct artifact schema
+
+no broken references
+
+no empty blocks
+
+If it fails here, it should move to:
+
+structure_failed
+
+Stage 5: academic_validated
+The artifact passes academic sanity checks.
+
+Checks:
+
+concept correctness
+
+formula correctness
+
+level appropriateness
+
+terminology consistency
+
+no obvious contradictions to curriculum
+
+note actually matches topic
+
+question solution logic valid
+
+If it fails:
+
+academic_failed
+
+Stage 6: evidence_validated
+The artifact has enough evidence support.
+
+Checks:
+
+enough strong sources
+
+trusted sources present
+
+source chunks align correctly
+
+not built from weak or noisy extraction alone
+
+source confidence acceptable
+
+no major unresolved contradiction
+
+If it fails:
+
+evidence_failed
+
+Stage 7: quality_scored
+The artifact gets a formal quality score.
+
+This is a scoring phase, not yet approval.
+
+Scored dimensions:
+
+curriculum alignment
+
+clarity
+
+usefulness
+
+depth
+
+accuracy confidence
+
+source support
+
+exam relevance
+
+non-duplication
+
+internal consistency
+
+generation cleanliness
+
+At this point artifact may be:
+
+high quality
+
+medium quality
+
+low quality
+
+rejectable
+
+Stage 8: comparison_pending
+The system compares this candidate artifact to the currently approved or live version.
+
+This is very important.
+
+A new artifact should not replace an old one just because it is newer.
+It must be better or materially different in a useful way.
+
+Stage 9: review_pending
+Human review may be needed.
+
+This should happen when:
+
+confidence is not high enough
+
+topic is important
+
+source type is risky
+
+formula-heavy content
+
+diagram explanation uncertain
+
+contradiction exists
+
+quality score is borderline
+
+replacement decision is significant
+
+Stage 10: approved_internal
+The artifact is accepted as internally trusted.
+
+This means:
+
+safe to use for internal engine support
+
+safe for retrieval in controlled generation
+
+safe for internal previews
+
+not necessarily live yet
+
+This is a useful intermediate state.
+
+Stage 11: approved_publishable
+The artifact is approved for live publication.
+
+This means:
+
+quality threshold passed
+
+evidence threshold passed
+
+no blocking review issues
+
+replacement comparison passed
+
+publishing constraints satisfied
+
+Stage 12: published_live
+The artifact is now used by the live product.
+
+Can appear in:
+
+student notes
+
+glossary
+
+teach mode
+
+public curriculum pages
+
+question bank
+
+missions
+
+drills
+
+parent reporting
+
+Stage 13: superseded
+A better version replaced it.
+
+The old one remains in history but is no longer live.
+
+Stage 14: retired
+No longer valid for use.
+Possible reasons:
+
+curriculum version changed
+
+topic removed
+
+academic error discovered
+
+asset no longer aligned
+
+duplicated by merged content
+
+Failure states
+You should explicitly model failures.
+
+structure_failed
+
+academic_failed
+
+evidence_failed
+
+quality_failed
+
+comparison_failed
+
+review_rejected
+
+publish_blocked
+
+These are important because they help the system learn what kinds of outputs keep failing.
+
+4. Artifact lifecycle by example
+Let’s make it concrete.
+
+Example: topic note lifecycle
+Topic: Fractions
+
+curriculum upload creates the topic node
+
+note demand appears: no note exists → seed_pending
+
+Foundry queues note generation → queued_for_build
+
+ARIL retrieves curriculum wording, textbook chapter, teacher note, past question patterns
+
+BRAIN directs build structure: definition, concept core, examples, mistakes, exam angle
+
+note draft produced → built_raw
+
+structure validated → structured_validated
+
+academic correctness checked → academic_validated
+
+source support checked → evidence_validated
+
+scored 82/100 → quality_scored
+
+compared to current live note; none exists → comparison_pending resolved positively
+
+important topic, but confidence high enough for auto internal approval → approved_internal
+
+publishing threshold met → approved_publishable
+
+note goes live → published_live
+
+Later:
+15. new scanned textbook arrives with stronger diagrams and better worked examples
+16. system detects note can be improved → new candidate note generated
+17. new note scores 89 and materially improves worked examples
+18. current live note becomes superseded
+19. new note becomes published_live
+
+That is the right model.
+
+5. The Foundry state machine should have two levels
+This is important.
+
+You actually need two state machines:
+
+A. Source Processing State Machine
+Tracks what is happening to uploaded materials.
+
+B. Artifact Production State Machine
+Tracks what is happening to generated academic assets.
+
+Do not merge them.
+
+6. Source processing state machine
+This tracks textbooks, curriculum documents, question papers, etc.
+
+Suggested source states:
+
+uploaded
+
+classified
+
+extracting
+
+extracted
+
+segmenting
+
+segmented
+
+analyzing
+
+mapped_to_graph
+
+enrichment_ready
+
+partially_usable
+
+review_required
+
+approved_for_use
+
+rejected_for_use
+
+archived
+
+Example
+A scanned textbook may be:
+
+uploaded
+
+extracted with OCR and layout understanding
+
+segmented into chapters/sections/examples/images
+
+mapped to topics
+
+reviewed because math recognition had weak confidence
+
+approved for enrichment use
+
+Until it reaches “approved_for_use,” it should not heavily influence live content.
+
+7. Topic-level state machine
+Each topic in the curriculum graph should also have a health lifecycle.
+
+Because your real goal is not merely managing files or individual artifacts.
+Your real goal is getting every topic to a strong state.
+
+Topic health states
+unseeded
+
+foundation_seeded
+
+partially_supported
+
+content_building
+
+quality_weak
+
+quality_mixed
+
+quality_stable
+
+quality_strong
+
+needs_refresh
+
+under_revision
+
+live_strong
+
+retired
+
+Meaning
+A topic can exist structurally from curriculum upload but still be weak because:
+
+no note
+
+poor glossary
+
+no worked examples
+
+weak question coverage
+
+no diagram support
+
+no exam-style mapping
+
+So topic health is a separate operational view that the dashboard should show.
+
+8. Topic package completeness model
+Each topic should have an expected package.
+
+Instead of asking “Do we have content for this topic?”
+the system should ask:
+“Is the topic package complete and strong?”
+
+Topic package checklist
+Mandatory for most topics
+topic summary
+
+core note
+
+glossary links
+
+objective mapping
+
+prerequisite mapping
+
+question blueprint
+
+Mandatory when relevant
+formula explanation
+
+worked examples
+
+misconception card
+
+exam-style representation
+
+diagram explanation
+
+teach-mode script
+
+Premium/advanced
+audio script
+
+interactive drill logic
+
+memory prompts
+
+elite mode challenge questions
+
+difference drills with adjacent concepts
+
+Each package element should have its own lifecycle and score.
+
+Then topic-level quality can be computed from the package.
+
+9. Quality scoring model
+You need a formal scorecard.
+
+Example quality score dimensions
+For notes
+curriculum alignment: 20
+
+academic correctness: 20
+
+clarity: 15
+
+depth: 10
+
+evidence support: 10
+
+level appropriateness: 10
+
+misconception usefulness: 5
+
+exam relevance: 5
+
+non-duplication / clean generation: 5
+
+For glossary entries
+term correctness
+
+clarity of definition
+
+level fit
+
+relation to topic
+
+example usefulness
+
+confusion avoidance
+
+source support
+
+For questions
+correct objective alignment
+
+correctness of answer
+
+distractor quality
+
+level appropriateness
+
+exam realism
+
+explanation quality
+
+non-triviality
+
+uniqueness vs duplicates
+
+For worked examples
+mathematical correctness
+
+process clarity
+
+step ordering
+
+educational usefulness
+
+link to objective
+
+link to common mistakes
+
+This score should not just exist as a single number.
+Store sub-scores too.
+
+10. Quality gate rules
+Define actual gates.
+
+Gate A: minimum structural pass
+Required before anything else.
+
+Gate B: academic pass
+If it fails, block completely.
+
+Gate C: evidence sufficiency
+If too weak, no publishing.
+
+Gate D: replacement advantage
+If not meaningfully better than current live content, do not replace.
+
+Gate E: review policy
+If high-risk content, human approval required even if scores are high.
+
+11. Auto-publish policy
+You should not use one blanket auto-publish rule.
+
+Use risk tiers.
+
+Tier 1: Safe low-risk artifacts
+Can auto-publish if high confidence.
+
+Examples:
+
+simple glossary alias
+
+non-critical topic summary
+
+minor enrichment to public description
+
+Tier 2: Moderate-risk artifacts
+Can auto-approve internal, but publish may need threshold + spot review.
+
+Examples:
+
+standard note
+
+worked example
+
+basic question set
+
+Tier 3: High-risk artifacts
+Human review required.
+
+Examples:
+
+formula-heavy explanations
+
+math-intensive worked examples
+
+high-stakes diagnostic question packs
+
+major live replacement for core topic note
+
+diagram-based science explanation with uncertain OCR/visual parsing
+
+12. Provenance model
+Every artifact should have provenance objects attached.
+
+Artifact provenance fields
+artifact_id
+
+artifact_version
+
+topic_id
+
+generation_run_id
+
+source_ids_used
+
+source_chunk_ids_used
+
+curriculum_version_id
+
+retrieval_snapshot_id
+
+model/pipeline version
+
+evidence_confidence
+
+review actions
+
+replaced_artifact_id
+
+published_by
+
+published_at
+
+This gives you a full lineage tree.
+
+So later you can answer:
+
+why was this note generated?
+
+what evidence was used?
+
+which textbook improved it?
+
+which past-paper cluster influenced it?
+
+who approved it?
+
+That makes the system trustworthy.
+
+13. The comparison engine
+This is one of the most important missing components.
+
+When a new artifact is produced, do not ask only:
+“Is it good?”
+
+Also ask:
+“Is it better than what we already have?”
+
+So you need an Artifact Comparator.
+
+Comparator responsibilities
+compare old vs new note
+
+detect whether new artifact adds real value
+
+detect regressions
+
+detect improved clarity
+
+detect more complete coverage
+
+detect stronger evidence support
+
+detect whether the change is only cosmetic
+
+recommend replace / keep both / reject / merge
+
+Possible outcomes
+replace_live
+
+keep_current
+
+keep_as_internal_variant
+
+merge_and_regenerate
+
+send_for_review
+
+This prevents the system from endlessly churning live content.
+
+14. Regeneration triggers
+Now let’s define what should trigger fresh builds.
+
+Triggers from source ingestion
+new curriculum uploaded
+
+syllabus amendment detected
+
+textbook approved for use
+
+past question batch approved
+
+new marking scheme added
+
+Triggers from content quality
+note score below threshold
+
+topic package incomplete
+
+glossary too shallow
+
+question coverage weak
+
+misconception pack missing
+
+Triggers from contradiction
+new source conflicts with old note
+
+curriculum version changed
+
+source trust downgrade
+
+Triggers from analytics
+topic repeatedly searched but low satisfaction
+
+students failing concept heavily
+
+parent reports show repeated weak area
+
+diagnostics repeatedly detect same misconception
+
+Triggers from human action
+admin flags topic for rebuild
+
+reviewer rejects current live artifact
+
+subject expert requests refinement
+
+These triggers should produce jobs, not instant uncontrolled rebuilds.
+
+15. Job orchestration model
+The Foundry Coordinator should manage jobs explicitly.
+
+Job types
+source_extract_job
+
+source_segment_job
+
+source_map_job
+
+topic_enrichment_job
+
+glossary_build_job
+
+note_build_job
+
+formula_pack_build_job
+
+worked_example_build_job
+
+question_generation_job
+
+misconception_build_job
+
+quality_score_job
+
+compare_artifact_job
+
+publish_job
+
+retire_job
+
+Job fields
+id
+
+job_type
+
+trigger_type
+
+target_entity_type
+
+target_entity_id
+
+priority
+
+status
+
+dependency_job_ids
+
+assigned_service
+
+created_at
+
+started_at
+
+completed_at
+
+failure_reason
+
+This lets the hidden factory work in an orderly way.
+
+16. Dependency model between jobs
+This matters.
+
+Some jobs should not run before others.
+
+Example dependencies
+Topic note build depends on:
+curriculum node exists
+
+source mapping exists
+
+enough evidence available
+
+Glossary build depends on:
+concept extraction or topic map exists
+
+Exam-style question pack build depends on:
+past question mapping exists
+
+objective map exists
+
+Publish depends on:
+build complete
+
+quality score complete
+
+comparison complete
+
+review complete if required
+
+This should be explicit in orchestration.
+
+17. Artifact versioning model
+Every artifact type should support versions.
+
+Fields
+artifact_id
+
+version_no
+
+parent_artifact_id
+
+status
+
+build_reason
+
+replaced_by_version
+
+change_summary
+
+quality_score
+
+evidence_score
+
+Change categories
+first_creation
+
+evidence_enrichment
+
+curriculum_alignment_fix
+
+clarity_improvement
+
+diagram_addition
+
+worked_example_upgrade
+
+exam-relevance_upgrade
+
+misconception_upgrade
+
+correction_fix
+
+This makes historical tracking and rollback possible.
+
+18. Rollback model
+You must support rollback.
+
+If an enriched note turns out to be weaker or wrong, the system should be able to:
+
+restore prior live version
+
+mark faulty version as retired or rejected
+
+preserve audit trail
+
+trigger investigation
+
+downgrade trust in source if needed
+
+Never let the foundry operate without rollback.
+
+19. Source trust model
+Not all sources should influence the system equally.
+
+Assign trust tiers.
+
+Tier A: canonical strong sources
+official curriculum
+
+official syllabus
+
+verified marking scheme
+
+verified exam board documents
+
+Tier B: high-value academic sources
+high-quality textbooks
+
+trusted teacher guides
+
+vetted class notes
+
+Tier C: useful but secondary
+workbook exercises
+
+school tests
+
+private worksheets
+
+Tier D: weak or noisy
+poor scans
+
+incomplete notes
+
+uncertain OCR
+
+messy source with weak metadata
+
+The Foundry should weigh evidence differently depending on source trust.
+
+A Tier D source may enrich ideas but should not overrule a Tier A curriculum or a strong live artifact.
+
+20. Contradiction resolution model
+Sources will sometimes disagree.
+
+The system must not collapse when this happens.
+
+Contradiction types
+topic sequencing conflict
+
+formula notation difference
+
+wording difference
+
+explanation conflict
+
+exam interpretation conflict
+
+answer logic conflict
+
+Resolution policy
+prefer canonical curriculum for structure
+
+prefer official marking scheme for expected answer logic
+
+prefer trusted textbook for explanatory depth
+
+prefer past questions for exam phrasing and tested style
+
+escalate unresolved important contradictions to human review
+
+So different sources have different authority domains.
+
+That is key.
+
+21. Artifact family model
+Some artifacts should be grouped into families.
+
+Example:
+Topic: Photosynthesis
+
+Artifact family:
+
+summary note
+
+deep note
+
+glossary pack
+
+worked examples
+
+misconception pack
+
+diagram explanation
+
+exam-style questions
+
+teach-mode explanation
+
+audio script
+
+The family should have a family health score and family completeness state.
+
+Because often the issue is not one bad artifact; the issue is that the topic family is unbalanced.
+
+22. Internal dashboard views you need
+The hidden admin control room should have these views.
+
+A. Source Pipeline Board
+Shows every upload and where it is stuck.
+
+B. Artifact Pipeline Board
+Shows:
+
+queued
+
+building
+
+quality pending
+
+review pending
+
+approved internal
+
+publishable
+
+live
+
+failed
+
+C. Topic Health Board
+Shows which topics are weak and why.
+
+D. Coverage Board
+Shows missing package elements across the curriculum.
+
+E. Quality Failure Board
+Shows artifacts repeatedly failing and patterns behind failure.
+
+F. Source Influence Board
+Shows which sources are improving the system most.
+
+G. Regression Alerts
+Shows when new candidate artifacts are weaker than current live ones.
+
+23. Example full scenario
+Let’s simulate it.
+
+You upload BECE Mathematics curriculum
+Source state:
+
+uploaded
+
+extracted
+
+mapped
+
+approved_for_use
+
+Topic node created:
+
+Algebraic Expressions
+
+Topic health:
+
+foundation_seeded
+
+Missing package:
+
+note
+
+glossary
+
+worked examples
+
+question blueprint
+
+Coordinator creates:
+
+note_build_job
+
+glossary_build_job
+
+question_blueprint_job
+
+Candidate note reaches:
+
+approved_internal
+
+Not yet live because evidence is shallow.
+
+Then you upload a scanned mathematics textbook.
+
+Source processing:
+
+uploaded
+
+extracted
+
+segmented
+
+math recognition done
+
+image blocks understood
+
+mapped to Algebraic Expressions topic
+
+approved_for_use
+
+Coordinator sees enrichment opportunities:
+
+better explanation
+
+3 worked examples
+
+sign error misconception
+
+formula language improvement
+
+New jobs:
+
+worked_example_build_job
+
+misconception_build_job
+
+note_refinement_job
+
+glossary_refinement_job
+
+Candidate note now reaches 88 quality.
+Comparator says:
+
+stronger than current internal draft
+
+publishable
+
+Result:
+
+note goes live
+
+glossary pack goes live
+
+worked example pack goes live
+
+misconception card held for review because confidence medium
+
+Then you upload past questions.
+
+Source processing:
+
+questions mapped
+
+family patterns extracted
+
+trap patterns found
+
+New jobs:
+
+exam_style_pack_build_job
+
+note_exam_enrichment_job
+
+diagnostic_pattern_job
+
+Now topic health becomes:
+
+live_strong
+
+That is exactly how the factory should behave.
+
+24. What ARIL and BRAIN each do in the lifecycle
+To keep roles clean:
+
+ARIL in lifecycle
+mines source
+
+aligns chunks to nodes
+
+retrieves evidence
+
+proposes enrichment candidates
+
+identifies gaps
+
+assembles evidence packs
+
+BRAIN in lifecycle
+decides what to build
+
+decides build priority
+
+decides whether regeneration is worthwhile
+
+judges completeness at topic level
+
+weighs signals for publishing
+
+triggers review where needed
+
+steers long-term coverage strategy
+
+Quality Engine in lifecycle
+tests candidate outputs
+
+scores them
+
+blocks weak outputs
+
+compares against live assets
+
+marks failures and risk
+
+Foundry Coordinator in lifecycle
+orchestrates the whole flow
+
+creates jobs
+
+resolves dependencies
+
+updates states
+
+manages retries
+
+ensures orderly movement
+
+25. Suggested database entities for lifecycle control
+At minimum add these tables.
+
+artifacts
+Stores core artifact records.
+
+Fields:
+
+id
+
+artifact_type
+
+topic_id
+
+subject_id
+
+level_id
+
+current_version_id
+
+lifecycle_state
+
+family_id
+
+live_version_id
+
+artifact_versions
+Stores each version.
+
+Fields:
+
+id
+
+artifact_id
+
+version_no
+
+state
+
+content_blob_ref
+
+build_reason
+
+quality_score
+
+evidence_score
+
+provenance_ref
+
+comparison_result
+
+created_at
+
+artifact_quality_reports
+Fields:
+
+id
+
+artifact_version_id
+
+structural_score
+
+academic_score
+
+evidence_score
+
+relevance_score
+
+clarity_score
+
+depth_score
+
+overall_score
+
+pass_fail
+
+issues_json
+
+artifact_reviews
+Fields:
+
+id
+
+artifact_version_id
+
+reviewer_id
+
+decision
+
+review_notes
+
+created_at
+
+artifact_comparisons
+Fields:
+
+id
+
+old_version_id
+
+new_version_id
+
+result
+
+summary
+
+improvement_score
+
+regression_score
+
+topic_health
+Fields:
+
+topic_id
+
+package_completeness_score
+
+quality_score
+
+live_health_state
+
+last_refresh_at
+
+missing_components_json
+
+foundry_jobs
+Fields:
+
+id
+
+job_type
+
+target_type
+
+target_id
+
+trigger_type
+
+state
+
+priority
+
+dependency_refs
+
+retry_count
+
+26. Operational rules to prevent chaos
+These are must-have rules.
+
+Rule 1
+No artifact can go live without provenance.
+
+Rule 2
+No artifact can replace live content without comparison.
+
+Rule 3
+No weak source can heavily influence live content without corroboration.
+
+Rule 4
+Curriculum structure outranks textbook structure.
+
+Rule 5
+Official marking logic outranks generic explanation when assessing answers.
+
+Rule 6
+Every topic must have a package completeness target.
+
+Rule 7
+Failures must be stored and learned from, not silently discarded.
+
+Rule 8
+Draft and live must remain separate.
+
+Rule 9
+New sources should trigger delta enrichment, not blind full regeneration.
+
+Rule 10
+Human review is mandatory for high-risk academic content.
+
+27. The bigger picture
+What you are creating is not just a backend feature.
+
+You are creating a private academic manufacturing system.
+
+Its job is to make sure that every time you add:
+
+curriculum
+
+textbook
+
+past questions
+
+notes
+
+schemes
+
+the platform becomes:
+
+more aligned
+
+more accurate
+
+more exam-aware
+
+more structured
+
+more useful
+
+more confident
+
+more polished
+
+without letting weak material slip into the live learner experience.
+
+That is the whole point of the hidden super admin foundry.
+
+28. Final summary of the operating model
+Here is the clean final operating loop:
+
+Source side
+upload source
+→ classify source
+→ extract text/math/images/layout
+→ segment content
+→ map to curriculum graph
+→ approve source for use
+
+Artifact side
+detect missing or improvable topic package
+→ queue build jobs
+→ ARIL gathers aligned evidence
+→ BRAIN directs build strategy
+→ build candidate artifacts
+→ validate structure
+→ validate academics
+→ validate evidence
+→ quality-score
+→ compare with current version
+→ review if needed
+→ approve internal
+→ approve publishable
+→ publish live
+→ supersede old version
+→ update topic health
+
+That is the full hidden factory loop.
+
+The next best step is to define the exact artifact families and minimum quality thresholds for each topic package — in other words, what a topic must contain before you consider it weak, stable, strong, or elite.
+
+
+
+

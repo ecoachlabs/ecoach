@@ -1,0 +1,10073 @@
+
+
+
+
+this is the problem i am facing , what do you suggest 
+
+Academic Coach — Problems & Proposed Solutions
+
+  PROBLEM 1: The Coach Abandons the User
+
+  What happens: After completing any action (diagnostic, mission, onboarding), the student lands on a generic page with no clear next step. They don't know what to do.
+
+  Root cause: The Coach Hub is a static dashboard, not a guided experience. It shows data but doesn't LEAD.
+
+  Solution: The Coach Hub should ALWAYS show ONE clear next action at the center of the screen. No browsing, no guessing. The coach decides what's next and presents it. Every
+  screen answers: "What should I do RIGHT NOW?"
+
+  ---
+  PROBLEM 2: Diagnostic Loop
+
+  What happens: After completing a diagnostic, the student sees the same diagnostic again. Endless loop.
+
+  Root cause: The orchestrator can't generate real missions because no topic profiles exist in the database. Placeholder questions don't produce real evidence. So the system keeps
+   falling back to diagnostics.
+
+  Fix applied: After the first mission completes, the orchestrator now seeds topic profiles from Journey content pack data (j_concept_nodes). This gives the mission planner real
+  topics to work with.
+
+  Fix applied: Phase logic simplified — once any episode exists, never show diagnostic screens again.
+
+  Remaining risk: The seeding depends on Journey content packs being installed. If none are installed, seeding returns zero topics and the orchestrator is stuck.
+
+  ---
+  PROBLEM 3: Placeholder Questions
+
+  What happens: All questions say "This question will be loaded from the question intelligence system." No real content.
+
+  Root cause: The generateStepsFromBlueprint() function in MissionFlow creates placeholder StepQuestion objects because it doesn't connect to the real question database (Journey's
+   j_concept_nodes, question_instances, question_families).
+
+  Solution: MissionFlow's step generation needs to query the actual question database — load real questions from question_instances filtered by the mission's topic/subject. The
+  question intelligence layer already exists (migration 031), it just needs to be wired into the coach's step generation.
+
+  ---
+  PROBLEM 4: No Study Plan
+
+  What happens: The coach has no structured plan. It generates one-off missions reactively instead of following a deliberate day-by-day program.
+
+  Root cause: No plan engine exists. The orchestrator picks the highest-priority topic at the moment but has no concept of a multi-day structured plan.
+
+  Solution: Build a Plan Engine that:
+  - Takes exam date + subjects + diagnostic results
+  - Generates a day-by-day structured plan with mixed activities (learn, practice, test, review, speed drill, repair)
+  - Specifies daily time budgets
+  - Sets milestones and targets
+  - Adapts after each session based on performance
+  - Shows a visual timeline on the Coach Hub overview
+
+  ---
+  PROBLEM 5: Self-Reported Assessment
+
+  What happens: RecallBurstStep asks "Did you get it right?" and the student can lie.
+
+  Fix applied: All recall_burst steps now render as real MCQ questions. The RecallBurstStep component is no longer used.
+
+  ---
+  PROBLEM 6: No Subject Selection Before Diagnostic
+
+  What happens: The diagnostic starts without knowing what subjects the student is studying.
+
+  Fix applied: Added Step 2 (Subject Selection) to the onboarding flow. Also added subject selection to the first_diagnostic screen for users who skip onboarding.
+
+  ---
+  PROBLEM 7: Content Not Centered
+
+  What happens: Screens have content crammed in the top-left with 60% of the screen empty.
+
+  Fix applied: MissionFlow work area uses flex items-center justify-center. All coach pages have mx-auto. Onboarding steps are full-viewport centered.
+
+  ---
+  PROBLEM 8: Mode Transition Glitches
+
+  What happens: Toggling Coach Mode causes card flickering, position shifts, and visual glitches.
+
+  Root cause: The ripple transition overlay caused React re-renders during navigation. Store state changes (coachModeActive, transitioning) triggered layout recalculations visible
+   through translucent overlays.
+
+  Fix applied: Transition component disabled (no-op). Coach toggle now does instant navigation. The sidebar hides via coachModeActive state directly.
+
+  Future solution: Revisit the transition effect in a dedicated session with a simpler approach — maybe just a CSS cross-fade on the main content area using the View Transition
+  API, not a custom overlay.
+
+  ---
+  PROBLEM 9: Dead Code in CoachHub.tsx
+
+  What happens: Babel parse error at line 711 — {/* Resume */} inside a multi-line /* */ comment breaks the parser because */ in JSX comments closes the outer comment.
+
+  Root cause: I tried to comment out orphaned code with /* */ but JSX comments containing */ broke it. Then I tried if(false) { template literal } which Babel also can't parse.
+
+  Fix needed: Delete the dead code block entirely (lines 684-856). It's wrapped in a broken comment/template literal. Just remove it and the CoachOnboarding function that follows
+  is clean.
+
+  ---
+  PROBLEM 10: No Time Tracking
+
+  What happens: There's no timer. The coach doesn't track how long the student spends studying or whether they've met their daily goal.
+
+  Solution: Add a timer to the Coach Hub header that:
+  - Shows today's remaining study budget (e.g. "35 min remaining")
+  - Counts down when Coach Mode is active
+  - Pauses when Coach Mode is toggled off
+  - Persists elapsed time to the database
+  - Uses c_engagement_events to track session starts/stops
+
+  ---
+  PROBLEM 11: No Visual Roadmap
+
+  What happens: The student can't see where they are in their journey toward the exam. No timeline, no progress visualization.
+
+  Solution: Build a visual timeline on the Coach Hub Overview showing:
+  - Day 1 → Exam Day progress bar with "you are here" marker
+  - Current preparation phase highlighted
+  - Today's planned activities as horizontal cards (done ✓, current ▶, upcoming ○)
+  - Weekly progress indicator
+  - Readiness trajectory (current vs target)
+
+  ---
+  PROBLEM 12: No Adaptive Blocking
+
+  What happens: The coach moves on to new topics even when the student is failing the current one.
+
+  Solution: Add blocking rules to the mission planner:
+  - If accuracy < 40% after 2 sessions on a topic → BLOCK forward progress
+  - Deploy reteach + worked example + guided practice
+  - Only unlock when accuracy reaches 60%
+  - If misconception recurs 3+ times → force a targeted repair session
+
+  ---
+
+I’m tightening this into the underlying architecture issue, not just screen issues. Most of these symptoms point to one thing: the coach lacks a real operating loop with clear state, content contracts, and progression rules.
+
+Thought for 23s
+Your diagnosis is strong. The main thing I would suggest is this:
+
+Stop treating these as 12 separate bugs.
+They are mostly symptoms of 4 missing core systems.
+
+What is really broken
+1. There is no Coach State Machine
+Right now the coach behaves like a set of pages and components.
+It needs to behave like a controlled progression engine.
+
+The system should always know, for every student:
+
+where they are in the coaching lifecycle
+
+what the current objective is
+
+what must happen before advancing
+
+what the next screen should be
+
+what to do if required data is missing
+
+Without that, you get:
+
+abandonment after actions
+
+diagnostic loops
+
+no adaptive blocking
+
+reactive one-off missions
+
+no proper handoff between screens
+
+So the first architectural move is:
+
+Build a single canonical CoachState model
+Example high-level states:
+
+onboarding_required
+
+subject_selection_required
+
+diagnostic_required
+
+plan_generation_required
+
+ready_for_today_mission
+
+mission_in_progress
+
+mission_review_required
+
+repair_required
+
+blocked_on_topic
+
+rest_day_or_review_day
+
+exam_mode
+
+coach_stalled_no_content
+
+And then a resolver:
+
+resolveNextCoachAction(studentId) -> NextAction
+
+This resolver becomes the brain behind Coach Hub.
+
+Not:
+“show dashboard”
+But:
+“given current evidence, plans, blockers, and content readiness, what is the one action this student should do next?”
+
+2. There is no Content Readiness Layer
+A lot of the looping is happening because the coach assumes content exists.
+
+That is dangerous.
+
+Before diagnostics, planning, or mission generation, the system should know:
+
+which subjects are selected
+
+which Journey packs are installed
+
+how many concept nodes exist for each subject
+
+how many question instances exist for each topic
+
+whether there is enough content to generate a mission
+
+whether there is enough content to generate a plan
+
+So I would add a content readiness check as a first-class gate.
+
+Example readiness states:
+
+NO_SUBJECTS_SELECTED
+
+NO_PACKS_INSTALLED
+
+NO_TOPICS_AVAILABLE
+
+TOPICS_AVAILABLE_NO_QUESTIONS
+
+READY
+
+Then your orchestrator does not fall back into a fake diagnostic.
+It does this instead:
+
+If no subjects → send user to subject selection
+
+If no packs → send user to install/import content
+
+If packs exist but no questions → send to content repair/admin notice
+
+If ready → generate plan/missions
+
+That alone kills a huge amount of bad behavior.
+
+3. There is no Plan Engine
+You already identified this correctly.
+
+Right now the coach is acting like a reactive tutor.
+What you want is an academic strategist.
+
+That means the coach needs a persistent structure like:
+
+Plan
+exam target
+
+start date
+
+exam date
+
+selected subjects
+
+daily study budget
+
+phase structure
+
+targets
+
+PlanDay
+date
+
+subject focus
+
+time budget
+
+mission types
+
+target outcomes
+
+completion status
+
+TopicTrack
+topic id
+
+mastery estimate
+
+fragility
+
+speed score
+
+misconception count
+
+exposure count
+
+blocked/unblocked
+
+last intervention type
+
+SessionRecord
+what was attempted
+
+what happened
+
+how much time was spent
+
+what evidence was gained
+
+what changed in mastery/risk
+
+Then missions stop being random.
+A mission becomes:
+
+the concrete execution unit for today’s plan
+
+Not:
+“pick highest-priority topic right now”
+But:
+“today is Day 6 of the plan; Math gets 40 minutes; current phase is repair + speed reinforcement; topic A is blocked; topic B is ready for timed practice”
+
+That is a completely different product.
+
+4. There is no Evidence-to-Decision Contract
+The coach should never move based on vague signals.
+
+It needs explicit rules for how evidence changes state.
+
+For example:
+
+Topic evidence model
+Per topic, track:
+
+attempts
+
+accuracy
+
+timed accuracy
+
+average response latency
+
+misconception tags triggered
+
+recall stability
+
+last seen date
+
+confidence estimate
+
+number of sessions attempted
+
+Then progression rules become deterministic.
+
+Example:
+
+if attempts < minimum evidence threshold, do not classify mastery yet
+
+if 2 sessions completed and accuracy < 40%, mark blocked
+
+if misconception family repeats 3 times, queue targeted_repair
+
+if untimed accuracy ≥ 75% but timed accuracy < 45%, queue speed_conversion
+
+if strong in recall but weak in application, queue worked_example + transfer drill
+
+if stable over 3 exposures, unlock next dependency topic
+
+This makes the coach feel intelligent.
+
+My strongest recommendation
+Build the coach around this loop:
+1. Readiness
+Can the system coach this student properly right now?
+
+2. Plan
+What should the student be doing over the next days/weeks?
+
+3. Execution
+What is today’s one primary mission?
+
+4. Evidence
+What did the student actually demonstrate?
+
+5. Adaptation
+How does today’s evidence change tomorrow’s plan?
+
+That loop should be the core architecture.
+
+What I would prioritize first
+P0 — Unbreak the experience
+Do these immediately:
+
+Delete dead code in CoachHub.tsx
+
+This is a hard blocker.
+
+Broken parse means nothing else matters.
+
+Kill the diagnostic fallback loop completely
+
+Diagnostics should be allowed only when:
+
+first-time student
+
+no evidence exists
+
+no generated plan exists
+
+Never use diagnostic as a fallback for missing content.
+
+Add content readiness guard
+
+Before mission generation, check:
+
+subjects selected
+
+content packs installed
+
+topics available
+
+question instances available
+
+If not ready, route to a specific recovery state.
+
+Wire real question loading
+
+Placeholder content destroys trust immediately.
+
+This is not cosmetic.
+
+It makes the whole coach feel fake.
+
+These four are the real emergency fixes.
+
+P1 — Install the coaching brain
+After that, implement:
+
+A. resolveNextCoachAction()
+This should become the single source of truth for Coach Hub.
+
+It returns something like:
+
+type
+
+title
+
+instruction
+
+ctaLabel
+
+route
+
+supportingContext
+
+urgency
+
+estimatedMinutes
+
+Example:
+
+continue_today_mission
+
+review_mission_results
+
+start_repair_session
+
+complete_subject_selection
+
+install_content_pack
+
+generate_study_plan
+
+Then Coach Hub becomes stable.
+
+B. Plan Engine
+Even a first version is enough if it is real.
+
+You do not need a perfect AI planner first.
+You need a deterministic planner first.
+
+Start with simple plan generation:
+
+take exam date
+
+calculate days remaining
+
+allocate subject budgets
+
+classify topics into:
+
+weak
+
+fragile
+
+stable
+
+strong
+
+create a rotating daily structure:
+
+learn
+
+guided practice
+
+timed drill
+
+review
+
+repair
+
+checkpoint
+
+Then adapt only one layer at a time.
+
+C. Topic state model
+This is essential.
+
+Right now your system sounds too session-centric.
+It must become topic-state-centric.
+
+The coach should not just know “a mission happened.”
+It should know:
+“Photosynthesis is fragile under time pressure but okay when untimed.”
+
+That is the level of intelligence students and parents will feel.
+
+P2 — Make the experience feel truly coached
+Only after the logic is solid:
+
+Coach Hub
+I agree with your “one clear next action” idea.
+
+But I would refine it slightly:
+
+One dominant next action
+
+plus secondary context beneath it
+
+So center screen should show:
+
+what you should do now
+
+why this is the next thing
+
+how long it will take
+
+what it contributes toward
+
+what happens after this
+
+That is better than a bare CTA.
+
+Example:
+
+Today’s Focus: Fractions Repair
+Because your last 2 sessions showed strong concept recognition but weak conversion accuracy under time.
+Time: 18 min
+Goal: reach 60% accuracy to unlock timed mixed practice
+
+[Start Session]
+
+That feels like a coach, not a dashboard.
+
+On specific items in your list
+Problem 1 — Coach abandons the user
+Correct diagnosis.
+
+But I would make the fix more explicit:
+
+Every major flow must end with a Completion Handoff Contract.
+
+After any diagnostic, mission, onboarding, repair session, or review:
+
+compute updated evidence
+
+recompute plan status
+
+resolve next action
+
+route to a purpose-built completion state
+
+Never return to a generic hub without a computed next step.
+
+Problem 2 — Diagnostic loop
+Good fix, but do not rely only on “if any episode exists, never show diagnostic.”
+
+That works as a temporary patch.
+Architecturally, it is too blunt.
+
+A better rule is:
+
+Diagnostic is only shown if:
+
+no baseline evidence exists for selected subjects
+
+no active plan exists
+
+the student is marked diagnostic_required
+
+Because later you may want:
+
+mini diagnostics
+
+subject-specific baseline checks
+
+readiness checkpoints
+
+So do not hardcode the app into a corner.
+
+Problem 3 — Placeholder questions
+This is one of the most damaging issues.
+
+I would introduce a QuestionSourceAdapter between Coach and Journey.
+
+MissionFlow should not directly improvise step content.
+It should request it through a contract like:
+
+subject
+
+topic
+
+subskill
+
+difficulty
+
+question type
+
+misconception target
+
+timing mode
+
+exclude recently seen
+
+desired count
+
+And then the adapter returns real question instances.
+
+This keeps Coach clean and lets the question intelligence system evolve independently.
+
+Problem 4 — No Study Plan
+Completely agree.
+
+I would also separate:
+
+long-range plan
+
+today’s mission
+
+live intervention
+
+These are different layers.
+
+Long-range plan
+Weeks / days
+
+Today mission
+Today’s execution block
+
+Live intervention
+What happens inside a session when the student struggles
+
+If you mix these together, the coach becomes messy.
+
+Problem 10 — No Time Tracking
+Yes, but do not make it only a countdown.
+
+Track both:
+
+Planned time
+What the student was expected to spend
+
+Actual engaged time
+What they really spent in active study
+
+And distinguish:
+
+coach mode entered
+
+mission started
+
+question answered
+
+idle timeout
+
+mission paused
+
+mission resumed
+
+coach mode exited
+
+That gives you:
+
+real effort tracking
+
+parent reporting
+
+realistic daily goals
+
+better adaptation
+
+Problem 11 — No Visual Roadmap
+Yes, but make sure the roadmap is derived from the plan engine.
+
+Do not build a timeline as a UI-only widget.
+It will become decorative nonsense.
+
+It should reflect:
+
+days remaining
+
+plan phase
+
+completed plan days
+
+current blockers
+
+readiness trend
+
+milestone dates
+
+weekly target attainment
+
+Problem 12 — No Adaptive Blocking
+Correct direction.
+
+I would only adjust one thing:
+
+Do not block on accuracy alone.
+
+Use a combined rule like:
+
+minimum attempts met
+
+minimum session count met
+
+low accuracy persists
+
+misconception recurrence persists
+
+no upward trend
+
+Because raw accuracy can be noisy.
+
+A student who got 2/5 should not always trigger the same response as a student who got 8/20 badly over two sessions with repeated misconception patterns.
+
+The one thing I would add that is missing from your document
+Problem 13: No explicit recovery states
+Right now your system seems to assume success paths.
+
+You need dedicated failure/recovery states such as:
+
+no content installed
+
+plan generation failed
+
+no questions found for selected topic
+
+session interrupted
+
+evidence insufficient
+
+today’s study budget exhausted
+
+topic blocked awaiting repair
+
+exam date changed, replan needed
+
+These should not be hidden as errors.
+They should be modeled states with designed UI.
+
+That will make the coach feel robust.
+
+The product principle I would use
+The coach should behave like this:
+Diagnose less. Plan more. Guide always. Adapt continuously. Never leave the student in ambiguity.
+
+That is the product north star.
+
+What I would do next, in exact order
+Remove the broken dead code and stabilize CoachHub.
+
+Add content readiness checks before any diagnostic/mission generation.
+
+Implement resolveNextCoachAction(studentId) as the one decision gateway.
+
+Replace placeholder step generation with a real question adapter.
+
+Build V1 Plan Engine with day plans and topic states.
+
+Add topic blockers and repair routing.
+
+Add time tracking with engagement events.
+
+Build Coach Hub around:
+
+one primary next action
+
+explanation
+
+time budget
+
+progress context
+
+Build the visual roadmap from real plan data.
+
+Add recovery states for all missing-data and no-content cases.
+
+If you want, I’ll turn this into a build-grade architecture spec with:
+
+tables
+
+resolver rules
+
+state machine
+
+API contracts
+
+Coach Hub decision logic
+
+plan engine pseudocode
+
+mission generation flow
+
+
+so what will be your implementation plan and how do i get this done , for good 
+
+I’m turning this into an execution sequence, not just design advice. The goal is to make the coach impossible to drift, loop, or fall back into fake behavior.
+
+Thought for a few seconds
+You get this done “for good” by stopping feature-first fixes and rebuilding the coach around a hard progression architecture.
+
+Not:
+
+patch screen
+
+patch bug
+
+patch mission
+
+patch route
+
+But:
+
+define the coach operating model
+
+define the state machine
+
+define the data contracts
+
+define the resolver
+
+define the plan engine
+
+then make every screen obey that system
+
+That is how this stops breaking.
+
+The implementation plan
+I would do this in 6 layers, in this order.
+
+PHASE 1 — Stabilize the foundation
+This phase is about removing anything that makes the system unpredictable.
+
+1.1 Remove all broken and orphaned code
+Immediate cleanup:
+
+delete the dead code block in CoachHub.tsx
+
+remove all commented JSX junk that can break parsing
+
+remove any temporary placeholder fallback rendering paths
+
+remove old unused coach components that are no longer part of the intended flow
+
+remove any fallback that silently routes back to diagnostic
+
+1.2 Freeze the current coach flow
+Before adding anything new, map the current flows:
+
+onboarding
+
+subject selection
+
+diagnostic
+
+coach hub
+
+mission flow
+
+mission completion
+
+overview
+
+review/debrief
+
+For each one, write:
+
+entry condition
+
+exit condition
+
+what data it expects
+
+what it writes
+
+where it routes next
+
+This is important because right now the problem is probably not only code quality.
+It is that screens are routing each other without a controlled contract.
+
+1.3 Add coach instrumentation immediately
+Before heavy refactor, add logging around all decision points.
+
+You need to see:
+
+why the hub chose what it chose
+
+why mission generation failed
+
+why topic seeding returned zero
+
+why a student was routed to diagnostic
+
+why no next action was available
+
+Add a structured debug event like:
+
+coach_state_resolved
+
+coach_next_action_resolved
+
+coach_content_readiness_failed
+
+coach_plan_generation_started
+
+coach_plan_generation_failed
+
+coach_mission_generation_started
+
+coach_mission_generation_failed
+
+coach_topic_seed_completed
+
+If you do not add this now, you will keep guessing later.
+
+PHASE 2 — Build the coach operating model
+This is the most important phase.
+This is the “for good” part.
+
+2.1 Define the canonical coach state machine
+Create a central model.
+
+Not page state.
+Not component state.
+Coach progression state.
+
+Example:
+
+type CoachLifecycleState =
+  | "onboarding_required"
+  | "subject_selection_required"
+  | "diagnostic_required"
+  | "content_readiness_required"
+  | "plan_generation_required"
+  | "ready_for_today_mission"
+  | "mission_in_progress"
+  | "mission_review_required"
+  | "repair_required"
+  | "blocked_on_topic"
+  | "plan_adjustment_required"
+  | "review_day"
+  | "exam_mode"
+  | "stalled_no_content";
+Then define transitions.
+
+Example:
+
+onboarding complete → subject selection or diagnostic
+
+subject selection complete → diagnostic or content readiness check
+
+diagnostic complete → plan generation
+
+plan generated → ready for today mission
+
+mission completed → review required
+
+review complete → next action resolver
+
+repeated failure → repair required
+
+no questions found → stalled no content
+
+This becomes the legal flow of the system.
+
+2.2 Create a single resolveCoachState(studentId) service
+This should be the core function.
+
+It checks:
+
+onboarding done?
+
+subjects selected?
+
+packs installed?
+
+topics available?
+
+question coverage available?
+
+diagnostic evidence exists?
+
+active plan exists?
+
+today’s plan item exists?
+
+active mission exists?
+
+blocked topics exist?
+
+required repair exists?
+
+review pending?
+
+Then it returns the single coach state.
+
+Every coach screen should rely on this.
+Not on scattered local checks.
+
+2.3 Create resolveNextCoachAction(studentId)
+This is the action layer on top of the state layer.
+
+Example return:
+
+type NextCoachAction = {
+  state: CoachLifecycleState;
+  actionType:
+    | "continue_onboarding"
+    | "select_subjects"
+    | "start_diagnostic"
+    | "install_content"
+    | "generate_plan"
+    | "start_today_mission"
+    | "resume_mission"
+    | "review_results"
+    | "start_repair"
+    | "view_today_plan";
+  title: string;
+  subtitle: string;
+  estimatedMinutes?: number;
+  route: string;
+  context?: Record<string, unknown>;
+};
+This function should be what powers the Coach Hub center panel.
+
+The hub must not invent actions on its own.
+
+PHASE 3 — Build the content readiness layer
+This is what prevents fake coaching.
+
+3.1 Create a CoachContentReadinessService
+This checks, per student and selected subject:
+
+selected subjects exist
+
+subject packs installed
+
+concept nodes available
+
+topic profiles seedable
+
+question instances available
+
+minimum question volume threshold met
+
+minimum topic coverage threshold met
+
+Return something like:
+
+type ContentReadinessStatus =
+  | "ready"
+  | "no_subjects_selected"
+  | "no_packs_installed"
+  | "no_topics_available"
+  | "topics_exist_but_no_questions"
+  | "insufficient_question_coverage";
+Include details:
+
+which subjects fail
+
+topic counts
+
+question counts
+
+missing content reasons
+
+3.2 Block mission and plan generation unless readiness is valid
+This is critical.
+
+Never do:
+
+“mission generation failed, so show diagnostic”
+
+“topics unavailable, so create placeholder questions”
+
+Instead:
+
+resolve readiness
+
+if not ready, show dedicated recovery action
+
+That is how you stop loops permanently.
+
+3.3 Create recovery states
+You need real UI states for:
+
+no content installed
+
+content installed but no questions
+
+selected subjects unsupported
+
+not enough question coverage to generate mission
+
+plan cannot be generated yet
+
+These are not errors.
+They are product states.
+
+PHASE 4 — Replace placeholder coaching with real evidence-driven content
+This is where the coach becomes real.
+
+4.1 Build a Question Source Adapter
+Do not let MissionFlow build fake step questions.
+
+Instead create a dedicated service:
+
+interface CoachQuestionRequest {
+  subjectId: string;
+  topicId: string;
+  subskill?: string;
+  questionType?: string;
+  difficultyBand?: string;
+  misconceptionTargets?: string[];
+  timingMode?: "untimed" | "timed";
+  excludeRecentlySeen?: boolean;
+  desiredCount: number;
+}
+Return:
+
+interface CoachQuestionResult {
+  questions: RealQuestionInstance[];
+  coverage: {
+    topicId: string;
+    totalFound: number;
+    difficultySpread: Record<string, number>;
+  };
+}
+This adapter should query:
+
+question_instances
+
+question_families
+
+j_concept_nodes
+
+intelligence tags from migration 031
+
+any topic classification metadata
+
+4.2 Refactor mission blueprint step generation
+Right now it sounds like generateStepsFromBlueprint() is too UI-local.
+
+Change it so blueprint generation does:
+
+determine instructional intent
+
+request question/material blocks
+
+request worked example blocks
+
+request explanation blocks
+
+request repair blocks
+
+assemble mission steps from real resources
+
+Meaning:
+the blueprint defines what kind of coaching
+the adapter supplies actual content
+
+4.3 Add strict no-placeholder policy
+If the question service returns zero questions:
+
+mission generation fails explicitly
+
+reason is logged
+
+coach state becomes a recovery or no-content state
+
+Never show fake questions again.
+
+That one rule protects trust.
+
+PHASE 5 — Build the Plan Engine
+This is what will transform the coach from reactive to strategic.
+
+5.1 Build the data model first
+You need proper plan entities.
+
+CoachPlan
+id
+
+studentId
+
+examTargetId
+
+startDate
+
+examDate
+
+totalDays
+
+dailyStudyBudgetMinutes
+
+selectedSubjects
+
+phaseModel
+
+status
+
+CoachPlanDay
+id
+
+planId
+
+date
+
+phase
+
+targetMinutes
+
+assignedActivities
+
+completionStatus
+
+carryoverMinutes
+
+notes
+
+PlanActivity
+id
+
+planDayId
+
+subjectId
+
+topicId
+
+activityType
+
+targetMinutes
+
+sequenceOrder
+
+targetOutcome
+
+status
+
+TopicProfile
+studentId
+
+subjectId
+
+topicId
+
+masteryEstimate
+
+fragilityScore
+
+speedScore
+
+misconceptionRecurrence
+
+evidenceCount
+
+lastSeenAt
+
+blockedStatus
+
+repairPriority
+
+SessionEvidence
+sessionId
+
+topicId
+
+activityType
+
+attemptCount
+
+correctCount
+
+accuracy
+
+timedAccuracy
+
+avgLatencyMs
+
+misconceptionTags
+
+confidenceScore
+
+completionQuality
+
+5.2 Build V1 plan generation rules
+Do not start with a fancy planner.
+Start deterministic.
+
+Inputs:
+
+exam date
+
+subjects
+
+daily time budget
+
+diagnostic evidence
+
+topic readiness
+
+weak/fragile/strong classification
+
+Logic:
+
+compute days remaining
+
+allocate time across subjects
+
+identify critical weak topics
+
+schedule plan phases:
+
+foundation
+
+strengthening
+
+timed practice
+
+mixed review
+
+final revision
+
+assign daily activity mix:
+
+learn
+
+guided practice
+
+worked example
+
+repair
+
+speed drill
+
+checkpoint
+
+review
+
+5.3 Create adaptation rules
+After every session:
+
+update topic profile
+
+update plan day status
+
+decide whether next day should change
+
+adjust blocked/unblocked states
+
+insert repair activities if needed
+
+reallocate minutes if student is behind
+
+This is where the coach becomes alive.
+
+PHASE 6 — Build the mission engine on top of the plan
+Mission generation should not be random anymore.
+
+6.1 Mission planner inputs
+Mission generation should take:
+
+today’s plan day
+
+current topic profiles
+
+active blockers
+
+unfinished repair obligations
+
+time remaining today
+
+recent exposures
+
+fatigue/load balancing rules
+
+6.2 Mission output
+Mission should output:
+
+mission title
+
+why this mission exists
+
+primary topic
+
+secondary topic if mixed
+
+step list
+
+expected duration
+
+unlock condition
+
+failure condition
+
+evidence targets
+
+Example:
+
+“Fractions Repair Session”
+
+reason: repeated denominator conversion misconception across 2 sessions
+
+duration: 18 min
+
+unlock condition: 60% guided accuracy and no repeated misconception on final 3 items
+
+This makes the mission explainable.
+
+6.3 Add adaptive blocking rules properly
+Blocking should be implemented in the topic profile layer, not as UI hacks.
+
+Suggested rule system:
+
+Block if:
+minimum 2 sessions completed
+
+attempts threshold met
+
+accuracy below threshold
+
+misconception recurrence high
+
+no positive trend
+
+Unblock if:
+repair session completed
+
+guided accuracy ≥ 60%
+
+misconception not repeated in last checkpoint items
+
+Escalate if:
+topic remains blocked after N repair attempts
+
+coach deploys deeper reteach / worked example / concept rebuild
+
+This should be a rule engine, not random conditionals scattered in screens.
+
+PHASE 7 — Rebuild Coach Hub around the resolver
+Only after the logic is sound.
+
+7.1 Redesign the Coach Hub contract
+Coach Hub should consume:
+
+current coach state
+
+next action
+
+today’s plan summary
+
+remaining minutes
+
+current readiness trajectory
+
+blockers
+
+streak / momentum / progress
+
+But visually it should show:
+
+Primary zone
+One dominant action:
+
+title
+
+why it matters
+
+time estimate
+
+CTA
+
+Secondary zone
+Supporting context:
+
+today’s progress
+
+where you are in the plan
+
+current phase
+
+blocked topics if any
+
+Tertiary zone
+Overview and history:
+
+roadmap
+
+recent sessions
+
+weekly trend
+
+The mistake would be turning the hub into noise again.
+
+7.2 Add a completion handoff flow
+Every flow must end by recomputing:
+
+content readiness
+
+topic evidence
+
+plan status
+
+coach state
+
+next action
+
+Then navigate to a handoff screen or directly to the refreshed Coach Hub with the new action.
+
+That is how you stop abandonment.
+
+PHASE 8 — Add real time tracking and engagement tracking
+8.1 Build a study session timer model
+Track:
+
+coach mode entered
+
+mission started
+
+mission paused
+
+resumed
+
+idle timeout
+
+coach mode exited
+
+mission completed
+
+Persist events to c_engagement_events.
+
+8.2 Track both planned and actual time
+You need:
+
+planned daily budget
+
+remaining budget
+
+actual active study time
+
+focus time
+
+drift time / idle time
+
+completed mission time
+
+This will feed:
+
+Coach Hub header
+
+parent reporting
+
+daily completion quality
+
+adaptation logic
+
+8.3 Do not bind time only to coach mode
+Coach mode active is not enough.
+Track actual engaged work.
+For example:
+
+answering questions
+
+reading explanation
+
+interacting with session
+
+inactivity timeout
+
+That gives cleaner analytics.
+
+PHASE 9 — Build the visual roadmap from real plan data
+This should come after the plan engine, not before.
+
+9.1 Timeline
+Show:
+
+plan start date
+
+today marker
+
+exam day
+
+current phase
+
+weekly completion
+
+readiness trend
+
+9.2 Today lane
+Horizontal activity cards:
+
+done
+
+current
+
+upcoming
+
+blocked
+
+deferred
+
+9.3 Readiness trajectory
+Show:
+
+current readiness
+
+target readiness
+
+whether the student is ahead / on track / at risk
+
+This becomes meaningful only if derived from real evidence.
+
+PHASE 10 — Harden the system with explicit recovery handling
+This is where “for good” really lands.
+
+You need deliberate handling for:
+
+no content
+
+plan generation failure
+
+mission generation failure
+
+session interruption
+
+no valid questions
+
+stale plan
+
+exam date changed
+
+subject selection incomplete
+
+insufficient evidence
+
+blocked topic saturation
+
+For each case define:
+
+system state
+
+user-facing screen
+
+recovery action
+
+logging event
+
+fallback route
+
+This prevents future regressions.
+
+The build order I would use week by week
+Sprint 1 — Foundation and visibility
+Goal: make the system debuggable and stop hard breakages.
+
+Deliverables:
+
+remove dead code
+
+map all coach flows
+
+add instrumentation
+
+centralize route checks
+
+remove fake diagnostic fallback
+
+enforce no-placeholder rule
+
+Sprint 2 — State and resolver layer
+Goal: one source of truth.
+
+Deliverables:
+
+CoachLifecycleState
+
+resolveCoachState()
+
+resolveNextCoachAction()
+
+content readiness service
+
+dedicated recovery states
+
+Sprint 3 — Real content integration
+Goal: make missions use real question data.
+
+Deliverables:
+
+question source adapter
+
+real step generation
+
+question filtering by subject/topic/type
+
+hard fail when no question coverage exists
+
+logs for mission content selection
+
+Sprint 4 — Plan engine V1
+Goal: structured day-by-day coaching.
+
+Deliverables:
+
+plan entities
+
+plan generation rules
+
+plan day creation
+
+topic profile seeding
+
+topic state persistence
+
+Sprint 5 — Adaptive coaching
+Goal: stop blind progression.
+
+Deliverables:
+
+evidence update rules
+
+blocking rules
+
+repair routing
+
+plan adaptation after sessions
+
+mission generation based on plan + evidence
+
+Sprint 6 — Experience polish
+Goal: make it feel premium and clear.
+
+Deliverables:
+
+Coach Hub redesign around next action
+
+time tracking
+
+roadmap UI
+
+completion handoff screens
+
+overview panel from real plan data
+
+The technical architecture I would enforce
+1. Domain services
+Keep this logic out of UI files.
+
+Create services such as:
+
+CoachStateService
+
+CoachNextActionService
+
+CoachContentReadinessService
+
+CoachPlanService
+
+CoachMissionService
+
+CoachEvidenceService
+
+CoachQuestionSourceAdapter
+
+CoachEngagementService
+
+UI components should consume outputs from these services.
+Not perform orchestration themselves.
+
+2. Clear separation of responsibility
+UI layer
+Renders and sends user actions.
+
+Orchestration layer
+Calls services and decides routes.
+
+Domain layer
+Contains rules.
+
+Data layer
+Queries DB and repositories.
+
+This separation is important because right now the bugs sound like orchestration logic is leaking into UI components.
+
+3. Treat the coach as a product engine, not a set of screens
+This is the mindset shift that fixes it permanently.
+
+How you actually get this done well
+1. Write the spec before the refactor
+Do not jump straight into code.
+
+Write a short internal architecture spec with:
+
+coach states
+
+transitions
+
+next action rules
+
+content readiness rules
+
+plan engine rules
+
+mission generation rules
+
+evidence update rules
+
+blocking rules
+
+recovery states
+
+Even 8–15 pages is enough if it is precise.
+
+2. Build one source of truth first
+Before redesigning anything visual, get these two functions working:
+
+resolveCoachState()
+
+resolveNextCoachAction()
+
+If those are correct, the rest becomes much easier.
+
+3. Replace implicit flows with explicit contracts
+Every major function should state:
+
+inputs
+
+outputs
+
+failure states
+
+For example:
+mission generation should never return “whatever”.
+It should return either:
+
+valid mission payload
+or
+
+explicit failure reason
+
+4. Use strict feature flags during rebuild
+Do not mix half-old and half-new behavior.
+Gate the new coaching architecture behind flags until each layer is stable.
+
+5. Add regression scenarios
+You need test scenarios like:
+
+first-time student with no subjects
+
+student with subjects but no packs
+
+student with packs but no questions
+
+student post-diagnostic
+
+student with active plan
+
+student with blocked topic
+
+student with pending mission review
+
+student after mission completion
+
+student with exam date updated
+
+These scenarios should be automated.
+
+What “done for good” looks like
+You know this is fixed when:
+
+no screen ever leaves the student without a next action
+
+diagnostic never appears except when legally required
+
+no placeholder question ever renders
+
+missions are generated from real content only
+
+every student has a plan or a clear reason they do not
+
+progression is blocked deliberately when needed
+
+today’s mission clearly comes from a broader plan
+
+time spent is tracked properly
+
+the hub always answers “what do I do now, why, and for how long?”
+
+That is the finish line.
+
+My recommendation for your exact next move
+Your immediate next move should be to create a Coach Architecture Refactor document with these sections:
+
+Current failure modes
+
+Canonical coach states
+
+Transition rules
+
+Next action resolver rules
+
+Content readiness contract
+
+Plan engine data model
+
+Mission generation contract
+
+Evidence update rules
+
+Blocking and repair rules
+
+Recovery states
+
+API/service boundaries
+
+Regression test scenarios
+
+Then implement in this order:
+
+cleanup
+
+state resolver
+
+readiness checks
+
+question adapter
+
+plan engine
+
+mission engine
+
+hub rebuild
+
+timer and roadmap
+
+hardening
+
+That is the clean path.
+
+I can turn this into the actual build-grade implementation document next, with exact tables, state diagrams, service contracts, pseudocode, and file/module breakdown.
+
+
+proceed with your recommendation  for my next move
+
+I’m converting this into the actual refactor document you can execute against. I’ll make it concrete enough to hand to an agent or dev team without ambiguity.
+
+Thought for 7s
+Coach Architecture Refactor Document
+This is the next move.
+
+The goal is not to “improve the coach.”
+The goal is to replace fragile screen-driven behavior with a deterministic coaching system that always knows:
+
+what state the student is in
+
+what the system is allowed to do next
+
+whether enough content exists
+
+what today’s plan is
+
+what mission to generate
+
+when to block, repair, adapt, or advance
+
+1. Purpose
+The Academic Coach must function as a guided academic operating system, not a dashboard and not a loose set of learning pages.
+
+The refactor must guarantee:
+
+the student is never abandoned
+
+diagnostics never loop
+
+placeholder content never appears
+
+missions come from real content
+
+every mission belongs to a plan
+
+performance evidence changes future behavior
+
+blocked learning is handled deliberately
+
+the Coach Hub always shows one dominant next action
+
+missing data/content leads to recovery states, not broken experiences
+
+2. Current Failure Modes
+2.1 Abandonment after flow completion
+After onboarding, diagnostic, or mission completion, the user lands on a generic surface with no clear guided next step.
+
+2.2 Diagnostic fallback loop
+When the system cannot plan or generate content, it falls back to diagnostics.
+
+2.3 Fake coaching content
+MissionFlow uses placeholder questions instead of real question data.
+
+2.4 No persistent study strategy
+The coach reacts to the present moment but has no durable multi-day instructional plan.
+
+2.5 Weak evidence integrity
+Some steps historically relied on self-report instead of verifiable answer data.
+
+2.6 Missing preconditions
+Subject selection and content readiness are not guaranteed before diagnosis or mission planning.
+
+2.7 UI-led orchestration
+Too much routing and decision logic is embedded in UI components instead of a central domain service.
+
+2.8 No explicit recovery handling
+When content is missing or generation fails, the system does not enter a deliberate product state.
+
+2.9 No real session time model
+There is no clean distinction between planned time, active study time, paused time, and idle time.
+
+2.10 No plan-derived roadmap
+The roadmap and timeline do not yet emerge from a real plan engine.
+
+3. Refactor Principles
+3.1 One source of truth
+Coach state and next action must come from a central resolver, not from individual pages.
+
+3.2 No fake fallbacks
+If content is unavailable, the system must enter a recovery state. It must never simulate intelligence with placeholders.
+
+3.3 Plan before mission
+Daily missions must be generated from a plan, not invented ad hoc.
+
+3.4 Evidence drives adaptation
+Performance must update topic state, blockers, repairs, and future plan decisions.
+
+3.5 UI renders decisions
+UI should render resolved decisions. It should not perform coaching reasoning.
+
+3.6 Recovery is a first-class state
+No content, failed plan generation, missing subjects, no questions, stale plan, interrupted session — all of these must be modeled explicitly.
+
+4. Canonical Coach States
+Create a canonical lifecycle enum.
+
+export type CoachLifecycleState =
+  | "onboarding_required"
+  | "subject_selection_required"
+  | "content_readiness_required"
+  | "diagnostic_required"
+  | "plan_generation_required"
+  | "ready_for_today_mission"
+  | "mission_in_progress"
+  | "mission_review_required"
+  | "repair_required"
+  | "blocked_on_topic"
+  | "plan_adjustment_required"
+  | "review_day"
+  | "exam_mode"
+  | "stalled_no_content";
+4.1 State meanings
+onboarding_required
+Student has not completed the coach onboarding baseline.
+
+subject_selection_required
+Student has not selected subjects, or subject scope is incomplete.
+
+content_readiness_required
+Selected subjects exist, but installed content/question coverage is not sufficient to proceed.
+
+diagnostic_required
+Student is coach-ready but lacks sufficient baseline evidence to build a plan.
+
+plan_generation_required
+Enough data exists to generate a plan, but no active plan exists yet.
+
+ready_for_today_mission
+Plan exists and today’s next executable activity can be generated.
+
+mission_in_progress
+A mission instance exists and is incomplete.
+
+mission_review_required
+Mission is complete, but evidence debrief/review handoff is pending.
+
+repair_required
+A targeted repair intervention is required before normal advancement.
+
+blocked_on_topic
+Current forward progression is intentionally blocked due to persistent weakness.
+
+plan_adjustment_required
+Plan exists, but exam date changed, subjects changed, or evidence drift requires re-planning.
+
+review_day
+The plan indicates review/revision focus rather than a fresh mission block.
+
+exam_mode
+Exam period behavior is active.
+
+stalled_no_content
+The system cannot proceed because required instructional content is absent.
+
+5. State Transition Rules
+Define legal transitions only.
+
+5.1 Transition summary
+onboarding complete -> subject selection or content readiness
+
+subject selection complete -> content readiness
+
+content readiness valid -> diagnostic or plan generation
+
+diagnostic complete -> plan generation
+
+plan generated -> ready_for_today_mission
+
+mission started -> mission_in_progress
+
+mission completed -> mission_review_required
+
+review completed -> ready_for_today_mission / repair_required / blocked_on_topic / review_day
+
+repeated failure -> repair_required
+
+unresolved low performance -> blocked_on_topic
+
+subject/exam change -> plan_adjustment_required
+
+plan repaired/regenerated -> ready_for_today_mission
+
+no usable content -> stalled_no_content or content_readiness_required
+
+5.2 Important rule
+Diagnostic is never a generic fallback.
+It may only appear if the resolver explicitly declares diagnostic_required.
+
+6. Resolver Services
+You need two core services.
+
+6.1 resolveCoachState(studentId)
+This service returns the canonical lifecycle state.
+
+Inputs checked
+onboarding status
+
+subject selection status
+
+content readiness status
+
+baseline evidence status
+
+active plan existence
+
+active mission existence
+
+pending review existence
+
+topic repair obligations
+
+topic blocker status
+
+plan validity
+
+exam phase
+
+Output
+type CoachStateResolution = {
+  state: CoachLifecycleState;
+  reasons: string[];
+  data: Record<string, unknown>;
+};
+Decision order
+Use strict order. Do not allow screens to override it.
+
+function resolveCoachState(studentId: string): CoachStateResolution {
+  if (!hasCompletedOnboarding(studentId)) {
+    return { state: "onboarding_required", reasons: ["onboarding_incomplete"], data: {} };
+  }
+
+  if (!hasSelectedSubjects(studentId)) {
+    return { state: "subject_selection_required", reasons: ["no_subjects"], data: {} };
+  }
+
+  const readiness = getContentReadiness(studentId);
+  if (readiness.status !== "ready") {
+    return {
+      state: readiness.status === "no_packs_installed" || readiness.status === "no_topics_available"
+        ? "stalled_no_content"
+        : "content_readiness_required",
+      reasons: [readiness.status],
+      data: { readiness }
+    };
+  }
+
+  if (hasPendingMissionReview(studentId)) {
+    return { state: "mission_review_required", reasons: ["pending_review"], data: {} };
+  }
+
+  if (hasActiveMission(studentId)) {
+    return { state: "mission_in_progress", reasons: ["active_mission"], data: {} };
+  }
+
+  if (requiresRepair(studentId)) {
+    return { state: "repair_required", reasons: ["repair_needed"], data: {} };
+  }
+
+  if (hasBlockedTopic(studentId)) {
+    return { state: "blocked_on_topic", reasons: ["topic_blocked"], data: {} };
+  }
+
+  if (!hasSufficientBaselineEvidence(studentId)) {
+    return { state: "diagnostic_required", reasons: ["insufficient_baseline"], data: {} };
+  }
+
+  if (!hasActivePlan(studentId)) {
+    return { state: "plan_generation_required", reasons: ["no_active_plan"], data: {} };
+  }
+
+  if (planNeedsAdjustment(studentId)) {
+    return { state: "plan_adjustment_required", reasons: ["plan_stale_or_changed"], data: {} };
+  }
+
+  if (isExamMode(studentId)) {
+    return { state: "exam_mode", reasons: ["exam_window"], data: {} };
+  }
+
+  if (isReviewDay(studentId)) {
+    return { state: "review_day", reasons: ["review_schedule"], data: {} };
+  }
+
+  return { state: "ready_for_today_mission", reasons: ["plan_ready"], data: {} };
+}
+6.2 resolveNextCoachAction(studentId)
+This is what the Coach Hub renders.
+
+type NextCoachAction = {
+  state: CoachLifecycleState;
+  actionType:
+    | "continue_onboarding"
+    | "select_subjects"
+    | "resolve_content"
+    | "start_diagnostic"
+    | "generate_plan"
+    | "start_today_mission"
+    | "resume_mission"
+    | "review_mission"
+    | "start_repair"
+    | "resolve_blocker"
+    | "review_today_plan";
+  title: string;
+  subtitle: string;
+  estimatedMinutes?: number;
+  route: string;
+  priority: "critical" | "high" | "normal";
+  context?: Record<string, unknown>;
+};
+Mapping rules
+onboarding_required -> continue_onboarding
+
+subject_selection_required -> select_subjects
+
+content_readiness_required -> resolve_content
+
+diagnostic_required -> start_diagnostic
+
+plan_generation_required -> generate_plan
+
+mission_in_progress -> resume_mission
+
+mission_review_required -> review_mission
+
+repair_required -> start_repair
+
+blocked_on_topic -> resolve_blocker
+
+review_day -> review_today_plan
+
+ready_for_today_mission -> start_today_mission
+
+7. Content Readiness Contract
+Build a dedicated readiness layer.
+
+7.1 Content readiness statuses
+type ContentReadinessStatus =
+  | "ready"
+  | "no_subjects_selected"
+  | "no_packs_installed"
+  | "no_topics_available"
+  | "topics_exist_but_no_questions"
+  | "insufficient_question_coverage";
+7.2 Readiness response
+type ContentReadinessResult = {
+  status: ContentReadinessStatus;
+  subjects: Array<{
+    subjectId: string;
+    topicCount: number;
+    questionCount: number;
+    packInstalled: boolean;
+    minimumCoverageMet: boolean;
+    failures: string[];
+  }>;
+  summary: {
+    totalSubjects: number;
+    readySubjects: number;
+    failedSubjects: number;
+  };
+};
+7.3 Readiness rules
+For each selected subject:
+
+subject must exist
+
+a Journey content pack must be installed
+
+concept nodes must exist
+
+topic profiles must be seedable
+
+question instances must exist
+
+minimum coverage threshold must be satisfied
+
+Suggested thresholds
+minimum 1 concept/topic node for seeding
+
+minimum 10 question instances for subject-level baseline
+
+minimum 3 question instances per mission-eligible topic
+
+at least 1 valid question family path for adaptive retrieval
+
+These thresholds can be tuned, but they must exist.
+
+7.4 Hard rule
+If readiness is not valid:
+
+no plan generation
+
+no mission generation
+
+no placeholder content
+
+no diagnostic fallback
+
+8. Plan Engine Specification
+The plan engine converts exam target + subjects + evidence into a multi-day program.
+
+8.1 Core plan entities
+coach_plans
+id
+
+student_id
+
+exam_target_id
+
+start_date
+
+exam_date
+
+total_days
+
+daily_budget_minutes
+
+status
+
+phase_model
+
+created_at
+
+updated_at
+
+coach_plan_days
+id
+
+plan_id
+
+date
+
+phase
+
+target_minutes
+
+status
+
+carryover_minutes
+
+notes
+
+coach_plan_activities
+id
+
+plan_day_id
+
+subject_id
+
+topic_id
+
+activity_type
+
+sequence_order
+
+target_minutes
+
+target_outcome
+
+status
+
+coach_topic_profiles
+student_id
+
+subject_id
+
+topic_id
+
+mastery_estimate
+
+fragility_score
+
+speed_score
+
+misconception_recurrence
+
+evidence_count
+
+attempt_count
+
+last_seen_at
+
+blocked_status
+
+repair_priority
+
+baseline_seed_source
+
+coach_session_evidence
+id
+
+mission_id
+
+student_id
+
+subject_id
+
+topic_id
+
+activity_type
+
+attempt_count
+
+correct_count
+
+accuracy
+
+timed_accuracy
+
+avg_latency_ms
+
+misconception_tags
+
+confidence_score
+
+completed_at
+
+8.2 Plan inputs
+exam date
+
+selected subjects
+
+daily study budget
+
+diagnostic evidence
+
+seeded topic profiles
+
+content coverage
+
+current date
+
+8.3 Plan outputs
+dated plan days
+
+plan phases
+
+daily activities
+
+target minutes
+
+topic sequencing
+
+repair reservations
+
+milestone/checkpoint days
+
+8.4 Suggested phase model
+This is deterministic V1.
+
+Phase A — Foundation
+concepts
+
+definitions
+
+recognition
+
+guided practice
+
+Phase B — Strengthening
+worked examples
+
+structured application
+
+misconception detection
+
+Phase C — Performance
+speed drills
+
+timed practice
+
+mixed-topic sessions
+
+Phase D — Consolidation
+review
+
+fragile-topic repair
+
+checkpoint testing
+
+Phase E — Final Revision
+exam simulation
+
+confidence stabilization
+
+rapid repair bursts
+
+8.5 V1 plan generation logic
+function generateCoachPlan(input: PlanInput): CoachPlan {
+  const daysRemaining = diffInDays(input.currentDate, input.examDate);
+  const subjectWeights = allocateSubjectTime(input.subjects, input.evidence);
+  const topicBuckets = classifyTopics(input.topicProfiles);
+
+  const phaseMap = buildPhaseMap(daysRemaining);
+  const planDays = [];
+
+  for (const day of eachDayUntilExam(input.currentDate, input.examDate)) {
+    const phase = phaseMap[day];
+    const budget = input.dailyBudgetMinutes;
+
+    const activities = buildDailyActivities({
+      phase,
+      budget,
+      subjectWeights,
+      topicBuckets,
+      evidence: input.evidence
+    });
+
+    planDays.push(createPlanDay(day, phase, budget, activities));
+  }
+
+  return persistPlan(planDays);
+}
+8.6 Daily activity types
+learn
+
+guided_practice
+
+worked_example
+
+review
+
+speed_drill
+
+repair
+
+checkpoint
+
+mixed_test
+
+9. Mission Generation Contract
+Mission generation must no longer create fake step content.
+
+9.1 Mission generation inputs
+current plan day
+
+selected activity block
+
+topic profile state
+
+active blockers
+
+recent exposures
+
+content readiness
+
+time remaining today
+
+9.2 Mission generation outputs
+type GeneratedMission = {
+  missionId: string;
+  title: string;
+  reason: string;
+  subjectId: string;
+  primaryTopicId: string;
+  secondaryTopicIds?: string[];
+  activityType: string;
+  targetMinutes: number;
+  unlockCondition?: string;
+  failureCondition?: string;
+  steps: MissionStep[];
+};
+9.3 Mission step types
+intro/explanation
+
+worked example
+
+concept recall MCQ
+
+guided application MCQ
+
+mixed practice
+
+timed drill
+
+review summary
+
+debrief prompt
+
+9.4 Hard rule
+If real content cannot be assembled, mission generation fails explicitly and returns a reason. It must not fabricate placeholder question steps.
+
+10. Question Source Adapter
+Create a clean adapter between Coach and the question intelligence/content system.
+
+10.1 Request contract
+interface CoachQuestionRequest {
+  studentId: string;
+  subjectId: string;
+  topicId: string;
+  activityType: string;
+  questionType?: string;
+  difficultyBand?: "low" | "mid" | "high";
+  timingMode?: "untimed" | "timed";
+  misconceptionTargets?: string[];
+  excludeRecentlySeen?: boolean;
+  desiredCount: number;
+}
+10.2 Response contract
+interface CoachQuestionResponse {
+  questions: RealQuestionInstance[];
+  totalFound: number;
+  coverage: {
+    topicId: string;
+    familyCount: number;
+    difficultySpread: Record<string, number>;
+  };
+  warnings?: string[];
+}
+10.3 Data sources
+The adapter should query from:
+
+j_concept_nodes
+
+question_instances
+
+question_families
+
+question classification/intelligence tags from migration 031
+
+misconception mappings where available
+
+10.4 Retrieval rules
+Support:
+
+by subject
+
+by topic
+
+by question type
+
+by difficulty
+
+by misconception target
+
+by recency exclusion
+
+by timing suitability
+
+by family diversity
+
+11. Topic Profile and Evidence Model
+The coach must reason at topic level, not just session level.
+
+11.1 Topic profile fields
+mastery estimate
+
+fragility score
+
+speed score
+
+misconception recurrence
+
+evidence count
+
+timed vs untimed performance
+
+recency
+
+blocked status
+
+repair priority
+
+11.2 Evidence update rules
+After each mission or activity segment:
+
+update attempts
+
+update correct count
+
+update untimed accuracy
+
+update timed accuracy
+
+update avg latency
+
+increment misconception recurrence for matching tags
+
+update mastery estimate
+
+update fragility
+
+update repair priority
+
+decide block/unblock/advance
+
+11.3 Example derived signals
+Mastery
+A weighted value from recent accuracy, stability, and transfer performance.
+
+Fragility
+High if performance collapses under time pressure or after spacing.
+
+Speed score
+High if correctness is maintained under reduced time.
+
+Misconception recurrence
+Count of repeated conceptual failure patterns across exposures.
+
+12. Blocking and Repair Rules
+Do not let the system move blindly to new topics when the student is failing persistently.
+
+12.1 Suggested block rule
+Block a topic if all are true:
+
+at least 2 completed sessions on topic
+
+attempt threshold met
+
+accuracy below 40%
+
+misconception recurrence above threshold
+
+no positive trend
+
+12.2 Suggested unblock rule
+Unblock if:
+
+repair session completed
+
+guided accuracy >= 60%
+
+misconception absent on last checkpoint set
+
+12.3 Repair triggers
+Trigger repair if:
+
+repeated misconception 3+ times
+
+untimed accuracy acceptable but timed accuracy collapses
+
+strong recognition but weak application
+
+failure to transfer concept across family variants
+
+12.4 Repair activity types
+reteach
+
+worked example
+
+guided practice
+
+contrast pair drill
+
+misconception spotlight
+
+slowed-down speed rebuild
+
+checkpoint repair test
+
+13. Recovery States
+This is missing today and must be added.
+
+Every failure mode should become a designed state.
+
+13.1 Recovery state list
+No subjects selected
+Route to subject selection.
+
+No packs installed
+Route to content installation/import guidance.
+
+Topics available but no questions
+Show content coverage issue and prevent mission generation.
+
+Insufficient question coverage
+Allow limited coaching only if threshold policy permits; otherwise block.
+
+Plan generation failed
+Show retry/rebuild state with logged reason.
+
+Mission generation failed
+Show “coach cannot assemble this session yet” recovery state.
+
+Session interrupted
+Offer resume or restart decision.
+
+Plan stale
+Recompute because exam date or subject scope changed.
+
+Topic blocked
+Force repair path instead of forward mission.
+
+Daily budget exhausted
+Move to review-only or session-complete state.
+
+14. Time and Engagement Tracking
+Add a real study time model.
+
+14.1 Track events in c_engagement_events
+coach_mode_entered
+
+coach_mode_exited
+
+mission_started
+
+mission_paused
+
+mission_resumed
+
+mission_completed
+
+idle_timeout
+
+question_answered
+
+review_opened
+
+repair_started
+
+14.2 Metrics derived
+planned minutes today
+
+actual engaged minutes
+
+paused minutes
+
+idle minutes
+
+remaining budget
+
+mission effort quality
+
+consistency streak
+
+14.3 Header contract
+Coach Hub header should show:
+
+today’s planned study budget
+
+used active minutes
+
+remaining minutes
+
+current session state
+
+15. Coach Hub Contract
+The hub must be rebuilt around the resolver.
+
+15.1 Primary zone
+One dominant next action only.
+
+Required fields:
+
+title
+
+why this is next
+
+estimated time
+
+CTA
+
+Example:
+“Fractions Repair”
+“Your last 2 sessions show repeated denominator conversion mistakes. Repair this before moving on.”
+“18 min”
+
+15.2 Secondary zone
+Context:
+
+current phase
+
+today’s progress
+
+readiness trend
+
+current blockers
+
+15.3 Tertiary zone
+Overview:
+
+roadmap
+
+recent completed sessions
+
+this week’s completion
+
+exam countdown
+
+15.4 Hard rule
+Coach Hub does not invent next actions.
+It only renders resolveNextCoachAction(studentId).
+
+16. API and Service Boundaries
+Keep the logic out of components.
+
+16.1 Recommended service modules
+CoachStateService
+
+CoachNextActionService
+
+CoachContentReadinessService
+
+CoachPlanService
+
+CoachMissionService
+
+CoachEvidenceService
+
+CoachTopicProfileService
+
+CoachQuestionSourceAdapter
+
+CoachEngagementService
+
+16.2 Responsibility split
+UI layer
+Renders data and sends events.
+
+Application/orchestration layer
+Calls services and coordinates route transitions.
+
+Domain layer
+Contains decision logic, rules, state resolution, plan rules, blocker rules.
+
+Data layer
+Repositories and DB access.
+
+17. Suggested File Structure
+Adjust to your repo conventions, but keep the separation.
+
+src/
+  features/
+    coach/
+      domain/
+        types/
+          coach-state.ts
+          coach-action.ts
+          coach-plan.ts
+          coach-topic-profile.ts
+          coach-readiness.ts
+        services/
+          CoachStateService.ts
+          CoachNextActionService.ts
+          CoachContentReadinessService.ts
+          CoachPlanService.ts
+          CoachMissionService.ts
+          CoachEvidenceService.ts
+          CoachTopicProfileService.ts
+          CoachEngagementService.ts
+          CoachQuestionSourceAdapter.ts
+        rules/
+          state-rules.ts
+          readiness-rules.ts
+          plan-rules.ts
+          mission-rules.ts
+          blocker-rules.ts
+          evidence-rules.ts
+        repositories/
+          CoachPlanRepository.ts
+          CoachMissionRepository.ts
+          CoachTopicProfileRepository.ts
+          CoachEvidenceRepository.ts
+          CoachEngagementRepository.ts
+      application/
+        resolveCoachState.ts
+        resolveNextCoachAction.ts
+        generateCoachPlan.ts
+        generateMission.ts
+        updateMissionEvidence.ts
+      ui/
+        pages/
+          CoachHubPage.tsx
+          CoachOnboardingPage.tsx
+          CoachDiagnosticPage.tsx
+          CoachMissionPage.tsx
+          CoachReviewPage.tsx
+          CoachRecoveryPage.tsx
+        components/
+          CoachNextActionCard.tsx
+          CoachRoadmap.tsx
+          CoachTimer.tsx
+          CoachProgressLane.tsx
+18. Database Changes
+You already have some coach-related storage, but likely need formal additions.
+
+18.1 Required tables or equivalent models
+coach_plans
+
+coach_plan_days
+
+coach_plan_activities
+
+coach_topic_profiles
+
+coach_session_evidence
+
+coach_blockers
+
+coach_repair_obligations
+
+coach_state_snapshots optional
+
+leverage existing c_engagement_events
+
+18.2 Important indexes
+by student_id
+
+by student_id + date
+
+by student_id + topic_id
+
+by plan_id + date
+
+by mission_id
+
+by subject_id + topic_id for retrieval
+
+19. Implementation Phases
+This is the execution order.
+
+Phase 1 — Stabilize and expose reality
+Goal: stop hard breakage and stop fake behavior.
+
+Deliverables
+delete dead code from CoachHub.tsx
+
+remove broken commented/orphaned JSX
+
+add structured coach debug instrumentation
+
+remove any silent diagnostic fallback
+
+enforce no-placeholder rendering policy
+
+Done means
+coach routes do not crash
+
+logs show why decisions were made
+
+placeholder questions can no longer render
+
+Phase 2 — Install the coach resolver layer
+Goal: centralize progression logic.
+
+Deliverables
+CoachLifecycleState
+
+resolveCoachState()
+
+resolveNextCoachAction()
+
+route guards consume resolver outputs
+
+Coach Hub reads next action from resolver
+
+Done means
+all key coach pages respect a central state model
+
+no screen independently decides the next academic step
+
+Phase 3 — Install content readiness
+Goal: no more pretending content exists.
+
+Deliverables
+CoachContentReadinessService
+
+thresholds and readiness statuses
+
+dedicated recovery screens
+
+mission and plan generation blocked unless ready
+
+Done means
+no fallback to diagnostics because content is missing
+
+missing content is surfaced as a product state
+
+Phase 4 — Wire real question/content retrieval
+Goal: MissionFlow becomes real.
+
+Deliverables
+CoachQuestionSourceAdapter
+
+step generation uses real question instances
+
+filtering by subject/topic/type/difficulty
+
+mission generation explicit failure reasons
+
+Done means
+all mission questions come from real data
+
+fake content path is gone
+
+Phase 5 — Build plan engine V1
+Goal: structured daily coaching.
+
+Deliverables
+plan tables/models
+
+topic profile seeding
+
+deterministic plan generation
+
+daily activity creation
+
+plan lifecycle status
+
+Done means
+each student can have a dated coach plan
+
+today’s mission emerges from the plan
+
+Phase 6 — Evidence-driven adaptation
+Goal: make the coach actually intelligent.
+
+Deliverables
+session evidence persistence
+
+topic profile updates
+
+blocking rules
+
+repair triggers
+
+plan adjustment rules
+
+Done means
+future sessions change based on actual performance
+
+low-performance topics do not get blindly bypassed
+
+Phase 7 — Experience rebuild
+Goal: make the product feel premium and clear.
+
+Deliverables
+Coach Hub redesign around one dominant next action
+
+timer header
+
+roadmap derived from plan
+
+completion handoff state after every mission
+
+today progress lane
+
+Done means
+student always knows what to do now
+
+roadmap reflects real plan data
+
+no abandonment after flow completion
+
+Phase 8 — Hardening and regression protection
+Goal: lock it down.
+
+Deliverables
+scenario-based tests
+
+resolver tests
+
+mission generation tests
+
+readiness tests
+
+blocker tests
+
+interrupted session recovery tests
+
+Done means
+future regressions are caught automatically
+
+20. Regression Test Scenarios
+These should be formal test cases.
+
+20.1 New student, nothing set up
+Expected:
+
+onboarding_required
+
+20.2 Onboarding done, no subjects
+Expected:
+
+subject_selection_required
+
+20.3 Subjects selected, no content packs
+Expected:
+
+content_readiness_required or stalled_no_content
+
+20.4 Packs installed, topics exist, no questions
+Expected:
+
+content_readiness_required
+
+no diagnostic fallback
+
+no mission generation
+
+20.5 Content ready, no evidence
+Expected:
+
+diagnostic_required
+
+20.6 Diagnostic completed, no plan yet
+Expected:
+
+plan_generation_required
+
+20.7 Plan exists, no active mission
+Expected:
+
+ready_for_today_mission
+
+20.8 Mission started but incomplete
+Expected:
+
+mission_in_progress
+
+20.9 Mission complete, review pending
+Expected:
+
+mission_review_required
+
+20.10 Repeated low performance
+Expected:
+
+repair_required or blocked_on_topic
+
+20.11 Exam date changed
+Expected:
+
+plan_adjustment_required
+
+20.12 Interrupted mission
+Expected:
+
+mission_in_progress with resume path
+
+21. Immediate Coding Priorities
+This is the exact order I would hand to an agent.
+
+Priority 1
+Delete dead code and stop syntax/parser instability.
+
+Priority 2
+Create CoachLifecycleState, resolveCoachState(), resolveNextCoachAction().
+
+Priority 3
+Create CoachContentReadinessService and block fake flows.
+
+Priority 4
+Create CoachQuestionSourceAdapter and remove placeholder step generation.
+
+Priority 5
+Add plan entities and deterministic V1 plan generation.
+
+Priority 6
+Add evidence persistence and topic profile updates.
+
+Priority 7
+Add blocking/repair rules.
+
+Priority 8
+Rebuild Coach Hub on resolver outputs.
+
+Priority 9
+Add timer and roadmap from plan data.
+
+Priority 10
+Add regression tests and recovery-state hardening.
+
+22. Non-Negotiable Rules
+These rules should be enforced across the coach system.
+
+No placeholder questions.
+
+No diagnostic fallback unless state explicitly says diagnostic required.
+
+No mission generation without valid content readiness.
+
+No screen decides academic next steps outside the resolver.
+
+No forward topic progression when blocker rules say stop.
+
+No roadmap UI that is not backed by actual plan data.
+
+No completion flow ends without recomputing state and next action.
+
+No silent generation failure. Every failure must be explicit and logged.
+
+23. Definition of Done
+The coach is “done for good” when:
+
+every student is always in exactly one legal coach lifecycle state
+
+every state resolves to a deliberate next action
+
+all missions use real content from the question/content system
+
+every student either has a plan or a clear reason they do not
+
+topic weakness updates future coaching
+
+blocked topics trigger repair, not avoidance
+
+Coach Hub always shows one clear next move
+
+missing content leads to recovery states, not loops
+
+time spent is tracked correctly
+
+regression tests protect the architecture
+
+24. What you should do right after this
+Create one internal implementation task called:
+
+“Coach Core Refactor — State, Readiness, Plan, Mission, Evidence”
+
+Then break it into these work packages:
+
+coach-core-cleanup
+
+coach-state-resolver
+
+coach-content-readiness
+
+coach-question-adapter
+
+coach-plan-engine-v1
+
+coach-evidence-topic-profiles
+
+coach-blocking-and-repair
+
+coach-hub-rebuild
+
+coach-timer-and-roadmap
+
+coach-regression-suite
+
+Then assign every UI change to depend on domain completion, not the other way around.
+
+25. Recommended first implementation ticket set
+Here is the first ticket batch I would create.
+
+Ticket 1 — Remove dead code and illegal comments in CoachHub
+remove broken code block lines 684–856
+
+ensure clean parse
+
+remove abandoned temporary comment/template hacks
+
+Ticket 2 — Add CoachLifecycleState and state resolver
+define enum
+
+implement resolveCoachState(studentId)
+
+add unit tests for state order
+
+Ticket 3 — Add NextCoachAction resolver
+implement resolveNextCoachAction(studentId)
+
+wire Coach Hub CTA to resolver output
+
+Ticket 4 — Add content readiness service
+validate selected subjects
+
+validate pack installation
+
+validate topics and questions
+
+return readiness status and reasons
+
+Ticket 5 — Prevent mission generation on readiness failure
+replace any diagnostic fallback
+
+add recovery screen route/state
+
+Ticket 6 — Build CoachQuestionSourceAdapter
+retrieve real questions from question tables
+
+remove placeholder StepQuestion generation
+
+Ticket 7 — Add plan tables and V1 plan generation
+create plan entities
+
+seed topic profiles
+
+generate first daily plan
+
+If you want, the next thing I’ll do is turn this into a developer execution pack with:
+
+exact tickets
+
+acceptance criteria
+
+pseudocode per service
+
+DB schema draft
+
+agent prompt pack for implementing each module one by one.
+
+
+i want to build a brain for the coach that will reason think and make everything work perfectly in sync '
+
+The right move is to design the coach brain as a controlled intelligence stack, not a single AI prompt. I’m laying it out as a hybrid system: deterministic core for truth and progression, reasoning layer for adaptation, and orchestration layer to keep every feature in sync.
+
+Thought for 14s
+Yes. That is exactly the right direction.
+
+But the most important thing is this:
+
+Do not build “the brain” as one giant AI agent.
+Build it as a layered coaching intelligence system where each part has a precise job.
+
+If you build one vague brain that “thinks about everything,” it will become unstable, inconsistent, expensive, and impossible to trust.
+
+What you want is:
+
+The Coach Brain
+A central intelligence layer that can:
+
+understand the student
+
+understand the syllabus and topic dependencies
+
+understand the exam target
+
+understand what happened in each session
+
+decide what should happen next
+
+generate plans
+
+generate missions
+
+detect weakness
+
+block forward movement when necessary
+
+adapt strategy over time
+
+keep all screens, flows, timers, roadmaps, and interventions in sync
+
+That is not one module.
+That is a brain architecture.
+
+1. The correct way to think about the Coach Brain
+The Coach Brain should be the academic control center of the product.
+
+It should sit above:
+
+Coach Hub
+
+Mission Flow
+
+Diagnostic
+
+Review / Debrief
+
+Timeline / Roadmap
+
+Timer / Time Budget
+
+Intervention cards
+
+Parent feedback loop
+
+Topic profiles
+
+Plan engine
+
+Question engine
+
+Every one of those should ask the brain:
+
+what is true right now?
+
+what matters most right now?
+
+what should happen next?
+
+what should be shown?
+
+what should be blocked?
+
+what should be updated?
+
+So the brain is not a page.
+It is not a UI.
+It is not a chatbot.
+It is a decision system.
+
+2. The biggest design decision: hybrid brain, not pure AI
+You need a hybrid brain:
+
+A. Deterministic Core
+This handles truth, state, rules, safety, progression, eligibility, timing, blockers, readiness, and plan structure.
+
+This part must be strict and predictable.
+
+B. Reasoning Layer
+This interprets patterns, chooses strategies, explains causes, selects interventions, and adapts coaching style.
+
+This can use more flexible reasoning.
+
+C. Orchestration Layer
+This keeps all subsystems synchronized.
+
+This is what turns “thought” into actual system behavior.
+
+That is the winning structure.
+
+3. The Brain should have 9 major engines
+This is the full stack I would build.
+
+Layer 1 — Perception Engine
+This is how the brain sees the student and the system.
+
+It ingests signals from everywhere.
+
+Inputs
+onboarding data
+
+selected subjects
+
+exam target and exam date
+
+diagnostic performance
+
+mission results
+
+question-level answer data
+
+speed / latency data
+
+misconception tags
+
+time spent
+
+skipped items
+
+retries
+
+topic history
+
+streaks
+
+recent fatigue patterns
+
+parent feedback
+
+teacher/coach overrides
+
+content readiness status
+
+Purpose
+Turn raw events into usable facts.
+
+Output
+Structured evidence objects like:
+
+student readiness
+
+topic performance
+
+time discipline
+
+weakness clusters
+
+active blockers
+
+plan completion status
+
+confidence degradation
+
+performance under pressure
+
+likely misconception families
+
+Without this layer, the brain is blind.
+
+Layer 2 — Student Model Engine
+This is the brain’s internal model of the learner.
+
+The system should not just know scores.
+It should know the student profile academically.
+
+What it stores
+current grade / level
+
+subjects
+
+exam target
+
+learning pace
+
+preferred response mode
+
+consistency profile
+
+speed profile
+
+accuracy profile
+
+fragility profile
+
+persistence profile
+
+misconception tendencies
+
+concept recognition strength
+
+application strength
+
+timed-performance stability
+
+confidence drift
+
+recovery response after failure
+
+Example outputs
+“strong in concept recognition, weak in application”
+
+“performs well untimed, collapses under time pressure”
+
+“keeps repeating symbol interpretation errors”
+
+“knows formulas but fails to identify when to use them”
+
+“benefits from worked examples before mixed practice”
+
+This becomes the brain’s learner identity layer.
+
+Layer 3 — Knowledge Graph / Curriculum Intelligence Engine
+The coach brain must understand the academic world, not just the student.
+
+It needs a map of:
+
+subject
+
+topic
+
+subtopic
+
+concept
+
+formula
+
+definition
+
+procedure
+
+dependency
+
+prerequisite
+
+common confusion pair
+
+misconception family
+
+question family
+
+exam frequency
+
+difficulty band
+
+Example
+For mathematics:
+
+Fractions may connect to:
+
+ratio
+
+percentages
+
+LCM
+
+simplification
+
+algebraic fractions
+
+The brain should know:
+
+what comes before what
+
+what breaks if this topic is weak
+
+what future topics depend on this one
+
+what kinds of errors signal foundational weakness
+
+This engine is what stops the coach from making shallow decisions.
+
+Layer 4 — Evidence Engine
+This is where raw student performance becomes interpreted truth.
+
+This engine updates topic state after every meaningful action.
+
+It should compute
+attempts
+
+correct count
+
+accuracy
+
+timed accuracy
+
+average latency
+
+first-try success
+
+retry dependency
+
+misconception recurrence
+
+retention stability
+
+transfer success
+
+error cluster frequency
+
+question family strength
+
+pressure drop
+
+readiness delta
+
+It should maintain per-topic state
+mastery estimate
+
+fragility score
+
+speed score
+
+misconception score
+
+exposure count
+
+evidence confidence
+
+repair urgency
+
+blocked status
+
+This is one of the most important engines in the whole brain.
+
+Because if evidence is weak, all decisions become weak.
+
+Layer 5 — Plan Engine
+This is the long-horizon strategic mind of the coach.
+
+It answers:
+
+what is the overall plan to get this student ready?
+
+how many days remain?
+
+what should happen this week?
+
+what should happen today?
+
+how should time be allocated?
+
+what is the current phase of preparation?
+
+Inputs
+exam date
+
+subject set
+
+daily time budget
+
+topic states
+
+diagnostic evidence
+
+content coverage
+
+progress to date
+
+Outputs
+full plan
+
+day plan
+
+phase model
+
+milestones
+
+checkpoint schedule
+
+daily targets
+
+backlog
+
+catch-up rules
+
+review day rules
+
+final revision strategy
+
+This is the engine that gives the coach structure.
+
+Without this, the brain is clever but directionless.
+
+Layer 6 — Mission Planner
+This is the short-horizon tactical mind.
+
+It converts the plan into executable sessions.
+
+It answers:
+
+what should the student do right now?
+
+what exact mission should be generated?
+
+which topic should be practiced?
+
+which question type should be used?
+
+should this be a repair session, speed drill, or review?
+
+how long should the mission be?
+
+what is the unlock condition?
+
+Mission planner inputs
+today’s plan block
+
+active blockers
+
+repair obligations
+
+current energy/load estimate
+
+topic state
+
+recent exposures
+
+available question coverage
+
+remaining study budget
+
+Mission planner outputs
+mission title
+
+reason
+
+target minutes
+
+topic list
+
+activity type
+
+ordered steps
+
+expected evidence outcomes
+
+pass/unlock condition
+
+fail/repair escalation condition
+
+This engine is what drives Mission Flow.
+
+Layer 7 — Intervention Engine
+This is the “coach instinct” layer.
+
+When the student struggles, this engine decides how to respond.
+
+It should not only say:
+“wrong answer”
+
+It should decide:
+
+reteach?
+
+slow down?
+
+show worked example?
+
+ask concept check?
+
+contrast with lookalike concept?
+
+switch from timed to untimed?
+
+force repair?
+
+reduce cognitive load?
+
+hold topic progression?
+
+trigger confidence rescue?
+
+Example triggers
+repeated misconception in same family
+
+low accuracy but high confidence
+
+correct reasoning but calculation slips
+
+correct concept but wrong method choice
+
+speed collapse
+
+panic pattern under timer
+
+Example interventions
+misconception spotlight
+
+worked example replay
+
+comparison card
+
+guided step breakdown
+
+strategy hint
+
+slow-mode practice
+
+targeted mini review
+
+title defense delay
+
+repair burst
+
+This is what makes the coach feel alive.
+
+Layer 8 — Synchronization / Orchestrator Engine
+This is the engine that keeps everything in sync.
+
+It ensures that when one thing changes, the rest of the system updates correctly.
+
+Example
+Student completes mission.
+
+The orchestrator should trigger:
+
+store mission result
+
+update evidence
+
+update topic profiles
+
+update blockers
+
+update repair obligations
+
+update time budget
+
+update plan progress
+
+re-resolve coach state
+
+re-resolve next action
+
+update Coach Hub
+
+update roadmap
+
+log session summary
+
+notify parent system if required
+
+That is synchronization.
+
+Without this engine, the product feels fragmented.
+
+Layer 9 — Explainability Engine
+This is critical.
+
+The coach brain should always be able to explain itself.
+
+Not internal chain of thought, but structured reasons like:
+
+why this mission is next
+
+why this topic is blocked
+
+why this strategy changed
+
+why the student is considered fragile in this topic
+
+why a repair session was inserted
+
+why speed work is not yet unlocked
+
+why the readiness score moved
+
+This is useful for:
+
+student trust
+
+parent updates
+
+teacher view
+
+debugging
+
+product analytics
+
+A coach that cannot explain itself will feel arbitrary.
+
+4. The central object: the Coach World Model
+The brain needs one central “living picture” of the student and current situation.
+
+Call it:
+
+CoachWorldState
+This is the single truth object the brain reasons over.
+
+Example shape:
+
+type CoachWorldState = {
+  student: {
+    id: string;
+    level: string;
+    selectedSubjects: string[];
+    examDate?: string;
+    dailyBudgetMinutes: number;
+    onboardingComplete: boolean;
+  };
+  readiness: {
+    contentReady: boolean;
+    readinessStatus: string;
+    missingRequirements: string[];
+  };
+  lifecycle: {
+    coachState: string;
+    nextActionType: string;
+    pendingReview: boolean;
+    activeMissionId?: string;
+  };
+  plan: {
+    hasActivePlan: boolean;
+    currentPhase?: string;
+    todayPlanDayId?: string;
+    minutesRemainingToday: number;
+  };
+  topicProfiles: Array<{
+    subjectId: string;
+    topicId: string;
+    mastery: number;
+    fragility: number;
+    speed: number;
+    blocked: boolean;
+    repairPriority: number;
+  }>;
+  evidence: {
+    recentAccuracy: number;
+    recentTimedAccuracy: number;
+    repeatedMisconceptions: string[];
+  };
+  blockers: Array<{
+    topicId: string;
+    reason: string;
+    severity: string;
+  }>;
+  recovery: {
+    hasRecoveryState: boolean;
+    recoveryType?: string;
+  };
+};
+Every major engine should reason from this.
+
+5. The central operating loop of the brain
+This is the heart of the system.
+
+The Coach Brain should run a loop like this:
+
+Step 1 — Observe
+Collect latest signals.
+
+Step 2 — Update world state
+Refresh topic profiles, time budget, mission status, blockers, readiness, plan progress.
+
+Step 3 — Diagnose current situation
+What is the student’s actual state right now?
+
+Step 4 — Decide
+What should happen next?
+
+Step 5 — Generate
+Create mission / repair / review / roadmap updates.
+
+Step 6 — Synchronize
+Push the new outputs to UI, timers, storage, parent layer, analytics.
+
+Step 7 — Explain
+Produce human-readable reasons.
+
+That loop should happen:
+
+after onboarding
+
+after diagnostic
+
+after mission step groups
+
+after mission completion
+
+after review
+
+after major settings change
+
+after exam date change
+
+after subject change
+
+after content pack installation
+
+6. The most important principle: separate reasoning horizons
+The brain should not think about everything at the same timescale.
+
+You need three decision horizons.
+
+Horizon A — Strategic
+Days to weeks.
+
+Handled by:
+
+Plan Engine
+
+Questions:
+
+are we on track for the exam?
+
+what is the weekly focus?
+
+what phase are we in?
+
+Horizon B — Tactical
+Today / this session.
+
+Handled by:
+
+Mission Planner
+
+Questions:
+
+what should the student do today?
+
+what exact mission should run now?
+
+Horizon C — Reactive
+Inside a session, minute to minute.
+
+Handled by:
+
+Intervention Engine
+
+Questions:
+
+the student is struggling right now; what should happen immediately?
+
+That separation is vital.
+
+7. The brain should not directly touch the UI
+This is a common mistake.
+
+The brain should produce decisions and outputs.
+The UI should render them.
+
+So:
+
+Brain outputs
+coachState
+
+nextAction
+
+todayMission
+
+topicBlockers
+
+repairQueue
+
+roadmapSummary
+
+headerTimerData
+
+interventionCard
+
+sessionDebrief
+
+parentSummary
+
+UI responsibility
+display them
+
+collect user input
+
+send events back
+
+This keeps the system clean.
+
+8. The best technical form: multi-engine service architecture
+You can implement this as a set of coordinated services.
+
+Recommended services
+CoachBrainService
+
+CoachWorldStateBuilder
+
+CoachPerceptionService
+
+CoachStudentModelService
+
+CoachEvidenceService
+
+CoachPlanService
+
+CoachMissionPlanner
+
+CoachInterventionService
+
+CoachBlockerService
+
+CoachSynchronizationService
+
+CoachExplainabilityService
+
+CoachContentReadinessService
+
+CoachQuestionSourceAdapter
+
+And the top-level entry point becomes:
+
+CoachBrainService.evaluate(studentId)
+This function should:
+
+build world state
+
+resolve lifecycle state
+
+choose next action
+
+generate/update plan if needed
+
+generate/update mission if needed
+
+return synchronized outputs
+
+9. The real “thinking” part: where AI can help safely
+You said you want the brain to reason and think.
+
+That is correct.
+But AI should be used in bounded places, not as uncontrolled global authority.
+
+Good places to use reasoning
+detecting likely cause of repeated failure
+
+selecting best intervention style
+
+generating explanations
+
+deciding whether to reinforce concept vs speed vs transfer
+
+choosing among equally valid next strategies
+
+summarizing parent updates
+
+interpreting patterns across many sessions
+
+Places that should remain deterministic
+whether content exists
+
+whether plan exists
+
+whether mission is complete
+
+whether diagnostic is allowed
+
+whether topic is blocked
+
+whether study time remains
+
+whether a state transition is legal
+
+whether a mission can be generated
+
+That split makes the system both smart and stable.
+
+10. The brain needs memory at 4 levels
+This is very important.
+
+Memory 1 — Immediate Session Memory
+What happened in this mission right now?
+
+Memory 2 — Short-Term Learning Memory
+What has happened in the last few sessions/days?
+
+Memory 3 — Longitudinal Academic Memory
+What is the student’s ongoing topic and subject profile?
+
+Memory 4 — Strategic Plan Memory
+What is the planned journey toward the exam?
+
+Without these memory layers, the brain will feel forgetful and inconsistent.
+
+11. The brain should produce 6 canonical outputs
+At any point, the brain should be able to return these:
+
+1. currentState
+What lifecycle state is the student in?
+
+2. nextAction
+What should they do now?
+
+3. todayStrategy
+What is today’s academic objective?
+
+4. missionPayload
+If a mission is needed, what is it?
+
+5. interventionPayload
+If active struggle exists, what support should appear?
+
+6. syncPayload
+What else in the product must update because of this decision?
+
+This becomes the universal brain response contract.
+
+12. The brain should own all key academic judgments
+These decisions should come from the brain, not scattered screens:
+
+is diagnostic needed?
+
+is the student ready for a plan?
+
+is the plan stale?
+
+what is the next mission?
+
+should the student continue or repair?
+
+should this topic be blocked?
+
+should time be extended or tightened?
+
+should today be review or new progress?
+
+what is the current phase of preparation?
+
+what should the parent be told?
+
+That is what “everything in sync” really means.
+
+13. A clean top-level architecture
+Here is the structure I would use.
+
+A. Coach Kernel
+Strict deterministic core.
+Handles:
+
+lifecycle state
+
+transitions
+
+eligibility
+
+readiness
+
+plan validity
+
+blocker enforcement
+
+time rules
+
+B. Coach Intelligence Layer
+Reasoning and adaptation.
+Handles:
+
+learner interpretation
+
+intervention choice
+
+strategy adjustment
+
+pattern detection
+
+explanation
+
+C. Coach Orchestrator
+Runs the loop and dispatches updates.
+
+D. Coach Interface Layer
+Hub, mission, roadmap, debrief, parent outputs.
+
+That is the right mental model.
+
+14. The implementation plan for the Brain
+Here is how I would actually build it.
+
+Phase 1 — Brain foundation
+Build:
+
+CoachWorldState
+
+CoachBrainService.evaluate(studentId)
+
+CoachLifecycleState
+
+resolveNextCoachAction()
+
+CoachContentReadinessService
+
+Goal:
+The brain can already tell the truth about the student and next step.
+
+Phase 2 — Student and evidence intelligence
+Build:
+
+CoachStudentModelService
+
+CoachEvidenceService
+
+CoachTopicProfileService
+
+Goal:
+The brain now understands performance meaningfully.
+
+Phase 3 — Strategic intelligence
+Build:
+
+CoachPlanService
+
+phase model
+
+day planner
+
+milestone engine
+
+plan adjustment rules
+
+Goal:
+The brain can plan ahead.
+
+Phase 4 — Tactical intelligence
+Build:
+
+CoachMissionPlanner
+
+CoachQuestionSourceAdapter
+
+real mission assembly
+
+unlock/fail conditions
+
+Goal:
+The brain can turn the plan into action.
+
+Phase 5 — Reactive intelligence
+Build:
+
+CoachInterventionService
+
+misconception response logic
+
+speed-collapse response
+
+repair routing
+
+confidence rescue flows
+
+Goal:
+The brain can respond live inside sessions.
+
+Phase 6 — Synchronization and explainability
+Build:
+
+CoachSynchronizationService
+
+CoachExplainabilityService
+
+parent summary generator
+
+state-change logs
+
+Goal:
+Everything stays aligned and understandable.
+
+15. The exact contract I would use for the Brain
+This is the shape I would target.
+
+type CoachBrainOutput = {
+  worldState: CoachWorldState;
+  currentState: CoachLifecycleState;
+  nextAction: NextCoachAction;
+  todayStrategy?: {
+    phase: string;
+    objective: string;
+    reason: string;
+  };
+  mission?: GeneratedMission;
+  intervention?: {
+    type: string;
+    title: string;
+    message: string;
+    recommendedAction: string;
+  };
+  roadmap?: {
+    currentPhase: string;
+    daysRemaining: number;
+    progressPercent: number;
+    readinessTrend: string;
+  };
+  syncActions: Array<{
+    type: string;
+    payload: Record<string, unknown>;
+  }>;
+  explanation: {
+    whyThisState: string[];
+    whyThisAction: string[];
+    risks: string[];
+  };
+};
+That output can drive almost the entire coach product.
+
+16. The key to making it “perfectly in sync”
+To make it work perfectly in sync, every important event must trigger a brain evaluation.
+
+Trigger points
+onboarding completed
+
+subjects selected
+
+content installed
+
+diagnostic completed
+
+mission started
+
+step block completed
+
+mission completed
+
+review completed
+
+timer exhausted
+
+exam date changed
+
+parent feedback submitted
+
+manual override made
+
+At each trigger:
+
+rebuild world state
+
+evaluate brain
+
+dispatch updates
+
+That is synchronization.
+
+17. The one thing you must avoid
+Do not let:
+
+Coach Hub
+
+Mission Flow
+
+Timeline
+
+Debrief
+
+Parent view
+
+Timer
+
+all run their own logic independently.
+
+That is exactly how the system drifts.
+
+They must all become consumers of the brain.
+
+18. What I recommend as your immediate next move
+Your next move should be to define the Coach Brain as a formal module with these 7 documents:
+
+Brain Purpose and Scope
+
+CoachWorldState schema
+
+Brain input events
+
+Brain output contract
+
+Engine breakdown
+
+Decision rules
+
+Evaluation loop and trigger map
+
+Then start implementation with:
+
+CoachWorldStateBuilder
+
+CoachBrainService.evaluate(studentId)
+
+CoachLifecycleState
+
+NextCoachAction
+
+ContentReadiness
+
+Plan summary
+
+Mission summary
+
+That gives you the skeleton of the brain.
+
+19. My blunt recommendation
+If you want the coach to feel world-class, the brain should be built like this:
+
+Deterministic academic kernel + adaptive reasoning layer + synchronized orchestration loop + explainable outputs.
+
+That is the right architecture.
+
+Not:
+“let’s add an LLM and let it coach.”
+
+That would be impressive for demos and terrible for reliability.
+
+20. What I can do next
+The best next artifact is this:
+
+A build-grade Coach Brain Specification
+
+with:
+
+engine-by-engine technical breakdown
+
+world state schema
+
+event model
+
+brain evaluation loop
+
+service boundaries
+
+DB/storage model
+
+pseudocode for evaluation
+
+sync triggers
+
+module/file structure
+
+That is the document that would let you actually build the brain properly.
+
+
+proceed
+
+I’m moving from concept to build-grade structure now. The key is to define the brain as a living academic control system with a strict kernel, bounded reasoning, and a single evaluation loop.
+
+Thought for 8s
+Coach Brain Specification
+This is the full structure for the brain of the Academic Coach.
+
+The purpose of this brain is to make the coach behave like a real academic strategist, not a collection of pages, widgets, and reactive flows. The brain must reason, plan, synchronize, adapt, and keep every part of the coach aligned around one truth.
+
+It must answer, at all times:
+
+what is true about this student right now
+
+what is the student trying to achieve
+
+what is blocking progress
+
+what should happen next
+
+what should not happen yet
+
+what every screen should show
+
+how today fits into the larger journey
+
+how new evidence changes future strategy
+
+1. Core mission of the Coach Brain
+The Coach Brain is the academic command system for the product.
+
+It must:
+
+perceive the student and the system state
+
+maintain a structured internal model of the learner
+
+maintain a structured internal model of the curriculum
+
+convert evidence into topic-level truth
+
+generate and adjust a multi-day plan
+
+generate today’s mission from that plan
+
+intervene intelligently when the student struggles
+
+synchronize all downstream surfaces
+
+explain why it made the decisions it made
+
+The brain does not exist to “chat.”
+It exists to make the whole coaching system coherent.
+
+2. The governing architecture
+The brain should be built as four layers.
+
+Layer A — Coach Kernel
+This is the deterministic core.
+
+It handles:
+
+lifecycle state
+
+legal state transitions
+
+readiness rules
+
+content gating
+
+time budget rules
+
+blocker enforcement
+
+plan validity
+
+mission completion truth
+
+repair eligibility
+
+exam-window rules
+
+This is the truth engine.
+It must be stable, testable, and fully deterministic.
+
+Layer B — Coach Intelligence Layer
+This is the adaptive reasoning layer.
+
+It handles:
+
+learner interpretation
+
+pattern diagnosis
+
+strategy selection
+
+intervention choice
+
+explanation generation
+
+prioritization among valid options
+
+parent-friendly summaries
+
+This layer can use more flexible logic and, where appropriate, bounded AI reasoning.
+
+Layer C — Coach Orchestrator
+This runs the evaluation loop.
+
+It:
+
+gathers events
+
+rebuilds world state
+
+invokes kernel and intelligence engines
+
+commits resulting state changes
+
+dispatches synchronized outputs to UI and storage
+
+Layer D — Coach Interface Outputs
+This is not UI logic. It is structured outputs for UI.
+
+It produces:
+
+hub next action
+
+today strategy
+
+mission payload
+
+roadmap payload
+
+timer payload
+
+intervention card payload
+
+debrief payload
+
+parent summary payload
+
+The UI consumes these outputs and renders them.
+
+3. The single source of truth: CoachWorldState
+The brain needs one canonical internal object.
+
+That object is CoachWorldState.
+
+It is the full current picture of the student, their plan, their evidence, and the system readiness context.
+
+A recommended shape:
+
+type CoachWorldState = {
+  student: {
+    id: string;
+    level?: string;
+    selectedSubjects: string[];
+    examTargetId?: string;
+    examDate?: string;
+    onboardingComplete: boolean;
+    dailyBudgetMinutes: number;
+    preferences?: {
+      preferredSessionLength?: number;
+      preferredDifficultyCurve?: "gentle" | "balanced" | "aggressive";
+    };
+  };
+
+  readiness: {
+    status:
+      | "ready"
+      | "no_subjects_selected"
+      | "no_packs_installed"
+      | "no_topics_available"
+      | "topics_exist_but_no_questions"
+      | "insufficient_question_coverage";
+    contentReady: boolean;
+    missingRequirements: string[];
+    subjectCoverage: Array<{
+      subjectId: string;
+      topicCount: number;
+      questionCount: number;
+      minimumCoverageMet: boolean;
+    }>;
+  };
+
+  lifecycle: {
+    coachState:
+      | "onboarding_required"
+      | "subject_selection_required"
+      | "content_readiness_required"
+      | "diagnostic_required"
+      | "plan_generation_required"
+      | "ready_for_today_mission"
+      | "mission_in_progress"
+      | "mission_review_required"
+      | "repair_required"
+      | "blocked_on_topic"
+      | "plan_adjustment_required"
+      | "review_day"
+      | "exam_mode"
+      | "stalled_no_content";
+    activeMissionId?: string;
+    pendingReview: boolean;
+    activeRepairId?: string;
+  };
+
+  plan: {
+    hasActivePlan: boolean;
+    planId?: string;
+    currentPhase?: string;
+    todayPlanDayId?: string;
+    todayActivityIds: string[];
+    todayTargetMinutes: number;
+    todayUsedActiveMinutes: number;
+    minutesRemainingToday: number;
+    behindSchedule: boolean;
+    planStale: boolean;
+    daysRemainingToExam?: number;
+  };
+
+  topicProfiles: Array<{
+    subjectId: string;
+    topicId: string;
+    masteryEstimate: number;
+    fragilityScore: number;
+    speedScore: number;
+    misconceptionRecurrence: number;
+    evidenceCount: number;
+    attemptCount: number;
+    blocked: boolean;
+    repairPriority: number;
+    lastSeenAt?: string;
+  }>;
+
+  evidence: {
+    recentAccuracy: number;
+    recentTimedAccuracy: number;
+    repeatedMisconceptions: string[];
+    recentSessions: Array<{
+      sessionId: string;
+      subjectId: string;
+      topicId: string;
+      accuracy: number;
+      timedAccuracy?: number;
+      avgLatencyMs?: number;
+      completedAt: string;
+    }>;
+  };
+
+  blockers: Array<{
+    subjectId: string;
+    topicId: string;
+    reason: string;
+    severity: "low" | "medium" | "high";
+    createdAt: string;
+  }>;
+
+  recovery: {
+    hasRecoveryState: boolean;
+    recoveryType?: string;
+    recoveryReason?: string;
+  };
+};
+This object should be rebuilt on every major trigger.
+Every engine should reason from it.
+
+4. The brain’s major engines
+The brain should be decomposed into 10 engines.
+
+4.1 Perception Engine
+This engine collects raw signals and normalizes them.
+
+Inputs include:
+
+onboarding completion
+
+subjects selected
+
+exam target
+
+exam date
+
+diagnostics completed
+
+question answer events
+
+timer events
+
+mission start/stop events
+
+review events
+
+parent feedback
+
+content pack installation state
+
+question coverage state
+
+manual overrides
+
+Outputs include:
+
+normalized event stream
+
+latest session facts
+
+usage facts
+
+content facts
+
+topic exposure facts
+
+missing prerequisite facts
+
+This engine does not decide anything.
+It only converts raw signals into usable observations.
+
+4.2 Student Model Engine
+This engine constructs the learner profile.
+
+It should maintain academic traits such as:
+
+pace of learning
+
+stability under time pressure
+
+concept recognition strength
+
+application strength
+
+transfer ability
+
+misconception tendencies
+
+persistence after failure
+
+need for worked examples
+
+need for repeated reinforcement
+
+tendency to rush
+
+tendency to hesitate
+
+A student model output might say:
+
+strong in untimed concept recall, weak in timed application
+
+repeated operator confusion in algebra
+
+accuracy acceptable but latency too high for exam conditions
+
+benefits from guided examples before independent practice
+
+This engine should not produce vague narratives only.
+It should produce structured signals used elsewhere.
+
+Example:
+
+type StudentLearningProfile = {
+  paceProfile: "slow" | "steady" | "fast";
+  pressureResponse: "stable" | "fragile" | "collapses_under_timer";
+  conceptVsApplication:
+    | "concept_stronger"
+    | "balanced"
+    | "application_stronger";
+  hintDependency: "low" | "medium" | "high";
+  misconceptionClusters: string[];
+  recoveryAfterFailure: "good" | "moderate" | "poor";
+};
+4.3 Curriculum Intelligence Engine
+This engine is the academic map.
+
+It should know:
+
+subject hierarchy
+
+topic hierarchy
+
+subtopic hierarchy
+
+prerequisites
+
+dependencies
+
+concept-to-formula relationships
+
+common confusion pairs
+
+misconception families
+
+question family mappings
+
+what future topics depend on which earlier ones
+
+This is not just storage. It is reasoning-ready curriculum structure.
+
+Example:
+
+If the student is weak in fractions, this engine should know that this can affect:
+
+percentages
+
+ratio
+
+algebraic fractions
+
+probability representations
+
+certain forms of mensuration and data interpretation
+
+That allows the brain to prioritize earlier repair before later damage spreads.
+
+4.4 Evidence Engine
+This is where performance becomes truth.
+
+It should update topic state from actual behavior, not just scores.
+
+It should compute:
+
+attempts
+
+correct count
+
+accuracy
+
+timed accuracy
+
+average latency
+
+hint usage rate
+
+retry rate
+
+first-pass success
+
+transfer success
+
+misconception recurrence
+
+exposure count
+
+recency decay
+
+confidence of estimate
+
+Topic outputs should look like:
+
+type TopicEvidenceState = {
+  subjectId: string;
+  topicId: string;
+  masteryEstimate: number;       // 0..1
+  fragilityScore: number;        // 0..1
+  speedScore: number;            // 0..1
+  misconceptionRecurrence: number;
+  evidenceConfidence: number;    // 0..1
+  exposureCount: number;
+  blocked: boolean;
+  repairPriority: number;        // 0..100
+};
+This engine is one of the most critical parts of the system.
+If this engine is weak, every later decision becomes unreliable.
+
+4.5 Lifecycle State Engine
+This engine determines the canonical coach state.
+
+It resolves whether the student is currently in:
+
+onboarding
+
+subject selection
+
+readiness recovery
+
+diagnostic
+
+plan generation
+
+active mission
+
+review
+
+repair
+
+blocked topic state
+
+plan adjustment state
+
+review day
+
+exam mode
+
+This is deterministic and strict.
+It must be fully unit-tested.
+
+4.6 Plan Engine
+This is the strategic brain.
+
+It must generate:
+
+plan phases
+
+dated plan days
+
+daily activity blocks
+
+subject distribution
+
+topic sequencing
+
+checkpoint placement
+
+review and repair reservations
+
+catch-up logic
+
+pre-exam consolidation behavior
+
+The plan engine must reason over:
+
+days remaining
+
+study budget
+
+topic weakness
+
+fragility
+
+coverage availability
+
+current phase
+
+backlog
+
+exam proximity
+
+This engine should not generate a vague plan.
+It should generate actual executable plan entities.
+
+4.7 Mission Planner
+This is the tactical engine.
+
+It must answer:
+
+what session should the student do now
+
+why that session exists
+
+what topic it covers
+
+what activity type it should be
+
+what question/data resources are required
+
+what counts as success or failure
+
+how long it should last
+
+The mission planner should never invent content.
+It must request real content through the content/question adapter.
+
+4.8 Intervention Engine
+This is the live coaching instinct.
+
+It should respond to patterns like:
+
+repeated misconception
+
+low accuracy but good effort
+
+high accuracy but too slow
+
+correct method choice but arithmetic slips
+
+good recall, poor transfer
+
+speed collapse after timer activation
+
+frustration after repeated wrong answers
+
+It should choose interventions like:
+
+worked example replay
+
+misconception spotlight
+
+comparison drill
+
+guided breakdown
+
+slowed mode
+
+repair burst
+
+restore confidence prompt
+
+defer speed training until stability returns
+
+This engine can use bounded reasoning because intervention choice benefits from nuance.
+
+4.9 Synchronization Engine
+This keeps everything aligned.
+
+When something changes, this engine determines all downstream updates.
+
+Example after mission completion:
+
+persist mission result
+
+persist question-level results
+
+update evidence state
+
+update topic profiles
+
+update blocker status
+
+update repair obligations
+
+update plan progress
+
+update time budget
+
+resolve new lifecycle state
+
+resolve new next action
+
+regenerate hub payload
+
+regenerate roadmap payload
+
+generate debrief payload
+
+trigger parent update if policy says so
+
+This engine is what prevents fragmentation.
+
+4.10 Explainability Engine
+The brain must be able to explain itself in clean structured language.
+
+It should answer:
+
+why is this the next action
+
+why is this topic blocked
+
+why was a repair inserted
+
+why did today’s strategy change
+
+why was the student classified as fragile here
+
+why is the coach delaying timed mode
+
+Output format:
+
+type CoachExplanation = {
+  whyThisState: string[];
+  whyThisAction: string[];
+  whyThisStrategy: string[];
+  risks: string[];
+  blockers: string[];
+};
+This is useful for students, parents, internal debugging, and future analytics.
+
+5. The central evaluation loop
+The brain should run a controlled evaluation loop.
+
+This is the heartbeat of the coaching system.
+
+Step 1 — Observe
+Collect latest events and current storage state.
+
+Step 2 — Build world state
+Assemble CoachWorldState.
+
+Step 3 — Resolve kernel truth
+Determine readiness, lifecycle state, plan validity, blockers, time truth.
+
+Step 4 — Run intelligence engines
+Interpret evidence, learner pattern, strategy options, intervention need.
+
+Step 5 — Decide next action
+Resolve what should happen now.
+
+Step 6 — Generate outputs
+Mission payload, hub payload, roadmap payload, timer payload, debrief payload.
+
+Step 7 — Persist changes
+Store updated snapshots, plan adjustments, evidence, blockers, etc.
+
+Step 8 — Dispatch sync actions
+Update every downstream consumer.
+
+Step 9 — Explain
+Produce structured reasons.
+
+A top-level function:
+
+async function evaluateCoachBrain(studentId: string, trigger: BrainTrigger): Promise<CoachBrainOutput> {
+  const observations = await perceptionService.collect(studentId, trigger);
+  const worldState = await worldStateBuilder.build(studentId, observations);
+
+  const lifecycle = lifecycleStateEngine.resolve(worldState);
+  const learnerProfile = studentModelEngine.derive(worldState);
+  const evidenceSummary = evidenceEngine.derive(worldState);
+
+  const planResult = await planEngine.evaluate(worldState, learnerProfile, evidenceSummary);
+  const missionResult = await missionPlanner.evaluate(worldState, planResult);
+  const interventionResult = interventionEngine.evaluate(worldState, missionResult, learnerProfile);
+
+  const nextAction = nextActionResolver.resolve(worldState, lifecycle, planResult, missionResult, interventionResult);
+  const syncActions = synchronizationEngine.build(worldState, lifecycle, nextAction, planResult, missionResult, interventionResult);
+
+  const explanation = explainabilityEngine.explain(worldState, lifecycle, nextAction, planResult, missionResult, interventionResult);
+
+  return {
+    worldState,
+    currentState: lifecycle.state,
+    nextAction,
+    todayStrategy: planResult.todayStrategy,
+    mission: missionResult.mission,
+    intervention: interventionResult,
+    roadmap: planResult.roadmap,
+    syncActions,
+    explanation
+  };
+}
+6. The brain input event model
+Every important event must trigger evaluation.
+
+Recommended trigger list:
+
+onboarding_completed
+
+subjects_selected
+
+exam_target_set
+
+content_pack_installed
+
+diagnostic_completed
+
+mission_started
+
+mission_paused
+
+mission_resumed
+
+question_answered
+
+mission_completed
+
+review_completed
+
+repair_completed
+
+timer_budget_exhausted
+
+exam_date_changed
+
+subjects_changed
+
+parent_feedback_received
+
+manual_override_applied
+
+A simple trigger contract:
+
+type BrainTrigger = {
+  type:
+    | "onboarding_completed"
+    | "subjects_selected"
+    | "exam_target_set"
+    | "content_pack_installed"
+    | "diagnostic_completed"
+    | "mission_started"
+    | "mission_paused"
+    | "mission_resumed"
+    | "question_answered"
+    | "mission_completed"
+    | "review_completed"
+    | "repair_completed"
+    | "timer_budget_exhausted"
+    | "exam_date_changed"
+    | "subjects_changed"
+    | "parent_feedback_received"
+    | "manual_override_applied";
+  actorId?: string;
+  payload?: Record<string, unknown>;
+  timestamp: string;
+};
+7. The brain output contract
+The brain should emit one universal response object.
+
+type CoachBrainOutput = {
+  worldState: CoachWorldState;
+
+  currentState: CoachWorldState["lifecycle"]["coachState"];
+
+  nextAction: {
+    actionType:
+      | "continue_onboarding"
+      | "select_subjects"
+      | "resolve_content"
+      | "start_diagnostic"
+      | "generate_plan"
+      | "start_today_mission"
+      | "resume_mission"
+      | "review_mission"
+      | "start_repair"
+      | "resolve_blocker"
+      | "review_today_plan";
+    title: string;
+    subtitle: string;
+    estimatedMinutes?: number;
+    priority: "critical" | "high" | "normal";
+    route: string;
+    context?: Record<string, unknown>;
+  };
+
+  todayStrategy?: {
+    phase: string;
+    objective: string;
+    reason: string;
+    targetMinutes: number;
+  };
+
+  mission?: {
+    missionId: string;
+    title: string;
+    reason: string;
+    subjectId: string;
+    primaryTopicId: string;
+    secondaryTopicIds?: string[];
+    activityType: string;
+    targetMinutes: number;
+    unlockCondition?: string;
+    failureCondition?: string;
+    steps: MissionStep[];
+  };
+
+  intervention?: {
+    type: string;
+    title: string;
+    message: string;
+    recommendedAction: string;
+    severity: "low" | "medium" | "high";
+  };
+
+  roadmap?: {
+    currentPhase: string;
+    progressPercent: number;
+    daysRemaining: number;
+    readinessTrend: "rising" | "flat" | "at_risk";
+    todayActivities: Array<{
+      title: string;
+      status: "done" | "current" | "upcoming" | "blocked";
+    }>;
+  };
+
+  syncActions: Array<{
+    type: string;
+    payload: Record<string, unknown>;
+  }>;
+
+  explanation: CoachExplanation;
+};
+All coach UI surfaces should consume this contract or subsets of it.
+
+8. Deterministic vs reasoning boundaries
+This is a critical design rule.
+
+Deterministic domain
+These must remain strict:
+
+whether onboarding is complete
+
+whether subjects are selected
+
+whether content exists
+
+whether questions exist
+
+whether readiness is valid
+
+whether diagnostic is allowed
+
+whether a mission is active
+
+whether a review is pending
+
+whether a plan is stale
+
+whether a blocker exists
+
+whether daily budget remains
+
+whether a transition is legal
+
+Reasoning domain
+These may use bounded intelligence:
+
+identifying likely misconception cause
+
+selecting best intervention style
+
+choosing whether to reinforce concept vs speed vs transfer
+
+composing human explanation
+
+selecting tone of debrief
+
+generating parent-facing summary
+
+prioritizing equally valid topic choices
+
+This split is how you make the brain both smart and reliable.
+
+9. Memory architecture
+The brain needs four memory layers.
+
+9.1 Session memory
+What is happening right now inside the current mission.
+
+Includes:
+
+active mission
+
+question-by-question results
+
+current frustration pattern
+
+live timer state
+
+unfinished step group
+
+9.2 Short-term learning memory
+The last few sessions/days.
+
+Includes:
+
+recent topics studied
+
+recent accuracy trend
+
+recent timed performance
+
+repeated recent errors
+
+recent intervention success/failure
+
+9.3 Longitudinal academic memory
+Persistent topic/subject state.
+
+Includes:
+
+mastery history
+
+fragility history
+
+speed history
+
+repair history
+
+blocker history
+
+readiness trajectory
+
+9.4 Strategic memory
+Plan-level memory.
+
+Includes:
+
+active plan
+
+phase schedule
+
+milestones
+
+missed days
+
+catch-up rules
+
+exam proximity
+
+target readiness
+
+Without these layers the brain will feel forgetful and inconsistent.
+
+10. Data/storage model
+You will likely need these core models or tables.
+
+Core tables
+coach_plans
+
+coach_plan_days
+
+coach_plan_activities
+
+coach_topic_profiles
+
+coach_session_evidence
+
+coach_blockers
+
+coach_repair_obligations
+
+coach_state_snapshots
+
+coach_brain_events
+
+existing c_engagement_events
+
+Important relationships
+one student -> many plans over time
+
+one active plan -> many plan days
+
+one plan day -> many activities
+
+one student + topic -> one current topic profile
+
+one mission -> many session evidence rows
+
+one topic -> zero or more blockers over time
+
+one topic -> zero or more repair obligations over time
+
+Optional but useful
+coach_explanations_log
+
+coach_parent_updates
+
+coach_overrides
+
+11. Service/module structure
+Recommended code structure:
+
+src/features/coach/brain/
+  kernel/
+    lifecycle/
+      CoachLifecycleState.ts
+      LifecycleStateEngine.ts
+    readiness/
+      ContentReadinessEngine.ts
+    blockers/
+      BlockerEngine.ts
+    timing/
+      BudgetTimingEngine.ts
+    transitions/
+      TransitionRules.ts
+
+  intelligence/
+    perception/
+      PerceptionEngine.ts
+    student-model/
+      StudentModelEngine.ts
+    curriculum/
+      CurriculumIntelligenceEngine.ts
+    evidence/
+      EvidenceEngine.ts
+    planning/
+      PlanEngine.ts
+    missions/
+      MissionPlanner.ts
+      MissionAssembler.ts
+      QuestionSourceAdapter.ts
+    interventions/
+      InterventionEngine.ts
+    explainability/
+      ExplainabilityEngine.ts
+
+  orchestration/
+    CoachWorldStateBuilder.ts
+    CoachBrainService.ts
+    SynchronizationEngine.ts
+    BrainTriggerRouter.ts
+
+  contracts/
+    CoachWorldState.ts
+    CoachBrainOutput.ts
+    BrainTrigger.ts
+    TopicEvidenceState.ts
+    MissionTypes.ts
+    PlanTypes.ts
+
+  repositories/
+    CoachPlanRepository.ts
+    CoachTopicProfileRepository.ts
+    CoachEvidenceRepository.ts
+    CoachBlockerRepository.ts
+    CoachStateSnapshotRepository.ts
+    CoachEventRepository.ts
+This keeps UI separate from the brain.
+
+12. Topic state scoring
+The topic profile should not be a vague label only.
+It needs real numbers.
+
+A workable first version:
+
+Mastery estimate
+Combination of:
+
+recent accuracy
+
+stability across exposures
+
+transfer success
+
+recency weighting
+
+Fragility score
+High when:
+
+timed performance drops sharply vs untimed
+
+spaced recall collapses
+
+accuracy varies wildly across sessions
+
+Speed score
+High when:
+
+correctness remains strong under time
+
+latency is within acceptable band
+
+panic errors are low
+
+Repair priority
+High when:
+
+topic is prerequisite-heavy
+
+topic is blocking downstream concepts
+
+misconception recurrence is high
+
+exam relevance is high
+
+recent failures are persistent
+
+A simple conceptual formula:
+
+masteryEstimate =
+  0.35 * recentAccuracy +
+  0.20 * spacedStability +
+  0.20 * transferSuccess +
+  0.15 * firstPassQuality +
+  0.10 * recencyWeightedConfidence;
+
+fragilityScore =
+  0.45 * pressureDrop +
+  0.25 * varianceAcrossSessions +
+  0.20 * retentionDrop +
+  0.10 * hesitationRate;
+
+speedScore =
+  0.50 * timedAccuracy +
+  0.30 * latencyEfficiency +
+  0.20 * lowPanicErrorRate;
+These can evolve, but the structure matters.
+
+13. Blocking and repair logic
+The brain must stop false progress.
+
+Block rule example
+A topic becomes blocked if all are true:
+
+at least 2 completed sessions
+
+attempts threshold met
+
+accuracy below 40%
+
+misconception recurrence above threshold
+
+trend non-improving
+
+Unblock rule example
+A topic becomes unblocked if:
+
+repair completed
+
+guided accuracy >= 60%
+
+misconception absent in checkpoint tail
+
+no severe collapse under mild timing
+
+Repair trigger example
+Trigger targeted repair if any are true:
+
+same misconception repeated 3 times
+
+untimed okay, timed disastrous
+
+strong recognition, weak application
+
+repeated family-variant failure
+
+high-confidence wrong answers recurring
+
+The blocker engine should be deterministic.
+The intervention style can be adaptive.
+
+14. Mission assembly flow
+Mission generation should work like this:
+
+Step 1
+Take the next planned activity.
+
+Step 2
+Check blockers and repair obligations.
+
+Step 3
+Determine activity type:
+
+learn
+
+guided practice
+
+worked example
+
+speed drill
+
+review
+
+repair
+
+mixed test
+
+Step 4
+Request content via QuestionSourceAdapter.
+
+Step 5
+Assemble steps using real content only.
+
+Step 6
+Attach success and failure conditions.
+
+Step 7
+Return mission payload.
+
+Hard rule:
+If no content is available, mission generation must fail explicitly and enter recovery logic.
+It must never create fake placeholder questions.
+
+15. Synchronization map
+This is how “everything in sync” actually works.
+
+On diagnostic completion
+Update:
+
+baseline evidence
+
+topic profiles
+
+lifecycle state
+
+plan eligibility
+
+next action
+
+coach hub payload
+
+On mission start
+Update:
+
+active mission state
+
+timer state
+
+today activity state
+
+session memory
+
+On question answered
+Update:
+
+session evidence
+
+live intervention need
+
+timer usage
+
+micro state
+
+On mission completion
+Update:
+
+session evidence
+
+topic profiles
+
+blockers
+
+repair obligations
+
+plan progress
+
+daily budget usage
+
+lifecycle state
+
+hub payload
+
+roadmap payload
+
+debrief payload
+
+On exam date change
+Update:
+
+plan validity
+
+days remaining
+
+phase map
+
+milestone map
+
+next action
+
+This map should be explicit in code, not implicit across components.
+
+16. Explainability examples
+The brain should speak clearly.
+
+Examples:
+
+Why this mission is next
+“Your last two sessions show that you can identify the concept, but you are still making denominator conversion errors in application. This repair session is next because percentages and ratio depend on this topic.”
+
+Why timed mode is delayed
+“You are accurate when untimed, but your accuracy drops sharply when time pressure is introduced. The coach is strengthening stability before reintroducing speed.”
+
+Why the topic is blocked
+“You have completed two sessions on this topic with persistent misconception recurrence and no upward trend. Forward progress is paused until repair stabilizes your performance.”
+
+This makes the coach feel intelligent and credible.
+
+17. Development roadmap for the brain
+Phase 1 — Skeleton
+Build:
+
+CoachWorldState
+
+BrainTrigger
+
+CoachBrainOutput
+
+CoachBrainService.evaluate()
+
+lifecycle engine
+
+readiness engine
+
+Goal:
+The brain can tell the truth about state and next action.
+
+Phase 2 — Academic memory
+Build:
+
+topic profiles
+
+evidence engine
+
+student model engine
+
+brain state snapshots
+
+Goal:
+The brain begins to understand performance meaningfully.
+
+Phase 3 — Strategy
+Build:
+
+plan engine
+
+plan day generation
+
+phase logic
+
+roadmap output
+
+Goal:
+The brain can think beyond the current session.
+
+Phase 4 — Execution
+Build:
+
+mission planner
+
+mission assembler
+
+question source adapter
+
+active mission loop
+
+Goal:
+The brain turns strategy into real coaching work.
+
+Phase 5 — Adaptation
+Build:
+
+blocker engine
+
+repair engine
+
+intervention engine
+
+strategy adjustment rules
+
+Goal:
+The brain reacts intelligently when things go wrong.
+
+Phase 6 — Full sync
+Build:
+
+synchronization engine
+
+explainability engine
+
+parent summary generator
+
+comprehensive trigger router
+
+Goal:
+Everything updates correctly and stays aligned.
+
+18. What you should build first
+Do not start with the most sophisticated AI logic.
+
+Start with the spine.
+
+The first essential modules are:
+
+CoachWorldStateBuilder
+
+LifecycleStateEngine
+
+ContentReadinessEngine
+
+CoachBrainService.evaluate()
+
+NextActionResolver
+
+TopicProfileRepository
+
+EvidenceEngine
+
+PlanEngine V1
+
+MissionPlanner V1
+
+SynchronizationEngine
+
+That gives you a brain that already has structure and truth.
+
+Then you add deeper reasoning.
+
+19. The critical non-negotiables
+These rules must hold.
+
+The brain is the only authority on academic next steps.
+
+UI components do not invent progression logic.
+
+No mission can be generated without validated content.
+
+No diagnostic appears unless lifecycle state explicitly requires it.
+
+Every major trigger causes brain reevaluation.
+
+Every completed flow ends with state recomputation and synchronized outputs.
+
+Every blocker, repair, and plan shift must be explainable.
+
+The deterministic kernel always wins over adaptive reasoning when they conflict.
+
+20. Final architecture statement
+The Coach Brain should be built as:
+
+a deterministic academic kernel
+plus
+an adaptive reasoning layer
+plus
+a synchronization orchestrator
+plus
+explainable output contracts
+
+That is how you get a coach that feels intelligent, stays reliable, and keeps everything in sync.
+
+The best next step after this is to turn this specification into an implementation pack with:
+
+exact TypeScript interfaces
+
+engine-by-engine acceptance criteria
+
+DB schema draft
+
+trigger map
+
+pseudocode for each engine
+
+ticket breakdown for the team
+
+I can write that next as the actual build pack.
+
+
+i want this brain to be able to come up with strategies and plans by harnessing all the tools we have in our codebase , all the features and creating custom experiences per the data gathered from the user to create unique experiences , should be able to embed this feature and that feature, when to show this and when to show that ,when it feels the user needs this and then pulls the feature that can deliver that to the user if you get me 
+
+You’re describing a brain that is not just a planner, but a capability composer. The core shift is this: the brain should reason in terms of needs, goals, and deficits, then map those to the best combination of features already available in your codebase.
+
+Thought for 6s
+Yes. I get you clearly.
+
+What you want is not just a coach brain.
+
+You want a Coach Meta-Brain that can:
+
+inspect the student deeply
+
+understand what the student needs now
+
+understand what tools, flows, features, widgets, drills, question types, interventions, and views exist in the product
+
+choose the best combination
+
+sequence them properly
+
+wrap them into a custom experience
+
+keep adapting that composition as new evidence comes in
+
+That is a much more powerful system.
+
+This means the brain should not think only in terms of:
+
+“show mission”
+
+“show diagnostic”
+
+“show hub”
+
+It should think in terms of:
+
+the student currently needs conceptual stabilization
+
+the student currently needs pressure conditioning
+
+the student currently needs terminology repair
+
+the student currently needs confidence rescue
+
+the student currently needs comparison training
+
+the student currently needs speed-to-accuracy conversion
+
+the student currently needs worked examples before open practice
+
+the student currently needs a parent alert
+
+the student currently needs less friction and more guidance
+
+the student currently needs a mixed-mode rehearsal experience
+
+Then the brain should ask:
+
+Which existing product capabilities can deliver that best?
+
+That is the architecture you are pointing toward.
+
+1. The correct model: from feature-based app to capability-based brain
+Right now most apps are built like this:
+
+there is Feature A
+
+there is Feature B
+
+there is Feature C
+
+user clicks around and uses them
+
+What you want is:
+
+the brain understands the student
+
+the brain understands all available capabilities in the system
+
+the brain assembles the right experience dynamically
+
+So the product stops being a pile of features.
+
+It becomes a capability library under intelligent orchestration.
+
+That is the right direction.
+
+2. The brain needs a new major engine: Capability Orchestration Engine
+Add a new engine to the brain stack:
+
+Capability Orchestration Engine
+This engine’s job is to know:
+
+what features exist
+
+what each feature is good for
+
+when each feature should be used
+
+when each feature should not be used
+
+how features can be combined
+
+what order they should run in
+
+what prerequisites each feature needs
+
+how each feature changes the learner state
+
+This is the engine that lets the brain “pull this feature and that feature” when needed.
+
+Without this engine, the brain can reason but cannot compose rich custom experiences.
+
+3. The brain must think in three layers
+To do what you want, the brain should reason in this order:
+
+Layer A — Need Detection
+What does the student need right now?
+
+Examples:
+
+concept repair
+
+speed conditioning
+
+recall reinforcement
+
+worked example support
+
+pressure reduction
+
+misconception exposure
+
+confidence rebuilding
+
+transfer practice
+
+review consolidation
+
+guided progression
+
+Layer B — Capability Matching
+Which features in the codebase can solve that need?
+
+Examples:
+
+glossary mode
+
+worked example screen
+
+mission flow
+
+difference drill
+
+concept pair drill
+
+past question family explorer
+
+wrong answer intelligence
+
+speed sprint
+
+teach mode
+
+targeted repair micro-session
+
+roadmap view
+
+parent notification
+
+titles defense
+
+concept audio playback
+
+Layer C — Experience Composition
+How should those capabilities be combined into one coherent session or journey?
+
+Examples:
+
+3-minute misconception spotlight
+
+then one worked example
+
+then 5 guided MCQs
+
+then 3 timed questions
+
+then a short debrief
+
+then update parent summary if risk remains high
+
+That is the full orchestration logic.
+
+4. The brain needs a Capability Registry
+This is the single most important addition.
+
+You need a machine-readable inventory of all features/tools in the codebase.
+
+Call it:
+
+CoachCapabilityRegistry
+This is where every usable feature is registered not just by name, but by purpose.
+
+Each capability should declare:
+
+what it is
+
+what problem it solves
+
+what signals should trigger it
+
+what prerequisites it needs
+
+what inputs it accepts
+
+what outputs it produces
+
+what learner states it is good for
+
+what learner states it is bad for
+
+how intense it is
+
+how long it takes
+
+whether it teaches, diagnoses, repairs, drills, explains, motivates, or evaluates
+
+what can follow it
+
+what should never follow it directly
+
+This is how the brain will harness the codebase intelligently.
+
+5. Example capability contract
+A feature should not just be “Difference Drill.”
+It should be described like this:
+
+type CoachCapability = {
+  id: string;
+  name: string;
+  category:
+    | "diagnostic"
+    | "teaching"
+    | "practice"
+    | "repair"
+    | "review"
+    | "assessment"
+    | "motivation"
+    | "roadmap"
+    | "parent"
+    | "support";
+
+  solvesNeeds: string[];          // e.g. ["concept_disambiguation", "confusion_repair"]
+  suitableForStates: string[];    // e.g. ["repair_required", "ready_for_today_mission"]
+  unsuitableForStates?: string[]; // e.g. ["severe_frustration", "time_exhausted"]
+
+  triggers: string[];             // e.g. ["repeated_confusion_pair", "wrong_feature_identification"]
+  prerequisites: string[];        // e.g. ["topic_selected", "content_available"]
+
+  requiredInputs: string[];       // e.g. ["subjectId", "topicId", "confusionPair"]
+  outputEffects: string[];        // e.g. ["clarifies_difference", "generates_evidence"]
+
+  intensity: "low" | "medium" | "high";
+  idealDurationMinutes: number;
+
+  compatibleWith: string[];       // what can be sequenced with it
+  incompatibleWith?: string[];
+
+  entryComponent: string;         // component or route
+  dataProvider: string;           // service that powers it
+};
+Now the brain can reason over the registry instead of hardcoding random if-statements.
+
+6. The brain must reason in terms of "learning needs"
+This is the missing middle layer.
+
+The brain should not jump directly from raw data to feature choice.
+
+It should first derive Need States.
+
+For example:
+
+Possible need states
+baseline_assessment_needed
+
+concept_repair_needed
+
+confusion_pair_repair_needed
+
+formula_recall_needed
+
+guided_application_needed
+
+worked_example_needed
+
+pressure_conditioning_needed
+
+confidence_recovery_needed
+
+parent_visibility_needed
+
+review_consolidation_needed
+
+speed_build_needed
+
+retention_reinforcement_needed
+
+motivation_support_needed
+
+roadmap_visibility_needed
+
+high_risk_alert_needed
+
+topic_block_repair_needed
+
+These are what the brain should produce first.
+
+Then the capability engine maps them to product features.
+
+This is what makes the composition elegant.
+
+7. From data to need to capability to experience
+This is the pipeline you want.
+
+Step 1 — Gather data
+question performance
+
+speed
+
+wrong answer patterns
+
+skipped questions
+
+feature usage history
+
+friction points
+
+confidence signals
+
+topic progression
+
+time budget
+
+parent input
+
+review results
+
+Step 2 — Derive learner needs
+Example:
+
+student is confusing osmosis and diffusion
+
+student is accurate untimed but weak under pressure
+
+student is losing motivation after repeated misses
+
+student has fragile understanding of algebraic fractions
+
+student needs more roadmap visibility
+
+student needs mixed transfer practice
+
+Step 3 — Match capabilities
+Example:
+
+Difference Drill
+
+comparison cards
+
+glossary audio
+
+worked example module
+
+guided practice mission
+
+speed mini-sprint
+
+intervention card
+
+roadmap overlay
+
+Step 4 — Compose custom experience
+Example:
+
+show confusion repair intro
+
+launch Difference Drill
+
+follow with concept card
+
+then worked example
+
+then 4 guided questions
+
+then one timed checkpoint
+
+then show “why this matters” roadmap context
+
+That is exactly the kind of unique experience you are describing.
+
+8. The brain needs a Session Composer
+Add another engine:
+
+Session Composer
+This engine takes:
+
+learner need states
+
+available capabilities
+
+current plan context
+
+student fatigue/friction state
+
+time available
+
+subject/topic context
+
+And produces:
+
+a custom session structure
+
+a custom screen sequence
+
+the right feature mix
+
+the right order
+
+the right intensity
+
+the right duration
+
+the right intervention points
+
+So instead of every mission being one rigid format, you can generate:
+
+Session A: Concept rescue
+misconception spotlight
+
+difference drill
+
+worked example
+
+guided check
+
+Session B: Speed conversion
+quick warm-up
+
+timed question set
+
+latency feedback
+
+pressure drill
+
+calm debrief
+
+Session C: Motivation stabilization
+easy early win
+
+confidence note
+
+short guided mission
+
+visible progress bar
+
+badge/title reinforcement
+
+This is how the coach becomes unique per student.
+
+9. The brain should understand the purpose of each feature
+Every feature in the system should be tagged by academic role.
+
+For example:
+
+Example feature roles
+Difference Drill
+Best for:
+
+confusion pairs
+
+feature discrimination
+
+concept contrast
+
+lookalike topic separation
+
+Glossary Smart Mode
+Best for:
+
+term reinforcement
+
+definition/formula/key concept linking
+
+audio revision
+
+quick recall build-up
+
+Wrong Answer Intelligence
+Best for:
+
+exposing why the answer was wrong
+
+surfacing misconception patterns
+
+helping the brain understand error types
+
+Teach Mode
+Best for:
+
+structured explanation
+
+teacher-like walkthrough
+
+foundation building before testing
+
+Speed Sprint
+Best for:
+
+timer adaptation
+
+pace conditioning
+
+pressure exposure
+
+Roadmap View
+Best for:
+
+motivation
+
+long-journey visibility
+
+contextualizing today’s effort
+
+Parent Alert / Feedback Layer
+Best for:
+
+external accountability
+
+high-risk escalation
+
+premium support loop
+
+If you tag everything this way, the brain can select meaningfully.
+
+10. The brain should produce "Experience Blueprints"
+Instead of just producing “next action,” it should sometimes produce:
+
+ExperienceBlueprint
+This is the object that describes the custom experience to render.
+
+Example:
+
+type ExperienceBlueprint = {
+  id: string;
+  objective: string;                 // e.g. "repair confusion between osmosis and diffusion"
+  strategy: string;                  // e.g. "contrast -> guided example -> checkpoint"
+  estimatedMinutes: number;
+
+  segments: Array<{
+    order: number;
+    capabilityId: string;            // references registry
+    purpose: string;                 // why this segment exists
+    durationMinutes?: number;
+    config: Record<string, unknown>; // topicId, question count, timing mode, etc.
+  }>;
+
+  successCriteria: string[];
+  failureCriteria: string[];
+  followUpPolicy: {
+    onSuccess: string;
+    onFailure: string;
+  };
+};
+This is extremely powerful.
+
+Because now the brain does not have to hardcode one flow.
+It can build experiences from components.
+
+11. You need feature embeddings, but in product terms
+When you said “embed this feature and that feature,” the right architecture is:
+
+every feature becomes a composable capability
+
+every capability exposes configuration knobs
+
+the session composer can embed one inside another flow
+
+Examples:
+
+mission embeds glossary popup
+
+repair flow embeds difference drill
+
+speed session embeds wrong-answer review
+
+roadmap screen embeds today’s mission preview
+
+teach mode embeds worked example and concept audio
+
+debrief embeds confidence rescue and next-action CTA
+
+This means the brain is not choosing entire monolithic pages only.
+It can choose experience fragments.
+
+That is how you get unique sessions.
+
+12. The brain needs a Policy Engine
+This is important so composition stays disciplined.
+
+Because if you let the brain pull anything arbitrarily, you get chaos.
+
+So add:
+
+Policy Engine
+This engine controls rules like:
+
+never show high-pressure speed drills when confidence is collapsing
+
+do not show a new topic when a blocker is unresolved
+
+do not use 3 heavy features in one short session
+
+do not insert a parent alert for minor dips
+
+do not show roadmap too often if it becomes noise
+
+do not repeat the same capability too frequently unless explicitly repairing
+
+do not trigger advanced feature X without prerequisite content Y
+
+prefer easier early wins after a streak of failures
+
+This keeps experience composition sane.
+
+13. The brain needs feature efficacy memory
+This is a very powerful idea.
+
+The brain should learn not only about the student.
+It should learn about which features work best for that student.
+
+For example:
+
+this student responds very well to worked examples
+
+this student improves after contrast drills
+
+this student gets frustrated by too many timed sessions
+
+this student retains better after audio glossary sessions
+
+this student likes roadmap visibility and responds positively to milestones
+
+this student improves more with short mixed sessions than long monotone practice
+
+This means the brain should maintain something like:
+
+CapabilityEffectivenessProfile
+Per student, per capability:
+
+frequency used
+
+success lift
+
+engagement lift
+
+retention lift
+
+frustration risk
+
+speed improvement contribution
+
+confidence improvement contribution
+
+Now the brain can personalize not just by academic weakness but by what works on this learner.
+
+That is next-level customization.
+
+14. The brain needs a Recommender + Composer pair
+Use these two engines together.
+
+A. Capability Recommender
+Given need states, recommend best capabilities.
+
+B. Experience Composer
+Given recommended capabilities, compose a coherent session/journey.
+
+That is cleaner than one giant engine.
+
+15. The brain should think across multiple surfaces
+When the brain detects a need, the response does not always have to be inside Mission Flow.
+
+For example:
+
+If student is losing direction
+Show:
+
+roadmap summary
+
+today focus banner
+
+small confidence note
+
+not a heavy drill immediately
+
+If student has repeated vocabulary confusion
+Show:
+
+glossary quick-link
+
+difference drill
+
+concept relation card
+
+If student is behind schedule
+Show:
+
+compressed mission pack
+
+reduced-friction entry
+
+time budget adaptation
+
+parent notification only if severe
+
+If student is doing well
+Show:
+
+more challenging mixed practice
+
+titles defense
+
+speed drill
+
+“level up” progression
+
+This means the brain composes not only sessions, but the entire surface behavior of the product.
+
+16. The brain should have a "surface decision engine"
+This engine decides:
+
+what should appear on Coach Hub
+
+what should appear inside Mission Flow
+
+what support card should appear
+
+what modal or side panel should appear
+
+whether to surface roadmap context
+
+whether to surface parent message generation
+
+whether to surface teach mode instead of test mode
+
+whether to show recovery UI, challenge UI, or reassurance UI
+
+This is how the product starts to feel alive.
+
+17. Recommended top-level architecture upgrade
+Your coach brain should now be expanded to include these new engines:
+
+Perception Engine
+
+Student Model Engine
+
+Curriculum Intelligence Engine
+
+Evidence Engine
+
+Lifecycle State Engine
+
+Plan Engine
+
+Mission Planner
+
+Intervention Engine
+
+Synchronization Engine
+
+Explainability Engine
+
+Capability Registry
+
+Capability Recommender
+
+Experience Composer
+
+Policy Engine
+
+Surface Decision Engine
+
+Capability Effectiveness Memory
+
+These additions are what unlock the behavior you are asking for.
+
+18. The right execution flow
+This is the exact logic.
+
+Step 1 — Build world state
+What is true right now?
+
+Step 2 — Infer needs
+What does the student need?
+
+Step 3 — Filter by policy
+What is allowed or appropriate now?
+
+Step 4 — Query registry
+Which product capabilities can satisfy those needs?
+
+Step 5 — Rank capabilities
+Which ones are best for this student now?
+
+Step 6 — Compose experience
+How should they be sequenced into a coherent session or surface?
+
+Step 7 — Render outputs
+What should Hub, Mission Flow, support cards, roadmap, and parent layer show?
+
+Step 8 — Observe results
+Did this composition work?
+
+Step 9 — Update capability effectiveness memory
+Did these chosen features help this student?
+
+This is the adaptive flywheel.
+
+19. Example scenario
+Let’s say the student:
+
+keeps mixing up osmosis and diffusion
+
+is getting frustrated
+
+has only 15 minutes left
+
+recently responded well to comparison-based activities
+
+is behind on the plan
+
+The brain could derive these needs:
+
+confusion_pair_repair_needed
+
+confidence_recovery_needed
+
+compressed_session_needed
+
+catch_up_mode_needed
+
+Then from the registry it selects:
+
+Difference Drill
+
+short worked example
+
+3-question guided checkpoint
+
+small progress reassurance card
+
+Then it composes:
+
+Experience Blueprint
+quick intro: “Let’s clear this up fast”
+
+Difference Drill on osmosis vs diffusion
+
+short concept comparison card
+
+3 guided questions
+
+one reassuring debrief
+
+update roadmap as “repair completed”
+
+That feels customized and intelligent.
+
+20. Another scenario
+Student is:
+
+doing well conceptually
+
+weak under timer
+
+preparing for mocks soon
+
+responds well to challenge modes
+
+has 35 minutes available
+
+The brain derives:
+
+pressure_conditioning_needed
+
+performance_conversion_needed
+
+exam_mode_preparation_needed
+
+Then it chooses:
+
+warm-up recap
+
+speed sprint
+
+wrong-answer intelligence review
+
+title defense checkpoint
+
+That is a totally different experience for a different student.
+
+That is the system you want.
+
+21. What to build first to unlock this
+You do not need to build every engine at once.
+
+Build these first:
+
+Phase 1
+Capability Registry
+
+Need State taxonomy
+
+Capability Recommender V1
+
+Experience Blueprint schema
+
+Phase 2
+Experience Composer
+
+Policy Engine
+
+Surface Decision Engine
+
+Phase 3
+Capability Effectiveness Memory
+
+adaptive ranking per student
+
+experience outcome scoring
+
+That gives you the personalization layer on top of the core brain.
+
+22. The critical mindset shift
+Do not ask:
+“Which page should the user go to?”
+
+Ask:
+“Which combination of capabilities best solves this learner need right now?”
+
+That one shift changes everything.
+
+23. Final architecture statement
+What you want is a brain that operates like this:
+
+student data -> need inference -> capability matching -> policy filtering -> experience composition -> synchronized delivery -> outcome learning
+
+That is the clean model.
+
+Not a dashboard brain.
+Not a chatbot brain.
+Not a page router.
+
+A dynamic academic experience composer.
+
+24. The next artifact you need
+The best next document is:
+
+Coach Capability Orchestration Specification
+It should define:
+
+capability registry schema
+
+need taxonomy
+
+capability matching rules
+
+experience blueprint schema
+
+policy rules
+
+surface decision rules
+
+capability effectiveness memory model
+
+ranking logic
+
+example compositions
+
+That is the document that will let you actually build the kind of brain you are describing.
+
+I can write that next in full build-grade form.
+
+
+proceed
+
+I’m turning it into the actual orchestration spec now: the registry, need taxonomy, matching logic, composition rules, and how the brain learns which features work best per student.
+
+Thought for 4s
+Coach Capability Orchestration Specification
+This specification defines how the Coach Brain will harness all features in the codebase, combine them intelligently, and generate custom learning experiences per student.
+
+This is the layer that transforms the product from a set of screens into an adaptive academic system.
+
+The central idea is simple:
+
+The brain should not think in terms of pages.
+It should think in terms of:
+
+learner needs
+
+available capabilities
+
+policy constraints
+
+best-fit compositions
+
+synchronized delivery
+
+outcome learning
+
+That is how the coach becomes unique per student.
+
+1. Purpose
+The Capability Orchestration Layer exists so the Coach Brain can:
+
+understand what the student needs right now
+
+know what instructional tools exist in the product
+
+decide which tools are best suited to the current need
+
+combine those tools into custom sessions and flows
+
+choose what to show, what not to show, and when
+
+vary experiences per learner, per topic, per time budget, per pressure state
+
+learn which capabilities work best for each student over time
+
+This layer is what allows the brain to “pull this feature and that feature” when needed.
+
+2. Core concept
+The system must operate through this pipeline:
+
+Step 1 — Observe
+Gather student data, system data, performance data, and context data.
+
+Step 2 — Infer needs
+Convert observations into learner need states.
+
+Step 3 — Query capabilities
+Look up which features in the codebase can satisfy those needs.
+
+Step 4 — Filter by policy
+Remove options that are inappropriate, too heavy, unavailable, or out of sequence.
+
+Step 5 — Rank candidates
+Choose the best capabilities for this specific student right now.
+
+Step 6 — Compose experience
+Assemble chosen capabilities into a coherent experience blueprint.
+
+Step 7 — Deliver across surfaces
+Render the blueprint into Coach Hub, Mission Flow, overlays, cards, modals, support panels, roadmap, parent layer, and debrief.
+
+Step 8 — Measure outcome
+Observe how the student responds.
+
+Step 9 — Learn feature efficacy
+Update what the brain knows about which capabilities work well for that student.
+
+3. Architectural additions to the Coach Brain
+To support this, the Coach Brain is expanded with six new core modules:
+
+Need Inference Engine
+
+Capability Registry
+
+Capability Recommender
+
+Policy Engine
+
+Experience Composer
+
+Capability Effectiveness Memory
+
+Optional but highly recommended:
+7. Surface Decision Engine
+8. Experience Outcome Evaluator
+
+These sit on top of the existing brain foundation:
+
+lifecycle state engine
+
+readiness engine
+
+evidence engine
+
+plan engine
+
+mission planner
+
+intervention engine
+
+synchronization engine
+
+explainability engine
+
+4. Definitions
+Capability
+A capability is any reusable instructional, support, motivational, evaluative, or orchestration feature in the product.
+
+Examples:
+
+diagnostic session
+
+glossary playback
+
+worked example module
+
+difference drill
+
+mission flow
+
+wrong answer intelligence panel
+
+speed sprint
+
+roadmap strip
+
+parent alert
+
+teach mode
+
+comparison card
+
+targeted repair burst
+
+confidence rescue card
+
+checkpoint test
+
+title defense challenge
+
+A capability is not just a page.
+It can be:
+
+a full feature
+
+an embedded micro-experience
+
+a card
+
+a lane
+
+a support widget
+
+a challenge mode
+
+a review mode
+
+a recovery mode
+
+Need State
+A need state is a structured conclusion about what the learner requires right now.
+
+Examples:
+
+concept repair needed
+
+confusion-pair repair needed
+
+speed build needed
+
+confidence recovery needed
+
+roadmap visibility needed
+
+parent visibility needed
+
+retention reinforcement needed
+
+Experience Blueprint
+An experience blueprint is a composed instructional flow built from multiple capabilities.
+
+5. Need Inference Engine
+This engine converts world-state and evidence into actionable learner needs.
+
+It should not jump directly from “wrong answer” to “show feature.”
+It should first derive the student’s actual needs.
+
+5.1 Need categories
+The system should support needs in at least these domains:
+
+A. Academic understanding
+baseline_assessment_needed
+
+concept_repair_needed
+
+confusion_pair_repair_needed
+
+formula_recall_needed
+
+definition_reinforcement_needed
+
+guided_application_needed
+
+worked_example_needed
+
+transfer_practice_needed
+
+exam_pattern_familiarity_needed
+
+B. Performance conditioning
+speed_build_needed
+
+speed_to_accuracy_conversion_needed
+
+pressure_conditioning_needed
+
+stability_under_timer_needed
+
+accuracy_recovery_needed
+
+C. Progression control
+topic_block_repair_needed
+
+prerequisite_rebuild_needed
+
+review_consolidation_needed
+
+catch_up_mode_needed
+
+plan_visibility_needed
+
+goal_alignment_needed
+
+D. Motivation and behavior
+confidence_recovery_needed
+
+friction_reduction_needed
+
+easy_win_needed
+
+engagement_refresh_needed
+
+momentum_support_needed
+
+E. Support and visibility
+parent_visibility_needed
+
+teacher_override_needed
+
+high_risk_alert_needed
+
+time_budget_awareness_needed
+
+roadmap_visibility_needed
+
+F. Product orchestration
+content_recovery_needed
+
+surface_simplification_needed
+
+session_compression_needed
+
+deep_focus_mode_needed
+
+guided_path_needed
+
+5.2 Need object contract
+type LearnerNeed = {
+  id: string;
+  type: string;
+  severity: "low" | "medium" | "high" | "critical";
+  confidence: number; // 0..1
+  subjectId?: string;
+  topicId?: string;
+  sourceSignals: string[];
+  explanation: string;
+  expiresAt?: string;
+  blockedBy?: string[];
+};
+5.3 Example inference rules
+Confusion pair repair
+If:
+
+wrong answers repeatedly occur between similar concepts
+
+wrong-answer intelligence tags the same distinction repeatedly
+
+difference identification tasks fail
+
+Then derive:
+
+confusion_pair_repair_needed
+
+Worked example needed
+If:
+
+concept recognition is okay
+
+application questions fail
+
+hint dependency is high
+
+free response or multi-step tasks collapse
+
+Then derive:
+
+worked_example_needed
+
+Confidence recovery
+If:
+
+repeated failures occur in one short span
+
+session abandonment risk rises
+
+latency increases sharply after misses
+
+hesitation grows
+
+Then derive:
+
+confidence_recovery_needed
+
+Session compression
+If:
+
+time remaining is low
+
+student is behind on plan
+
+too many pending activities remain
+
+Then derive:
+
+session_compression_needed
+
+6. Capability Registry
+This is the machine-readable map of all usable instructional product powers.
+
+Every major feature, micro-feature, and embeddable support component should be registered here.
+
+This is how the brain becomes aware of the codebase.
+
+6.1 Registry purpose
+The registry tells the brain:
+
+what exists
+
+what each thing solves
+
+when it is useful
+
+when it is risky
+
+what it needs to run
+
+what it outputs
+
+what it can be embedded into
+
+what it combines well with
+
+Without this registry, the brain cannot compose intelligently.
+
+6.2 Capability contract
+type CoachCapability = {
+  id: string;
+  name: string;
+  version?: string;
+
+  category:
+    | "diagnostic"
+    | "teaching"
+    | "practice"
+    | "repair"
+    | "review"
+    | "assessment"
+    | "motivation"
+    | "navigation"
+    | "roadmap"
+    | "parent"
+    | "support"
+    | "intervention";
+
+  modality:
+    | "full_screen"
+    | "embedded_panel"
+    | "card"
+    | "modal"
+    | "inline_block"
+    | "background_process"
+    | "overlay"
+    | "side_rail";
+
+  solvesNeeds: string[];
+  suitableForStates: string[];
+  unsuitableForStates?: string[];
+
+  suitableForProfiles?: string[];     // e.g. "concept_stronger", "fragile_under_timer"
+  unsuitableForProfiles?: string[];
+
+  triggers: string[];
+  prerequisites: string[];
+  blockers?: string[];                // conditions that prohibit use
+
+  requiredInputs: string[];
+  optionalInputs?: string[];
+
+  outputEffects: string[];            // e.g. generates evidence, clarifies difference, restores confidence
+  expectedOutcomes: string[];
+
+  intensity: "low" | "medium" | "high";
+  idealDurationMinutes: number;
+  minimumDurationMinutes?: number;
+  maximumDurationMinutes?: number;
+
+  supportsEmbedding: boolean;
+  embeddableInto?: string[];          // IDs of capabilities it can be embedded into
+  compatibleWith: string[];
+  incompatibleWith?: string[];
+
+  reusePolicy?: {
+    minSpacingSessions?: number;
+    maxUsesPerDay?: number;
+    maxUsesPerWeek?: number;
+  };
+
+  rendering: {
+    entryRoute?: string;
+    entryComponent: string;
+    configSchema?: string;
+  };
+
+  data: {
+    provider: string;
+    contentRequirements?: string[];
+    coverageRequirements?: string[];
+  };
+
+  instrumentation: {
+    successSignals: string[];
+    failureSignals: string[];
+    engagementSignals: string[];
+  };
+};
+6.3 Example registry entries
+Difference Drill
+{
+  id: "difference_drill",
+  name: "Difference Drill",
+  category: "repair",
+  modality: "full_screen",
+  solvesNeeds: [
+    "confusion_pair_repair_needed",
+    "concept_repair_needed",
+    "definition_reinforcement_needed"
+  ],
+  suitableForStates: [
+    "repair_required",
+    "ready_for_today_mission",
+    "review_day"
+  ],
+  triggers: [
+    "repeated_confusion_pair",
+    "wrong_feature_identification",
+    "lookalike_concept_failure"
+  ],
+  prerequisites: ["topic_selected", "comparison_data_available"],
+  requiredInputs: ["subjectId", "topicId", "comparisonPair"],
+  outputEffects: ["clarifies_difference", "generates_evidence"],
+  expectedOutcomes: ["reduced_confusion", "higher_discrimination_accuracy"],
+  intensity: "medium",
+  idealDurationMinutes: 6,
+  supportsEmbedding: true,
+  embeddableInto: ["repair_session", "mission_flow"],
+  compatibleWith: ["worked_example_panel", "guided_mcq_block", "debrief_card"],
+  rendering: {
+    entryComponent: "DifferenceDrillScreen"
+  },
+  data: {
+    provider: "ComparisonContentService"
+  },
+  instrumentation: {
+    successSignals: ["pair_accuracy_improves", "confusion_tag_drops"],
+    failureSignals: ["confusion_repeats"],
+    engagementSignals: ["completion_rate", "latency_drop"]
+  }
+}
+Glossary Audio Playback
+{
+  id: "glossary_audio",
+  name: "Glossary Audio Playback",
+  category: "teaching",
+  modality: "embedded_panel",
+  solvesNeeds: [
+    "definition_reinforcement_needed",
+    "formula_recall_needed",
+    "retention_reinforcement_needed"
+  ],
+  suitableForStates: ["ready_for_today_mission", "review_day"],
+  triggers: ["term_fragility", "formula_recall_low"],
+  prerequisites: ["glossary_content_available"],
+  requiredInputs: ["subjectId", "topicId"],
+  outputEffects: ["reinforces_terms", "supports_passive_revision"],
+  expectedOutcomes: ["better recall", "lower retrieval latency"],
+  intensity: "low",
+  idealDurationMinutes: 4,
+  supportsEmbedding: true,
+  embeddableInto: ["mission_flow", "coach_hub", "review_session"],
+  compatibleWith: ["worked_example_panel", "guided_mcq_block"],
+  rendering: {
+    entryComponent: "GlossaryAudioPanel"
+  },
+  data: {
+    provider: "GlossaryService"
+  },
+  instrumentation: {
+    successSignals: ["recall_accuracy_lift"],
+    failureSignals: ["no_recall_change"],
+    engagementSignals: ["audio_completion_rate"]
+  }
+}
+Wrong Answer Intelligence
+{
+  id: "wrong_answer_intelligence",
+  name: "Wrong Answer Intelligence",
+  category: "intervention",
+  modality: "embedded_panel",
+  solvesNeeds: [
+    "concept_repair_needed",
+    "guided_application_needed",
+    "misconception_exposure_needed"
+  ],
+  suitableForStates: ["mission_in_progress", "mission_review_required", "repair_required"],
+  triggers: ["wrong_answer_submitted", "patterned_error_detected"],
+  prerequisites: ["answer_data_available"],
+  requiredInputs: ["questionId", "selectedOption", "correctOption"],
+  outputEffects: ["surfaces_reasoning_gap", "labels_misconception"],
+  expectedOutcomes: ["better self-correction", "pattern awareness"],
+  intensity: "low",
+  idealDurationMinutes: 2,
+  supportsEmbedding: true,
+  embeddableInto: ["mission_flow", "review_session"],
+  compatibleWith: ["worked_example_panel", "repair_micro_session"],
+  rendering: {
+    entryComponent: "WrongAnswerIntelligenceCard"
+  },
+  data: {
+    provider: "MisconceptionAnalysisService"
+  },
+  instrumentation: {
+    successSignals: ["same_error_not_repeated"],
+    failureSignals: ["misconception_recurs"],
+    engagementSignals: ["card_interaction_rate"]
+  }
+}
+7. Capability taxonomy
+Every capability should be tagged across multiple dimensions, not just one.
+
+7.1 By academic role
+detect
+
+teach
+
+clarify
+
+compare
+
+drill
+
+test
+
+repair
+
+review
+
+consolidate
+
+motivate
+
+reassure
+
+escalate
+
+inform parent
+
+visualize progress
+
+7.2 By learner challenge solved
+conceptual confusion
+
+formula retrieval
+
+speed weakness
+
+timer panic
+
+application gap
+
+transfer weakness
+
+motivation drop
+
+progress disorientation
+
+schedule slippage
+
+topic fragility
+
+7.3 By intensity
+low cognitive load
+
+medium cognitive load
+
+high cognitive load
+
+7.4 By phase suitability
+onboarding
+
+baseline
+
+foundation
+
+strengthening
+
+timed performance
+
+revision
+
+repair
+
+debrief
+
+7.5 By time profile
+1–3 min
+
+4–7 min
+
+8–15 min
+
+15–30 min
+
+30+ min
+
+7.6 By embedding type
+standalone only
+
+embeddable
+
+nested only
+
+overlay only
+
+card only
+
+8. Capability Recommender
+The recommender receives learner needs and returns candidate capabilities ranked for current fit.
+
+This engine should not yet decide exact sequence.
+It decides suitability.
+
+8.1 Inputs
+learner needs
+
+coach state
+
+topic context
+
+student learning profile
+
+plan context
+
+time available
+
+fatigue/friction state
+
+capability effectiveness memory
+
+current policies
+
+content availability
+
+8.2 Outputs
+A ranked list of capability candidates.
+
+type CapabilityRecommendation = {
+  capabilityId: string;
+  score: number;
+  reasons: string[];
+  matchedNeeds: string[];
+  warnings?: string[];
+  recommendedMode?: "standalone" | "embedded";
+};
+8.3 Ranking factors
+A. Need match score
+How well the capability solves the current needs.
+
+B. Profile fit score
+Does this capability historically work for this type of student?
+
+C. Student-specific effectiveness score
+Has this capability helped this specific student before?
+
+D. Policy safety score
+Is it allowed, safe, and appropriate right now?
+
+E. Sequencing fit score
+Does it combine cleanly with likely adjacent capabilities?
+
+F. Time fit score
+Does it fit the time remaining?
+
+G. Novelty / freshness score
+Has the capability been overused recently?
+
+H. Coverage readiness score
+Is required content/data available?
+
+8.4 Conceptual scoring formula
+capabilityScore =
+  0.30 * needMatch +
+  0.18 * studentSpecificEffectiveness +
+  0.15 * learnerProfileFit +
+  0.12 * policySafety +
+  0.10 * sequencingFit +
+  0.08 * timeFit +
+  0.04 * freshness +
+  0.03 * coverageReadiness;
+Weights can evolve, but the idea matters.
+
+9. Policy Engine
+The policy engine stops the brain from composing chaotic or harmful experiences.
+
+It acts as a guardrail layer.
+
+9.1 Purpose
+It decides what is allowed, preferred, discouraged, or forbidden.
+
+9.2 Policy categories
+Academic policies
+do not advance to new topic if prerequisite blocker is unresolved
+
+do not trigger high-speed drill before minimum concept stability
+
+do not schedule mixed challenge if foundational confusion is severe
+
+Emotional / motivation policies
+do not show high-pressure experiences after repeated immediate failure
+
+prefer easy-win or guided support after collapse patterns
+
+do not stack 3 hard capabilities back-to-back
+
+Time policies
+do not compose sessions longer than available minutes
+
+compress or split experiences if time is low
+
+avoid long warm-ups when behind schedule
+
+Product policies
+do not repeat the same feature too often without reason
+
+do not surface roadmap too frequently as noise
+
+do not overuse parent escalation
+
+prefer embedded experiences over full navigation when friction is high
+
+Capability policies
+capability A may require capability B first
+
+capability C must not be used after capability D in the same session
+
+capability E has max uses per week
+
+9.3 Policy contract
+type CapabilityPolicyDecision = {
+  capabilityId: string;
+  status: "allowed" | "discouraged" | "blocked";
+  reasons: string[];
+  constraints?: {
+    maxDurationMinutes?: number;
+    mustEmbed?: boolean;
+    preferredPosition?: "opening" | "middle" | "ending";
+  };
+};
+10. Experience Composer
+This is the engine that takes recommended capabilities and assembles a coherent custom experience.
+
+This is where the magic happens.
+
+10.1 Purpose
+The composer decides:
+
+which capabilities to include
+
+which one starts the experience
+
+which are embedded vs standalone
+
+what order they run in
+
+how long each segment gets
+
+what the total flow is called
+
+what success looks like
+
+what failure triggers next
+
+10.2 Inputs
+ranked capabilities
+
+learner needs
+
+current plan activity
+
+available minutes
+
+student friction state
+
+policy decisions
+
+current session context
+
+surface constraints
+
+10.3 Output: Experience Blueprint
+type ExperienceBlueprint = {
+  id: string;
+  type:
+    | "repair_session"
+    | "teaching_session"
+    | "speed_session"
+    | "guided_practice_session"
+    | "review_session"
+    | "confidence_recovery_session"
+    | "compressed_catchup_session"
+    | "mixed_custom_session";
+
+  objective: string;
+  strategy: string;
+  estimatedMinutes: number;
+
+  needsAddressed: string[];
+  primarySubjectId?: string;
+  primaryTopicId?: string;
+
+  segments: Array<{
+    order: number;
+    capabilityId: string;
+    deliveryMode: "standalone" | "embedded" | "overlay" | "inline";
+    purpose: string;
+    estimatedMinutes?: number;
+    config: Record<string, unknown>;
+  }>;
+
+  successCriteria: string[];
+  failureCriteria: string[];
+
+  followUpPolicy: {
+    onSuccess: string;
+    onFailure: string;
+    ifInterrupted: string;
+  };
+
+  surfacePlan: {
+    coachHubEntryCard?: boolean;
+    missionFlowRoute?: string;
+    showRoadmapContext?: boolean;
+    showTimer?: boolean;
+    showParentVisibilityHint?: boolean;
+    debriefStyle?: "supportive" | "neutral" | "challenge";
+  };
+};
+10.4 Composition patterns
+The composer should support repeatable strategic patterns.
+
+Pattern A — Contrast -> Guided -> Check
+Used for:
+
+confusion repair
+
+lookalike concept separation
+
+Example:
+
+difference drill
+
+concept comparison card
+
+guided MCQs
+
+mini debrief
+
+Pattern B — Explain -> Model -> Practice
+Used for:
+
+new concept learning
+
+foundation build
+
+Example:
+
+teach mode
+
+worked example
+
+guided practice
+
+checkpoint
+
+Pattern C — Warm-up -> Timed -> Reflection
+Used for:
+
+speed conditioning
+
+timer adaptation
+
+Example:
+
+quick recap
+
+speed sprint
+
+wrong answer intelligence
+
+time feedback card
+
+Pattern D — Rescue -> Easy Win -> Re-entry
+Used for:
+
+confidence collapse
+
+frustration recovery
+
+Example:
+
+reassurance card
+
+simple guided question block
+
+milestone visibility
+
+short next action
+
+Pattern E — Compression Pack
+Used for:
+
+low time
+
+catch-up days
+
+Example:
+
+priority recap
+
+high-value practice block
+
+short checkpoint
+
+roadmap adjustment
+
+11. Surface Decision Engine
+This engine decides where and how the experience should appear in the product.
+
+Not every need should lead to a full-screen mission.
+
+Sometimes the right move is:
+
+a Coach Hub card
+
+an inline support block
+
+a modal
+
+a side panel
+
+a short pre-mission intervention
+
+a debrief add-on
+
+a parent summary
+
+11.1 Surface decisions include
+what appears on Coach Hub
+
+what appears before mission starts
+
+what appears inside mission flow
+
+what support blocks appear after wrong answers
+
+when to surface roadmap context
+
+when to show confidence rescue
+
+when to simplify the page
+
+when to keep the session deep and uncluttered
+
+11.2 Example rules
+If roadmap disorientation is high
+Show:
+
+Coach Hub roadmap strip
+
+“why today matters” context before mission
+
+If live misconception recurrence is detected
+Show:
+
+inline wrong-answer intelligence
+
+optional embedded worked example
+
+not a full page diversion unless severity is high
+
+If time is nearly exhausted
+Show:
+
+compressed mission card
+
+hide secondary surfaces
+
+emphasize single next action only
+
+If parent visibility need is high
+Show:
+
+parent summary generation after session
+
+not during the session itself
+
+12. Capability Effectiveness Memory
+This is how the brain learns which features work best for each student.
+
+This is one of the most powerful layers in the system.
+
+The brain should not only learn about topics.
+It should learn about feature effectiveness per learner.
+
+12.1 Purpose
+Track how well each capability performs for each student over time.
+
+12.2 What to store
+For each student + capability:
+
+usage count
+
+recent usage dates
+
+engagement lift
+
+accuracy lift
+
+speed lift
+
+retention lift
+
+confidence lift
+
+frustration risk
+
+abandonment correlation
+
+average session completion effect
+
+topic suitability patterns
+
+12.3 Contract
+type CapabilityEffectivenessRecord = {
+  studentId: string;
+  capabilityId: string;
+
+  usageCount: number;
+  lastUsedAt?: string;
+
+  effectiveness: {
+    engagementLift: number;   // -1..1
+    accuracyLift: number;     // -1..1
+    speedLift: number;        // -1..1
+    retentionLift: number;    // -1..1
+    confidenceLift: number;   // -1..1
+    frustrationRisk: number;  // 0..1
+  };
+
+  contextPatterns?: Array<{
+    subjectId?: string;
+    topicId?: string;
+    needType: string;
+    observedEffect: number;
+  }>;
+};
+12.4 Example interpretation
+If a student consistently improves after worked examples, then:
+
+worked example capability gets a boost in ranking for future similar needs
+
+If a student consistently gets frustrated with high-pressure speed drills, then:
+
+speed drill capability is discouraged until confidence or stability improves
+
+If glossary audio produces good retention gains:
+
+it becomes more likely to be embedded into revision or repair flows
+
+13. Experience Outcome Evaluator
+This engine judges whether a composed experience actually worked.
+
+It closes the loop.
+
+13.1 Outcome dimensions
+academic lift
+
+speed lift
+
+confusion reduction
+
+retention lift
+
+engagement quality
+
+completion quality
+
+frustration reduction
+
+confidence recovery
+
+13.2 Outcome contract
+type ExperienceOutcome = {
+  blueprintId: string;
+  studentId: string;
+  successLevel: "failed" | "partial" | "successful" | "strong_success";
+
+  metrics: {
+    academicLift: number;
+    speedLift: number;
+    engagementLift: number;
+    confidenceLift: number;
+    confusionReduction?: number;
+  };
+
+  notes: string[];
+  recommendedAdjustments?: string[];
+};
+This outcome feeds back into:
+
+topic evidence
+
+plan updates
+
+capability effectiveness memory
+
+14. Data flow
+This is the operating flow end to end.
+
+world state is rebuilt
+
+need inference engine derives active learner needs
+
+capability recommender queries registry
+
+policy engine filters and constrains
+
+experience composer assembles blueprint
+
+surface decision engine maps blueprint to product surfaces
+
+user experiences the session
+
+outcome evaluator measures success
+
+effectiveness memory is updated
+
+future recommendations become more personalized
+
+This is the adaptive loop.
+
+15. Example end-to-end scenarios
+Scenario 1 — Confusion repair with limited time
+Observed data
+student confuses osmosis and diffusion repeatedly
+
+14 minutes available
+
+confidence slightly falling
+
+history shows difference drill works well for this student
+
+Derived needs
+confusion_pair_repair_needed
+
+session_compression_needed
+
+confidence_recovery_needed
+
+Recommended capabilities
+difference drill
+
+comparison card
+
+guided MCQ block
+
+supportive debrief
+
+Blueprint
+quick supportive intro
+
+difference drill
+
+concept comparison card
+
+3 guided questions
+
+short success/failure debrief
+
+Surfaces
+Coach Hub entry card
+
+Mission Flow segments
+
+Debrief card
+
+Scenario 2 — Student is behind and losing direction
+Observed data
+plan behind by 3 days
+
+student keeps opening hub without starting
+
+no major weakness spike
+
+roadmap visibility historically improves engagement
+
+Derived needs
+roadmap_visibility_needed
+
+guided_path_needed
+
+friction_reduction_needed
+
+catch_up_mode_needed
+
+Recommended capabilities
+roadmap strip
+
+compressed catch-up card
+
+one-click mission starter
+
+milestone reassurance note
+
+Blueprint
+show “you are here” roadmap
+
+show one catch-up pack CTA
+
+remove secondary options
+
+show completion payoff for today
+
+Surfaces
+Coach Hub only, simplified
+
+Scenario 3 — Strong concept, weak under timer
+Observed data
+untimed accuracy strong
+
+timed accuracy weak
+
+student responds well to challenge modes
+
+upcoming mock
+
+Derived needs
+pressure_conditioning_needed
+
+speed_to_accuracy_conversion_needed
+
+exam_pattern_familiarity_needed
+
+Recommended capabilities
+recap warm-up
+
+speed sprint
+
+wrong answer intelligence
+
+title defense checkpoint
+
+Blueprint
+short warm-up
+
+timed sprint
+
+immediate wrong-answer review
+
+challenge checkpoint
+
+performance debrief
+
+Scenario 4 — Repeated failure and emotional collapse
+Observed data
+4 wrong answers in short span
+
+increased latency
+
+hesitation rising
+
+abandonment risk high
+
+Derived needs
+confidence_recovery_needed
+
+easy_win_needed
+
+friction_reduction_needed
+
+Recommended capabilities
+reassurance card
+
+guided example
+
+low-difficulty success set
+
+milestone visibility
+
+Blueprint
+confidence rescue card
+
+worked example
+
+two easy guided questions
+
+visible progress acknowledgement
+
+small re-entry CTA
+
+This is exactly the kind of humane adaptation the brain should perform.
+
+16. Registry population plan
+To make this work, you need to audit your codebase and register every feature/capability.
+
+Start by building a capability inventory with columns:
+
+feature name
+
+academic purpose
+
+learner needs solved
+
+suitable states
+
+required data
+
+component/route
+
+embeddable?
+
+duration
+
+intensity
+
+compatible with
+
+risks
+
+instrumentation available
+
+effectiveness metrics possible
+
+Then convert that inventory into typed registry entries.
+
+17. Recommended initial capabilities to register
+Based on your product direction, the first registry wave should include:
+
+onboarding flow
+
+subject selection
+
+diagnostic session
+
+Coach Hub next-action card
+
+Mission Flow
+
+teach mode
+
+worked example block
+
+guided MCQ block
+
+wrong answer intelligence
+
+difference drill
+
+glossary smart mode
+
+glossary audio mode
+
+comparison card
+
+speed sprint
+
+checkpoint test
+
+review session
+
+roadmap strip
+
+timer panel
+
+confidence rescue card
+
+parent visibility summary
+
+repair micro-session
+
+past question family explorer
+
+misconception spotlight
+
+debrief summary
+
+title defense
+
+return summary
+
+session intervention card
+
+That gives the composer enough pieces to start creating differentiated experiences.
+
+18. Technical module structure
+Recommended file structure:
+
+src/features/coach/orchestration/
+  contracts/
+    LearnerNeed.ts
+    CoachCapability.ts
+    CapabilityRecommendation.ts
+    ExperienceBlueprint.ts
+    CapabilityEffectivenessRecord.ts
+    ExperienceOutcome.ts
+
+  registry/
+    CoachCapabilityRegistry.ts
+    capabilities/
+      differenceDrill.ts
+      glossaryAudio.ts
+      wrongAnswerIntelligence.ts
+      speedSprint.ts
+      roadmapStrip.ts
+      workedExample.ts
+      teachMode.ts
+      confidenceRescue.ts
+
+  engines/
+    NeedInferenceEngine.ts
+    CapabilityRecommender.ts
+    PolicyEngine.ts
+    ExperienceComposer.ts
+    SurfaceDecisionEngine.ts
+    CapabilityEffectivenessEngine.ts
+    ExperienceOutcomeEvaluator.ts
+
+  services/
+    CapabilityRegistryService.ts
+    ExperienceBlueprintService.ts
+
+  repositories/
+    CapabilityEffectivenessRepository.ts
+    ExperienceOutcomeRepository.ts
+19. Suggested implementation phases
+Phase 1 — Inventory and registry
+Deliverables:
+
+capability inventory spreadsheet
+
+capability schema
+
+initial registry entries
+
+need taxonomy
+
+Goal:
+The brain becomes aware of the codebase.
+
+Phase 2 — Need inference and recommendation
+Deliverables:
+
+need inference engine
+
+capability recommender
+
+scoring logic
+
+policy engine V1
+
+Goal:
+The brain can map student needs to features.
+
+Phase 3 — Experience composition
+Deliverables:
+
+blueprint schema
+
+experience composer
+
+surface decision engine
+
+4–6 standard composition patterns
+
+Goal:
+The brain can build custom sessions instead of fixed flows.
+
+Phase 4 — Outcome learning
+Deliverables:
+
+effectiveness memory
+
+outcome evaluator
+
+ranking updates based on history
+
+Goal:
+The brain learns what works for each student.
+
+Phase 5 — Full sync integration
+Deliverables:
+
+integration with coach brain evaluation loop
+
+sync actions to hub/mission/review/parent layer
+
+debrief and roadmap integration
+
+Goal:
+Custom experiences are fully operational across the product.
+
+20. Non-negotiable rules
+The brain must reason over learner needs, not just pages.
+
+Every capability must be registered before the brain can orchestrate it.
+
+Composition must be policy-filtered.
+
+The brain must respect time, emotion, readiness, and progression constraints.
+
+No capability should be overused blindly.
+
+The system must learn from capability outcomes over time.
+
+Surface decisions must be intentional, not accidental.
+
+The final experience must remain explainable.
+
+21. Definition of done
+This orchestration layer is working when:
+
+the same topic can yield different session experiences for different learners
+
+the coach can combine multiple features dynamically into one custom flow
+
+the coach chooses support features at the right time, not randomly
+
+the system knows which capabilities are helping a particular student
+
+the hub, mission, support cards, roadmap, and debrief all stay in sync with one composed strategy
+
+experiences feel intentionally crafted, not generic
+
+22. The first build steps I would take
+Create the LearnerNeed schema.
+
+Create the CoachCapability schema.
+
+Build the first CoachCapabilityRegistry with 10–20 capabilities.
+
+Build Need Inference Engine V1 with hard rules.
+
+Build Capability Recommender V1.
+
+Build Policy Engine V1.
+
+Build ExperienceBlueprint schema.
+
+Build Experience Composer V1 with standard patterns.
+
+Add Surface Decision Engine V1.
+
+Add Capability Effectiveness Memory after initial flows work.
+
+That is the shortest path to making the brain capable of harnessing your feature library intelligently.
+
+23. Final design statement
+What you are building is not merely a tutoring engine.
+
+It is a capability-aware academic experience composer.
+
+Its logic is:
+
+data -> needs -> capabilities -> policies -> composition -> surfaces -> outcomes -> learning
+
+That is the right architecture for a coach that can pull the right feature at the right time, build unique experiences, and evolve with each student.
+
+The best next step after this is a Capability Inventory and Mapping Document where we list your actual existing features one by one and convert them into registry entries and composition patterns.
+
+
+proceed but also make sure it scans the codebase for all features and maps them and updating the inventory as more features are added to the codebase 
+
+I’m extending the brain spec into a self-maintaining system now. The key addition is a discovery pipeline that continuously scans the codebase, detects capabilities, maps them into the registry, and flags anything new that hasn’t been modeled yet.
+
+Thought for 23s
+Good. That means the orchestration layer must not depend on a manually maintained feature list alone.
+
+It needs a Codebase Capability Discovery and Inventory Sync System.
+
+That system should do four things continuously:
+
+scan the codebase for features, flows, surfaces, tools, drills, cards, and micro-experiences
+
+map what it finds into the capability inventory
+
+detect when new features have been added but not registered
+
+keep the brain’s capability registry current over time
+
+So the next layer to define is this:
+
+Codebase Capability Discovery & Inventory Sync Specification
+This is the system that makes the Coach Brain aware of the real product, not just a stale document.
+
+1. Purpose
+The Coach Brain can only orchestrate what it knows exists.
+
+If the product keeps growing and the registry is updated manually, the registry will drift, and the brain will become blind to new powers in the codebase.
+
+So you need a subsystem that continuously answers:
+
+what features currently exist in the codebase
+
+what changed since the last scan
+
+what new surfaces have appeared
+
+what new flows were introduced
+
+what old features were removed or renamed
+
+which capabilities are fully mapped
+
+which capabilities are only partially understood
+
+which newly discovered features need human confirmation
+
+This subsystem should feed the Capability Registry and keep the inventory alive.
+
+2. Design principle
+Do not rely on one method only.
+
+A strong discovery system should use four complementary discovery modes:
+
+A. Static code discovery
+Scan files, routes, components, imports, services, hooks, schemas, registries, and state machines.
+
+B. Metadata-assisted discovery
+Use explicit capability metadata in code where available.
+
+C. Runtime discovery
+Observe actual rendered surfaces, event flows, feature activations, and instrumentation.
+
+D. Change detection and governance
+Compare scans over time and force new capability review when code changes introduce new feature-level behavior.
+
+That combined approach is what makes this robust.
+
+3. High-level architecture
+The discovery system should have these modules:
+
+Codebase Scanner
+
+Feature Candidate Extractor
+
+Capability Mapper
+
+Inventory Repository
+
+Diff & Drift Detector
+
+Confidence Scorer
+
+Human Review Queue
+
+Registry Sync Engine
+
+CI Guard / Build Check
+
+Runtime Signal Collector
+
+Together these create a living inventory.
+
+4. Core operating flow
+The system should work like this:
+
+Step 1
+Scan the codebase and extract candidate product units.
+
+Step 2
+Group them into likely features/capabilities.
+
+Step 3
+Infer purpose, usage context, and relationships.
+
+Step 4
+Map them to existing capability records where possible.
+
+Step 5
+Create new inventory candidates where no match exists.
+
+Step 6
+Score confidence.
+
+Step 7
+Auto-sync high-confidence mappings.
+
+Step 8
+Send uncertain items to a review queue.
+
+Step 9
+Store snapshots and diffs.
+
+Step 10
+Expose updated inventory to the Coach Brain.
+
+That makes the inventory self-updating instead of static.
+
+5. What the scanner should discover
+This should go far beyond page names.
+
+The scanner should look for:
+
+Surfaces
+pages
+
+routes
+
+tabs
+
+full-screen flows
+
+standalone screens
+
+feature entry points
+
+Embedded capabilities
+cards
+
+panels
+
+widgets
+
+inline learning blocks
+
+overlays
+
+modals
+
+side-rails
+
+expandable teaching blocks
+
+contextual support elements
+
+Instructional tools
+drills
+
+quizzes
+
+tests
+
+worked example renderers
+
+glossary modules
+
+comparison views
+
+wrong answer analysis blocks
+
+mission segments
+
+checkpoint components
+
+speed/timer modules
+
+debrief modules
+
+Decision and support components
+intervention cards
+
+roadmap blocks
+
+timer headers
+
+feedback prompts
+
+parent summaries
+
+progress banners
+
+titles and defense modules
+
+review summaries
+
+Back-end instructional services
+question selectors
+
+misconception analyzers
+
+mission generators
+
+plan generators
+
+content loaders
+
+recommendation services
+
+evidence updaters
+
+Hidden but important features
+feature flags
+
+alternate flow branches
+
+premium-only features
+
+gated coach modes
+
+conditionally rendered support components
+
+The point is to discover both visible and composable capabilities.
+
+6. Discovery sources inside the codebase
+The scanner should inspect multiple artifact classes.
+
+A. Route layer
+Look at:
+
+route definitions
+
+nested routes
+
+route guards
+
+lazy-loaded feature pages
+
+deep links
+
+coach-specific route clusters
+
+This tells you major surfaces.
+
+B. UI component layer
+Look at:
+
+feature components
+
+container components
+
+components with feature-like names
+
+components wired to subject/topic/question props
+
+components tied to mission, review, drill, glossary, roadmap, intervention
+
+This tells you embeddable capabilities.
+
+C. State/action layer
+Look at:
+
+stores
+
+reducers
+
+actions
+
+events
+
+state machines
+
+transitions
+
+coordinator hooks
+
+orchestrator services
+
+This tells you real behavioral features, not just UI shells.
+
+D. Domain/service layer
+Look at:
+
+services that generate plans, missions, questions, analyses
+
+decision engines
+
+topic scoring logic
+
+progress evaluators
+
+repair logic
+
+recommendation logic
+
+This tells you functional powers the brain can invoke.
+
+E. Data/config layer
+Look at:
+
+JSON configs
+
+content schemas
+
+feature registries
+
+mode definitions
+
+activity templates
+
+screen manifests
+
+question-type definitions
+
+This tells you hidden configurable capabilities.
+
+F. Instrumentation layer
+Look at:
+
+analytics events
+
+engagement events
+
+tracking names
+
+event payloads
+
+This tells you which things are first-class product actions.
+
+7. Discovery techniques
+Use a layered scanning method.
+
+7.1 Static AST scanning
+For TypeScript/React codebases, parse:
+
+route definitions
+
+JSX trees
+
+exported components
+
+component names
+
+prop contracts
+
+imported services
+
+hook usage
+
+conditional render branches
+
+feature flags
+
+event emitters
+
+tracking calls
+
+This lets you find structure, not just text.
+
+Example discoveries:
+
+components named DifferenceDrillScreen
+
+routes containing /coach/review
+
+hooks like useMissionPlanner
+
+conditional branches like showRoadmap && <RoadmapStrip />
+
+7.2 File system heuristics
+Scan filenames and folders for patterns like:
+
+*Drill*
+
+*Mission*
+
+*Glossary*
+
+*Review*
+
+*Debrief*
+
+*Intervention*
+
+*Coach*
+
+*Teach*
+
+*Checkpoint*
+
+*Timer*
+
+*Summary*
+
+*Compare*
+
+*Repair*
+
+This is weaker than AST parsing but useful for recall.
+
+7.3 Import graph analysis
+This is important.
+
+The scanner should build a graph showing:
+
+which pages import which components
+
+which components depend on question services
+
+which modules are embedded into mission flow
+
+which support modules appear together
+
+which components are reused across multiple surfaces
+
+This helps detect whether something is:
+
+standalone
+
+embeddable
+
+support-only
+
+central to multiple flows
+
+7.4 Event and analytics analysis
+Scan analytics/event calls like:
+
+track("mission_started")
+
+track("difference_drill_completed")
+
+track("wrong_answer_intelligence_opened")
+
+These event names often reveal product capabilities more cleanly than the UI code.
+
+This also helps map:
+
+success signals
+
+failure signals
+
+engagement signals
+
+which are needed for capability effectiveness memory.
+
+7.5 Runtime render discovery
+Static analysis alone is not enough.
+
+You should also collect runtime render signals such as:
+
+which components actually mounted in a session
+
+which surfaces were shown
+
+which support cards appeared
+
+what sequence they appeared in
+
+what features co-occurred
+
+This helps discover:
+
+features hidden behind conditions
+
+real usage sequences
+
+embedded capability behavior
+
+7.6 Explicit metadata discovery
+The strongest long-term solution is to support explicit in-code metadata.
+
+For example, feature modules should be able to declare:
+
+export const capabilityMeta = {
+  id: "difference_drill",
+  category: "repair",
+  solvesNeeds: ["confusion_pair_repair_needed"],
+  embeddable: true
+};
+The scanner should prioritize this when available.
+
+That way discovery gets better over time.
+
+8. Discovery output model
+The scanner should not directly write final registry entries first.
+It should produce intermediate objects.
+
+8.1 Raw code artifact
+type RawCodeArtifact = {
+  id: string;
+  kind: "route" | "component" | "service" | "hook" | "config" | "event" | "state_machine";
+  name: string;
+  filePath: string;
+  exportedSymbols: string[];
+  routePath?: string;
+  imports: string[];
+  referencedBy: string[];
+  trackingEvents?: string[];
+  flags?: string[];
+};
+8.2 Feature candidate
+type FeatureCandidate = {
+  id: string;
+  name: string;
+  sourceArtifacts: string[];
+  inferredKind:
+    | "surface"
+    | "embedded_capability"
+    | "instructional_tool"
+    | "support_module"
+    | "orchestration_feature"
+    | "unknown";
+  inferredPurpose?: string[];
+  inferredInputs?: string[];
+  inferredOutputs?: string[];
+  inferredRelatedFeatures?: string[];
+  confidence: number;
+};
+8.3 Capability inventory item
+type CapabilityInventoryItem = {
+  capabilityId: string;
+  name: string;
+  status: "mapped" | "candidate" | "deprecated" | "needs_review";
+  sourceFiles: string[];
+  routePaths?: string[];
+  entryComponents: string[];
+  categories: string[];
+  solvesNeeds: string[];
+  suitableSurfaces: string[];
+  supportsEmbedding: boolean;
+  dependencies: string[];
+  usedBy: string[];
+  confidence: number;
+  lastScannedAt: string;
+  versionHash: string;
+};
+9. Capability Mapper
+This engine maps discovered candidates into the actual CoachCapability registry.
+
+It should do one of four things:
+
+A. Exact match
+Candidate clearly matches an existing registered capability.
+
+B. Merge/update
+Candidate matches an existing capability but with new files, new routes, or new relationships.
+
+C. New candidate
+No existing capability match found. Create needs_review.
+
+D. Deprecation signal
+An existing capability no longer appears in the codebase.
+
+9.1 Matching signals
+The mapper should compare:
+
+names
+
+file path similarity
+
+route similarity
+
+entry component similarity
+
+imported data providers
+
+shared tracking events
+
+prop/input shapes
+
+usage context
+
+related feature graph
+
+This reduces false positives.
+
+10. Confidence scoring
+Not every discovery should auto-update the registry.
+
+Each candidate should have a confidence score.
+
+Suggested dimensions:
+
+name clarity
+
+route clarity
+
+presence of explicit metadata
+
+usage density
+
+event instrumentation richness
+
+import graph centrality
+
+repeated runtime observation
+
+similarity to known capability patterns
+
+Example:
+
+confidenceScore =
+  0.22 * metadataStrength +
+  0.18 * namePatternStrength +
+  0.16 * routeSignal +
+  0.14 * importGraphSignal +
+  0.10 * eventSignal +
+  0.10 * runtimeSignal +
+  0.10 * existingCapabilitySimilarity;
+Then apply rules:
+
+>= 0.85 auto-sync
+
+0.60–0.84 sync as candidate or needs_review
+
+< 0.60 retain as low-confidence artifact only
+
+11. Inventory repository
+You need a persistent store for the inventory.
+
+This should support:
+
+current inventory snapshot
+
+full scan history
+
+diffs between scans
+
+confidence history
+
+mapping history
+
+review decisions
+
+deprecated items
+
+renamed/migrated items
+
+Recommended entities:
+
+capability_inventory_items
+
+capability_scan_runs
+
+capability_scan_artifacts
+
+capability_inventory_diffs
+
+capability_review_queue
+
+capability_registry_links
+
+This lets you trace the evolution of the product.
+
+12. Diff and drift detection
+This is essential.
+
+Every scan should be compared to the previous scan.
+
+The diff engine should detect:
+
+New
+new routes
+
+new components
+
+new feature-like services
+
+new capability candidates
+
+Changed
+capability moved to new file
+
+new embedding relationships
+
+new events added
+
+new dependencies added
+
+changed route entry point
+
+Removed
+no longer found in codebase
+
+no longer imported
+
+no longer routed to
+
+no runtime evidence for long period
+
+Drift
+registry says capability exists, code scan cannot confirm
+
+code scan finds new feature, registry has no record
+
+runtime shows feature activation, inventory missing mapping
+
+This is how the inventory stays honest.
+
+13. Human review queue
+You should not fully automate every mapping.
+
+Some capabilities will need human confirmation.
+
+Create a review queue for cases like:
+
+ambiguous candidates
+
+merged features
+
+renamed features
+
+multi-purpose components
+
+capabilities that are technically present but not product-ready
+
+experimental/gated features
+
+low-confidence new discoveries
+
+Review actions:
+
+approve as new capability
+
+merge into existing capability
+
+mark internal-only, not orchestration-eligible
+
+mark deprecated
+
+add missing metadata
+
+suppress false positive
+
+This queue is how you maintain quality.
+
+14. Registry sync engine
+This engine updates the actual orchestration registry from reviewed or high-confidence discoveries.
+
+It should:
+
+add new inventory items
+
+update source file references
+
+update embedding relationships
+
+update routes
+
+update input/output hints
+
+update instrumentation signal mappings
+
+mark deprecated capabilities
+
+trigger capability registry rebuild
+
+Important:
+the scanner should not overwrite thoughtful manual annotations such as:
+
+solvesNeeds
+
+intensity
+
+emotional risk
+
+ideal duration
+
+policy constraints
+
+So split the registry into two layers:
+
+Auto-discovered fields
+source files
+
+entry components
+
+routes
+
+imports
+
+instrumentation events
+
+relationships
+
+embedding evidence
+
+Human-authored fields
+academic purpose
+
+need mapping
+
+policy rules
+
+duration estimates
+
+profile suitability
+
+emotional cautions
+
+That separation is critical.
+
+15. Recommended two-layer registry model
+Use:
+
+Layer 1 — DiscoveredCapabilityRecord
+Machine-generated.
+
+Layer 2 — CuratedCapabilityProfile
+Human-authored and coach-brain-facing.
+
+Then produce:
+
+Layer 3 — ResolvedCoachCapability
+Merged output used by the brain.
+
+This avoids losing human design intent.
+
+16. CI and pre-merge enforcement
+This is how the inventory stays current as the codebase evolves.
+
+Add checks in CI that detect:
+
+new route added with no inventory mapping
+
+new feature-like component added with no metadata
+
+new analytics event for coach feature with no registered capability
+
+capability file renamed without registry update
+
+deleted capability still present in curated registry
+
+CI should not always block immediately, but it should at least warn or require review.
+
+Recommended policy:
+
+Soft warnings
+For:
+
+low-confidence new candidates
+
+likely embeddable component additions
+
+Hard review requirement
+For:
+
+new full-screen coach features
+
+new mission-capable flows
+
+new repair/test/drill modules
+
+removed or renamed registered capabilities
+
+This is what keeps the inventory alive.
+
+17. Runtime learning and continuous update
+Scanning the codebase at build time is not enough.
+
+Some features only appear in certain student states.
+
+So also track runtime surface activations.
+
+For example:
+
+which capability actually rendered
+
+where it rendered
+
+how it was configured
+
+what session state triggered it
+
+how often it is used
+
+This lets the discovery system learn:
+
+whether a feature is really active
+
+whether it is embeddable in practice
+
+which capabilities co-occur
+
+which capabilities are dormant
+
+That runtime layer should update inventory confidence over time.
+
+18. Recommended metadata standard
+To improve future scanning, create a lightweight feature metadata contract developers can add to modules.
+
+Example:
+
+export const capabilityMeta = {
+  id: "speed_sprint",
+  name: "Speed Sprint",
+  kind: "instructional_tool",
+  surfaces: ["mission_flow", "coach_hub"],
+  embeddable: true,
+  category: "practice",
+  tags: ["speed", "timer", "exam_prep"]
+};
+This metadata should be optional at first, then gradually become standard for all new coach-facing features.
+
+That makes discovery more accurate with time.
+
+19. Feature inventory update policy
+The inventory should update in three modes:
+
+A. Full scheduled scan
+Run periodically or nightly.
+Catches broad drift.
+
+B. Incremental scan on changed files
+Run on PRs / commits.
+Fast and practical.
+
+C. Runtime signal reconciliation
+Run periodically from usage data.
+Improves confidence and detects hidden features.
+
+Then merge these into a unified inventory state.
+
+20. Recommended scan cadence
+A practical setup:
+
+incremental scan on every PR touching coach-related code
+
+nightly full scan of the repo
+
+weekly registry reconciliation report
+
+runtime reconciliation daily or near-real-time depending on scale
+
+That gives good freshness without chaos.
+
+21. Inventory enrichment rules
+Scanning should not only list features.
+It should enrich them.
+
+For each capability, try to infer:
+
+likely category
+
+likely role
+
+likely entry surface
+
+likely dependencies
+
+likely compatible neighbors
+
+likely data providers
+
+whether it generates evidence
+
+whether it is interactive or passive
+
+whether it is likely standalone or embeddable
+
+These can start as inferred hints, then be confirmed by review.
+
+22. Mapping existing and future features
+To make sure the system keeps updating as new features are added, adopt this governance rule:
+
+Every new coach-facing feature must satisfy at least one of these:
+
+include capabilityMeta
+
+be discovered by scan and reviewed before merge
+
+be automatically flagged by CI as unregistered
+
+That way nothing meaningful slips through.
+
+23. Brain integration
+The Coach Brain should not read raw scan results directly.
+
+Instead it should consume the resolved capability layer.
+
+The flow should be:
+
+codebase scan
+
+inventory update
+
+curated registry merge
+
+resolved capability graph build
+
+brain consumes resolved capability graph
+
+This keeps the brain stable.
+
+24. The resolved capability graph
+This is a valuable structure.
+
+The final discovery system should produce not just flat inventory items, but a graph.
+
+Example relationships:
+
+mission_flow embeds wrong_answer_intelligence
+
+repair_session can include difference_drill
+
+coach_hub can surface roadmap_strip
+
+worked_example_panel is often followed by guided_mcq_block
+
+speed_sprint incompatible with confidence_collapse_state
+
+This graph is what the composer and recommender should use.
+
+25. Suggested output artifacts from each scan
+Each scan run should produce:
+
+A. Inventory snapshot
+Current known capabilities.
+
+B. Diff report
+What changed since last scan.
+
+C. Review queue
+What needs human attention.
+
+D. Registry sync summary
+What got auto-linked or updated.
+
+E. Drift report
+What is inconsistent between codebase and registry.
+
+These reports are useful for both product integrity and brain quality.
+
+26. Recommended technical modules
+A clean structure would be:
+
+src/features/coach/discovery/
+  scanner/
+    CodebaseScanner.ts
+    ASTScanner.ts
+    RouteScanner.ts
+    ComponentScanner.ts
+    ServiceScanner.ts
+    EventScanner.ts
+    RuntimeSignalCollector.ts
+
+  extraction/
+    FeatureCandidateExtractor.ts
+    ImportGraphBuilder.ts
+    CapabilitySignalEnricher.ts
+
+  mapping/
+    CapabilityMapper.ts
+    ConfidenceScorer.ts
+    DriftDetector.ts
+    DiffEngine.ts
+
+  registry/
+    InventoryRepository.ts
+    CuratedRegistryRepository.ts
+    RegistrySyncEngine.ts
+    ResolvedCapabilityGraphBuilder.ts
+
+  review/
+    ReviewQueueService.ts
+    CapabilityReviewDecisions.ts
+
+  ci/
+    CapabilityInventoryCheck.ts
+    PullRequestCapabilityGuard.ts
+27. Suggested scan-to-registry flow in pseudocode
+async function runCapabilityDiscoveryScan(scanMode: "incremental" | "full") {
+  const artifacts = await codebaseScanner.scan(scanMode);
+  const featureCandidates = featureCandidateExtractor.extract(artifacts);
+  const enrichedCandidates = capabilitySignalEnricher.enrich(featureCandidates);
+
+  const mapped = capabilityMapper.map(enrichedCandidates);
+  const scored = confidenceScorer.score(mapped);
+
+  const diff = diffEngine.compareWithPrevious(scored);
+  const drift = driftDetector.detect(scored);
+
+  const { autoApproved, needsReview } = splitByConfidenceAndPolicy(scored);
+
+  await inventoryRepository.storeScan({
+    artifacts,
+    candidates: scored,
+    diff,
+    drift
+  });
+
+  await registrySyncEngine.sync(autoApproved);
+  await reviewQueueService.enqueue(needsReview);
+
+  return {
+    autoApproved,
+    needsReview,
+    diff,
+    drift
+  };
+}
+28. Practical rollout plan
+Do this in phases.
+
+Phase 1 — Basic discovery
+Build:
+
+route scanner
+
+component scanner
+
+service scanner
+
+feature candidate extractor
+
+simple inventory store
+
+Goal:
+See the codebase clearly.
+
+Phase 2 — Mapping and diff
+Build:
+
+mapper
+
+confidence scorer
+
+diff engine
+
+review queue
+
+Goal:
+Turn discovery into maintained inventory.
+
+Phase 3 — Registry sync
+Build:
+
+two-layer registry model
+
+auto-sync of high-confidence fields
+
+curated merge rules
+
+Goal:
+Keep the brain’s registry current.
+
+Phase 4 — CI and governance
+Build:
+
+PR checks
+
+warnings for unregistered features
+
+metadata recommendation rules
+
+Goal:
+Prevent future drift.
+
+Phase 5 — Runtime reconciliation
+Build:
+
+runtime surface activation logs
+
+runtime-to-inventory reconciliation
+
+capability graph improvement
+
+Goal:
+Make the inventory reflect real usage, not just static code.
+
+29. Non-negotiable rules
+The capability inventory must not be purely manual.
+
+The scanner must not overwrite curated academic meaning blindly.
+
+New coach-facing features must be discoverable or annotated.
+
+Diff and drift detection must run continuously.
+
+High-confidence structural fields can auto-sync.
+
+Low-confidence academic purpose fields require review.
+
+The brain consumes only resolved capabilities, not raw scan artifacts.
+
+Runtime evidence should influence confidence and relationships over time.
+
+30. Final architecture statement
+What you need is:
+
+a living capability inventory system
+powered by
+static discovery + metadata + runtime reconciliation + CI governance
+
+So the Coach Brain always knows what the codebase can actually do, keeps learning as new features are added, and can orchestrate the full product intelligently without registry drift.
+
+The next concrete deliverable should be a Capability Inventory Schema + Scan Rules Pack with exact interfaces, scan heuristics, confidence rules, and CI checks.
+
+
+
+

@@ -1,0 +1,20 @@
+﻿“Crossword puzzle” - A traditional crossword puzzle game with clues being questions from one or more courses and answers to the questions being the tiles for across and down puzzle solutions.
+        Gamification: Weekly puzzle will be available (one or more?) to keep users hooked
+
+
+“Hangman” - Game inspired by popular hangman game. Text or phrases used will be derived from various concepts or terms available for a set of chosen courses or subjects.
+
+
+“Who Wants to be a Millionnaire” - Boards with different prizes (based on question difficulty, different categories based on interest). Boards are flipped upon selection to reveal the question behind. This can be played in multiplayer mode as well.
+
+
+“eCoach National Quiz Challenge” - Multiplayer Game inspired by the National Science and Math Quiz format. Up to 3 players can team-up to represent a single institution. A general audience can “tune-in” to follow live progress. Teams are matched and progress is by head-to-head elimination 
+
+
+“eCoach Racer” - A single or multiplayer traditional car racing game with obstacles, bends, etc. A player answers questions correctly to gain speed. Questions answered wrongly slow down a user (e.g. via a flat tyre). A user can elect to skip a  question and thus will maintain their speed for a period of time before it slowly reduces again. Players will have to juggle between answering questions and focusing on the race to avoid crashing. Winning will be by crossing the finish line first with bonus points awarded for the number of questions obtained correctly.
+
+
+“eCoach Maze” - This will be a traditional maze puzzle game where a user will have to move from a start location to an end location. A user can proceed throughout the game manually. However, inside the labyrinth, there will be questions (or clues) on various doors to assist the user. So a user who correctly answers all questions encountered will make it safely through the labyrinth to the end location fastest. Selecting the wrong answer (or “door”) may occasionally result in longer journeys or a user running into a dead-end and thus needing to go back.
+
+
+eCoach Flashcard Game - single/Multiplayer game where questions in a topic are represented with a deck of cards , one card with a question pops up at a time whilst all possible answers for all the questions are placed on a dashboard with some sort of metro UI, once you select the right answer card that option goes away (or is hidden). Obviously, difficulty of subsequent questions will be decreased as cards are eliminated. Difficulty can be increased by a variety of techniques such as i) adding a countdown timer for each new question, ii) replacing hidden cards with new answers and reshuffling the deck.

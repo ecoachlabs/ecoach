@@ -1,0 +1,4708 @@
+
+
+
+
+knowledge gap 
+
+Thought for 8s
+A knowledge gap is the specific part of what a student does not yet know, understand, retain, or apply correctly.
+
+In your kind of educational system, it should not be treated as just “the student is weak in math.” That is too broad.
+
+It should be broken into layers:
+
+1. Content gap
+The student has not learned the concept at all.
+Example: they do not know what a fraction numerator means.
+
+2. Understanding gap
+They have seen it before, but do not truly understand it.
+Example: they can recite a formula but cannot explain why it works.
+
+3. Application gap
+They understand the concept in theory, but cannot use it in questions.
+Example: they know percentages but fail word problems.
+
+4. Process gap
+They know the idea, but their steps are weak.
+Example: in algebra they make the wrong first move.
+
+5. Speed gap
+They can solve it, but too slowly for exam conditions.
+
+6. Accuracy gap
+They know it, but make careless mistakes.
+
+7. Retention gap
+They once knew it, but forgot it.
+
+8. Confidence gap
+They hesitate, panic, or avoid the topic, so performance drops even when some knowledge exists.
+
+9. Interest gap
+They are disengaged, so they never spend enough quality effort to improve.
+
+10. Transfer gap
+They can solve familiar questions but fail when the question is asked in a new way.
+
+For your app, a knowledge gap should be modeled as:
+
+Topic → Subtopic → Skill → Error pattern → Cause → Fix path
+
+Example:
+
+Subject: Mathematics
+
+Topic: Fractions
+
+
+a mode in an educational app that says show me what i don't know or teach me what i don't know yet , so at all times you will know your knowledge gap and the goal is to get your knowledge gap to zero 
+
+Thought for 5s
+Yes — that is a very strong mode.
+
+What you are really describing is a Knowledge Gap Mode:
+a living system inside the app that continuously detects:
+
+what the student has not learned
+
+what the student thinks they know but does not truly know
+
+what they knew before but are forgetting
+
+what they can do slowly, weakly, or inconsistently
+
+And then turns all of that into a clear mission:
+
+Reduce your knowledge gap to zero.
+
+That is powerful because it gives the student one clean objective:
+not “study randomly,” but close the missing parts of your mind.
+
+The core idea
+The mode could be called things like:
+
+Show Me What I Don’t Know
+
+Teach Me What I Don’t Know Yet
+
+My Knowledge Gap
+
+Gap Finder
+
+Zero Gap Mode
+
+Unknowns Mode
+
+What You’re Missing
+
+The strongest framing is probably:
+
+Teach Me What I Don’t Know Yet
+
+because it feels less insulting and more growth-oriented.
+
+What this mode should mean in practice
+When a student enters the mode, the app should not just dump weak topics.
+
+It should answer four things:
+
+What don’t I know at all?
+
+What do I partially know but still get wrong?
+
+What am I forgetting?
+
+What is stopping me from becoming complete in this subject?
+
+So the mode becomes a personal map of missing knowledge.
+
+The promise to the student
+The mode should make a promise like this:
+
+“I will continuously find your missing knowledge, teach it to you in the right order, test it, and shrink your knowledge gap until there is almost nothing left exposed.”
+
+That is the product promise.
+
+The score
+You need a central number:
+
+Knowledge Gap Score
+
+Example:
+
+72% gap remaining
+
+41 skills missing
+
+12 critical gaps
+
+7 weak zones
+
+22 mastered this month
+
+Or invert it:
+
+Knowledge Coverage
+
+28% complete
+
+72% gap remaining
+
+But psychologically, it may be better to show both:
+
+Coverage: 28%
+
+Gap: 72%
+
+That gives progress and urgency.
+
+How the engine should think
+The app needs to model the student’s mind as a set of skills.
+
+Not just topics like “fractions” or “photosynthesis,” but smaller units:
+
+Subject → Topic → Subtopic → Skill → Micro-skill
+
+Example:
+
+Mathematics
+→ Fractions
+→ Adding fractions
+→ Find common denominator
+→ Convert both fractions correctly
+→ Add numerators
+→ Simplify result
+
+Now the app can detect exactly where the student breaks.
+
+So instead of saying:
+
+“You are weak in fractions”
+
+it says:
+
+“You can identify denominators, but you struggle to find the least common denominator when denominators are unlike.”
+
+That is real intelligence.
+
+What the mode should do when opened
+The home screen of this mode could show:
+
+1. Your current gap
+Total knowledge gap: 46%
+
+Critical gaps: 8
+
+Hidden gaps: 13
+
+Recently fixed: 5
+
+2. The biggest holes
+Algebraic substitution
+
+Interpreting science graphs
+
+Past tense sentence transformation
+
+Percentage word problems
+
+3. What you should fix first
+A ranked path:
+
+Fix this now
+
+Fix this next
+
+Leave this for later
+
+4. Your zero-gap path
+3 quick wins
+
+2 foundational repairs
+
+1 danger zone
+
+The different kinds of gaps the system should track
+This is important. A gap is not just “wrong answer.”
+
+The engine should track at least these categories:
+
+1. Unknown gap
+The student truly has never learned it.
+
+2. Fragile gap
+They sometimes get it right, but not reliably.
+
+3. False mastery gap
+They seem confident, but break when the question changes.
+
+4. Retention gap
+They knew it before but are forgetting it.
+
+5. Speed gap
+They know it, but too slowly.
+
+6. Accuracy gap
+They know it, but make careless errors.
+
+7. Foundation gap
+They are failing here because an earlier skill is broken.
+
+8. Transfer gap
+They can answer textbook-style questions but fail real or twisted versions.
+
+9. Confidence gap
+Fear or hesitation is suppressing actual ability.
+
+10. Interest gap
+They avoid the topic, so exposure is too low to improve.
+
+This means the mode becomes much smarter than a normal weak-topic feature.
+
+The magic: hidden knowledge gaps
+One of the best parts of this feature is that it can uncover hidden gaps.
+
+A student may say:
+
+“I am bad at algebra.”
+
+But the true issue may be:
+
+weak integers
+
+poor equation balancing
+
+confusion around variable substitution
+
+low reading accuracy in word problems
+
+So the app should act like a diagnostic intelligence layer.
+
+It should say:
+
+“You are not mainly failing algebra. Your real issue is weak number operations and first-step breakdown.”
+
+That is where the feature becomes special.
+
+How the app finds the gap
+The mode should use several methods together.
+
+Diagnostic questions
+Short sets of targeted questions to expose exact weaknesses.
+
+Continuous passive detection
+Every time the student answers anything in the app, the system updates the gap map.
+
+Step analysis
+For subjects like math and science calculations, inspect where the student broke in the solution path.
+
+Error pattern tracking
+Example:
+
+keeps confusing mean and median
+
+misses unit conversion
+
+selects attractive distractors linked to one misconception
+
+Time analysis
+Too much hesitation can signal uncertainty even when answers are correct.
+
+Confidence check
+Sometimes ask:
+
+“How sure are you?”
+If a student gets it right but with low confidence, mastery is still weak.
+
+Variation testing
+Ask the same concept in different forms.
+If performance drops, the understanding is shallow.
+
+The student experience
+This mode should feel like a smart teacher saying:
+
+“Let me show you exactly what is missing and fix it one piece at a time.”
+
+A good flow would be:
+
+Step 1: Scan me
+The student taps:
+Show me what I don’t know
+
+The app runs a quick adaptive scan.
+
+Step 2: Reveal the gaps
+It shows:
+
+what is missing
+
+why it matters
+
+how severe it is
+
+what is causing it
+
+Step 3: Fix mode
+For each gap:
+
+teach it simply
+
+give a worked example
+
+ask a few guided questions
+
+test again
+
+confirm repair
+
+Step 4: Update the map
+The gap bar shrinks in real time.
+
+That shrinking visual is addictive.
+
+The best visual metaphor
+This feature needs a visual identity.
+
+A few strong options:
+
+1. Knowledge map
+A map with dark zones and illuminated zones.
+Dark = unknown.
+Light = mastered.
+
+2. Hole repair
+Your subject is like a wall with cracks.
+You patch the cracks one by one.
+
+3. Fog clearing
+The subject starts foggy.
+As you learn, the fog disappears.
+
+4. Brain grid
+A matrix of knowledge cells.
+Missing cells fill up over time.
+
+5. Journey path
+Broken bridges become complete as gaps are repaired.
+
+The fog clearing or knowledge map metaphor is probably strongest.
+
+The emotional framing
+Do not make the student feel dumb.
+
+Do not say:
+
+“These are all the things you don’t know”
+in a harsh way.
+
+Instead say:
+
+“Here’s what we’ll unlock next”
+
+“Here are your missing pieces”
+
+“These are the areas that will most improve your performance”
+
+“You’re closer than you think”
+
+The language must feel empowering.
+
+The key loop
+This mode should create this loop:
+
+Detect → Explain → Repair → Recheck → Lock in → Expand
+
+That is the engine.
+
+In plain words:
+
+Find what is missing
+
+Teach it
+
+Test it
+
+Confirm it is fixed
+
+Revisit later so it stays fixed
+
+Move to the next gap
+
+The zero-gap goal
+Now, “gap to zero” is brilliant as a motivating concept, but in reality, no student truly has zero gap forever, because memory decays and new topics appear.
+
+So the system should present it like this:
+
+Practical version
+Current active gap
+
+Total mapped gap
+
+Gap closed this week
+
+Zero-gap streak in mastered topics
+
+That makes it more believable.
+
+You can still use the aspirational message:
+
+“Push your active knowledge gap toward zero.”
+
+That is cleaner than pretending total human knowledge becomes complete.
+
+What makes this feature addictive
+To make students keep returning, every session should visibly do one of these:
+
+uncover a new hidden weakness
+
+close a visible gap
+
+increase coverage %
+
+reduce critical gaps
+
+unlock a mastery badge
+
+clear fog from the map
+
+move the student closer to exam readiness
+
+The student should feel:
+“Every small session removes ignorance.”
+
+That is powerful.
+
+Extra layers that make it elite
+1. Critical gap ranking
+Not all gaps matter equally.
+Some gaps block many future topics.
+Those should be fixed first.
+
+2. Dependency logic
+If the student is weak in subtraction, that may affect algebra, fractions, and ratios.
+So the app must know prerequisite chains.
+
+3. Exam relevance
+A gap should be tagged by exam importance:
+
+high-frequency exam gap
+
+foundational gap
+
+advanced gap
+
+low-priority gap
+
+4. Confidence repair
+If a student has trauma around a topic, the system should lower difficulty and rebuild belief.
+
+5. Daily minimum gap reduction
+Set a target:
+
+reduce 1% today
+
+close 2 micro-gaps today
+
+repair 1 critical concept today
+
+6. Teacher/parent view
+Show:
+
+biggest active gaps
+
+newly fixed gaps
+
+stubborn recurring gaps
+
+Great mode names inside the UI
+Main title options:
+
+Teach Me What I Don’t Know Yet
+
+Show Me My Knowledge Gap
+
+Find My Missing Pieces
+
+Close My Gaps
+
+Zero Gap Journey
+
+Buttons could be:
+
+Scan My Mind
+
+Reveal My Gaps
+
+Fix My Weak Spots
+
+Start Closing Gaps
+
+Show Missing Skills
+
+Example user flow
+A student opens the feature.
+
+The app says:
+
+Your Mathematics Knowledge Gap: 38%
+You have:
+
+4 critical gaps
+
+9 weak skills
+
+3 hidden misconceptions
+
+Most urgent gap: Percentage word problems
+Why it matters: It affects profit and loss, discounts, ratios, and exam application questions.
+
+Then the student taps it.
+
+The app says:
+
+here’s what you’re missing
+
+here’s a quick explanation
+
+here’s one worked example
+
+now try 3 guided questions
+
+now try 2 independent questions
+
+gap status updated
+
+Then the bar drops from 38% to 36%.
+
+That visible movement matters.
+
+What the backend should store
+This mode needs a real student knowledge model.
+
+For each skill, track:
+
+seen or unseen
+
+attempts
+
+correct rate
+
+response time
+
+confidence
+
+error types
+
+misconception tags
+
+last seen date
+
+retention strength
+
+transfer strength
+
+prerequisite status
+
+mastery status
+
+gap severity
+
+exam importance
+
+From that, the app can constantly compute:
+
+active gap
+
+critical gap
+
+hidden gap
+
+priority gap
+
+repaired gap
+
+One very important insight
+This mode should not only answer:
+
+“What don’t I know?”
+
+It should also answer:
+
+“What should I learn next for the biggest improvement?”
+
+That changes it from a passive report into an active intelligence guide.
+
+So the feature is really two things combined:
+
+Gap Detection Engine
+
+Gap Repair Engine
+
+That is the full system.
+
+Best final positioning
+This is how I would position it in the product:
+
+Knowledge Gap Mode is a smart learning mode that continuously finds what a student has not yet mastered, reveals hidden weaknesses, and builds a personalized path to close those gaps until the learner becomes stronger, faster, and more complete.
+
+Or more user-facing:
+
+Teach Me What I Don’t Know Yet
+Discover your missing knowledge, fix your weak spots, and drive your gap toward zero.
+
+This is a very strong feature. It can become one of the core pillars of your app because it gives students a simple obsession:
+find the missing piece, fix it, repeat.
+
+The strongest next step is to define this as a full product spec with:
+screen-by-screen frontend flow, scoring logic, diagnostic engine, knowledge model, and the exact algorithm for calculating the knowledge gap.
+
+
+so this will pull areas you don't know , areas you are weak , and the goal is to continually reduce it and as you make progress with it you see that your knowledge gap is shrinking 
+
+Thought for 5s
+Exactly.
+
+What you are building is a living gap-reduction system.
+
+It keeps pulling out:
+
+areas you do not know at all
+
+areas you are weak in
+
+areas you once knew but are forgetting
+
+areas you appear to know, but cannot apply properly
+
+foundation gaps causing failure in higher topics
+
+Then it keeps doing one job:
+
+shrink the gap over time.
+
+So the student should constantly feel this:
+
+“My missing knowledge is being exposed, repaired, and reduced.”
+
+The core loop
+The mode should work like this:
+
+Detect → Rank → Teach → Practice → Recheck → Shrink
+
+That means:
+
+the app finds what is missing
+
+it decides what matters most
+
+it teaches that piece
+
+it gives practice
+
+it checks again
+
+the knowledge gap score drops
+
+What the student sees
+The student should always see something like:
+
+Knowledge Gap: 42%
+Unknown areas: 8
+Weak areas: 11
+Critical blockers: 3
+Recently fixed: 4
+
+Then after a session:
+
+Knowledge Gap: 39%
+
+That drop is the reward.
+
+What should count toward the gap
+Your gap should not just be “wrong answers.”
+
+It should include:
+
+unseen concepts
+
+low-confidence concepts
+
+slow-solving concepts
+
+repeated mistake patterns
+
+forgotten concepts
+
+misconception-heavy concepts
+
+prerequisite weaknesses
+
+So a student may answer some things right, but the app can still know:
+
+this topic is still fragile
+
+this skill is too slow
+
+this understanding is shallow
+
+this mastery is not stable yet
+
+How the shrinking should feel
+The shrinking must be visual and emotional.
+
+For example:
+
+fog clearing from a subject map
+
+a bar reducing from 60% to 48%
+
+weak zones turning from red to yellow to green
+
+“3 gaps closed this week”
+
+“1 hidden blocker removed”
+
+That creates momentum.
+
+Important distinction
+You should probably separate the gap into categories:
+
+1. Unknown
+Things never properly learned.
+
+2. Weak
+Things learned but unstable.
+
+3. Broken foundation
+Earlier missing pieces affecting current work.
+
+4. Forgetting
+Things slipping away over time.
+
+5. Exam weakness
+Things important for the exam but still not reliable.
+
+That way the system is more intelligent than just a weak-topics list.
+
+What makes it powerful
+This is powerful because students usually study blindly.
+
+Your mode says:
+
+here is what is missing
+
+here is what is costing you marks
+
+here is what to fix first
+
+here is proof that you are becoming more complete
+
+So instead of random studying, the app becomes a knowledge repair engine.
+
+The best promise of the feature
+A very good promise is:
+
+“We continuously find and reduce your missing knowledge until your weak areas become strong areas.”
+
+Or even more simply:
+
+“Find it. Fix it. Shrink the gap.”
+
+One important truth
+The gap never stays at zero forever, because:
+
+new topics appear
+
+memory fades
+
+harder question types expose hidden weaknesses
+
+So the real goal is not fake perfection.
+
+The real goal is:
+
+continual gap reduction toward mastery.
+
+That is more believable and stronger.
+
+The product language
+This feature could say:
+
+Your Knowledge Gap is shrinking
+
+Last week: 51%
+
+Today: 43%
+
+Critical gaps fixed: 2
+
+New hidden gaps found: 1
+
+Net improvement: strong
+
+That is the kind of feedback that keeps students coming back.
+
+The engine behind it
+Under the hood, the app is basically maintaining:
+
+Known
+Weak
+Unknown
+Forgetting
+Mastered
+
+And constantly moving skills from:
+
+Unknown → Weak → Stable → Mastered
+
+That is the transformation model.
+
+Best framing
+So yes — the mode should absolutely:
+
+pull what you do not know
+
+pull what you are weak in
+
+keep updating as you learn
+
+show visible gap shrinkage
+
+make progress feel measurable
+
+This can become one of the most powerful parts of the app because it gives the student one very clear mission:
+
+reduce what is missing in your mind.
+
+The next strong move is to define the exact Knowledge Gap Score formula and the screen flow for this mode.
+
+
+if you are falling behind in some areas the knowledge gap should be updating in real time ,  and the goal is to prioritise you solidifying those areas 
+
+Thought for a few seconds
+Yes — that is exactly how it should work.
+
+The knowledge gap cannot be static. It has to behave like a live academic health system.
+
+If a student starts falling behind in certain areas, the system should detect that immediately and respond by:
+
+increasing the severity of those gaps
+
+raising their priority
+
+pushing them higher in the repair queue
+
+shifting learning time toward solidifying them before the weakness spreads
+
+So the feature is not just:
+
+“Here are your weak areas.”
+
+It is more like:
+
+“These areas are getting unstable. Fix them now before they become bigger problems.”
+
+What this means
+The app should constantly update in real time based on:
+
+wrong answers
+
+repeated mistakes
+
+slow response time
+
+hesitation
+
+declining performance in a topic
+
+failure in related higher-level questions
+
+signs of forgetting
+
+inability to apply the concept in new forms
+
+So if a student was once okay in a topic but starts slipping, the system should say:
+
+this topic is weakening
+
+this skill is becoming fragile
+
+this foundation is starting to crack
+
+this needs reinforcement now
+
+The real goal
+The goal is not only to show missing knowledge.
+
+The goal is to protect mastery from decay and stabilize weak zones before they worsen.
+
+So the mode becomes:
+
+Detect weakness early → Prioritize it → Reinforce it → Restore strength
+
+The right priority logic
+Not every weak area should get equal attention.
+
+The app should prioritize based on:
+
+1. Severity
+How bad is the weakness right now?
+
+2. Importance
+Does this topic matter a lot for exams?
+
+3. Foundational impact
+Does weakness here damage many other topics?
+
+4. Trend
+Is the student getting worse in this area over time?
+
+5. Recurrence
+Has this weakness shown up again and again?
+
+6. Time sensitivity
+Is the exam approaching and this topic still unstable?
+
+That means the app is not just looking at what is weak, but what is dangerously weak.
+
+Example
+Suppose a student is doing mathematics.
+
+The system notices:
+
+fractions accuracy dropping
+
+response time increasing
+
+mistakes appearing in ratios and percentages
+
+confidence decreasing
+
+Then the app should conclude:
+
+“Your fractions foundation is weakening, and it is now affecting other topics. This becomes a priority repair zone.”
+
+So instead of continuing random revision, the app redirects the student to:
+
+strengthen fractions
+
+review key subskills
+
+practice targeted questions
+
+re-test stability
+
+confirm recovery
+
+What the student should see
+The interface could show something like:
+
+Knowledge Gap: 34%
+Rising risk areas: 3
+Urgent to solidify: Fractions, Graph Interpretation, Sentence Transformation
+
+Then:
+
+Priority Alert
+Your performance in Fractions is dropping.
+This is now affecting:
+
+ratios
+
+percentages
+
+word problems
+
+Recommended action: solidify now
+
+That makes the system feel alive and intelligent.
+
+The key concept
+You are not just tracking “gap.”
+
+You are tracking gap movement.
+
+So each skill should have a state like:
+
+stable
+
+improving
+
+fragile
+
+declining
+
+critical
+
+repaired
+
+That is much better than a simple weak/strong label.
+
+Because a topic can be:
+
+weak but improving
+
+strong but slipping
+
+average but dangerous because it affects many other things
+
+What the engine should do automatically
+When a topic starts falling behind, the system should:
+
+increase its repair priority
+
+schedule more practice around it
+
+bring back prerequisite lessons
+
+reduce overexposure to unrelated topics
+
+reinforce that area with guided support
+
+test again after intervention
+
+So the app begins to behave like a smart tutor saying:
+
+“Pause. This area is becoming unstable. Let’s lock it down before moving on.”
+
+Best way to frame it
+This feature is really a dynamic knowledge stabilization engine.
+
+It does three jobs:
+
+finds missing knowledge
+
+detects weakening knowledge
+
+prioritizes solidification
+
+So the student’s experience becomes:
+
+“As soon as I start slipping, the app notices and helps me strengthen that area before it becomes a bigger problem.”
+
+That is powerful.
+
+Very important principle
+The app should not only chase what is newest.
+
+It should also defend what is most important.
+
+Because many students move forward with weak foundations, and that is why they collapse later.
+
+So your system should continuously ask:
+
+what is missing?
+
+what is weak?
+
+what is getting worse?
+
+what must be stabilized now?
+
+Strong product statement
+A clean way to describe the mode is:
+
+Knowledge Gap Mode continuously detects what you do not know, what you are weak in, and what is starting to slip, then prioritizes those areas for reinforcement so your knowledge becomes stronger and more complete over time.
+
+Or even tighter:
+
+It finds the cracks early and helps you seal them before they spread.
+
+The next thing to design is the priority formula that decides when a weak topic becomes urgent.
+
+
+proceed , 
+
+I’m turning this into an actual engine now: what signals it watches, how it scores urgency, and how it decides what to force-solidify first.
+
+Thought for 11s
+Good. Let’s turn it into a real engine.
+
+Knowledge Gap Priority Engine
+This engine decides, at any moment:
+
+what the student does not know
+
+what the student is weak in
+
+what is getting worse
+
+what is most dangerous to leave unfixed
+
+what should be solidified first
+
+So this is not just a report.
+It is a ranking and intervention system.
+
+1. Core idea
+Every skill in the system should have two separate values:
+
+Gap Score
+How incomplete this skill currently is.
+
+Priority Score
+How urgently this skill should be fixed now.
+
+That distinction is important.
+
+A topic may have a high gap but low urgency.
+Another may have a medium gap but very high urgency because:
+
+it is worsening fast
+
+it affects many other topics
+
+the exam is near
+
+it is a prerequisite for many upcoming tasks
+
+So:
+
+Gap = how broken
+Priority = how urgently to fix
+
+2. Skill as the main unit
+Everything should be tracked at skill level, not just topic level.
+
+Example:
+
+Mathematics
+→ Fractions
+→ Adding unlike fractions
+→ Find common denominator
+→ Convert correctly
+→ Add numerators
+→ Simplify answer
+
+Each of these can have its own score.
+
+That is how the app becomes intelligent.
+
+3. Inputs the engine should watch
+For each skill, the system should continuously observe these signals.
+
+A. Accuracy signal
+How often the student gets the skill correct.
+
+This includes:
+
+first attempt correctness
+
+corrected correctness
+
+repeated correctness across sessions
+
+B. Speed signal
+How long the student takes compared to expected time.
+
+A student may be correct but too slow.
+That still means instability under exam conditions.
+
+C. Confidence signal
+How sure the student feels.
+
+Low-confidence correctness is weaker than high-confidence correctness.
+
+D. Trend signal
+Whether the student is improving, flat, or declining over time.
+
+This is one of the most important signals.
+
+E. Retention signal
+Whether the student is forgetting previously learned content.
+
+If the student mastered something 3 weeks ago and is now failing it, that is a live warning.
+
+F. Misconception signal
+Whether the student is falling into known wrong patterns.
+
+Example:
+
+confusing numerator and denominator
+
+mixing up area and perimeter
+
+treating mean like median
+
+G. Transfer signal
+Whether the student can solve the same idea in different forms.
+
+If they only succeed in familiar wording, mastery is shallow.
+
+H. Dependency signal
+How many future skills depend on this one.
+
+A broken foundation should rise quickly in priority.
+
+I. Exam relevance signal
+How much this skill matters for the exam or the student’s goal.
+
+J. Recurrence signal
+How often this weakness keeps returning after previous repair.
+
+A recurring gap is more dangerous than a fresh one.
+
+4. The main outputs per skill
+For each skill, store these values:
+
+mastery score
+
+gap score
+
+priority score
+
+trend state
+
+forgetting risk
+
+misconception type
+
+dependency weight
+
+exam weight
+
+intervention state
+
+5. Mastery score
+Start with a mastery score from 0 to 100.
+
+A possible formula:
+
+Mastery Score =
+
+35% accuracy
+
+15% speed
+
+10% confidence
+
+15% retention
+
+15% transfer
+
+10% consistency
+
+So in formula form:
+
+Mastery = 0.35A + 0.15S + 0.10C + 0.15R + 0.15T + 0.10K
+
+Where:
+
+A = normalized accuracy
+
+S = normalized speed
+
+C = confidence
+
+R = retention
+
+T = transfer
+
+K = consistency across recent attempts
+
+Then:
+
+Gap Score = 100 - Mastery Score
+
+That gives the raw incompleteness.
+
+6. Priority score
+Now we build the urgency layer.
+
+A strong formula is:
+
+Priority = w1*Gap + w2*TrendRisk + w3*DependencyImpact + w4*ExamWeight + w5*Recurrence + w6*ForgettingRisk + w7*MisconceptionPenalty
+
+Example weighting:
+
+Gap severity: 30%
+
+Trend risk: 20%
+
+Dependency impact: 15%
+
+Exam relevance: 15%
+
+Recurrence: 10%
+
+Forgetting risk: 5%
+
+Misconception penalty: 5%
+
+So:
+
+Priority = 0.30G + 0.20TR + 0.15DI + 0.15EW + 0.10RC + 0.05FR + 0.05MP
+
+Where:
+
+G = gap score
+
+TR = trend risk
+
+DI = dependency impact
+
+EW = exam weight
+
+RC = recurrence
+
+FR = forgetting risk
+
+MP = misconception penalty
+
+This gives a score from 0 to 100.
+
+7. What each term means
+Gap score
+How weak the skill currently is.
+
+Example:
+
+10 = almost stable
+
+40 = weak
+
+70 = serious gap
+
+90 = nearly absent mastery
+
+Trend risk
+Measures whether the student is slipping.
+
+Example logic:
+
+improving = 10
+
+flat = 40
+
+slightly declining = 65
+
+sharply declining = 90
+
+A topic becoming worse should jump in priority.
+
+Dependency impact
+Measures how many other skills rely on this one.
+
+Example:
+
+isolated skill = 15
+
+moderate dependency = 50
+
+major prerequisite = 85
+
+Fractions may affect ratios, percentages, algebra, probability.
+
+Exam weight
+How important the skill is for the exam or stated goal.
+
+Example:
+
+low frequency = 20
+
+moderate = 50
+
+high frequency = 80
+
+must-know topic = 95
+
+Recurrence
+How often the student has failed to fully stabilize this skill.
+
+Example:
+
+first-time weakness = 20
+
+repeated weakness = 60
+
+chronic recurring weakness = 90
+
+Forgetting risk
+How likely the student is to lose this skill because of decay.
+
+Example:
+
+recently reinforced = 15
+
+some time since exposure = 45
+
+long gap + slipping = 80
+
+Misconception penalty
+If the student is making a deep conceptual mistake rather than a shallow error, increase urgency.
+
+Example:
+
+careless arithmetic slip = 15
+
+concept confusion = 60
+
+strong misconception = 90
+
+8. Priority levels
+Convert the priority score into categories.
+
+0–24: Low
+No immediate intervention needed.
+
+25–49: Watch
+Keep in review queue.
+
+50–69: Active repair
+Needs focused practice soon.
+
+70–84: Urgent solidify
+Move near the front of the queue.
+
+85–100: Critical blocker
+Stop weak forward progress and repair this now.
+
+This lets the system behave clearly.
+
+9. The state model for each skill
+Each skill should live in a state machine.
+
+Unknown
+The student has not shown enough evidence of understanding.
+
+Fragile
+Some success, but unstable.
+
+Weak
+Clear underperformance.
+
+Declining
+Was better before, now falling.
+
+Critical
+Must be repaired immediately.
+
+Repairing
+Currently under focused intervention.
+
+Stable
+Reliable and strong.
+
+Mastered
+Strong across time, speed, transfer, and variation.
+
+At-risk mastered
+Previously mastered, now showing signs of decay.
+
+This is much better than just weak/strong.
+
+10. When to force solidification
+The app should automatically trigger reinforcement when one or more of these happens:
+
+Rule 1: consecutive failure
+If a student misses the same skill 2–3 times in a short window.
+
+Rule 2: declining trend
+If performance drops significantly from prior baseline.
+
+Rule 3: dependency damage
+If this weakness is now causing failures in downstream topics.
+
+Rule 4: exam urgency
+If this skill is exam-critical and still unstable close to the exam.
+
+Rule 5: recurrence
+If the student “fixed” it before but keeps relapsing.
+
+Rule 6: slow mastery
+If correct but too slow under time pressure.
+
+Rule 7: confidence collapse
+If the student is getting right answers with high hesitation and low confidence.
+
+When any of these fire, the app should elevate the topic.
+
+11. Real-time update model
+The knowledge gap should update after every meaningful interaction.
+
+That includes:
+
+answering a question
+
+choosing a wrong option
+
+taking too long
+
+abandoning a question
+
+asking for too many hints
+
+failing a transfer version
+
+succeeding independently after scaffolding
+
+forgetting on later review
+
+So every event should adjust skill values.
+
+Example:
+
+A student answers a fractions question wrong twice, then gets a related percentages question wrong, then takes too long on a ratio problem.
+
+The system should do this in real time:
+
+increase gap score for fractions
+
+increase trend risk
+
+increase dependency impact due to spillover
+
+move fractions to urgent solidify
+
+recommend repair session
+
+That is the live engine.
+
+12. Intervention logic
+Once a skill becomes urgent, the system should not just tell the student.
+
+It should intervene.
+
+Intervention sequence
+Step 1: Diagnose precisely
+Find the exact break point.
+
+Not “you are bad at fractions,” but:
+“you struggle to find equivalent fractions before addition.”
+
+Step 2: Pull prerequisite check
+Maybe the real issue is multiplication facts or simplification.
+
+Step 3: Teach briefly
+Give a simple explanation, not a long lecture.
+
+Step 4: Guided examples
+Walk through a few controlled examples.
+
+Step 5: Targeted practice
+Short burst of focused questions.
+
+Step 6: Variation test
+Ask the skill in different forms.
+
+Step 7: Timed recheck
+See if it is becoming stable under light pressure.
+
+Step 8: Lock or continue
+If stable, lower priority.
+If not stable, keep intervention active.
+
+13. Queue logic
+The system should maintain a Gap Repair Queue.
+
+This queue is ordered by priority score, but also shaped by session design.
+
+A strong ordering formula is:
+
+Repair Queue Rank = Priority Score + Readiness Bonus + Momentum Bonus - Fatigue Penalty
+
+Where:
+
+Readiness Bonus = student is cognitively ready for this skill now
+
+Momentum Bonus = this is a quick win that builds confidence
+
+Fatigue Penalty = too much repetition on the same hard topic may burn the student
+
+This prevents the app from becoming oppressive.
+
+14. Example
+Let’s say a student has these four skills:
+
+Skill A: Fractions
+Gap: 65
+
+Trend risk: 80
+
+Dependency: 90
+
+Exam weight: 75
+
+Recurrence: 70
+
+Forgetting: 40
+
+Misconception: 60
+
+Priority:
+
+0.30(65) + 0.20(80) + 0.15(90) + 0.15(75) + 0.10(70) + 0.05(40) + 0.05(60)
+= 19.5 + 16 + 13.5 + 11.25 + 7 + 2 + 3
+= 72.25
+
+This becomes Urgent Solidify.
+
+Skill B: Mean/Median
+Gap: 70
+
+Trend risk: 25
+
+Dependency: 30
+
+Exam weight: 40
+
+Recurrence: 20
+
+Forgetting: 20
+
+Misconception: 50
+
+Priority:
+= 21 + 5 + 4.5 + 6 + 2 + 1 + 2.5
+= 42
+
+This is weaker in raw mastery, but less urgent.
+
+That is exactly the kind of intelligence you want.
+
+15. Knowledge gap display
+The student should not only see a single number.
+They should see structure.
+
+Main number
+Knowledge Gap: 38%
+
+Breakdown
+Unknown: 11%
+
+Weak: 12%
+
+Declining: 7%
+
+Forgetting: 4%
+
+Critical blockers: 4%
+
+Priority panel
+Fix now: Fractions
+
+Watch closely: Graph interpretation
+
+Stable again: Sentence transformation
+
+That makes the system feel alive.
+
+16. Gap shrinking logic
+The total gap should shrink only when real evidence appears.
+
+Do not shrink because the student watched a lesson.
+
+Shrink only when the student demonstrates:
+
+correctness
+
+repeat correctness
+
+transfer ability
+
+acceptable speed
+
+later retention
+
+So one successful question should reduce the gap a little, not fully.
+
+A skill becomes truly reduced when there is stable evidence.
+
+Example repair levels:
+
+explanation viewed: no major gap reduction
+
+guided correct: slight reduction
+
+independent correct: medium reduction
+
+repeated correct across variation: major reduction
+
+retained later: long-term reduction
+
+This prevents fake mastery.
+
+17. Solidification strategy types
+Different skills need different repair styles.
+
+For unknown skills
+Teach from scratch.
+
+For weak skills
+Target specific breakdown points.
+
+For declining skills
+Reinforce quickly and retest.
+
+For forgetting skills
+Use spaced retrieval.
+
+For misconception-heavy skills
+Confront the wrong mental model directly.
+
+For speed gaps
+Use timed repetition after accuracy stabilizes.
+
+So the app should not repair everything the same way.
+
+18. System behavior near exams
+As exams approach, priority weights should change.
+
+For example, increase:
+
+exam weight
+
+time sensitivity
+
+speed pressure
+
+Possible exam-adjusted formula:
+
+PriorityExam = 0.25G + 0.20TR + 0.15DI + 0.25EW + 0.10RC + 0.05FR
+
+This makes exam-important unstable skills rise faster.
+
+19. Personalized weighting
+Different students may need slightly different weighting profiles.
+
+Student type: anxious but knowledgeable
+Increase confidence and speed weighting.
+
+Student type: careless
+Increase consistency and error pattern weighting.
+
+Student type: weak foundation
+Increase dependency impact weighting.
+
+Student type: exam crammer
+Increase exam relevance and trend weighting.
+
+So the engine can adapt.
+
+20. Final architecture of the feature
+This feature should really be five connected parts:
+
+1. Skill Graph
+Maps all skills and prerequisites.
+
+2. Student Knowledge Model
+Stores mastery, trend, retention, confidence, and error history per skill.
+
+3. Gap Engine
+Calculates gap score.
+
+4. Priority Engine
+Calculates urgency and repair order.
+
+5. Solidification Engine
+Chooses the right intervention and checks whether the repair worked.
+
+That is the full core.
+
+21. Best product definition
+Here is the clean product definition:
+
+Knowledge Gap Mode is a live learning engine that continuously detects what a student does not know, what they are weak in, and what is starting to decline, then ranks those areas by urgency and prioritizes focused solidification until the student’s gap steadily shrinks.
+
+22. Best simple formula set
+If you want a clean first version, use this:
+
+Mastery
+Mastery = 0.4 Accuracy + 0.2 Retention + 0.15 Transfer + 0.15 Speed + 0.1 Confidence
+
+Gap
+Gap = 100 - Mastery
+
+Priority
+Priority = 0.35 Gap + 0.2 Trend + 0.15 Dependency + 0.15 ExamWeight + 0.1 Recurrence + 0.05 Misconception
+
+That is simple enough to build and already strong.
+
+23. What this gives your app
+This changes your app from:
+
+question practice
+
+topic revision
+
+weak topic listing
+
+into:
+
+a live knowledge radar
+
+a repair and stabilization system
+
+an intelligent academic prioritizer
+
+That is much stronger.
+
+The next layer after this is the screen-by-screen frontend flow for this mode: dashboard, gap map, urgent repair screen, solidification session, and post-session shrink animation.
+
+
+proceed
+
+I’m moving from engine logic into the actual product surface now: what the student sees first, how the gap map behaves, and how the app turns slipping areas into guided solidification sessions.
+
+Thought for 10s
+Good. Now let’s design the actual frontend experience for this mode.
+
+What we are building is not just a dashboard.
+It is a living academic command center that shows the student:
+
+what they do not know
+
+what is weakening
+
+what is urgent
+
+what to fix first
+
+proof that the gap is shrinking
+
+Knowledge Gap Mode — Frontend Flow
+A good name for the mode inside the app could be:
+
+Teach Me What I Don’t Know Yet
+
+Knowledge Gap
+
+Close My Gaps
+
+Gap Radar
+
+Zero Gap Journey
+
+The strongest user-facing title is probably:
+
+Teach Me What I Don’t Know Yet
+
+And underneath it:
+
+Find your missing knowledge. Fix it. Shrink your gap.
+
+1. Entry points into the mode
+The student should be able to enter this mode from several places.
+
+A. Home dashboard
+Card:
+Knowledge Gap: 42%
+“3 urgent areas need solidifying”
+
+CTA:
+Open Gap Mode
+
+B. After a mock exam
+Prompt:
+We found 7 weak zones and 3 hidden gaps. Want us to fix them?
+
+CTA:
+Start Gap Repair
+
+C. After repeated mistakes in practice
+Prompt:
+You’re slipping in Fractions. Lock it down now.
+
+CTA:
+Solidify This Area
+
+D. Study planner
+Suggestion:
+Today’s best move: reduce your gap by 2%
+
+This makes the feature feel central, not hidden.
+
+2. First-time onboarding flow
+When the student opens the mode for the first time, there should be a short onboarding.
+
+Screen 1 — What this mode does
+Title:
+We’ll show you what you haven’t mastered yet
+
+Text:
+“This mode finds missing knowledge, weak areas, and slipping topics, then helps you fix them in the right order.”
+
+Visual:
+A foggy subject map gradually clearing.
+
+CTA:
+Continue
+
+Screen 2 — How progress works
+Title:
+Your gap shrinks as you prove mastery
+
+Text:
+“Watching lessons does not reduce your gap. Solving, retaining, and applying correctly does.”
+
+Visual:
+Bar going from 58% to 49%.
+
+CTA:
+Got it
+
+Screen 3 — What the student gets
+Title:
+You’ll always know what to fix next
+
+Bullets:
+
+Missing skills
+
+Weak skills
+
+Slipping skills
+
+Critical blockers
+
+Best next repair path
+
+CTA:
+Scan My Knowledge
+
+3. Initial scan screen
+This is the first active screen.
+
+Purpose
+Run a quick diagnostic to estimate the knowledge map.
+
+UI layout
+Top:
+Teach Me What I Don’t Know Yet
+
+Subtext:
+“We’re mapping what you know, what is weak, and what needs repair first.”
+
+Middle visual:
+Animated subject map or brain grid with unknown cells.
+
+Info chips:
+
+10–15 quick questions
+
+adaptive difficulty
+
+takes about 3–5 minutes
+
+updates as you answer
+
+CTA:
+Start Scan
+
+Secondary CTA:
+Use My Past Performance Instead
+
+That second option matters if the app already has enough data.
+
+4. Live scan experience
+This should not feel like a normal quiz.
+
+It should feel like an intelligent probe.
+
+Header
+Scanning your knowledge…
+
+Top progress strip
+Knowledge map filling in
+
+“7 skills mapped”
+
+“2 weaknesses detected”
+
+“1 hidden blocker suspected”
+
+Question card
+Large clean question
+Minimal distraction
+
+Bottom utilities
+confidence toggle: “Not sure / Somewhat sure / Very sure”
+
+optional hint
+
+skip if truly unknown
+
+Real-time side behavior
+After a few questions, the app starts showing subtle discoveries:
+
+“You seem strong in basic arithmetic”
+
+“Equivalent fractions may need reinforcement”
+
+“We are checking whether this affects percentages too”
+
+That makes the system feel alive.
+
+5. Scan results reveal screen
+This is a major emotional moment.
+It must feel intelligent and useful.
+
+Top section
+Big headline:
+
+Here’s what we found
+
+Main card:
+Knowledge Gap: 46%
+
+Sub line:
+“You have 4 critical gaps, 9 weak skills, and 3 slipping areas.”
+
+Visual
+A dynamic map with color coding:
+
+red = critical
+
+orange = weak
+
+yellow = fragile
+
+blue = stable
+
+green = mastered
+
+purple outline = slipping / declining
+
+Breakdown cards
+Unknown — 12%
+
+Weak — 14%
+
+Declining — 8%
+
+Forgetting — 5%
+
+Critical blockers — 7%
+
+Main CTA
+Start Closing My Gaps
+
+Secondary CTA
+See My Full Gap Map
+
+6. Main Knowledge Gap Dashboard
+This is the core home of the mode.
+
+Think of it as a personal academic control panel.
+
+Top hero section
+Main metric
+Knowledge Gap: 46%
+
+Secondary metrics
+Coverage: 54%
+
+Critical blockers: 4
+
+Weak skills: 9
+
+Slipping areas: 3
+
+Fixed this week: 5
+
+Motion
+The gap ring should animate subtly when updated.
+
+Dashboard sections
+Section A — Fix now
+This is the most important panel.
+
+Title:
+Fix Now
+
+Cards like:
+
+Fractions — critical blocker
+
+Graph interpretation — slipping
+
+Sentence transformation — recurring weakness
+
+Each card should show:
+
+severity
+
+why it matters
+
+what it affects
+
+action button
+
+Example:
+
+Fractions
+Priority: Urgent Solidify
+Affecting: ratios, percentages, word problems
+Reason: declining accuracy + recurring errors
+CTA: Repair Now
+
+Section B — What you don’t know yet
+This is true unknown territory.
+
+Examples:
+
+probability trees
+
+balancing chemical equations
+
+direct and indirect speech
+
+Each item:
+
+skill name
+
+not yet mapped / barely known
+
+quick entry button
+
+CTA:
+Learn from zero
+
+Section C — Weak but improving
+This keeps hope alive.
+
+Examples:
+
+algebraic substitution
+
+punctuation
+
+heat transfer
+
+Each card:
+
+before and after trend
+
+confidence gain
+
+mastery progress
+
+CTA:
+Keep building
+
+Section D — Slipping areas
+This is a powerful section.
+
+Title:
+Starting to Slip
+
+Items show:
+
+was stable before
+
+now declining
+
+recommended reinforcement
+
+This is where the live-update engine shines.
+
+Example:
+Fractions
+Was stable 2 weeks ago
+Now accuracy dropped from 78% to 56%
+Fix now before it spreads
+
+CTA:
+Solidify Again
+
+Section E — Hidden blockers
+This is one of the most intelligent sections.
+
+Title:
+Hidden blockers we found
+
+Example:
+“You seem weak in ratios, but the real blocker is equivalent fractions.”
+
+This makes the system look smart.
+
+Each blocker card:
+
+observed failure area
+
+root cause
+
+linked downstream topics
+
+CTA:
+Fix Root Cause
+
+Section F — Recent shrinkage
+This gives emotional reward.
+
+Title:
+Your gap is shrinking
+
+Show:
+
+last week: 52%
+
+now: 46%
+
+3 critical gaps closed
+
+2 topics stabilized
+
+Visual:
+small downward trend graph or animated shrink bar
+
+7. Full Gap Map screen
+This is the detailed exploration view.
+
+Purpose
+Let the student see the full structure of their subject knowledge.
+
+Visual options
+Option A — Subject map
+Topic clusters connected by lines.
+
+Option B — Grid map
+Cells for topics, subtopics, and skills.
+
+Option C — Journey map
+Roads, bridges, zones, and fog.
+
+Best choice:
+Map + fog-clearing hybrid
+
+It feels educational and game-like.
+
+Filters
+all
+
+unknown
+
+weak
+
+slipping
+
+critical
+
+mastered
+
+exam-important
+
+Interaction
+Tap any topic to expand into:
+
+subtopics
+
+micro-skills
+
+status
+
+trend
+
+related dependencies
+
+Example:
+Fractions
+
+identify denominator — stable
+
+equivalent fractions — critical
+
+addition of unlike fractions — weak
+
+simplification — fragile
+
+Each skill shows:
+
+mastery %
+
+last seen
+
+confidence
+
+linked downstream topics
+
+CTA at bottom:
+Repair This Topic
+
+8. Skill detail screen
+This is where the app explains a specific weakness clearly.
+
+Example skill:
+Equivalent Fractions
+
+Top section
+Status badge:
+Critical Blocker
+
+Reason:
+“You are missing this skill, and it is affecting fractions, ratios, and percentage questions.”
+
+Insight block
+This block should answer:
+
+what the skill is
+
+why the student is weak here
+
+what evidence the app used
+
+what will improve if fixed
+
+Example:
+“You often choose the right denominator but convert the numerator incorrectly. This is causing repeated mistakes in fraction addition.”
+
+Performance evidence
+recent accuracy: 30%
+
+average time: too slow
+
+confidence: low
+
+recurrence: high
+
+last stable: never / 2 weeks ago
+
+Related impact
+“This skill affects:
+
+adding unlike fractions
+
+ratio simplification
+
+percentage conversion”
+
+Main CTA
+Start Solidification Session
+
+Secondary CTA
+See Example Mistakes
+
+9. Example mistake screen
+Very important.
+Students should be able to see exactly how they are going wrong.
+
+Layout
+Show their most common wrong pattern.
+
+Example:
+You often do this:
+1/2 + 1/3 = 2/5
+
+System note:
+“You are adding numerators and denominators directly. That is the misconception.”
+
+Then show:
+What should happen instead
+Find a common denominator first.
+
+This is where misconception repair becomes real.
+
+CTA:
+Teach Me Properly
+
+10. Solidification session screen
+This is the repair experience.
+
+It should not feel like random question practice.
+It should feel like focused academic therapy.
+
+Session structure
+A full solidification session can have 5 stages.
+
+Stage 1 — Quick diagnosis
+One or two small probes to confirm exact failure point.
+
+Stage 2 — Mini teaching
+Short explanation, visual example, maybe animation.
+
+Stage 3 — Guided practice
+Student solves with scaffolded support.
+
+Stage 4 — Independent proof
+Student answers alone.
+
+Stage 5 — Variation test
+Same concept in another form.
+
+UI for the session
+Header
+Solidifying: Equivalent Fractions
+
+Subtext:
+“Goal: make this skill stable and usable under pressure.”
+
+Progress strip
+diagnose
+
+teach
+
+guide
+
+prove
+
+lock in
+
+Live reinforcement messages
+“Good — you found the common denominator”
+
+“Careful — the denominator stays the same after combining”
+
+“Now try it with less support”
+
+Bottom state
+Gap effect preview:
+“Stabilizing this skill can reduce your Mathematics gap by up to 2% and improve fractions, ratios, and percentages.”
+
+That is motivating.
+
+11. Post-session result screen
+This should feel rewarding but credible.
+
+Top result
+You stabilized 1 critical skill
+
+Updated numbers
+Knowledge Gap: 46% → 44%
+
+Fractions: critical → fragile
+
+Percentage readiness: improved
+
+Confidence: rising
+
+Visual
+Fog clears in that skill area
+or red turns orange / yellow
+
+Insights
+“You solved 4 in a row correctly”
+
+“You handled a new variation”
+
+“You still need a later recheck to lock it in fully”
+
+That last part matters.
+Do not pretend full mastery too early.
+
+CTA options
+Fix the next urgent gap
+
+Reinforce this later
+
+See what improved
+
+12. Real-time slipping alert screen
+This is for when the engine detects decline.
+
+Trigger example
+A student was stable in fractions but is now missing related questions repeatedly.
+
+Alert format
+Title:
+This area is starting to slip
+
+Body:
+“Your recent answers suggest Fractions is weakening again. This is now affecting ratios and percentages.”
+
+Visual:
+Skill card pulsing lightly or showing a downward trend arrow
+
+Actions:
+
+Solidify now
+
+Add to today’s repair plan
+
+Remind me later
+
+This makes the app proactive.
+
+13. Daily gap plan screen
+The system should create a daily plan around gap reduction.
+
+Title
+Today’s Gap Reduction Plan
+
+Example plan:
+
+fix 1 critical blocker
+
+reinforce 2 slipping areas
+
+protect 1 strong topic from decay
+
+Estimated result
+“Complete this plan and you may reduce your active gap by 2–3%”
+
+This helps make the feature actionable.
+
+Each task card should show:
+
+topic
+
+urgency
+
+estimated time
+
+expected impact
+
+CTA:
+Start Today’s Plan
+
+14. Weekly gap review screen
+This is important for longer-term engagement.
+
+Title
+Your Knowledge Gap This Week
+
+Show:
+
+gap last week vs now
+
+skills fixed
+
+skills that slipped
+
+strongest improvements
+
+recurring danger zones
+
+Example
+Gap: 51% → 44%
+
+4 critical skills repaired
+
+2 topics relapsed
+
+biggest improvement: algebraic substitution
+
+next danger zone: graph interpretation
+
+Add encouraging but intelligent messaging:
+“You are reducing your gap, but two repaired areas are becoming unstable again.”
+
+That keeps the student honest.
+
+15. Parent or teacher companion view
+This can be extremely powerful.
+
+Dashboard
+overall gap
+
+critical blockers
+
+recurring weaknesses
+
+recent gains
+
+slipping skills
+
+intervention adherence
+
+Example
+“Victor’s main blocker is not algebra itself. It is weak negative-number handling, which is affecting algebra and graphs.”
+
+That makes the reporting meaningful.
+
+16. Core UI blocks that should exist throughout
+These are reusable components.
+
+A. Gap Ring
+Circular progress showing current gap %
+
+B. Priority Cards
+Cards showing urgency and recommended action
+
+C. Trend Arrows
+rising mastery
+
+flat
+
+declining
+
+D. Skill State Badges
+unknown
+
+weak
+
+fragile
+
+declining
+
+critical
+
+stable
+
+mastered
+
+E. Dependency Tags
+“This affects 3 other skills”
+
+F. Shrink Animation
+When the student improves, the map should visually tighten / clear / heal
+
+G. Root Cause Insight Card
+“Your issue here is actually coming from an earlier skill”
+
+These components will make the whole mode coherent.
+
+17. Core microcopy
+The language matters a lot.
+
+Do not make the student feel stupid.
+
+Use lines like:
+
+“Here’s what we’ll unlock next”
+
+“This area needs strengthening”
+
+“This skill is becoming fragile”
+
+“We found the root cause”
+
+“Let’s stabilize this before it spreads”
+
+“Your gap is shrinking”
+
+“This skill is stronger now”
+
+“This area still needs proof”
+
+Avoid harsh lines like:
+
+“You are bad at this”
+
+“You failed this topic”
+
+“You don’t know anything here”
+
+18. Color and emotional logic
+The colors should communicate status without shame.
+
+red = urgent / critical
+
+orange = weak / active repair
+
+yellow = fragile
+
+blue = stable
+
+green = mastered
+
+purple = slipping / declining
+
+gray fog = unknown / unmapped
+
+Use gentle gradients, not harsh alarming tones all the time.
+
+This is a serious academic feature, but it should still feel hopeful.
+
+19. Gamification without becoming childish
+This mode can be very addictive if done properly.
+
+Good gamification
+gap shrinking animation
+
+unlock “fixed” badges
+
+streak for daily reduction
+
+“3 hidden blockers uncovered”
+
+“foundation repaired”
+
+“weak zone stabilized”
+
+Bad gamification
+too many coins
+
+noisy rewards
+
+meaningless badges
+
+distracting confetti every second
+
+The motivation should come from visible academic repair, not empty noise.
+
+20. Real-time updating behavior on screen
+This is very important.
+
+When the student is using the app anywhere, the Knowledge Gap Mode should update silently in the background.
+
+Then, when they open it, they see:
+
+one skill moved from fragile to declining
+
+one weak skill became stable
+
+one new hidden blocker was detected
+
+one topic rose in priority
+
+You can show a small activity feed:
+
+Recent knowledge updates
+
+Fractions moved to urgent solidify
+
+Graph interpretation improved
+
+Sentence transformation is now stable
+
+A hidden root cause was found in decimals
+
+This makes the system feel truly live.
+
+21. Suggested navigation structure
+Inside the mode, bottom tab or top tab could be:
+
+Overview
+
+Gap Map
+
+Fix Now
+
+Slipping
+
+Progress
+
+Overview
+Main dashboard
+
+Gap Map
+Full subject/skill structure
+
+Fix Now
+Priority repair queue
+
+Slipping
+Declining and at-risk skills
+
+Progress
+Trend, shrink history, repaired gaps
+
+That is a strong structure.
+
+22. Best first-version screen set
+If you want a focused first release, build these 7 screens first:
+
+Knowledge Gap Dashboard
+
+Gap Scan
+
+Results Reveal
+
+Gap Map
+
+Skill Detail
+
+Solidification Session
+
+Post-Session Result
+
+That is enough to create a strong initial product surface.
+
+Then later add:
+
+daily plan
+
+weekly report
+
+parent view
+
+live slip alerts
+
+comparison view across subjects
+
+23. Recommended student flow
+Here is the ideal journey.
+
+Flow A — first-time user
+Open mode
+→ onboarding
+→ scan
+→ results reveal
+→ dashboard
+→ first urgent repair
+→ shrink animation
+→ next recommended repair
+
+Flow B — returning user
+Open mode
+→ dashboard shows new slipping areas
+→ choose urgent repair
+→ solidification session
+→ post-session result
+→ progress log updates
+
+Flow C — after mock exam
+Mock completed
+→ weak areas detected
+→ enter gap mode
+→ hidden blockers revealed
+→ root-cause repair begins
+
+That is how the feature becomes woven into the whole app.
+
+24. Strong product identity of this mode
+This mode should feel like:
+
+a personal diagnosis system
+
+a repair workshop
+
+a live academic radar
+
+a mastery stabilizer
+
+Not just another practice tab.
+
+It should become one of the most powerful reasons students trust the app.
+
+25. Clean final definition of the frontend experience
+Knowledge Gap Mode is a live student-facing command center that visualizes missing knowledge, weak and declining skills, hidden blockers, and real-time repair priorities, then guides the learner through focused solidification sessions and shows visible proof that the gap is shrinking.
+
+The next layer is the backend data model and event system for this mode — exactly what entities, tables, fields, and events must exist so the UI can update live and correctly.
+
+
+proceed
+
+I’m taking it under the UI now: the persistent student model, the events that mutate it, and the live update pipeline that keeps the gap accurate instead of fake.
+
+Thought for 8s
+Good. Now we define the backend foundation that makes this mode real.
+
+Because if the backend is weak, the frontend will only be pretending to be intelligent.
+
+What you need is not just a table for weak topics.
+You need a live knowledge-state system that can:
+
+represent the curriculum as skills and dependencies
+
+represent each student’s state per skill
+
+record every learning event
+
+detect weakness, decline, forgetting, and recurrence
+
+calculate gap and priority in real time
+
+drive interventions and update the UI immediately
+
+So this backend is really a Knowledge State Engine.
+
+1. Core backend principle
+The system must separate these things clearly:
+
+A. The academic world
+What exists to be learned:
+
+subject
+
+topic
+
+subtopic
+
+skill
+
+micro-skill
+
+dependencies
+
+exam importance
+
+B. The student’s knowledge state
+What this particular student currently knows, partly knows, is forgetting, or is weak in.
+
+C. Evidence
+All the actual signals:
+
+answers
+
+response time
+
+confidence
+
+hint usage
+
+retries
+
+transfer performance
+
+retention performance
+
+D. Interpretation
+The engine’s conclusions:
+
+this skill is weak
+
+this skill is declining
+
+this skill is a blocker
+
+this skill should be repaired now
+
+That separation is important.
+
+2. The major backend modules
+You should think of the backend as 8 cooperating modules.
+
+1. Curriculum Graph Service
+Owns academic structure.
+
+2. Student Knowledge State Service
+Owns current per-skill state for each student.
+
+3. Learning Event Store
+Owns raw evidence from student interactions.
+
+4. Gap Scoring Engine
+Computes mastery and gap per skill.
+
+5. Priority Engine
+Computes urgency and repair order.
+
+6. Dependency / Root Cause Engine
+Finds upstream blockers.
+
+7. Intervention Engine
+Creates solidification sessions and repair plans.
+
+8. Progress Projection / Reporting Engine
+Feeds dashboards, trends, parents, and planners.
+
+That is the full system.
+
+3. Main entity model
+Let’s define the core entities.
+
+Entity 1: Subject
+Represents a major academic subject.
+
+Fields
+id
+
+code — e.g. math, science, english
+
+name
+
+curriculum_id
+
+grade_band
+
+is_active
+
+created_at
+
+updated_at
+
+Entity 2: Topic
+Represents a major unit within a subject.
+
+Fields
+id
+
+subject_id
+
+code
+
+name
+
+description
+
+display_order
+
+exam_weight
+
+difficulty_band
+
+is_active
+
+created_at
+
+updated_at
+
+Example:
+Fractions, Heat, Direct Speech
+
+Entity 3: Subtopic
+Breaks topic down further.
+
+Fields
+id
+
+topic_id
+
+code
+
+name
+
+description
+
+display_order
+
+exam_weight
+
+is_active
+
+created_at
+
+updated_at
+
+Example:
+Equivalent fractions, Adding unlike fractions
+
+Entity 4: Skill
+This is the most important academic unit.
+
+A skill should represent a specific thing the student must be able to do.
+
+Fields
+id
+
+subject_id
+
+topic_id
+
+subtopic_id
+
+code
+
+name
+
+description
+
+skill_type
+Examples:
+
+conceptual
+
+procedural
+
+recall
+
+transfer
+
+interpretation
+
+calculation
+
+difficulty_level
+
+exam_weight
+
+foundation_weight
+
+expected_time_seconds
+
+mastery_threshold
+
+retention_half_life_days
+
+is_exam_critical
+
+is_active
+
+created_at
+
+updated_at
+
+Example:
+“Find equivalent fractions”
+“Convert ratio to fraction”
+“Identify subject and predicate”
+
+Entity 5: Skill Dependency
+Represents prerequisite relationships.
+
+Fields
+id
+
+parent_skill_id
+
+child_skill_id
+
+dependency_strength
+
+dependency_type
+
+hard prerequisite
+
+soft prerequisite
+
+supporting
+
+created_at
+
+This is how the system knows that weakness in one area can affect many others.
+
+Entity 6: Question / Assessment Item
+Represents an assessment item.
+
+Fields
+id
+
+subject_id
+
+topic_id
+
+subtopic_id
+
+difficulty_level
+
+question_type
+
+stem
+
+metadata_json
+
+expected_time_seconds
+
+exam_style_weight
+
+is_active
+
+created_at
+
+updated_at
+
+Entity 7: Question Skill Link
+Because one question can test multiple skills.
+
+Fields
+id
+
+question_id
+
+skill_id
+
+contribution_weight
+
+This is critical.
+Without this, your intelligence becomes too vague.
+
+Entity 8: Misconception Pattern
+Represents known error archetypes.
+
+Fields
+id
+
+skill_id
+
+code
+
+title
+
+description
+
+severity_weight
+
+remediation_hint
+
+created_at
+
+updated_at
+
+Example for fractions:
+
+adds denominators directly
+
+fails to find common denominator
+
+simplifies incorrectly
+
+Entity 9: Student
+Your normal student entity.
+
+Fields
+id
+
+account_id
+
+name
+
+grade_level
+
+curriculum_id
+
+exam_target_date
+
+profile_settings_json
+
+created_at
+
+updated_at
+
+4. Student knowledge-state entities
+This is where the real intelligence sits.
+
+Entity 10: Student Skill State
+This is the central table of the whole feature.
+
+There should be one row per student per skill.
+
+Fields
+id
+
+student_id
+
+skill_id
+
+Current knowledge fields
+mastery_score — 0 to 100
+
+gap_score — 0 to 100
+
+priority_score — 0 to 100
+
+confidence_score
+
+speed_score
+
+accuracy_score
+
+retention_score
+
+transfer_score
+
+consistency_score
+
+Trend / risk fields
+trend_state
+
+improving
+
+stable
+
+fragile
+
+declining
+
+critical
+
+trend_score
+
+forgetting_risk_score
+
+recurrence_score
+
+dependency_impact_score
+
+exam_importance_score
+
+misconception_penalty_score
+
+Status fields
+knowledge_state
+
+unknown
+
+weak
+
+fragile
+
+declining
+
+repairing
+
+stable
+
+mastered
+
+at_risk_mastered
+
+is_hidden_blocker
+
+is_urgent
+
+is_exam_critical_gap
+
+is_foundational_gap
+
+Attempt / evidence fields
+total_attempts
+
+correct_attempts
+
+recent_attempts_window
+
+recent_correct_window
+
+recent_avg_response_ms
+
+recent_avg_confidence
+
+last_seen_at
+
+last_correct_at
+
+last_mastered_at
+
+last_decline_at
+
+last_repaired_at
+
+Forgetting model fields
+memory_strength
+
+predicted_decay_at
+
+next_retention_check_at
+
+Intervention fields
+repair_queue_rank
+
+current_intervention_mode
+
+intervention_status
+
+intervention_started_at
+
+intervention_completed_at
+
+Audit
+version
+
+created_at
+
+updated_at
+
+This table should be fast to query because the UI will use it constantly.
+
+Entity 11: Student Topic Aggregate
+For topic-level summaries.
+
+Fields
+id
+
+student_id
+
+topic_id
+
+coverage_score
+
+gap_score
+
+priority_score
+
+unknown_skill_count
+
+weak_skill_count
+
+declining_skill_count
+
+critical_skill_count
+
+mastered_skill_count
+
+last_updated_at
+
+This helps the dashboard render quickly without recalculating every time.
+
+Entity 12: Student Subject Aggregate
+For subject-level summary.
+
+Fields
+id
+
+student_id
+
+subject_id
+
+coverage_score
+
+gap_score
+
+priority_score
+
+critical_blockers_count
+
+slipping_skill_count
+
+fixed_this_week_count
+
+last_updated_at
+
+This powers the main “Knowledge Gap: 46%” type cards.
+
+5. Evidence entities
+You need an evidence layer, not just computed state.
+
+Entity 13: Learning Event
+Every meaningful interaction becomes an event.
+
+Fields
+id
+
+student_id
+
+event_type
+Examples:
+
+question_answered
+
+hint_used
+
+answer_changed
+
+timeout
+
+session_completed
+
+lesson_viewed
+
+confidence_submitted
+
+question_skipped
+
+intervention_started
+
+intervention_completed
+
+source_mode
+
+mock
+
+practice
+
+gap_mode
+
+journey
+
+elite
+
+memory
+
+subject_id
+
+topic_id
+
+subtopic_id
+
+skill_id nullable
+
+question_id nullable
+
+session_id nullable
+
+occurred_at
+
+payload_json
+
+This event table is the truth trail.
+
+Entity 14: Student Question Attempt
+Detailed record of a question attempt.
+
+Fields
+id
+
+student_id
+
+question_id
+
+session_id
+
+attempt_number
+
+started_at
+
+submitted_at
+
+response_time_ms
+
+was_correct
+
+confidence_level
+
+hint_count
+
+skip_flag
+
+support_level
+
+independent
+
+guided
+
+heavily_guided
+
+transfer_variant_flag
+
+retention_check_flag
+
+payload_json
+
+created_at
+
+Entity 15: Attempt Skill Outcome
+Because a question may affect multiple skills differently.
+
+Fields
+id
+
+student_question_attempt_id
+
+student_id
+
+skill_id
+
+question_id
+
+correctness_score
+
+speed_score_delta
+
+confidence_score_delta
+
+retention_signal
+
+transfer_signal
+
+misconception_id nullable
+
+outcome_type
+
+success
+
+failure
+
+fragile_success
+
+timed_out
+
+guessed
+
+created_at
+
+This lets you update per-skill state intelligently.
+
+Entity 16: Misconception Detection Event
+Tracks detected error types.
+
+Fields
+id
+
+student_id
+
+skill_id
+
+misconception_id
+
+question_id
+
+confidence_level
+
+severity_score
+
+detected_at
+
+resolved_at nullable
+
+This supports root-cause repair and recurring weakness logic.
+
+6. Intervention entities
+Now we define how repair sessions are represented.
+
+Entity 17: Gap Repair Plan
+A system-generated repair plan.
+
+Fields
+id
+
+student_id
+
+subject_id
+
+plan_type
+
+daily
+
+weekly
+
+urgent
+
+post_mock
+
+goal_gap_reduction
+
+status
+
+draft
+
+active
+
+completed
+
+abandoned
+
+generated_reason
+
+created_at
+
+updated_at
+
+Entity 18: Gap Repair Plan Item
+Each action inside a plan.
+
+Fields
+id
+
+repair_plan_id
+
+skill_id
+
+priority_score_snapshot
+
+reason_code
+
+critical_blocker
+
+slipping
+
+forgetting
+
+exam_critical
+
+recurring
+
+recommended_mode
+
+reteach
+
+guided_practice
+
+transfer_drill
+
+retention_check
+
+speed_drill
+
+estimated_minutes
+
+expected_gap_impact
+
+status
+
+pending
+
+in_progress
+
+completed
+
+deferred
+
+display_order
+
+created_at
+
+updated_at
+
+Entity 19: Solidification Session
+Represents one focused repair session.
+
+Fields
+id
+
+student_id
+
+skill_id
+
+origin_plan_item_id nullable
+
+session_mode
+
+critical_repair
+
+slipping_repair
+
+retention_repair
+
+misconception_repair
+
+status
+
+started
+
+teaching
+
+guided
+
+proving
+
+retesting
+
+completed
+
+failed
+
+start_time
+
+end_time
+
+starting_gap_score
+
+ending_gap_score
+
+starting_state
+
+ending_state
+
+success_flag
+
+created_at
+
+updated_at
+
+Entity 20: Solidification Session Step
+To track the stages inside a repair session.
+
+Fields
+id
+
+solidification_session_id
+
+step_type
+
+diagnose
+
+explain
+
+worked_example
+
+guided_practice
+
+independent_check
+
+variation_test
+
+timed_check
+
+display_order
+
+status
+
+result_json
+
+created_at
+
+updated_at
+
+This is useful for analytics and adaptive session design.
+
+7. Progress and feed entities
+These drive the frontend update feed.
+
+Entity 21: Knowledge Update Feed Item
+For showing “Fractions is slipping” and similar messages.
+
+Fields
+id
+
+student_id
+
+update_type
+
+gap_shrank
+
+skill_declined
+
+skill_stabilized
+
+hidden_blocker_found
+
+critical_gap_detected
+
+repair_completed
+
+subject_id
+
+topic_id
+
+skill_id
+
+title
+
+message
+
+importance_level
+
+read_flag
+
+created_at
+
+This powers the live activity feed in the UI.
+
+Entity 22: Gap Snapshot
+Stores periodic snapshots for trend graphs.
+
+Fields
+id
+
+student_id
+
+subject_id nullable
+
+topic_id nullable
+
+snapshot_scope
+
+overall
+
+subject
+
+topic
+
+coverage_score
+
+gap_score
+
+critical_count
+
+weak_count
+
+declining_count
+
+mastered_count
+
+captured_at
+
+This helps render weekly and monthly charts without expensive recalculation.
+
+8. Event-driven backend behavior
+Now let’s define how the system behaves in motion.
+
+The knowledge state must update whenever something meaningful happens.
+
+The best model here is event-driven.
+
+Core pipeline
+Step 1: student interaction happens
+Example:
+student answers a fractions question wrong
+
+Step 2: event is recorded
+Create:
+
+LearningEvent
+
+StudentQuestionAttempt
+
+AttemptSkillOutcome
+
+Step 3: skill update processor runs
+It recalculates affected skill states.
+
+Step 4: dependency engine runs
+Checks if upstream or downstream related skills are affected.
+
+Step 5: aggregates update
+Topic and subject summary records are refreshed.
+
+Step 6: alerts / repair logic update
+If needed:
+
+mark skill as slipping
+
+create feed item
+
+raise priority
+
+insert into repair plan
+
+Step 7: frontend receives updated state
+Dashboard and gap mode reflect the change
+
+That is the live loop.
+
+9. Real-time event types that should trigger recalculation
+These are the events that should mutate the system.
+
+High-priority recalculation triggers
+question answered
+
+session ended
+
+transfer check completed
+
+retention check completed
+
+repeated failure detected
+
+confidence drop detected
+
+slow performance trend detected
+
+repair session completed
+
+Medium-priority triggers
+hint use spike
+
+question skip
+
+lesson completed
+
+guided success after failure
+
+Low-priority informational triggers
+mode entered
+
+screen viewed
+
+explanation opened
+
+Do not let passive screen views falsely reduce the gap.
+
+10. Skill update algorithm flow
+When a question attempt is recorded, the system should do this:
+
+A. identify all affected skills
+Using QuestionSkillLink
+
+B. compute evidence deltas
+For each skill:
+
+accuracy delta
+
+speed delta
+
+confidence delta
+
+retention delta
+
+transfer delta
+
+misconception penalty
+
+C. update rolling windows
+last 5 attempts
+
+last 10 attempts
+
+recent 7-day trend
+
+recent 30-day retention pattern
+
+D. recalculate mastery
+Using your formula
+
+E. derive gap
+gap = 100 - mastery
+
+F. compute trend state
+Compare recent performance to previous baseline
+
+G. compute priority
+Use the priority formula
+
+H. detect special states
+slipping
+
+recurring
+
+hidden blocker
+
+urgent solidify
+
+at-risk mastered
+
+I. persist updated StudentSkillState
+J. emit update events
+If state changed materially
+
+That is the core mutation cycle.
+
+11. State transition rules
+Each skill should follow a controlled state machine.
+
+Here is a clean version.
+
+unknown → weak
+When first evidence shows low mastery.
+
+unknown → fragile
+When first evidence is mixed but incomplete.
+
+weak → repairing
+When a repair session starts.
+
+repairing → fragile
+When partial improvement appears but not enough proof yet.
+
+fragile → stable
+When the student performs consistently across varied items.
+
+stable → mastered
+When performance is sustained across time and retention checks.
+
+mastered → at_risk_mastered
+When decay or decline signals appear.
+
+at_risk_mastered → declining
+When performance drops below threshold.
+
+declining → critical
+When trend worsens or downstream failures appear.
+
+critical → repairing
+When intervention starts.
+
+repairing → stable
+When sufficient evidence proves recovery.
+
+This state machine should be explicit in code.
+
+12. Hidden blocker detection logic
+This is one of the smartest parts of the system.
+
+A hidden blocker means:
+the student appears weak in one area, but the real cause is elsewhere.
+
+Example:
+student keeps failing ratio questions, but root cause is equivalent fractions.
+
+Detection approach
+A. observe downstream failures
+Student is repeatedly failing children skills
+
+B. inspect prerequisite graph
+Check upstream skills linked to those failures
+
+C. compare performance
+If upstream skill has weak/fragile evidence and children are failing, flag probable blocker
+
+D. compute blocker confidence
+A blocker confidence score can be derived from:
+
+dependency strength
+
+upstream weakness severity
+
+downstream failure frequency
+
+recency
+
+E. mark blocker
+Set:
+
+is_hidden_blocker = true
+
+create feed item
+
+increase priority
+
+This is how the app says:
+“You seem weak in ratios, but your real issue is fractions.”
+
+13. Forgetting / decay model
+This mode must detect not just ignorance, but slipping knowledge.
+
+A practical first model:
+
+Each skill has:
+
+memory_strength
+
+last_correct_at
+
+predicted_decay_at
+
+next_retention_check_at
+
+Basic logic
+If a skill has not been reinforced for a while, decay risk rises.
+
+Example
+mastery high + recently reinforced = low forgetting risk
+
+mastery medium + long inactivity = medium risk
+
+previously mastered + recent errors = high risk
+
+Simple decay approach
+Use a decay curve where memory strength gradually falls with time unless reinforced.
+
+Every independent successful recall:
+
+increases memory strength
+
+pushes predicted_decay_at further out
+
+Every failed recall:
+
+reduces memory strength sharply
+
+raises forgetting risk
+
+can move skill to at_risk_mastered or declining
+
+This is how the app protects what the student already learned.
+
+14. Topic and subject aggregate refresh strategy
+Do not calculate the whole system from scratch every time.
+
+Use incremental updates.
+
+When a skill changes:
+
+update StudentSkillState
+
+recompute that topic aggregate
+
+recompute that subject aggregate
+
+maybe recompute overall gap snapshot
+
+This gives fast UI response.
+
+Topic aggregate should include
+average weighted mastery
+
+weighted gap
+
+counts by state
+
+top urgent skills
+
+slipping count
+
+hidden blocker count
+
+Subject aggregate should include
+total weighted gap
+
+critical blockers
+
+top 5 urgent skills
+
+recent shrink percentage
+
+projected readiness
+
+15. API / command layer
+The frontend will need clean endpoints or commands.
+
+Here is a strong initial API set.
+
+Dashboard APIs
+GET /students/{id}/knowledge-gap/overview
+Returns:
+
+overall gap
+
+coverage
+
+counts by category
+
+top urgent skills
+
+slipping areas
+
+recent shrinkage
+
+GET /students/{id}/knowledge-gap/map?subject=math
+Returns:
+
+topic tree
+
+skill states
+
+colors/statuses
+
+dependency markers
+
+GET /students/{id}/knowledge-gap/updates
+Returns activity feed items
+
+Skill detail APIs
+GET /students/{id}/skills/{skillId}/state
+Returns:
+
+mastery
+
+gap
+
+priority
+
+state
+
+recent trend
+
+evidence summary
+
+dependencies
+
+related topics affected
+
+GET /students/{id}/skills/{skillId}/mistakes
+Returns:
+
+common misconception patterns
+
+recent failed examples
+
+evidence summary
+
+Repair APIs
+POST /students/{id}/knowledge-gap/scan/start
+Starts or resumes scan
+
+POST /students/{id}/repair-plans/generate
+Generates a daily or urgent plan
+
+GET /students/{id}/repair-plans/current
+Returns current active repair plan
+
+POST /students/{id}/skills/{skillId}/solidification-session/start
+Creates focused repair session
+
+POST /solidification-sessions/{id}/step-complete
+Records progress inside session
+
+POST /solidification-sessions/{id}/complete
+Finalizes session and updates states
+
+Event ingestion APIs
+POST /learning-events
+Write event
+
+POST /question-attempts
+Write attempt + trigger recalculation
+
+POST /confidence-events
+Capture confidence
+
+POST /retention-checks
+Capture spaced recall results
+
+These can be internal commands if you prefer command-based architecture.
+
+16. Realtime transport to frontend
+If you want the frontend to feel alive, do not wait for full page refresh.
+
+Use:
+
+websocket
+
+local event bus
+
+push-based store updates
+
+Whenever a material state change happens, emit messages like:
+
+knowledge_gap.updated
+
+skill_state.changed
+
+topic_state.changed
+
+repair_plan.generated
+
+hidden_blocker.detected
+
+skill_declining.detected
+
+solidification_session.completed
+
+The frontend then updates:
+
+gap ring
+
+urgent list
+
+map colors
+
+activity feed
+
+This is what creates the “real-time” feeling.
+
+17. Materialized frontend view models
+To avoid making the frontend assemble too much logic, create specific backend view models.
+
+View Model 1: Gap Overview DTO
+Fields:
+
+overall_gap_score
+
+coverage_score
+
+unknown_count
+
+weak_count
+
+declining_count
+
+critical_count
+
+fixed_this_week_count
+
+top_urgent_skills[]
+
+slipping_skills[]
+
+recent_updates[]
+
+View Model 2: Gap Map DTO
+Fields:
+
+subjects
+
+topics
+
+subtopics
+
+skills
+
+state badges
+
+trend badges
+
+dependency markers
+
+urgency markers
+
+View Model 3: Skill Detail DTO
+Fields:
+
+status
+
+evidence summary
+
+reason for weakness
+
+misconception summary
+
+downstream affected skills
+
+recommended next action
+
+View Model 4: Repair Session DTO
+Fields:
+
+session state
+
+current step
+
+skill name
+
+why it matters
+
+gap impact preview
+
+question items / teaching blocks
+
+These view models will make the UI much cleaner.
+
+18. Scoring cadence
+Not everything should update at the same frequency.
+
+Immediate recalculation
+question answered
+
+timed out
+
+repeated failure
+
+retention test result
+
+transfer result
+
+repair completed
+
+Batched recalculation
+full topic aggregate recompute
+
+subject trend charts
+
+weekly gap snapshots
+
+projections
+
+This reduces unnecessary load.
+
+19. Performance strategy
+Since your product is likely desktop-first and may be local-first, design the engine efficiently.
+
+Good strategy
+keep StudentSkillState as the hot state table
+
+keep events append-only
+
+use incremental aggregation
+
+do background recalculation for large snapshots
+
+only recompute affected skill neighborhoods, not the entire graph
+
+If a fractions skill changes, do not recalc all mathematics.
+Recalc:
+
+that skill
+
+dependent child skills
+
+topic aggregate
+
+subject summary
+
+That is enough.
+
+20. Auditing and explainability
+This feature must be explainable.
+
+If the app says:
+“Fractions is slipping and is now urgent,”
+the system should be able to justify it.
+
+So keep a calculation explanation record.
+
+Entity 23: Skill Score Explanation
+Fields
+id
+
+student_id
+
+skill_id
+
+mastery_score
+
+gap_score
+
+priority_score
+
+explanation_json
+
+generated_at
+
+The explanation JSON can include:
+
+recent accuracy drop
+
+slow response trend
+
+recurring misconception
+
+downstream impact
+
+exam weight
+
+This is useful for:
+
+teacher views
+
+debugging
+
+trust
+
+future AI explanations
+
+21. Example end-to-end flow
+Let’s walk it through.
+
+A student answers a fractions question wrongly.
+
+Step 1
+StudentQuestionAttempt saved
+
+Step 2
+AttemptSkillOutcome created for:
+
+equivalent fractions
+
+common denominator conversion
+
+Step 3
+StudentSkillState updated
+
+accuracy down
+
+trend worsens
+
+mastery drops
+
+gap rises
+
+Step 4
+Dependency engine sees downstream errors in ratios and percentages
+
+Step 5
+Equivalent fractions marked as probable hidden blocker
+
+Step 6
+Priority score crosses urgent threshold
+
+Step 7
+KnowledgeUpdateFeedItem created:
+“Equivalent Fractions is now urgent. It is affecting ratios and percentages.”
+
+Step 8
+Repair plan item added
+
+Step 9
+Frontend dashboard updates live
+
+That is the system working as intended.
+
+22. Minimal viable backend version
+If you want a first strong version without overbuilding, start with these tables first:
+
+Subject
+
+Topic
+
+Subtopic
+
+Skill
+
+SkillDependency
+
+Question
+
+QuestionSkillLink
+
+Student
+
+StudentSkillState
+
+StudentQuestionAttempt
+
+AttemptSkillOutcome
+
+GapRepairPlan
+
+GapRepairPlanItem
+
+SolidificationSession
+
+GapSnapshot
+
+KnowledgeUpdateFeedItem
+
+That is enough to build a real first version.
+
+Then later add:
+
+misconception tables
+
+explanation tables
+
+advanced retention modeling
+
+richer activity history
+
+parent analytics
+
+23. Strong recommended code architecture
+Since your stack discussions have leaned Rust/backend-heavy before, a clean service split would be:
+
+Domain modules
+curriculum
+
+skills
+
+dependencies
+
+student_state
+
+attempts
+
+gap_engine
+
+priority_engine
+
+repair_engine
+
+projections
+
+feed
+
+Important internal services
+SkillStateUpdater
+
+TrendAnalyzer
+
+PriorityCalculator
+
+DependencyImpactResolver
+
+HiddenBlockerDetector
+
+RetentionDecayService
+
+RepairPlanGenerator
+
+GapAggregateProjector
+
+Keep the formulas in dedicated engine modules, not scattered in handlers.
+
+24. Recommended event names
+Here is a clean internal event vocabulary.
+
+QuestionAnswered
+
+QuestionTimedOut
+
+ConfidenceSubmitted
+
+HintUsed
+
+SkillEvidenceRecorded
+
+SkillStateChanged
+
+SkillBecameUrgent
+
+SkillStartedDeclining
+
+HiddenBlockerDetected
+
+RepairPlanGenerated
+
+SolidificationSessionStarted
+
+SolidificationSessionCompleted
+
+RetentionRiskRaised
+
+GapOverviewUpdated
+
+This will help keep the system disciplined.
+
+25. Final backend definition
+The backend for Knowledge Gap Mode is a student-centered academic state engine built around per-skill knowledge records, event-driven evidence capture, live gap and priority scoring, dependency-aware blocker detection, and intervention planning. It should continuously convert raw learning behavior into updated knowledge states and actionable repair priorities.
+
+26. The most important design rule
+Do not let the system confuse activity with mastery.
+
+Watching content is activity.
+Tapping through screens is activity.
+Reading an explanation is activity.
+
+The gap should only meaningfully shrink when there is evidence of:
+
+correctness
+
+repeat correctness
+
+variation success
+
+retention
+
+usable speed
+
+reduced misconception
+
+That one rule will protect the integrity of the whole feature.
+
+The strongest next move is to define the exact formula layer and pseudocode for:
+
+skill state update
+
+trend detection
+
+hidden blocker detection
+
+repair plan generation
+
+gap aggregation across topic and subject levels.
+
+
+
+

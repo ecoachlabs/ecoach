@@ -1,0 +1,6960 @@
+
+
+
+
+;et's say you are a student , you have an upcoming classtest or mid term test or mock exam , lets assume you know mostly the topics the testing would be derived from , so it's very simple , with customised testing or test mix , you select the type of test you are preparing for , select the topics and we tailor the questions , the experience and the mode to suit that particular test you are preparing for , 
+
+I’m turning this into a real feature concept rather than just a loose idea: what the student selects, how the system adapts the test, and what makes it feel different for class test vs mock vs midterm.
+
+Thought for 12s
+Yes — this is a very strong feature.
+
+What you are describing is not just “practice questions.”
+It is purpose-shaped assessment.
+
+The student is not simply saying:
+“Give me questions.”
+
+The student is saying:
+“I am preparing for a specific kind of test, under a specific condition, across specific topics, with a specific urgency and pressure level.”
+
+That changes everything.
+
+The core idea
+Call it something like:
+
+Customised Testing
+or
+Test Mix
+or even better,
+Prepare for My Test
+
+The logic is:
+
+The student selects:
+
+What kind of test they are preparing for
+
+Which topics are likely to be covered
+
+How the test is usually set
+
+How close the test is
+
+What kind of help they want
+
+Then the system generates not only the right questions, but the right testing experience.
+
+That is the real power.
+
+Why this matters
+A student preparing for a:
+
+class test
+
+midterm
+
+mock exam
+
+terminal exam
+
+revision quiz
+
+teacher surprise test
+
+BECE/WASSCE-style exam
+
+should not get the same experience.
+
+Because each one has different characteristics.
+
+For example:
+
+1. Class test
+Usually:
+
+narrower scope
+
+recent topics
+
+teacher-driven
+
+may focus on what was just taught
+
+may have repeated class patterns
+
+often less broad but more direct
+
+So the system should:
+
+focus tightly on recent topics
+
+ask shorter, more direct questions
+
+increase recall and class-style question patterns
+
+include likely teacher-style traps
+
+emphasize speed and freshness of understanding
+
+2. Midterm test
+Usually:
+
+broader than class test
+
+covers multiple topics across weeks
+
+mixes recall and application
+
+may expose weak understanding across connected topics
+
+So the system should:
+
+blend topics intelligently
+
+include transition questions across subtopics
+
+test both memory and understanding
+
+expose knowledge gaps across the tested range
+
+3. Mock exam
+Usually:
+
+more exam-like
+
+more pressure
+
+closer to the structure of the final exam
+
+includes tricky distractors and stamina demands
+
+meant to reveal true readiness
+
+So the system should:
+
+simulate full pressure
+
+include harder distractors
+
+mimic exam pacing
+
+measure endurance, timing, and consistency
+
+produce a readiness score and breakdown
+
+That means the student is not just choosing topics.
+They are choosing the context of assessment.
+
+That is brilliant.
+
+What the feature should do
+Entry screen
+The student starts with:
+
+What are you preparing for?
+
+Class Test
+
+Quiz
+
+Midterm
+
+Mock Exam
+
+End of Term Exam
+
+Revision Drill
+
+Teacher’s Test
+
+Custom Test Mix
+
+Then:
+
+Which subject?
+
+Mathematics
+
+Integrated Science
+
+English
+
+Social Studies
+
+etc.
+
+Then:
+
+Which topics will likely be covered?
+Student selects:
+
+one topic
+
+multiple topics
+
+entire unit
+
+recent topics only
+
+weak topics only
+
+teacher-selected topic bundle
+
+Then:
+
+How do you want to prepare?
+
+Test me like the real thing
+
+Teach me through questions
+
+Fix my weak areas
+
+Warm me up first, then test me
+
+Give me likely questions
+
+Put me under pressure
+
+Challenge me above expected level
+
+This is where the feature becomes much more powerful than a standard test generator.
+
+The intelligence underneath
+The system should build the test from multiple layers.
+
+Layer 1: Test intent
+Why is the student here?
+
+Examples:
+
+quick preparation for tomorrow’s class test
+
+broad preparation for midterm
+
+realistic simulation for mock
+
+topic confidence check
+
+pressure practice
+
+weak-area repair
+
+This determines tone, difficulty balance, timing, feedback depth, and mode.
+
+Layer 2: Topic scope
+Which exact concepts are in play?
+
+Not just “fractions.”
+But:
+
+identifying fractions
+
+equivalent fractions
+
+simplifying fractions
+
+comparing fractions
+
+adding fractions
+
+word problems with fractions
+
+This is critical because a student may say “fractions” but the upcoming test may only really target two parts of it.
+
+Layer 3: Expected question style
+What kind of questions are likely?
+
+For example:
+
+direct recall
+
+worked calculation
+
+multi-step reasoning
+
+application
+
+word problems
+
+tricky conceptual discrimination
+
+short answer
+
+objective questions
+
+Layer 4: Pressure model
+How intense should the experience be?
+
+For a class test tomorrow:
+
+more urgency
+
+shorter timer
+
+less teaching during the test
+
+more correction after
+
+For early preparation:
+
+slower pace
+
+hints allowed
+
+correction during the session
+
+diagnostic intervention
+
+Layer 5: Readiness objective
+What is success?
+
+Possible goals:
+
+just pass
+
+score above 70%
+
+master the topic
+
+beat previous performance
+
+survive timed conditions
+
+eliminate common mistakes
+
+become exam-ready
+
+How the experience should change based on test type
+This is the heart of the feature.
+
+A. Class Test Mode
+This should feel:
+
+focused
+
+direct
+
+recent
+
+sharp
+
+teacher-like
+
+Behavior:
+
+narrow topic pool
+
+more short questions
+
+more likely class-note-derived structure
+
+more “what teacher may ask tomorrow” logic
+
+limited explanation until end
+
+quick confidence meter
+
+Special features:
+
+“Last Minute Rush”
+
+“Most Likely Questions”
+
+“Recent Topic Focus”
+
+“Teacher Trap Finder”
+
+B. Midterm Mode
+This should feel:
+
+mixed
+
+broader
+
+layered
+
+balanced between memory and understanding
+
+Behavior:
+
+combines recent and older topics
+
+tests cross-topic confusion
+
+identifies forgotten earlier work
+
+gives spaced pressure instead of constant pressure
+
+provides topic-wise readiness scores
+
+Special features:
+
+“Coverage Heatmap”
+
+“Weak Topic Injection”
+
+“Mixed Difficulty Ladder”
+
+“Midterm Confidence Report”
+
+C. Mock Exam Mode
+This should feel:
+
+serious
+
+exam-authentic
+
+tense
+
+revealing
+
+Behavior:
+
+full structure simulation
+
+stricter timing
+
+more distractor-rich options
+
+fewer hints
+
+post-test forensic analysis
+
+stamina scoring
+
+pressure response analysis
+
+Special features:
+
+“Exam Hall Mode”
+
+“No Hint Lock”
+
+“Timed Section Simulation”
+
+“Readiness Index”
+
+“Mistake Pattern Report”
+
+What makes this feature truly excellent
+The system should not only generate a test.
+It should also shape:
+
+1. The question mix
+Example dimensions:
+
+easy / medium / hard
+
+recall / application / reasoning
+
+direct / tricky
+
+recent / cumulative
+
+single-step / multi-step
+
+speed / depth
+
+So a student preparing for a class test may get:
+
+50% direct
+
+30% moderate application
+
+20% tricky teacher-style questions
+
+But a mock may get:
+
+20% direct
+
+40% reasoning
+
+40% exam-standard traps and layered questions
+
+2. The feedback timing
+For some modes:
+
+instant feedback is okay
+
+For others:
+
+no feedback until the end, to simulate real testing
+
+So the mode should control whether:
+
+answer is shown immediately
+
+hint is allowed
+
+explanation is delayed
+
+score is hidden until completion
+
+3. The pacing
+The student experience should differ by mode:
+
+relaxed practice
+
+exam pressure
+
+speed drill
+
+endurance session
+
+recovery mode after repeated errors
+
+4. The visual and emotional atmosphere
+This is important.
+
+A mock exam should not look playful.
+A class-test prep can be a little lighter.
+A last-minute cram mode can feel urgent.
+A confidence-builder mode can feel encouraging.
+
+So even the UI and sound design can shift:
+
+countdown tension
+
+calm revision mode
+
+challenge mode
+
+elite mode
+
+emergency prep mode
+
+A stronger version of the feature
+You can take it further.
+
+Instead of only asking:
+“Which topics?”
+
+also ask:
+
+“What do you know about the upcoming test?”
+Examples:
+
+My teacher said these topics will come
+
+It will likely be short
+
+It will be difficult
+
+It may include word problems
+
+It is mostly from recent notes
+
+It may mix old and new topics
+
+I am weak in one of the topics
+
+I only have one day left
+
+Now the engine becomes much smarter.
+
+It can respond like:
+
+Since you are preparing for a class test tomorrow on Algebra and Word Problems, and you said your teacher usually sets tricky short questions, this session will focus on fast-response, teacher-style items with pressure turned up slightly.
+
+That feels premium.
+
+The modes inside Customised Testing
+This feature can contain several sub-modes.
+
+1. Predictive Test Mix
+Builds a likely test based on selected topics, teacher style, timing, and past patterns.
+
+2. Weakness-Aware Test Mix
+Still stays within selected topics, but quietly injects more of the student’s weak sub-areas.
+
+3. Exam Simulation Mix
+Creates a more realistic paper experience based on the chosen test type.
+
+4. Confidence Builder Mix
+Starts easier, then increases in difficulty so the student doesn’t lose morale.
+
+5. Pressure Mix
+Uses tighter timing and fewer hints.
+
+6. Smart Rescue Mix
+If the student keeps failing, the system pauses and repairs the weak concept before continuing.
+
+The hidden engine logic
+Behind the scenes, your engine can work like this:
+
+Input variables
+test type
+
+subject
+
+selected topics
+
+exam date / days left
+
+current mastery per topic
+
+past errors
+
+speed level
+
+confidence level
+
+preferred mode
+
+recent learning history
+
+Engine decisions
+number of questions
+
+question family distribution
+
+difficulty blend
+
+distractor intensity
+
+timer behavior
+
+hint policy
+
+feedback policy
+
+ordering of questions
+
+whether to include recovery questions
+
+whether to insert confidence-restoring questions after repeated failure
+
+Output
+A test session that feels specifically crafted for:
+
+that student
+
+that exam
+
+that time pressure
+
+that topic set
+
+that readiness stage
+
+Example scenario
+A student says:
+
+Test type: Class Test
+
+Subject: Integrated Science
+
+Topics: Respiration, Photosynthesis, Excretion
+
+Time left: 2 days
+
+Goal: Help me prepare for what is most likely to come
+
+The system should not just randomize 20 questions.
+
+It should say internally:
+
+narrow scope
+
+focus on likely teacher-testable concepts
+
+prioritize common confusion points
+
+include direct definitions, diagrams, process comparisons, and one or two application items
+
+make it short and sharp
+
+give a readiness summary at the end
+
+show “most fragile areas before the test”
+
+That is a real product experience.
+
+Another example
+A student says:
+
+Test type: Mock Exam
+
+Subject: Mathematics
+
+Topics: Linear Equations, Fractions, Ratio, Percentages
+
+Time left: 3 weeks
+
+Goal: Test me like the real thing
+
+The system should:
+
+simulate realistic paper flow
+
+include timing pressure
+
+include multi-step problems
+
+reduce hints
+
+measure not just score, but breakdown:
+
+speed
+
+accuracy
+
+topic weakness
+
+careless mistakes
+
+endurance drop-off
+
+Now it becomes a proper exam prep tool.
+
+What the student should get after the test
+The result page should not just say score.
+
+It should say things like:
+
+Readiness for your class test: Strong / Moderate / Weak
+
+Most likely danger areas: Algebraic substitution, worded ratio questions
+
+What to revise tonight: Topic 2 and Topic 4
+
+What you are already safe in: Fractions basics
+
+Your biggest issue: You know the method but misread the question
+
+Recommended next session: 12-minute teacher-style rapid test
+
+That is where the value becomes undeniable.
+
+Even better: test packs
+You can let the student choose prebuilt packs like:
+
+Tomorrow’s Class Test Pack
+
+Midterm Survival Pack
+
+Mock Pressure Pack
+
+Likely Questions Pack
+
+Topic Rescue Pack
+
+Teacher Trap Pack
+
+Fast Revision Pack
+
+This gives shape and marketability to the feature.
+
+Why this can become a killer feature
+Because most educational apps stop at:
+“Choose topic, answer questions.”
+
+But this feature says:
+
+“Tell us what you are preparing for, and we will shape the entire assessment around that reality.”
+
+That is much closer to how a good tutor behaves.
+
+A good tutor asks:
+
+What exam is coming?
+
+Which topics?
+
+How soon?
+
+How difficult is your teacher?
+
+Are you trying to pass, improve, or dominate?
+
+Do you need confidence or pressure?
+
+Your product can do exactly that.
+
+Best naming directions
+Some strong names:
+
+Test Mix
+
+Custom Test Builder
+
+Prepare for My Test
+
+Smart Test Prep
+
+Targeted Test Mode
+
+Exam-Specific Practice
+
+My Upcoming Test
+
+Precision Prep
+
+My favorite for product feel is:
+
+Prepare for My Test
+
+because it is natural and emotionally direct.
+
+If you want something more internal or branded:
+TestMix
+
+The deeper opportunity
+This feature can become the bridge between:
+
+tutoring
+
+practice
+
+diagnostics
+
+prediction
+
+pressure training
+
+confidence building
+
+So it should not be treated as just a filter screen.
+
+It is really a test-intent engine.
+
+That is the powerful framing.
+
+My recommendation
+Build it as a structured flow:
+
+Step 1
+What are you preparing for?
+
+Step 2
+Which subject and topics?
+
+Step 3
+How soon is the test?
+
+Step 4
+What kind of preparation do you want?
+
+likely questions
+
+real test simulation
+
+fix weak spots
+
+confidence boost
+
+pressure mode
+
+Step 5
+Generate a tailored session
+
+Step 6
+Return a readiness report plus next action
+
+This is a very solid feature and it is realistic, useful, and easy for students to understand.
+
+The next layer is to define the exact question generation logic, mode logic, and result logic for this feature so it becomes implementation-ready.
+
+
+proceed
+
+Thought for 4 seconds
+Good. Let’s push it from a good idea into a real buildable system.
+
+What you have is not just a test generator.
+It is a context-aware preparation engine.
+
+The system should behave like this:
+
+“Because you are preparing for this specific test, in this subject, on these topics, with this amount of time left, at your current strength level, this is the best type of question session for you right now.”
+
+That is the real product.
+
+1. The feature reframed properly
+Instead of treating this as:
+
+pick topics
+
+get questions
+
+treat it as:
+
+declare preparation intent
+
+define likely test scope
+
+model likely assessment conditions
+
+generate a preparation experience optimized for that test
+
+So the feature can be positioned as:
+
+Customised Testing Engine
+A smart engine that tailors the question mix, pressure level, timing, explanations, and session behavior to the exact test a student is preparing for.
+
+2. What the student tells the system
+The student should not face a boring “select topics” form only.
+
+The setup flow should feel intelligent.
+
+Step A — What are you preparing for?
+Class Test
+
+Quiz
+
+Midterm
+
+Mock Exam
+
+End of Term Exam
+
+BECE / WASSCE Practice
+
+Assignment-Based Test
+
+Custom Test
+
+This is important because the test type controls behavior.
+
+Step B — What subject is this for?
+Mathematics
+
+English
+
+Integrated Science
+
+Social Studies
+
+etc.
+
+Step C — Which topics are likely to be covered?
+This should support:
+
+single topic
+
+multiple topics
+
+whole unit
+
+recent lessons
+
+weak topics within selected scope
+
+“teacher mentioned these topics”
+
+Also, behind the scenes, each topic should break into:
+
+topic
+
+subtopic
+
+micro-skill
+
+misconception families
+
+question families
+
+So “fractions” is not enough.
+The system must understand:
+
+simplifying fractions
+
+equivalent fractions
+
+adding unlike fractions
+
+comparing fractions
+
+fraction word problems
+
+converting mixed numbers
+
+Step D — When is the test?
+today
+
+tomorrow
+
+this week
+
+next week
+
+in two weeks
+
+custom date
+
+This matters because urgency changes strategy.
+
+If the test is tomorrow, the app should not waste time on long detours.
+If the test is in three weeks, the app can afford deeper diagnosis and repair.
+
+Step E — What do you want from this session?
+Test me like the real thing
+
+Give me likely questions
+
+Fix my weak areas inside these topics
+
+Build my confidence
+
+Put me under pressure
+
+Revise me quickly
+
+Teach me through the test
+
+Make me exam ready
+
+This is extremely important.
+
+Two students can select the same topics and same test type, yet need different experiences.
+
+3. The hidden input model
+The engine should use a structured input object like this:
+
+Session Input
+test_type
+
+subject
+
+topic_ids
+
+subtopic_ids
+
+exam_date
+
+days_left
+
+desired_mode
+
+current_mastery_by_topic
+
+current_speed_profile
+
+confidence_level
+
+past_error_patterns
+
+recent_study_history
+
+fatigue_tolerance
+
+teacher_style_hint
+
+target_score
+
+session_duration_preference
+
+This lets the engine behave intelligently.
+
+4. The important system insight
+The system should not only generate questions.
+
+It should generate these 6 things together:
+
+1. Question Mix
+What kind of questions should appear?
+
+2. Session Flow
+In what order should they appear?
+
+3. Pressure Profile
+How much timing pressure?
+
+4. Support Policy
+Hints? explanations? step help? none?
+
+5. Feedback Timing
+Instant, delayed, section-end, full-end?
+
+6. Recovery Interventions
+If the student struggles, does the system continue, pause, reteach, or simplify?
+
+That is what makes the feature premium.
+
+5. Core session modes inside the feature
+This should not be one flat mode.
+It should have internal strategies.
+
+A. Likely Test Mode
+Goal:
+Generate what is most likely to appear.
+
+Best for:
+
+class tests
+
+teacher-made quizzes
+
+last-minute revision
+
+Behavior:
+
+narrower scope
+
+more direct and familiar phrasing
+
+higher weight on recently taught concepts
+
+more teacher-style patterns
+
+more predictable examable concepts
+
+B. Real Simulation Mode
+Goal:
+Mimic the actual test environment.
+
+Best for:
+
+midterms
+
+mock exams
+
+finals
+
+Behavior:
+
+realistic structure
+
+realistic timing
+
+limited hints
+
+no interruption
+
+end-of-test feedback only
+
+exam stamina measured
+
+C. Weakness Repair Mode
+Goal:
+Stay within the selected test scope but focus heavily on weak areas.
+
+Best for:
+
+students who know what topics are coming but are shaky
+
+Behavior:
+
+selected topics only
+
+weak subtopic injection
+
+more misconception traps
+
+more targeted explanations
+
+mini reteaching after repeated errors
+
+D. Confidence Build Mode
+Goal:
+Prevent discouragement while preparing.
+
+Best for:
+
+low-confidence students
+
+students recovering from repeated poor scores
+
+Behavior:
+
+starts easier
+
+escalates gradually
+
+early wins
+
+clearer explanations
+
+emotional reinforcement
+
+avoids too many punishing items too early
+
+E. Pressure Mode
+Goal:
+Sharpen response speed and exam composure.
+
+Best for:
+
+students who know content but fail under pressure
+
+Behavior:
+
+tighter timers
+
+faster transitions
+
+reduced thinking window
+
+timed streaks
+
+pressure sounds / visual urgency if enabled
+
+F. Teach-Through-Test Mode
+Goal:
+Use assessment as a teaching path.
+
+Best for:
+
+students who are underprepared but have a test coming
+
+Behavior:
+
+diagnostic questions
+
+immediate correction
+
+stepwise explanation
+
+follow-up confirmation questions
+
+concept reinforcement before moving on
+
+6. How the system should think by test type
+This is where the feature becomes believable.
+
+Class Test logic
+Typical assumptions:
+
+smaller scope
+
+recent lessons
+
+more direct questioning
+
+teacher influence high
+
+not always standardized
+
+less time, often faster questions
+
+Engine behavior:
+
+prioritize recent topics
+
+increase direct recall and class-style application
+
+weight topic recency heavily
+
+allow likely question prediction
+
+include “what teacher may ask next” patterns
+
+Suggested mix:
+
+35% direct recall
+
+35% standard application
+
+20% teacher-style trap
+
+10% stretch question
+
+Midterm logic
+Typical assumptions:
+
+moderate breadth
+
+mixed weeks of content
+
+combines memory and understanding
+
+may expose inter-topic confusion
+
+Engine behavior:
+
+balanced topic distribution
+
+combine recall + application + synthesis
+
+detect forgotten early topics
+
+include topic-switch transitions
+
+expose unstable understanding
+
+Suggested mix:
+
+25% recall
+
+35% application
+
+25% reasoning
+
+15% mixed/tricky
+
+Mock Exam logic
+Typical assumptions:
+
+exam rehearsal
+
+timing matters
+
+traps matter
+
+endurance matters
+
+coverage breadth matters
+
+Engine behavior:
+
+full paper structure
+
+harder distractors
+
+strict timer behavior
+
+no instant feedback
+
+performance analytics afterward
+
+readiness scoring
+
+Suggested mix:
+
+15% direct
+
+35% standard exam items
+
+30% reasoning
+
+20% high-trap / pressure items
+
+7. The engine formula
+A practical way to build this is to score candidate questions before selecting them.
+
+Each question in your bank should have metadata like:
+
+subject
+
+topic
+
+subtopic
+
+micro-skill
+
+question_family
+
+difficulty
+
+cognitive_type
+
+pressure_suitability
+
+teacher_style_score
+
+exam_style_score
+
+misconception_tags
+
+recency_relevance
+
+explanation_depth
+
+estimated_time
+
+prerequisite_skills
+
+Then your engine can rank questions using a weighted formula.
+
+Example ranking logic
+For a given question:
+
+Question Fit Score =
+
+topic_match_weight
+
+test_type_match_weight
+
+mode_match_weight
+
+student_weakness_weight
+
+recency_weight
+
+readiness_gap_weight
+
+timing_fit_weight
+
+variety_weight
+
+misconception_value_weight
+
+realism_weight
+
+Simplified idea:
+
+fit_score =
+( topic_match * 0.25 ) +
+( test_type_fit * 0.20 ) +
+( desired_mode_fit * 0.15 ) +
+( weakness_match * 0.15 ) +
+( recency_relevance * 0.10 ) +
+( timing_fit * 0.05 ) +
+( realism_fit * 0.05 ) +
+( variety_bonus * 0.05 )
+Weights change by mode.
+
+For example:
+
+Likely Test Mode increases recency and teacher-style fit
+
+Mock Mode increases realism and difficulty distribution
+
+Weakness Repair Mode increases weakness match and misconception value
+
+Pressure Mode increases timing fit and fast-response compatibility
+
+8. Session construction logic
+Once questions are scored, the app should not just pick the top 20.
+It should build a coherent session.
+
+The session builder should decide:
+how many questions
+
+what order
+
+which difficulty curve
+
+where to insert easy stabilizers
+
+where to insert traps
+
+whether to end strong or diagnostic
+
+whether to cluster by topic or mix topics
+
+when to intervene if the student is struggling
+
+Example session patterns
+Pattern 1: Warm → Test → Trap → Finish
+Good for class test prep:
+
+3 easy warm-up questions
+
+6 standard likely questions
+
+3 trap questions
+
+3 confidence-restoring finishers
+
+Pattern 2: Simulated Paper
+Good for mock exams:
+
+Section A: direct questions
+
+Section B: standard application
+
+Section C: reasoning / extended items
+
+no interruptions
+
+Pattern 3: Diagnose → Repair → Recheck
+Good for struggling students:
+
+initial diagnostic questions
+
+detect weak subskill
+
+pause and explain
+
+give repair questions
+
+give final confirmation questions
+
+9. The system should adapt during the session
+This is where it becomes truly smart.
+
+The engine should not remain fixed after question 1.
+
+It should monitor:
+
+response accuracy
+
+response speed
+
+confidence indicator if available
+
+answer revision behavior
+
+repeated misconception patterns
+
+drop in performance across time
+
+Then it can adapt.
+
+Examples of adaptation
+Case 1: Student gets first 4 wrong in same misconception family
+System response:
+
+reduce difficulty slightly
+
+insert a repair question
+
+show short clarification
+
+ask a checkpoint question before returning to the main stream
+
+Case 2: Student is accurate but very slow
+System response:
+
+maintain correctness level
+
+insert timing-focused versions
+
+switch from “understanding problem” to “speed under familiarity”
+
+Case 3: Student is doing well too easily
+System response:
+
+increase complexity
+
+increase distractor subtlety
+
+add reasoning variants
+
+Case 4: Student confidence collapses
+System response:
+
+insert stabilizer question
+
+use encouraging tone
+
+reduce punishment loop
+
+preserve morale while still diagnosing
+
+10. The result page must be smarter than just score
+A generic score page is not enough.
+
+The result page should answer:
+
+how ready am I for this exact test?
+
+what is likely to hurt me?
+
+what should I do next?
+
+how close am I to safety?
+
+Result page should include:
+A. Readiness score
+Not just 12/20.
+But:
+
+Class Test Readiness: 74%
+
+Midterm Readiness: Moderate
+
+Mock Exam Readiness: At Risk
+
+B. Topic-by-topic status
+Strong
+
+Stable
+
+Fragile
+
+Weak
+
+Unseen risk
+
+C. Mistake profile
+Examples:
+
+You know the concept but misread wording
+
+You forget the second step in multi-step questions
+
+You confuse similar scientific processes
+
+You are weak when questions are worded differently
+
+Your recall is fine but application is poor
+
+D. Test danger zones
+likely traps before the test
+
+fragile subtopics
+
+time pressure weaknesses
+
+careless errors
+
+low-confidence topic areas
+
+E. Recommended next action
+Examples:
+
+Do a 10-minute pressure drill on percentages
+
+Revise excretion vs respiration comparison
+
+Retry likely class-test pack on these two subtopics
+
+Enter simulation mode tomorrow morning
+
+11. Premium feature behavior
+To make this truly premium, the system should speak like a strategist.
+
+Not:
+
+Here are your results.
+
+But:
+
+You are preparing for a class test on Fractions and Decimals in 2 days. Your core understanding is fair, but you are still fragile in mixed-number conversion and decimal comparison under time pressure. Your next best session is a 12-question rapid teacher-style drill.
+
+That feels premium and personalized.
+
+12. Special sub-features to make this exceptional
+Here are the real differentiators.
+
+A. Likely Questions Generator
+Not guaranteed predictions, but smart prioritization of:
+
+common teacher favorites
+
+examable subskills
+
+recent-class concepts
+
+standard patterns within selected topics
+
+B. Last-Minute Rescue
+For tests happening soon.
+
+If test is today or tomorrow:
+
+no long diagnosis
+
+focus only on high-probability concepts
+
+highest yield mistakes
+
+direct corrections
+
+memory reinforcement
+
+speed focus
+
+C. Teacher Pattern Layer
+If enough data exists, the system can learn:
+
+teacher prefers definitions
+
+teacher prefers worked examples
+
+teacher mixes objective and theory
+
+teacher repeats certain styles
+
+teacher likes trick wording
+
+Then the customized test becomes even better.
+
+D. Weakness Injection
+Even when student selects their own topics, the app quietly increases the share of weak subskills inside those topics.
+
+So if they choose “Linear Equations,” and they are weakest in:
+
+variable isolation
+
+sign handling
+
+translating words into equations
+
+those areas get weighted more heavily.
+
+E. Confidence Curve Management
+The app should manage morale.
+
+A session should not accidentally destroy confidence just before an exam.
+
+So the engine should control:
+
+how harsh the first few questions are
+
+when to insert stabilizer questions
+
+when to hold back from over-punishing difficulty spikes
+
+That matters.
+
+13. The best UX structure
+Here is the product flow.
+
+Screen 1 — What are you preparing for?
+Large cards:
+
+Class Test
+
+Midterm
+
+Mock
+
+Final Exam
+
+Quick Quiz
+
+Custom Mix
+
+Screen 2 — Select subject and topics
+subject picker
+
+topic chips
+
+subtopic expanders
+
+recent-topic shortcut
+
+weak-topic shortcut
+
+Screen 3 — Tell us about the test
+when is it?
+
+how hard is it likely to be?
+
+how does your teacher usually ask questions?
+
+what do you want most right now?
+
+Screen 4 — Choose your preparation style
+likely questions
+
+realistic simulation
+
+pressure mode
+
+fix weak areas
+
+confidence build
+
+teach-through-test
+
+Screen 5 — Generated session preview
+Example:
+
+Your session
+
+15 questions
+
+12 minutes
+
+Mathematics
+
+Fractions + Decimals
+
+Class Test Focus
+
+Teacher-style likely questions
+
+Pressure: Medium
+
+Feedback: End of session
+
+This makes the system feel intentional.
+
+14. Data model you will need
+To build this properly, your content system must support richer tagging.
+
+Question metadata
+question_id
+
+subject_id
+
+topic_id
+
+subtopic_id
+
+micro_skill_id
+
+question_family
+
+cognitive_type
+
+difficulty
+
+exam_style
+
+test_type_fit
+
+teacher_style_fit
+
+pressure_suitability
+
+est_time_seconds
+
+misconception_tags
+
+prerequisite_skills
+
+explanation_version_ids
+
+confidence_repair_version_ids
+
+Student performance metadata
+accuracy_by_topic
+
+accuracy_by_subtopic
+
+speed_by_question_family
+
+confidence_by_topic
+
+misconception_frequency
+
+performance_under_pressure
+
+recent_revision_history
+
+readiness_score_by_test_type
+
+fatigue_drop_pattern
+
+Session metadata
+session_type
+
+selected_topics
+
+test_type
+
+mode
+
+urgency_band
+
+pressure_profile
+
+feedback_policy
+
+intervention_policy
+
+difficulty_curve
+
+15. A simple rules engine version to start
+Even before a sophisticated AI layer, you can build a strong rules engine.
+
+Example rules
+Rule 1
+If:
+
+test_type = class_test
+
+days_left <= 2
+
+Then:
+
+prioritize recent topics
+
+use narrow scope
+
+reduce long explanations
+
+increase likely-question patterns
+
+Rule 2
+If:
+
+mode = weakness_repair
+
+Then:
+
+increase question frequency for low-mastery subskills
+
+show explanations after repeated same-pattern errors
+
+Rule 3
+If:
+
+test_type = mock_exam
+
+Then:
+
+disable hints by default
+
+hide answers until end
+
+use realistic section pacing
+
+compute readiness index
+
+Rule 4
+If:
+
+student_confidence low
+
+recent failure streak high
+
+Then:
+
+start with easier diagnostic items
+
+delay difficulty spike
+
+insert stabilizer questions
+
+16. The strategic value
+This feature is powerful because it sits at the intersection of:
+
+diagnostics
+
+tutoring
+
+simulation
+
+prediction
+
+personalization
+
+coaching
+
+It becomes the place where a student says:
+
+“I have a real test coming. Help me prepare properly.”
+
+That is a very natural use case.
+Parents will understand it.
+Students will understand it.
+Teachers will understand it.
+
+17. Best names for sub-modes
+Inside the feature, you can use clearer, student-friendly labels:
+
+Likely Questions
+
+Real Test Simulation
+
+Fix My Weak Spots
+
+Confidence Builder
+
+Pressure Practice
+
+Teach Me While Testing
+
+Last-Minute Rescue
+
+Teacher Style Prep
+
+These are much more emotionally meaningful than technical labels.
+
+18. The deeper product opportunity
+Eventually this feature can become the main preparation engine of the app.
+
+Because many students do not think in abstract study language like:
+
+“give me a balanced adaptive formative assessment”
+
+They think like:
+
+“I have a midterm next week”
+
+“my science teacher is setting a test tomorrow”
+
+“I know the topics but I’m not ready”
+
+“test me like the real exam”
+
+“show me what is likely to come”
+
+Your feature matches that real mindset.
+
+That is why it is strong.
+
+19. My sharper product framing for you
+I would define it like this:
+
+Customised Testing / Test Mix
+A smart test preparation feature that lets students choose the exact test they are preparing for, select the likely topics, and receive a tailored question experience optimized for that test’s scope, timing, pressure, and expected style.
+
+That is clean.
+
+20. My recommendation for build priority
+Build it in layers.
+
+Phase 1
+test type selector
+
+topic selector
+
+mode selector
+
+rules-based question mix
+
+tailored session
+
+readiness report
+
+Phase 2
+weakness injection
+
+urgency-aware behavior
+
+confidence curve logic
+
+pressure tuning
+
+Phase 3
+teacher-style modeling
+
+likely-question intelligence
+
+dynamic mid-session adaptation
+
+parent/student coaching summaries
+
+The next thing to do is define the full internal architecture of this feature:
+the modes, engine layers, scoring model, question tagging structure, decision tree, and result logic in a build-grade way.
+
+
+proceed
+
+I’m moving from concept into implementation shape now: engine layers, decision rules, data structures, and how a session actually gets assembled and adapted.
+
+Thought for 9s
+Good. Now let’s turn it into a build-grade internal architecture.
+
+What we are designing here is not just a feature page. It is a Preparation Orchestration Engine that powers customized testing.
+
+The system’s job is simple in principle:
+
+Given a specific upcoming test, a likely topic scope, a student profile, and a chosen preparation goal, generate the most appropriate testing experience right now.
+
+That means this feature needs its own internal engine.
+
+1. System identity
+I would define the feature internally as:
+
+Customised Testing Engine (CTE)
+And its mission is:
+
+To create a test-preparation session that matches the student’s upcoming assessment reality better than a generic practice mode.
+
+So this engine is not a plain question picker.
+It is a session composer.
+
+It composes:
+
+the right questions
+
+in the right order
+
+with the right timing
+
+under the right pressure
+
+with the right feedback policy
+
+with the right interventions
+
+toward the right outcome
+
+2. High-level architecture
+The engine should have 8 main layers.
+
+Layer 1 — Intent Capture Layer
+This captures what the student is trying to prepare for.
+
+Inputs:
+
+test type
+
+subject
+
+selected topics
+
+days left
+
+desired mode
+
+target score
+
+preferred session length
+
+This layer answers:
+
+What is the student preparing for?
+
+How urgent is it?
+
+What kind of experience do they want?
+
+Layer 2 — Scope Resolution Layer
+This resolves vague topic selection into precise assessable content.
+
+Example:
+Student chooses:
+
+Fractions
+
+Decimals
+
+The layer expands that into:
+
+equivalent fractions
+
+simplifying fractions
+
+mixed numbers
+
+decimal comparison
+
+decimal operations
+
+fraction-decimal conversion
+
+common misconceptions
+
+This layer answers:
+
+What exactly is inside the chosen scope?
+
+Which subskills are assessable?
+
+Which question families apply?
+
+Layer 3 — Student State Layer
+This reads the student’s current condition.
+
+Inputs:
+
+mastery by subtopic
+
+accuracy history
+
+speed profile
+
+common errors
+
+confidence signals
+
+recent revision activity
+
+pressure performance
+
+forgetting risk
+
+This layer answers:
+
+What does this student already know?
+
+What are they weak in?
+
+Are they slow, careless, anxious, underprepared, or unstable?
+
+Layer 4 — Test Reality Modeling Layer
+This converts the chosen test type into expected test behavior.
+
+For example:
+
+Class Test model:
+
+narrow scope
+
+recent content bias
+
+directness high
+
+teacher influence high
+
+Mock model:
+
+realism high
+
+timing strict
+
+trap rate higher
+
+stamina relevant
+
+This layer answers:
+
+What does this test usually feel like?
+
+What type of questions are more appropriate?
+
+How much realism is needed?
+
+Layer 5 — Session Strategy Layer
+This decides the preparation strategy.
+
+Examples:
+
+likely question prep
+
+simulation prep
+
+weakness repair
+
+confidence build
+
+pressure training
+
+teach-through-test
+
+This layer answers:
+
+What is the best learning/testing posture for this session?
+
+Layer 6 — Question Selection & Assembly Layer
+This selects and arranges the questions.
+
+It decides:
+
+which questions to include
+
+how many
+
+what difficulty blend
+
+what ordering logic
+
+what topic mix
+
+where to place traps
+
+where to place stabilizers
+
+This is the core composer.
+
+Layer 7 — Live Adaptation Layer
+This monitors performance during the session and adjusts where allowed.
+
+It decides:
+
+whether to continue as planned
+
+whether to intervene
+
+whether to soften or intensify
+
+whether to teach briefly
+
+whether to recheck a misconception immediately
+
+Layer 8 — Interpretation & Next-Step Layer
+This does more than scoring.
+
+It produces:
+
+readiness status
+
+risk map
+
+fragile subtopics
+
+likely exam dangers
+
+next best session
+
+strategic advice
+
+This is where the value gets surfaced clearly.
+
+3. Main engine objects
+To build this cleanly, the feature should operate on a few core objects.
+
+A. Preparation Request
+This is the student’s explicit request.
+
+Example fields:
+
+{
+  "test_type": "class_test",
+  "subject_id": "math",
+  "topic_ids": ["fractions", "decimals"],
+  "days_left": 2,
+  "mode": "likely_questions",
+  "target_score": 80,
+  "session_length_minutes": 15,
+  "difficulty_preference": "balanced"
+}
+This is the starting contract.
+
+B. Preparation Context
+This is the enriched version of the request after resolution.
+
+Example contents:
+
+expanded subtopics
+
+test reality profile
+
+urgency band
+
+student weaknesses inside selected scope
+
+preferred question families
+
+support policy
+
+estimated session size
+
+This is the real working context for the engine.
+
+C. Session Blueprint
+This is the plan before the session starts.
+
+It should define:
+
+number of questions
+
+question family quotas
+
+difficulty curve
+
+timing policy
+
+hint policy
+
+feedback timing
+
+intervention thresholds
+
+reporting focus
+
+This is what the engine executes.
+
+D. Session Runtime State
+This tracks what is happening live.
+
+Fields like:
+
+current question index
+
+current streak
+
+same-error streak
+
+average response time
+
+confidence drop indicators
+
+misconception flags triggered
+
+adaptation status
+
+This lets the session respond dynamically.
+
+E. Session Outcome
+This is the interpreted result.
+
+It should contain:
+
+raw score
+
+adjusted readiness score
+
+topic strength map
+
+misconception profile
+
+timing profile
+
+pressure response profile
+
+next recommended action
+
+4. Internal engine pipeline
+This feature should run in a fixed sequence.
+
+Stage 1 — Capture request
+The student selects:
+
+test type
+
+topics
+
+when the test is
+
+preferred mode
+
+Stage 2 — Resolve scope
+The engine expands topic selection into:
+
+subtopics
+
+micro-skills
+
+assessable units
+
+misconception families
+
+question families
+
+Stage 3 — Pull student state
+The engine retrieves:
+
+performance history
+
+weak subskills
+
+speed
+
+confidence
+
+recent exposure to these topics
+
+Stage 4 — Build preparation context
+The engine merges:
+
+test reality
+
+student state
+
+scope details
+
+urgency
+
+desired mode
+
+This creates the full situation model.
+
+Stage 5 — Generate session blueprint
+The engine decides:
+
+the session archetype
+
+the question distribution
+
+the order
+
+timing
+
+feedback rules
+
+interventions
+
+Stage 6 — Rank and select questions
+The engine scores question candidates against the blueprint.
+
+Stage 7 — Run the session
+The engine presents the session and monitors behavior.
+
+Stage 8 — Adapt if needed
+If allowed by the mode, the engine modifies pathing.
+
+Stage 9 — Interpret results
+The engine converts performance into meaningful insight.
+
+Stage 10 — Recommend next action
+The engine tells the student what to do next.
+
+5. The session blueprint structure
+This object is crucial.
+It is the bridge between strategy and execution.
+
+A session blueprint could look like this:
+
+{
+  "session_archetype": "class_test_likely_questions",
+  "question_count": 15,
+  "duration_minutes": 12,
+  "topic_distribution": {
+    "fractions": 9,
+    "decimals": 6
+  },
+  "difficulty_distribution": {
+    "easy": 3,
+    "medium": 8,
+    "hard": 4
+  },
+  "cognitive_distribution": {
+    "recall": 4,
+    "application": 7,
+    "reasoning": 4
+  },
+  "feedback_policy": "end_of_session",
+  "hint_policy": "disabled",
+  "adaptation_policy": "light",
+  "pressure_profile": "medium",
+  "ordering_pattern": "warm_test_trap_finish",
+  "intervention_rules": {
+    "same_misconception_streak": 3,
+    "slow_accuracy_flag": true,
+    "confidence_drop_flag": true
+  }
+}
+This is the object the session runner follows.
+
+6. Question tagging system required
+This feature will fail if questions are only tagged with broad topics.
+
+Each question needs deep metadata.
+
+Minimum metadata
+question_id
+
+subject_id
+
+topic_id
+
+subtopic_id
+
+micro_skill_id
+
+question_family
+
+cognitive_type
+
+difficulty
+
+estimated_time
+
+explanation_id
+
+Stronger metadata
+test_type_fit
+
+exam_style_fit
+
+teacher_style_fit
+
+pressure_suitability
+
+misconception_tags
+
+prerequisite_skill_ids
+
+confidence_level_appropriateness
+
+revision_value_score
+
+realism_score
+
+recency_relevance_score
+
+recovery_variant_available
+
+Example
+A math question may be tagged as:
+
+{
+  "question_id": "Q1021",
+  "subject_id": "math",
+  "topic_id": "fractions",
+  "subtopic_id": "adding_unlike_fractions",
+  "micro_skill_id": "lcd_conversion",
+  "question_family": "worked_calculation",
+  "cognitive_type": "application",
+  "difficulty": "medium",
+  "estimated_time": 45,
+  "test_type_fit": ["class_test", "midterm", "mock"],
+  "teacher_style_fit": 0.78,
+  "exam_style_fit": 0.65,
+  "pressure_suitability": 0.72,
+  "misconception_tags": [
+    "adds_numerators_and_denominators_directly",
+    "forgets_common_denominator"
+  ],
+  "realism_score": 0.69
+}
+That is the quality of tagging needed for a premium engine.
+
+7. Strategy profiles by mode
+Each mode should map to a strategy profile.
+
+A. Likely Questions Profile
+Purpose:
+Maximize probable relevance.
+
+Biases:
+
+recent topic weight high
+
+common classroom patterns high
+
+direct question styles favored
+
+teacher-style question patterns favored
+
+moderate difficulty
+
+little wasted breadth
+
+Output feel:
+Focused, practical, high-yield.
+
+B. Simulation Profile
+Purpose:
+Reproduce real-test conditions.
+
+Biases:
+
+realism high
+
+timing strict
+
+fewer interventions
+
+exam-like ordering
+
+balanced difficulty
+
+traps present
+
+Output feel:
+Authentic, serious, revealing.
+
+C. Weakness Repair Profile
+Purpose:
+Fix fragile areas within the selected scope.
+
+Biases:
+
+low mastery subskills weighted higher
+
+misconception-rich questions included
+
+explanations available
+
+recheck questions inserted
+
+immediate repair allowed
+
+Output feel:
+Targeted, diagnostic, corrective.
+
+D. Confidence Build Profile
+Purpose:
+Improve belief and stability without losing rigor.
+
+Biases:
+
+early success probability higher
+
+gradual difficulty ramp
+
+stabilizer questions inserted
+
+feedback tone supportive
+
+overly punishing early items avoided
+
+Output feel:
+Safe, encouraging, strengthening.
+
+E. Pressure Profile
+Purpose:
+Train performance under time constraint.
+
+Biases:
+
+shorter estimated-time questions
+
+timer strictness increased
+
+streak mechanics possible
+
+little reflection time
+
+performance decay monitored
+
+Output feel:
+Urgent, sharp, demanding.
+
+F. Teach-Through-Test Profile
+Purpose:
+Use questions as guided instruction.
+
+Biases:
+
+diagnostic-first
+
+intervention allowed quickly
+
+explanations shown when needed
+
+follow-up checks after teaching
+
+correctness confirmation cycles
+
+Output feel:
+Tutored, adaptive, instructive.
+
+8. Urgency bands
+The engine should heavily respect time left before the test.
+
+Band 1 — Immediate
+Test today or tomorrow.
+
+Strategy:
+
+high-yield only
+
+narrow scope
+
+little exploratory diagnosis
+
+emphasize likely questions
+
+emphasize memory reinforcement
+
+quick rescue logic
+
+Band 2 — Near
+Test within 3–5 days.
+
+Strategy:
+
+focused diagnosis
+
+patch weaknesses quickly
+
+moderate realism
+
+likely-question emphasis still strong
+
+Band 3 — Medium
+Test within 1–2 weeks.
+
+Strategy:
+
+proper diagnosis
+
+repair and retest cycles
+
+broader coverage possible
+
+simulation can be introduced
+
+Band 4 — Early
+Test more than 2 weeks away.
+
+Strategy:
+
+full structured preparation
+
+deeper repair
+
+stronger mastery building
+
+progress tracking over multiple sessions
+
+Urgency should alter the engine significantly.
+
+9. Decision logic for choosing the session archetype
+The engine should not only use the selected mode literally.
+It should derive a session archetype.
+
+Example formula:
+
+Inputs:
+
+test_type
+
+mode
+
+days_left
+
+student_state
+
+scope breadth
+
+Output:
+
+session_archetype
+
+Examples
+Case 1
+class_test
+
+likely_questions
+
+1 day left
+
+Archetype:
+class_test_last_minute_likely
+
+Case 2
+mock_exam
+
+real_test_simulation
+
+7 days left
+
+Archetype:
+mock_exam_full_simulation
+
+Case 3
+midterm
+
+fix_weak_areas
+
+low mastery in 2 selected topics
+
+Archetype:
+midterm_targeted_repair
+
+Case 4
+class_test
+
+confidence_build
+
+poor recent performance
+
+Archetype:
+class_test_confidence_recovery
+
+These archetypes make the system easier to manage.
+
+10. Question selection formula
+The engine needs a ranking score for candidate questions.
+
+A good structure:
+
+Candidate Fit Score
+This score should combine:
+
+scope fit
+
+test type fit
+
+mode fit
+
+weakness value
+
+urgency fit
+
+realism fit
+
+variety fit
+
+timing fit
+
+confidence appropriateness
+
+A sample formula:
+
+candidate_fit =
+(scope_match * 0.22) +
+(test_type_fit * 0.14) +
+(mode_fit * 0.14) +
+(weakness_match * 0.14) +
+(urgency_fit * 0.10) +
+(realism_fit * 0.08) +
+(timing_fit * 0.07) +
+(variety_bonus * 0.06) +
+(confidence_fit * 0.05)
+Then adjust weights by archetype.
+
+For example:
+
+In Likely Questions mode
+Increase:
+
+urgency_fit
+
+teacher_style_fit
+
+recency_relevance
+
+In Simulation mode
+Increase:
+
+realism_fit
+
+timing_fit
+
+balanced coverage
+
+In Weakness Repair mode
+Increase:
+
+weakness_match
+
+misconception_value
+
+recheck compatibility
+
+11. Question assembly logic
+After ranking, the engine must still assemble properly.
+
+This is important because top-ranked questions alone can create a bad session:
+
+too many similar questions
+
+too much of one topic
+
+poor pacing
+
+punishing openings
+
+no emotional rhythm
+
+So use an assembly step with constraints.
+
+Assembly constraints
+do not overrepeat one micro-skill unless intended
+
+maintain planned topic balance
+
+maintain difficulty curve
+
+avoid too many same-shaped questions in a row
+
+ensure at least one confidence-stabilizing moment if needed
+
+ensure coverage of key selected areas
+
+ensure trap count does not exceed plan
+
+Ordering patterns
+Pattern A — Warm / Core / Trap / Stabilize
+Best for class tests and confidence modes.
+
+Pattern B — Sectioned Simulation
+Best for mocks and structured exams.
+
+Pattern C — Diagnostic / Repair / Confirm
+Best for weakness repair and teach-through-test.
+
+Pattern D — Speed Ladder
+Best for pressure modes.
+
+The blueprint should choose one.
+
+12. Adaptation rules during the session
+Not all modes should adapt equally.
+Some modes require strictness.
+
+Adaptation policy levels
+None
+No changes once session starts.
+Best for full simulation.
+
+Light
+Only insert internal notes and maybe change next item difficulty slightly.
+
+Moderate
+Can reorder upcoming items and insert repair checks.
+
+High
+Can pause, teach, simplify, and retest.
+
+Adaptation triggers
+Trigger 1 — Same misconception streak
+If the student makes 3 errors with the same misconception tag,
+then:
+
+flag misconception as active
+
+insert a targeted repair item
+
+optionally show a short concept correction
+
+Trigger 2 — Slow but accurate
+If accuracy is high but response time exceeds target repeatedly,
+then:
+
+mark speed weakness
+
+introduce a time-compressed familiar item later
+
+Trigger 3 — Fast but sloppy
+If speed is high but careless errors spike,
+then:
+
+introduce precision prompt
+
+slow pacing slightly if mode allows
+
+Trigger 4 — Confidence collapse
+Detected by:
+
+repeated skips
+
+rapid guessing
+
+long freezes
+
+performance crash after hard items
+
+Then:
+
+insert stabilizer question
+
+lower immediate complexity slightly
+
+preserve progression
+
+Trigger 5 — Overperformance
+If performance is too easy:
+
+increase subtlety
+
+increase complexity
+
+reduce overconfidence risk
+
+13. Student modeling inside selected scope
+This is very important.
+
+The engine should not look at the student globally only.
+It should calculate a scope-specific student state.
+
+For example, a student may be:
+
+strong overall in mathematics
+
+weak specifically in decimal ordering
+
+extremely weak in word problems involving fractions
+
+So when they choose:
+Fractions + Decimals
+
+the engine should calculate:
+
+Scope-specific profile
+mastery_by_selected_subskill
+
+speed_by_selected_family
+
+common_selected_misconceptions
+
+confidence_by_selected_area
+
+forgetting_risk_by_selected_area
+
+This prevents generic behavior.
+
+14. Readiness scoring model
+The final output should not just be score percentage.
+It should estimate readiness for the target test.
+
+A readiness model can combine:
+
+accuracy
+
+coverage breadth
+
+difficulty handled
+
+speed suitability
+
+misconception severity
+
+consistency
+
+pressure stability
+
+Example
+readiness_score =
+(accuracy_score * 0.35) +
+(coverage_score * 0.15) +
+(difficulty_handled_score * 0.15) +
+(speed_score * 0.10) +
+(consistency_score * 0.10) +
+(pressure_stability_score * 0.10) -
+(misconception_penalty * 0.05)
+Then map to labels:
+
+85–100: Strongly Ready
+
+70–84: Mostly Ready
+
+55–69: Partially Ready
+
+40–54: At Risk
+
+below 40: Not Ready Yet
+
+This is much more meaningful than raw score.
+
+15. Mistake interpretation model
+Your system should interpret wrong answers, not just count them.
+
+Each wrong answer should be classified under a cause.
+
+Error cause categories
+Concept does not exist in memory
+
+Concept exists but not recognized
+
+Misread question wording
+
+Forgot a key rule
+
+Broke at step 2 or step 3
+
+Confused two related concepts
+
+Knew method but made arithmetic slip
+
+Panicked under time
+
+Chose familiar-looking wrong option
+
+Guessed
+
+This is where your broader wrong-answer intelligence work connects beautifully.
+
+The Customised Testing Engine should feed into that system.
+
+16. Recommendation engine after the session
+After interpretation, the feature should recommend the next best move.
+
+This engine should consider:
+
+test date
+
+fragility level
+
+error pattern
+
+readiness level
+
+remaining scope breadth
+
+Example outputs
+If readiness low and test tomorrow
+Recommend:
+
+last-minute rescue pack
+
+top 3 danger subtopics
+
+memory drill
+
+likely-question burst
+
+If readiness fair and mock next week
+Recommend:
+
+full simulation in 2 days
+
+weakness repair on identified zones
+
+timing drill on section B type items
+
+If confidence low
+Recommend:
+
+confidence build session first
+
+then light pressure session later
+
+This creates continuity.
+
+17. UI behavior tied to the blueprint
+The UI should not be cosmetic only.
+It should reflect blueprint choices.
+
+If session archetype is simulation
+UI behavior:
+
+serious tone
+
+strict timer
+
+no hints shown
+
+minimal interruptions
+
+answers hidden
+
+If session archetype is weakness repair
+UI behavior:
+
+supportive tone
+
+visible progress on weak areas
+
+explanation moments allowed
+
+“let’s fix this” framing
+
+If session archetype is pressure
+UI behavior:
+
+sharper timer visuals
+
+quicker transition
+
+tension cues
+
+So the engine should send UI directives too.
+
+18. Analytics you should track
+To improve the engine over time, you should log key analytics.
+
+Session analytics
+selected test type
+
+selected mode
+
+chosen topics
+
+generated archetype
+
+completion rate
+
+score
+
+readiness
+
+time used
+
+adaptation events triggered
+
+Question analytics
+presented question ids
+
+correctness
+
+response time
+
+misconception matched
+
+difficulty outcome
+
+confidence signal if available
+
+Strategy analytics
+which archetypes improve readiness fastest
+
+which modes students choose most
+
+which interventions work best
+
+whether likely-question mode predicts success better than generic practice
+
+This data will refine the engine.
+
+19. Build order for implementation
+Here is the cleanest implementation sequence.
+
+Phase 1 — Core rules engine
+Build:
+
+test type selector
+
+topic scope expansion
+
+session archetype selection
+
+blueprint generator
+
+question ranking
+
+static session run
+
+readiness summary
+
+No live adaptation yet beyond light handling.
+
+Phase 2 — Student-aware intelligence
+Add:
+
+scope-specific mastery
+
+weakness weighting
+
+confidence weighting
+
+urgency-sensitive strategy
+
+better recommendation engine
+
+Phase 3 — Live adaptation
+Add:
+
+misconception streak detection
+
+dynamic repair insertion
+
+timing adaptation
+
+confidence recovery logic
+
+Phase 4 — Teacher-style and predictive intelligence
+Add:
+
+teacher preference modeling
+
+likely-question weighting
+
+smarter exam realism profiles
+
+institution-specific patterns if relevant
+
+20. Internal modules to define in code
+A clean modular structure would be:
+
+PreparationRequestService
+Validates and stores request inputs.
+
+ScopeResolver
+Expands chosen topics into subtopics, micro-skills, families.
+
+StudentStateResolver
+Calculates student readiness and weakness inside selected scope.
+
+TestRealityModeler
+Produces test-type behavior profile.
+
+StrategySelector
+Chooses session archetype and strategy profile.
+
+BlueprintBuilder
+Builds the session plan.
+
+QuestionRanker
+Scores candidate questions.
+
+QuestionAssembler
+Constructs final ordered session.
+
+SessionRunner
+Executes the experience.
+
+AdaptationEngine
+Handles live changes.
+
+OutcomeInterpreter
+Builds readiness and mistake meaning.
+
+RecommendationEngine
+Suggests the next action.
+
+That is the correct separation.
+
+21. A concrete example from end to end
+Let’s say a student chooses:
+
+Test type: Midterm
+
+Subject: Integrated Science
+
+Topics: Respiration, Excretion, Photosynthesis
+
+Days left: 4
+
+Mode: Fix my weak areas
+
+The system should do this:
+
+Step 1
+Resolve the scope into:
+
+definition recall
+
+organ/process matching
+
+comparison questions
+
+sequence/process reasoning
+
+biological application
+
+concept discrimination
+
+Step 2
+Check the student profile and find:
+
+weak in respiration vs photosynthesis comparison
+
+slow in excretion process questions
+
+confident in definitions
+
+Step 3
+Build context:
+
+midterm implies moderate breadth and mixed questioning
+
+4 days left implies targeted repair with moderate realism
+
+Step 4
+Generate archetype:
+midterm_targeted_repair
+
+Step 5
+Build blueprint:
+
+18 questions
+
+15 minutes
+
+medium pressure
+
+30% recall
+
+40% application
+
+30% comparison/reasoning
+
+immediate explanation after repeated same-type failure
+
+order pattern: diagnose / repair / confirm
+
+Step 6
+Assemble questions:
+
+start with diagnosis
+
+identify confusion
+
+insert repair items
+
+confirm mastery with recheck questions
+
+Step 7
+Interpret outcome:
+
+strong in definitions
+
+weak in process comparison
+
+medium readiness
+
+top danger zone: mixing outputs and functions of excretory organs
+
+Step 8
+Recommend:
+
+8-minute comparison drill tomorrow
+
+then a realistic midterm mini-simulation
+
+That is how this feature should think.
+
+22. How this connects to the rest of your educational system
+This feature should not stand alone.
+It should plug into:
+
+wrong-answer intelligence
+
+knowledge gap engine
+
+memory mode
+
+pressure/mental mode
+
+elite mode
+
+weakness repair
+
+revision planner
+
+exam countdown strategy
+
+So Customized Testing becomes a major front door.
+
+Because many students naturally start with:
+
+“I have a test coming.”
+
+And from there, the system can branch intelligently.
+
+23. The final product truth
+The real product is not:
+“Create questions from selected topics.”
+
+The real product is:
+“Model the student’s upcoming test reality and prepare them for it intelligently.”
+
+That is a much more powerful framing.
+
+24. My sharp final structure for this feature
+If I had to define it in one compact internal spec line:
+
+Customised Testing Engine
+A context-aware session composer that transforms a student’s upcoming test type, likely scope, urgency, and current state into a tailored assessment-preparation experience with adaptive question selection, pressure tuning, feedback control, readiness interpretation, and next-step guidance.
+
+That is the right definition.
+
+The next layer is to break this into a full PRD-style specification:
+user flow, screens, engine rules, database fields, APIs, question schema, session state machine, and result page components.
+
+
+proceed
+
+I’m taking it one level deeper now: product spec structure, screen flow, state machine, APIs, data model, and the exact logic the app would need to run this reliably.
+
+Thought for 5s
+Good. Now let’s write this as a real product specification for the feature.
+
+I will structure it like something a product team, design team, and engineering team can actually use.
+
+Customised Testing / Test Mix
+Product Specification
+1. Feature purpose
+Customised Testing is a preparation feature that allows a student to prepare for a specific upcoming test by selecting:
+
+the kind of test
+
+the likely topics
+
+how soon the test is
+
+the type of preparation they want
+
+The system then generates a tailored preparation session whose:
+
+question mix
+
+difficulty pattern
+
+timing
+
+pressure level
+
+feedback behavior
+
+adaptation behavior
+
+result interpretation
+
+are all shaped around that exact preparation context.
+
+This feature exists to answer a very natural student need:
+
+“I have a test coming. Help me prepare for that test properly.”
+
+2. Core product promise
+Instead of giving generic practice, the system should behave like this:
+
+“Because you are preparing for this type of test, on these topics, with this amount of time left, and with your current strengths and weaknesses, this is the best practice experience for you right now.”
+
+That is the core promise.
+
+3. Primary user goals
+A student may come into this feature with one of these goals:
+
+I want likely questions
+
+I want to be tested like the real thing
+
+I want to fix my weak areas before the test
+
+I want quick revision
+
+I want pressure practice
+
+I want confidence before the test
+
+I want the system to teach me through testing
+
+I want to know whether I am ready
+
+The feature must support all of these without feeling fragmented.
+
+4. User personas inside this feature
+Persona A — Last-minute student
+test is today or tomorrow
+
+wants fast, high-yield preparation
+
+not interested in long diagnosis
+
+wants likely questions, memory reinforcement, key danger zones
+
+Persona B — Serious planner
+test is in a few days or 1–2 weeks
+
+wants structured preparation
+
+willing to do proper diagnostic work
+
+wants readiness tracking
+
+Persona C — Weak but trying
+knows topics but is fragile in several areas
+
+wants repair inside selected scope
+
+needs teaching and confirmation
+
+Persona D — Strong student
+wants realistic simulation or stretch challenge
+
+wants to avoid complacency
+
+wants speed and precision under pressure
+
+Persona E — Low confidence student
+fears failure
+
+needs emotional stability
+
+needs better ramping and supportive flow
+
+The same feature must handle all of them.
+
+5. User-facing feature name options
+Recommended main names:
+
+Prepare for My Test
+
+Test Mix
+
+Customised Testing
+
+Smart Test Prep
+
+Precision Test Prep
+
+Best user-facing choice:
+
+Prepare for My Test
+Best internal name:
+
+Customised Testing Engine (CTE)
+6. User flow
+Entry point
+The student opens the feature from the home screen or subject screen.
+
+The CTA can be:
+
+“Prepare for My Test”
+
+“I have a test coming”
+
+“Build my test prep”
+
+Flow step 1 — Select test type
+Prompt:
+What are you preparing for?
+
+Options:
+
+Class Test
+
+Quiz
+
+Midterm
+
+Mock Exam
+
+End of Term Exam
+
+BECE / WASSCE Practice
+
+Assignment / Topic Test
+
+Custom Test Mix
+
+System effect:
+This determines the initial test reality model.
+
+Flow step 2 — Select subject
+Prompt:
+Which subject is this for?
+
+Options:
+
+Mathematics
+
+English
+
+Integrated Science
+
+Social Studies
+
+etc.
+
+System effect:
+Loads topic tree for the chosen subject.
+
+Flow step 3 — Select topics
+Prompt:
+Which topics are likely to be covered?
+
+Interaction options:
+
+choose one or more topics
+
+expand topics into subtopics
+
+select “recent topics”
+
+select “weak topics inside this subject”
+
+select “teacher mentioned these”
+
+select “everything in this unit”
+
+System effect:
+Feeds the scope resolver.
+
+Flow step 4 — Test timing
+Prompt:
+When is the test?
+
+Options:
+
+Today
+
+Tomorrow
+
+In 2–3 days
+
+This week
+
+Next week
+
+Custom date
+
+System effect:
+Sets urgency band.
+
+Flow step 5 — Preparation intent
+Prompt:
+What do you want from this session?
+
+Options:
+
+Give me likely questions
+
+Test me like the real thing
+
+Fix my weak spots
+
+Revise me quickly
+
+Build my confidence
+
+Put me under pressure
+
+Teach me through the test
+
+Show me if I’m ready
+
+System effect:
+Determines session strategy.
+
+Flow step 6 — Session preferences
+Optional refinements:
+
+session length: 5, 10, 15, 20, 30 minutes
+
+difficulty preference: standard / challenging / balanced
+
+hints: allowed / limited / none
+
+timer: on / off / strict
+
+question amount: quick / standard / extended
+
+System effect:
+Fine-tunes blueprint.
+
+Flow step 7 — Session preview
+The app shows:
+
+Your session
+
+Class Test Prep
+
+Mathematics
+
+Fractions + Decimals
+
+15 questions
+
+12 minutes
+
+Likely Questions mode
+
+Pressure: Medium
+
+Feedback: End of session
+
+CTA:
+Start Session
+
+7. Main system modules
+The feature should have these modules.
+
+7.1 Preparation Request Service
+Responsible for:
+
+capturing user selections
+
+validating inputs
+
+building the base request object
+
+7.2 Scope Resolver
+Responsible for:
+
+expanding topic selection into subtopics
+
+mapping topics to micro-skills
+
+mapping topics to question families
+
+mapping topics to misconception families
+
+Example:
+“Fractions” becomes:
+
+identifying fractions
+
+simplifying fractions
+
+equivalent fractions
+
+ordering fractions
+
+adding fractions
+
+subtracting fractions
+
+word problems
+
+common fraction misconceptions
+
+7.3 Student State Resolver
+Responsible for reading the student’s current performance state, especially inside the selected scope.
+
+It should retrieve:
+
+mastery by selected topic
+
+mastery by selected subtopic
+
+speed profile
+
+recent wrong-answer patterns
+
+confidence indicators
+
+forgetting risk
+
+performance under time pressure
+
+This should be scope-specific, not generic.
+
+7.4 Test Reality Modeler
+Responsible for converting test type into behavioral assumptions.
+
+Example outputs:
+
+scope breadth expectation
+
+realism level
+
+teacher influence
+
+typical difficulty shape
+
+typical timing shape
+
+recall/application ratio
+
+7.5 Strategy Selector
+Responsible for deciding the session archetype based on:
+
+selected mode
+
+urgency
+
+test type
+
+student state
+
+breadth of selected scope
+
+Example outputs:
+
+class_test_last_minute_likely
+
+midterm_targeted_repair
+
+mock_exam_full_simulation
+
+class_test_confidence_recovery
+
+7.6 Blueprint Builder
+Responsible for generating the session plan:
+
+question count
+
+duration
+
+topic distribution
+
+difficulty distribution
+
+cognitive distribution
+
+ordering pattern
+
+pressure profile
+
+feedback policy
+
+intervention policy
+
+7.7 Question Ranker
+Responsible for scoring candidate questions against the blueprint and preparation context.
+
+7.8 Question Assembler
+Responsible for selecting and sequencing the final set of questions.
+
+7.9 Session Runner
+Responsible for:
+
+presenting the questions
+
+tracking time
+
+recording answers
+
+triggering runtime rules
+
+7.10 Adaptation Engine
+Responsible for live response during the session:
+
+detect misconception streaks
+
+detect confidence collapse
+
+detect overperformance
+
+insert repairs or stabilizers where permitted
+
+7.11 Outcome Interpreter
+Responsible for converting performance into:
+
+readiness score
+
+weakness map
+
+mistake pattern summary
+
+danger zones
+
+next-step recommendation
+
+7.12 Recommendation Engine
+Responsible for:
+
+suggesting the next session
+
+suggesting what to revise
+
+selecting follow-up mode
+
+surfacing urgency-aware next moves
+
+8. Session archetypes
+These are system-generated internal session types.
+
+8.1 class_test_last_minute_likely
+For:
+
+class test
+
+test soon
+
+likely questions mode
+
+Behavior:
+
+narrow scope
+
+recent concepts prioritized
+
+teacher-style direct questions
+
+short session
+
+fast result
+
+8.2 class_test_confidence_recovery
+For:
+
+low confidence
+
+class test soon
+
+Behavior:
+
+easy-to-medium ramp
+
+likely questions emphasis
+
+light stabilizers
+
+supportive tone
+
+risk areas highlighted gently
+
+8.3 midterm_targeted_repair
+For:
+
+midterm
+
+weaknesses detected within selected scope
+
+Behavior:
+
+diagnose weak areas
+
+repair with targeted questions
+
+confirm with rechecks
+
+moderate realism
+
+8.4 midterm_balanced_prep
+For:
+
+midterm
+
+no severe weakness profile
+
+enough time left
+
+Behavior:
+
+balanced recall/application/reasoning
+
+distributed topic coverage
+
+mixed-session pacing
+
+8.5 mock_exam_full_simulation
+For:
+
+mock exams
+
+student wants realism
+
+Behavior:
+
+strict timing
+
+no instant help
+
+exam-like flow
+
+end-only review
+
+8.6 mock_exam_pressure_drill
+For:
+
+strong student
+
+timing and pressure emphasis
+
+Behavior:
+
+tighter timer
+
+less reflection time
+
+harder distractors
+
+pressure metrics
+
+8.7 weakness_repair_guided
+For:
+
+student explicitly wants weak area repair
+
+teaching allowed
+
+Behavior:
+
+targeted weaknesses
+
+explanation after repeated issues
+
+follow-up confirmation questions
+
+8.8 teach_through_test
+For:
+
+underprepared student
+
+instructional session desired
+
+Behavior:
+
+diagnostic first
+
+intervention early
+
+explanation shown
+
+step-by-step recovery allowed
+
+9. Session blueprint schema
+This should be a concrete internal object.
+
+Example:
+
+{
+  "session_id": "sess_001",
+  "session_archetype": "midterm_targeted_repair",
+  "test_type": "midterm",
+  "subject_id": "integrated_science",
+  "selected_topics": ["respiration", "photosynthesis", "excretion"],
+  "question_count": 18,
+  "duration_minutes": 15,
+  "topic_distribution": {
+    "respiration": 6,
+    "photosynthesis": 6,
+    "excretion": 6
+  },
+  "difficulty_distribution": {
+    "easy": 3,
+    "medium": 10,
+    "hard": 5
+  },
+  "cognitive_distribution": {
+    "recall": 5,
+    "application": 7,
+    "reasoning": 6
+  },
+  "question_family_distribution": {
+    "definition_check": 3,
+    "process_comparison": 5,
+    "application_scenario": 6,
+    "concept_discrimination": 4
+  },
+  "ordering_pattern": "diagnose_repair_confirm",
+  "pressure_profile": "medium",
+  "feedback_policy": "adaptive",
+  "hint_policy": "limited",
+  "adaptation_policy": "moderate",
+  "intervention_rules": {
+    "same_misconception_streak": 3,
+    "confidence_drop_threshold": 2,
+    "slow_accuracy_flag": true
+  }
+}
+This blueprint becomes the contract for execution.
+
+10. Question data requirements
+This feature depends on strong content metadata.
+
+Minimum fields
+question_id
+
+subject_id
+
+topic_id
+
+subtopic_id
+
+micro_skill_id
+
+question_family
+
+cognitive_type
+
+difficulty
+
+estimated_time_seconds
+
+correct_answer
+
+explanation_id
+
+Recommended richer fields
+misconception_tags
+
+test_type_fit
+
+exam_style_fit
+
+teacher_style_fit
+
+pressure_suitability
+
+realism_score
+
+revision_value_score
+
+recovery_variant_id
+
+prerequisite_skill_ids
+
+hint_version_id
+
+confidence_level_appropriateness
+
+question_stem_pattern
+
+distractor_quality_score
+
+Example question object
+{
+  "question_id": "Q879",
+  "subject_id": "math",
+  "topic_id": "fractions",
+  "subtopic_id": "equivalent_fractions",
+  "micro_skill_id": "equivalence_recognition",
+  "question_family": "concept_application",
+  "cognitive_type": "application",
+  "difficulty": "medium",
+  "estimated_time_seconds": 40,
+  "misconception_tags": ["confuses_simplification_with_equivalence"],
+  "test_type_fit": ["class_test", "midterm"],
+  "teacher_style_fit": 0.82,
+  "exam_style_fit": 0.58,
+  "pressure_suitability": 0.76,
+  "realism_score": 0.61,
+  "revision_value_score": 0.72
+}
+11. Student state model
+The feature needs a scoped student model.
+
+Global student state
+overall subject performance
+
+long-term mastery
+
+overall speed
+
+general confidence
+
+Scope-specific student state
+mastery in selected subtopics
+
+common mistakes in selected scope
+
+response speed by selected question family
+
+confusion patterns inside selected topics
+
+forgetting risk within selected scope
+
+performance under timer in selected scope
+
+This is important because the student may be strong overall but weak in the chosen areas.
+
+12. Strategy rules
+12.1 Urgency rules
+If test is today or tomorrow
+limit scope breadth
+
+prioritize likely question families
+
+prioritize fragile but high-probability content
+
+reduce exploratory diagnosis
+
+focus on rapid reinforcement
+
+If test is within 3–5 days
+allow light diagnosis
+
+patch visible weaknesses
+
+include likely-question bias
+
+If test is in 1–2 weeks
+allow deeper diagnosis
+
+allow repair cycles
+
+include simulation and progression
+
+If test is beyond 2 weeks
+allow structured mastery-building
+
+broader coverage
+
+more developmental progression
+
+12.2 Test type rules
+Class Test
+topic recency weight high
+
+teacher-style weight high
+
+direct question rate higher
+
+smaller session sizes acceptable
+
+Midterm
+broader balance
+
+mixed recall/application
+
+topic spread more even
+
+moderate realism
+
+Mock Exam
+realism weight high
+
+timing strictness high
+
+distractor subtlety high
+
+no interruption by default
+
+Final / End of Term
+larger scope coverage
+
+mixed difficulty
+
+readiness and endurance more important
+
+12.3 Mode rules
+Likely Questions
+Increase weight for:
+
+recent content
+
+teacher style
+
+standard examinable patterns
+
+high-probability subskills
+
+Real Simulation
+Increase weight for:
+
+realism
+
+timing alignment
+
+structured paper flow
+
+reduced interventions
+
+Fix Weak Spots
+Increase weight for:
+
+low mastery areas
+
+misconception-heavy questions
+
+reteach opportunities
+
+rechecks
+
+Confidence Build
+Increase weight for:
+
+solvable openings
+
+supportive ramp
+
+controlled difficulty growth
+
+Pressure Mode
+Increase weight for:
+
+short response windows
+
+timing pressure
+
+speed-demanding items
+
+Teach Through Test
+Increase weight for:
+
+diagnostic clarity
+
+explainability
+
+follow-up validation items
+
+13. Candidate question ranking
+Each candidate question should receive a fit score.
+
+Suggested fit dimensions
+scope_match
+
+test_type_fit
+
+mode_fit
+
+weakness_match
+
+urgency_fit
+
+realism_fit
+
+timing_fit
+
+variety_bonus
+
+confidence_fit
+
+misconception_value
+
+Sample weighted formula
+candidate_fit =
+(scope_match * 0.22) +
+(test_type_fit * 0.14) +
+(mode_fit * 0.14) +
+(weakness_match * 0.14) +
+(urgency_fit * 0.10) +
+(realism_fit * 0.08) +
+(timing_fit * 0.07) +
+(variety_bonus * 0.06) +
+(confidence_fit * 0.03) +
+(misconception_value * 0.02)
+Then the weights should shift by archetype.
+
+14. Question assembly rules
+Even with high-ranking questions, the session must still be composed carefully.
+
+Hard rules
+stay within topic quotas
+
+stay within difficulty quotas
+
+stay within time budget
+
+avoid too many identical question shapes in a row
+
+avoid too many punishing items early unless pressure mode
+
+include high-value subtopic coverage
+
+do not overrepeat a micro-skill unless in repair mode
+
+Soft rules
+maintain rhythm
+
+allow early traction
+
+include one or two reality-check items
+
+preserve emotional stability where needed
+
+15. Ordering patterns
+15.1 warm_core_trap_finish
+Best for:
+
+class test prep
+
+balanced prep
+
+confidence build
+
+Pattern:
+
+easy warm-up
+
+main likely questions
+
+one or two subtle traps
+
+clean ending
+
+15.2 diagnose_repair_confirm
+Best for:
+
+weakness repair
+
+teach-through-test
+
+Pattern:
+
+test for fragility
+
+surface misconception
+
+apply targeted correction
+
+confirm understanding
+
+15.3 sectioned_exam_simulation
+Best for:
+
+mock exam
+
+final exam simulation
+
+Pattern:
+
+section A: direct
+
+section B: standard application
+
+section C: reasoning / mixed
+
+no interruptions
+
+15.4 speed_ladder
+Best for:
+
+pressure mode
+
+mental sharpness
+
+Pattern:
+
+moderate time
+
+tighter time
+
+tighter time
+
+burst finish
+
+16. Runtime adaptation logic
+Not every session should adapt the same way.
+
+Adaptation levels
+None
+no adjustment after start
+
+full realism
+
+used for simulations
+
+Light
+minor difficulty shifts
+
+no obvious interruption
+
+Moderate
+can insert repair or stabilizer question
+
+can slightly reorder remaining items
+
+High
+can stop and explain
+
+can reteach
+
+can recheck immediately
+
+Runtime triggers
+Trigger A — Same misconception streak
+If student misses 3 questions with same misconception tag:
+
+mark misconception active
+
+insert targeted corrective item if policy allows
+
+optionally surface micro-explanation
+
+Trigger B — Slow but accurate
+If student gets answers correct but is too slow:
+
+mark timing risk
+
+inject speed-focused variation later
+
+Trigger C — Fast but careless
+If answers are rushed and error pattern indicates sloppiness:
+
+issue precision prompt
+
+slightly rebalance pacing if allowed
+
+Trigger D — Confidence drop
+Signals:
+
+repeated skips
+
+unusually long pauses
+
+fast guesses after hard question
+
+sharp accuracy crash
+
+Response:
+
+insert stabilizer item
+
+reduce immediate harshness
+
+preserve momentum
+
+Trigger E — Too easy
+If performance exceeds expected level:
+
+increase difficulty or subtlety
+
+prevent false confidence
+
+17. Session state machine
+The session should have explicit states.
+
+Main states
+Drafting
+
+Ready
+
+Running
+
+Paused
+
+Adapting
+
+Completed
+
+Interpreting
+
+Results_Shown
+
+Runtime substates
+Inside Running:
+
+Presenting_Question
+
+Awaiting_Response
+
+Evaluating_Response
+
+Recording_Event
+
+Trigger_Check
+
+Applying_Adaptation
+
+Moving_To_Next
+
+Simplified flow
+Drafting
+  -> Ready
+  -> Running
+      -> Presenting_Question
+      -> Awaiting_Response
+      -> Evaluating_Response
+      -> Trigger_Check
+         -> Adapting (if needed)
+         -> Presenting_Question
+      -> Completed
+  -> Interpreting
+  -> Results_Shown
+18. Results page specification
+The results page must answer real student questions.
+
+18.1 Top summary
+Show:
+
+readiness score
+
+readiness label
+
+raw score
+
+time performance
+
+completion status
+
+Example:
+
+Readiness: 74%
+
+Status: Mostly Ready
+
+Score: 13/18
+
+Timing: Slightly slow
+
+Confidence: Stable
+
+18.2 Topic performance
+For each selected topic:
+
+Strong
+
+Stable
+
+Fragile
+
+Weak
+
+Example:
+
+Respiration — Stable
+
+Photosynthesis — Fragile
+
+Excretion — Weak
+
+18.3 Mistake profile
+Explain what actually went wrong.
+
+Examples:
+
+You know the terms but confuse the processes
+
+You understand the topic but misread scenario-based wording
+
+You are slow in comparison questions
+
+You break at step two in multi-step science reasoning
+
+18.4 Danger zones before the test
+Show the likely risk points if the student took the real test now.
+
+Examples:
+
+comparing respiration and photosynthesis
+
+role of organs in excretion
+
+application questions under time pressure
+
+18.5 Recommended next action
+Examples:
+
+Do an 8-minute weak-area repair on process comparison
+
+Run a likely-questions burst tomorrow morning
+
+Try a timed mini-simulation next
+
+18.6 Confidence message
+Should be mode-aware.
+
+Examples:
+
+“You are close, but two fragile areas could still hurt you.”
+
+“Your knowledge is good; your speed is the bigger issue.”
+
+“You need one focused repair session before this test.”
+
+19. Readiness model
+Readiness is not just score.
+
+Inputs to readiness
+accuracy
+
+topic coverage
+
+difficulty handled
+
+timing suitability
+
+consistency
+
+misconception severity
+
+pressure stability
+
+Suggested formula
+readiness_score =
+(accuracy_score * 0.35) +
+(coverage_score * 0.15) +
+(difficulty_handled_score * 0.15) +
+(speed_score * 0.10) +
+(consistency_score * 0.10) +
+(pressure_stability_score * 0.10) -
+(misconception_penalty * 0.05)
+Labels
+85–100: Strongly Ready
+
+70–84: Mostly Ready
+
+55–69: Partially Ready
+
+40–54: At Risk
+
+Below 40: Not Ready Yet
+
+20. Error interpretation model
+Every wrong answer should be interpreted under a cause class.
+
+Cause classes
+concept absent from memory
+
+concept present but not recognized
+
+wording misunderstood
+
+procedure broken mid-way
+
+confused similar concepts
+
+careless slip
+
+guessed under pressure
+
+slow recall problem
+
+trap distractor attraction
+
+This is where the feature connects strongly to your wrong-answer intelligence system.
+
+21. APIs needed
+A clean API set could look like this.
+
+21.1 Create preparation session
+POST /customized-testing/sessions
+
+Input:
+
+test_type
+
+subject_id
+
+topic_ids
+
+date_or_days_left
+
+mode
+
+session_length
+
+settings
+
+Output:
+
+session_id
+
+session_blueprint
+
+session_preview
+
+21.2 Start session
+POST /customized-testing/sessions/{id}/start
+
+Output:
+
+first_question
+
+timer_config
+
+session_state
+
+21.3 Submit answer
+POST /customized-testing/sessions/{id}/answer
+
+Input:
+
+question_id
+
+answer
+
+response_time
+
+optional confidence signal
+
+Output:
+
+correctness
+
+next_question
+
+runtime_events
+
+adaptation_flags
+
+21.4 Pause session
+POST /customized-testing/sessions/{id}/pause
+
+21.5 Resume session
+POST /customized-testing/sessions/{id}/resume
+
+21.6 Complete session
+POST /customized-testing/sessions/{id}/complete
+
+Output:
+
+raw results
+
+interpreted results
+
+recommendations
+
+21.7 Get result details
+GET /customized-testing/sessions/{id}/results
+
+Output:
+
+readiness summary
+
+topic breakdown
+
+error profile
+
+next best action
+
+22. Database entities
+Core tables or collections:
+
+preparation_requests
+id
+
+user_id
+
+test_type
+
+subject_id
+
+topic_ids
+
+days_left
+
+mode
+
+session_length
+
+created_at
+
+session_blueprints
+id
+
+request_id
+
+archetype
+
+blueprint_json
+
+created_at
+
+session_runs
+id
+
+blueprint_id
+
+user_id
+
+started_at
+
+ended_at
+
+final_score
+
+readiness_score
+
+status
+
+session_question_events
+id
+
+session_run_id
+
+question_id
+
+order_index
+
+answer
+
+correctness
+
+response_time
+
+misconception_tags_hit
+
+adaptation_event
+
+interpreted_outcomes
+id
+
+session_run_id
+
+topic_breakdown_json
+
+readiness_label
+
+danger_zones_json
+
+recommendation_json
+
+student_scope_profiles
+user_id
+
+subject_id
+
+topic_id
+
+subtopic_id
+
+mastery_score
+
+speed_score
+
+forgetting_risk
+
+confidence_score
+
+misconception_frequency
+
+23. UI screens
+Screen 1 — Feature landing
+Headline:
+Prepare for My Test
+
+Subtext:
+Tell us what test is coming and we’ll tailor your practice for it.
+
+CTA:
+Start
+
+Screen 2 — Test type selector
+Large cards for each test type.
+
+Screen 3 — Subject and topics
+Topic chips, expandable subtopics, recent topic shortcut.
+
+Screen 4 — Timing and intent
+When is the test?
+What do you want from this session?
+
+Screen 5 — Session preview
+Session size, pressure, feedback behavior, focus.
+
+Screen 6 — Session runtime
+Mode-sensitive runtime interface.
+
+Different visual tone for:
+
+simulation
+
+repair
+
+pressure
+
+confidence build
+
+Screen 7 — Results
+Readiness, risk, strengths, weaknesses, next step.
+
+24. UX tone by mode
+Likely Questions
+Tone:
+focused, practical, useful
+
+Real Simulation
+Tone:
+serious, exam-like, minimal
+
+Weakness Repair
+Tone:
+supportive, corrective, clear
+
+Confidence Build
+Tone:
+encouraging, steady, calming
+
+Pressure Mode
+Tone:
+urgent, sharp, disciplined
+
+Teach Through Test
+Tone:
+instructive, patient, guided
+
+The system should send UI directives so the interface matches the mode.
+
+25. Analytics and metrics
+You need product analytics and engine analytics.
+
+Product metrics
+feature usage rate
+
+completion rate
+
+repeat usage
+
+mode distribution
+
+average session length
+
+session start-to-complete rate
+
+Learning metrics
+readiness lift
+
+weak area repair rate
+
+pre-test improvement
+
+timing improvement
+
+reduction in repeated misconception frequency
+
+Engine quality metrics
+archetype success rate
+
+question fit success
+
+adaptation effectiveness
+
+recommendation follow-through
+
+likely-question predictive value
+
+26. Release plan
+Phase 1 — Foundational version
+Build:
+
+request capture
+
+topic scope resolution
+
+archetype selection
+
+blueprint generation
+
+question ranking
+
+static session execution
+
+readiness result page
+
+No heavy live adaptation yet.
+
+Phase 2 — Student-aware tuning
+Add:
+
+scoped mastery weighting
+
+weakness prioritization
+
+confidence shaping
+
+urgency-sensitive strategy refinement
+
+Phase 3 — Runtime intelligence
+Add:
+
+misconception streak detection
+
+stabilizer injection
+
+targeted repair insertion
+
+live timing adjustments
+
+Phase 4 — Predictive sophistication
+Add:
+
+teacher style patterning
+
+likely-question modeling
+
+school/exam pattern intelligence
+
+exam realism refinement
+
+27. Risks and design cautions
+Risk 1 — Weak question tagging
+If your question bank is poorly tagged, this feature becomes shallow.
+
+Risk 2 — Overpromising predictions
+Do not imply certainty when generating “likely questions.”
+It should be high-probability preparation, not guaranteed prediction.
+
+Risk 3 — Too much adaptation in simulation mode
+If simulation keeps helping, it stops being simulation.
+
+Risk 4 — Demotivating low-confidence students
+A harsh sequence right before a test can reduce performance rather than improve it.
+
+Risk 5 — Generic results
+If the result page only shows score, the feature loses its premium value.
+
+28. Recommended product statement
+Here is the clean internal statement:
+
+Customised Testing is a context-aware preparation feature that transforms a student’s upcoming test type, selected scope, urgency, and current performance state into a tailored testing session with intelligent question selection, pressure tuning, readiness interpretation, and next-step guidance.
+
+That is the right product definition.
+
+29. The real strength of the feature
+The feature is strong because it mirrors how real students think.
+
+Students do not usually think:
+
+“Give me a balanced formative assessment.”
+
+They think:
+
+“I have a class test tomorrow.”
+
+“These are the topics.”
+
+“I want likely questions.”
+
+“Test me like the real thing.”
+
+“Fix my weak areas before the exam.”
+
+Your feature speaks that language.
+
+That is why it can become a major entry point into the whole learning system.
+
+30. What should come next
+The next best step is to break this feature into:
+
+question families for this engine
+
+exact decision trees
+
+full backend logic
+
+sample UI wireframe structure
+
+component-by-component screen spec
+
+That next layer would make it even more implementation-ready.
+
+
+proceed
+
+Thought for 5s
+Good. The next layer is to make this engineering-grade and content-grade.
+
+I’ll break it into five parts:
+
+question families
+
+decision logic
+
+backend execution logic
+
+UI wireframe structure
+
+screen-by-screen component spec
+
+This is the layer that makes the feature actually buildable.
+
+Customised Testing / Test Mix
+Implementation Specification — Engine Logic, Question Families, UI Structure
+1. Question family system
+The engine will only be as good as its question family model.
+
+If questions are only stored as “topic + difficulty,” the system will feel generic.
+It needs to understand how a question behaves.
+
+A question family is not the same as format.
+It is not just:
+
+multiple choice
+
+fill in the blank
+
+short answer
+
+It is:
+
+what kind of thinking the question demands
+
+how it reveals readiness
+
+what kind of mistake it is likely to expose
+
+when it is useful in a preparation session
+
+1.1 Core question families
+These are the core families the engine should support across subjects.
+
+A. Direct Recall
+Tests:
+
+memory
+
+definition recall
+
+fact recognition
+
+immediate retrieval
+
+Best for:
+
+class tests
+
+quick revision
+
+warm-ups
+
+memory reinforcement
+
+Examples:
+
+What is photosynthesis?
+
+Define a fraction.
+
+Which organ is responsible for…?
+
+Use cases:
+
+early session warm-up
+
+likely-question packs
+
+low-confidence stabilization
+
+B. Recognition / Discrimination
+Tests:
+
+ability to identify the correct concept among similar options
+
+confusion between related ideas
+
+conceptual separation
+
+Best for:
+
+misconception detection
+
+multiple-choice work
+
+science and grammar distinctions
+
+Examples:
+
+Which of these is an example of respiration, not photosynthesis?
+
+Which sentence uses the adjective correctly?
+
+Use cases:
+
+trap detection
+
+concept confusion detection
+
+mock-style distractor work
+
+C. Procedure Execution
+Tests:
+
+whether the student can carry out a known method correctly
+
+Best for:
+
+mathematics
+
+grammar transformation
+
+step-based science
+
+process-based tasks
+
+Examples:
+
+Simplify 18/24.
+
+Solve 3x + 5 = 17.
+
+Convert a mixed number to an improper fraction.
+
+Use cases:
+
+class test prep
+
+speed drills
+
+weakness repair
+
+D. Multi-Step Reasoning
+Tests:
+
+whether the student can sustain correct reasoning across steps
+
+Best for:
+
+mock exams
+
+midterms
+
+mastery testing
+
+error diagnosis
+
+Examples:
+
+Solve a word problem involving percentages.
+
+Predict the outcome of a science process after two changes.
+
+Choose the correct sequence of steps to solve.
+
+Use cases:
+
+readiness testing
+
+deeper diagnosis
+
+elite challenge
+
+simulation mode
+
+E. Concept Application
+Tests:
+
+whether the student can use a concept in a new or practical context
+
+Best for:
+
+midterms
+
+mocks
+
+stronger class tests
+
+real understanding checks
+
+Examples:
+
+A plant was kept in darkness for 3 days. What would likely happen and why?
+
+Ama bought… calculate the discount.
+
+Use cases:
+
+true readiness checks
+
+distinguishing memory from understanding
+
+F. Comparison / Contrast
+Tests:
+
+whether the student can separate similar concepts clearly
+
+Best for:
+
+science
+
+social studies
+
+English language categories
+
+concept-fragility detection
+
+Examples:
+
+Differentiate between respiration and photosynthesis.
+
+Compare common and proper nouns.
+
+Distinguish between weather and climate.
+
+Use cases:
+
+midterm repair
+
+last-minute danger zone checks
+
+misconception targeting
+
+G. Error Spotting
+Tests:
+
+whether the student can detect wrong reasoning or wrong use
+
+Best for:
+
+advanced understanding
+
+teacher-style tricky items
+
+metacognitive growth
+
+Examples:
+
+Which step in this solution is wrong?
+
+What is wrong with this sentence?
+
+A student says fractions are equivalent because… why is that wrong?
+
+Use cases:
+
+elite mode
+
+repair mode
+
+wrong-answer intelligence
+
+exam traps
+
+H. Completion / Continuation
+Tests:
+
+whether the student can continue a pattern, process, or sentence
+
+Best for:
+
+sequence-heavy topics
+
+process logic
+
+language flow
+
+formula progression
+
+Examples:
+
+Complete the next step.
+
+Continue the pattern.
+
+Fill the missing operation in the solution sequence.
+
+Use cases:
+
+procedural confidence
+
+pressure mode
+
+teacher-style prep
+
+I. Scenario-Based Problem Solving
+Tests:
+
+use of topic knowledge in a real-looking situation
+
+Best for:
+
+higher readiness testing
+
+stronger students
+
+exam-level understanding
+
+Examples:
+
+A trader buys and sells...
+
+A person has difficulty excreting…
+
+During drought season, what happens to...
+
+Use cases:
+
+mocks
+
+reasoning profile
+
+exam realism
+
+J. Trap / Distractor Resistance
+Tests:
+
+whether the student is easily pulled by familiar but wrong options
+
+Best for:
+
+mock exams
+
+confidence calibration
+
+wrong-answer analysis
+
+Examples:
+
+option choices designed around common misconceptions
+
+plausible but false statements
+
+familiar-looking wrong procedures
+
+Use cases:
+
+exam readiness
+
+careless error detection
+
+confidence realism
+
+1.2 Extended family layer
+These are more specialized and can be added later.
+
+K. Hint-Dependent Recovery
+Question is designed to test whether one hint is enough for recovery.
+
+L. Confidence Check Question
+Simple but important item used to stabilize and restore flow.
+
+M. Pressure-Short Item
+Short-response, fast-resolution question suitable for timer compression.
+
+N. Memory-Reactivation Item
+Specifically designed to revive a fading concept.
+
+O. Teacher-Style Familiar Pattern
+Modeled after common class teacher phrasing or structure.
+
+P. Transfer Question
+Tests whether learning from one context transfers into another.
+
+2. Question family usage by session type
+The engine should not use all families equally.
+
+2.1 Class test likely-questions session
+Preferred families:
+
+direct recall
+
+procedure execution
+
+recognition/discrimination
+
+completion/continuation
+
+one or two comparison or trap items
+
+Avoid too much:
+
+long scenario-based reasoning
+
+overly abstract transfer questions
+
+Reason:
+class tests are often narrow, recent, and direct.
+
+2.2 Midterm balanced prep
+Preferred families:
+
+recall
+
+procedure execution
+
+application
+
+comparison
+
+multi-step reasoning
+
+Reason:
+midterm often mixes memory and understanding.
+
+2.3 Mock simulation
+Preferred families:
+
+application
+
+multi-step reasoning
+
+scenario-based problem solving
+
+trap resistance
+
+some direct items for realism balance
+
+Reason:
+mock should feel like an actual exam, not just revision.
+
+2.4 Weakness repair
+Preferred families:
+
+comparison/contrast
+
+error spotting
+
+recognition/discrimination
+
+procedure execution
+
+recovery/recheck items
+
+Reason:
+repair mode must expose and correct the exact fragility.
+
+2.5 Confidence build
+Preferred families:
+
+direct recall
+
+procedure execution
+
+completion
+
+controlled application
+
+confidence check items
+
+Reason:
+student needs traction, not punishment.
+
+2.6 Pressure mode
+Preferred families:
+
+pressure-short items
+
+direct recall
+
+procedure execution
+
+rapid discrimination
+
+timing-sensitive variants
+
+Reason:
+pressure mode is about fast clarity, not long reflective explanation.
+
+3. Decision tree logic
+Now we define how the engine chooses what to build.
+
+The engine should not simply map one option to one mode.
+It should derive the session from multiple inputs.
+
+3.1 Primary decision inputs
+The main inputs are:
+
+test type
+
+selected topics
+
+number of topics / scope breadth
+
+days left
+
+selected preparation intent
+
+current mastery inside scope
+
+confidence profile
+
+timing profile
+
+recent performance trend
+
+3.2 First decision: urgency band
+If days_left <= 1
+Set:
+
+urgency = immediate
+
+If days_left 2–5
+Set:
+
+urgency = near
+
+If days_left 6–14
+Set:
+
+urgency = medium
+
+If days_left > 14
+Set:
+
+urgency = early
+
+Urgency changes everything downstream.
+
+3.3 Second decision: scope complexity
+If one topic or tightly related topics
+Set:
+
+scope_complexity = narrow
+
+If 2–4 topics with moderate spread
+Set:
+
+scope_complexity = moderate
+
+If many topics or whole unit
+Set:
+
+scope_complexity = broad
+
+This affects question count, breadth, and diagnostic depth.
+
+3.4 Third decision: student stability inside scope
+Use scoped profile to determine:
+
+Strong
+high accuracy
+
+decent speed
+
+low misconception frequency
+
+Stable-but-fragile
+okay score
+
+weak in a few subskills
+
+some timing or confusion risk
+
+Weak
+low mastery
+
+repeated misconception patterns
+
+low readiness
+
+Unstable
+inconsistent score
+
+fluctuating performance
+
+likely confidence or pressure issue
+
+This influences tone and intervention policy.
+
+3.5 Fourth decision: derive session archetype
+Below is the simplified logic.
+
+Case A
+If:
+
+test_type = class_test
+
+urgency = immediate
+
+intent = likely_questions
+
+Then:
+
+archetype = class_test_last_minute_likely
+
+Case B
+If:
+
+test_type = class_test
+
+urgency = immediate
+
+stability = unstable or weak
+
+intent = confidence_build OR quick_revision
+
+Then:
+
+archetype = class_test_confidence_recovery
+
+Case C
+If:
+
+test_type = midterm
+
+stability = weak or fragile
+
+intent = fix_weak_spots
+
+Then:
+
+archetype = midterm_targeted_repair
+
+Case D
+If:
+
+test_type = midterm
+
+stability = stable
+
+intent = test_me_like_real_thing
+
+Then:
+
+archetype = midterm_balanced_simulation
+
+Case E
+If:
+
+test_type = mock_exam
+
+intent = real_simulation
+
+Then:
+
+archetype = mock_exam_full_simulation
+
+Case F
+If:
+
+test_type = mock_exam
+
+stability = strong
+
+intent = pressure_mode
+
+Then:
+
+archetype = mock_exam_pressure_drill
+
+Case G
+If:
+
+intent = teach_through_test
+
+Then:
+
+archetype = teach_through_test
+
+This overrides many others unless explicitly disabled.
+
+4. Blueprint generation logic
+Once archetype is chosen, the blueprint builder decides the exact session structure.
+
+4.1 Blueprint decisions
+The builder must decide:
+
+number of questions
+
+session duration
+
+topic quotas
+
+subtopic quotas
+
+family quotas
+
+difficulty mix
+
+timing strictness
+
+feedback policy
+
+hint policy
+
+adaptation policy
+
+ordering pattern
+
+report emphasis
+
+4.2 Example blueprint rules
+For class_test_last_minute_likely
+question_count: 10–15
+
+duration: 8–12 min
+
+difficulty: mostly easy/medium
+
+family mix: recall + procedure + discrimination
+
+feedback: end or brief
+
+adaptation: light
+
+report emphasis: danger zones, likely weaknesses, last-minute advice
+
+For midterm_targeted_repair
+question_count: 15–20
+
+duration: 12–18 min
+
+difficulty: medium weighted
+
+family mix: comparison + application + repair checks
+
+feedback: adaptive
+
+adaptation: moderate/high
+
+report emphasis: weak subtopics, repair confirmation, next rescue plan
+
+For mock_exam_full_simulation
+question_count: 20–40 depending on length
+
+duration: exam-like
+
+difficulty: balanced to hard
+
+family mix: realistic exam spread
+
+feedback: end only
+
+adaptation: none
+
+report emphasis: readiness, pacing, stamina, exam danger profile
+
+5. Family quota engine
+The blueprint should explicitly calculate quotas.
+
+5.1 Example family quota output
+For a 15-question class test prep:
+
+direct recall: 4
+
+procedure execution: 5
+
+recognition/discrimination: 3
+
+comparison/contrast: 2
+
+trap resistance: 1
+
+For an 18-question midterm repair:
+
+direct recall: 3
+
+comparison/contrast: 4
+
+concept application: 5
+
+procedure execution: 3
+
+error spotting: 2
+
+repair confirm item: 1
+
+For a 25-question mock simulation:
+
+direct recall: 4
+
+concept application: 7
+
+multi-step reasoning: 7
+
+scenario-based problem solving: 4
+
+trap resistance: 3
+
+This is how the engine stops being random.
+
+6. Difficulty curve logic
+The system should not only decide how many hard questions exist.
+It should decide where they appear.
+
+6.1 Difficulty curve patterns
+Curve A — Gentle Ramp
+Use for:
+
+confidence mode
+
+class test prep
+
+weaker students
+
+Pattern:
+easy → medium → medium → one challenge → stabilizing finish
+
+Curve B — Balanced Mixed Curve
+Use for:
+
+midterm
+
+general prep
+
+Pattern:
+easy → medium → hard → medium → hard → medium
+
+Curve C — Real Exam Curve
+Use for:
+
+mock
+
+full simulation
+
+Pattern:
+direct/easier opening → standard body → hard/tricky middle → mixed finish
+
+Curve D — Repair Curve
+Use for:
+
+weakness repair
+
+Pattern:
+diagnostic item → slightly easier target item → standard target item → confirm item
+
+Curve E — Pressure Curve
+Use for:
+
+pressure mode
+
+Pattern:
+moderate start → faster tempo → shorter windows → high-focus finish
+
+7. Backend logic flow
+Now we move from product logic to system behavior.
+
+7.1 Create session request flow
+Step 1
+Client sends request:
+
+test type
+
+subject
+
+topics
+
+time left
+
+mode
+
+preferences
+
+Step 2
+Backend validates:
+
+subject exists
+
+topics belong to subject
+
+mode valid
+
+session length valid
+
+Step 3
+Backend resolves scope:
+
+expand topic tree
+
+collect subtopics
+
+collect micro-skills
+
+collect available candidate questions
+
+Step 4
+Backend loads scoped student profile:
+
+performance in selected scope
+
+speed profile
+
+recent mistakes
+
+confidence indicators
+
+Step 5
+Backend computes:
+
+urgency band
+
+scope complexity
+
+student stability
+
+archetype
+
+Step 6
+Blueprint builder constructs session blueprint.
+
+Step 7
+Question ranker scores candidates.
+
+Step 8
+Question assembler builds ordered session.
+
+Step 9
+Session stored in DB with draft/ready state.
+
+Step 10
+Preview returned to client.
+
+7.2 Start session flow
+Step 1
+Client hits start.
+
+Step 2
+Backend transitions session state:
+
+Ready -> Running
+
+Step 3
+Backend returns:
+
+first question
+
+timer config
+
+UI mode flags
+
+question counter
+
+feedback policy flags
+
+7.3 Submit answer flow
+Step 1
+Client sends:
+
+question id
+
+answer
+
+response time
+
+optional confidence signal
+
+Step 2
+Backend evaluates correctness.
+
+Step 3
+Backend logs event:
+
+correctness
+
+time
+
+misconception hit
+
+family
+
+difficulty
+
+answer choice
+
+Step 4
+Runtime evaluator checks triggers:
+
+same misconception streak
+
+slow-accuracy pattern
+
+confidence drop
+
+careless pattern
+
+Step 5
+If adaptation policy permits:
+
+update remaining queue
+
+inject repair/stabilizer/check question
+
+Step 6
+Return:
+
+correctness
+
+feedback payload if allowed
+
+next question
+
+progress state
+
+7.4 Complete session flow
+Step 1
+Last question submitted or timer ends.
+
+Step 2
+Backend calculates:
+
+raw score
+
+topic-level score
+
+family-level score
+
+speed stats
+
+misconception summary
+
+readiness score
+
+Step 3
+Outcome interpreter builds:
+
+readiness label
+
+mistake profile
+
+danger zones
+
+next action recommendation
+
+Step 4
+Session state:
+
+Running -> Completed -> Interpreting -> Results_Shown
+
+Step 5
+Results payload sent.
+
+8. Runtime event model
+Every question interaction should create structured events.
+
+8.1 Event object example
+{
+  "session_id": "sess_302",
+  "question_id": "Q214",
+  "order_index": 6,
+  "family": "comparison_contrast",
+  "topic_id": "photosynthesis",
+  "subtopic_id": "photosynthesis_vs_respiration",
+  "response_time_ms": 42200,
+  "answer_status": "incorrect",
+  "selected_option": "B",
+  "correct_option": "C",
+  "misconception_tags_hit": ["confuses_input_output_processes"],
+  "confidence_signal": "low",
+  "runtime_flags": ["same_pattern_error_2"]
+}
+This gives the system memory of how the session unfolded.
+
+9. Adaptation logic in detail
+9.1 Same misconception streak logic
+If:
+
+2 or 3 wrong answers in same misconception family
+
+adaptation policy >= moderate
+
+Then:
+
+mark misconception as active
+
+promote targeted recheck or corrective question into next 2 slots
+
+optionally display a short correction card
+
+Example:
+Student keeps confusing:
+
+respiration
+
+photosynthesis
+
+System inserts:
+
+a clean comparison item
+
+then a short application item
+
+9.2 Confidence stabilization logic
+Signals:
+
+long pause
+
+rapid guess after hard question
+
+repeated wrong answers
+
+optional self-reported low confidence
+
+Then:
+
+insert confidence-stabilizer question
+
+avoid immediate stacking of another harsh trap
+
+keep student moving
+
+This matters especially near a real test.
+
+9.3 Speed weakness logic
+If:
+
+correct answers but too slow
+
+relevant in timing-heavy mode
+
+Then:
+
+mark speed weakness
+
+include familiar but quicker item later
+
+result page highlights speed risk separately from knowledge risk
+
+9.4 Overperformance logic
+If:
+
+accuracy very high
+
+time very good
+
+difficulty too easy relative to profile
+
+Then:
+
+increase upcoming item complexity
+
+or insert one stretch item
+
+especially in mock or elite style prep
+
+10. UI wireframe structure
+Now let’s define the user-facing structure.
+
+I’ll describe each screen as a practical wireframe.
+
+10.1 Screen 1 — Landing
+Purpose
+Introduce the feature and make the promise clear.
+
+Layout
+Top:
+
+page title: Prepare for My Test
+
+short explanation:
+“Tell us what test is coming and we’ll tailor your practice.”
+
+Middle:
+
+illustrated card or prominent CTA
+
+maybe small chips showing:
+
+likely questions
+
+timed practice
+
+weak spot repair
+
+readiness check
+
+Bottom:
+
+CTA button: Start
+
+secondary: Resume last session if applicable
+
+10.2 Screen 2 — Test Type Selection
+Purpose
+Capture assessment context.
+
+Layout
+Header:
+
+“What are you preparing for?”
+
+Grid of large cards:
+
+Class Test
+
+Quiz
+
+Midterm
+
+Mock Exam
+
+End of Term Exam
+
+Custom Test Mix
+
+Each card can have a small descriptor.
+
+Example:
+
+Class Test — Narrow, likely classroom topics
+
+Mock Exam — Real exam-style practice
+
+Bottom:
+
+Continue button
+
+10.3 Screen 3 — Subject Selection
+Layout
+Header:
+
+“Which subject is this for?”
+
+Selectable subject cards or list.
+
+Bottom:
+
+Continue
+
+10.4 Screen 4 — Topic Selection
+Layout
+Header:
+
+“Which topics are likely to be covered?”
+
+Components:
+
+topic chip list
+
+expandable tree into subtopics
+
+“select all in this unit”
+
+“recent topics”
+
+“my weak topics”
+
+search bar if content large
+
+Bottom sticky area:
+
+selected count
+
+Continue
+
+Important:
+This screen should show not just topic names but possibly progress indicators if the student already has history.
+
+10.5 Screen 5 — Timing + Intent
+Layout
+Section A:
+“When is the test?”
+
+Today
+
+Tomorrow
+
+In 2–3 days
+
+This week
+
+Next week
+
+Pick date
+
+Section B:
+“What do you want from this session?”
+
+Likely Questions
+
+Real Test Simulation
+
+Fix My Weak Spots
+
+Quick Revision
+
+Build My Confidence
+
+Put Me Under Pressure
+
+Teach Me Through the Test
+
+Show Me If I’m Ready
+
+Bottom:
+
+Continue
+
+10.6 Screen 6 — Preferences
+Layout
+Header:
+“Fine-tune your session”
+
+Controls:
+
+Session length
+
+Difficulty preference
+
+Timer setting
+
+Hint preference
+
+Possible presets:
+
+Quick Burst
+
+Standard Prep
+
+Full Session
+
+Bottom:
+
+Generate Session
+
+10.7 Screen 7 — Session Preview
+Purpose
+Make the session feel intelligently composed.
+
+Layout
+Large summary card:
+
+Test: Midterm
+
+Subject: Integrated Science
+
+Topics: Respiration, Excretion, Photosynthesis
+
+Mode: Fix My Weak Spots
+
+Duration: 15 min
+
+Questions: 18
+
+Pressure: Medium
+
+Feedback: Adaptive
+
+Secondary details:
+
+Focus areas highlighted
+
+“We’ll concentrate more on the areas you struggle with.”
+
+Buttons:
+
+Start Session
+
+Adjust Settings
+
+This screen is important for premium feel.
+
+10.8 Screen 8 — Session Runtime
+This screen changes by mode.
+
+Runtime base layout
+Top bar:
+
+question number
+
+timer
+
+pause button
+
+Upper block:
+
+topic / subtopic chip
+
+optional mode tag
+
+Middle:
+
+question stem
+
+any diagram or prompt support
+
+Answer section:
+
+options / input / interaction area
+
+Bottom:
+
+submit button
+
+optional hint button depending on policy
+
+Progress:
+
+slim progress bar
+
+Mode-specific runtime changes
+Simulation mode
+cleaner, more serious visuals
+
+no hint button
+
+minimal encouragement
+
+end-only review
+
+Repair mode
+“Let’s fix this” tone
+
+explanation cards allowed
+
+visible weak-area framing
+
+Pressure mode
+stronger timer visual emphasis
+
+faster transitions
+
+sharper UI
+
+Confidence mode
+calmer color/animation style
+
+less punishing feedback language
+
+supportive prompts
+
+10.9 Screen 9 — Results
+Layout
+Top summary card:
+
+readiness score
+
+status label
+
+raw score
+
+time performance
+
+Middle section 1:
+How ready are you for this test?
+
+Middle section 2:
+Topic breakdown
+
+strong
+
+stable
+
+fragile
+
+weak
+
+Middle section 3:
+What is hurting you most
+
+mistake profile bullets
+
+Middle section 4:
+Danger zones before the real test
+
+2–4 items
+
+Bottom:
+What to do next
+
+recommended next session CTA
+
+Buttons:
+
+Start recommended session
+
+Review mistakes
+
+Retry similar session
+
+11. Component-by-component screen spec
+Now we define the reusable UI components.
+
+11.1 TestTypeCard
+Fields:
+
+title
+
+short description
+
+icon
+
+selected state
+
+Used on:
+
+test type screen
+
+11.2 TopicPickerTree
+Fields:
+
+topic name
+
+nested subtopics
+
+selected state
+
+optional progress indicator
+
+Used on:
+
+topic selection screen
+
+11.3 IntentSelector
+Options:
+
+likely questions
+
+simulation
+
+weak spot repair
+
+etc.
+
+Used on:
+
+intent screen
+
+11.4 SessionPreviewCard
+Displays:
+
+archetype summary
+
+question count
+
+duration
+
+pressure
+
+feedback policy
+
+focus note
+
+Used on:
+
+preview screen
+
+11.5 QuestionRenderer
+Must support:
+
+MCQ
+
+short answer
+
+multi-step
+
+diagram-based question
+
+ordering / matching if needed later
+
+Used on:
+
+runtime screen
+
+11.6 FeedbackCard
+Variants:
+
+correct
+
+incorrect
+
+corrective
+
+stabilizing
+
+quick tip
+
+Used only when feedback policy allows.
+
+11.7 ReadinessMeter
+Displays:
+
+readiness score
+
+readiness label
+
+visual gauge
+
+Used on:
+
+result screen
+
+11.8 TopicBreakdownPanel
+Displays per-topic status:
+
+strong
+
+stable
+
+fragile
+
+weak
+
+Used on:
+
+result screen
+
+11.9 DangerZoneList
+Displays:
+
+high-risk subtopics
+
+timing issues
+
+misconception clusters
+
+Used on:
+
+result screen
+
+11.10 NextStepCard
+Displays:
+
+recommended follow-up session
+
+why it is recommended
+
+CTA to start
+
+Used on:
+
+result screen
+
+12. Example end-to-end UI flow
+Let’s make one concrete.
+
+Example flow
+Student says:
+
+Midterm
+
+Integrated Science
+
+Respiration + Photosynthesis + Excretion
+
+Test in 4 days
+
+Fix my weak spots
+
+System returns preview:
+
+Your session
+
+Midterm prep
+
+18 questions
+
+15 minutes
+
+Focus: fragile comparison and process questions
+
+Adaptive repair enabled
+
+Feedback: limited and corrective when needed
+
+During session:
+
+student misses 2 respiration/photosynthesis comparison items
+
+system flags misconception trend
+
+injects a cleaner comparison question
+
+later injects a confirmatory application question
+
+Result page:
+
+readiness 66%
+
+status: Partially Ready
+
+strongest area: definitions
+
+weakest area: process comparison
+
+danger zone: mixing up inputs and outputs
+
+next action: 8-minute comparison repair drill tomorrow
+
+That is the exact feeling we want.
+
+13. Engineering notes
+A few important implementation choices:
+
+13.1 Store blueprint snapshot
+Once session starts, store the blueprint as a snapshot.
+Do not recompute it from scratch later unless adaptation explicitly changes it.
+
+13.2 Adaptation should be event-driven
+Do not continuously rerun huge logic.
+Trigger checks after each answer.
+
+13.3 Separate question ranking from question assembly
+Ranking picks good candidates.
+Assembly creates a good session.
+These should not be mixed.
+
+13.4 Keep simulation mode strict
+If simulation mode adapts too much, it stops being a simulation.
+
+13.5 Scope profile should be cached
+Student scoped performance for common topic groups should be cached where possible.
+
+14. Content operations requirements
+Your content team will need to support this engine.
+
+They must define:
+
+topic trees
+
+subtopic maps
+
+micro-skills
+
+misconception tags
+
+question family labels
+
+teacher-style tags where possible
+
+realism levels
+
+repair variants
+
+confidence-stabilizer items
+
+Without this, the engine cannot be premium.
+
+15. What to build next
+The next layer after this should be one of these:
+
+Option A
+A full database schema + backend endpoint contract document
+
+Option B
+A full question tagging framework for the content team
+
+Option C
+A full runtime logic/state machine specification with pseudocode
+
+Option D
+A full UI/UX screen spec with exact field-by-field behavior
+
+The strongest next move is probably the question tagging framework, because this entire feature depends heavily on structured content.
+
+
+
+

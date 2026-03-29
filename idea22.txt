@@ -1,0 +1,6511 @@
+
+
+
+
+We need question intelligence across every feature that displays a question , for instance we need the system to be able to pick up is this a definition type of question , is this a key concept , is this a proof of formula , is this a worked example , to intelligently classify questions that applies to past questions , as well as topic tests , quizzes and all kinds of tests , every where a question appears , so currently for past questions is mostly by year or by topic but we need to also know by type , classify it by definition, worked example, key concept , explanation , we need to build this into the very core of the db so for every question that goes through the db we have this intelligence on the question 
+
+I’m mapping this as a core data-model problem, not just a tagging feature. One thing I’m resolving while I build it out: “definition,” “worked example,” and “key concept” should not compete as one label — they belong to different intelligence layers.
+
+Thought for 26s
+Yes — this should live in the core question model itself, not as a loose filter bolted onto past questions.
+
+The biggest design mistake would be to store only one question_type field.
+
+Because a question can be more than one thing at once:
+
+it can be a definition question
+
+based on a key concept
+
+require a worked-example style method
+
+test application
+
+belong to algebra
+
+target a specific subskill
+
+expose a specific misconception
+
+So what you need is not a single type label.
+
+You need a Question Intelligence Layer inside the database.
+
+What this should become
+Every question in the system should carry a structured intelligence profile.
+
+Not just:
+
+year
+
+topic
+
+subject
+
+difficulty
+
+But also:
+
+what kind of knowledge it is testing
+
+what mental operation it demands
+
+what instructional role it plays
+
+what solving pattern it belongs to
+
+what misconception it is likely to expose
+
+what family of questions it belongs to
+
+That means every question everywhere — past questions, topic tests, quizzes, drills, mocks, mental mode, memory mode, elite mode, wrong-answer analysis — all pull from the same enriched intelligence object.
+
+The right way to think about it
+Do not model this as:
+
+question_type = definition
+
+That is too shallow.
+
+Model it as a multi-axis classification system.
+
+A question should be classified across several dimensions.
+
+The 8 core intelligence axes
+1. Knowledge Role
+This answers: what kind of content is this question centered on?
+
+Examples:
+
+Definition
+
+Key concept
+
+Principle
+
+Rule
+
+Formula recall
+
+Formula derivation / proof
+
+Worked example pattern
+
+Procedure / method
+
+Explanation
+
+Interpretation
+
+Comparison
+
+Classification
+
+Cause and effect
+
+Exception / edge case
+
+Application scenario
+
+Real-world use
+
+Graph / table reading
+
+Diagram interpretation
+
+This is where your examples like definition, key concept, proof of formula, worked example, explanation belong.
+
+2. Cognitive Demand
+This answers: what kind of thinking does the student have to do?
+
+Examples:
+
+Recognition
+
+Recall
+
+Comprehension
+
+Application
+
+Transfer
+
+Analysis
+
+Inference
+
+Synthesis
+
+Evaluation
+
+Justification
+
+A definition question may be simple recall.
+A worked example question may be application.
+A proof question may be reasoning plus justification.
+
+3. Solve Pattern
+This answers: how is the question typically solved?
+
+Examples:
+
+Direct retrieval
+
+Step-by-step computation
+
+Substitution into formula
+
+Rearrangement
+
+Elimination
+
+Pattern spotting
+
+Concept matching
+
+Diagram inspection
+
+Rule selection
+
+Multi-step reasoning
+
+Deduction from conditions
+
+Estimation
+
+Unit conversion
+
+Proof chain
+
+Error identification
+
+This is powerful because two questions can look different on the surface but belong to the same solve pattern.
+
+That is how you build real question intelligence.
+
+4. Pedagogic Function
+This answers: what role does this question play in learning?
+
+Examples:
+
+Teaches core idea
+
+Reinforces memory
+
+Checks foundational understanding
+
+Diagnoses misconception
+
+Builds speed
+
+Tests transfer
+
+Deepens conceptual clarity
+
+Scaffolds a harder idea
+
+Bridges concept to method
+
+Serves as exam pattern familiarization
+
+This becomes extremely useful for your app modes.
+
+For example:
+
+Memory Mode wants recall-heavy and reinforcement-heavy questions
+
+Knowledge Gap Mode wants diagnostic and concept-foundation questions
+
+Elite Mode wants deep-transfer and multi-step reasoning questions
+
+Wrong Answer Intelligence wants misconception-diagnostic questions
+
+5. Content Grain
+This answers: what exact level of curriculum knowledge is being tested?
+
+Examples:
+
+Subject
+
+Topic
+
+Subtopic
+
+Concept
+
+Micro-concept
+
+Skill
+
+Subskill
+
+Formula
+
+Rule
+
+Vocabulary term
+
+Example for Mathematics:
+
+Subject: Mathematics
+
+Topic: Algebra
+
+Subtopic: Linear Equations
+
+Concept: Solving for unknown
+
+Subskill: Collect like terms
+
+Formula: ax + b = c
+
+This grain is what lets the system say:
+“This is not just algebra. This is a worked-example-style application question on collecting like terms in one-variable linear equations.”
+
+6. Question Family
+This answers: which recurring pattern group does this question belong to?
+
+Examples:
+
+Same question family appears across years
+
+Same concept but different numbers
+
+Same trick with different wording
+
+Same misconception trap
+
+Same inverse-appearance cluster
+
+Same structure but different context
+
+This is essential for past-question intelligence.
+
+Instead of only saying:
+“This question came in 2018, 2020, and 2024.”
+
+You can say:
+“This belongs to the ‘definition-to-example recognition’ family.”
+or
+“This belongs to the ‘substitute-and-solve linear equation’ family.”
+
+That is much stronger.
+
+7. Misconception / Error Exposure
+This answers: what wrong thinking is this question likely to catch?
+
+Examples:
+
+Confusing term with definition
+
+Memorized formula without understanding conditions
+
+Sign errors
+
+Wrong unit conversion
+
+Mixing up related concepts
+
+Applying wrong theorem
+
+Failing to identify what is asked
+
+Skipping hidden condition
+
+Using surface clues instead of actual principle
+
+This should be built in at question level, because later when a student gets it wrong, your system can connect the mistake to a known error pattern.
+
+8. Evidence and Confidence
+This answers: how certain is the system about the classification?
+
+Because not all classifications will be equally obvious.
+
+Store:
+
+system_classified = true/false
+
+human_verified = true/false
+
+confidence_score
+
+evidence_notes
+
+version
+
+reviewer_id
+
+last_reviewed_at
+
+This is important because question intelligence should be treated like structured knowledge, not magic guessing.
+
+The core idea: use a Question Intelligence Profile
+Every question should have a nested intelligence object like this:
+
+{
+  "knowledge_role": ["definition", "key_concept"],
+  "cognitive_demand": ["recall", "comprehension"],
+  "solve_pattern": ["direct_retrieval", "concept_matching"],
+  "pedagogic_function": ["foundation_check", "memory_reinforcement"],
+  "content_grain": {
+    "subject": "Integrated Science",
+    "topic": "Living Things",
+    "subtopic": "Cells",
+    "concept": "Cell definition",
+    "subskill": "Identify core biological definition"
+  },
+  "question_family_id": "bio_cells_definition_core_01",
+  "misconceptions": [
+    "confuses cell with tissue",
+    "recalls partial definition only"
+  ],
+  "confidence_score": 0.93,
+  "classification_source": "model+rules",
+  "human_verified": false
+}
+That is the kind of thing that should sit behind every question.
+
+Why this must be in the DB core
+Because once this intelligence is in the database, every feature becomes smarter automatically.
+
+Past Questions
+No longer just:
+
+by year
+
+by topic
+
+Now also:
+
+by definition questions
+
+by formula-proof questions
+
+by worked-example families
+
+by key-concept questions
+
+by misconception-diagnostic questions
+
+by multi-step reasoning questions
+
+Topic Tests
+You can generate balanced tests like:
+
+20% definition
+
+30% key concept
+
+30% worked examples
+
+20% explanation/application
+
+Quiz Builder
+Teachers can choose:
+
+only proof-style questions
+
+only worked-example questions
+
+only explanation-heavy questions
+
+only concept-foundation questions
+
+Wrong Answer Engine
+When a student misses 5 questions, you can say:
+
+“You are not failing algebra generally. You are specifically weak in questions that require formula selection before substitution.”
+
+Memory Mode
+The system can pull:
+
+definition
+
+core fact
+
+key concept
+
+short explanation recall
+
+Elite Mode
+The system can pull:
+
+non-obvious application
+
+multi-step reasoning
+
+exception handling
+
+concept transfer
+
+Teach Mode
+The system can arrange learning flow like:
+
+Definition
+
+Key concept
+
+Explanation
+
+Worked example
+
+Guided practice
+
+Mixed application
+
+Trap question
+
+Exam-style question
+
+This is where the real power comes from.
+
+The most important design rule
+Do not force all intelligence into one flat label.
+
+Instead, separate:
+
+what it is about
+
+what kind of thinking it needs
+
+how it is solved
+
+what learning role it plays
+
+what misconception it targets
+
+That separation is what makes the system scalable.
+
+Proposed database structure
+You can implement this in a relational way or hybrid relational + JSON.
+
+The best practical model is:
+
+stable reference tables for vocabularies
+
+join tables for multi-label assignments
+
+JSON snapshot for fast retrieval / caching
+
+Main question table
+questions
+---------
+id
+subject_id
+topic_id
+subtopic_id
+source_type            -- past_question, quiz, topic_test, mock, custom
+source_ref
+year
+exam_body
+question_text
+answer_text
+explanation_text
+question_format        -- mcq, short_answer, essay, numeric
+difficulty_level
+status
+created_at
+updated_at
+Question intelligence master table
+question_intelligence
+---------------------
+id
+question_id
+primary_knowledge_role_id
+primary_cognitive_demand_id
+primary_solve_pattern_id
+question_family_id
+classification_version
+classification_source
+confidence_score
+human_verified
+review_status
+reviewer_id
+reviewed_at
+notes
+created_at
+updated_at
+This stores the main snapshot.
+
+Multi-label join tables
+Because one question can have multiple labels.
+
+question_knowledge_roles
+------------------------
+question_id
+knowledge_role_id
+weight
+is_primary
+confidence_score
+question_cognitive_demands
+--------------------------
+question_id
+cognitive_demand_id
+weight
+is_primary
+confidence_score
+question_solve_patterns
+-----------------------
+question_id
+solve_pattern_id
+weight
+is_primary
+confidence_score
+question_pedagogic_functions
+----------------------------
+question_id
+pedagogic_function_id
+weight
+is_primary
+confidence_score
+question_misconceptions
+-----------------------
+question_id
+misconception_id
+likelihood_score
+question_concepts
+-----------------
+question_id
+concept_id
+strength_score
+Vocabulary tables
+knowledge_roles
+---------------
+id
+code
+name
+description
+Examples:
+
+definition
+
+key_concept
+
+explanation
+
+worked_example
+
+formula_recall
+
+formula_proof
+
+procedure
+
+interpretation
+
+application_scenario
+
+cognitive_demands
+-----------------
+id
+code
+name
+description
+Examples:
+
+recall
+
+comprehension
+
+application
+
+analysis
+
+inference
+
+justification
+
+solve_patterns
+--------------
+id
+code
+name
+description
+Examples:
+
+direct_retrieval
+
+substitution
+
+rearrangement
+
+multi_step_computation
+
+proof_chain
+
+pattern_identification
+
+pedagogic_functions
+-------------------
+id
+code
+name
+description
+Examples:
+
+foundation_check
+
+memory_reinforcement
+
+misconception_diagnosis
+
+exam_pattern_training
+
+concept_deepening
+
+Question family tables
+question_families
+-----------------
+id
+family_code
+family_name
+subject_id
+topic_id
+subtopic_id
+description
+canonical_pattern
+question_family_members
+-----------------------
+question_family_id
+question_id
+similarity_score
+role_in_family
+This supports recurring patterns across years.
+
+Recommended classification ontology
+Here is a practical starter taxonomy.
+
+Knowledge Role taxonomy
+Definition
+
+Term identification
+
+Key concept
+
+Principle
+
+Rule
+
+Law
+
+Formula recall
+
+Formula meaning
+
+Formula derivation / proof
+
+Theorem use
+
+Worked example pattern
+
+Procedure / steps
+
+Explanation
+
+Interpretation
+
+Comparison / contrast
+
+Classification
+
+Cause and effect
+
+Application scenario
+
+Exception / limitation
+
+Error spotting
+
+Diagram / graph meaning
+
+Cognitive Demand taxonomy
+Recognition
+
+Recall
+
+Comprehension
+
+Application
+
+Multi-step application
+
+Analysis
+
+Inference
+
+Generalization
+
+Evaluation
+
+Justification / proof
+
+Solve Pattern taxonomy
+Direct memory retrieval
+
+Match term to meaning
+
+Choose correct principle
+
+Select formula
+
+Substitute values
+
+Rearrange equation
+
+Simplify expression
+
+Follow worked-example pattern
+
+Read graph / table
+
+Infer from diagram
+
+Compare options
+
+Eliminate distractors
+
+Build logical chain
+
+Justified proof
+
+Pedagogic Function taxonomy
+Concept introduction
+
+Concept reinforcement
+
+Foundation check
+
+Memory check
+
+Speed drill
+
+Misconception exposure
+
+Bridge from concept to method
+
+Exam conditioning
+
+Deep reasoning challenge
+
+Transfer challenge
+
+How classification should work in practice
+You need a pipeline.
+
+Stage 1: Ingestion
+Any question entering the system is parsed and stored.
+
+Sources:
+
+past papers
+
+teacher-created questions
+
+topic bank
+
+quiz generator
+
+imported questions
+
+AI-generated questions
+
+Stage 2: Base tagging
+Basic known metadata is attached:
+
+subject
+
+topic
+
+subtopic
+
+question format
+
+marks
+
+year
+
+exam body
+
+Stage 3: Intelligence classification
+A classifier assigns:
+
+knowledge role
+
+cognitive demand
+
+solve pattern
+
+pedagogic function
+
+likely misconceptions
+
+family candidate
+
+This should be done using a hybrid approach:
+
+rules
+
+ontology matching
+
+pattern detection
+
+LLM classification
+
+optional human review
+
+Not just AI alone.
+
+Why hybrid is better than pure AI
+Because some question types are obvious from structure.
+
+Examples:
+
+Definition indicators
+“What is…”
+
+“Define…”
+
+“Meaning of…”
+
+“Which of the following best describes…”
+
+Formula recall indicators
+“State the formula for…”
+
+“Which formula is used to…”
+
+Worked-example indicators
+numeric setup
+
+stepwise calculation expectation
+
+variable substitution
+
+familiar solved pattern structure
+
+Explanation indicators
+“Explain why…”
+
+“Give reason…”
+
+“Why does…”
+
+“Account for…”
+
+Proof / justification indicators
+“Prove that…”
+
+“Show that…”
+
+“Demonstrate that…”
+
+“Justify…”
+
+Rules help a lot here.
+
+Then the AI handles ambiguity.
+
+Suggested classification pipeline logic
+Layer A: Rule engine
+Fast deterministic heuristics.
+
+Example:
+
+If stem starts with "Define" -> strong signal for definition
+If stem contains "Explain why" -> explanation + justification
+If stem contains "Show that" -> proof / derivation
+If numeric values + formula symbol + unknown requested -> worked example / application
+If asks for "state two reasons" -> explanation / cause-effect
+Layer B: Semantic classifier
+LLM or ML classifier looks at:
+
+stem
+
+answer
+
+explanation
+
+subject
+
+topic
+
+options
+
+It returns structured labels with confidence.
+
+Layer C: Resolver
+This merges rule outputs and model outputs.
+
+Example:
+
+rules say definition = 0.92
+
+model says definition = 0.81
+
+final label = definition
+
+Or:
+
+rules say worked_example = 0.66
+
+model says application = 0.88
+
+final result = both, with application primary
+
+Layer D: Review queue
+Low-confidence cases go to manual review.
+
+Important: store primary and secondary labels
+For example:
+
+A math question may be:
+
+primary knowledge role: worked_example
+
+secondary knowledge role: formula_use
+
+primary cognitive demand: application
+
+secondary cognitive demand: recall
+
+primary solve pattern: substitution
+
+secondary solve pattern: rearrangement
+
+This is much more realistic.
+
+Example classifications
+Example 1
+Question: Define photosynthesis.
+
+Classification:
+
+Knowledge Role: Definition
+
+Cognitive Demand: Recall
+
+Solve Pattern: Direct retrieval
+
+Pedagogic Function: Memory check
+
+Concept: Photosynthesis definition
+
+Misconception: Confusing process with respiration
+
+Example 2
+Question: State the formula for the area of a circle.
+
+Classification:
+
+Knowledge Role: Formula recall
+
+Cognitive Demand: Recall
+
+Solve Pattern: Direct retrieval
+
+Pedagogic Function: Foundation check
+
+Example 3
+Question: Calculate the area of a circle of radius 7 cm.
+
+Classification:
+
+Knowledge Role: Worked example, formula use
+
+Cognitive Demand: Application
+
+Solve Pattern: Formula selection + substitution
+
+Pedagogic Function: Concept-to-method bridge
+
+Example 4
+Question: Explain why metals are good conductors of electricity.
+
+Classification:
+
+Knowledge Role: Explanation, key concept
+
+Cognitive Demand: Comprehension + causal reasoning
+
+Solve Pattern: Concept-based justification
+
+Pedagogic Function: Concept deepening
+
+Example 5
+Question: Prove that the angles in a triangle sum to 180°.
+
+Classification:
+
+Knowledge Role: Proof / derivation
+
+Cognitive Demand: Justification + reasoning
+
+Solve Pattern: Proof chain
+
+Pedagogic Function: Deep conceptual understanding
+
+How this affects search and retrieval
+Once this is in place, your query engine becomes much more powerful.
+
+Instead of only:
+
+fetch past questions in algebra
+
+You can do:
+
+fetch algebra questions that are definition-heavy
+
+fetch photosynthesis key-concept questions
+
+fetch geometry proof questions
+
+fetch worked-example questions on linear equations
+
+fetch high-misconception questions on fractions
+
+fetch foundational questions before application questions
+
+fetch only explanation questions for revision
+
+fetch question families related to this wrong answer
+
+This is where the product starts to feel intelligent.
+
+You should also build “question pathing”
+Because once every question is classified, you can arrange them intelligently.
+
+For a concept, the ideal sequence may be:
+
+Definition
+
+Core idea
+
+Key distinction
+
+Simple worked example
+
+Guided application
+
+Exam-style application
+
+Trap / misconception question
+
+Mixed transfer question
+
+That sequence can be auto-built because the DB knows the role of each question.
+
+Retrofitting old questions
+You already have lots of questions by year and topic.
+
+So you need a migration strategy.
+
+Phase 1: add new schema
+Do not break current system.
+Add the intelligence tables alongside existing question tables.
+
+Phase 2: backfill legacy questions
+Run batch classification across existing question bank.
+
+Start with:
+
+subject
+
+topic
+
+subtopic
+
+knowledge role
+
+cognitive demand
+
+solve pattern
+
+Then later:
+
+pedagogic function
+
+question family
+
+misconceptions
+
+Phase 3: review high-value subjects first
+Prioritize:
+
+Mathematics
+
+Science
+
+English
+
+Because they benefit most from structured intelligence.
+
+Phase 4: make all new questions intelligence-aware by default
+Any new question entering the bank must pass through the classifier before it becomes active.
+
+That is how you make it core infrastructure.
+
+Minimum viable version of this intelligence system
+If you want to start lean but strong, start with these 5 fields:
+
+knowledge_role
+
+cognitive_demand
+
+solve_pattern
+
+concept_id
+
+question_family_id
+
+That alone already changes everything.
+
+Then later add:
+
+pedagogic_function
+
+misconceptions
+
+confidence / review
+
+learning-sequence position
+
+Best practice: don’t bury this inside UI logic
+This should not be frontend tagging.
+
+This should be a backend/domain layer capability.
+
+Meaning:
+
+classification happens in ingestion pipeline
+
+stored in database
+
+retrievable through API
+
+reusable by every feature
+
+visible in admin tools
+
+available in analytics
+
+available in generators and recommenders
+
+The UI should only consume it.
+
+Recommended API shape
+{
+  "question_id": "q_10291",
+  "subject": "Mathematics",
+  "topic": "Algebra",
+  "subtopic": "Linear Equations",
+  "question_text": "...",
+  "intelligence": {
+    "knowledge_roles": [
+      { "code": "worked_example", "confidence": 0.94, "primary": true },
+      { "code": "formula_use", "confidence": 0.63, "primary": false }
+    ],
+    "cognitive_demands": [
+      { "code": "application", "confidence": 0.91, "primary": true }
+    ],
+    "solve_patterns": [
+      { "code": "substitution", "confidence": 0.89, "primary": true }
+    ],
+    "pedagogic_functions": [
+      { "code": "concept_to_method_bridge", "confidence": 0.77 }
+    ],
+    "concepts": [
+      { "id": "alg_linear_substitution", "name": "Substitution in linear equations" }
+    ],
+    "family_id": "alg_linear_substitute_01",
+    "misconceptions": [
+      { "code": "wrong_rearrangement", "likelihood": 0.56 }
+    ]
+  }
+}
+This opens up major features later
+Once this exists, you can build:
+
+question-type filters
+
+balanced paper generators
+
+concept ladders
+
+misconception analytics
+
+auto-remediation flows
+
+smarter review plans
+
+better teach mode
+
+family-based past-question exploration
+
+question similarity and inverse appearance logic
+
+dynamic “what kind of question are you weak at?” dashboards
+
+This is foundational.
+
+My strongest recommendation
+Create a dedicated subsystem called:
+
+Question Intelligence Engine
+It should own:
+
+taxonomy
+
+classification rules
+
+model inference
+
+review workflow
+
+confidence scoring
+
+family clustering
+
+misconception mapping
+
+DB writes
+
+And every question source in the platform must pass through it.
+
+That way the intelligence is universal, not feature-specific.
+
+The clean architecture
+Core modules
+Question Taxonomy Registry
+Master list of valid knowledge roles, cognitive demands, solve patterns, pedagogic functions.
+
+Question Classifier
+Assigns labels to new or edited questions.
+
+Question Family Engine
+Groups structurally similar questions.
+
+Misconception Mapper
+Associates questions with likely error patterns.
+
+Question Intelligence Store
+Saves structured intelligence to DB.
+
+Question Retrieval Service
+Lets every feature query by intelligence.
+
+Review Console
+For human validation and correction.
+
+In one sentence
+What you need is not “question type tagging.”
+
+What you need is a core Question Intelligence architecture where every question carries a multi-axis intelligence profile that can power classification, retrieval, analytics, teaching flow, generation, and remediation across the entire app.
+
+If I were defining the first implementation package, I would do it like this
+Package 1 — ontology and schema
+Define the taxonomy and create the tables.
+
+Package 2 — classification engine
+Build rule-based + AI-assisted classifier.
+
+Package 3 — legacy backfill
+Classify the whole question bank.
+
+Package 4 — retrieval upgrades
+Expose filters and APIs by intelligence type.
+
+Package 5 — feature integration
+Use it in past questions, quizzes, teach mode, wrong answer mode, memory mode, and test builder.
+
+I can turn this next into a full implementation document with:
+
+exact database schema
+
+classification ontology in table form
+
+ingestion pipeline
+
+API contracts
+
+admin review workflow
+
+prompt design for the classifier
+
+migration plan for your existing question bank.
+
+
+proceed
+
+I’m turning this into build-grade structure now: ontology, schema, ingestion pipeline, classifier logic, review workflow, and how every app surface plugs into it.
+
+Thought for 10s
+Good. Let’s turn it into the actual core system.
+
+Question Intelligence Engine
+Universal classification infrastructure for every question in the platform
+
+This is the engine that makes every question in the database structurally understandable.
+
+Not just stored.
+Not just searchable.
+But understood in terms of:
+
+what it is testing
+
+how it is meant to be solved
+
+what role it plays in learning
+
+what misconception it can expose
+
+what family of recurring questions it belongs to
+
+This should sit beneath:
+
+Past Questions
+
+Topic Tests
+
+Quizzes
+
+Mock Exams
+
+Custom Tests
+
+Teach Mode
+
+Wrong Answer Intelligence
+
+Memory Mode
+
+Knowledge Gap Mode
+
+Elite Mode
+
+Question Generator
+
+Teacher Uploads
+
+AI-generated questions
+
+So from now on, every question is not just a row.
+Every question is an intelligence object.
+
+1. Core design principle
+A question is not one label.
+
+It has multiple intelligence layers.
+
+So the engine must classify each question across separate axes.
+
+That is the foundation.
+
+2. The classification model
+Axis A — Knowledge Role
+What kind of instructional content is the question centered on?
+
+Examples:
+
+Definition
+
+Term identification
+
+Key concept
+
+Principle
+
+Rule
+
+Law
+
+Fact recall
+
+Formula recall
+
+Formula meaning
+
+Formula derivation
+
+Proof
+
+Worked example pattern
+
+Procedure / method
+
+Explanation
+
+Interpretation
+
+Comparison
+
+Classification
+
+Cause and effect
+
+Application scenario
+
+Exception / limitation
+
+Error spotting
+
+Graph / table / diagram reading
+
+This is where your “definition,” “key concept,” “proof of formula,” “worked example,” and “explanation” live.
+
+Axis B — Cognitive Demand
+What mental action is required from the learner?
+
+Examples:
+
+Recognition
+
+Recall
+
+Comprehension
+
+Application
+
+Multi-step application
+
+Analysis
+
+Inference
+
+Generalization
+
+Evaluation
+
+Justification
+
+Proof reasoning
+
+This is critical because two “definition-related” questions may have different mental demand.
+
+Example:
+
+“Define osmosis” → recall
+
+“Which statement best explains osmosis in this experiment?” → comprehension + interpretation
+
+Axis C — Solve Pattern
+What solving route is usually required?
+
+Examples:
+
+Direct retrieval
+
+Concept matching
+
+Rule selection
+
+Formula selection
+
+Substitution
+
+Rearrangement
+
+Step-by-step computation
+
+Pattern spotting
+
+Elimination
+
+Compare options
+
+Graph reading
+
+Diagram inference
+
+Multi-step reasoning
+
+Proof chain
+
+Error detection
+
+Unit conversion
+
+Estimation
+
+This is the engine’s most important practical layer for analytics and remediation.
+
+Because students are often not weak in “topic” broadly.
+They are weak in a solve pattern.
+
+Axis D — Pedagogic Function
+What role does this question play in learning?
+
+Examples:
+
+Concept introduction
+
+Foundation check
+
+Concept reinforcement
+
+Memory reinforcement
+
+Speed drill
+
+Misconception diagnosis
+
+Concept-to-method bridge
+
+Exam familiarization
+
+Transfer challenge
+
+Deep reasoning challenge
+
+Revision anchor
+
+Confidence builder
+
+This is what lets the same question bank behave differently in different modes.
+
+Axis E — Content Grain
+What exact curricular unit is being tested?
+
+Levels:
+
+Subject
+
+Topic
+
+Subtopic
+
+Concept
+
+Micro-concept
+
+Skill
+
+Subskill
+
+Formula
+
+Vocabulary term
+
+Procedure node
+
+This must be precise.
+
+Not:
+
+Mathematics → Algebra
+
+But:
+
+Mathematics → Algebra → Linear Equations → Solving for x → collect like terms → one-variable equation balancing
+
+That precision is what powers everything else.
+
+Axis F — Question Family
+What recurring pattern group does this question belong to?
+
+Examples:
+
+Same idea, different numbers
+
+Same idea, different wording
+
+Same trap, different surface form
+
+Same exam structure
+
+Same worked-example template
+
+Same reasoning chain
+
+Same misconception trigger
+
+This is the axis that makes past questions come alive.
+
+Axis G — Misconception Exposure
+What error or confusion is this question likely to reveal?
+
+Examples:
+
+Confuses definition with example
+
+Knows formula but not when to use it
+
+Uses wrong sign
+
+Misreads unit
+
+Chooses answer by keyword instead of principle
+
+Misses hidden constraint
+
+Applies memorized step blindly
+
+Confuses similar concepts
+
+Cannot translate words into math/science reasoning
+
+This becomes the basis of your Wrong Answer Intelligence system.
+
+Axis H — Confidence and Review
+How reliable is the classification?
+
+Fields:
+
+machine confidence
+
+review status
+
+human verified
+
+classification source
+
+version
+
+reviewer notes
+
+last updated
+
+This matters because question intelligence must be auditable.
+
+3. System architecture
+The engine should be broken into seven internal modules.
+
+3.1 Taxonomy Registry
+Holds all approved labels, codes, descriptions, and relationships.
+
+It answers:
+
+what labels are valid
+
+which labels are siblings
+
+which labels are mutually exclusive
+
+which labels can co-exist
+
+what definitions each label has
+
+This prevents chaos.
+
+3.2 Question Parsing Layer
+Normalizes the incoming question.
+
+It extracts:
+
+stem
+
+options
+
+answer
+
+explanation
+
+marks
+
+subject
+
+topic
+
+source
+
+year
+
+format
+
+media references
+
+formulas / symbols
+
+command verbs
+
+This creates a structured question object.
+
+3.3 Classification Layer
+Assigns intelligence labels.
+
+This should use a hybrid classifier:
+
+deterministic rules
+
+NLP cues
+
+ontology mapping
+
+semantic model / LLM
+
+confidence resolver
+
+Not LLM only.
+
+3.4 Family Clustering Layer
+Groups structurally related questions together.
+
+This powers:
+
+repeated question families across years
+
+family-based revision
+
+variation generation
+
+recurrence frequency
+
+inverse appearance logic
+
+3.5 Misconception Mapper
+Associates questions with likely reasoning failures.
+
+This uses:
+
+question structure
+
+distractor logic
+
+answer explanation
+
+historical wrong-answer patterns
+
+teacher annotations
+
+3.6 Intelligence Store
+Writes intelligence into the database in normalized form and in retrieval-friendly snapshot form.
+
+3.7 Review and Correction Console
+Allows humans to:
+
+verify classifications
+
+edit labels
+
+merge families
+
+split bad families
+
+add misconception notes
+
+retrain patterns over time
+
+4. Database design
+You said this must be in the core of the DB. Correct.
+
+The right model is:
+
+base question tables
+
+master taxonomy tables
+
+intelligence join tables
+
+family tables
+
+review tables
+
+denormalized snapshot for fast reads
+
+5. Base question tables
+5.1 questions
+CREATE TABLE questions (
+    id BIGSERIAL PRIMARY KEY,
+    public_id UUID NOT NULL UNIQUE,
+    subject_id BIGINT NOT NULL,
+    topic_id BIGINT,
+    subtopic_id BIGINT,
+    source_type VARCHAR(50) NOT NULL,        -- past_question, quiz, topic_test, mock, custom, teacher_upload, ai_generated
+    source_ref VARCHAR(255),                 -- exam ID, upload batch ID, quiz ID etc
+    exam_body VARCHAR(100),
+    exam_year INT,
+    paper_code VARCHAR(100),
+    question_format VARCHAR(50) NOT NULL,    -- mcq, short_answer, essay, numeric, true_false, matching
+    stem TEXT NOT NULL,
+    answer_text TEXT,
+    explanation_text TEXT,
+    marks NUMERIC(5,2),
+    difficulty_level VARCHAR(50),
+    language_code VARCHAR(20) DEFAULT 'en',
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+5.2 question_options
+CREATE TABLE question_options (
+    id BIGSERIAL PRIMARY KEY,
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    option_label VARCHAR(10),      -- A, B, C, D
+    option_text TEXT NOT NULL,
+    is_correct BOOLEAN DEFAULT FALSE,
+    position INT NOT NULL
+);
+5.3 question_assets
+CREATE TABLE question_assets (
+    id BIGSERIAL PRIMARY KEY,
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    asset_type VARCHAR(50) NOT NULL,     -- image, graph, table, diagram, audio
+    asset_url TEXT NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+6. Taxonomy registry tables
+These define the intelligence vocabulary.
+
+6.1 knowledge_roles
+CREATE TABLE knowledge_roles (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE
+);
+Seed examples:
+
+definition
+
+term_identification
+
+key_concept
+
+principle
+
+rule
+
+fact_recall
+
+formula_recall
+
+formula_meaning
+
+formula_derivation
+
+proof
+
+worked_example
+
+procedure_method
+
+explanation
+
+interpretation
+
+comparison
+
+classification
+
+cause_effect
+
+application_scenario
+
+exception_limitation
+
+error_spotting
+
+graph_diagram_reading
+
+6.2 cognitive_demands
+CREATE TABLE cognitive_demands (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE
+);
+Examples:
+
+recognition
+
+recall
+
+comprehension
+
+application
+
+multi_step_application
+
+analysis
+
+inference
+
+generalization
+
+evaluation
+
+justification
+
+proof_reasoning
+
+6.3 solve_patterns
+CREATE TABLE solve_patterns (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE
+);
+Examples:
+
+direct_retrieval
+
+concept_matching
+
+rule_selection
+
+formula_selection
+
+substitution
+
+rearrangement
+
+stepwise_computation
+
+pattern_spotting
+
+elimination
+
+compare_options
+
+graph_reading
+
+diagram_inference
+
+multi_step_reasoning
+
+proof_chain
+
+error_detection
+
+unit_conversion
+
+estimation
+
+6.4 pedagogic_functions
+CREATE TABLE pedagogic_functions (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE
+);
+Examples:
+
+concept_introduction
+
+foundation_check
+
+concept_reinforcement
+
+memory_reinforcement
+
+speed_drill
+
+misconception_diagnosis
+
+concept_to_method_bridge
+
+exam_familiarization
+
+transfer_challenge
+
+deep_reasoning_challenge
+
+revision_anchor
+
+confidence_builder
+
+6.5 misconceptions
+CREATE TABLE misconceptions (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(120) NOT NULL UNIQUE,
+    name VARCHAR(180) NOT NULL,
+    description TEXT,
+    subject_id BIGINT,
+    topic_id BIGINT,
+    subtopic_id BIGINT,
+    is_active BOOLEAN DEFAULT TRUE
+);
+Examples:
+
+confuses_definition_with_example
+
+formula_known_but_misapplied
+
+sign_error
+
+unit_confusion
+
+surface_keyword_trap
+
+misses_hidden_condition
+
+wrong_operation_choice
+
+concept_overlap_confusion
+
+6.6 concepts
+CREATE TABLE concepts (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(150) NOT NULL UNIQUE,
+    subject_id BIGINT NOT NULL,
+    topic_id BIGINT,
+    subtopic_id BIGINT,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    parent_concept_id BIGINT REFERENCES concepts(id)
+);
+This lets you map a question to precise concept nodes.
+
+7. Question intelligence tables
+7.1 question_intelligence
+This is the core summary row.
+
+CREATE TABLE question_intelligence (
+    id BIGSERIAL PRIMARY KEY,
+    question_id BIGINT NOT NULL UNIQUE REFERENCES questions(id) ON DELETE CASCADE,
+    primary_knowledge_role_id BIGINT REFERENCES knowledge_roles(id),
+    primary_cognitive_demand_id BIGINT REFERENCES cognitive_demands(id),
+    primary_solve_pattern_id BIGINT REFERENCES solve_patterns(id),
+    primary_pedagogic_function_id BIGINT REFERENCES pedagogic_functions(id),
+    primary_concept_id BIGINT REFERENCES concepts(id),
+    question_family_id BIGINT,
+    classification_source VARCHAR(100) NOT NULL,    -- rules, model, hybrid, human
+    classification_version VARCHAR(50) NOT NULL,
+    machine_confidence NUMERIC(5,4),
+    human_verified BOOLEAN DEFAULT FALSE,
+    review_status VARCHAR(50) DEFAULT 'pending',    -- pending, approved, rejected, needs_review
+    reviewer_id BIGINT,
+    reviewed_at TIMESTAMP,
+    notes TEXT,
+    snapshot JSONB,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+The snapshot field stores a denormalized object for fast API output.
+
+7.2 question_knowledge_roles
+CREATE TABLE question_knowledge_roles (
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    knowledge_role_id BIGINT NOT NULL REFERENCES knowledge_roles(id),
+    weight NUMERIC(5,4),
+    confidence_score NUMERIC(5,4),
+    is_primary BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (question_id, knowledge_role_id)
+);
+7.3 question_cognitive_demands
+CREATE TABLE question_cognitive_demands (
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    cognitive_demand_id BIGINT NOT NULL REFERENCES cognitive_demands(id),
+    weight NUMERIC(5,4),
+    confidence_score NUMERIC(5,4),
+    is_primary BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (question_id, cognitive_demand_id)
+);
+7.4 question_solve_patterns
+CREATE TABLE question_solve_patterns (
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    solve_pattern_id BIGINT NOT NULL REFERENCES solve_patterns(id),
+    weight NUMERIC(5,4),
+    confidence_score NUMERIC(5,4),
+    is_primary BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (question_id, solve_pattern_id)
+);
+7.5 question_pedagogic_functions
+CREATE TABLE question_pedagogic_functions (
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    pedagogic_function_id BIGINT NOT NULL REFERENCES pedagogic_functions(id),
+    weight NUMERIC(5,4),
+    confidence_score NUMERIC(5,4),
+    is_primary BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (question_id, pedagogic_function_id)
+);
+7.6 question_concepts
+CREATE TABLE question_concepts (
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    concept_id BIGINT NOT NULL REFERENCES concepts(id),
+    strength_score NUMERIC(5,4),
+    is_primary BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (question_id, concept_id)
+);
+7.7 question_misconceptions
+CREATE TABLE question_misconceptions (
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    misconception_id BIGINT NOT NULL REFERENCES misconceptions(id),
+    likelihood_score NUMERIC(5,4),
+    PRIMARY KEY (question_id, misconception_id)
+);
+8. Question family model
+Question families are not optional.
+They are central to your “past questions transformed” vision.
+
+8.1 question_families
+CREATE TABLE question_families (
+    id BIGSERIAL PRIMARY KEY,
+    family_code VARCHAR(120) NOT NULL UNIQUE,
+    family_name VARCHAR(200) NOT NULL,
+    subject_id BIGINT NOT NULL,
+    topic_id BIGINT,
+    subtopic_id BIGINT,
+    family_type VARCHAR(100),         -- recurring_pattern, worked_example_template, misconception_cluster, exam_structure
+    canonical_pattern TEXT,
+    description TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+8.2 question_family_members
+CREATE TABLE question_family_members (
+    question_family_id BIGINT NOT NULL REFERENCES question_families(id) ON DELETE CASCADE,
+    question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    similarity_score NUMERIC(5,4),
+    role_in_family VARCHAR(100),      -- canonical, variant, edge_case, inverse_pair
+    PRIMARY KEY (question_family_id, question_id)
+);
+9. Classification pipeline
+This is the flow that every question should pass through.
+
+Stage 1 — Ingestion
+Question enters from:
+
+teacher upload
+
+past paper import
+
+manual entry
+
+question generator
+
+AI-generated content
+
+external data import
+
+The system stores raw data.
+
+Stage 2 — Parsing
+The parser extracts:
+
+question stem
+
+option structure
+
+answer
+
+explanation
+
+numeric features
+
+symbols
+
+verbs
+
+topic hints
+
+diagram presence
+
+command phrases
+
+marks
+
+format
+
+This becomes a normalized parse object.
+
+Stage 3 — Rule-based preclassification
+A deterministic engine assigns early signals.
+
+Examples:
+
+Definition rules
+starts with “define”
+
+includes “what is meant by”
+
+includes “meaning of”
+
+asks for “best definition”
+
+Explanation rules
+starts with “explain”
+
+“give reason”
+
+“why does”
+
+“account for”
+
+Proof / derivation rules
+“prove that”
+
+“show that”
+
+“derive”
+
+“demonstrate that”
+
+Worked example signals
+has numbers
+
+has target unknown
+
+references known formula or variable relationship
+
+computational structure
+
+Diagram-reading signals
+contains image/table/graph
+
+“from the diagram”
+
+“study the graph”
+
+“use the table”
+
+The rule engine should produce weighted signals, not hard final labels.
+
+Example output:
+
+{
+  "knowledge_role": {
+    "definition": 0.91,
+    "key_concept": 0.48
+  },
+  "cognitive_demand": {
+    "recall": 0.87
+  },
+  "solve_pattern": {
+    "direct_retrieval": 0.83
+  }
+}
+Stage 4 — Semantic model classification
+Use an LLM or semantic model to classify the question more intelligently.
+
+Inputs:
+
+stem
+
+options
+
+answer
+
+explanation
+
+subject
+
+topic
+
+subtopic
+
+marks
+
+format
+
+Output should be strict structured JSON, not prose.
+
+Example:
+
+{
+  "knowledge_roles": [
+    {"code": "worked_example", "confidence": 0.92},
+    {"code": "formula_meaning", "confidence": 0.41}
+  ],
+  "cognitive_demands": [
+    {"code": "application", "confidence": 0.89}
+  ],
+  "solve_patterns": [
+    {"code": "substitution", "confidence": 0.86}
+  ],
+  "pedagogic_functions": [
+    {"code": "concept_to_method_bridge", "confidence": 0.74}
+  ],
+  "misconceptions": [
+    {"code": "formula_known_but_misapplied", "confidence": 0.57}
+  ]
+}
+Stage 5 — Resolver
+This combines rules + model + ontology constraints.
+
+For example:
+
+if rule confidence and model confidence strongly agree, mark high confidence
+
+if they conflict, reduce confidence
+
+if ontology forbids certain combinations, drop invalid labels
+
+if a question has graph asset + graph-reading cue, boost graph_reading
+
+This produces the final classification.
+
+Stage 6 — Family matching
+The question is compared against known families using:
+
+semantic similarity
+
+solve pattern similarity
+
+concept similarity
+
+structural pattern
+
+numeric template similarity
+
+explanation pattern similarity
+
+If a match is strong enough:
+
+assign existing family
+
+If not:
+
+create candidate family or flag for clustering batch
+
+Stage 7 — Misconception mapping
+Question is mapped to likely misconceptions.
+
+Methods:
+
+rule-based mapping from distractors
+
+pattern mapping from solve pattern
+
+topic-specific misconception registry
+
+historical student error data
+
+Stage 8 — Persistence
+Write:
+
+join-table labels
+
+summary row
+
+family membership
+
+misconception links
+
+snapshot JSON
+
+Stage 9 — Review routing
+If confidence below threshold, send to review queue.
+
+Example thresholds:
+
+0.88 = auto-approved
+
+0.70 to 0.88 = usable but flagged
+
+< 0.70 = manual review required
+
+10. Resolver logic
+You need explicit rules for how final labels are chosen.
+
+10.1 Primary label rule
+Each axis must have one primary label unless confidence is extremely low.
+
+Example:
+
+knowledge_roles: worked_example 0.92, application_scenario 0.61
+
+primary = worked_example
+
+10.2 Multi-label rule
+Allow secondary labels when their confidence is close enough.
+
+Example:
+
+primary if within highest score
+
+add secondary if score >= 0.60 and within 0.25 of primary
+
+10.3 Mutual exclusion rule
+Some pairs should not co-exist as primaries.
+
+Example:
+
+direct_retrieval and proof_chain cannot both be primary solve pattern
+
+10.4 Compatible-pair rule
+Some pairs are commonly paired.
+
+Examples:
+
+definition + recall + direct_retrieval
+
+worked_example + application + substitution
+
+proof + justification + proof_chain
+
+explanation + comprehension + concept_based_reasoning
+
+This improves final classification stability.
+
+11. Example label ontology
+Here is a strong starter taxonomy you can actually implement.
+
+Knowledge role categories
+Foundational knowledge
+definition
+
+term_identification
+
+fact_recall
+
+principle
+
+rule
+
+law
+
+Conceptual understanding
+key_concept
+
+explanation
+
+interpretation
+
+comparison
+
+classification
+
+cause_effect
+
+Mathematical / scientific structure
+formula_recall
+
+formula_meaning
+
+formula_derivation
+
+proof
+
+procedure_method
+
+worked_example
+
+Applied forms
+application_scenario
+
+graph_diagram_reading
+
+error_spotting
+
+exception_limitation
+
+Cognitive demand categories
+Low-level retrieval
+recognition
+
+recall
+
+Understanding
+comprehension
+
+interpretation
+
+Use
+application
+
+multi_step_application
+
+Higher reasoning
+analysis
+
+inference
+
+generalization
+
+evaluation
+
+justification
+
+proof_reasoning
+
+Solve pattern categories
+Retrieval patterns
+direct_retrieval
+
+concept_matching
+
+Computation patterns
+formula_selection
+
+substitution
+
+rearrangement
+
+stepwise_computation
+
+unit_conversion
+
+estimation
+
+Reasoning patterns
+compare_options
+
+elimination
+
+multi_step_reasoning
+
+proof_chain
+
+error_detection
+
+Representation patterns
+graph_reading
+
+diagram_inference
+
+table_interpretation
+
+12. Classification prompt design
+The LLM must not be allowed to freestyle.
+
+It must return structured schema-bound output.
+
+A strong prompt structure should say:
+
+System instruction essence
+You are a question-classification engine.
+Classify the question across predefined taxonomies.
+Choose only from allowed codes.
+Return JSON only.
+A question may have multiple labels.
+Choose one primary label per axis.
+Prefer the most pedagogically meaningful label over surface wording.
+
+User payload structure
+Pass:
+
+subject
+
+topic
+
+subtopic
+
+question stem
+
+options
+
+answer
+
+explanation
+
+marks
+
+known metadata
+
+allowed labels
+
+Required output
+knowledge_roles
+
+cognitive_demands
+
+solve_patterns
+
+pedagogic_functions
+
+concepts
+
+misconceptions
+
+question_family_summary
+
+rationale_short
+
+confidence_by_axis
+
+No long prose.
+
+13. API design
+Every part of the platform should consume the same intelligence object.
+
+13.1 Get question by ID
+{
+  "question_id": "q_1001",
+  "stem": "Define photosynthesis.",
+  "subject": "Integrated Science",
+  "topic": "Living Things",
+  "subtopic": "Plants",
+  "format": "short_answer",
+  "intelligence": {
+    "knowledge_roles": [
+      {"code": "definition", "primary": true, "confidence": 0.96}
+    ],
+    "cognitive_demands": [
+      {"code": "recall", "primary": true, "confidence": 0.94}
+    ],
+    "solve_patterns": [
+      {"code": "direct_retrieval", "primary": true, "confidence": 0.92}
+    ],
+    "pedagogic_functions": [
+      {"code": "memory_reinforcement", "primary": true, "confidence": 0.78}
+    ],
+    "concepts": [
+      {"code": "photosynthesis_definition", "primary": true, "strength": 0.95}
+    ],
+    "misconceptions": [
+      {"code": "confuses_process_with_outcome", "likelihood": 0.41}
+    ],
+    "family": {
+      "family_code": "sci_photosynthesis_definition_01",
+      "similarity_score": 0.88
+    },
+    "review": {
+      "human_verified": false,
+      "machine_confidence": 0.93,
+      "status": "approved"
+    }
+  }
+}
+13.2 Search questions by intelligence
+Examples:
+
+/questions?knowledge_role=definition
+
+/questions?solve_pattern=substitution
+
+/questions?pedagogic_function=misconception_diagnosis
+
+/questions?family_code=alg_linear_substitute_01
+
+/questions?topic=algebra&cognitive_demand=application
+
+13.3 Build test blueprint
+The test builder should be able to request combinations like:
+
+{
+  "subject": "Mathematics",
+  "topic": "Algebra",
+  "blueprint": [
+    {"knowledge_role": "definition", "count": 3},
+    {"knowledge_role": "key_concept", "count": 4},
+    {"knowledge_role": "worked_example", "count": 6},
+    {"knowledge_role": "explanation", "count": 2}
+  ]
+}
+14. Review console design
+You need a reviewer interface for admins, curriculum experts, or teachers.
+
+Each review row should show:
+
+question stem
+
+topic
+
+system labels
+
+confidence
+
+model rationale
+
+family suggestion
+
+misconception suggestion
+
+edit controls
+
+approve / reject / reclassify
+
+Reviewer can:
+
+change primary label
+
+add secondary labels
+
+create new family
+
+merge into existing family
+
+add misconception
+
+add notes
+
+This is how the system becomes stronger over time.
+
+15. How each app feature uses this engine
+15.1 Past Questions
+Current weak form:
+
+grouped by year
+
+grouped by topic
+
+New form:
+
+grouped by year
+
+grouped by topic
+
+grouped by knowledge role
+
+grouped by solve pattern
+
+grouped by question family
+
+grouped by misconception type
+
+grouped by cognitive demand
+
+grouped by recurrence pattern
+
+So a student can open:
+
+all definition questions in photosynthesis
+
+all worked-example questions in linear equations
+
+all proof-style geometry questions
+
+all questions in the “same family” as a 2022 question
+
+15.2 Topic Tests
+Instead of random topic questions, the system can balance a topic test.
+
+Example:
+
+20% definition
+
+20% key concept
+
+30% worked example
+
+20% explanation
+
+10% challenge / transfer
+
+That makes tests more educationally sound.
+
+15.3 Teach Mode
+Teach Mode can follow the instructional ladder:
+
+definition
+
+concept
+
+explanation
+
+guided worked example
+
+standard application
+
+exam-style application
+
+misconception trap
+
+mixed review
+
+This becomes automatic because the engine knows what each question is.
+
+15.4 Wrong Answer Intelligence
+When a student answers wrongly, don’t just say topic weak.
+
+Say:
+
+weak in worked-example questions requiring formula selection
+
+weak in explanation questions with cause-effect reasoning
+
+often misses hidden condition in multi-step application questions
+
+That is much more powerful.
+
+15.5 Memory Mode
+Memory Mode should pull:
+
+definition
+
+fact recall
+
+formula recall
+
+key concept reinforcement
+
+short explanation recall
+
+Not heavy worked examples.
+
+15.6 Elite Mode
+Elite Mode should emphasize:
+
+multi-step application
+
+proof reasoning
+
+transfer challenge
+
+deep explanation
+
+exception cases
+
+mixed family variants
+
+15.7 Knowledge Gap Mode
+This mode can ask:
+“What kind of knowledge is missing?”
+
+Not just:
+
+topic weak
+
+But:
+
+definitions missing
+
+concept understanding missing
+
+method transfer weak
+
+proof reasoning weak
+
+graph interpretation weak
+
+That is real knowledge-gap analysis.
+
+16. Family engine logic
+The family engine deserves special attention.
+
+A family is not just “same topic.”
+
+It should capture reusable patterns.
+
+16.1 Family formation signals
+Questions belong to same family if they share:
+
+same concept
+
+same solve pattern
+
+same structural intent
+
+same reasoning chain
+
+same answer-generation method
+
+same misconception trap
+
+strong semantic similarity
+
+16.2 Family types
+Use these categories:
+
+direct_variation_family
+
+worked_example_template_family
+
+reasoning_family
+
+misconception_family
+
+exam_recurrence_family
+
+inverse_pair_family
+
+scaffold_family
+
+16.3 Inverse pair logic
+This is important for your earlier idea.
+
+Some question families suppress each other in exams.
+
+If one family appears, another usually does not.
+
+That can be tracked.
+
+Store:
+
+co-appearance count
+
+inverse-appearance score
+
+substitution likelihood
+
+exam cycle recurrence
+
+That becomes a future layer under past-question intelligence.
+
+17. Misconception model
+Misconception tagging must be explicit.
+
+A misconception is not the same as an incorrect option.
+
+It is the underlying faulty reasoning likely to lead to the wrong answer.
+
+17.1 Sources of misconception labels
+distractor design
+
+teacher knowledge
+
+explanation analysis
+
+historical answer logs
+
+family pattern
+
+subject-matter templates
+
+17.2 Example
+Question:
+“Calculate area of circle with radius 7 cm.”
+
+Likely misconceptions:
+
+confuses radius with diameter
+
+forgets square
+
+uses circumference formula instead
+
+arithmetic slip after correct setup
+
+These should be linked at question level.
+
+Later, when a student gets it wrong, the system uses their chosen answer and time pattern to infer which misconception occurred.
+
+18. Backfill strategy for existing database
+You already have legacy questions. So this needs a phased migration.
+
+Phase 1 — Add intelligence tables
+Do not disturb existing product behavior.
+Add all new schema first.
+
+Phase 2 — Seed taxonomy registry
+Populate:
+
+knowledge roles
+
+cognitive demands
+
+solve patterns
+
+pedagogic functions
+
+misconception registry
+
+concept map
+
+Do this subject by subject.
+
+Phase 3 — Batch backfill old questions
+Run all existing questions through classifier pipeline.
+
+Start with highest-value subjects:
+
+Mathematics
+
+Integrated Science
+
+English
+
+Then expand.
+
+Phase 4 — Build review queue
+Low-confidence results go to reviewers.
+
+This will clean up:
+
+ambiguous questions
+
+bad imports
+
+broken topic mapping
+
+confusing families
+
+Phase 5 — Turn on universal ingestion rule
+Any new question entering the system must be classified before activation.
+
+That is how it becomes part of the core.
+
+Phase 6 — Upgrade retrieval APIs
+Expose intelligence filters in all question retrieval endpoints.
+
+Phase 7 — Upgrade feature surfaces
+Past Questions, Topic Tests, Teach Mode, Wrong Answer Intelligence, etc. now query against intelligence.
+
+19. Performance strategy
+Because classification is expensive, do not classify on demand while students browse.
+
+Best practice:
+classify asynchronously at ingestion time
+
+store final snapshot JSON
+
+query precomputed intelligence
+
+reclassify only when question text changes or taxonomy changes
+
+Use:
+
+join tables for analytics
+
+JSON snapshot for fast API response
+
+materialized views for dashboards if needed
+
+20. Recommended snapshot format
+Each question should store a prebuilt snapshot like this in question_intelligence.snapshot:
+
+{
+  "knowledge_roles": [
+    {"code": "worked_example", "primary": true, "confidence": 0.92},
+    {"code": "formula_meaning", "primary": false, "confidence": 0.48}
+  ],
+  "cognitive_demands": [
+    {"code": "application", "primary": true, "confidence": 0.89}
+  ],
+  "solve_patterns": [
+    {"code": "substitution", "primary": true, "confidence": 0.86}
+  ],
+  "pedagogic_functions": [
+    {"code": "concept_to_method_bridge", "primary": true, "confidence": 0.74}
+  ],
+  "concepts": [
+    {"code": "math_algebra_linear_substitution", "primary": true, "strength": 0.93}
+  ],
+  "misconceptions": [
+    {"code": "formula_known_but_misapplied", "likelihood": 0.58}
+  ],
+  "family": {
+    "family_code": "alg_linear_substitution_01",
+    "similarity_score": 0.87
+  },
+  "review": {
+    "status": "approved",
+    "human_verified": false,
+    "machine_confidence": 0.89,
+    "version": "qi_v1"
+  }
+}
+21. Practical examples
+Example A — Definition question
+Question: Define evaporation.
+
+Classification:
+
+knowledge role: definition
+
+cognitive demand: recall
+
+solve pattern: direct_retrieval
+
+pedagogic function: memory_reinforcement
+
+concept: evaporation_definition
+
+family: science_phase_change_definition
+
+misconception: confuses evaporation with boiling
+
+Example B — Worked example
+Question: Find the value of x if 3x + 5 = 20.
+
+Classification:
+
+knowledge role: worked_example
+
+cognitive demand: application
+
+solve pattern: rearrangement
+
+pedagogic function: concept_to_method_bridge
+
+concept: linear_equation_solving
+
+family: one_variable_linear_equation_family
+
+misconception: wrong inverse operation
+
+Example C — Proof / derivation
+Question: Show that the sum of angles in a triangle is 180°.
+
+Classification:
+
+knowledge role: proof
+
+cognitive demand: justification
+
+solve pattern: proof_chain
+
+pedagogic function: deep_reasoning_challenge
+
+concept: angle_sum_triangle
+
+family: geometric_proof_foundation
+
+misconception: assumes result without chain of reasoning
+
+Example D — Explanation
+Question: Explain why iron rusts faster in moist air.
+
+Classification:
+
+knowledge role: explanation
+
+cognitive demand: comprehension + causal reasoning
+
+solve pattern: concept_based_reasoning
+
+pedagogic function: concept_reinforcement
+
+concept: rusting_conditions
+
+misconception: thinks water alone is sufficient
+
+22. Minimal launch version
+To get this moving fast without drowning in complexity, start with these mandatory fields:
+
+Mandatory v1 axes
+knowledge_role
+
+cognitive_demand
+
+solve_pattern
+
+primary_concept
+
+question_family
+
+Strongly recommended in v1
+pedagogic_function
+
+misconception mapping
+
+machine confidence
+
+human review status
+
+That is enough to unlock major intelligence features immediately.
+
+23. Strong warnings
+Do not do this
+Bad approach 1:
+Single question_type field
+
+Too weak. Too flat. Too limiting.
+
+Bad approach 2:
+Only use AI classification without ontology
+
+Results will become inconsistent over time.
+
+Bad approach 3:
+Store labels only in frontend/UI
+
+That kills reuse across features.
+
+Bad approach 4:
+Let each feature invent its own question labels
+
+Then Past Questions, Teach Mode, and Wrong Answer Mode will all speak different languages.
+
+That would be a serious architecture error.
+
+24. Final recommended core entity
+Every question should effectively behave like this:
+
+{
+  "question": {
+    "id": "q_2041",
+    "subject": "Mathematics",
+    "topic": "Algebra",
+    "subtopic": "Linear Equations",
+    "stem": "Find the value of x if 3x + 5 = 20"
+  },
+  "intelligence": {
+    "knowledge_roles": ["worked_example"],
+    "cognitive_demands": ["application"],
+    "solve_patterns": ["rearrangement"],
+    "pedagogic_functions": ["concept_to_method_bridge"],
+    "concepts": ["linear_equation_solving"],
+    "misconceptions": ["wrong_inverse_operation"],
+    "family": "one_variable_linear_equation_family",
+    "confidence": 0.91
+  }
+}
+That is the universal model.
+
+25. The real product advantage
+Once this engine is in place, your platform stops being “a question bank.”
+
+It becomes:
+
+a concept-aware question system
+
+a pedagogy-aware question system
+
+a solve-pattern-aware question system
+
+a misconception-aware question system
+
+a family-aware exam intelligence system
+
+That is a serious leap.
+
+26. My recommendation for immediate implementation order
+Build it in this sequence:
+
+Step 1
+Create taxonomy registry tables.
+
+Step 2
+Create intelligence join tables and summary table.
+
+Step 3
+Build parser and rule engine.
+
+Step 4
+Add model-based classifier.
+
+Step 5
+Write snapshot JSON builder.
+
+Step 6
+Run backfill on existing bank.
+
+Step 7
+Build admin review console.
+
+Step 8
+Upgrade Past Questions first.
+
+Step 9
+Upgrade Topic Tests and Teach Mode.
+
+Step 10
+Upgrade Wrong Answer Intelligence and Knowledge Gap Mode.
+
+Next, I can turn this into one of two things:
+
+a full engineering PRD for the Question Intelligence Engine, with modules, endpoints, workflows, edge cases, and rollout plan, or
+
+a taxonomy master list with all the exact label codes for Mathematics, Science, and English.
+
+
+proceed
+
+I’m taking the next step as a build document, not just ideas: concrete services, tables, workflows, classifier outputs, APIs, and how the engine plugs into each mode.
+
+Thought for 2m 32s
+Good. I’ll turn it into the engineering-grade spec and include the starter taxonomy so it is immediately buildable.
+
+Question Intelligence Engine
+Core Product and Engineering Specification
+
+This is the system that makes every question in your platform structurally intelligible.
+It gives the platform the ability to understand:
+
+what kind of question this is
+
+what kind of knowledge it tests
+
+what mental action it demands
+
+how it is typically solved
+
+what role it plays in learning
+
+what misconceptions it is likely to expose
+
+which recurring family it belongs to
+
+This engine must sit underneath the entire question ecosystem.
+
+That means it is not a feature.
+It is infrastructure.
+
+1. Product purpose
+The Question Intelligence Engine exists to convert raw questions into enriched educational objects that can be used consistently across every surface in the system.
+
+Without this engine, a question is mostly just:
+
+text
+
+answer
+
+topic
+
+year
+
+With this engine, a question becomes:
+
+a concept-aware learning asset
+
+a pattern-aware assessment asset
+
+a misconception-aware diagnostic asset
+
+a family-aware exam intelligence asset
+
+That changes the whole product.
+
+2. What problem this solves
+Your current question bank is likely organized mostly around:
+
+subject
+
+topic
+
+year
+
+source
+
+maybe difficulty
+
+That is useful, but shallow.
+
+It does not answer questions like:
+
+Is this a definition question or an application question?
+
+Is this testing a key concept or a method?
+
+Is this a worked example or an explanation question?
+
+Is this a proof-style question?
+
+Is this best used for memory strengthening or for deep reasoning?
+
+Does this belong to a recurring exam family?
+
+What misconception does this question tend to reveal?
+
+Why do students keep getting this type wrong?
+
+The Question Intelligence Engine answers these.
+
+3. Product goals
+Primary goals
+The engine must:
+
+classify every question across a multi-axis intelligence framework
+
+store that intelligence in the core database
+
+expose it to all product surfaces through a common API
+
+support both machine classification and human review
+
+backfill legacy questions already in the database
+
+make question retrieval, sequencing, and analytics much smarter
+
+Secondary goals
+The engine should:
+
+help generate balanced tests
+
+help create concept ladders and teaching flow
+
+help power wrong-answer diagnosis
+
+support family-based past-question exploration
+
+support misconception mapping
+
+support future AI-assisted question generation and remediation
+
+4. Non-goals
+At least in the first major implementation, this engine is not trying to:
+
+fully replace teacher judgment
+
+generate new questions from scratch
+
+infer full student psychology from one answer
+
+build curriculum maps automatically without human oversight
+
+do final grading logic across all question formats
+
+become a full content authoring platform by itself
+
+Those may sit around it, but they are not the engine’s immediate job.
+
+5. Core design principles
+Principle 1: One question, many intelligence layers
+A question must not be reduced to a single question_type.
+
+A question can simultaneously be:
+
+a worked example
+
+centered on a key concept
+
+testing application
+
+solved by substitution
+
+functioning as a bridge from concept to method
+
+linked to a common misconception
+
+So the model must be multi-axis.
+
+Principle 2: Taxonomy before AI
+The platform must define valid classifications first.
+
+AI should classify into your structure.
+It should not invent the structure.
+
+Principle 3: Intelligence lives in the data layer
+This must be stored in the database and exposed through APIs.
+
+It should not be recreated feature by feature in the frontend.
+
+Principle 4: Machine-first, reviewable, auditable
+The system can classify automatically, but it must be reviewable and correctable.
+
+Principle 5: Family logic is foundational
+Recurring question families are central to transforming past questions into a superior experience.
+
+6. Users of the engine
+The engine is not directly used only by students.
+It has several system users.
+
+6.1 Internal product users
+Past Questions module
+
+Topic Tests module
+
+Quiz engine
+
+Teach Mode
+
+Wrong Answer Intelligence
+
+Memory Mode
+
+Knowledge Gap Mode
+
+Elite Mode
+
+Mock exam builder
+
+Custom paper generator
+
+Question recommendation systems
+
+6.2 Human users
+curriculum admins
+
+teachers
+
+reviewers / moderators
+
+content team
+
+analytics team
+
+6.3 System processes
+upload ingestion pipeline
+
+AI question generator
+
+reporting engine
+
+student performance analyzer
+
+family-clustering jobs
+
+backfill jobs
+
+7. Intelligence model
+The engine should classify questions across these core axes.
+
+7.1 Axis A — Knowledge Role
+This asks: what kind of knowledge object is the question centered on?
+
+Examples:
+
+definition
+
+term identification
+
+key concept
+
+principle
+
+rule
+
+law
+
+fact recall
+
+formula recall
+
+formula meaning
+
+formula derivation
+
+proof
+
+worked example
+
+procedure / method
+
+explanation
+
+interpretation
+
+comparison
+
+classification
+
+cause and effect
+
+application scenario
+
+exception / limitation
+
+error spotting
+
+graph / table / diagram reading
+
+7.2 Axis B — Cognitive Demand
+This asks: what kind of thinking does the learner need?
+
+Examples:
+
+recognition
+
+recall
+
+comprehension
+
+application
+
+multi-step application
+
+analysis
+
+inference
+
+generalization
+
+evaluation
+
+justification
+
+proof reasoning
+
+7.3 Axis C — Solve Pattern
+This asks: how is the question generally solved?
+
+Examples:
+
+direct retrieval
+
+concept matching
+
+rule selection
+
+formula selection
+
+substitution
+
+rearrangement
+
+stepwise computation
+
+pattern spotting
+
+elimination
+
+compare options
+
+graph reading
+
+diagram inference
+
+table interpretation
+
+multi-step reasoning
+
+proof chain
+
+error detection
+
+unit conversion
+
+estimation
+
+7.4 Axis D — Pedagogic Function
+This asks: what role does this question play in learning?
+
+Examples:
+
+concept introduction
+
+foundation check
+
+concept reinforcement
+
+memory reinforcement
+
+speed drill
+
+misconception diagnosis
+
+concept-to-method bridge
+
+exam familiarization
+
+transfer challenge
+
+deep reasoning challenge
+
+revision anchor
+
+confidence builder
+
+7.5 Axis E — Content Grain
+This asks: what exact curricular unit is being tested?
+
+Levels:
+
+subject
+
+topic
+
+subtopic
+
+concept
+
+micro-concept
+
+skill
+
+subskill
+
+formula
+
+vocabulary term
+
+procedure node
+
+7.6 Axis F — Question Family
+This asks: which recurring pattern cluster does this question belong to?
+
+Examples:
+
+same method, different numbers
+
+same trick, different wording
+
+same misconception trap
+
+same proof structure
+
+same worked-example template
+
+same exam pattern
+
+inverse family relation
+
+7.7 Axis G — Misconception Exposure
+This asks: what common wrong thinking is likely to lead to failure here?
+
+Examples:
+
+confuses definition with example
+
+knows formula but cannot select it
+
+wrong sign
+
+unit confusion
+
+keyword trap
+
+hidden condition ignored
+
+concept overlap confusion
+
+wrong operation choice
+
+7.8 Axis H — Review Confidence
+This tracks:
+
+machine confidence
+
+classification source
+
+version
+
+human review state
+
+reviewer notes
+
+approval status
+
+8. System architecture
+The engine should be designed as a set of backend modules.
+
+8.1 Taxonomy Registry Service
+Owns valid label vocabularies and their rules.
+
+Responsibilities:
+
+store allowed codes
+
+manage definitions
+
+manage active/inactive labels
+
+manage compatibility rules
+
+manage mutually exclusive relationships
+
+manage label hierarchies
+
+8.2 Question Parser
+Converts incoming question content into a normalized object.
+
+Inputs:
+
+stem
+
+options
+
+answer
+
+explanation
+
+marks
+
+format
+
+images / diagrams
+
+source metadata
+
+topic metadata
+
+Outputs:
+
+parsed tokens
+
+command verbs
+
+numeric cues
+
+media cues
+
+syntax features
+
+clean structured question object
+
+8.3 Rule Classifier
+Applies deterministic logic for obvious signals.
+
+Example:
+
+starts with “Define” → strong definition cue
+
+“Explain why” → explanation cue
+
+“Show that” → proof cue
+
+graph/table assets present → graph reading or data interpretation cue
+
+numeric substitution structure → worked example / application cue
+
+8.4 Semantic Classifier
+Uses LLM or other semantic model to classify more subtly.
+
+It should:
+
+consume full structured question object
+
+use the approved taxonomy
+
+return strict schema-bound output
+
+produce confidence per axis
+
+8.5 Resolver
+Combines:
+
+rule-based outputs
+
+semantic outputs
+
+ontology constraints
+
+source context
+
+historical patterns
+
+Then produces final labels.
+
+8.6 Family Engine
+Groups questions into recurring structural families.
+
+Responsibilities:
+
+compare question similarity
+
+cluster recurring patterns
+
+assign family IDs
+
+detect family variants
+
+detect inverse family relationships
+
+support family recurrence stats
+
+8.7 Misconception Mapper
+Assigns likely misconception tags.
+
+Uses:
+
+distractor analysis
+
+explanation patterns
+
+subject-specific misconception registry
+
+family behavior
+
+student wrong-answer history
+
+8.8 Intelligence Store
+Writes all final intelligence data into normalized tables and cached snapshots.
+
+8.9 Review Console
+Lets humans inspect, correct, and approve classification.
+
+9. Data model
+You already saw the table ideas. Here I’ll explain the model at system level.
+
+9.1 Base content layer
+Stores question content itself:
+
+stem
+
+options
+
+answer
+
+explanation
+
+marks
+
+year
+
+paper
+
+format
+
+assets
+
+9.2 Taxonomy layer
+Stores valid intelligence labels:
+
+knowledge roles
+
+cognitive demands
+
+solve patterns
+
+pedagogic functions
+
+misconceptions
+
+concepts
+
+9.3 Assignment layer
+Stores which labels belong to which question.
+
+Because questions can have many labels, this must use join tables.
+
+9.4 Summary layer
+Stores one summary record per question with:
+
+primary labels
+
+family ID
+
+confidence
+
+review state
+
+snapshot JSON
+
+9.5 Family layer
+Stores families and family membership.
+
+9.6 Review layer
+Stores review actions, edits, notes, reviewer identity, and audit trail.
+
+10. Key database behavior
+10.1 One primary label per axis
+Every axis should usually have one primary label.
+
+Example:
+
+primary knowledge role: worked_example
+
+primary cognitive demand: application
+
+primary solve pattern: substitution
+
+10.2 Secondary labels allowed
+Questions can still carry secondary labels.
+
+Example:
+A question may be:
+
+primary knowledge role: worked_example
+
+secondary knowledge role: key_concept
+
+10.3 Snapshot JSON for speed
+The engine should compute and store a prebuilt intelligence object in JSON for fast retrieval by APIs.
+
+10.4 Normalized joins for analytics
+Join tables remain necessary for:
+
+dashboards
+
+filtering
+
+reporting
+
+advanced analytics
+
+11. Question ingestion flow
+Every question entering the platform should follow this lifecycle.
+
+Step 1 — Receive question
+The question comes from:
+
+manual authoring
+
+bulk upload
+
+OCR/import pipeline
+
+AI generation
+
+legacy database backfill
+
+teacher-created quiz
+
+past paper ingestion
+
+Step 2 — Normalize content
+The parser standardizes:
+
+whitespace
+
+option structure
+
+answer structure
+
+formula symbols
+
+media references
+
+topic assignment
+
+source metadata
+
+Step 3 — Extract structural cues
+The parser pulls signals like:
+
+command verb
+
+presence of numbers
+
+equation-like syntax
+
+graph/table presence
+
+proof phrases
+
+“why/explain” phrases
+
+compare/contrast language
+
+multiple-step structure hints
+
+Step 4 — Rule classification
+The deterministic engine produces weighted candidates.
+
+Step 5 — Semantic classification
+The semantic model generates structured label predictions.
+
+Step 6 — Resolve final labels
+Resolver merges all evidence.
+
+Step 7 — Family matching
+The family engine assigns the question to an existing family or creates a candidate cluster.
+
+Step 8 — Misconception mapping
+Likely misconception tags are attached.
+
+Step 9 — Store intelligence
+All results are written to the database.
+
+Step 10 — Review routing
+If low confidence or unusual structure, send to review queue.
+
+12. Classification logic in detail
+The engine should not just “guess.”
+It should behave like a layered decision system.
+
+12.1 Rule signal examples
+Definition cues
+“Define…”
+
+“What is…”
+
+“What is meant by…”
+
+“Meaning of…”
+
+Explanation cues
+“Explain…”
+
+“Why…”
+
+“Give reasons…”
+
+“Account for…”
+
+Proof cues
+“Prove that…”
+
+“Show that…”
+
+“Derive…”
+
+“Demonstrate…”
+
+Worked example cues
+numeric values
+
+target unknown
+
+formula-like relationships
+
+asks to calculate or solve
+
+Graph/diagram cues
+“Use the diagram”
+
+“Study the graph”
+
+“From the table”
+
+question asset type is graph/table/image
+
+Comparison cues
+“Differentiate”
+
+“Distinguish”
+
+“Compare”
+
+“Contrast”
+
+Error spotting cues
+“What is wrong with…”
+
+“Identify the mistake”
+
+“Which step is incorrect”
+
+These become weighted features, not final decisions by themselves.
+
+12.2 Semantic classification behavior
+The semantic model should:
+
+understand the topic context
+
+avoid shallow keyword-only classification
+
+use answer and explanation, not just stem
+
+map into approved codes only
+
+assign confidence per axis
+
+provide a short rationale for internal logging
+
+It must return structured JSON, not essays.
+
+12.3 Resolver behavior
+The resolver should apply logic like this:
+
+if rules and model strongly agree, boost confidence
+
+if rules and model disagree, reduce confidence
+
+if taxonomy says a label combination is impossible, reject it
+
+if graph asset exists, graph-related labels get boosted
+
+if marks are high and the question has reasoning verbs, higher-order cognitive labels get boosted
+
+if answer explanation contains proof language, proof-related labels get boosted
+
+It should also enforce a primary label rule.
+
+13. Family engine design
+This is one of the most important parts of your product differentiation.
+
+13.1 What a family is
+A question family is a recurring pattern group, not just a topic bucket.
+
+Questions belong to the same family if they share:
+
+same underlying concept
+
+same solve route
+
+same reasoning structure
+
+same distractor trap
+
+same worked-example template
+
+same pedagogic purpose
+
+13.2 Family types
+Use categories like:
+
+direct_variation
+
+worked_example_template
+
+reasoning_pattern
+
+misconception_cluster
+
+exam_recurrence
+
+inverse_pair
+
+scaffold_group
+
+13.3 Family formation logic
+Family similarity should look at:
+
+semantic similarity of stem
+
+concept overlap
+
+solve pattern overlap
+
+answer-generation pattern
+
+explanation similarity
+
+distractor structure
+
+exam recurrence behavior
+
+13.4 Canonical member
+Every family should have a canonical representative question that best expresses the family pattern.
+
+13.5 Inverse family support
+Your earlier idea about inverse appearance is important.
+
+Store relationships like:
+
+co-occurs often
+
+rarely co-occurs
+
+tends to replace
+
+tends to appear instead of
+
+This allows future past-question intelligence such as:
+“When this family appears, that family usually does not.”
+
+14. Misconception system design
+This engine must not treat wrong answers as random.
+
+Each question should be linked to likely misconceptions.
+
+14.1 Misconception sources
+content team annotations
+
+distractor logic
+
+explanation analysis
+
+family-level historical patterns
+
+student answer histories
+
+topic-specific misconception libraries
+
+14.2 Why this matters
+It allows the system to move from:
+“You got this wrong.”
+
+To:
+“You are repeatedly selecting answers that suggest you confuse formula recall with formula selection.”
+
+That is a deeper educational product.
+
+14.3 Example
+Question:
+Calculate the area of a circle with radius 7 cm.
+
+Possible misconception links:
+
+confuses radius with diameter
+
+forgets to square radius
+
+uses circumference formula
+
+arithmetic error after correct setup
+
+These misconception codes should be attached before the student even answers.
+
+15. Review workflow
+Because automated classification will not always be perfect, a review system is necessary.
+
+15.1 When review is triggered
+Send a question to review if:
+
+machine confidence is below threshold
+
+no clear primary label emerges
+
+label combination is odd
+
+topic mapping is weak
+
+family assignment is uncertain
+
+question content is malformed
+
+new unseen style is detected
+
+15.2 Review actions
+Reviewer can:
+
+approve system classification
+
+change primary labels
+
+add secondary labels
+
+change concept mapping
+
+merge into existing family
+
+create new family
+
+edit misconception tags
+
+leave notes
+
+mark taxonomy gap
+
+15.3 Review output
+Every review should create:
+
+audit trail record
+
+updated intelligence version
+
+reviewer ID
+
+timestamp
+
+change reason
+
+16. API specification
+The Question Intelligence Engine should expose a clean service contract.
+
+16.1 Classify a new question
+POST /question-intelligence/classify
+
+Input:
+
+subject
+
+topic
+
+subtopic
+
+format
+
+stem
+
+options
+
+answer
+
+explanation
+
+marks
+
+source metadata
+
+Output:
+
+multi-axis classification
+
+confidence
+
+family candidate
+
+misconception candidates
+
+review status
+
+16.2 Get intelligence for question
+GET /questions/{id}/intelligence
+
+Returns:
+
+all assigned labels
+
+primary labels
+
+concept mapping
+
+family
+
+misconception tags
+
+review status
+
+version
+
+16.3 Search by intelligence
+GET /questions/search
+
+Supported filters:
+
+subject
+
+topic
+
+subtopic
+
+year
+
+exam_body
+
+knowledge_role
+
+cognitive_demand
+
+solve_pattern
+
+pedagogic_function
+
+family_id
+
+misconception_code
+
+concept_id
+
+difficulty
+
+reviewed_only
+
+machine_confidence_min
+
+16.4 Build blueprint request
+POST /question-blueprints/build
+
+Example request:
+
+subject = Mathematics
+
+topic = Algebra
+
+5 definition
+
+8 worked_example
+
+4 explanation
+
+3 misconception_diagnosis
+
+exclude family duplicates
+
+Output:
+
+matching question set
+
+alternatives if insufficient supply
+
+16.5 Review queue
+GET /question-intelligence/review-queue
+
+Filters:
+
+subject
+
+topic
+
+low_confidence
+
+unreviewed
+
+taxonomy_gap
+
+family_unresolved
+
+16.6 Approve or edit classification
+PATCH /question-intelligence/{question_id}
+
+Allows reviewer to:
+
+update labels
+
+set review state
+
+add notes
+
+approve
+
+reject
+
+17. Example intelligence output
+A good standard output object should look like this:
+
+{
+  "question_id": "q_41892",
+  "intelligence": {
+    "knowledge_roles": [
+      { "code": "worked_example", "primary": true, "confidence": 0.93 },
+      { "code": "key_concept", "primary": false, "confidence": 0.54 }
+    ],
+    "cognitive_demands": [
+      { "code": "application", "primary": true, "confidence": 0.91 }
+    ],
+    "solve_patterns": [
+      { "code": "substitution", "primary": true, "confidence": 0.88 }
+    ],
+    "pedagogic_functions": [
+      { "code": "concept_to_method_bridge", "primary": true, "confidence": 0.77 }
+    ],
+    "concepts": [
+      { "code": "math_algebra_linear_substitution", "primary": true, "strength": 0.94 }
+    ],
+    "misconceptions": [
+      { "code": "wrong_operation_choice", "likelihood": 0.42 },
+      { "code": "formula_known_but_misapplied", "likelihood": 0.28 }
+    ],
+    "family": {
+      "id": "fam_alg_lin_sub_01",
+      "type": "worked_example_template",
+      "similarity_score": 0.89
+    },
+    "review": {
+      "status": "approved",
+      "human_verified": false,
+      "machine_confidence": 0.90,
+      "classification_version": "qi_v1.0"
+    }
+  }
+}
+18. Starter taxonomy master list
+Now let’s define the starter classification codes you can actually use.
+
+18.1 Knowledge role codes
+Use these as the first stable taxonomy.
+
+Foundational
+definition
+
+term_identification
+
+fact_recall
+
+principle
+
+rule
+
+law
+
+Conceptual
+key_concept
+
+explanation
+
+interpretation
+
+comparison
+
+classification
+
+cause_effect
+
+Quantitative / formal
+formula_recall
+
+formula_meaning
+
+formula_derivation
+
+proof
+
+procedure_method
+
+worked_example
+
+Applied / representational
+application_scenario
+
+graph_diagram_reading
+
+error_spotting
+
+exception_limitation
+
+18.2 Cognitive demand codes
+recognition
+
+recall
+
+comprehension
+
+application
+
+multi_step_application
+
+analysis
+
+inference
+
+generalization
+
+evaluation
+
+justification
+
+proof_reasoning
+
+18.3 Solve pattern codes
+direct_retrieval
+
+concept_matching
+
+rule_selection
+
+formula_selection
+
+substitution
+
+rearrangement
+
+stepwise_computation
+
+pattern_spotting
+
+elimination
+
+compare_options
+
+graph_reading
+
+diagram_inference
+
+table_interpretation
+
+multi_step_reasoning
+
+proof_chain
+
+error_detection
+
+unit_conversion
+
+estimation
+
+18.4 Pedagogic function codes
+concept_introduction
+
+foundation_check
+
+concept_reinforcement
+
+memory_reinforcement
+
+speed_drill
+
+misconception_diagnosis
+
+concept_to_method_bridge
+
+exam_familiarization
+
+transfer_challenge
+
+deep_reasoning_challenge
+
+revision_anchor
+
+confidence_builder
+
+18.5 Family type codes
+direct_variation
+
+worked_example_template
+
+reasoning_pattern
+
+misconception_cluster
+
+exam_recurrence
+
+inverse_pair
+
+scaffold_group
+
+19. Subject examples
+19.1 Mathematics examples
+Question:
+“State the formula for the area of a circle.”
+
+knowledge role: formula_recall
+
+cognitive demand: recall
+
+solve pattern: direct_retrieval
+
+pedagogic function: foundation_check
+
+Question:
+“Calculate the area of a circle of radius 7 cm.”
+
+knowledge role: worked_example
+
+cognitive demand: application
+
+solve pattern: substitution
+
+pedagogic function: concept_to_method_bridge
+
+Question:
+“Show that the sum of angles in a triangle is 180°.”
+
+knowledge role: proof
+
+cognitive demand: justification
+
+solve pattern: proof_chain
+
+pedagogic function: deep_reasoning_challenge
+
+19.2 Science examples
+Question:
+“Define osmosis.”
+
+knowledge role: definition
+
+cognitive demand: recall
+
+solve pattern: direct_retrieval
+
+pedagogic function: memory_reinforcement
+
+Question:
+“Explain why iron rusts faster in moist air.”
+
+knowledge role: explanation
+
+cognitive demand: comprehension
+
+solve pattern: multi_step_reasoning
+
+pedagogic function: concept_reinforcement
+
+Question:
+“Study the diagram and label the parts of the flower.”
+
+knowledge role: graph_diagram_reading
+
+cognitive demand: recognition
+
+solve pattern: diagram_inference
+
+pedagogic function: foundation_check
+
+19.3 English examples
+Question:
+“What is the meaning of the underlined word as used in the passage?”
+
+knowledge role: term_identification or interpretation
+
+cognitive demand: comprehension
+
+solve pattern: concept_matching
+
+pedagogic function: foundation_check
+
+Question:
+“Explain the role of the main character in the conflict.”
+
+knowledge role: explanation
+
+cognitive demand: analysis
+
+solve pattern: multi_step_reasoning
+
+pedagogic function: deep_reasoning_challenge
+
+Question:
+“Choose the sentence with the correct punctuation.”
+
+knowledge role: rule
+
+cognitive demand: application
+
+solve pattern: compare_options
+
+pedagogic function: misconception_diagnosis
+
+20. How this engine changes each product surface
+20.1 Past Questions
+Past questions stop being just archive pages.
+
+They become explorable by:
+
+year
+
+topic
+
+definition type
+
+explanation type
+
+worked example type
+
+proof type
+
+family
+
+misconception type
+
+cognitive demand
+
+recurrence pattern
+
+That is a major upgrade.
+
+20.2 Topic Tests
+Tests can now be balanced by question nature, not only by topic.
+
+20.3 Teach Mode
+Teach Mode can intentionally sequence:
+
+definition
+
+key concept
+
+explanation
+
+example
+
+application
+
+trap
+
+challenge
+
+20.4 Wrong Answer Intelligence
+Wrong answers can be diagnosed by question nature and solve pattern.
+
+20.5 Memory Mode
+Memory Mode can prioritize:
+
+definitions
+
+facts
+
+formulas
+
+key concepts
+
+short explanation recall
+
+20.6 Knowledge Gap Mode
+Knowledge gaps can be framed as:
+
+concept gap
+
+explanation gap
+
+method gap
+
+proof gap
+
+graph-reading gap
+
+20.7 Elite Mode
+Elite Mode can focus on:
+
+transfer challenge
+
+proof reasoning
+
+multi-step application
+
+subtle family variations
+
+high-discrimination items
+
+21. Rollout plan
+This should be deployed in phases.
+
+Phase 1 — Foundation
+Build:
+
+taxonomy registry
+
+core tables
+
+parser
+
+rule classifier
+
+summary snapshot builder
+
+Phase 2 — Semantic classification
+Add model-based classifier and resolver.
+
+Phase 3 — Backfill
+Run all legacy question bank content through the engine.
+
+Prioritize:
+
+Mathematics
+
+Science
+
+English
+
+Phase 4 — Review console
+Enable human review to clean up low-confidence results.
+
+Phase 5 — Retrieval integration
+Expose intelligence filters in question APIs.
+
+Phase 6 — Feature integration
+Start with:
+
+Past Questions
+
+Topic Tests
+
+Teach Mode
+
+Then move to:
+
+Wrong Answer Intelligence
+
+Memory Mode
+
+Knowledge Gap Mode
+
+Elite Mode
+
+Phase 7 — Family analytics
+Add recurrence and inverse appearance intelligence.
+
+22. Success metrics
+You need measurable signals that the engine is working.
+
+Classification quality metrics
+percentage of questions successfully classified
+
+percentage of questions auto-approved
+
+reviewer correction rate
+
+family assignment accuracy
+
+taxonomy conflict rate
+
+Product impact metrics
+increase in question retrieval relevance
+
+increase in time spent in Past Questions exploration
+
+increase in completion of concept ladders
+
+improved wrong-answer diagnosis usefulness
+
+better test blueprint balance
+
+higher return rate in modes using intelligence filters
+
+Review metrics
+time to review low-confidence items
+
+most corrected labels
+
+taxonomy gaps discovered
+
+23. Failure modes to watch for
+Taxonomy too broad
+If labels are vague, classification becomes meaningless.
+
+Taxonomy too granular too early
+If labels explode too quickly, consistency falls apart.
+
+Overreliance on surface keywords
+You will misclassify too many questions.
+
+Weak concept mapping
+Without precise concept nodes, the engine becomes shallow again.
+
+No review process
+Errors will accumulate silently.
+
+No family maintenance
+Family clustering will drift and become noisy.
+
+24. Strong implementation recommendation
+For version 1, do not try to make the taxonomy enormous.
+
+Start with a clean, strong core taxonomy and make it consistent.
+
+The winning path is:
+
+stable label set
+
+strong parser
+
+good rule layer
+
+schema-bound model output
+
+review queue
+
+family system
+
+precise concept mapping
+
+That gives you real power quickly.
+
+25. Immediate build order
+This is the exact order I would build it.
+
+Build 1
+Taxonomy registry tables and seed data
+
+Build 2
+Question intelligence tables and summary snapshot
+
+Build 3
+Question parser and feature extractor
+
+Build 4
+Rule-based classifier
+
+Build 5
+Model-based classifier with strict JSON output
+
+Build 6
+Resolver and confidence logic
+
+Build 7
+Family engine basic version
+
+Build 8
+Misconception mapper starter version
+
+Build 9
+Review console
+
+Build 10
+Backfill pipeline for legacy bank
+
+Build 11
+Integrate with Past Questions first
+
+Build 12
+Integrate with Topic Tests and Teach Mode
+
+26. Final product view
+Once this is done, your platform stops treating questions as flat content.
+
+It starts treating them as educational intelligence objects.
+
+That means the system can know:
+
+this is a definition
+
+this is a key concept
+
+this is a worked example
+
+this is a formula-proof structure
+
+this is likely to expose a misconception
+
+this belongs to a recurring exam family
+
+this should appear in Memory Mode
+
+this should not appear too early in Teach Mode
+
+this should be used to diagnose why the student keeps failing
+
+That is the real shift.
+
+Next, I can do the next layer in one clean block: the full backend contract, meaning exact JSON schemas, classifier prompt format, resolver rules, review states, and event flow from ingestion to storage.
+
+
+proceed
+
+I’m locking this down at contract level now: exact payloads, enums, state transitions, resolver thresholds, and ingestion-to-storage event flow so it can move straight into implementation.
+
+Thought for 4s
+Good. Here is the next layer: the actual backend contract and operational logic.
+
+Question Intelligence Engine
+Backend Contract, JSON Schemas, Resolver Rules, Review States, and Event Flow
+
+This specification defines how the Question Intelligence Engine behaves as a real backend system.
+
+It covers:
+
+service boundaries
+
+request and response contracts
+
+classification payloads
+
+resolver logic
+
+review workflow
+
+event lifecycle
+
+reclassification rules
+
+integration points with the rest of the platform
+
+The goal is to make this directly implementable.
+
+1. Service boundary
+The Question Intelligence Engine should be implemented as a backend domain service, not UI logic.
+
+It can live as:
+
+a standalone service, or
+
+a bounded module inside your backend monolith
+
+Either way, it must own:
+
+taxonomy lookup
+
+question parsing
+
+rule classification
+
+semantic classification orchestration
+
+resolver logic
+
+family assignment
+
+misconception assignment
+
+review routing
+
+intelligence persistence
+
+reclassification lifecycle
+
+2. Internal modules
+The backend should expose these internal modules.
+
+2.1 TaxonomyRegistry
+Responsibilities:
+
+return valid labels for each axis
+
+validate codes
+
+manage deprecated labels
+
+enforce compatibility rules
+
+expose taxonomy version
+
+2.2 QuestionParser
+Responsibilities:
+
+normalize question payload
+
+extract features
+
+produce parsed object
+
+2.3 RuleClassifier
+Responsibilities:
+
+apply deterministic rules
+
+output weighted label candidates
+
+2.4 SemanticClassifier
+Responsibilities:
+
+call LLM or classifier model
+
+pass approved taxonomy
+
+force schema-bound output
+
+2.5 ClassificationResolver
+Responsibilities:
+
+merge rule and semantic outputs
+
+assign primary labels
+
+compute final confidence
+
+validate combinations
+
+2.6 FamilyEngine
+Responsibilities:
+
+assign or suggest question family
+
+compute family similarity
+
+detect inverse family relation candidates
+
+2.7 MisconceptionEngine
+Responsibilities:
+
+assign misconception tags
+
+compute likelihood
+
+use distractors, patterns, and history
+
+2.8 IntelligenceRepository
+Responsibilities:
+
+persist normalized and snapshot intelligence
+
+version intelligence records
+
+track review state
+
+2.9 ReviewOrchestrator
+Responsibilities:
+
+route to manual review
+
+manage review queue
+
+apply reviewer edits
+
+keep audit log
+
+3. Core domain entities
+The service should operate around these domain entities.
+
+3.1 Question
+Raw question content and metadata.
+
+3.2 ParsedQuestion
+Normalized question content plus extracted features.
+
+3.3 ClassificationCandidate
+Intermediate label predictions from rules or model.
+
+3.4 ResolvedIntelligence
+Final merged intelligence result.
+
+3.5 QuestionFamilyMatch
+Family assignment or candidate family decision.
+
+3.6 ReviewRecord
+Human review action and audit state.
+
+3.7 IntelligenceSnapshot
+Fast retrieval representation stored with the question.
+
+4. Canonical payloads
+4.1 Question ingestion request
+Use one standard payload for all sources.
+
+{
+  "question_id": "q_12345",
+  "source": {
+    "source_type": "past_question",
+    "source_ref": "bece_2022_math_paper_1",
+    "exam_body": "BECE",
+    "exam_year": 2022,
+    "paper_code": "math_p1"
+  },
+  "curriculum": {
+    "subject_code": "mathematics",
+    "topic_code": "algebra",
+    "subtopic_code": "linear_equations"
+  },
+  "question": {
+    "format": "mcq",
+    "stem": "Find the value of x if 3x + 5 = 20.",
+    "options": [
+      { "label": "A", "text": "3" },
+      { "label": "B", "text": "4" },
+      { "label": "C", "text": "5" },
+      { "label": "D", "text": "6" }
+    ],
+    "answer": {
+      "type": "single_option",
+      "value": "C"
+    },
+    "explanation": "Subtract 5 from both sides to get 3x = 15, then divide by 3.",
+    "marks": 1,
+    "language_code": "en"
+  },
+  "assets": [],
+  "authoring": {
+    "created_by": "system_import",
+    "ingestion_mode": "bulk_import"
+  }
+}
+4.2 Parsed question object
+This should be internal, but stable.
+
+{
+  "question_id": "q_12345",
+  "normalized": {
+    "stem": "Find the value of x if 3x + 5 = 20.",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "answer_text": "5",
+    "explanation_text": "Subtract 5 from both sides to get 3x = 15, then divide by 3."
+  },
+  "features": {
+    "command_verbs": ["find"],
+    "contains_numeric_literals": true,
+    "contains_equation": true,
+    "contains_graph_asset": false,
+    "contains_table_asset": false,
+    "contains_diagram_asset": false,
+    "has_proof_language": false,
+    "has_explanation_language": false,
+    "has_comparison_language": false,
+    "has_error_detection_language": false,
+    "option_count": 4,
+    "format": "mcq",
+    "marks": 1,
+    "equation_like_density": 0.91,
+    "reasoning_length_hint": "short",
+    "symbol_features": ["variable", "plus", "equals"]
+  },
+  "context": {
+    "subject_code": "mathematics",
+    "topic_code": "algebra",
+    "subtopic_code": "linear_equations"
+  }
+}
+5. Classification request contract
+The engine should support an explicit classify endpoint.
+
+5.1 Endpoint
+POST /question-intelligence/classify
+
+5.2 Request body
+{
+  "question_id": "q_12345",
+  "mode": "full",
+  "reclassify": false,
+  "payload": {
+    "source": {
+      "source_type": "past_question",
+      "source_ref": "bece_2022_math_paper_1",
+      "exam_body": "BECE",
+      "exam_year": 2022
+    },
+    "curriculum": {
+      "subject_code": "mathematics",
+      "topic_code": "algebra",
+      "subtopic_code": "linear_equations"
+    },
+    "question": {
+      "format": "mcq",
+      "stem": "Find the value of x if 3x + 5 = 20.",
+      "options": [
+        { "label": "A", "text": "3" },
+        { "label": "B", "text": "4" },
+        { "label": "C", "text": "5" },
+        { "label": "D", "text": "6" }
+      ],
+      "answer": {
+        "type": "single_option",
+        "value": "C"
+      },
+      "explanation": "Subtract 5 from both sides to get 3x = 15, then divide by 3.",
+      "marks": 1
+    },
+    "assets": []
+  }
+}
+5.3 mode values
+rules_only
+
+semantic_only
+
+full
+
+family_only
+
+misconception_only
+
+Normally use full.
+
+6. Classification response contract
+6.1 Response body
+{
+  "question_id": "q_12345",
+  "taxonomy_version": "qi_taxonomy_v1",
+  "classification_version": "qi_engine_v1",
+  "parsed_question": {
+    "command_verbs": ["find"],
+    "contains_numeric_literals": true,
+    "contains_equation": true,
+    "contains_diagram_asset": false
+  },
+  "rule_candidates": {
+    "knowledge_roles": [
+      { "code": "worked_example", "score": 0.84 },
+      { "code": "procedure_method", "score": 0.28 }
+    ],
+    "cognitive_demands": [
+      { "code": "application", "score": 0.88 }
+    ],
+    "solve_patterns": [
+      { "code": "rearrangement", "score": 0.82 }
+    ],
+    "pedagogic_functions": [
+      { "code": "concept_to_method_bridge", "score": 0.61 }
+    ]
+  },
+  "semantic_candidates": {
+    "knowledge_roles": [
+      { "code": "worked_example", "score": 0.93 },
+      { "code": "key_concept", "score": 0.34 }
+    ],
+    "cognitive_demands": [
+      { "code": "application", "score": 0.91 }
+    ],
+    "solve_patterns": [
+      { "code": "rearrangement", "score": 0.89 }
+    ],
+    "pedagogic_functions": [
+      { "code": "concept_to_method_bridge", "score": 0.76 }
+    ],
+    "misconceptions": [
+      { "code": "wrong_inverse_operation", "score": 0.43 }
+    ],
+    "concepts": [
+      { "code": "math_algebra_linear_equation_solving", "score": 0.95 }
+    ]
+  },
+  "resolved": {
+    "knowledge_roles": [
+      { "code": "worked_example", "primary": true, "confidence": 0.92 }
+    ],
+    "cognitive_demands": [
+      { "code": "application", "primary": true, "confidence": 0.90 }
+    ],
+    "solve_patterns": [
+      { "code": "rearrangement", "primary": true, "confidence": 0.88 }
+    ],
+    "pedagogic_functions": [
+      { "code": "concept_to_method_bridge", "primary": true, "confidence": 0.73 }
+    ],
+    "concepts": [
+      { "code": "math_algebra_linear_equation_solving", "primary": true, "strength": 0.95 }
+    ],
+    "misconceptions": [
+      { "code": "wrong_inverse_operation", "likelihood": 0.43 }
+    ],
+    "family": {
+      "family_id": "fam_math_alg_linear_solve_01",
+      "family_type": "worked_example_template",
+      "similarity_score": 0.87
+    },
+    "review": {
+      "status": "approved",
+      "human_verified": false,
+      "machine_confidence": 0.89,
+      "needs_review": false
+    }
+  }
+}
+7. Output schema for semantic classifier
+The semantic classifier must return a very strict JSON format.
+
+7.1 Required schema
+{
+  "knowledge_roles": [
+    {
+      "code": "worked_example",
+      "score": 0.93,
+      "rationale_short": "Requires solving a concrete equation instance."
+    }
+  ],
+  "cognitive_demands": [
+    {
+      "code": "application",
+      "score": 0.91,
+      "rationale_short": "Learner applies equation-solving knowledge."
+    }
+  ],
+  "solve_patterns": [
+    {
+      "code": "rearrangement",
+      "score": 0.89,
+      "rationale_short": "Requires moving terms and isolating variable."
+    }
+  ],
+  "pedagogic_functions": [
+    {
+      "code": "concept_to_method_bridge",
+      "score": 0.76,
+      "rationale_short": "Checks whether learner can execute the method."
+    }
+  ],
+  "concepts": [
+    {
+      "code": "math_algebra_linear_equation_solving",
+      "score": 0.95
+    }
+  ],
+  "misconceptions": [
+    {
+      "code": "wrong_inverse_operation",
+      "score": 0.43
+    }
+  ],
+  "family_summary": {
+    "pattern_name": "one variable linear solve",
+    "family_type": "worked_example_template"
+  }
+}
+7.2 Rules for this output
+all codes must come from current taxonomy
+
+score range must be 0.00 to 1.00
+
+at least one candidate per major axis unless confidence is extremely low
+
+no prose outside schema
+
+no invented labels
+
+no markdown
+
+no explanations longer than short rationale fields
+
+8. Semantic classifier prompt contract
+The semantic classifier should be given tightly controlled instructions.
+
+8.1 System prompt structure
+The model should be instructed like this:
+
+You are a question classification engine.
+Classify the input question into the provided educational taxonomy.
+Only use allowed codes.
+Do not invent labels.
+Output valid JSON that matches the required schema exactly.
+A question may have multiple labels per axis, but each axis should prefer the most educationally central label.
+Use the question stem, options, answer, explanation, subject, and topic context together.
+When uncertain, return lower confidence rather than guessing.
+Do not produce prose outside the JSON output.
+
+8.2 Input payload to the model
+{
+  "taxonomy_version": "qi_taxonomy_v1",
+  "allowed_codes": {
+    "knowledge_roles": [
+      "definition",
+      "term_identification",
+      "fact_recall",
+      "principle",
+      "rule",
+      "law",
+      "key_concept",
+      "explanation",
+      "interpretation",
+      "comparison",
+      "classification",
+      "cause_effect",
+      "formula_recall",
+      "formula_meaning",
+      "formula_derivation",
+      "proof",
+      "procedure_method",
+      "worked_example",
+      "application_scenario",
+      "graph_diagram_reading",
+      "error_spotting",
+      "exception_limitation"
+    ],
+    "cognitive_demands": [
+      "recognition",
+      "recall",
+      "comprehension",
+      "application",
+      "multi_step_application",
+      "analysis",
+      "inference",
+      "generalization",
+      "evaluation",
+      "justification",
+      "proof_reasoning"
+    ],
+    "solve_patterns": [
+      "direct_retrieval",
+      "concept_matching",
+      "rule_selection",
+      "formula_selection",
+      "substitution",
+      "rearrangement",
+      "stepwise_computation",
+      "pattern_spotting",
+      "elimination",
+      "compare_options",
+      "graph_reading",
+      "diagram_inference",
+      "table_interpretation",
+      "multi_step_reasoning",
+      "proof_chain",
+      "error_detection",
+      "unit_conversion",
+      "estimation"
+    ],
+    "pedagogic_functions": [
+      "concept_introduction",
+      "foundation_check",
+      "concept_reinforcement",
+      "memory_reinforcement",
+      "speed_drill",
+      "misconception_diagnosis",
+      "concept_to_method_bridge",
+      "exam_familiarization",
+      "transfer_challenge",
+      "deep_reasoning_challenge",
+      "revision_anchor",
+      "confidence_builder"
+    ]
+  },
+  "question_context": {
+    "subject_code": "mathematics",
+    "topic_code": "algebra",
+    "subtopic_code": "linear_equations",
+    "format": "mcq",
+    "stem": "Find the value of x if 3x + 5 = 20.",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "answer_text": "5",
+    "explanation_text": "Subtract 5 from both sides to get 3x = 15, then divide by 3.",
+    "marks": 1,
+    "asset_types": []
+  }
+}
+9. Resolver rules
+This is one of the most important pieces.
+
+The resolver should not simply average scores.
+It should make educational decisions in a controlled way.
+
+9.1 Score inputs
+For each axis, the resolver receives:
+
+rule score per label
+
+semantic score per label
+
+optional historical prior
+
+optional source-based adjustment
+
+ontology constraints
+
+9.2 Combined score formula
+A simple and strong starting formula:
+
+combined_score =
+  (rule_score * 0.40) +
+  (semantic_score * 0.50) +
+  (context_bonus * 0.10)
+Where:
+
+context_bonus comes from known structure, assets, marks, format, or topic cues
+
+This can be tuned later.
+
+9.3 Primary label rule
+Each axis should assign one primary label if the top combined score is at least the minimum primary threshold.
+
+Starting thresholds
+primary threshold: 0.62
+
+secondary threshold: 0.45
+
+auto-approve threshold: 0.85
+
+manual review threshold: < 0.70
+
+9.4 Secondary label rule
+A secondary label is allowed if:
+
+score >= 0.45
+
+and within 0.20 of the primary label
+
+and not blocked by ontology incompatibility
+
+9.5 Tie-breaking rule
+If two labels are within 0.05 of each other:
+
+prefer the one more central to the question’s actual task
+
+use explanation and answer structure as tie-breakers
+
+if still ambiguous, lower machine confidence and mark for review
+
+9.6 Ontology compatibility rules
+Examples:
+
+Invalid or unlikely pairs
+definition + proof should rarely co-exist as primary knowledge role
+
+direct_retrieval + proof_chain cannot both be primary solve pattern
+
+recall + proof_reasoning cannot both be primary cognitive demand
+
+Valid common pairs
+definition + recall + direct_retrieval
+
+worked_example + application + substitution
+
+proof + justification + proof_chain
+
+explanation + comprehension + multi_step_reasoning
+
+graph_diagram_reading + recognition or interpretation
+
+9.7 Context bonuses
+Examples:
+
+graph asset present → boost graph_diagram_reading, graph_reading, table_interpretation
+
+phrase “study the diagram” → strong boost to representational labels
+
+phrase “show that” → boost proof, justification, proof_chain
+
+phrase “explain why” → boost explanation, comprehension, multi_step_reasoning
+
+numeric formula-heavy question → boost worked_example, application, substitution or rearrangement
+
+9.8 Confidence calculation
+Machine confidence should not be identical to top score.
+
+Use a weighted function such as:
+
+machine_confidence =
+  (top_axis_average * 0.60) +
+  (axis_consistency * 0.20) +
+  (rule_model_agreement * 0.20)
+Where:
+
+top_axis_average = mean of primary label scores across major axes
+
+axis_consistency = whether labels make coherent sense together
+
+rule_model_agreement = how closely rule and semantic systems agree
+
+10. Review state model
+Review states should be explicit.
+
+10.1 Review states
+Use these values:
+
+pending
+
+approved
+
+needs_review
+
+rejected
+
+edited_and_approved
+
+taxonomy_gap
+
+family_unresolved
+
+archived
+
+10.2 Meaning of each state
+pending
+Classification has run but no final decision yet.
+
+approved
+Machine-approved or human-approved and accepted for use.
+
+needs_review
+Safe to store, but not trusted enough for production usage in high-stakes flows.
+
+rejected
+Classification result is invalid and must be rerun or manually fixed.
+
+edited_and_approved
+Human reviewer changed labels and approved final result.
+
+taxonomy_gap
+The reviewer found that the question cannot be adequately described using current taxonomy.
+
+family_unresolved
+Main labels may be okay, but family assignment is unclear.
+
+archived
+Question or intelligence profile is no longer active.
+
+11. Review queue routing rules
+Send to review if any of these happen:
+machine confidence < 0.70
+
+any axis lacks a valid primary label
+
+ontology conflict unresolved
+
+no concept assignment above threshold
+
+family similarity < 0.60
+
+semantic classifier output malformed
+
+question parsing fails
+
+reviewer explicitly flags it
+
+source import marked as low quality
+
+taxonomy gap detected
+
+12. Review action contract
+12.1 Endpoint
+PATCH /question-intelligence/{question_id}/review
+
+12.2 Request body
+{
+  "reviewer_id": "admin_004",
+  "action": "edit_and_approve",
+  "changes": {
+    "knowledge_roles": [
+      { "code": "worked_example", "primary": true, "confidence": 0.95 }
+    ],
+    "cognitive_demands": [
+      { "code": "application", "primary": true, "confidence": 0.93 }
+    ],
+    "solve_patterns": [
+      { "code": "rearrangement", "primary": true, "confidence": 0.91 }
+    ],
+    "pedagogic_functions": [
+      { "code": "concept_to_method_bridge", "primary": true, "confidence": 0.82 }
+    ],
+    "concepts": [
+      { "code": "math_algebra_linear_equation_solving", "primary": true, "strength": 0.98 }
+    ],
+    "misconceptions": [
+      { "code": "wrong_inverse_operation", "likelihood": 0.51 }
+    ],
+    "family": {
+      "family_id": "fam_math_alg_linear_solve_01",
+      "family_type": "worked_example_template",
+      "similarity_score": 0.90
+    }
+  },
+  "notes": "Semantic output was correct but pedagogic function score was too low. Approved after adjustment."
+}
+12.3 action values
+approve
+
+reject
+
+edit_and_approve
+
+mark_taxonomy_gap
+
+mark_family_unresolved
+
+send_for_reclassification
+
+13. Intelligence retrieval contract
+13.1 Endpoint
+GET /questions/{question_id}/intelligence
+
+13.2 Response
+{
+  "question_id": "q_12345",
+  "classification_version": "qi_engine_v1",
+  "taxonomy_version": "qi_taxonomy_v1",
+  "intelligence": {
+    "knowledge_roles": [
+      { "code": "worked_example", "primary": true, "confidence": 0.92 }
+    ],
+    "cognitive_demands": [
+      { "code": "application", "primary": true, "confidence": 0.90 }
+    ],
+    "solve_patterns": [
+      { "code": "rearrangement", "primary": true, "confidence": 0.88 }
+    ],
+    "pedagogic_functions": [
+      { "code": "concept_to_method_bridge", "primary": true, "confidence": 0.73 }
+    ],
+    "concepts": [
+      { "code": "math_algebra_linear_equation_solving", "primary": true, "strength": 0.95 }
+    ],
+    "misconceptions": [
+      { "code": "wrong_inverse_operation", "likelihood": 0.43 }
+    ],
+    "family": {
+      "family_id": "fam_math_alg_linear_solve_01",
+      "family_type": "worked_example_template",
+      "similarity_score": 0.87
+    },
+    "review": {
+      "status": "approved",
+      "human_verified": false,
+      "machine_confidence": 0.89,
+      "last_reviewed_at": null
+    }
+  }
+}
+14. Search contract
+14.1 Endpoint
+GET /questions/search
+
+14.2 Filters
+Support filters like:
+
+subject_code
+
+topic_code
+
+subtopic_code
+
+knowledge_role
+
+cognitive_demand
+
+solve_pattern
+
+pedagogic_function
+
+concept_code
+
+misconception_code
+
+family_id
+
+exam_body
+
+exam_year
+
+source_type
+
+review_status
+
+machine_confidence_min
+
+exclude_family_duplicates=true
+
+14.3 Example query
+/questions/search?subject_code=mathematics&topic_code=algebra&knowledge_role=worked_example&solve_pattern=rearrangement&machine_confidence_min=0.75
+15. Blueprint contract
+This is important for Topic Tests, Custom Tests, and Teach Mode.
+
+15.1 Endpoint
+POST /question-blueprints/build
+
+15.2 Request
+{
+  "subject_code": "mathematics",
+  "topic_code": "algebra",
+  "subtopic_code": "linear_equations",
+  "constraints": {
+    "exclude_family_duplicates": true,
+    "review_status": "approved",
+    "difficulty_mix": ["easy", "medium", "medium", "hard"]
+  },
+  "distribution": [
+    {
+      "knowledge_role": "definition",
+      "count": 2
+    },
+    {
+      "knowledge_role": "key_concept",
+      "count": 2
+    },
+    {
+      "knowledge_role": "worked_example",
+      "count": 4
+    },
+    {
+      "pedagogic_function": "misconception_diagnosis",
+      "count": 2
+    }
+  ]
+}
+15.3 Response
+{
+  "blueprint_id": "bp_001",
+  "status": "fulfilled",
+  "question_ids": [
+    "q_101",
+    "q_204",
+    "q_889",
+    "q_993",
+    "q_1771",
+    "q_1910",
+    "q_2288",
+    "q_4110",
+    "q_5112",
+    "q_6320"
+  ],
+  "coverage_summary": {
+    "knowledge_roles": {
+      "definition": 2,
+      "key_concept": 2,
+      "worked_example": 4
+    },
+    "pedagogic_functions": {
+      "misconception_diagnosis": 2
+    },
+    "family_duplicates_avoided": true
+  }
+}
+16. Family engine contract
+16.1 Endpoint
+POST /question-families/match
+
+16.2 Request
+{
+  "question_id": "q_12345",
+  "context": {
+    "subject_code": "mathematics",
+    "topic_code": "algebra",
+    "subtopic_code": "linear_equations"
+  },
+  "intelligence": {
+    "knowledge_roles": ["worked_example"],
+    "cognitive_demands": ["application"],
+    "solve_patterns": ["rearrangement"],
+    "concepts": ["math_algebra_linear_equation_solving"]
+  }
+}
+16.3 Response
+{
+  "match_status": "matched",
+  "family": {
+    "family_id": "fam_math_alg_linear_solve_01",
+    "family_type": "worked_example_template",
+    "similarity_score": 0.87,
+    "canonical_question_id": "q_879"
+  },
+  "alternatives": [
+    {
+      "family_id": "fam_math_alg_linear_solve_02",
+      "similarity_score": 0.68
+    }
+  ]
+}
+16.4 Family decision thresholds
+>= 0.80 → auto-match
+
+0.60 – 0.79 → candidate, may need review
+
+< 0.60 → create unresolved family candidate or defer
+
+17. Misconception engine contract
+17.1 Endpoint
+POST /question-misconceptions/infer
+
+17.2 Request
+{
+  "question_id": "q_12345",
+  "context": {
+    "subject_code": "mathematics",
+    "topic_code": "algebra",
+    "subtopic_code": "linear_equations"
+  },
+  "question": {
+    "stem": "Find the value of x if 3x + 5 = 20.",
+    "options": ["3", "4", "5", "6"],
+    "answer_text": "5",
+    "explanation_text": "Subtract 5 from both sides to get 3x = 15, then divide by 3."
+  },
+  "intelligence": {
+    "solve_patterns": ["rearrangement"],
+    "concepts": ["math_algebra_linear_equation_solving"]
+  }
+}
+17.3 Response
+{
+  "misconceptions": [
+    {
+      "code": "wrong_inverse_operation",
+      "likelihood": 0.43,
+      "rationale_short": "Learner may add instead of subtracting or divide before isolating."
+    },
+    {
+      "code": "arithmetic_after_correct_setup",
+      "likelihood": 0.27,
+      "rationale_short": "Setup is simple but arithmetic slip is plausible."
+    }
+  ]
+}
+18. Event-driven flow
+This engine should support event-driven processing.
+
+That makes ingestion scalable.
+
+18.1 Recommended event names
+question.created
+
+question.updated
+
+question.deleted
+
+question.classification.requested
+
+question.classification.completed
+
+question.classification.failed
+
+question.review.required
+
+question.review.completed
+
+question.family.assigned
+
+question.family.unresolved
+
+question.reclassification.requested
+
+taxonomy.updated
+
+19. Full event flow
+Flow A — New question ingestion
+Step 1
+A question is created.
+
+Event:
+question.created
+
+Payload includes:
+
+question ID
+
+source type
+
+subject/topic
+
+raw content
+
+Step 2
+The system emits:
+question.classification.requested
+
+Step 3
+QuestionParser runs.
+
+If parser fails:
+
+emit question.classification.failed
+
+mark review state needs_review
+
+Step 4
+RuleClassifier runs.
+
+Step 5
+SemanticClassifier runs.
+
+Step 6
+ClassificationResolver merges outputs.
+
+Step 7
+FamilyEngine matches or suggests family.
+
+Step 8
+MisconceptionEngine assigns likely misconceptions.
+
+Step 9
+IntelligenceRepository persists:
+
+summary row
+
+join rows
+
+snapshot JSON
+
+review state
+
+Step 10
+If confidence high:
+
+emit question.classification.completed
+
+If confidence low:
+
+emit question.review.required
+
+Flow B — Question updated
+If stem, answer, options, explanation, or topic changes, the system should reclassify.
+
+Event:
+question.updated
+
+Rules:
+
+if only metadata unrelated to meaning changes, no reclassification
+
+if content or topic changes, reclassify
+
+if taxonomy version changed and question is affected, schedule reclassification batch
+
+Flow C — Human review
+Step 1
+Reviewer opens queue item.
+
+Step 2
+Reviewer approves, edits, or rejects.
+
+Step 3
+System stores review record and updated intelligence.
+
+Step 4
+Event emitted:
+question.review.completed
+
+If reviewer created new family candidate:
+
+emit question.family.unresolved or family merge event
+
+Flow D — Taxonomy update
+If taxonomy changes:
+
+detect impacted labels
+
+schedule batch reclassification for affected questions
+
+preserve prior version for audit
+
+mark snapshot as stale until refreshed
+
+Event:
+taxonomy.updated
+
+20. Reclassification rules
+Not every question update should re-run full classification.
+
+Reclassify fully if:
+stem changed
+
+options changed
+
+answer changed
+
+explanation changed
+
+subject/topic/subtopic changed
+
+new assets added that affect interpretation
+
+taxonomy changed in relevant area
+
+family engine improved materially
+
+reviewer requested reclassification
+
+Do not reclassify fully if:
+display order changed
+
+typo fixed outside semantic meaning
+
+source reference changed
+
+tags unrelated to intelligence changed
+
+21. Intelligence versioning
+This is important.
+
+Every classification should be versioned by:
+
+taxonomy version
+
+engine version
+
+prompt version
+
+resolver version
+
+family engine version
+
+Example
+{
+  "versioning": {
+    "taxonomy_version": "qi_taxonomy_v1",
+    "classification_engine_version": "qi_engine_v1",
+    "semantic_prompt_version": "qi_prompt_v1",
+    "resolver_version": "qi_resolver_v1",
+    "family_engine_version": "qi_family_v1"
+  }
+}
+That way you can always audit why a question got the labels it did.
+
+22. Review audit schema
+Each review action should produce an audit record.
+
+{
+  "review_id": "rev_1009",
+  "question_id": "q_12345",
+  "reviewer_id": "admin_004",
+  "previous_state": "needs_review",
+  "new_state": "edited_and_approved",
+  "changes": {
+    "pedagogic_function_primary": {
+      "from": "foundation_check",
+      "to": "concept_to_method_bridge"
+    }
+  },
+  "notes": "Question is not just a foundation check. It requires method execution.",
+  "created_at": "2026-03-28T21:10:00Z"
+}
+23. Failure handling
+The service must fail safely.
+
+23.1 Semantic model failure
+If semantic classifier times out or returns bad JSON:
+
+fall back to rule-only classification
+
+reduce confidence
+
+mark needs_review
+
+23.2 Parser failure
+If parser cannot normalize question:
+
+store failure reason
+
+mark needs_review
+
+do not auto-approve
+
+23.3 Taxonomy validation failure
+If model returns invalid codes:
+
+discard invalid labels
+
+rerun with stricter prompt if allowed
+
+if still invalid, mark failed and send to review
+
+23.4 Family engine uncertainty
+If family similarity low:
+
+leave family unresolved
+
+allow question classification to remain usable
+
+flag family review separately
+
+This is important. Family uncertainty should not block the rest of classification.
+
+24. Performance model
+The engine should not classify live during student browsing.
+
+Recommended processing model
+asynchronous job at ingestion time
+
+precomputed snapshot for reads
+
+background reclassification batches
+
+cache taxonomy in memory
+
+persist both normalized and denormalized outputs
+
+Suggested queues
+question_classification_queue
+
+family_matching_queue
+
+misconception_inference_queue
+
+review_notification_queue
+
+reclassification_queue
+
+25. Security and trust constraints
+Because this feeds many learning decisions, it should be treated as trusted but reviewable infrastructure.
+
+Guardrails
+only approved taxonomy codes allowed
+
+all classification versions auditable
+
+reviewer overrides preserved
+
+raw model output stored for traceability if needed
+
+production retrieval can filter to approved-only if desired
+
+26. Integration patterns with app features
+Past Questions
+Use intelligence filters directly.
+
+Topic Tests
+Use blueprint endpoint with intelligence distributions.
+
+Teach Mode
+Use pedagogic sequencing based on intelligence.
+
+Wrong Answer Intelligence
+Use question-level misconceptions and solve patterns.
+
+Memory Mode
+Retrieve by:
+
+definition
+
+fact_recall
+
+formula_recall
+
+memory_reinforcement
+
+Elite Mode
+Retrieve by:
+
+transfer_challenge
+
+deep_reasoning_challenge
+
+proof_reasoning
+
+multi_step_application
+
+Knowledge Gap Mode
+Aggregate student misses by:
+
+concept
+
+solve_pattern
+
+cognitive_demand
+
+misconception
+
+27. Minimum implementation pack
+If you want the leanest viable backend implementation, version 1 should include these exact deliverables:
+
+Must-have
+taxonomy registry
+
+parser
+
+rule classifier
+
+semantic classifier contract
+
+resolver
+
+intelligence persistence
+
+review states
+
+retrieval endpoint
+
+blueprint endpoint
+
+family assignment basic version
+
+Strongly recommended in v1
+misconception inference
+
+review console backend
+
+versioning
+
+event emission
+
+reclassification support
+
+28. Final backend contract summary
+The engine should behave like this:
+
+a question enters the system
+
+parser normalizes it
+
+rules produce structural signals
+
+semantic model classifies within approved taxonomy
+
+resolver merges and validates
+
+family engine assigns recurring pattern group
+
+misconception engine tags likely reasoning failures
+
+result is stored in normalized tables and snapshot JSON
+
+low-confidence items go to review
+
+every product surface consumes the same intelligence object
+
+That is the backend truth layer.
+
+29. What I would do next
+The next most useful layer is to define the actual taxonomy tables in full detail for the first three subjects:
+
+Mathematics
+
+Integrated Science
+
+English
+
+That means:
+
+all label descriptions
+
+subject-specific misconception codes
+
+subject-specific concept examples
+
+rules for when each label applies
+
+That would make the classifier far more concrete.
+
+
+
+

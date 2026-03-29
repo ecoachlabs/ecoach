@@ -1,0 +1,6474 @@
+
+
+
+
+Smart Central Curriculum 
+
+
+there are definitely different curricula being run across the world but let's say we are running GES one for jhs students writing the BECE YOU WANT the curriculum to shape the topics , the subtopics etc because the objectives and comments in the curriculum also go along way in shaping what we have , there should be a version of the curriculum that is only accessible to the super admin and there should be a version acessible to students and parents , sometimes the curriculum also has strands etc so how are you going to make this curiculum smart to be the starting point to power all content work and scope 
+
+I’m grounding this in the actual Ghana JHS curriculum structure so the design does not drift from how GES/NaCCA really organize strands, sub-strands, content standards, indicators, and exemplars. Then I’ll turn that into a smart curriculum architecture with super-admin and student/parent views.
+
+Thought for 5m 32s
+Yes. The curriculum should be the constitutional source of truth for the whole system, not just a reference PDF sitting somewhere.
+
+For Ghana JHS, the NaCCA Common Core Programme already gives you the correct machine structure to build on: subjects are centrally published, and each curriculum is organized into strands, sub-strands, content standards, indicators, and exemplars, each with unique reference codes. The curriculum also includes scope-and-sequence across B7/JHS1 to B9/JHS3, so it already defines what belongs where and when. NaCCA states that the Key Phase 4 JHS CCP was completed in 2020, implemented progressively from the 2021/2022 academic year, and the pioneer cohort sat BECE in 2024. 
+
+That means the system should not start from loose “topics” typed manually by staff. It should start from a versioned, structured curriculum model derived from the official curriculum documents. That matters even more because NaCCA materials can be revised or modified, so your curriculum engine must support versions, publishing, and change tracking rather than one flat permanent list. 
+
+What “smart curriculum” should mean
+A smart central curriculum is not just a tree of subjects and topics. It is an executable curriculum graph.
+
+It should answer all of these questions automatically:
+
+What is officially in scope for this student, subject, year, and exam path?
+
+What exact objective or indicator is this content teaching?
+
+What comes before this topic?
+
+What depends on it later?
+
+What kind of teaching or assessment is appropriate for it?
+
+What content is missing?
+
+What has already been taught, tested, mastered, or forgotten?
+
+So the curriculum becomes the first layer of intelligence.
+
+A clean way to think about it is this:
+
+Curriculum decides what is allowed and expected.
+
+Exam intelligence decides what is emphasized.
+
+Learner intelligence decides what this child needs right now.
+
+That is the right separation of authority.
+
+The architecture
+Build it in six layers.
+
+1. Official Curriculum Layer — the canonical truth
+This is the locked master layer.
+
+Every official curriculum release should be ingested into structured entities like:
+
+Curriculum version
+
+Subject
+
+Strand
+
+Sub-strand
+
+Content standard
+
+Indicator
+
+Exemplar
+
+Core competency
+
+Scope-and-sequence placement
+
+Source citation back to PDF/page/section
+
+Do not rename the official structure here. Preserve the official codes exactly.
+
+For example, the curriculum documents explicitly define the hierarchy and unique annotation structure, such as codes like B7/JHS1.1.1.2.1, where the code encodes year/class, strand, sub-strand, content standard, and indicator. 
+
+This layer should be immutable once published.
+You can supersede it with a new version, but you do not casually edit the canonical record.
+
+2. Interpretation Layer — super-admin only
+This is where the curriculum becomes smart.
+
+The official curriculum text is often not enough by itself for generation, tutoring, diagnosis, or sequencing. So every official node should have an internal interpretation layer attached to it.
+
+For each indicator or standard, the super-admin side should enrich it with hidden fields such as:
+
+Friendly topic name
+
+Internal subtopic atoms
+
+Knowledge points
+
+Skills involved
+
+Cognitive verb
+
+Expected evidence type
+
+Common misconceptions
+
+Prerequisite nodes
+
+Next dependent nodes
+
+Difficulty ladder
+
+Recommended teaching strategies
+
+Question families
+
+Worked-example templates
+
+Memory/recall tags
+
+Local-context examples
+
+BECE/past-question mapping
+
+Notes/comments from curriculum interpretation
+
+Approval status
+
+This layer is where the curriculum stops being a document and becomes a control system.
+
+So an indicator is no longer just text. It becomes an instructional object.
+
+3. Public Curriculum Layer — student and parent view
+Do not expose the raw internal curriculum engine directly.
+
+Create a second rendered view from the same master.
+
+Super-admin view
+This view can see:
+
+full official wording
+
+source references
+
+hidden interpretation tags
+
+mappings to question banks
+
+misconceptions
+
+prompt templates
+
+content recipes
+
+curriculum diffs between versions
+
+unpublished draft changes
+
+risk and coverage analytics
+
+Student view
+This view should see:
+
+subject
+
+strand
+
+simplified topic name
+
+what I should know
+
+what I should be able to do
+
+examples
+
+current mastery
+
+confidence
+
+recall stability
+
+what comes next
+
+Parent view
+This should be even more outcome-focused:
+
+what is expected this term
+
+what has been covered
+
+what is weak
+
+what is overdue
+
+exam risk by strand/sub-strand
+
+whether the child is on track
+
+So there are not really “two separate curricula.”
+There is one master curriculum, but multiple role-based renderings.
+
+That prevents drift.
+
+How the curriculum becomes intelligent
+The smartness comes from the derived engines sitting on top of the master structure.
+
+A. Objective parser
+The curriculum objectives often carry verbs that define what kind of learning is expected: identify, explain, compare, solve, analyze, construct, justify, interpret, and so on.
+
+Your system should parse every objective into:
+
+verb — what action the learner must perform
+
+knowledge object — what the action is about
+
+depth — how demanding the task is
+
+evidence form — how mastery is shown
+
+instructional mode — how it should be taught
+
+assessment mode — how it should be tested
+
+That means the objective itself shapes the content engine.
+
+So “define” is not treated the same way as “compare,” and “solve” is not treated the same way as “justify.”
+
+B. Exemplar and comment interpreter
+The curriculum exemplars and remarks are gold.
+
+They should not sit as passive notes. They should be converted into structured guidance.
+
+Take them and classify them into types such as:
+
+example
+
+non-example
+
+boundary note
+
+teacher hint
+
+local-context cue
+
+misconception alert
+
+application cue
+
+assessment cue
+
+scaffold suggestion
+
+This matters because those notes/comments often tell you what the curriculum writers really intended, not just the surface wording.
+
+So the engine should ask:
+
+What examples are explicitly suggested?
+
+What kinds of reasoning are implied?
+
+What misunderstandings should be anticipated?
+
+What local Ghanaian context is appropriate?
+
+What level of depth is safe or out of scope?
+
+That is how the curriculum controls scope instead of letting content drift.
+
+C. Prerequisite graph
+The curriculum may look like a tree, but operationally it is a graph.
+
+A child may fail one indicator because they are weak in a prerequisite from an earlier sub-strand or even another year.
+
+So each node needs:
+
+parent-child hierarchy
+
+prerequisite edges
+
+dependency edges
+
+horizontal sibling relations
+
+cross-subject conceptual links where appropriate
+
+This is what will power diagnosis, remediation, and sequencing.
+
+Without this graph, your coach only knows names of topics.
+With it, your coach knows cause.
+
+D. Coverage ledger
+Every curriculum node should maintain live status fields such as:
+
+not introduced
+
+introduced
+
+taught
+
+practiced
+
+assessed
+
+mastered
+
+unstable
+
+decayed
+
+re-opened
+
+Then the system can tell the difference between:
+
+“not yet taught”
+
+“taught but weak”
+
+“once mastered but now forgotten”
+
+“mastered under support but not independently stable”
+
+That is essential for serious academic coaching.
+
+E. Scope guard engine
+This is one of the most important controls.
+
+No content item should enter the system unless it is anchored to a curriculum node.
+
+Every lesson, quiz item, flashcard, explanation, revision drill, diagnostic step, worked example, and mock-paper section should carry:
+
+curriculum version
+
+subject
+
+node id
+
+objective type
+
+difficulty
+
+content type
+
+approval state
+
+That gives you traceability.
+
+So at any moment you can answer:
+
+which exact part of the curriculum does this question belong to?
+
+what part of the curriculum still has no content?
+
+which content is now obsolete because the curriculum changed?
+
+are we overserving one strand and neglecting another?
+
+That is what makes the curriculum the starting point for all content work.
+
+A concrete example
+In the Social Studies curriculum, there is an indicator coded B7/JHS1.1.1.1.1 with the wording “Examine ways of dealing with sanitation challenges in the environment,” and the exemplars beneath it include explaining “environment” and “sanitation,” discussing types of environment, and identifying environmental problems. 
+
+That single node should become an executable object like this internally:
+
+official node: B7/JHS1.1.1.1.1
+
+public topic label: Sanitation and the Environment
+
+concept atoms: environment, sanitation, environmental problems, sanitation challenges, response strategies
+
+verb family: examine / explain / identify / discuss
+
+question families: definition, classification, local scenario, problem-solution, short structured response
+
+misconceptions: confusing physical environment with only natural environment; equating sanitation only with sweeping
+
+prerequisites: basic idea of environment
+
+evidence forms: explain in words, identify examples, suggest solutions
+
+remediation path: vocabulary → categories → examples → problem-solving
+
+parent-facing status: weak on identifying real-life sanitation challenges; moderate on definitions
+
+Now the coach can generate lessons, drills, diagnostics, revision tasks, and parent summaries from the same curriculum node without losing scope.
+
+What the super-admin side should be able to do
+The super-admin curriculum console should support:
+
+Ingest official curriculum
+
+upload PDF
+
+parse structure
+
+map codes
+
+verify hierarchy
+
+Enrich nodes
+
+add hidden interpretation fields
+
+add prerequisites
+
+add misconceptions
+
+attach content recipes
+
+Publish views
+
+internal draft
+
+approved public version
+
+student-facing wording
+
+parent-facing summary wording
+
+Run audits
+
+uncovered curriculum areas
+
+over-covered curriculum areas
+
+nodes with no assessments
+
+nodes with no remedial content
+
+nodes with no mastery logic
+
+Version control
+
+compare old vs new curriculum
+
+detect impacted content
+
+republish safely
+
+Lock scope
+
+prevent unauthorized topic creation
+
+flag out-of-scope content
+
+require approval for enrichment topics
+
+What students and parents should never see
+Keep these internal only:
+
+raw authoring notes
+
+hidden diagnosis rules
+
+exam-likelihood estimates
+
+internal difficulty calibration
+
+generation prompts
+
+misconception tags
+
+unpublished curriculum edits
+
+mapping confidence scores
+
+internal remedial logic
+
+Students should see clarity.
+Parents should see readiness.
+Super admins should see machinery.
+
+The core rule for content generation
+Every content workflow should begin with the same question:
+
+Which curriculum node are we serving?
+
+Not:
+
+what random topic are we writing on?
+
+what question sounds nice?
+
+what chapter title seems similar?
+
+This one rule will clean up the entire system.
+
+Because once the curriculum node is known, the system can derive:
+
+scope
+
+language
+
+depth
+
+prerequisite checks
+
+teaching mode
+
+question format
+
+mastery criteria
+
+review timing
+
+The minimum data model you need
+At minimum, I would define these entities:
+
+CurriculumVersion
+
+Subject
+
+Strand
+
+SubStrand
+
+ContentStandard
+
+Indicator
+
+Exemplar
+
+CurriculumAnnotation
+
+CurriculumComment
+
+CurriculumNodeRelation
+
+PublicTranslation
+
+ContentBlueprint
+
+AssessmentBlueprint
+
+NodeCoverageLedger
+
+VersionDiff
+
+VisibilityPolicy
+
+And every downstream object should reference one or more curriculum nodes:
+
+Lesson
+
+Question
+
+WorkedExample
+
+Flashcard
+
+DiagnosticProbe
+
+RevisionSet
+
+MockPaperSection
+
+RemediationPlan
+
+The real outcome
+When done properly, Smart Central Curriculum becomes:
+
+the source of academic scope
+
+the boundary against content drift
+
+the blueprint for question generation
+
+the anchor for diagnosis
+
+the map for tutoring sequence
+
+the dashboard for parent reporting
+
+the audit trail for curriculum coverage
+
+the upgrade path when the curriculum changes
+
+The mistake would be to treat curriculum as a static document.
+
+The correct move is to treat it as a versioned, permissioned, executable academic knowledge graph.
+
+The next thing to define is the exact schema and admin/public workflow for this Smart Central Curriculum engine.
+
+
+also meaning from time to time you can be updating the curiculum as well , that could lead new generation of content as well 
+
+Thought for 26s
+Yes. In fact, that is one of the biggest advantages of making the curriculum central.
+
+The curriculum should be a living controlled engine, not a one-time setup.
+
+When the curriculum changes, or when your internal interpretation of it improves, the system should be able to produce a new wave of content safely and systematically.
+
+There are really two kinds of curriculum updates
+1. Official curriculum updates
+This is when GES/NaCCA changes something externally:
+
+a strand is added or removed
+
+a sub-strand is moved
+
+an indicator is reworded
+
+scope is expanded or narrowed
+
+exemplars/comments are revised
+
+class placement changes
+
+This creates a new official curriculum version.
+
+2. Internal intelligence updates
+This is when your super-admin team improves the curriculum interpretation even though the official curriculum has not changed:
+
+better breakdown of a topic into subtopics
+
+better misconception mapping
+
+better prerequisite links
+
+better teaching strategy tagging
+
+better question blueprints
+
+better local-context examples
+
+better difficulty calibration
+
+This creates a new internal enrichment version.
+
+That second one is very important, because even without an official GES revision, your system keeps getting smarter.
+
+So yes — curriculum updates should generate new content
+But not in a careless “overwrite everything” way.
+
+It should work like this:
+
+Curriculum update happens
+A super admin edits or imports a new curriculum version.
+
+The system detects impact
+It checks which nodes changed:
+
+unchanged nodes
+
+lightly changed nodes
+
+structurally changed nodes
+
+newly added nodes
+
+deprecated nodes
+
+The system marks affected content
+Every lesson, question, drill, explanation, mock item, revision card, and diagnostic probe is tied to curriculum nodes.
+
+So the engine can immediately say:
+
+this content is still valid
+
+this content needs review
+
+this content must be regenerated
+
+this content is now obsolete
+
+this curriculum area now has no content and needs generation
+
+New generation is triggered
+The system then creates a regeneration queue.
+
+Not all content needs to be regenerated at once.
+Only impacted content should be.
+
+This means every content asset needs lineage
+Every content object should carry metadata like:
+
+curriculum version
+
+subject
+
+strand
+
+sub-strand
+
+node ID
+
+generation recipe version
+
+created by
+
+approved by
+
+status
+
+So for one question, you should know:
+
+what curriculum node produced it
+
+which version of the curriculum it belongs to
+
+which internal blueprint created it
+
+whether it is still current or stale
+
+Without lineage, you cannot safely regenerate content.
+
+Not all curriculum changes should have the same effect
+This is very important.
+
+A smart system should classify curriculum changes by severity.
+
+Type A — cosmetic change
+Example:
+
+wording is cleaned up
+
+typo fixed
+
+phrasing improved without changing scope
+
+Effect:
+
+maybe update display text only
+
+no need to regenerate all content
+
+Type B — interpretive change
+Example:
+
+super admin adds misconceptions
+
+better examples are added
+
+better question family mapping is added
+
+Effect:
+
+new future content becomes better
+
+some existing content may be optionally refreshed
+
+Type C — scope change
+Example:
+
+new topic added
+
+objective expanded
+
+subtopic removed
+
+difficulty expectation changes
+
+Effect:
+
+generate new content
+
+deprecate old content
+
+re-sequence learning paths
+
+Type D — structural change
+Example:
+
+topic moved to another year
+
+indicator split into two
+
+multiple nodes merged
+
+prerequisite chain changed
+
+Effect:
+
+regenerate content
+
+recalculate dependencies
+
+update study plans, mastery maps, revision queues, reporting
+
+That classification should be automatic or assisted.
+
+The safest model is versioned publishing
+Never let edits instantly rewrite the live student curriculum.
+
+Use three states:
+
+Draft
+Super admin is editing the curriculum.
+
+Review
+The system has already analyzed the effects and prepared regeneration candidates.
+
+Published
+The new curriculum version becomes active for selected cohorts.
+
+That way, students are not learning from unstable data.
+
+Cohort locking is critical
+Suppose BECE 2027 students are already using a curriculum set.
+
+If the curriculum is updated mid-year, you may not want all students switched immediately.
+
+So each learner cohort should be pinned to a curriculum release, for example:
+
+JHS2 Cohort A → Curriculum v2026.1
+
+BECE 2027 Cohort → Curriculum v2026.2
+
+That prevents chaos.
+
+Otherwise a child could be studying one topic structure today and a different one tomorrow.
+
+What happens to old content after an update?
+Do not delete it blindly.
+
+Content should move into one of these states:
+
+active
+
+active but legacy
+
+review required
+
+deprecated
+
+archived
+
+This matters because sometimes you want to compare performance across versions, or restore something if an update was wrong.
+
+The best part: curriculum updates can improve content quality, not just scope
+A lot of people think curriculum updates only mean adding topics.
+
+No.
+
+The more powerful effect is that better curriculum interpretation leads to better generation.
+
+For example:
+
+you add a misconception note to “osmosis”
+
+the system now generates better distractors
+
+you refine a math indicator into step-level subskills
+
+the system now generates better progressive worked examples
+
+you attach local Ghana examples to a Social Studies objective
+
+the tutor now explains with more relevant context
+
+you improve prerequisite mapping
+
+the diagnostic engine now digs deeper in the right place
+
+So a curriculum update can improve:
+
+teaching
+
+testing
+
+diagnosis
+
+revision
+
+parent reporting
+
+all at once.
+
+What the regeneration pipeline should look like
+A good pipeline would be:
+
+Curriculum node is updated
+
+Diff engine identifies what changed
+
+Dependency engine finds affected assets
+
+Coverage engine finds new gaps
+
+Generation engine creates new candidate content
+
+Validation engine checks scope, difficulty, clarity, duplication
+
+Super admin reviews high-risk changes
+
+Approved content is published
+
+Student-facing systems switch to new content based on version rules
+
+That is the full loop.
+
+A very important distinction
+You should support both:
+
+A. curriculum-driven generation
+This is when the curriculum change itself causes new content.
+
+B. curriculum-constrained generation
+This is when content is generated on demand, but still must stay within curriculum boundaries.
+
+Both matter.
+
+So even when the coach creates a fresh quiz in real time, it must still ask:
+
+which curriculum version?
+
+which node?
+
+what allowed scope?
+
+what difficulty band?
+
+what cognitive action?
+
+The super-admin should also see update impact analytics
+When they update the curriculum, the system should tell them:
+
+42 nodes changed
+
+18 lessons affected
+
+390 questions still valid
+
+75 questions need review
+
+24 items deprecated
+
+12 nodes now have no diagnostic content
+
+7 nodes gained new exemplars and can generate enrichment content
+
+That makes curriculum management intelligent, not blind.
+
+The real model you want
+What you are describing is not just “a curriculum table.”
+
+It is a versioned curriculum intelligence core.
+
+That core should do five things:
+
+define scope
+
+track change
+
+trigger regeneration
+
+protect live users from unstable edits
+
+keep all generated content traceable to curriculum truth
+
+So yes, from time to time you update the curriculum, and that absolutely should lead to new generation of content.
+
+But the correct model is:
+
+update curriculum → detect impact → regenerate affected content → review → publish by version
+
+not
+
+update curriculum → everything changes immediately
+
+That difference is what makes the system safe and serious.
+
+The next layer to define is the exact data schema and workflow states for:
+CurriculumVersion, CurriculumNode, CurriculumDiff, ContentImpact, RegenerationJob, and PublishingRule.
+
+
+once the brain and intelligence have the curriculum they have a good idea of how to steer the student , because now they understand the entire playing field , so on the super admin allow us to upload a pdf and for the ocr to kick in to extra all the data needed and process it via the brain and intelligence 
+
+Exactly. Once the brain has the curriculum, it is no longer coaching inside a fog.
+
+It now knows:
+
+the full syllabus territory
+
+the boundaries of scope
+
+the order of ideas
+
+the official expectations
+
+the strands and sub-strands
+
+the objectives and indicators
+
+the intended depth
+
+the likely progression path from weak to exam-ready
+
+That gives the intelligence engine the playing field.
+
+So yes, on the super-admin side, you should absolutely support curriculum PDF upload, then run an extraction pipeline that turns the PDF into structured curriculum intelligence.
+
+But I would tighten the model a bit:
+
+Do not think of it as “OCR and done.”
+
+Think of it as a Curriculum Ingestion Pipeline.
+
+Because OCR alone is not enough.
+What you need is:
+
+PDF upload → text extraction/OCR → structure detection → curriculum parsing → normalization → intelligence enrichment → human review → publish
+
+That is the right architecture.
+
+What this should do
+When a super admin uploads a curriculum PDF, the system should try to automatically extract:
+
+curriculum title
+
+subject
+
+level/class range
+
+version/year
+
+strands
+
+sub-strands
+
+content standards
+
+indicators
+
+exemplars
+
+comments/notes
+
+competencies
+
+reference codes
+
+page references
+
+tables and structured blocks
+
+any scope guidance language
+
+Then the brain should process that into an internal curriculum graph.
+
+So the upload is not just document storage.
+It is curriculum conversion.
+
+The correct pipeline
+1. Upload layer
+Super admin uploads:
+
+PDF curriculum file
+
+optional metadata:
+
+subject
+
+level
+
+source authority
+
+effective date
+
+curriculum family
+
+version label
+
+The system stores:
+
+original PDF
+
+extracted text
+
+parsed structure
+
+processing logs
+
+confidence scores
+
+You always keep the original source file for audit and reprocessing.
+
+2. Extraction layer
+This layer should decide how to read the PDF.
+
+Case A: digital PDF
+If the PDF already contains selectable text:
+
+use direct text extraction first
+
+Case B: scanned PDF
+If it is image-based:
+
+run OCR
+
+Case C: mixed PDF
+Some pages may be digital, some scanned:
+
+hybrid extraction per page
+
+So the system should not force OCR on every file.
+It should first detect whether native text exists.
+
+That matters for quality.
+
+3. Structure detection layer
+This is where the real intelligence begins.
+
+The extracted text must be segmented into curriculum parts such as:
+
+front matter
+
+subject metadata
+
+strand headers
+
+sub-strand headers
+
+content standard blocks
+
+indicator rows
+
+exemplar lists
+
+comments/teacher notes
+
+competency sections
+
+assessment guidance
+
+This layer should also detect:
+
+numbering patterns
+
+indentation hierarchy
+
+table layouts
+
+repeated header styles
+
+code patterns like curriculum references
+
+page continuation behavior
+
+Because curriculum documents often have a structure that OCR alone will flatten.
+
+You need to recover the hierarchy.
+
+4. Curriculum parser
+Now the parser converts the extracted structure into internal nodes.
+
+For example:
+
+Subject → Integrated Science
+
+Strand → Diversity of Matter
+
+Sub-strand → Materials
+
+Content Standard → Understand properties/classification
+
+Indicator → specific expected outcome
+
+Exemplars → activity/example cues
+
+Comments → guidance notes
+
+Each item gets:
+
+internal ID
+
+official label
+
+normalized label
+
+parent relation
+
+source page
+
+extraction confidence
+
+parser confidence
+
+status
+
+If the parser is uncertain, it should flag the item for review.
+
+5. Brain/intelligence enrichment layer
+This is the step you are really talking about.
+
+Once the structure is extracted, the intelligence layer should process each curriculum node and derive smart fields like:
+
+topic atoms
+
+skill atoms
+
+cognitive verb
+
+expected mastery type
+
+likely assessment modes
+
+likely misconception zones
+
+prerequisite candidates
+
+dependent topics
+
+teaching strategy family
+
+question family candidates
+
+diagnostic probe suggestions
+
+revision suitability
+
+memory review suitability
+
+So the raw curriculum becomes a machine-usable curriculum brain.
+
+This is where your system begins to “understand the playing field.”
+
+6. Human review layer
+This is critical.
+
+Never auto-publish extracted curriculum directly to students.
+
+The super admin must be able to review:
+
+extracted hierarchy
+
+misread text
+
+broken tables
+
+wrongly grouped indicators
+
+duplicate nodes
+
+missing exemplars
+
+confidence warnings
+
+generated enrichments
+
+So the system should present a review console like:
+
+left: original PDF snippet/page preview
+
+center: extracted structured node
+
+right: brain-enriched interpretation
+
+Then the admin can:
+
+approve
+
+edit
+
+merge
+
+split
+
+reject
+
+mark unresolved
+
+save draft
+
+This is how you keep the system safe.
+
+7. Publish layer
+Once reviewed, the curriculum is published as a new version.
+
+That published version then powers:
+
+content generation
+
+lesson planning
+
+diagnostics
+
+review scheduling
+
+mastery tracking
+
+parent reporting
+
+scope boundaries
+
+exam prep logic
+
+So yes, once ingested, the curriculum starts steering the student through the intelligence system.
+
+What the brain should do with the curriculum after ingestion
+Once the curriculum is loaded, the brain should create a strategic map.
+
+A. Full-field map
+It now knows all subjects, strands, and sub-strands for that program.
+
+B. Progression map
+It knows what is foundational and what comes later.
+
+C. Scope map
+It knows what is in and out of scope.
+
+D. Skill map
+It knows whether something is:
+
+recall
+
+explanation
+
+comparison
+
+application
+
+structured reasoning
+
+problem-solving
+
+interpretation
+
+essay response
+
+E. Assessment map
+It knows the likely ways a student may be tested.
+
+F. Dependency map
+It knows what weakness may be causing another weakness.
+
+That is why curriculum ingestion is so important.
+Without it, the coach is guessing.
+With it, the coach is navigating.
+
+Super-admin upload feature: what it should contain
+Your super-admin curriculum upload module should have these parts:
+
+1. Upload panel
+upload PDF
+
+assign subject
+
+assign level
+
+assign curriculum family
+
+assign version label
+
+mark source authority
+
+effective date
+
+2. Extraction settings
+auto-detect text vs OCR
+
+force OCR if needed
+
+page range option
+
+language option
+
+table recovery toggle
+
+preserve page references toggle
+
+3. Processing dashboard
+pages processed
+
+extraction success rate
+
+confidence score
+
+potential errors
+
+nodes extracted
+
+missing sections detected
+
+4. Review workspace
+PDF page preview
+
+extracted hierarchy tree
+
+structured field editor
+
+AI enrichment preview
+
+issue flags
+
+5. Publish controls
+draft
+
+review
+
+approved
+
+published
+
+archived
+
+Very important design rule
+Do not make OCR the intelligence.
+
+OCR is only the doorway.
+
+The real value is in the layers after OCR:
+
+hierarchy recovery
+
+curriculum parsing
+
+semantic classification
+
+dependency inference
+
+enrichment
+
+validation
+
+controlled publishing
+
+If you stop at OCR, you only get raw text.
+If you continue through the full pipeline, you get a smart curriculum engine.
+
+What can go wrong if you do not do this carefully
+If you just upload a PDF and dump OCR text into the database, you will get:
+
+broken strand/sub-strand hierarchy
+
+indicators merged together
+
+missing exemplars
+
+wrong topic boundaries
+
+bad content generation later
+
+inaccurate diagnostics
+
+scope drift
+
+poor parent reporting
+
+So the ingestion system must be treated as a serious subsystem, not a utility feature.
+
+Best operational model
+I would structure it like this:
+
+Stage 1: Source capture
+Store original PDF and metadata.
+
+Stage 2: Extraction
+Get raw text/page blocks/tables.
+
+Stage 3: Parsing
+Build official curriculum nodes.
+
+Stage 4: Enrichment
+Let the brain derive smart academic fields.
+
+Stage 5: Review
+Super admin verifies and edits.
+
+Stage 6: Publication
+Create a live curriculum version.
+
+Stage 7: Downstream impact
+Trigger content coverage analysis and content generation opportunities.
+
+The intelligence outputs you want after upload
+Once processing is done, the system should be able to produce things like:
+
+“23 strands found”
+
+“91 sub-strands found”
+
+“214 indicators extracted”
+
+“17 nodes have low confidence and need admin review”
+
+“42 indicators lack exemplars”
+
+“18 nodes appear to duplicate prior version”
+
+“67 new content opportunities detected”
+
+“13 topic dependency chains inferred”
+
+“9 areas need diagnostic templates”
+
+“5 strands appear under-covered in the content bank”
+
+That is when the upload becomes operationally powerful.
+
+The key insight
+You are right that once the intelligence has the curriculum, it can steer the student much better.
+
+But the deeper truth is this:
+
+The curriculum should not just be read by the brain.
+It should be converted into a curriculum graph the brain can reason over.
+
+That is the difference between:
+
+document-aware coaching
+and
+
+curriculum-driven coaching
+
+You want curriculum-driven coaching.
+
+Strong recommendation on OCR
+Also, do not rely on OCR alone as the main extraction mechanism unless necessary.
+
+Preferred order should be:
+
+native text extraction
+
+structured PDF parsing
+
+table detection
+
+OCR only where needed
+
+human review for low-confidence regions
+
+That will produce far better curriculum quality.
+
+Final model
+So yes, the super-admin should be able to:
+
+upload the curriculum PDF
+
+let extraction kick in
+
+let the brain and intelligence process it
+
+review the extracted structure
+
+approve and publish it
+
+then let that curriculum power all downstream academic systems
+
+The overall concept can be called:
+
+Smart Curriculum Ingestion and Intelligence Pipeline
+
+or more simply:
+
+Curriculum Brain Pipeline
+
+And its job is to turn a curriculum PDF into a live academic control system.
+
+The next thing to define is the exact internal pipeline modules and data objects for this upload-to-publish flow.
+
+
+so as a student goes to the curriculum page can see how he is actually progressing through every facet and it will also show him a map of his level across every topic , subtopic , strand etc 
+
+Yes. That is exactly what the curriculum page should become.
+
+It should not be a dead syllabus page.
+It should be the student’s live curriculum map.
+
+The moment the curriculum becomes the central graph, the student should be able to open a curriculum page and immediately see:
+
+where they are
+
+what they have covered
+
+what is weak
+
+what is stable
+
+what is incomplete
+
+what is decaying
+
+what is blocked by prerequisites
+
+what lies ahead
+
+So the curriculum page becomes both:
+
+a map of the territory
+
+a map of the student inside the territory
+
+That is very powerful.
+
+What the student should see
+The student curriculum page should show progress at multiple levels, not just one flat percentage.
+
+1. Subject level
+For each subject:
+
+overall curriculum completion
+
+mastery level
+
+current readiness
+
+weak zones
+
+strongest zones
+
+exam risk
+
+recent movement
+
+Example:
+
+Mathematics — 62% structurally covered, 41% truly stable
+
+Integrated Science — 70% covered, 52% stable
+
+English Language — 58% covered, 36% stable
+
+Notice the difference between covered and stable.
+That distinction is critical.
+
+Covered means “we touched it.”
+Stable means “you can still do it reliably.”
+
+2. Strand level
+Within each subject, the student should see all strands with status.
+
+For each strand:
+
+completion %
+
+mastery %
+
+confidence %
+
+retention %
+
+problem severity
+
+trend
+
+This immediately answers:
+
+which strand is my biggest danger?
+
+which strand is strongest?
+
+where am I improving?
+
+where am I slipping?
+
+3. Sub-strand level
+This is where things get more precise.
+
+For each sub-strand:
+
+introduced
+
+practiced
+
+assessed
+
+mastered
+
+unstable
+
+decayed
+
+not started
+
+This gives the student a real sense of movement through the curriculum.
+
+4. Topic / indicator level
+At the finest level, the student should be able to click into any curriculum node and see:
+
+what this topic is about
+
+current level
+
+whether it is blocked by another weakness
+
+what evidence says they are weak or strong
+
+what kind of mistakes they make
+
+what next step is recommended
+
+That is what makes the curriculum page feel intelligent.
+
+The page should not show one “progress” number
+That would be too shallow.
+
+A smart curriculum page should show at least five different kinds of progress.
+
+A. Scope progress
+How much of the curriculum has been encountered?
+
+Example:
+
+78 of 120 indicators introduced
+
+B. Learning progress
+How much has been actually worked on?
+
+Example:
+
+61 indicators meaningfully practiced
+
+C. Mastery progress
+How much can the student do independently?
+
+Example:
+
+39 indicators currently mastered
+
+D. Stability progress
+How much remains solid over time?
+
+Example:
+
+27 indicators stable after delayed review
+
+E. Exam-readiness progress
+How much is ready under realistic exam conditions?
+
+Example:
+
+19 indicators reliable under time pressure
+
+These are not the same thing.
+And your system should respect that.
+
+What the visual map should look like
+The curriculum page should have a hierarchical progress map.
+
+Think of it as a living academic atlas.
+
+Top view
+At the highest level:
+
+Subject cards
+
+each card shows readiness, strength, weakness, trend
+
+Subject drill-down
+Inside a subject:
+
+strand map
+
+each strand as a block, bar, or node cluster
+
+color/state reflects condition
+
+Strand drill-down
+Inside a strand:
+
+sub-strands listed or shown as connected nodes
+
+Sub-strand drill-down
+Inside a sub-strand:
+
+topic/indicator nodes
+
+each node shows actual student status
+
+So the student can move from big picture to detailed weakness.
+
+The statuses should be meaningful
+Do not just use:
+
+done
+
+not done
+
+That is far too weak for an academic coach.
+
+Use richer statuses such as:
+
+Not Started
+
+Exposed
+
+Learning
+
+Practicing
+
+Under Support
+
+Independently Correct
+
+Stable
+
+Fragile
+
+Decayed
+
+Blocked
+
+High Risk
+
+Exam Ready
+
+These states tell a story.
+
+For example:
+
+Exposed means the student has seen it, but that means almost nothing.
+
+Under Support means they can do it with guidance.
+
+Fragile means they were once okay, but are wobbling.
+
+Blocked means the problem is probably not this topic itself but a prerequisite.
+
+Exam Ready means they can perform under the right pressure and format.
+
+That is the kind of language a real intelligent coach should use.
+
+The map should show level across every layer
+You said “show him a map of his level across every topic, subtopic, strand etc.”
+
+Yes. That should be one of the signature strengths of the system.
+
+For each node, the system can calculate a level like:
+
+Beginner
+
+Emerging
+
+Developing
+
+Functional
+
+Strong
+
+Advanced
+
+Secure under pressure
+
+Or more analytically:
+
+familiarity
+
+conceptual understanding
+
+procedural control
+
+recall durability
+
+exam performance
+
+That means one topic may look like this:
+
+Fractions
+
+Familiarity: high
+
+Conceptual understanding: medium
+
+Procedural control: medium
+
+Recall durability: low
+
+Exam performance: low under time pressure
+
+That is much more useful than saying “60%.”
+
+Because now the student sees the nature of the weakness.
+
+The curriculum page should also explain why the student is at that level
+Every level should have evidence behind it.
+
+For example, when a student clicks a topic, they should see things like:
+
+last practiced 9 days ago
+
+accuracy in untimed practice: 83%
+
+accuracy in timed practice: 46%
+
+confusion pattern: denominator comparison
+
+prerequisite issue: equivalent fractions weak
+
+retention signal: unstable after 1 week
+
+recommendation: revisit prerequisite before harder drills
+
+Now the curriculum page is not just showing judgment.
+It is showing reasoning.
+
+A very strong design concept: “Curriculum Terrain + Student Heat”
+A good mental model is this:
+
+the curriculum is the terrain
+
+the student’s state is the heat overlay
+
+So the student can literally see a subject map with:
+
+green = stable
+
+yellow = developing/fragile
+
+red = weak/high risk
+
+gray = not yet entered
+
+blue = recently improved
+
+purple = blocked by prerequisite
+
+That would be extremely powerful visually.
+
+It turns the curriculum into something navigable.
+
+The page should show connections, not isolated topics
+If possible, the system should also show when one weak area is affecting another.
+
+For example:
+
+Algebraic expressions weak
+↓
+
+Linear equations fragile
+↓
+
+Word problems in equations failing
+
+So the student sees cause, not just symptoms.
+
+This helps motivation because the child begins to understand:
+“I’m not just bad at this topic. There is a reason.”
+
+Parent and student views should differ slightly
+Student view
+The student should see:
+
+progress
+
+strengths
+
+weak spots
+
+what to do next
+
+momentum
+
+improvement streaks
+
+readiness map
+
+Parent view
+The parent should see:
+
+curriculum coverage
+
+true mastery
+
+risk zones
+
+whether the child is on track for BECE
+
+whether weakness is growing or shrinking
+
+what intervention is happening
+
+Same engine, different rendering.
+
+You should also add timeline awareness
+The curriculum map should not be static.
+
+It should also show:
+
+what should have been covered by now
+
+what is overdue
+
+what is ahead
+
+what is being revised
+
+what is at risk of being forgotten
+
+So the map becomes time-aware.
+
+A student could see:
+
+12 indicators overdue for stabilization
+
+5 indicators scheduled for review this week
+
+3 sub-strands at risk before mock exams
+
+2 strands ahead of schedule
+
+That makes the curriculum page strategic.
+
+This page can become one of the strongest features in the whole product
+Because it answers one of the biggest frustrations students usually have:
+
+“I don’t actually know where I stand.”
+
+Most systems only show:
+
+scores
+
+tests taken
+
+maybe performance by subject
+
+But your curriculum page can show:
+
+exactly where they stand inside the official syllabus
+
+That is much more serious.
+
+The engine behind it
+To support this, each curriculum node should hold live computed values like:
+
+coverage status
+
+mastery score
+
+confidence score
+
+retention score
+
+exam pressure score
+
+last touched date
+
+last assessed date
+
+decay risk
+
+blockage status
+
+prerequisite health
+
+trend direction
+
+recommended next action
+
+Then these can roll up upward:
+
+topic rolls into subtopic
+
+subtopic rolls into sub-strand
+
+sub-strand rolls into strand
+
+strand rolls into subject
+
+That gives you progress at every layer.
+
+A very important rule
+Do not let upper-level progress be based only on averaging raw scores.
+
+A strand should not look healthy just because the student scored well in a few easy parts.
+
+The roll-up logic should consider:
+
+importance of node
+
+dependency weight
+
+recency
+
+retention
+
+exam significance
+
+foundationality
+
+So foundational weak points can weigh more heavily.
+
+That makes the map honest.
+
+Ideal page sections
+The student curriculum page could have sections like:
+
+1. Overall Curriculum Position
+“You are currently secure in 34% of the BECE curriculum, developing in 28%, fragile in 16%, and untouched in 22%.”
+
+2. Subject Readiness Cards
+Per subject overview.
+
+3. Curriculum Map
+Tree or graph view of strands → sub-strands → topics.
+
+4. Strength and Weakness Heatmap
+Where the student is strongest and weakest.
+
+5. At-Risk Topics
+Topics likely to decay or cause downstream problems.
+
+6. Next Best Moves
+What the coach recommends next.
+
+7. Progress Over Time
+How the student has moved across the curriculum.
+
+The deep value
+What you are describing is not just a curriculum page.
+
+It is a student-facing curriculum intelligence dashboard.
+
+It should let the student see:
+
+the official learning field
+
+their exact location in it
+
+their health across every layer
+
+the dangers ahead
+
+the progress they have made
+
+the next route forward
+
+That would make the system feel very alive and very serious.
+
+The next logical step is to define the exact states, scoring model, and UI blocks for this curriculum progress map.
+
+
+proceed
+
+Good. Let’s define it properly.
+
+What you need now is the full operational model for the student curriculum map:
+
+the states a node can be in
+
+the scores behind those states
+
+how scores roll upward
+
+what the UI blocks should show
+
+how the page behaves for students, parents, and super admins
+
+how the map ties into the coach’s next-action engine
+
+This is where the curriculum page stops being a visual add-on and becomes a core academic control surface.
+
+1. The curriculum page should be a live graph, not a static outline
+Each curriculum item is a node.
+
+That node may represent:
+
+subject
+
+strand
+
+sub-strand
+
+topic cluster
+
+indicator
+
+micro-skill
+
+atomic concept
+
+But the most important operational level is usually the indicator / teachable unit / skill atom level.
+
+Why?
+
+Because that is the level where the system can actually observe learning evidence.
+
+A strand is too broad.
+A whole subject is too broad.
+But an indicator or micro-skill is precise enough to measure.
+
+So the page should visually show the full hierarchy, but the intelligence underneath should compute from atomic nodes upward.
+
+2. The node-state model
+Every curriculum node should have a clearly defined state.
+
+Not vague “completed” labels.
+
+Use a richer academic lifecycle.
+
+Core states
+A. Not Seen
+The student has not yet encountered this node in a meaningful way.
+
+Meaning:
+
+no lesson
+
+no drill
+
+no explanation session
+
+no practice exposure
+
+This should appear neutral, not bad.
+
+B. Exposed
+The student has encountered it, but exposure does not yet imply learning.
+
+Meaning:
+
+saw explanation
+
+watched/received teaching
+
+maybe attempted one or two examples
+
+no meaningful mastery evidence yet
+
+This state is important because many systems falsely treat exposure as progress.
+
+C. Entering Practice
+The student is actively working on it.
+
+Meaning:
+
+multiple guided exercises
+
+some supported attempts
+
+beginning familiarity is forming
+
+This is the first real learning zone.
+
+D. Supported Performance
+The student can do it with help, prompts, structure, or hints.
+
+Meaning:
+
+can answer with scaffold
+
+can follow examples
+
+still not independent
+
+This is a critical state because many students appear competent here but are not yet stable.
+
+E. Independent Performance
+The student can do it correctly without help in the right format.
+
+Meaning:
+
+untimed correctness
+
+stable enough in direct tasks
+
+still not fully durable under delay or pressure
+
+F. Stable
+The student retains the node across time and can still perform after delay.
+
+Meaning:
+
+survives spaced review
+
+survives context shifts
+
+does not collapse after a few days
+
+This is very important.
+Stable is better than merely “correct today.”
+
+G. Exam Ready
+The student can handle it under exam-like conditions.
+
+Meaning:
+
+can perform independently
+
+can handle pressure or timing
+
+can apply it in the likely question forms
+
+can survive distractors and variations
+
+This is the gold standard state.
+
+Risk states
+H. Fragile
+The node looked learned but is unstable.
+
+Meaning:
+
+recent drops in recall
+
+inconsistent answers
+
+weak transfer
+
+breaks under mild variation
+
+This is a very common real-life state.
+
+I. Decaying
+The student once had stronger control, but the signal is deteriorating.
+
+Meaning:
+
+time since last meaningful success is large
+
+recent review is weak
+
+memory trace appears to be fading
+
+J. Blocked
+The student’s failure on this node is likely downstream from another weakness.
+
+Meaning:
+
+prerequisite weakness detected
+
+repeated attempts here are inefficient until root cause is repaired
+
+This is one of the smartest states the system can have.
+
+K. High Risk
+The node is important, weak, and likely to damage exam readiness if not fixed soon.
+
+Meaning:
+
+foundational
+
+exam-relevant
+
+currently unstable or missing
+
+time sensitivity is high
+
+Administrative states
+L. Out of Sequence
+This content exists in curriculum but has not yet become active for this learner’s pathway or current plan.
+
+M. Archived / Legacy
+Used in older version or for historical evidence but not live in current curriculum view.
+
+3. The core score dimensions behind every node
+Do not reduce a curriculum node to one raw score.
+
+Each node should have multiple dimensions.
+
+A. Exposure score
+How much meaningful contact has the learner had with this node?
+
+Signals:
+
+lessons received
+
+explanation time
+
+number of encounters
+
+review count
+
+B. Accuracy score
+How often does the learner answer correctly on this node?
+
+Signals:
+
+practice accuracy
+
+diagnostic accuracy
+
+review accuracy
+
+first-attempt correctness
+
+C. Independence score
+How much support was required?
+
+Signals:
+
+hints used
+
+scaffolding needed
+
+retries needed
+
+solution reveal dependence
+
+This helps distinguish real skill from guided participation.
+
+D. Retention score
+How well does performance survive delay?
+
+Signals:
+
+delayed review outcomes
+
+forgetting curve behavior
+
+recovery speed after gap
+
+E. Transfer score
+Can the learner apply the skill in different forms?
+
+Signals:
+
+variation performance
+
+word problem transfer
+
+reverse-format questions
+
+mixed context success
+
+This is crucial for BECE-style readiness.
+
+F. Pressure score
+How well does the learner perform under timing, stress, or dense question environments?
+
+Signals:
+
+timed test performance
+
+response latency
+
+collapse rate under pacing
+
+G. Confidence reliability score
+Not self-confidence alone, but whether confidence matches reality.
+
+Signals:
+
+confident but wrong
+
+hesitant but correct
+
+calibration behavior
+
+This is very useful diagnostically.
+
+H. Recency score
+How recently has the node been meaningfully exercised?
+
+Signals:
+
+days since last valid attempt
+
+days since last strong performance
+
+I. Importance weight
+How important is this node in the curriculum and exam ecosystem?
+
+Signals:
+
+foundationality
+
+dependency count
+
+curriculum prominence
+
+exam appearance weight
+
+linkage to later topics
+
+This is not learner-generated; it comes from curriculum intelligence.
+
+J. Risk score
+A composite score reflecting how dangerous weakness on this node currently is.
+
+This should consider:
+
+weakness level
+
+importance
+
+proximity to exam
+
+decay trend
+
+dependency burden
+
+4. Derived node level
+From those dimensions, the system can derive a node level.
+
+For example, a node may read:
+
+Exposure: high
+
+Accuracy: medium
+
+Independence: low
+
+Retention: low
+
+Transfer: low
+
+Pressure: low
+
+Derived state:
+Supported Performance / Fragile
+
+Another node may read:
+
+Exposure: medium
+
+Accuracy: high
+
+Independence: high
+
+Retention: high
+
+Transfer: medium
+
+Pressure: high
+
+Derived state:
+Stable / Exam Ready
+
+This is much more honest than a single percentage.
+
+5. Roll-up logic: how lower nodes become strand and subject progress
+This is one of the most important parts.
+
+Do not simply average children scores.
+
+That will produce fake health.
+
+A strand can appear fine while a foundational weakness inside it is destroying later performance.
+
+Better roll-up model
+Each parent node should compute from child nodes using weighted logic.
+
+Factors in roll-up:
+child mastery
+
+child stability
+
+child risk
+
+foundational importance
+
+dependency centrality
+
+exam relevance
+
+recency of evidence
+
+So a high-importance foundational node can drag a strand down more than a peripheral one.
+
+That is correct behavior.
+
+Example
+A sub-strand has 6 indicators:
+
+4 are green
+
+2 are red
+
+If those 2 red ones are foundational and feed everything else, the sub-strand should not appear “mostly healthy.”
+
+It may appear:
+
+moderate coverage
+
+weak structural health
+
+high downstream risk
+
+That is more truthful.
+
+6. The major UI blocks on the curriculum page
+Now let’s design the page itself.
+
+Block 1: Overall Position Summary
+At the top, the student should see a concise live statement like:
+
+“You are currently secure in 31% of the curriculum, developing in 29%, fragile in 18%, and not yet entered in 22%.”
+
+Also show:
+
+strongest subject
+
+weakest subject
+
+most improved strand
+
+highest-risk strand
+
+This gives immediate orientation.
+
+Block 2: Subject Readiness Grid
+A card for each subject.
+
+Each subject card should show:
+
+overall readiness
+
+curriculum coverage
+
+stable mastery
+
+high-risk count
+
+trend arrow
+
+last movement
+
+quick action button
+
+Example card fields:
+
+Mathematics
+
+Coverage: 68%
+
+Stable: 39%
+
+High Risk Topics: 11
+
+Trend: improving
+
+Next best move: Fractions & Ratio stabilization
+
+This becomes the main entry point.
+
+Block 3: Curriculum Hierarchy Explorer
+This is the expandable tree or graph:
+
+Subject
+→ Strand
+→ Sub-strand
+→ Topic Cluster
+→ Indicator / Skill Nodes
+
+Each row or node should show:
+
+state color
+
+small progress bar
+
+risk marker if needed
+
+last activity
+
+mastery tag
+
+click-to-drill-down
+
+This lets the student navigate the curriculum directly.
+
+Block 4: Heatmap
+A matrix or tile layout showing health across the curriculum.
+
+Possible axes:
+
+strands on one axis
+
+status intensity on the other
+
+Or simpler:
+
+all nodes colored by state
+
+Suggested meanings:
+
+green = stable
+
+lime = exam ready
+
+yellow = developing
+
+orange = fragile
+
+red = high risk
+
+gray = not seen
+
+blue = recently improved
+
+purple = blocked
+
+This becomes visually powerful very quickly.
+
+Block 5: Progress by Layer
+A section showing progress separately by:
+
+coverage
+
+mastery
+
+retention
+
+exam readiness
+
+This is important because one learner may have high exposure but low retention.
+
+You want the student to see the distinction.
+
+Block 6: Blocked Pathways
+This is where the page becomes truly intelligent.
+
+The system should say things like:
+
+Weakness in “Equivalent Fractions” is affecting:
+
+comparing fractions
+
+fraction operations
+
+ratio interpretation
+
+or
+
+Weakness in “Sentence parts” is affecting:
+
+transformation tasks
+
+concord
+
+essay sentence stability
+
+This helps the student understand cause.
+
+Block 7: At-Risk Zones
+A section showing the most urgent curriculum zones to address.
+
+Each item should explain why it is at risk:
+
+decaying after 10 days without review
+
+foundational for 5 later topics
+
+weak under timed conditions
+
+repeatedly confused with related concept
+
+high exam importance
+
+This gives strategic clarity.
+
+Block 8: Momentum and Trend
+Show how the learner is moving.
+
+Examples:
+
+9 topics stabilized this month
+
+4 topics slipped into fragile
+
+2 strands improving steadily
+
+1 sub-strand reopened due to decay
+
+This gives life to the page.
+
+Block 9: Next Best Moves
+This may be the most important decision block on the page.
+
+Instead of the student asking “what should I study now?”, the page tells them:
+
+Repair this prerequisite
+
+Stabilize this weak topic
+
+Review this decaying concept
+
+Push this strand to exam readiness
+
+So the curriculum page links directly into coaching action.
+
+7. Drill-down view for a single curriculum node
+When a student clicks a specific topic or indicator, the detail panel should show:
+
+A. What this node is
+official topic name
+
+simple explanation
+
+why it matters
+
+B. Current state
+developing / fragile / stable / exam ready, etc.
+
+C. Evidence summary
+last attempted
+
+last correct
+
+untimed accuracy
+
+timed accuracy
+
+support needed
+
+recent trend
+
+D. Mistake patterns
+common wrong path taken
+
+confusion with adjacent concept
+
+procedural breakdown point
+
+E. Dependency context
+prerequisites feeding this node
+
+downstream nodes affected by weakness here
+
+F. Recommended next step
+revisit explanation
+
+do contrast drill
+
+do timed mixed practice
+
+repair prerequisite first
+
+do memory reinforcement
+
+This makes each node explainable.
+
+8. Student view vs parent view vs super-admin view
+Same engine, different lenses.
+
+Student view
+Should emphasize:
+
+clarity
+
+progress
+
+weak spots
+
+motivation
+
+what to do next
+
+Language should be learner-friendly.
+
+Parent view
+Should emphasize:
+
+real readiness
+
+structural weaknesses
+
+on-track/off-track status
+
+risk to BECE preparation
+
+intervention summary
+
+Parent view should be less cluttered and more strategic.
+
+Super-admin / internal view
+Should emphasize:
+
+score breakdown
+
+evidence sources
+
+curriculum node lineage
+
+confidence of judgments
+
+content gaps
+
+diagnostic coverage
+
+model outputs
+
+This is the engineering and operations layer.
+
+9. Time-aware curriculum map
+The page should not just show absolute standing.
+
+It should also show standing relative to time.
+
+Examples:
+
+ahead of schedule
+
+on track
+
+behind expected sequence
+
+overdue for review
+
+urgent before mock exam
+
+good coverage but poor stabilization
+
+This requires the curriculum engine to know:
+
+school term structure
+
+student’s current plan
+
+exam timeline
+
+pacing expectations
+
+Then the map becomes temporal, not static.
+
+10. Suggested scoring framework
+A simple but strong internal model is this:
+
+For each atomic node, maintain normalized scores from 0–100:
+
+exposure_score
+
+mastery_score
+
+independence_score
+
+retention_score
+
+transfer_score
+
+pressure_score
+
+risk_score
+
+Then derive:
+
+state
+
+trend
+
+urgency
+
+next best action
+
+Example state rules
+Not exact formulas yet, but conceptually:
+
+Not Seen:
+
+exposure < threshold
+
+Exposed:
+
+exposure high enough, mastery still low
+
+Supported Performance:
+
+mastery moderate, independence low
+
+Independent Performance:
+
+mastery strong, independence strong, retention not yet proven
+
+Stable:
+
+mastery + independence + retention strong
+
+Exam Ready:
+
+stable + transfer + pressure strong
+
+Fragile:
+
+prior competence but retention/pressure falling
+
+Blocked:
+
+current weakness strongly explained by prerequisite failures
+
+This kind of rule set will make the page consistent.
+
+11. How the page should feel emotionally
+Very important.
+
+Do not make the page feel like a wall of failure.
+
+It should feel:
+
+honest
+
+precise
+
+navigable
+
+motivating
+
+actionable
+
+So alongside weak zones, always show:
+
+recent gains
+
+what has been secured
+
+areas of momentum
+
+best route to improve
+
+The page should create orientation, not panic.
+
+12. Signature advanced features
+These are the things that can make your curriculum page truly special.
+
+A. “Show me my blind spots”
+Highlights weak zones the student may not realize.
+
+B. “Show me what is blocking me”
+Shows prerequisite causes.
+
+C. “Show me what is decaying”
+Shows once-learned but fading areas.
+
+D. “Show me what would improve my score fastest”
+Optimization mode.
+
+E. “Show me what is most important for BECE right now”
+Exam-priority mode.
+
+F. “Play my route”
+The coach turns the curriculum map into a guided action path.
+
+These features make the map alive.
+
+13. Recommended page structure
+A practical layout could be:
+
+Top row
+Overall curriculum position
+
+Exam readiness snapshot
+
+Trend summary
+
+Second row
+Subject cards
+
+Main body left
+Curriculum hierarchy explorer
+
+Main body center
+Heatmap / graph map
+
+Main body right
+Current node detail / next action panel
+
+Lower sections
+blocked pathways
+
+at-risk zones
+
+momentum and trend
+
+recommended route
+
+This layout would be very strong.
+
+14. The deeper system effect
+Once this page exists, it changes the whole product.
+
+Because now:
+
+the student can see exactly where they stand
+
+the coach can act from a visible curriculum map
+
+parents can see structural readiness
+
+diagnostics can open weak zones precisely
+
+revision can target decaying nodes
+
+content generation can fill under-covered areas
+
+curriculum updates can immediately reflect on the map
+
+This makes the curriculum page one of the central nervous system surfaces of the platform.
+
+15. The most important principle
+The student curriculum page must answer five questions at all times:
+
+What exists in the official learning territory?
+
+Where exactly am I inside it?
+
+What is strong, weak, fragile, blocked, or missing?
+
+Why am I in that condition?
+
+What should I do next?
+
+If the page answers those five questions well, it becomes one of the strongest features in the whole application.
+
+The next proper move is to define the exact node schema and score formulas that drive this page.
+
+
+can we focus on specifying the user experience for the student and also what the super admin sees under the hood and also how it can be updated from time to time 
+
+Yes. Let’s pin this down as an actual product surface.
+
+We will define three things:
+
+the student experience
+
+the super-admin under-the-hood experience
+
+the update workflow over time
+
+The right mental model is this:
+
+the student sees clarity
+
+the super admin sees structure, controls, and risk
+
+the update system preserves trust while evolving the curriculum
+
+1. Student experience: what the curriculum page should feel like
+For the student, this page should not feel like a government curriculum document.
+
+It should feel like:
+
+a live academic map
+
+a personal progress mirror
+
+a clear route forward
+
+a place that answers “where am I, what is weak, what next?”
+
+The student should never have to interpret curriculum bureaucracy.
+
+The system should translate the curriculum into something visually understandable and emotionally usable.
+
+1.1 Entry point
+When the student clicks Curriculum, they should land on a page that immediately tells them three things:
+
+how much of the curriculum they have entered
+
+how strong they are across the curriculum
+
+where they should focus next
+
+The top area should feel like a dashboard, not a document.
+
+Top summary block
+This can say something like:
+
+You have entered 63% of the curriculum
+
+You are stable in 29%
+
+11 areas need urgent attention
+
+Your strongest strand is Number
+
+Your weakest sub-strand is Fractions
+
+Next best move: repair equivalent fractions
+
+This is the first thing the student should understand before they begin exploring.
+
+1.2 Main layout for the student
+The student experience should probably be divided into five major zones.
+
+Zone A: Overall progress strip
+A compact overview showing:
+
+curriculum entered
+
+stable mastery
+
+exam-readiness
+
+fragile zones
+
+topics not yet started
+
+This gives instant orientation.
+
+Zone B: Subject cards
+Each subject gets a card.
+
+Each card should show:
+
+subject name
+
+progress through curriculum
+
+current strength
+
+number of weak zones
+
+trend arrow
+
+quick action: Continue / Review / Repair
+
+This makes the curriculum approachable.
+
+Zone C: Curriculum explorer
+This is the main interactive map.
+
+Student can expand:
+
+Subject
+
+Strand
+
+Sub-strand
+
+Topic cluster
+
+Topic / skill node
+
+This should feel like navigating a live tree of learning.
+
+Each row or node should show a clear state, for example:
+
+not started
+
+learning
+
+improving
+
+stable
+
+fragile
+
+blocked
+
+exam ready
+
+This is where the student sees their actual path.
+
+Zone D: Node detail panel
+When they click any topic, the right side or lower panel should show:
+
+what the topic is
+
+why it matters
+
+their current state
+
+what they are getting wrong
+
+what is affecting it
+
+what to do next
+
+This is very important because the student should not just see “red.”
+They should understand the reason.
+
+Zone E: Recommended route
+At the bottom or side, the system should always show:
+
+what to fix now
+
+what to review soon
+
+what is decaying
+
+what can wait
+
+what should come next
+
+This keeps the page action-oriented.
+
+1.3 What the student should be able to do
+The student curriculum page should support these actions directly.
+
+A. Browse the curriculum
+The student can move through:
+
+all subjects
+
+all strands
+
+all sub-strands
+
+all topics
+
+They should be able to see the official learning terrain in a simplified way.
+
+B. See personal status at every level
+At each layer, they should see their own state.
+
+For example:
+
+Mathematics: Developing
+
+Number: Strong
+
+Fractions: Fragile
+
+Equivalent Fractions: Blocked
+
+This makes the curriculum personal.
+
+C. Click to understand weakness
+If a topic is weak, the student should be able to click and see:
+
+what the weakness means
+
+whether it is a memory issue
+
+whether it is a concept issue
+
+whether it is caused by another missing skill
+
+This reduces frustration.
+
+D. Jump into action
+From a curriculum node, the student should be able to:
+
+revise this
+
+practice this
+
+fix the root cause
+
+review similar topics
+
+ask coach to explain
+
+This is critical. The curriculum page should not be informational only. It should connect directly to action.
+
+E. Filter the map
+Students should be able to filter the curriculum by:
+
+weak only
+
+fragile only
+
+not started
+
+exam-ready
+
+blocked topics
+
+recently improved
+
+due for review
+
+This helps them make sense of the map quickly.
+
+F. Track movement over time
+They should be able to see:
+
+what improved this week
+
+what slipped recently
+
+what is stable now
+
+what still needs work
+
+This gives momentum.
+
+1.4 How the student page should speak
+The language matters.
+
+Do not expose internal technical labels like:
+
+indicator confidence
+
+graph dependency burden
+
+node severity class
+
+Instead use student-friendly wording:
+
+Strong
+
+Still growing
+
+Needs repair
+
+Slipping
+
+Not yet started
+
+This topic depends on another one
+
+You are improving here
+
+You need one more review here
+
+The page should feel precise but not clinical.
+
+1.5 Student drill-down experience
+Let’s say a student clicks Fractions.
+
+The detail view should show something like this structure:
+
+What this topic covers
+Simple explanation of the topic.
+
+Your current position
+For example:
+
+You understand basic fraction meaning
+
+You are weak in comparing fractions
+
+You struggle when denominators differ
+
+Timed questions reduce your accuracy here
+
+What may be causing it
+For example:
+
+Equivalent fractions is still weak
+
+Part-whole representation is unstable
+
+What this affects
+For example:
+
+ratio
+
+percentage
+
+fraction operations
+
+What to do next
+For example:
+
+repair equivalent fractions
+
+do 6 comparison drills
+
+return to timed mixed practice after
+
+That is a powerful learning UX.
+
+1.6 Emotional quality of the student experience
+The page must not feel like a list of failures.
+
+It should feel like:
+
+honest
+
+navigable
+
+motivating
+
+alive
+
+helpful
+
+So the student page should always balance:
+
+weak zones
+
+strong zones
+
+recent wins
+
+next achievable move
+
+That emotional balance matters a lot.
+
+2. Super-admin experience: what they see under the hood
+Now let’s move to the real engine room.
+
+The super admin should not just see the same student page with more buttons.
+
+They should see the curriculum as a controlled system.
+
+Their view should answer:
+
+what is in the curriculum
+
+how it is structured
+
+what version is live
+
+what changed
+
+what is unpublished
+
+what content is attached
+
+what gaps exist
+
+what needs regeneration
+
+what learners are affected
+
+The super-admin experience should be divided into modules.
+
+2.1 Curriculum registry
+This is the master list of curriculum versions.
+
+It should show:
+
+curriculum family
+
+subject set
+
+level range
+
+source authority
+
+version label
+
+status: draft / review / published / archived
+
+effective date
+
+uploaded source file
+
+processing status
+
+This is the home of all official curriculum versions.
+
+2.2 Curriculum ingestion workspace
+This is where the admin uploads and processes a curriculum PDF.
+
+They should see:
+
+original PDF preview
+
+extraction status
+
+parsed hierarchy
+
+confidence warnings
+
+missing or ambiguous sections
+
+extracted strands/sub-strands/indicators
+
+low-confidence OCR or parsing blocks
+
+The workspace should be split like this:
+
+Left panel
+Source document preview, page thumbnails, extraction highlights.
+
+Middle panel
+Structured hierarchy tree:
+
+subject
+
+strand
+
+sub-strand
+
+standard
+
+indicator
+
+exemplar
+
+Right panel
+Editable node detail:
+
+official text
+
+simplified public title
+
+node metadata
+
+interpretation fields
+
+confidence / validation status
+
+This gives them direct visibility into what the system extracted.
+
+2.3 Node editor
+Every curriculum node should have its own deep editor.
+
+For one node, the super admin should be able to see and edit:
+
+official wording
+
+display wording for students
+
+display wording for parents
+
+strand / sub-strand placement
+
+node type
+
+prerequisites
+
+dependent nodes
+
+tags
+
+misconceptions
+
+teaching strategy hints
+
+question families
+
+difficulty band
+
+exam significance
+
+local examples
+
+comments
+
+notes for internal use
+
+content attachments
+
+state of downstream generation
+
+This is where raw curriculum becomes smart curriculum.
+
+2.4 Curriculum graph view
+This is a visual structural map.
+
+The admin should be able to see:
+
+hierarchy tree
+
+prerequisite links
+
+cross-links
+
+weakly connected nodes
+
+orphan nodes
+
+overly broad nodes
+
+missing relationships
+
+This helps catch structural problems that a plain list would hide.
+
+2.5 Coverage dashboard
+This is one of the most important under-the-hood tools.
+
+The admin should see, per node:
+
+number of lessons attached
+
+number of drills attached
+
+number of question items attached
+
+number of worked examples
+
+number of diagnostics
+
+whether review content exists
+
+whether there is parent-facing summary content
+
+whether there are content gaps
+
+This dashboard answers:
+“Does this curriculum area have enough academic material behind it?”
+
+Without this, the curriculum may be well structured but operationally empty.
+
+2.6 Learner impact dashboard
+Once learners are using the system, the super admin should also see curriculum health in the field.
+
+They should be able to view:
+
+which nodes are most frequently weak
+
+which nodes are most often blocked
+
+which nodes decay fastest
+
+which nodes students recover from easily
+
+which strands are chronically underperforming
+
+which nodes are rarely reached
+
+which content types work best per node
+
+This turns learner behavior into feedback for curriculum refinement.
+
+2.7 Publishing controls
+Super admins need strong publishing controls.
+
+They should be able to:
+
+save draft changes
+
+mark node ready for review
+
+approve section
+
+publish version
+
+rollback to prior version
+
+archive old versions
+
+stage changes for specific cohorts only
+
+This is what makes the curriculum system safe over time.
+
+3. How curriculum updates should work over time
+Now let’s define the update workflow properly.
+
+This is critical, because without a clean update model, you will create confusion for both staff and learners.
+
+The curriculum should evolve in a controlled way.
+
+3.1 Types of updates
+There should be at least three classes of updates.
+
+Type 1: Source update
+A new or revised official PDF is uploaded.
+
+Examples:
+
+new official revision
+
+wording update
+
+changed structure
+
+additional comments or exemplars
+
+This creates a new source-linked curriculum version.
+
+Type 2: Internal enrichment update
+The official curriculum remains the same, but your team improves the internal intelligence.
+
+Examples:
+
+better prerequisite mapping
+
+better misconceptions
+
+clearer public wording
+
+improved teaching strategy mapping
+
+improved question-family alignment
+
+This creates a new enrichment revision.
+
+Type 3: Content linkage update
+Curriculum structure stays the same, but attached content changes.
+
+Examples:
+
+new drills
+
+new explanations
+
+new question sets
+
+new diagnostics
+
+This affects curriculum coverage and downstream experience even without changing the academic structure.
+
+3.2 Update stages
+A proper update should move through these stages:
+
+Stage A: Upload / edit
+The admin uploads a new source or edits internal interpretation.
+
+Stage B: Parse / process
+The system extracts and structures the change.
+
+Stage C: Diff analysis
+The system compares new vs current live version.
+
+It should identify:
+
+added nodes
+
+removed nodes
+
+moved nodes
+
+reworded nodes
+
+changed prerequisites
+
+changed public wording
+
+changed hidden interpretation fields
+
+Stage D: Impact analysis
+The system determines what is affected.
+
+Examples:
+
+12 question families impacted
+
+4 lessons now out of scope
+
+3 diagnostics need review
+
+18 learners are currently on changed nodes
+
+7 weak nodes gained new prerequisite links
+
+Stage E: Review
+Admin checks the changes and confirms.
+
+Stage F: Publish
+Admin pushes changes live.
+
+Stage G: Regeneration and sync
+The system:
+
+flags stale content
+
+creates regeneration jobs
+
+updates student map rendering
+
+updates parent dashboards
+
+updates coaching recommendations
+
+That is the proper lifecycle.
+
+3.3 What the admin should see during update
+When an update is being prepared, the admin should get a summary like:
+
+3 strands changed
+
+8 sub-strands updated
+
+11 nodes reworded
+
+5 nodes newly added
+
+2 nodes deprecated
+
+76 question items affected
+
+14 lesson summaries require review
+
+3 existing learner paths may need resequencing
+
+This turns updates into a controlled operational event.
+
+3.4 Versioning model
+You should never have just one fluid curriculum that changes invisibly.
+
+Use a version model.
+
+For example:
+
+GES JHS CCP v2026.1
+
+GES JHS CCP v2026.2
+
+GES JHS CCP v2027.1
+
+And separately, if needed:
+
+enrichment revision 12
+
+enrichment revision 13
+
+That way you can distinguish:
+
+official structure version
+
+internal intelligence revision
+
+This is very important.
+
+3.5 Learner-facing update behavior
+Students should not be confused by silent curriculum changes.
+
+So when updates happen:
+
+major changes should be staged
+
+current learners may remain pinned to a curriculum version until transition
+
+new cohorts may start on the new version
+
+small safe wording improvements can update immediately
+
+structural changes should be reviewed before switching learner routes
+
+This protects continuity.
+
+4. The student UX and super-admin UX should be connected, but not identical
+This is the key design principle.
+
+Student sees:
+progress
+
+map
+
+weak zones
+
+route forward
+
+simple explanations
+
+Super admin sees:
+extraction results
+
+structure
+
+metadata
+
+dependencies
+
+coverage
+
+impact
+
+publishing controls
+
+update workflows
+
+Same system. Different windows into it.
+
+5. Recommended student UX flow
+A likely student flow is:
+
+student opens curriculum page
+
+sees overall position summary
+
+chooses a subject
+
+sees strand/sub-strand map
+
+clicks a weak node
+
+sees explanation of weakness and what it affects
+
+taps “Fix this now”
+
+coach launches into the right repair flow
+
+That is a clean, valuable journey.
+
+6. Recommended super-admin workflow
+A likely admin flow is:
+
+admin uploads curriculum PDF
+
+extraction pipeline runs
+
+parsed hierarchy appears
+
+admin reviews low-confidence areas
+
+admin enriches nodes with hidden intelligence
+
+system runs coverage and impact analysis
+
+admin publishes version
+
+system updates downstream content and learner maps
+
+That is the operational backbone.
+
+7. The update system should also support gradual improvement
+This is important.
+
+Not every update needs a giant curriculum event.
+
+The super admin should also be able to improve the curriculum continuously by making smaller upgrades such as:
+
+refining public wording
+
+adding better explanations
+
+correcting misconceptions
+
+improving node relationships
+
+linking more content
+
+tagging exam-critical nodes more accurately
+
+This keeps the curriculum growing smarter over time.
+
+8. Suggested module list for implementation
+A practical system breakdown would be:
+
+Student-facing
+Curriculum Dashboard
+
+Subject Explorer
+
+Node Detail Panel
+
+Progress Heatmap
+
+Route Recommendations
+
+Filters and Search
+
+Super-admin
+Curriculum Registry
+
+Upload and Ingestion Workspace
+
+Extraction Review Console
+
+Node Editor
+
+Graph Viewer
+
+Coverage Dashboard
+
+Learner Impact Dashboard
+
+Diff and Version Manager
+
+Publishing Control Center
+
+Update engine
+Parser
+
+Diff engine
+
+Impact engine
+
+Regeneration queue
+
+Publishing service
+
+Cohort version pinning logic
+
+9. The deepest rule
+The student experience must answer:
+
+Where am I?
+
+What is weak?
+
+Why is it weak?
+
+What should I do next?
+
+The super-admin experience must answer:
+
+What is the curriculum?
+
+How is it structured?
+
+What changed?
+
+What is missing?
+
+What is affected?
+
+Is it safe to publish?
+
+And the update system must answer:
+
+How do we improve the curriculum without destabilizing the learner experience?
+
+That is the full triangle.
+
+The best next step is to turn this into a screen-by-screen specification: exact student screens, exact super-admin screens, and exact update flow screens.
+
+
+proceed
+
+Good. Let’s turn it into a screen-by-screen product specification.
+
+I’ll structure it in three sections:
+
+Student-facing curriculum experience
+
+Super-admin curriculum management experience
+
+Curriculum update flow over time
+
+This will focus on user experience, behavior, and what each screen must do.
+
+Part 1: Student-facing curriculum experience
+The student side should feel simple, alive, and personal.
+
+The student is not coming to read a formal curriculum document.
+The student is coming to understand:
+
+what exists to learn
+
+where they stand
+
+what is weak
+
+what is next
+
+So the student experience should be built around clarity and action.
+
+Screen 1: Curriculum Home
+This is the main curriculum landing page for the student.
+
+Purpose
+Give the student immediate orientation.
+
+What the student sees
+At the top:
+
+overall curriculum progress
+
+stable mastery percentage
+
+fragile topics count
+
+blocked topics count
+
+exam-readiness snapshot
+
+Then below:
+
+subject cards
+
+recent movement
+
+next recommended actions
+
+Example content blocks
+A. Hero summary
+Something like:
+
+You have entered 64% of your curriculum
+
+28% is stable
+
+13 topics need repair
+
+7 topics are slipping
+
+Your strongest subject is Integrated Science
+
+Your highest-risk strand is Fractions
+
+B. Subject cards
+Each card shows:
+
+subject name
+
+entered %
+
+stable %
+
+weak areas count
+
+trend
+
+action button
+
+Example:
+
+Mathematics
+
+Entered: 71%
+
+Stable: 34%
+
+Weak areas: 9
+
+Trend: Improving
+
+Button: View Curriculum
+
+C. Recent movement strip
+This shows:
+
+3 topics stabilized this week
+
+2 topics slipped into fragile
+
+1 blocked topic resolved
+
+D. Next actions panel
+Examples:
+
+Repair equivalent fractions
+
+Review sentence concord
+
+Stabilize respiration vs breathing
+
+What the student can do
+open a subject
+
+filter weak areas
+
+jump into repair
+
+continue last curriculum route
+
+Screen 2: Subject Curriculum Map
+When the student clicks a subject, they enter the subject map.
+
+Purpose
+Show the full subject territory and the student’s position inside it.
+
+Layout
+Three main zones work well:
+
+left: strand and sub-strand explorer
+
+center: curriculum map or hierarchical list
+
+right: selected node detail / next action
+
+What the student sees
+A. Subject header
+subject name
+
+subject readiness
+
+entered %
+
+stable %
+
+high-risk count
+
+last reviewed date
+
+exam-readiness level
+
+B. Strand overview
+Each strand appears as an expandable block.
+
+For each strand:
+
+name
+
+progress
+
+health state
+
+risk indicator
+
+improvement trend
+
+Example:
+Number
+
+Entered: 82%
+
+Stable: 45%
+
+High Risk: 3
+
+Trend: Mixed
+
+C. Sub-strand rows
+Inside each strand, student sees sub-strands.
+
+Each sub-strand shows:
+
+progress bar
+
+state label
+
+number of weak nodes
+
+click to open
+
+D. Topic nodes
+Inside a sub-strand, the student sees topic or skill nodes.
+
+Each node shows:
+
+topic name
+
+state
+
+simple icon/color
+
+small trend signal
+
+whether it is blocked or decaying
+
+Node states the student should see
+Use simple terms such as:
+
+Not started
+
+Learning
+
+Improving
+
+Strong
+
+Fragile
+
+Slipping
+
+Blocked
+
+Exam ready
+
+What the student can do
+expand and collapse strands
+
+click any node
+
+filter by state
+
+show weak only
+
+show due for review
+
+show blocked topics
+
+search for a topic
+
+Screen 3: Topic / Node Detail View
+This opens when the student clicks a topic.
+
+Purpose
+Explain the topic, the student’s current state, and what should happen next.
+
+What the student sees
+A. Topic identity block
+topic name
+
+strand / sub-strand path
+
+simple explanation of what this topic covers
+
+why it matters
+
+B. Current position block
+This should explain the student’s level in human terms.
+
+Example:
+
+You understand the basic idea
+
+You struggle when denominators differ
+
+Timed questions reduce your accuracy
+
+This topic is currently fragile
+
+C. Evidence block
+Simple, not overly technical.
+
+Examples:
+
+Last practiced: 5 days ago
+
+Untimed accuracy: strong
+
+Timed performance: weak
+
+You often confuse unlike fractions with equivalent fractions
+
+D. Dependency block
+This is powerful.
+
+Examples:
+
+This topic depends on:
+
+equivalent fractions
+
+part-whole understanding
+
+Weakness here affects:
+
+ratio
+
+percentages
+
+fraction operations
+
+E. What to do next
+Direct actions:
+
+Repair root cause
+
+Practice this topic
+
+Review explanation
+
+Do timed drills
+
+Ask coach to teach this
+
+What the student can do
+start repair session
+
+start practice session
+
+revisit explanation
+
+compare with related topics
+
+mark for later review
+
+Screen 4: Weak Zones View
+This is a filtered view focused on problem areas.
+
+Purpose
+Help the student quickly understand what is hurting progress.
+
+What the student sees
+A list or visual map of all weak/fragile/blocked topics.
+
+Each item should show:
+
+topic
+
+current issue
+
+why it is weak
+
+urgency
+
+what it affects
+
+next action
+
+This view can be grouped by:
+
+subject
+
+strand
+
+severity
+
+urgency
+
+review due
+
+blocked chain
+
+What the student can do
+fix the highest-risk topic
+
+fix prerequisites first
+
+queue topics for review
+
+sort by urgency or exam importance
+
+Screen 5: Progress Over Time
+This is where the student sees movement.
+
+Purpose
+Build motivation and help the student understand whether they are improving or slipping.
+
+What the student sees
+topics stabilized this week
+
+topics that became fragile
+
+subject improvement trend
+
+strand improvement timeline
+
+recent breakthroughs
+
+decay alerts
+
+This should not be too heavy.
+It should feel like progress storytelling.
+
+What the student can do
+inspect what improved
+
+inspect what slipped
+
+jump into recovery actions
+
+Screen 6: Review Due / Slipping Topics
+This is a practical operational page.
+
+Purpose
+Show what must be revisited before memory decays further.
+
+What the student sees
+A focused list of:
+
+due for review
+
+slipping
+
+reopened topics
+
+once-mastered but now unstable topics
+
+Each item should show:
+
+topic
+
+how long since last strong performance
+
+current state
+
+recommended review type
+
+What the student can do
+review all due items
+
+start with easiest wins
+
+start with highest exam value
+
+let the coach choose the order
+
+Student navigation principles
+The student side should make it easy to move between:
+
+map
+
+weakness
+
+detail
+
+action
+
+A clean top navigation inside Curriculum could be:
+
+Overview
+
+Subjects
+
+Weak Zones
+
+Review Due
+
+Progress
+
+That would already be strong.
+
+Part 2: Super-admin curriculum management experience
+Now the internal side.
+
+The super-admin should see a serious control center, not just the student map with edit tools.
+
+Their job is to manage:
+
+source curriculum
+
+structure
+
+enrichment
+
+versioning
+
+publishing
+
+coverage
+
+update impact
+
+Screen 1: Curriculum Registry
+This is the central home for all curriculum versions.
+
+Purpose
+Show all curriculum packages and their current state.
+
+What the admin sees
+A table or card list with:
+
+curriculum family
+
+authority/source
+
+level range
+
+subjects included
+
+version label
+
+status
+
+effective date
+
+current live cohorts
+
+last updated
+
+source file
+
+Actions
+upload new curriculum
+
+open existing version
+
+duplicate for revision
+
+archive old version
+
+compare versions
+
+view impact
+
+This is the master inventory.
+
+Screen 2: Upload / Ingestion Workspace
+This is where the admin uploads a PDF and lets the processing pipeline run.
+
+Purpose
+Convert a PDF into structured curriculum data.
+
+Layout
+Best as a 3-column workspace.
+
+Left column
+uploaded PDF preview
+
+page thumbnails
+
+extraction highlights
+
+OCR warnings
+
+page confidence
+
+Center column
+extracted hierarchy tree
+
+strands
+
+sub-strands
+
+standards
+
+indicators
+
+exemplars
+
+comments
+
+Right column
+selected node editor
+
+extracted text
+
+normalized fields
+
+status
+
+confidence
+
+validation notes
+
+What the admin sees
+extraction status
+
+parsing status
+
+number of nodes found
+
+missing sections
+
+low-confidence sections
+
+duplicate detections
+
+structural warnings
+
+Actions
+approve extraction
+
+re-run extraction
+
+edit extracted nodes
+
+split merged nodes
+
+merge duplicates
+
+mark unresolved
+
+save as draft
+
+Screen 3: Curriculum Tree Editor
+This is the detailed structure manager.
+
+Purpose
+Let the admin inspect and edit the actual curriculum hierarchy.
+
+What the admin sees
+A full hierarchy such as:
+
+Subject
+
+Strand
+
+Sub-strand
+
+Standard
+
+Indicator
+
+Exemplar
+
+Each node shows:
+
+official title
+
+display title
+
+node type
+
+status
+
+internal tags
+
+completeness
+
+content coverage
+
+Actions
+add node
+
+move node
+
+rename display label
+
+edit official wording
+
+add notes
+
+attach metadata
+
+mark node as hidden/public/internal
+
+This is the structural editing surface.
+
+Screen 4: Node Intelligence Editor
+This is where raw curriculum becomes smart curriculum.
+
+Purpose
+Attach under-the-hood intelligence to a node.
+
+What the admin sees for one node
+official wording
+
+student-facing wording
+
+parent-facing wording
+
+strand and sub-strand placement
+
+node code/reference
+
+source page
+
+hidden notes
+
+misconceptions
+
+prerequisite nodes
+
+dependent nodes
+
+question family mapping
+
+teaching strategy tags
+
+content type expectations
+
+exam relevance
+
+difficulty band
+
+local context notes
+
+Actions
+edit hidden intelligence
+
+add prerequisite links
+
+mark foundation level
+
+assign content recipe tags
+
+assign diagnostic tags
+
+mark high exam value
+
+save draft
+
+request review
+
+This screen is one of the most important.
+
+Screen 5: Curriculum Graph View
+This is a visual relationship map.
+
+Purpose
+Help the admin see structural and dependency relationships.
+
+What the admin sees
+Nodes connected by:
+
+hierarchy edges
+
+prerequisite edges
+
+dependency edges
+
+cross-topic links
+
+What this helps reveal
+orphan nodes
+
+overconnected nodes
+
+bad prerequisite chains
+
+weakly modeled strands
+
+hidden structural gaps
+
+Actions
+inspect link
+
+add dependency
+
+remove dependency
+
+trace blockage chains
+
+highlight foundational nodes
+
+This is more advanced but very useful.
+
+Screen 6: Content Coverage Dashboard
+This is the operational power view.
+
+Purpose
+Show whether the curriculum has enough usable content behind it.
+
+What the admin sees per node
+lessons count
+
+question count
+
+drill count
+
+worked examples count
+
+diagnostic count
+
+review content count
+
+explanation content count
+
+content freshness
+
+coverage gaps
+
+Summary panels
+nodes with no assessment content
+
+nodes with no remedial content
+
+nodes with no worked examples
+
+nodes with weak diagnostic coverage
+
+over-covered nodes
+
+under-covered nodes
+
+Actions
+generate content jobs
+
+flag content gaps
+
+open affected nodes
+
+assign review
+
+This screen connects curriculum to actual academic output.
+
+Screen 7: Learner Impact Dashboard
+This is where the admin sees how the curriculum behaves in real usage.
+
+Purpose
+Turn learner data into curriculum intelligence.
+
+What the admin sees
+most frequently weak nodes
+
+most blocked nodes
+
+most decayed nodes
+
+hardest strands
+
+easiest strands
+
+nodes with highest misconception rates
+
+nodes where students recover quickly
+
+nodes where content seems ineffective
+
+Actions
+inspect node performance
+
+adjust hidden intelligence
+
+revise content strategy
+
+mark node for content review
+
+investigate recurring weakness
+
+This allows the curriculum to improve over time.
+
+Screen 8: Diff and Version Manager
+This is the change-control screen.
+
+Purpose
+Compare one version against another and control change.
+
+What the admin sees
+added nodes
+
+removed nodes
+
+moved nodes
+
+reworded nodes
+
+changed dependencies
+
+changed hidden fields
+
+changed public labels
+
+Impact panel
+affected lessons
+
+affected questions
+
+affected diagnostics
+
+affected learners
+
+affected routes
+
+Actions
+accept change
+
+reject change
+
+stage for review
+
+publish later
+
+roll back
+
+pin to selected cohorts
+
+This is essential for safe updates.
+
+Screen 9: Publish Control Center
+This is where updates become live.
+
+Purpose
+Control what version is active and for whom.
+
+What the admin sees
+current live version
+
+draft versions
+
+ready-for-review versions
+
+published history
+
+assigned cohorts
+
+effective dates
+
+pending regeneration jobs
+
+Actions
+publish
+
+stage
+
+schedule activation
+
+pin by cohort
+
+archive
+
+roll back
+
+trigger regeneration
+
+This is the formal release layer.
+
+Part 3: How updates happen over time
+Now let’s define the update experience itself.
+
+The system should support both major and minor updates without breaking trust.
+
+Update Type A: New official curriculum upload
+Example
+A new GES/NaCCA PDF is uploaded.
+
+Flow
+admin goes to Curriculum Registry
+
+clicks Upload New Curriculum
+
+uploads PDF
+
+system runs extraction and parsing
+
+admin reviews extracted structure
+
+system compares against live version
+
+admin reviews impact
+
+admin publishes as new version or saves as draft
+
+What the admin sees during this flow
+extraction confidence
+
+changed nodes
+
+new nodes
+
+deprecated nodes
+
+learner impact
+
+content impact
+
+Update Type B: Internal enrichment update
+Example
+No new official PDF, but the team improves:
+
+prerequisites
+
+misconceptions
+
+public wording
+
+difficulty mapping
+
+Flow
+admin opens existing curriculum version
+
+edits node intelligence
+
+saves as enrichment revision
+
+system calculates affected areas
+
+admin decides whether change is immediate or staged
+
+publish
+
+Common use cases
+better topic naming for students
+
+better hidden tagging
+
+better downstream question generation
+
+better diagnosis guidance
+
+Update Type C: Content-driven update
+Example
+The curriculum structure remains the same, but new content is attached or old content is flagged weak.
+
+Flow
+admin sees coverage gap or learner failure pattern
+
+opens node
+
+marks content for regeneration or review
+
+generation pipeline creates new content
+
+content is reviewed
+
+node coverage improves
+
+student experience updates
+
+This is how the system keeps evolving without structural change.
+
+The update screens
+Now let’s specify the screens involved in an update.
+
+Update Screen 1: Update Start
+Purpose
+Choose what kind of update is being made.
+
+Options
+upload new source PDF
+
+revise existing version
+
+enrich node intelligence
+
+regenerate affected content
+
+compare versions
+
+Update Screen 2: Processing Summary
+Purpose
+Show what the system extracted or changed.
+
+The admin sees
+nodes found
+
+confidence rates
+
+suspected errors
+
+duplicates
+
+hierarchy warnings
+
+relationship warnings
+
+Update Screen 3: Diff Review
+Purpose
+Help the admin understand what changed.
+
+The admin sees
+before vs after
+
+wording changes
+
+node additions/removals
+
+moved items
+
+changed tags
+
+changed dependencies
+
+This should be very explicit.
+
+Update Screen 4: Impact Analysis
+Purpose
+Show downstream consequences.
+
+The admin sees
+impacted content count
+
+stale items count
+
+learners on affected nodes
+
+routes requiring recalculation
+
+parent summary areas affected
+
+regeneration jobs needed
+
+This is one of the most important screens in the whole internal system.
+
+Update Screen 5: Publish Decision
+Purpose
+Let the admin choose how to release the update.
+
+Options
+keep as draft
+
+publish immediately
+
+publish for new cohorts only
+
+schedule activation
+
+publish structure but hold content changes
+
+publish content but keep learner routing pinned
+
+This gives serious control.
+
+Student experience during updates
+The student should never feel the curriculum is unstable.
+
+So update behavior should be controlled.
+
+Safe student-facing behavior
+wording-only improvements may update quietly
+
+structural changes may be staged
+
+current routes may stay pinned
+
+student progress history should not be lost
+
+changed nodes should preserve continuity where possible
+
+If a topic label changes, the student should still feel that it is the same learning journey unless the change is genuinely structural.
+
+What super admin should always know under the hood
+At any point, the super admin should be able to answer:
+
+what curriculum version is live?
+
+what is still draft?
+
+what nodes changed recently?
+
+what nodes have low confidence?
+
+what parts of the curriculum are weakly covered?
+
+what learner signals suggest the curriculum model needs refining?
+
+what content is now stale because of an update?
+
+which cohorts are pinned to which version?
+
+That is the operational reality they need.
+
+Recommended information architecture
+A clean internal navigation could be:
+
+Curriculum
+
+Registry
+
+Upload & Ingestion
+
+Tree Editor
+
+Node Intelligence
+
+Graph View
+
+Coverage
+
+Learner Impact
+
+Diff & Versions
+
+Publish Center
+
+And student navigation could be:
+
+Curriculum
+
+Overview
+
+Subjects
+
+Weak Zones
+
+Review Due
+
+Progress
+
+This separation is very clean.
+
+The deepest design rule
+The student side must hide complexity and expose meaning.
+
+The super-admin side must expose complexity and control it safely.
+
+That means:
+
+student sees “You are weak in fractions because equivalent fractions are unstable”
+
+admin sees “Node MAT.N.3 has low retention, high dependency centrality, poor diagnostic separation, and inadequate worked-example coverage”
+
+Same truth. Different expression.
+
+What this system becomes
+If you do this well, the curriculum stops being:
+
+a static syllabus page
+
+a reference document
+
+a list of topics
+
+It becomes:
+
+the academic map for the student
+
+the control center for the super admin
+
+the regeneration trigger for content systems
+
+the backbone of tutoring, diagnosis, revision, and reporting
+
+The best next step is to define the exact fields and components on each screen, one screen at a time, starting with either the student Curriculum Home or the super-admin Upload & Ingestion Workspace.
+
+
+proceed
+
+Good. I’ll go screen by screen and specify the actual structure.
+
+I’ll start with:
+
+Student Curriculum Home
+
+Student Subject Curriculum Map
+
+Student Topic Detail
+
+Super Admin Curriculum Registry
+
+Super Admin Upload & Ingestion Workspace
+
+Super Admin Curriculum Tree Editor
+
+Super Admin Diff / Impact / Publish flow
+
+How updates happen over time
+
+This will focus on what is on each screen, what each part means, and what actions it must support.
+
+1. Student Screen: Curriculum Home
+Purpose
+This is the student’s main entry into the curriculum system.
+
+It must answer immediately:
+
+Where am I overall?
+
+What is strongest?
+
+What is weakest?
+
+What should I do next?
+
+It should feel like a live academic dashboard, not a curriculum document.
+
+Layout structure
+Top header area
+This contains:
+
+page title: Curriculum
+
+student class / level
+
+curriculum name
+
+last sync / last updated time
+
+optional term / exam target label
+
+Example:
+
+JHS 2
+
+GES BECE Curriculum
+
+Term 2
+
+Preparing toward BECE pathway
+
+Section A: Hero summary strip
+This is the first major block.
+
+Fields shown
+curriculum entered %
+
+stable mastery %
+
+exam readiness %
+
+weak topics count
+
+blocked topics count
+
+review-due count
+
+Meaning
+These are not just vanity percentages. They tell the student:
+
+how much of the curriculum has been encountered
+
+how much is actually strong
+
+how much is weak or slipping
+
+how much needs attention right now
+
+UI behavior
+Each metric should be clickable.
+
+For example:
+
+clicking weak topics count opens Weak Zones view
+
+clicking review-due count opens Review Due view
+
+clicking exam readiness opens the readiness breakdown
+
+Section B: Position statement card
+This is a narrative intelligence card.
+
+Example content
+“You have entered most of the Number strand, but some foundational areas are still fragile. Your strongest progress is in Integrated Science. Your biggest current risk is Fraction relationships, which is affecting Ratio and Percentage.”
+
+Purpose
+This gives meaning, not just numbers.
+
+Components inside
+short personal insight sentence
+
+strongest subject
+
+highest-risk strand
+
+most improved strand this week
+
+next best move
+
+This should update dynamically.
+
+Section C: Subject card grid
+This is the main exploration zone.
+
+Each subject appears as a large card.
+
+Each subject card should contain:
+Identity block
+subject name
+
+subject icon
+
+curriculum version / class alignment if needed
+
+Progress block
+entered %
+
+stable %
+
+exam-ready %
+
+weak area count
+
+Trend block
+improving / mixed / slipping
+
+small trend sparkline or simple arrow
+
+State summary
+strongest strand
+
+weakest sub-strand
+
+Action buttons
+View Curriculum
+
+Fix Weak Areas
+
+Continue Route
+
+Why this matters
+This makes the curriculum easy to enter from any subject.
+
+The student should not have to open a subject blindly.
+
+Section D: Recent movement panel
+This is a small but important motivational block.
+
+Shows
+topics stabilized this week
+
+topics that slipped
+
+topics newly opened
+
+blocked paths resolved
+
+Purpose
+To help the student see that the curriculum map is moving.
+
+Interaction
+Each item should be clickable and open the related topic or strand.
+
+Section E: Recommended next actions
+This is the most actionable block on the page.
+
+Shows 3 to 5 prioritized items
+Each item should show:
+
+topic name
+
+reason it is recommended
+
+action type
+
+expected benefit
+
+Example
+Equivalent Fractions
+Reason: Foundational weakness affecting 3 later topics
+Action: Repair now
+
+Sentence Concord
+Reason: Recently slipping after earlier success
+Action: Review
+
+Respiration vs Breathing
+Reason: Confusion pattern detected in timed questions
+Action: Contrast Drill
+
+Buttons
+Start
+
+View Why
+
+Save for Later
+
+Section F: Filters / quick navigation strip
+This can sit below the hero or near the subject grid.
+
+Quick filters
+Weak Only
+
+Blocked
+
+Review Due
+
+Not Started
+
+Exam Ready
+
+Recently Improved
+
+Purpose
+Lets the student jump directly into a focused mode without digging.
+
+2. Student Screen: Subject Curriculum Map
+Purpose
+This is where the student sees the actual terrain of a subject and their state across it.
+
+It must answer:
+
+What exists in this subject?
+
+Which strands and sub-strands am I strong or weak in?
+
+Where exactly is the problem?
+
+What should I tackle first?
+
+Layout structure
+A three-pane layout works best.
+
+Left pane: subject hierarchy navigator
+Shows:
+
+subject title
+
+strands
+
+expandable sub-strands
+
+search box
+
+filters
+
+Center pane: live curriculum map
+Shows:
+
+strand blocks
+
+sub-strand rows
+
+topic or skill nodes
+
+state colors
+
+compact progress indicators
+
+Right pane: detail / action pane
+Shows:
+
+selected strand or topic detail
+
+reason for state
+
+next action
+
+Section A: Subject header
+Fields
+subject name
+
+entered %
+
+stable %
+
+exam-ready %
+
+high-risk topics count
+
+review due count
+
+last active date
+
+Buttons
+Continue Best Route
+
+Practice Weak Areas
+
+Show Review Due
+
+Show Whole Map
+
+Section B: Strand summary row
+At the top of the map, show all strands as cards or tabs.
+
+Each strand card contains
+strand name
+
+entered %
+
+stable %
+
+weak count
+
+risk label
+
+trend
+
+Clicking a strand
+Focuses the map on that strand and loads its details.
+
+Section C: Sub-strand explorer
+When a strand is open, the student sees its sub-strands.
+
+Each sub-strand row should show
+name
+
+current state
+
+entered %
+
+stable %
+
+weak node count
+
+blocked node count
+
+review due count
+
+Actions
+expand
+
+focus only this sub-strand
+
+view weak topics within it
+
+Section D: Topic / node tiles
+These are the most important interactive units.
+
+Each topic tile shows:
+
+topic name
+
+status label
+
+mini progress indicator
+
+if blocked
+
+if decaying
+
+if recently improved
+
+if exam-critical
+
+Student-facing status labels
+Use simple language:
+
+Not Started
+
+Learning
+
+Improving
+
+Strong
+
+Fragile
+
+Slipping
+
+Blocked
+
+Exam Ready
+
+Visual behavior
+clicking selects the node
+
+double-clicking or button opens detail view
+
+hovering can show a small tooltip summary
+
+Section E: Map filters
+The student should be able to filter the subject map by:
+
+weak only
+
+blocked only
+
+review due
+
+not started
+
+exam-ready
+
+by strand
+
+by urgency
+
+by importance
+
+This turns the curriculum map into an actual navigation tool.
+
+Section F: Right-side detail pane for selected node
+When a topic is selected, the pane shows:
+
+Identity
+topic name
+
+strand path
+
+short explanation
+
+Current state
+current level
+
+simple reason for level
+
+what is going well
+
+what is going wrong
+
+Impact
+what this depends on
+
+what this affects
+
+Next action
+repair
+
+practice
+
+review
+
+ask coach to teach
+
+do timed drill
+
+This lets the student act without leaving the map.
+
+3. Student Screen: Topic Detail View
+Purpose
+This is the deep explanation screen for one curriculum node.
+
+It should remove confusion and turn a weak point into a clear plan.
+
+Layout structure
+Top block: topic identity
+Fields:
+
+topic title
+
+subject > strand > sub-strand path
+
+simple description
+
+why it matters in the curriculum
+
+Section A: Your current position
+This should explain the student’s status in plain language.
+
+Example:
+
+You understand the basic idea of fractions
+
+You struggle when fractions must be compared with unlike denominators
+
+Your performance drops under time pressure
+
+This topic is currently fragile
+
+Section B: Evidence snapshot
+Show student-friendly evidence fields:
+
+last practiced
+
+last strong performance
+
+recent practice strength
+
+timed vs untimed pattern
+
+most common confusion
+
+Do not make this too technical.
+
+Section C: Root cause area
+This explains whether the weakness is direct or caused by another topic.
+
+Example:
+
+Likely root issue: Equivalent Fractions
+
+Supporting issue: Part-whole interpretation
+
+Section D: Downstream effect area
+This shows what this topic affects.
+
+Example:
+
+Ratio
+
+Percentage
+
+Fraction operations
+
+Word problems
+
+This is powerful because it explains why the topic matters.
+
+Section E: Next-step planner
+Actions shown as buttons:
+
+Repair Root Cause
+
+Practice This Topic
+
+Review Explanation
+
+Do Timed Drill
+
+Ask Coach
+
+Section F: Related topics
+Shows:
+
+prerequisite topics
+
+linked topics
+
+similar/confusable topics
+
+This helps the student connect the map.
+
+4. Super Admin Screen: Curriculum Registry
+Purpose
+This is the master control list for curriculum packages and versions.
+
+It answers:
+
+What curricula exist?
+
+Which is live?
+
+Which is draft?
+
+What is being revised?
+
+Which cohorts use which version?
+
+Layout structure
+Top action bar
+Buttons:
+
+Upload New Curriculum
+
+Create Revision
+
+Compare Versions
+
+View Archived
+
+Search
+
+Main table fields
+Each row should show:
+
+curriculum family name
+
+authority/source
+
+level range
+
+subjects count
+
+version label
+
+status
+
+effective date
+
+current cohorts
+
+last updated
+
+source file presence
+
+extraction status
+
+Status values
+Draft
+
+In Review
+
+Ready to Publish
+
+Published
+
+Archived
+
+Superseded
+
+Row actions
+Open
+
+Compare
+
+Duplicate
+
+Archive
+
+Publish
+
+View Impact
+
+This page is the operational front door for internal curriculum management.
+
+5. Super Admin Screen: Upload & Ingestion Workspace
+Purpose
+Turn a curriculum PDF into structured, reviewable curriculum data.
+
+This is not just file upload. This is conversion, validation, and preparation.
+
+Layout structure
+A three-column workspace is ideal.
+
+Left column: Source document panel
+Components
+PDF preview
+
+page thumbnails
+
+zoom controls
+
+OCR / extraction highlights
+
+page confidence markers
+
+page-level warnings
+
+Page-level warnings examples
+low OCR confidence
+
+table structure uncertain
+
+possible header merge
+
+unreadable section
+
+repeated text anomaly
+
+Purpose
+Allows the admin to compare source against parsed structure.
+
+Center column: Parsed curriculum tree
+Tree structure
+curriculum root
+
+subject
+
+strand
+
+sub-strand
+
+standard
+
+indicator
+
+exemplar
+
+comments
+
+Each node in the tree should show
+extracted title
+
+node type
+
+confidence icon
+
+validation status
+
+child count
+
+Status types
+parsed cleanly
+
+needs review
+
+unresolved
+
+manually edited
+
+approved
+
+Actions
+expand/collapse
+
+select node
+
+merge
+
+split
+
+move
+
+mark unresolved
+
+This is where the extracted curriculum becomes visible as structure.
+
+Right column: Selected node editor
+When a node is selected, show:
+
+Raw extraction
+extracted text
+
+source page
+
+source snippet
+
+OCR confidence
+
+parsing confidence
+
+Normalized structure fields
+official title
+
+node type
+
+parent
+
+code/reference
+
+order index
+
+public display title
+
+notes
+
+Validation controls
+approve node
+
+flag issue
+
+mark duplicate
+
+split content
+
+add missing child
+
+remap parent
+
+Hidden intelligence preview
+detected topic candidates
+
+detected verbs
+
+possible prerequisites
+
+suggested misconceptions
+
+suggested tags
+
+This gives the admin control before publication.
+
+Top processing summary bar
+Above the three columns, show:
+
+pages processed
+
+extraction status
+
+tree nodes found
+
+low-confidence nodes count
+
+duplicate warnings count
+
+unresolved count
+
+Buttons
+Re-run Parsing
+
+Force OCR on Selected Pages
+
+Save Draft
+
+Send for Review
+
+Approve Structure
+
+This lets the admin manage the pipeline.
+
+6. Super Admin Screen: Curriculum Tree Editor
+Purpose
+Manage the curriculum after ingestion as structured academic data.
+
+This is where the admin shapes the final hierarchy and public representation.
+
+Layout structure
+Left side: hierarchy navigator
+Shows the full curriculum tree.
+
+Main panel: node detail editor
+For the selected node, show a multi-tab editor.
+
+Tabs in node detail editor
+Tab 1: Official Structure
+Fields:
+
+official wording
+
+official code/reference
+
+node type
+
+position in hierarchy
+
+parent
+
+source file
+
+source page
+
+source snippet
+
+effective status
+
+Tab 2: Public Rendering
+Fields:
+
+student-facing title
+
+parent-facing title
+
+short explanation
+
+learning objective summary
+
+visibility flags
+
+This is important because the raw official wording is often not ideal for students.
+
+Tab 3: Hidden Intelligence
+Fields:
+
+prerequisite nodes
+
+dependent nodes
+
+misconceptions
+
+question families
+
+teaching method tags
+
+diagnostic tags
+
+exam relevance
+
+foundation weight
+
+difficulty band
+
+local-context note
+
+This is the “smart curriculum” layer.
+
+Tab 4: Content Linkage
+Fields:
+
+lessons linked
+
+drills linked
+
+questions linked
+
+worked examples linked
+
+diagnostics linked
+
+review content linked
+
+content gaps
+
+stale content warnings
+
+Tab 5: Learner Signals
+Fields:
+
+weakness frequency
+
+blockage frequency
+
+decay frequency
+
+success after repair
+
+confusion pairings
+
+content effectiveness notes
+
+This lets the admin refine the curriculum using live learner evidence.
+
+7. Super Admin Flow: Diff, Impact, and Publish
+This is the update-control sequence.
+
+Screen A: Diff Review
+Purpose
+Compare a revised curriculum version against the current live version.
+
+Layout
+Two-column compare view:
+
+left = current live version
+
+right = proposed revision
+
+Change categories shown
+added nodes
+
+removed nodes
+
+moved nodes
+
+reworded official text
+
+reworded public labels
+
+changed dependencies
+
+changed intelligence fields
+
+For each changed item
+Show:
+
+old value
+
+new value
+
+severity
+
+review requirement
+
+Severity examples
+cosmetic
+
+interpretive
+
+structural
+
+high-impact
+
+This helps the admin understand what kind of change is happening.
+
+Screen B: Impact Analysis
+Purpose
+Show consequences before publication.
+
+Show counts for:
+affected lessons
+
+affected questions
+
+affected drills
+
+affected diagnostics
+
+stale content count
+
+learners currently on affected nodes
+
+routes needing recalculation
+
+parent summary areas affected
+
+Also show impact buckets
+safe to update immediately
+
+requires content review
+
+requires learner route review
+
+requires staging by cohort
+
+This is one of the most important internal screens.
+
+Screen C: Publish Decision
+Purpose
+Control how the update goes live.
+
+Publish options
+Save as Draft
+
+Publish Immediately
+
+Publish to New Cohorts Only
+
+Schedule Activation
+
+Publish Structure Only
+
+Publish with Content Regeneration Queue
+
+Hold Learner Routing Until Review Complete
+
+Additional controls
+choose affected cohorts
+
+set effective date
+
+trigger regeneration jobs
+
+notify internal reviewers
+
+This protects learner continuity.
+
+8. How updates happen over time
+The curriculum system should support ongoing improvement without chaos.
+
+Update mode 1: New official curriculum source
+Flow:
+
+upload new PDF
+
+run extraction
+
+review structure
+
+compare with current
+
+analyze impact
+
+publish as new version
+
+Update mode 2: Internal intelligence refinement
+Flow:
+
+open existing version
+
+edit node intelligence
+
+save enrichment revision
+
+review impact
+
+publish safe changes
+
+stage larger changes
+
+Update mode 3: Content linkage / coverage improvement
+Flow:
+
+identify content gap
+
+attach new content or trigger generation
+
+review result
+
+publish updated node coverage
+
+Time-based update principles
+Small safe updates
+Examples:
+
+better student-facing wording
+
+corrected internal notes
+
+clearer explanations
+
+These can often be released quietly.
+
+Medium updates
+Examples:
+
+new prerequisites
+
+changed misconception mapping
+
+changed question-family logic
+
+These may need review and impact analysis.
+
+Major updates
+Examples:
+
+new official curriculum version
+
+moved topics
+
+merged or split nodes
+
+changed scope
+
+These should be versioned, staged, and cohort-aware.
+
+Cohort protection rules
+When updates happen, students should not feel disoriented.
+
+So the system should support:
+
+pinning existing learners to current version
+
+moving new cohorts to new version
+
+controlled migration for active learners
+
+preserving historical progress where mappings remain possible
+
+This is very important.
+
+9. Suggested student vs admin screen philosophy
+Student side
+Must feel:
+
+simple
+
+visual
+
+encouraging
+
+actionable
+
+personally meaningful
+
+Admin side
+Must feel:
+
+controlled
+
+auditable
+
+structured
+
+transparent
+
+safe for change management
+
+The two sides should not look alike.
+
+The student sees meaning.
+The admin sees machinery.
+
+10. What the system is really becoming
+At this point, the curriculum module is no longer just a “curriculum page.”
+
+It is becoming:
+
+a student academic map
+
+a super-admin curriculum operating console
+
+a content regeneration trigger
+
+a versioned academic control layer
+
+a feedback loop between official curriculum, learner struggle, and content evolution
+
+That is the right level of seriousness.
+
+The next best step is to specify one of these screens in full component detail, field by field, with behavior states. The best place to start is either the Student Curriculum Home or the Super Admin Upload & Ingestion Workspace.
+
+
+
