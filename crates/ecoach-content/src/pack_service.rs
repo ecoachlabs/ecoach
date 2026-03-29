@@ -286,6 +286,43 @@ struct KnowledgeEntryRecord {
     aliases: Vec<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct ContrastPairRecord {
+    pair_code: String,
+    title: String,
+    topic_code: String,
+    left_entry_title: String,
+    right_entry_title: String,
+    #[serde(default)]
+    left_label: Option<String>,
+    #[serde(default)]
+    right_label: Option<String>,
+    #[serde(default)]
+    summary_text: Option<String>,
+    #[serde(default)]
+    trap_strength: Option<i64>,
+    #[serde(default)]
+    difficulty_score: Option<i64>,
+    #[serde(default)]
+    atoms: Vec<ContrastAtomRecord>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ContrastAtomRecord {
+    ownership_type: String,
+    atom_text: String,
+    #[serde(default)]
+    lane: Option<String>,
+    #[serde(default)]
+    explanation_text: Option<String>,
+    #[serde(default)]
+    difficulty_score: Option<i64>,
+    #[serde(default)]
+    is_speed_ready: Option<bool>,
+    #[serde(default)]
+    reveal_order: Option<i64>,
+}
+
 pub struct PackService<'a> {
     conn: &'a Connection,
 }
@@ -411,6 +448,8 @@ impl<'a> PackService<'a> {
             self.read_json_file(&pack_path.join("content/formulas.json"))?;
         let worked_examples: Vec<KnowledgeEntryRecord> =
             self.read_json_file(&pack_path.join("content/worked_examples.json"))?;
+        let contrast_pairs: Vec<ContrastPairRecord> =
+            self.read_optional_json_file(&pack_path.join("content/contrast_pairs.json"))?;
 
         let topic_ids = self.insert_topics(subject_id, &topics)?;
         let node_ids = self.insert_academic_nodes(&topic_ids, &nodes)?;
@@ -443,6 +482,7 @@ impl<'a> PackService<'a> {
             &worked_examples,
             "worked_example",
         )?;
+        self.insert_contrast_profiles(subject_id, &topic_ids, &contrast_pairs)?;
         self.link_questions_to_knowledge(subject_id)?;
 
         Ok(PackImportCounts {
@@ -1211,6 +1251,129 @@ impl<'a> PackService<'a> {
         Ok(())
     }
 
+    fn insert_contrast_profiles(
+        &self,
+        subject_id: i64,
+        topic_ids: &BTreeMap<String, i64>,
+        contrast_pairs: &[ContrastPairRecord],
+    ) -> EcoachResult<()> {
+        if contrast_pairs.is_empty() {
+            return Ok(());
+        }
+
+        let knowledge_entries = self.load_subject_knowledge_entries_by_title(subject_id)?;
+
+        for pair in contrast_pairs {
+            let topic_id = *topic_ids.get(&pair.topic_code).ok_or_else(|| {
+                EcoachError::Validation(format!(
+                    "contrast pair {} references unknown topic code {}",
+                    pair.title, pair.topic_code
+                ))
+            })?;
+            let left_entry_id = resolve_knowledge_entry_title(
+                &knowledge_entries,
+                &pair.left_entry_title,
+                &pair.topic_code,
+            )?;
+            let right_entry_id = resolve_knowledge_entry_title(
+                &knowledge_entries,
+                &pair.right_entry_title,
+                &pair.topic_code,
+            )?;
+
+            self.conn
+                .execute(
+                    "INSERT INTO contrast_pairs (
+                        left_entry_id, right_entry_id, title, trap_strength, pair_code,
+                        subject_id, topic_id, left_label, right_label, summary_text, difficulty_score
+                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                    params![
+                        left_entry_id,
+                        right_entry_id,
+                        pair.title,
+                        pair.trap_strength.unwrap_or(6500),
+                        pair.pair_code,
+                        subject_id,
+                        topic_id,
+                        pair.left_label
+                            .as_deref()
+                            .unwrap_or(pair.left_entry_title.as_str()),
+                        pair.right_label
+                            .as_deref()
+                            .unwrap_or(pair.right_entry_title.as_str()),
+                        pair.summary_text,
+                        pair.difficulty_score.unwrap_or(5000),
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            let pair_id = self.conn.last_insert_rowid();
+
+            for atom in &pair.atoms {
+                validate_contrast_ownership(&atom.ownership_type, &pair.title)?;
+                self.conn
+                    .execute(
+                        "INSERT INTO contrast_evidence_atoms (
+                            pair_id, ownership_type, atom_text, lane, explanation_text,
+                            difficulty_score, is_speed_ready, reveal_order
+                        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                        params![
+                            pair_id,
+                            atom.ownership_type,
+                            atom.atom_text,
+                            atom.lane.as_deref().unwrap_or("feature"),
+                            atom.explanation_text,
+                            atom.difficulty_score.unwrap_or(5000),
+                            atom.is_speed_ready.unwrap_or(true) as i64,
+                            atom.reveal_order.unwrap_or(1),
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn load_subject_knowledge_entries_by_title(
+        &self,
+        subject_id: i64,
+    ) -> EcoachResult<BTreeMap<String, i64>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT ke.id, t.code, ke.title
+                 FROM knowledge_entries ke
+                 LEFT JOIN topics t ON t.id = ke.topic_id
+                 WHERE ke.subject_id = ?1",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let rows = statement
+            .query_map([subject_id], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, Option<String>>(1)?,
+                    row.get::<_, String>(2)?,
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut entries = BTreeMap::new();
+        for row in rows {
+            let (entry_id, topic_code, title) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let title_key = normalize_title_key(&title);
+            entries.insert(title_key.clone(), entry_id);
+            if let Some(topic_code) = topic_code {
+                entries.insert(scoped_key(&topic_code, &title), entry_id);
+                entries.insert(scoped_key(&topic_code, &title_key), entry_id);
+            }
+        }
+
+        Ok(entries)
+    }
+
     fn load_question_knowledge_questions(
         &self,
         subject_id: i64,
@@ -1632,6 +1795,17 @@ impl<'a> PackService<'a> {
         })
     }
 
+    fn read_optional_json_file<T>(&self, file_path: &Path) -> EcoachResult<T>
+    where
+        T: DeserializeOwned + Default,
+    {
+        if !file_path.exists() {
+            return Ok(T::default());
+        }
+
+        self.read_json_file(file_path)
+    }
+
     fn validate_pack_shape(&self, pack_path: &Path) -> EcoachResult<()> {
         let required_paths = [
             "manifest.json",
@@ -1814,6 +1988,43 @@ fn scoped_key(scope: &str, value: &str) -> String {
 
 fn normalize_key(value: &str) -> String {
     value.trim().to_ascii_lowercase()
+}
+
+fn normalize_title_key(value: &str) -> String {
+    normalize_key(value)
+}
+
+fn validate_contrast_ownership(ownership_type: &str, pair_title: &str) -> EcoachResult<()> {
+    match ownership_type {
+        "left_only" | "right_only" | "both" | "neither" => Ok(()),
+        _ => Err(EcoachError::Validation(format!(
+            "contrast pair {} contains unsupported ownership type {}",
+            pair_title, ownership_type
+        ))),
+    }
+}
+
+fn resolve_knowledge_entry_title(
+    knowledge_entries: &BTreeMap<String, i64>,
+    title: &str,
+    topic_code: &str,
+) -> EcoachResult<i64> {
+    let scoped = scoped_key(topic_code, title);
+    if let Some(entry_id) = knowledge_entries.get(&scoped) {
+        return Ok(*entry_id);
+    }
+
+    let normalized = normalize_title_key(title);
+    if let Some(entry_id) = knowledge_entries.get(&scoped_key(topic_code, &normalized)) {
+        return Ok(*entry_id);
+    }
+
+    knowledge_entries.get(&normalized).copied().ok_or_else(|| {
+        EcoachError::Validation(format!(
+            "contrast pair references unknown knowledge entry title {} in topic {}",
+            title, topic_code
+        ))
+    })
 }
 
 fn normalize_taxonomy_value(value: &str) -> String {
@@ -2146,16 +2357,26 @@ mod tests {
         let linked_entries = glossary_service
             .list_entries_for_question(first_question_id)
             .expect("linked glossary entries should be retrievable");
+        let contrast_pair_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM contrast_pairs", [], |row| row.get(0))
+            .expect("contrast pair count should be queryable");
+        let contrast_atom_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM contrast_evidence_atoms", [], |row| {
+                row.get(0)
+            })
+            .expect("contrast atom count should be queryable");
 
         assert_eq!(status, "active");
         assert_eq!(topic_count, 2);
         assert_eq!(question_count, 2);
-        assert_eq!(knowledge_entry_count, 3);
+        assert_eq!(knowledge_entry_count, 4);
         assert_eq!(subject_name, "Mathematics");
         assert_eq!(runtime_event_count, 1);
         assert!(glossary_link_count >= 2);
         assert!(!linked_entries.is_empty());
         assert!(linked_entries[0].is_primary);
+        assert_eq!(contrast_pair_count, 1);
+        assert_eq!(contrast_atom_count, 6);
     }
 
     #[test]

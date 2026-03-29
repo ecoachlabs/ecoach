@@ -5,7 +5,7 @@ pub mod state_machine;
 pub mod topic_case;
 
 pub use journey::{JourneyRoute, JourneyRouteSnapshot, JourneyService, JourneyStation};
-pub use plan_engine::{CoachMissionMemory, PlanEngine};
+pub use plan_engine::{CoachMissionMemory, PlanEngine, PlanRewriteResult};
 pub use readiness_engine::{ReadinessEngine, StudentReadinessSnapshot, TopicReadinessSlice};
 pub use state_machine::{
     CoachActionType, CoachNextAction, CoachStateResolution, ContentReadinessResolution,

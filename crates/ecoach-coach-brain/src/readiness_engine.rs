@@ -287,7 +287,9 @@ mod tests {
             )
             .expect("subject should exist");
         let topic_id: i64 = conn
-            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| row.get(0))
+            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
+                row.get(0)
+            })
             .expect("topic should exist");
         conn.execute(
             "INSERT INTO student_topic_states (

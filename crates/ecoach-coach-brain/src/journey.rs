@@ -95,7 +95,13 @@ impl<'a> JourneyService<'a> {
                 "INSERT INTO journey_routes (
                     student_id, subject_id, target_exam, route_type, status, route_summary_json
                  ) VALUES (?1, ?2, ?3, ?4, 'active', ?5)",
-                params![student_id, subject_id, target_exam, route_type, route_summary_json],
+                params![
+                    student_id,
+                    subject_id,
+                    target_exam,
+                    route_type,
+                    route_summary_json
+                ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let route_id = self.conn.last_insert_rowid();
@@ -344,7 +350,6 @@ impl<'a> JourneyService<'a> {
                     mastery_score: row.get(2)?,
                     gap_score: row.get(3)?,
                     fragility_score: row.get(4)?,
-                    priority_score: row.get(5)?,
                 })
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -384,7 +389,6 @@ struct TopicCandidate {
     mastery_score: BasisPoints,
     gap_score: BasisPoints,
     fragility_score: BasisPoints,
-    priority_score: BasisPoints,
 }
 
 fn station_type_for_candidate(
@@ -406,11 +410,7 @@ fn station_type_for_candidate(
 fn map_route(row: &rusqlite::Row<'_>) -> rusqlite::Result<JourneyRoute> {
     let route_summary_json: String = row.get(7)?;
     let route_summary = serde_json::from_str::<Value>(&route_summary_json).map_err(|err| {
-        rusqlite::Error::FromSqlConversionFailure(
-            7,
-            rusqlite::types::Type::Text,
-            Box::new(err),
-        )
+        rusqlite::Error::FromSqlConversionFailure(7, rusqlite::types::Type::Text, Box::new(err))
     })?;
     Ok(JourneyRoute {
         id: row.get(0)?,

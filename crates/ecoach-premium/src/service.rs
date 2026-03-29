@@ -25,10 +25,7 @@ impl<'a> PremiumService<'a> {
 
     // ── Entitlement gating ──
 
-    pub fn check_entitlement(
-        &self,
-        student_id: i64,
-    ) -> EcoachResult<EntitlementTier> {
+    pub fn check_entitlement(&self, student_id: i64) -> EcoachResult<EntitlementTier> {
         let tier_str: String = self
             .conn
             .query_row(
@@ -57,11 +54,7 @@ impl<'a> PremiumService<'a> {
         }
     }
 
-    pub fn is_feature_enabled(
-        &self,
-        student_id: i64,
-        feature_key: &str,
-    ) -> EcoachResult<bool> {
+    pub fn is_feature_enabled(&self, student_id: i64, feature_key: &str) -> EcoachResult<bool> {
         let tier = self.check_entitlement(student_id)?;
 
         // Check feature flag table for overrides
@@ -96,7 +89,10 @@ impl<'a> PremiumService<'a> {
         match required_tier {
             Some(required) => match required.as_str() {
                 "standard" => Ok(true),
-                "premium" => Ok(matches!(tier, EntitlementTier::Premium | EntitlementTier::Elite)),
+                "premium" => Ok(matches!(
+                    tier,
+                    EntitlementTier::Premium | EntitlementTier::Elite
+                )),
                 "elite" => Ok(matches!(tier, EntitlementTier::Elite)),
                 _ => Ok(false),
             },
@@ -104,10 +100,7 @@ impl<'a> PremiumService<'a> {
         }
     }
 
-    pub fn list_features_for_student(
-        &self,
-        student_id: i64,
-    ) -> EcoachResult<Vec<PremiumFeature>> {
+    pub fn list_features_for_student(&self, student_id: i64) -> EcoachResult<Vec<PremiumFeature>> {
         let tier = self.check_entitlement(student_id)?;
         let mut stmt = self
             .conn
@@ -337,8 +330,7 @@ impl<'a> PremiumService<'a> {
                 title: format!("Low mastery in {}", topic_name),
                 description: Some(format!(
                     "Mastery score is {} bp, below the {} bp threshold",
-                    mastery,
-                    RISK_HIGH_MASTERY_BP
+                    mastery, RISK_HIGH_MASTERY_BP
                 )),
             })?;
             created_flags.push(flag);

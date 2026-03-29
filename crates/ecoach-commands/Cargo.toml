@@ -1,0 +1,20 @@
+[package]
+name = "ecoach-commands"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+chrono.workspace = true
+ecoach-content = { path = "../ecoach-content" }
+ecoach-games = { path = "../ecoach-games" }
+ecoach-identity = { path = "../ecoach-identity" }
+ecoach-sessions = { path = "../ecoach-sessions" }
+ecoach-storage = { path = "../ecoach-storage" }
+ecoach-substrate = { path = "../ecoach-substrate" }
+rusqlite.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+ecoach-identity = { path = "../ecoach-identity" }

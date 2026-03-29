@@ -539,7 +539,9 @@ impl<'a> PlanEngine<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let blocker_rows = blocker_statement
-            .query_map(params![student_id, limit as i64], |row| row.get::<_, i64>(0))
+            .query_map(params![student_id, limit as i64], |row| {
+                row.get::<_, i64>(0)
+            })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         for row in blocker_rows {
             let topic_id = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -1125,6 +1127,80 @@ mod tests {
         assert!(mission_plan_day_id > 0);
         assert_eq!(mission_memory.review_status, "pending");
         assert_eq!(pending_review_count, 1);
+    }
+
+    #[test]
+    fn rewrite_active_plan_marks_old_plan_stale_and_creates_new_plan() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, status, first_run)
+             VALUES ('student', 'Kojo', 'hash', 'salt', 'active', 0)",
+            [],
+        )
+        .expect("student should insert");
+        let student_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO student_profiles (account_id, preferred_subjects, daily_study_budget_minutes)
+             VALUES (?1, '[\"MATH\"]', 60)",
+            [student_id],
+        )
+        .expect("student profile should insert");
+        let topic_id: i64 = conn
+            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
+                row.get(0)
+            })
+            .expect("topic should exist");
+        conn.execute(
+            "INSERT INTO student_topic_states (student_id, topic_id, mastery_score, gap_score, priority_score)
+             VALUES (?1, ?2, 3500, 8200, 9100)",
+            params![student_id, topic_id],
+        )
+        .expect("topic state should insert");
+
+        let engine = PlanEngine::new(&conn);
+        let exam_date = Utc::now()
+            .date_naive()
+            .checked_add_days(Days::new(21))
+            .expect("future date should exist")
+            .to_string();
+        let original_plan_id = engine
+            .generate_plan(student_id, "BECE", &exam_date, 50)
+            .expect("original plan should generate");
+        conn.execute(
+            "INSERT INTO coach_blockers (student_id, topic_id, reason, severity)
+             VALUES (?1, ?2, 'blocked', 'high')",
+            params![student_id, topic_id],
+        )
+        .expect("blocker should insert");
+
+        let result = engine
+            .rewrite_active_plan(student_id, "readiness_drop")
+            .expect("plan rewrite should succeed");
+
+        let original_status: String = conn
+            .query_row(
+                "SELECT status FROM coach_plans WHERE id = ?1",
+                [original_plan_id],
+                |row| row.get(0),
+            )
+            .expect("original plan status should query");
+        let new_status: String = conn
+            .query_row(
+                "SELECT status FROM coach_plans WHERE id = ?1",
+                [result.new_plan_id],
+                |row| row.get(0),
+            )
+            .expect("new plan status should query");
+
+        assert_eq!(result.previous_plan_id, original_plan_id);
+        assert_eq!(original_status, "stale");
+        assert_eq!(new_status, "active");
+        assert!(!result.carryover_topic_ids.is_empty());
     }
 
     fn open_test_database() -> Connection {

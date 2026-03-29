@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use ecoach_substrate::BasisPoints;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Session {
@@ -35,6 +36,35 @@ pub struct CustomTestStartInput {
     pub is_timed: bool,
     pub target_difficulty: Option<BasisPoints>,
     pub weakness_bias: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MockBlueprintInput {
+    pub student_id: i64,
+    pub subject_id: i64,
+    pub topic_ids: Vec<i64>,
+    pub question_count: usize,
+    pub duration_minutes: Option<i64>,
+    pub is_timed: bool,
+    pub target_difficulty: Option<BasisPoints>,
+    pub weakness_bias: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MockBlueprint {
+    pub id: i64,
+    pub student_id: i64,
+    pub subject_id: i64,
+    pub title: String,
+    pub blueprint_type: String,
+    pub duration_minutes: Option<i64>,
+    pub question_count: i64,
+    pub readiness_score: BasisPoints,
+    pub readiness_band: String,
+    pub coverage: Value,
+    pub quotas: Value,
+    pub compiled_question_ids: Vec<i64>,
+    pub status: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

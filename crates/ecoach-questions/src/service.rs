@@ -29,6 +29,45 @@ impl<'a> QuestionService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
+    pub fn list_questions_for_scope(
+        &self,
+        subject_id: i64,
+        topic_ids: &[i64],
+    ) -> EcoachResult<Vec<Question>> {
+        if topic_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let placeholders = topic_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        let sql = format!(
+            "SELECT id, subject_id, topic_id, subtopic_id, family_id, stem, question_format,
+                    explanation_text, difficulty_level, estimated_time_seconds, marks, primary_skill_id
+             FROM questions
+             WHERE is_active = 1 AND subject_id = ?1 AND topic_id IN ({})
+             ORDER BY updated_at DESC, id DESC",
+            placeholders
+        );
+        let mut params_vec: Vec<rusqlite::types::Value> = Vec::with_capacity(topic_ids.len() + 1);
+        params_vec.push(subject_id.into());
+        for topic_id in topic_ids {
+            params_vec.push((*topic_id).into());
+        }
+
+        let mut statement = self
+            .conn
+            .prepare(&sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(rusqlite::params_from_iter(params_vec.iter()), map_question)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut questions = Vec::new();
+        for row in rows {
+            questions.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(questions)
+    }
+
     pub fn get_question_profile(
         &self,
         question_id: i64,

@@ -1,5 +1,6 @@
 use ecoach_substrate::BasisPoints;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -145,4 +146,33 @@ pub struct DiagnosticBattery {
     pub session_mode: String,
     pub status: String,
     pub phases: Vec<DiagnosticPhasePlan>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticTopicAnalytics {
+    pub diagnostic_id: i64,
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub mastery_score: BasisPoints,
+    pub fluency_score: BasisPoints,
+    pub precision_score: BasisPoints,
+    pub pressure_score: BasisPoints,
+    pub flexibility_score: BasisPoints,
+    pub stability_score: BasisPoints,
+    pub classification: String,
+    pub confidence_score: BasisPoints,
+    pub recommended_action: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticRootCauseHypothesis {
+    pub id: i64,
+    pub diagnostic_id: i64,
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub hypothesis_code: String,
+    pub confidence_score: BasisPoints,
+    pub recommended_action: String,
+    pub evidence: Value,
+    pub created_at: String,
 }

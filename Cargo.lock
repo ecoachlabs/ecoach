@@ -151,6 +151,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "ecoach-commands"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "ecoach-content",
+ "ecoach-games",
+ "ecoach-identity",
+ "ecoach-sessions",
+ "ecoach-storage",
+ "ecoach-substrate",
+ "rusqlite",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ecoach-content"
 version = "0.1.0"
 dependencies = [
@@ -203,6 +219,9 @@ name = "ecoach-games"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "ecoach-content",
+ "ecoach-identity",
+ "ecoach-storage",
  "ecoach-substrate",
  "rusqlite",
  "serde",
@@ -256,6 +275,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ecoach-knowledge-gap"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "ecoach-substrate",
+ "rusqlite",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ecoach-library"
 version = "0.1.0"
 dependencies = [
@@ -263,6 +293,28 @@ dependencies = [
  "ecoach-content",
  "ecoach-storage",
  "ecoach-student-model",
+ "ecoach-substrate",
+ "rusqlite",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ecoach-memory"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "ecoach-substrate",
+ "rusqlite",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ecoach-mock-centre"
+version = "0.1.0"
+dependencies = [
+ "chrono",
  "ecoach-substrate",
  "rusqlite",
  "serde",

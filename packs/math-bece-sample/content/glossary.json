@@ -3,5 +3,10 @@
     "title": "Equivalent Fraction",
     "entry_type": "definition",
     "short_text": "Fractions that represent the same value."
+  },
+  {
+    "title": "Simplest Form",
+    "entry_type": "definition",
+    "short_text": "The fraction written with the smallest whole-number numerator and denominator."
   }
 ]

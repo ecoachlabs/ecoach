@@ -12,8 +12,8 @@ Legend:
 
 | Document | Audit Status | Implementation Status | Notes |
 | --- | --- | --- | --- |
-| idea1.txt | read_complete | implemented_gap, partial | Added durable session runtime state and append-only runtime events; larger Mock Centre / Question Reactor scope still outstanding |
-| idea2.txt | read_complete | implemented_gap, partial | Added first skill-level learner truth slice; full Journey orchestration still missing |
+| idea1.txt | read_complete | implemented_gap, partial | Added durable session runtime, append-only runtime events, mock blueprint compilation, quota/coverage logic, and mock session startup; larger Question Reactor scope still outstanding |
+| idea2.txt | read_complete | implemented_gap, partial | Added first skill-level learner truth slice plus Journey route/station persistence and advancement; fuller Journey orchestration is still missing |
 | idea3.txt | read_complete | implemented_gap, partial | Added parent insight generation/persistence; deeper household/intervention flows still missing |
 | idea4.txt | read_complete | implemented_gap, partial | Added Beat Yesterday daily target generation, summary scoring, recovery-aware mode selection, and climb trend projection; full teacher/risk layer still missing |
 | idea5.txt | read_complete | implemented_gap, partial | Added elite session scoring, debrief recommendations, rolling profile updates, and topic domination tracking; session generation and richer authoring still missing |
@@ -25,13 +25,13 @@ Legend:
 | idea11.txt | read_complete | implemented_gap, partial | Added persisted wrong-answer diagnosis records and retrieval; deeper diagnosis stack still missing |
 | idea12.txt | read_complete | implemented_gap, partial | Added parent dashboard and memo generation pipeline; premium strategy/readiness layers still missing |
 | idea13.txt | read_complete | implemented_gap, partial | Added past-paper question linking, family recurrence/coappearance analytics recompute, and high-frequency family read models; richer inverse appearance intelligence still missing |
-| idea14.txt | read_complete | implemented_gap, partial | Added custom-test composer on top of local session runtime; richer adaptive interpretation still missing |
+| idea14.txt | read_complete | implemented_gap, partial | Added custom-test composer plus mock blueprint compilation and mock session startup on top of local session runtime; richer adaptive interpretation still missing |
 | idea15.txt | read_complete | implemented_gap, partial | Added live memory updates, due recheck listing, and overdue decay scanning; fuller return-loop orchestration still missing |
 | idea16.txt | read_complete | implemented_gap, partial | Added generated library shelves, saved-question intelligence, and weak-topic revision packs; richer relationship graph and teach actions still missing |
 | idea17.txt | read_complete | implemented_gap, partial | Added persisted question-glossary linkage and retrieval; audio program still missing |
-| idea18.txt | read_complete | implemented_gap, partial | Added persisted multi-phase diagnostic battery assembly; deeper scoring and root-cause analytics still missing |
+| idea18.txt | read_complete | implemented_gap, partial | Added persisted multi-phase diagnostic battery assembly plus phase submission, topic analytics, and root-cause hypotheses; deeper longitudinal interpretation still missing |
 | idea19.txt | read_complete | implemented_gap, partial | Added persisted mission/debrief memory and review handoff; richer experience composition still missing |
-| idea20.txt | read_complete | implemented_gap, partial | Added content-readiness gating and canonical next-action resolution; deeper coach memory and mission adaptation still missing |
+| idea20.txt | read_complete | implemented_gap, partial | Added content-readiness gating, canonical next-action resolution, subject readiness engine, and plan rewrite support; deeper coach memory and mission adaptation still missing |
 | idea21.txt | read_complete | implemented_gap, partial | Added resource-readiness scoring for topics and subjects across atoms, questions, misconceptions, and knowledge assets |
 | idea22.txt | read_complete | implemented_gap, partial | Added normalized question-intelligence registry, taxonomy links, and question intelligence query surfaces |
 | idea23.txt | read_complete | implemented_gap, partial | Added coach topic-case reasoning service with case synthesis, hypotheses, and intervention recommendations |
@@ -44,9 +44,9 @@ Legend:
 | idea30.txt | read_complete | implemented_gap, partial | Added availability/capacity substrate plus free-now recommendation and daily replanning orchestration |
 | idea31.txt | read_complete | implemented_gap, partial | Added publish jobs, quality reports, and quality-gated publish transitions; full end-to-end pack publish automation still missing |
 | idea32.txt | read_complete | implemented_gap, partial | Added live memory/recheck updates plus due recheck listing and overdue decay scanning; deeper memory recompute/orchestration is still missing |
-| idea33.txt | read_complete | partial | Traps/contrast audit complete; mode runtime still missing |
-| idea34.txt | read_complete | partial | Adaptive diagnostic audit complete; phased orchestration still missing |
-| idea35.txt | read_complete | partial | Build-discipline audit complete; command boundary hardening still missing |
+| idea33.txt | read_complete | implemented_gap, partial | Added contrast-profile ingestion, trap round/session persistence, Difference Drill, Similarity Trap, Know the Difference, Which Is Which, Unmask runtime flows, replay review, and learner confusion state; deeper remediation routing is still missing |
+| idea34.txt | read_complete | implemented_gap, partial | Added diagnostic phase submission, phase-aware topic analytics, and durable root-cause hypotheses; fuller adaptive orchestration is still missing |
+| idea35.txt | read_complete | implemented_gap, partial | Added a DTO-only runtime command boundary crate with shared AppState, unified CommandError, and app-facing identity, pack, session, and traps commands; full Tauri registration and broader module coverage are still missing |
 | idea36.txt | read_complete | implemented_gap, partial | Added bundle reconstruction/classification and extracted insight reporting; deeper OCR/layout recovery still missing |
 | idea37.txt | read_complete | implemented_gap, partial | Added learner-truth snapshot read model with topic, skill, memory, and diagnosis projections; broader cross-engine fabric still missing |
 | idea38.txt | read_complete | implemented_gap, partial | Added source staging, acquisition jobs, learner evidence fabrics, and publish/trust job substrate; full content OS orchestration still missing |
@@ -136,12 +136,65 @@ Implemented from this range in this pass:
   - quality gate reporting
   - readiness checks
   - publish completion transitions
+- Added `migrations/runtime/033_mock_and_journey_runtime.sql` and extended `crates/ecoach-storage/src/migrations.rs` with:
+  - mock blueprint storage
+  - Journey route persistence
+  - Journey station persistence
+- Added `crates/ecoach-coach-brain/src/readiness_engine.rs`, `crates/ecoach-coach-brain/src/journey.rs`, and updated `crates/ecoach-coach-brain/src/plan_engine.rs` and `crates/ecoach-coach-brain/src/lib.rs` with:
+  - subject readiness snapshots
+  - recommended mock blueprint modes
+  - plan rewrite support
+  - Journey route/station build and advancement
+- Extended `crates/ecoach-sessions/src/models.rs`, `crates/ecoach-sessions/src/lib.rs`, `crates/ecoach-sessions/src/service.rs`, `crates/ecoach-sessions/Cargo.toml`, and `crates/ecoach-questions/src/service.rs` with:
+  - mock blueprint DTOs
+  - mock blueprint compilation
+  - topic quota and coverage logic
+  - mock session startup from compiled blueprint
+  - scoped question listing for blueprint compilation
+- Added `migrations/runtime/034_diagnostic_analytics.sql` and extended `crates/ecoach-storage/src/migrations.rs` with:
+  - diagnostic topic analytics
+  - diagnostic root-cause hypotheses
+- Extended `crates/ecoach-diagnostics/src/models.rs`, `crates/ecoach-diagnostics/src/lib.rs`, and `crates/ecoach-diagnostics/src/engine.rs` with:
+  - diagnostic phase attempt submission
+  - phase-aware topic analytics
+  - durable root-cause hypotheses
+  - persisted diagnostic analytics reads
+- Added `migrations/runtime/035_traps_runtime.sql` and extended `crates/ecoach-storage/src/migrations.rs` with:
+  - contrast-pair runtime columns
+  - traps round persistence
+  - learner contrast state persistence
+- Extended `crates/ecoach-content/src/pack_service.rs` and the sample pack under `packs/math-bece-sample/content/` with:
+  - optional contrast-profile ingestion
+  - contrast pair insertion
+  - contrast evidence atom insertion
+  - sample trap-ready contrast content
+- Extended `crates/ecoach-games/src/models.rs`, `crates/ecoach-games/src/lib.rs`, `crates/ecoach-games/src/service.rs`, and `crates/ecoach-games/Cargo.toml` with:
+  - Traps mode/session DTOs
+  - contrast pair listing for the Traps hub
+  - Difference Drill runtime
+  - Similarity Trap runtime
+  - Know the Difference runtime
+  - Which Is Which runtime
+  - Unmask clue-reveal runtime
+  - round review and confusion-reason persistence
+  - learner contrast/confusion analytics state
+- Added `crates/ecoach-commands/` with:
+  - `AppState` runtime context
+  - unified `CommandError`
+  - DTO-only identity commands
+  - DTO-only content pack commands
+  - DTO-only session commands
+  - DTO-only traps commands
+  - a command-boundary integration test over in-memory runtime state
 
 Verification:
 - `cargo check`
+- `cargo test -p ecoach-content --lib`
+- `cargo test -p ecoach-games --lib`
+- `cargo test -p ecoach-commands --lib`
 
 Verification caveat:
-- Rust test binaries began failing to execute under Windows Application Control (`os error 4551`) after this slice, so this memory implementation is compile-verified but not newly runtime-verified in the current environment.
+- Earlier slices hit Windows Application Control (`os error 4551`) for some newly built test executables, but the latest content and games crates were runtime-verified successfully in this environment.
 
 ## idea21.txt through idea30.txt
 

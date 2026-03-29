@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 chrono.workspace = true
+ecoach-coach-brain = { path = "../ecoach-coach-brain" }
 ecoach-questions = { path = "../ecoach-questions" }
 ecoach-substrate = { path = "../ecoach-substrate" }
 rusqlite.workspace = true

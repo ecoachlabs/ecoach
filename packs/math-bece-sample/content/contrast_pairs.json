@@ -1,0 +1,68 @@
+[
+  {
+    "pair_code": "fra_equivalent_fraction_vs_simplest_form",
+    "title": "Equivalent Fraction vs Simplest Form",
+    "topic_code": "FRA",
+    "left_entry_title": "Equivalent Fraction",
+    "right_entry_title": "Simplest Form",
+    "summary_text": "Equivalent fractions name the same value, while simplest form asks for the most reduced name for that value.",
+    "trap_strength": 7200,
+    "difficulty_score": 5400,
+    "atoms": [
+      {
+        "ownership_type": "left_only",
+        "atom_text": "Represents the same value using a different numerator and denominator.",
+        "lane": "definition",
+        "explanation_text": "Equivalent fractions are different names for the same amount.",
+        "difficulty_score": 4200,
+        "is_speed_ready": true,
+        "reveal_order": 2
+      },
+      {
+        "ownership_type": "right_only",
+        "atom_text": "Writes the fraction after dividing by the greatest common factor.",
+        "lane": "procedure",
+        "explanation_text": "Simplest form is the most reduced version of a fraction.",
+        "difficulty_score": 4300,
+        "is_speed_ready": true,
+        "reveal_order": 2
+      },
+      {
+        "ownership_type": "left_only",
+        "atom_text": "2/4 and 1/2 belong together as an example pair.",
+        "lane": "example",
+        "explanation_text": "Those two fractions are equivalent because they represent the same value.",
+        "difficulty_score": 3500,
+        "is_speed_ready": true,
+        "reveal_order": 1
+      },
+      {
+        "ownership_type": "right_only",
+        "atom_text": "1/2 is the reduced answer for 2/4.",
+        "lane": "example",
+        "explanation_text": "Simplest form asks for the reduced version, not just another matching fraction.",
+        "difficulty_score": 3600,
+        "is_speed_ready": true,
+        "reveal_order": 1
+      },
+      {
+        "ownership_type": "both",
+        "atom_text": "Can appear in the same worked example about 2/4 and 1/2.",
+        "lane": "overlap",
+        "explanation_text": "The same example can teach both ideas, but each idea answers a different question.",
+        "difficulty_score": 5200,
+        "is_speed_ready": false,
+        "reveal_order": 3
+      },
+      {
+        "ownership_type": "neither",
+        "atom_text": "Add the numerator and denominator together to get the answer.",
+        "lane": "trap",
+        "explanation_text": "Adding the numerator and denominator does not define equivalent fractions or simplest form.",
+        "difficulty_score": 6500,
+        "is_speed_ready": true,
+        "reveal_order": 4
+      }
+    ]
+  }
+]

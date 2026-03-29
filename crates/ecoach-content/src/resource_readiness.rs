@@ -405,10 +405,12 @@ mod tests {
 
         let service = ResourceReadinessService::new(&conn);
         let topic_id: i64 = conn
-            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
-                row.get(0)
-            })
-            .expect("topic should exist");
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("fractions topic should exist");
         let readiness = service
             .get_topic_readiness(topic_id)
             .expect("topic readiness should query")

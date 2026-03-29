@@ -1,15 +1,20 @@
-use std::str::FromStr;
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    str::FromStr,
+};
 
 use chrono::{DateTime, Utc};
+use ecoach_coach_brain::ReadinessEngine;
 use ecoach_questions::{
-    QuestionSelectionRequest, QuestionSelector, QuestionService, SelectedQuestion,
+    Question, QuestionSelectionRequest, QuestionSelector, QuestionService, SelectedQuestion,
 };
-use ecoach_substrate::{DomainEvent, EcoachError, EcoachResult};
+use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension, params};
+use serde_json::{Value, json};
 
 use crate::models::{
-    CustomTestStartInput, PracticeSessionStartInput, Session, SessionAnswerInput, SessionItem,
-    SessionSnapshot, SessionSummary,
+    CustomTestStartInput, MockBlueprint, MockBlueprintInput, PracticeSessionStartInput, Session,
+    SessionAnswerInput, SessionItem, SessionSnapshot, SessionSummary,
 };
 
 pub struct SessionService<'a> {
@@ -176,6 +181,225 @@ impl<'a> SessionService<'a> {
             .get_session(session_id)?
             .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
         Ok((session, questions))
+    }
+
+    pub fn generate_mock_blueprint(
+        &self,
+        input: &MockBlueprintInput,
+    ) -> EcoachResult<MockBlueprint> {
+        let topic_scope = self.resolve_mock_topic_scope(input)?;
+        let readiness = ReadinessEngine::new(self.conn)
+            .build_subject_readiness(input.student_id, input.subject_id)?;
+        let question_service = QuestionService::new(self.conn);
+        let recent_ids = self.load_recently_seen_question_ids(input.student_id, 40)?;
+        let mut candidates =
+            question_service.list_questions_for_scope(input.subject_id, &topic_scope)?;
+        if !recent_ids.is_empty() {
+            candidates.retain(|question| !recent_ids.contains(&question.id));
+        }
+        if candidates.is_empty() {
+            candidates =
+                question_service.list_questions_for_scope(input.subject_id, &topic_scope)?;
+        }
+        if candidates.is_empty() {
+            return Err(EcoachError::NotFound(
+                "no questions available to compile a mock blueprint".to_string(),
+            ));
+        }
+
+        let quotas = self.build_mock_topic_quotas(
+            input.student_id,
+            &topic_scope,
+            input.question_count,
+            &readiness,
+        )?;
+        let compiled_questions = self.compile_mock_questions(
+            &candidates,
+            &quotas,
+            input.target_difficulty,
+            input.is_timed,
+        );
+        if compiled_questions.is_empty() {
+            return Err(EcoachError::Validation(
+                "mock blueprint compilation produced no questions".to_string(),
+            ));
+        }
+
+        let blueprint_type =
+            if input.is_timed && readiness.recommended_mock_blueprint == "balanced_mock" {
+                "pressure_mock".to_string()
+            } else {
+                readiness.recommended_mock_blueprint.clone()
+            };
+        let compiled_question_ids = compiled_questions
+            .iter()
+            .map(|question| question.id)
+            .collect::<Vec<_>>();
+        let quota_json = json!({
+            "is_timed": input.is_timed,
+            "target_difficulty": input.target_difficulty,
+            "topics": quotas.iter().map(|quota| {
+                json!({
+                    "topic_id": quota.topic_id,
+                    "target_count": quota.target_count,
+                    "priority_weight": quota.priority_weight,
+                    "is_weak_topic": quota.is_weak_topic,
+                })
+            }).collect::<Vec<_>>(),
+        });
+        let coverage_json = self.build_mock_coverage(&quotas, &compiled_questions, &readiness)?;
+
+        self.conn
+            .execute(
+                "INSERT INTO mock_blueprints (
+                    student_id, subject_id, title, blueprint_type, duration_minutes, question_count,
+                    readiness_score, readiness_band, coverage_json, quota_json,
+                    compiled_question_ids_json, status
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 'compiled')",
+                params![
+                    input.student_id,
+                    input.subject_id,
+                    format!(
+                        "{} Mock Blueprint",
+                        title_for_mock_blueprint(&blueprint_type)
+                    ),
+                    blueprint_type,
+                    input.duration_minutes,
+                    compiled_questions.len() as i64,
+                    readiness.readiness_score,
+                    readiness.readiness_band,
+                    serde_json::to_string(&coverage_json)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&quota_json)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&compiled_question_ids)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let blueprint_id = self.conn.last_insert_rowid();
+
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "mock.blueprint_compiled",
+                blueprint_id.to_string(),
+                json!({
+                    "student_id": input.student_id,
+                    "subject_id": input.subject_id,
+                    "blueprint_type": blueprint_type,
+                    "compiled_question_count": compiled_question_ids.len(),
+                    "readiness_score": readiness.readiness_score,
+                }),
+            ),
+        )?;
+
+        self.get_mock_blueprint(blueprint_id)?
+            .ok_or_else(|| EcoachError::NotFound("mock blueprint was not created".to_string()))
+    }
+
+    pub fn start_mock_session(
+        &self,
+        blueprint_id: i64,
+    ) -> EcoachResult<(Session, Vec<SelectedQuestion>)> {
+        let blueprint = self.get_mock_blueprint(blueprint_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("mock blueprint {} not found", blueprint_id))
+        })?;
+        if blueprint.compiled_question_ids.is_empty() {
+            return Err(EcoachError::Validation(
+                "mock blueprint has no compiled questions".to_string(),
+            ));
+        }
+        let topic_ids = blueprint
+            .coverage
+            .get("topic_scope")
+            .and_then(Value::as_array)
+            .map(|items| items.iter().filter_map(Value::as_i64).collect::<Vec<_>>())
+            .unwrap_or_default();
+        let is_timed = blueprint
+            .quotas
+            .get("is_timed")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        let now = Utc::now().to_rfc3339();
+
+        self.conn
+            .execute(
+                "INSERT INTO sessions (
+                    student_id, session_type, subject_id, topic_ids, question_count, total_questions,
+                    duration_minutes, is_timed, difficulty_preference, status, started_at, last_activity_at
+                 ) VALUES (?1, 'mock', ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'active', ?9, ?9)",
+                params![
+                    blueprint.student_id,
+                    blueprint.subject_id,
+                    serde_json::to_string(&topic_ids)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    blueprint.question_count,
+                    blueprint.compiled_question_ids.len() as i64,
+                    blueprint.duration_minutes,
+                    if is_timed { 1 } else { 0 },
+                    blueprint.blueprint_type,
+                    now,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let session_id = self.conn.last_insert_rowid();
+
+        let question_service = QuestionService::new(self.conn);
+        let mut selected_questions = Vec::new();
+        for (index, question_id) in blueprint.compiled_question_ids.iter().enumerate() {
+            let question = question_service
+                .get_question(*question_id)?
+                .ok_or_else(|| {
+                    EcoachError::NotFound(format!("question {} missing", question_id))
+                })?;
+            self.conn
+                .execute(
+                    "INSERT INTO session_items (
+                        session_id, question_id, display_order, source_family_id, source_topic_id, status
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, 'queued')",
+                    params![
+                        session_id,
+                        question.id,
+                        (index + 1) as i64,
+                        question.family_id,
+                        question.topic_id,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            selected_questions.push(SelectedQuestion {
+                question,
+                fit_score: 1.0,
+            });
+        }
+
+        self.conn
+            .execute(
+                "UPDATE mock_blueprints
+                 SET status = 'used', updated_at = datetime('now')
+                 WHERE id = ?1",
+                [blueprint_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "mock.session_created",
+                session_id.to_string(),
+                json!({
+                    "blueprint_id": blueprint_id,
+                    "student_id": blueprint.student_id,
+                    "subject_id": blueprint.subject_id,
+                    "question_count": blueprint.compiled_question_ids.len(),
+                }),
+            ),
+        )?;
+
+        let session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        Ok((session, selected_questions))
     }
 
     pub fn get_session_snapshot(&self, session_id: i64) -> EcoachResult<Option<SessionSnapshot>> {
@@ -572,6 +796,310 @@ impl<'a> SessionService<'a> {
         }
     }
 
+    fn resolve_mock_topic_scope(&self, input: &MockBlueprintInput) -> EcoachResult<Vec<i64>> {
+        if !input.topic_ids.is_empty() {
+            return Ok(input.topic_ids.clone());
+        }
+
+        let weak_topics = if input.weakness_bias {
+            self.load_weakness_topic_ids(input.student_id, input.subject_id)?
+        } else {
+            Vec::new()
+        };
+        if !weak_topics.is_empty() {
+            return Ok(weak_topics);
+        }
+
+        self.load_default_subject_topics(input.subject_id)
+    }
+
+    fn load_recently_seen_question_ids(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<i64>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT question_id
+                 FROM student_question_attempts
+                 WHERE student_id = ?1
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, limit.max(1) as i64], |row| {
+                row.get::<_, i64>(0)
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut seen = BTreeSet::new();
+        let mut out = Vec::new();
+        for row in rows {
+            let question_id = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if seen.insert(question_id) {
+                out.push(question_id);
+            }
+        }
+        Ok(out)
+    }
+
+    fn build_mock_topic_quotas(
+        &self,
+        student_id: i64,
+        topic_scope: &[i64],
+        target_question_count: usize,
+        readiness: &ecoach_coach_brain::StudentReadinessSnapshot,
+    ) -> EcoachResult<Vec<MockTopicQuota>> {
+        let mut weights = self.load_topic_priority_weights(student_id, topic_scope)?;
+        let weak_topic_ids = readiness
+            .topic_slices
+            .iter()
+            .filter(|slice| slice.topic_readiness_score < 5_500)
+            .map(|slice| slice.topic_id)
+            .collect::<BTreeSet<_>>();
+        for quota in &mut weights {
+            if weak_topic_ids.contains(&quota.topic_id) {
+                quota.priority_weight += 2_000;
+                quota.is_weak_topic = true;
+            }
+        }
+        weights.sort_by(|left, right| right.priority_weight.cmp(&left.priority_weight));
+
+        if weights.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let mut remaining = target_question_count as i64;
+        for quota in &mut weights {
+            if remaining <= 0 {
+                break;
+            }
+            quota.target_count = 1;
+            remaining -= 1;
+        }
+
+        while remaining > 0 {
+            for quota in &mut weights {
+                if remaining <= 0 {
+                    break;
+                }
+                quota.target_count += 1;
+                remaining -= 1;
+            }
+        }
+
+        Ok(weights)
+    }
+
+    fn load_topic_priority_weights(
+        &self,
+        student_id: i64,
+        topic_scope: &[i64],
+    ) -> EcoachResult<Vec<MockTopicQuota>> {
+        let mut topic_names = BTreeMap::new();
+        let placeholders = topic_scope
+            .iter()
+            .map(|_| "?")
+            .collect::<Vec<_>>()
+            .join(", ");
+        let topic_sql = format!(
+            "SELECT id, name FROM topics WHERE id IN ({}) ORDER BY id ASC",
+            placeholders
+        );
+        let mut params_vec = topic_scope
+            .iter()
+            .map(|topic_id| rusqlite::types::Value::from(*topic_id))
+            .collect::<Vec<_>>();
+        let mut topic_statement = self
+            .conn
+            .prepare(&topic_sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let topic_rows = topic_statement
+            .query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for row in topic_rows {
+            let (topic_id, topic_name) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            topic_names.insert(topic_id, topic_name);
+        }
+
+        params_vec.insert(0, rusqlite::types::Value::from(student_id));
+        let sql = format!(
+            "SELECT topic_id, COALESCE(priority_score, 0)
+             FROM student_topic_states
+             WHERE student_id = ?1 AND topic_id IN ({})
+             ORDER BY priority_score DESC, gap_score DESC",
+            placeholders
+        );
+        let mut statement = self
+            .conn
+            .prepare(&sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, BasisPoints>(1)?))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut weight_map = BTreeMap::new();
+        for row in rows {
+            let (topic_id, priority_weight) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            weight_map.insert(topic_id, priority_weight);
+        }
+
+        Ok(topic_scope
+            .iter()
+            .map(|topic_id| MockTopicQuota {
+                topic_id: *topic_id,
+                topic_name: topic_names
+                    .get(topic_id)
+                    .cloned()
+                    .unwrap_or_else(|| format!("Topic {}", topic_id)),
+                target_count: 0,
+                priority_weight: *weight_map.get(topic_id).unwrap_or(&5_000),
+                is_weak_topic: false,
+            })
+            .collect())
+    }
+
+    fn compile_mock_questions(
+        &self,
+        candidates: &[Question],
+        quotas: &[MockTopicQuota],
+        target_difficulty: Option<BasisPoints>,
+        is_timed: bool,
+    ) -> Vec<Question> {
+        let mut selected = Vec::new();
+        let mut selected_ids = BTreeSet::new();
+        let mut selected_families = BTreeSet::new();
+        let quota_map = quotas
+            .iter()
+            .map(|quota| (quota.topic_id, quota.clone()))
+            .collect::<BTreeMap<_, _>>();
+        let mut buckets = BTreeMap::<i64, Vec<RankedQuestion>>::new();
+
+        for question in candidates {
+            let quota = quota_map.get(&question.topic_id);
+            let topic_priority = quota
+                .map(|item| item.priority_weight as f64 / 10_000.0)
+                .unwrap_or(0.5);
+            let score = mock_candidate_fit(question, target_difficulty, is_timed, topic_priority);
+            buckets
+                .entry(question.topic_id)
+                .or_default()
+                .push(RankedQuestion {
+                    question: question.clone(),
+                    score,
+                });
+        }
+        for bucket in buckets.values_mut() {
+            bucket.sort_by(|left, right| {
+                right
+                    .score
+                    .partial_cmp(&left.score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+        }
+
+        for quota in quotas {
+            if let Some(bucket) = buckets.get_mut(&quota.topic_id) {
+                for _ in 0..quota.target_count {
+                    if let Some(question) =
+                        take_ranked_question(bucket, &selected_ids, &selected_families)
+                    {
+                        selected_ids.insert(question.id);
+                        if let Some(family_id) = question.family_id {
+                            selected_families.insert(family_id);
+                        }
+                        selected.push(question);
+                    }
+                }
+            }
+        }
+
+        let target_count = quotas.iter().map(|quota| quota.target_count).sum::<i64>() as usize;
+        if selected.len() < target_count {
+            let mut remaining = buckets
+                .values()
+                .flat_map(|bucket| bucket.iter().cloned())
+                .collect::<Vec<_>>();
+            remaining.sort_by(|left, right| {
+                right
+                    .score
+                    .partial_cmp(&left.score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+            for ranked in remaining {
+                if selected.len() >= target_count {
+                    break;
+                }
+                if selected_ids.insert(ranked.question.id) {
+                    if let Some(family_id) = ranked.question.family_id {
+                        selected_families.insert(family_id);
+                    }
+                    selected.push(ranked.question);
+                }
+            }
+        }
+
+        selected
+    }
+
+    fn build_mock_coverage(
+        &self,
+        quotas: &[MockTopicQuota],
+        compiled_questions: &[Question],
+        readiness: &ecoach_coach_brain::StudentReadinessSnapshot,
+    ) -> EcoachResult<Value> {
+        let mut topic_counts = BTreeMap::<i64, i64>::new();
+        let mut topic_families = BTreeMap::<i64, BTreeSet<i64>>::new();
+        for question in compiled_questions {
+            *topic_counts.entry(question.topic_id).or_default() += 1;
+            if let Some(family_id) = question.family_id {
+                topic_families
+                    .entry(question.topic_id)
+                    .or_default()
+                    .insert(family_id);
+            }
+        }
+
+        Ok(json!({
+            "topic_scope": quotas.iter().map(|quota| quota.topic_id).collect::<Vec<_>>(),
+            "compiled_question_count": compiled_questions.len(),
+            "distinct_family_count": compiled_questions.iter().filter_map(|question| question.family_id).collect::<BTreeSet<_>>().len(),
+            "readiness_score": readiness.readiness_score,
+            "topics": quotas.iter().map(|quota| {
+                json!({
+                    "topic_id": quota.topic_id,
+                    "topic_name": quota.topic_name,
+                    "target_count": quota.target_count,
+                    "compiled_count": topic_counts.get(&quota.topic_id).copied().unwrap_or(0),
+                    "distinct_family_count": topic_families.get(&quota.topic_id).map(|families| families.len()).unwrap_or(0),
+                })
+            }).collect::<Vec<_>>(),
+        }))
+    }
+
+    fn get_mock_blueprint(&self, blueprint_id: i64) -> EcoachResult<Option<MockBlueprint>> {
+        self.conn
+            .query_row(
+                "SELECT id, student_id, subject_id, title, blueprint_type, duration_minutes,
+                        question_count, readiness_score, readiness_band, coverage_json, quota_json,
+                        compiled_question_ids_json, status
+                 FROM mock_blueprints
+                 WHERE id = ?1",
+                [blueprint_id],
+                map_mock_blueprint,
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
     fn list_session_items(&self, session_id: i64) -> EcoachResult<Vec<SessionItem>> {
         let mut statement = self
             .conn
@@ -719,6 +1247,119 @@ fn map_session_item(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionItem> {
         response_time_ms: row.get(9)?,
         is_correct: row.get::<_, Option<i64>>(10)?.map(|value| value == 1),
     })
+}
+
+#[derive(Debug, Clone)]
+struct MockTopicQuota {
+    topic_id: i64,
+    topic_name: String,
+    target_count: i64,
+    priority_weight: BasisPoints,
+    is_weak_topic: bool,
+}
+
+#[derive(Debug, Clone)]
+struct RankedQuestion {
+    question: Question,
+    score: f64,
+}
+
+fn map_mock_blueprint(row: &rusqlite::Row<'_>) -> rusqlite::Result<MockBlueprint> {
+    let coverage_json: String = row.get(9)?;
+    let quota_json: String = row.get(10)?;
+    let compiled_question_ids_json: String = row.get(11)?;
+    Ok(MockBlueprint {
+        id: row.get(0)?,
+        student_id: row.get(1)?,
+        subject_id: row.get(2)?,
+        title: row.get(3)?,
+        blueprint_type: row.get(4)?,
+        duration_minutes: row.get(5)?,
+        question_count: row.get(6)?,
+        readiness_score: row.get(7)?,
+        readiness_band: row.get(8)?,
+        coverage: parse_json_value(9, &coverage_json)?,
+        quotas: parse_json_value(10, &quota_json)?,
+        compiled_question_ids: parse_i64_json_array(11, &compiled_question_ids_json)?,
+        status: row.get(12)?,
+    })
+}
+
+fn parse_json_value(column_index: usize, raw: &str) -> rusqlite::Result<Value> {
+    serde_json::from_str::<Value>(raw).map_err(|err| {
+        rusqlite::Error::FromSqlConversionFailure(
+            column_index,
+            rusqlite::types::Type::Text,
+            Box::new(err),
+        )
+    })
+}
+
+fn parse_i64_json_array(column_index: usize, raw: &str) -> rusqlite::Result<Vec<i64>> {
+    serde_json::from_str::<Vec<i64>>(raw).map_err(|err| {
+        rusqlite::Error::FromSqlConversionFailure(
+            column_index,
+            rusqlite::types::Type::Text,
+            Box::new(err),
+        )
+    })
+}
+
+fn mock_candidate_fit(
+    question: &Question,
+    target_difficulty: Option<BasisPoints>,
+    is_timed: bool,
+    topic_priority: f64,
+) -> f64 {
+    let difficulty_fit = target_difficulty
+        .map(|target| {
+            1.0 - ((question.difficulty_level as f64 - target as f64).abs() / 10_000.0).min(1.0)
+        })
+        .unwrap_or(0.75);
+    let timed_fit = if is_timed && question.estimated_time_seconds <= 60 {
+        0.95
+    } else if is_timed {
+        0.6
+    } else {
+        0.8
+    };
+    let family_bonus = if question.family_id.is_some() {
+        0.85
+    } else {
+        0.55
+    };
+    0.35 * difficulty_fit + 0.25 * topic_priority + 0.20 * timed_fit + 0.20 * family_bonus
+}
+
+fn take_ranked_question(
+    bucket: &mut Vec<RankedQuestion>,
+    selected_ids: &BTreeSet<i64>,
+    selected_families: &BTreeSet<i64>,
+) -> Option<Question> {
+    if let Some(index) = bucket.iter().position(|candidate| {
+        !selected_ids.contains(&candidate.question.id)
+            && candidate
+                .question
+                .family_id
+                .map(|family_id| !selected_families.contains(&family_id))
+                .unwrap_or(true)
+    }) {
+        return Some(bucket.remove(index).question);
+    }
+    bucket
+        .iter()
+        .position(|candidate| !selected_ids.contains(&candidate.question.id))
+        .map(|index| bucket.remove(index).question)
+}
+
+fn title_for_mock_blueprint(blueprint_type: &str) -> &'static str {
+    match blueprint_type {
+        "repair_mock" => "Repair",
+        "recovery_mock" => "Recovery",
+        "coverage_mock" => "Coverage",
+        "pressure_mock" => "Pressure",
+        _ => "Balanced",
+    }
 }
 
 #[cfg(test)]
@@ -955,6 +1596,67 @@ mod tests {
         assert_eq!(snapshot.items.len(), 2);
         assert_eq!(archetype, "timed_targeted");
         assert_eq!(custom_event_count, 1);
+    }
+
+    #[test]
+    fn mock_blueprint_compiles_and_starts_mock_session() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let identity = IdentityService::new(&conn);
+        let student = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Esi".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student account should be created");
+        conn.execute(
+            "INSERT INTO student_profiles (account_id, preferred_subjects, daily_study_budget_minutes)
+             VALUES (?1, '[\"MATH\"]', 60)",
+            [student.id],
+        )
+        .expect("student profile should insert");
+
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, fragility_score, memory_strength, priority_score
+             ) VALUES (?1, ?2, 4200, 7800, 6200, 3500, 9300)",
+            params![student.id, topic_id],
+        )
+        .expect("topic state should insert");
+
+        let service = SessionService::new(&conn);
+        let blueprint = service
+            .generate_mock_blueprint(&MockBlueprintInput {
+                student_id: student.id,
+                subject_id,
+                topic_ids: vec![topic_id],
+                question_count: 2,
+                duration_minutes: Some(20),
+                is_timed: true,
+                target_difficulty: Some(6500),
+                weakness_bias: true,
+            })
+            .expect("mock blueprint should compile");
+        let (session, selected_questions) = service
+            .start_mock_session(blueprint.id)
+            .expect("mock session should start");
+
+        let event_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events WHERE event_type IN ('mock.blueprint_compiled', 'mock.session_created')",
+                [],
+                |row| row.get(0),
+            )
+            .expect("mock events should query");
+
+        assert_eq!(session.session_type, "mock");
+        assert_eq!(selected_questions.len(), 2);
+        assert_eq!(blueprint.status, "compiled");
+        assert!(event_count >= 2);
     }
 
     fn open_test_database() -> Connection {

@@ -8,6 +8,7 @@ members = [
     "crates/ecoach-questions",
     "crates/ecoach-student-model",
     "crates/ecoach-sessions",
+    "crates/ecoach-commands",
     "crates/ecoach-diagnostics",
     "crates/ecoach-coach-brain",
     "crates/ecoach-reporting",
@@ -19,6 +20,9 @@ members = [
     "crates/ecoach-intake",
     "crates/ecoach-premium",
     "crates/ecoach-elite",
+    "crates/ecoach-memory",
+    "crates/ecoach-mock-centre",
+    "crates/ecoach-knowledge-gap",
 ]
 resolver = "3"
 
