@@ -1,0 +1,14 @@
+{
+  "pack_id": "math-bece-sample-v1",
+  "pack_version": "0.1.0",
+  "subject_code": "MATH",
+  "curriculum_version": "Ghana NaCCA JHS 2024",
+  "exam_target": "BECE",
+  "grade_levels": ["JHS1", "JHS2", "JHS3"],
+  "topic_count": 2,
+  "question_count": 2,
+  "min_app_version": "0.1.0",
+  "checksums": {},
+  "created_at": "2026-03-29T00:00:00Z",
+  "author": "eCoach Content Team"
+}

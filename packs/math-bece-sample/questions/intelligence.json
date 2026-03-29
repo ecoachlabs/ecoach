@@ -1,0 +1,30 @@
+[
+  {
+    "question_index": 0,
+    "primary_knowledge_role": "concept",
+    "primary_cognitive_demand": "recognition",
+    "primary_solve_pattern": "concept_matching",
+    "primary_pedagogic_function": "foundation_check",
+    "classification_confidence": 8600,
+    "knowledge_roles": ["definition", "key_concept"],
+    "cognitive_demands": ["recognition", "recall"],
+    "solve_patterns": ["concept_matching", "direct_retrieval"],
+    "pedagogic_functions": ["foundation_check", "memory_reinforcement"],
+    "content_grains": ["concept", "skill"],
+    "misconception_exposures": ["numerator_denominator_swap"]
+  },
+  {
+    "question_index": 1,
+    "primary_knowledge_role": "worked_example",
+    "primary_cognitive_demand": "application",
+    "primary_solve_pattern": "step_by_step_computation",
+    "primary_pedagogic_function": "transfer_check",
+    "classification_confidence": 8200,
+    "knowledge_roles": ["worked_example", "procedure"],
+    "cognitive_demands": ["application"],
+    "solve_patterns": ["step_by_step_computation", "simplification"],
+    "pedagogic_functions": ["transfer_check", "memory_reinforcement"],
+    "content_grains": ["skill", "subskill"],
+    "misconception_exposures": ["numerator_denominator_swap"]
+  }
+]

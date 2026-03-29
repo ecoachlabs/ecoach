@@ -1,0 +1,58 @@
+[
+  {
+    "stem": "Which fraction is equivalent to 1/2?",
+    "question_format": "mcq",
+    "topic_code": "FRA",
+    "family_code": "FRA_EQUIV_01",
+    "explanation_text": "Multiply or divide the numerator and denominator by the same number to keep the value unchanged.",
+    "primary_skill_title": "Equivalent Fractions",
+    "skill_titles": ["Equivalent Fractions"],
+    "options": [
+      {
+        "option_label": "A",
+        "option_text": "2/4",
+        "is_correct": true
+      },
+      {
+        "option_label": "B",
+        "option_text": "1/4",
+        "is_correct": false
+      },
+      {
+        "option_label": "C",
+        "option_text": "4/2",
+        "is_correct": false,
+        "misconception_title": "Numerator-denominator swap",
+        "distractor_intent": "Triggers numerator-denominator reversal."
+      }
+    ]
+  },
+  {
+    "stem": "What is 2/4 written in simplest form?",
+    "question_format": "mcq",
+    "topic_code": "FRA",
+    "family_code": "FRA_EQUIV_01",
+    "explanation_text": "Simplify by dividing both numerator and denominator by their greatest common factor.",
+    "primary_skill_title": "Equivalent Fractions",
+    "skill_titles": ["Equivalent Fractions"],
+    "options": [
+      {
+        "option_label": "A",
+        "option_text": "1/2",
+        "is_correct": true
+      },
+      {
+        "option_label": "B",
+        "option_text": "2/2",
+        "is_correct": false
+      },
+      {
+        "option_label": "C",
+        "option_text": "4/2",
+        "is_correct": false,
+        "misconception_title": "Numerator-denominator swap",
+        "distractor_intent": "Swaps numerator and denominator instead of simplifying."
+      }
+    ]
+  }
+]

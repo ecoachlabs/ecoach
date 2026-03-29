@@ -1,0 +1,20 @@
+[package]
+name = "ecoach-sessions"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+chrono.workspace = true
+ecoach-questions = { path = "../ecoach-questions" }
+ecoach-substrate = { path = "../ecoach-substrate" }
+rusqlite.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+ecoach-coach-brain = { path = "../ecoach-coach-brain" }
+ecoach-content = { path = "../ecoach-content" }
+ecoach-identity = { path = "../ecoach-identity" }
+ecoach-storage = { path = "../ecoach-storage" }
+ecoach-student-model = { path = "../ecoach-student-model" }

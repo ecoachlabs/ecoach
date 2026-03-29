@@ -1,0 +1,14 @@
+[package]
+name = "ecoach-questions"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ecoach-substrate = { path = "../ecoach-substrate" }
+rusqlite.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+ecoach-content = { path = "../ecoach-content" }
+ecoach-storage = { path = "../ecoach-storage" }

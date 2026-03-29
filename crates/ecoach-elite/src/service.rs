@@ -1,0 +1,643 @@
+use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, ema_update, to_bp};
+use rusqlite::{Connection, OptionalExtension, params};
+use serde_json::json;
+
+use crate::models::{EliteProfile, EliteSessionScore, EliteTopicProfile};
+
+pub struct EliteService<'a> {
+    conn: &'a Connection,
+}
+
+impl<'a> EliteService<'a> {
+    pub fn new(conn: &'a Connection) -> Self {
+        Self { conn }
+    }
+
+    pub fn upsert_profile(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        eps_score: i64,
+        tier: &str,
+    ) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "INSERT INTO elite_profiles (student_id, subject_id, eps_score, tier)
+                 VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(student_id, subject_id)
+                 DO UPDATE SET eps_score = excluded.eps_score, tier = excluded.tier, updated_at = datetime('now')",
+                params![student_id, subject_id, eps_score, tier],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    pub fn score_session(
+        &self,
+        student_id: i64,
+        session_id: i64,
+        session_class: &str,
+    ) -> EcoachResult<EliteSessionScore> {
+        let session = self
+            .load_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        if session.student_id != student_id {
+            return Err(EcoachError::Validation(format!(
+                "session {} does not belong to student {}",
+                session_id, student_id
+            )));
+        }
+        let subject_id = session.subject_id.ok_or_else(|| {
+            EcoachError::Validation(format!("session {} has no subject_id", session_id))
+        })?;
+
+        let items = self.load_scored_items(session_id)?;
+        if items.is_empty() {
+            return Err(EcoachError::Validation(format!(
+                "session {} has no scoreable items",
+                session_id
+            )));
+        }
+
+        let answered_count = items.len() as f64;
+        let correct_count = items.iter().filter(|item| item.is_correct).count() as f64;
+        let accuracy_score = to_bp(correct_count / answered_count);
+
+        let precision_score =
+            to_bp(items.iter().map(precision_component).sum::<f64>() / answered_count);
+        let speed_score = to_bp(items.iter().map(speed_component).sum::<f64>() / answered_count);
+        let depth_score = to_bp(items.iter().map(depth_component).sum::<f64>() / answered_count);
+        let trap_resistance_score =
+            to_bp(items.iter().map(trap_resistance_component).sum::<f64>() / answered_count);
+        let composure_score = compute_composure_score(&items);
+        let consistency_score = compute_consistency_score(&items);
+
+        let eps_score = compute_eps_score(
+            session_class,
+            accuracy_score,
+            precision_score,
+            speed_score,
+            depth_score,
+            trap_resistance_score,
+            composure_score,
+            consistency_score,
+        );
+        let session_label = elite_label_from_score(eps_score).to_string();
+        let debrief_text = elite_debrief_text(
+            accuracy_score,
+            precision_score,
+            speed_score,
+            depth_score,
+            trap_resistance_score,
+            composure_score,
+        );
+        let recommended_next_session = elite_recommendation(
+            precision_score,
+            speed_score,
+            depth_score,
+            trap_resistance_score,
+            composure_score,
+            consistency_score,
+        )
+        .to_string();
+
+        let previous_profile = self.get_profile(student_id, subject_id)?;
+        let eps_delta = previous_profile
+            .as_ref()
+            .map(|profile| eps_score as i64 - profile.eps_score as i64)
+            .unwrap_or(eps_score as i64);
+        let metadata = json!({
+            "accuracy_score": accuracy_score,
+            "precision_score": precision_score,
+            "speed_score": speed_score,
+            "depth_score": depth_score,
+            "trap_resistance_score": trap_resistance_score,
+            "composure_score": composure_score,
+            "consistency_score": consistency_score,
+            "item_count": items.len(),
+            "recommended_next_session": recommended_next_session,
+        });
+
+        self.conn
+            .execute(
+                "INSERT INTO elite_session_records (student_id, subject_id, session_type, eps_delta, metadata_json)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![
+                    student_id,
+                    subject_id,
+                    session_class,
+                    eps_delta,
+                    serde_json::to_string(&metadata)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.update_profile_rollup(
+            student_id,
+            subject_id,
+            eps_score,
+            precision_score,
+            speed_score,
+            depth_score,
+            composure_score,
+        )?;
+        self.update_topic_domination(student_id, subject_id, &items)?;
+
+        Ok(EliteSessionScore {
+            session_id,
+            student_id,
+            subject_id,
+            session_class: session_class.to_string(),
+            accuracy_score,
+            precision_score,
+            speed_score,
+            depth_score,
+            trap_resistance_score,
+            composure_score,
+            consistency_score,
+            eps_score,
+            session_label,
+            debrief_text,
+            recommended_next_session,
+            metadata,
+        })
+    }
+
+    pub fn get_profile(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<Option<EliteProfile>> {
+        self.conn
+            .query_row(
+                "SELECT student_id, subject_id, eps_score, tier, precision_score, speed_score,
+                        depth_score, composure_score
+                 FROM elite_profiles
+                 WHERE student_id = ?1 AND subject_id = ?2",
+                params![student_id, subject_id],
+                |row| {
+                    Ok(EliteProfile {
+                        student_id: row.get(0)?,
+                        subject_id: row.get(1)?,
+                        eps_score: row.get(2)?,
+                        tier: row.get(3)?,
+                        precision_score: row.get(4)?,
+                        speed_score: row.get(5)?,
+                        depth_score: row.get(6)?,
+                        composure_score: row.get(7)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    pub fn list_topic_domination(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<EliteTopicProfile>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT etp.topic_id, t.name, etp.precision_score, etp.speed_score, etp.depth_score,
+                        etp.composure_score, etp.consistency_score, etp.trap_resistance_score,
+                        etp.domination_score, etp.status
+                 FROM elite_topic_profiles etp
+                 INNER JOIN topics t ON t.id = etp.topic_id
+                 WHERE etp.student_id = ?1 AND etp.subject_id = ?2
+                 ORDER BY etp.domination_score DESC, t.name ASC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, subject_id, limit as i64], |row| {
+                Ok(EliteTopicProfile {
+                    topic_id: row.get(0)?,
+                    topic_name: row.get(1)?,
+                    precision_score: row.get(2)?,
+                    speed_score: row.get(3)?,
+                    depth_score: row.get(4)?,
+                    composure_score: row.get(5)?,
+                    consistency_score: row.get(6)?,
+                    trap_resistance_score: row.get(7)?,
+                    domination_score: row.get(8)?,
+                    status: row.get(9)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut profiles = Vec::new();
+        for row in rows {
+            profiles.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(profiles)
+    }
+
+    fn update_profile_rollup(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        eps_score: BasisPoints,
+        precision_score: BasisPoints,
+        speed_score: BasisPoints,
+        depth_score: BasisPoints,
+        composure_score: BasisPoints,
+    ) -> EcoachResult<()> {
+        let existing = self.get_profile(student_id, subject_id)?;
+        let alpha = 0.25;
+        let rolled_eps = existing
+            .as_ref()
+            .map(|profile| ema_update(profile.eps_score, eps_score, alpha))
+            .unwrap_or(eps_score);
+        let rolled_precision = existing
+            .as_ref()
+            .map(|profile| ema_update(profile.precision_score, precision_score, alpha))
+            .unwrap_or(precision_score);
+        let rolled_speed = existing
+            .as_ref()
+            .map(|profile| ema_update(profile.speed_score, speed_score, alpha))
+            .unwrap_or(speed_score);
+        let rolled_depth = existing
+            .as_ref()
+            .map(|profile| ema_update(profile.depth_score, depth_score, alpha))
+            .unwrap_or(depth_score);
+        let rolled_composure = existing
+            .as_ref()
+            .map(|profile| ema_update(profile.composure_score, composure_score, alpha))
+            .unwrap_or(composure_score);
+
+        self.conn.execute(
+            "INSERT INTO elite_profiles (
+                student_id, subject_id, eps_score, tier, precision_score, speed_score, depth_score, composure_score
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+             ON CONFLICT(student_id, subject_id) DO UPDATE SET
+                eps_score = excluded.eps_score,
+                tier = excluded.tier,
+                precision_score = excluded.precision_score,
+                speed_score = excluded.speed_score,
+                depth_score = excluded.depth_score,
+                composure_score = excluded.composure_score,
+                updated_at = datetime('now')",
+            params![
+                student_id,
+                subject_id,
+                rolled_eps,
+                elite_tier_from_score(rolled_eps),
+                rolled_precision,
+                rolled_speed,
+                rolled_depth,
+                rolled_composure,
+            ],
+        ).map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn update_topic_domination(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        items: &[EliteScoredItem],
+    ) -> EcoachResult<()> {
+        let mut topic_ids = items.iter().map(|item| item.topic_id).collect::<Vec<_>>();
+        topic_ids.sort_unstable();
+        topic_ids.dedup();
+
+        for topic_id in topic_ids {
+            let topic_items = items
+                .iter()
+                .filter(|item| item.topic_id == topic_id)
+                .collect::<Vec<_>>();
+            let count = topic_items.len().max(1) as f64;
+            let precision_score = to_bp(
+                topic_items
+                    .iter()
+                    .map(|item| precision_component(item))
+                    .sum::<f64>()
+                    / count,
+            );
+            let speed_score = to_bp(
+                topic_items
+                    .iter()
+                    .map(|item| speed_component(item))
+                    .sum::<f64>()
+                    / count,
+            );
+            let depth_score = to_bp(
+                topic_items
+                    .iter()
+                    .map(|item| depth_component(item))
+                    .sum::<f64>()
+                    / count,
+            );
+            let trap_resistance_score = to_bp(
+                topic_items
+                    .iter()
+                    .map(|item| trap_resistance_component(item))
+                    .sum::<f64>()
+                    / count,
+            );
+            let composure_score = compute_composure_score_refs(&topic_items);
+            let consistency_score = compute_consistency_score_refs(&topic_items);
+            let domination_score = clamp_bp(
+                (0.35 * precision_score as f64
+                    + 0.15 * speed_score as f64
+                    + 0.15 * depth_score as f64
+                    + 0.10 * trap_resistance_score as f64
+                    + 0.15 * composure_score as f64
+                    + 0.10 * consistency_score as f64)
+                    .round() as i64,
+            ) as BasisPoints;
+
+            self.conn.execute(
+                "INSERT INTO elite_topic_profiles (
+                    student_id, subject_id, topic_id, precision_score, speed_score, depth_score,
+                    composure_score, consistency_score, trap_resistance_score, domination_score, status
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                 ON CONFLICT(student_id, topic_id) DO UPDATE SET
+                    subject_id = excluded.subject_id,
+                    precision_score = excluded.precision_score,
+                    speed_score = excluded.speed_score,
+                    depth_score = excluded.depth_score,
+                    composure_score = excluded.composure_score,
+                    consistency_score = excluded.consistency_score,
+                    trap_resistance_score = excluded.trap_resistance_score,
+                    domination_score = excluded.domination_score,
+                    status = excluded.status,
+                    updated_at = datetime('now')",
+                params![
+                    student_id,
+                    subject_id,
+                    topic_id,
+                    precision_score,
+                    speed_score,
+                    depth_score,
+                    composure_score,
+                    consistency_score,
+                    trap_resistance_score,
+                    domination_score,
+                    elite_tier_from_score(domination_score),
+                ],
+            ).map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    fn load_session(&self, session_id: i64) -> EcoachResult<Option<EliteSessionHeader>> {
+        self.conn
+            .query_row(
+                "SELECT id, student_id, subject_id
+                 FROM sessions
+                 WHERE id = ?1",
+                [session_id],
+                |row| {
+                    Ok(EliteSessionHeader {
+                        student_id: row.get(1)?,
+                        subject_id: row.get(2)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_scored_items(&self, session_id: i64) -> EcoachResult<Vec<EliteScoredItem>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                si.question_id,
+                q.topic_id,
+                si.display_order,
+                q.difficulty_level,
+                q.estimated_time_seconds,
+                COALESCE(si.response_time_ms, q.estimated_time_seconds * 1000),
+                COALESCE(si.is_correct, 0),
+                CASE WHEN qo.misconception_id IS NOT NULL THEN 1 ELSE 0 END
+             FROM session_items si
+             INNER JOIN questions q ON q.id = si.question_id
+             LEFT JOIN question_options qo ON qo.id = si.selected_option_id
+             WHERE si.session_id = ?1
+               AND si.status = 'answered'
+             ORDER BY si.display_order ASC, si.id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let rows = statement
+            .query_map([session_id], |row| {
+                Ok(EliteScoredItem {
+                    topic_id: row.get(1)?,
+                    difficulty_level: row.get(3)?,
+                    expected_time_seconds: row.get(4)?,
+                    response_time_ms: row.get(5)?,
+                    is_correct: row.get::<_, i64>(6)? == 1,
+                    misconception_trap_hit: row.get::<_, i64>(7)? == 1,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+}
+
+struct EliteSessionHeader {
+    student_id: i64,
+    subject_id: Option<i64>,
+}
+
+struct EliteScoredItem {
+    topic_id: i64,
+    difficulty_level: BasisPoints,
+    expected_time_seconds: i64,
+    response_time_ms: i64,
+    is_correct: bool,
+    misconception_trap_hit: bool,
+}
+
+fn precision_component(item: &EliteScoredItem) -> f64 {
+    let accuracy = if item.is_correct { 1.0 } else { 0.0 };
+    let trap_penalty = if item.misconception_trap_hit {
+        0.35
+    } else {
+        0.0
+    };
+    (0.80 * accuracy + 0.20 * difficulty_factor(item) - trap_penalty).clamp(0.0, 1.0)
+}
+
+fn speed_component(item: &EliteScoredItem) -> f64 {
+    let expected_ms = (item.expected_time_seconds.max(1) * 1000) as f64;
+    let actual_ms = item.response_time_ms.max(1) as f64;
+    let pace_ratio = (expected_ms / actual_ms).clamp(0.0, 1.2);
+    let base = if item.is_correct {
+        pace_ratio.min(1.0)
+    } else {
+        0.15
+    };
+    base.clamp(0.0, 1.0)
+}
+
+fn depth_component(item: &EliteScoredItem) -> f64 {
+    let difficulty = difficulty_factor(item);
+    let accuracy = if item.is_correct { 1.0 } else { 0.0 };
+    (0.65 * accuracy + 0.35 * difficulty * accuracy).clamp(0.0, 1.0)
+}
+
+fn trap_resistance_component(item: &EliteScoredItem) -> f64 {
+    if item.misconception_trap_hit {
+        0.0
+    } else if item.is_correct {
+        1.0
+    } else {
+        0.35
+    }
+}
+
+fn difficulty_factor(item: &EliteScoredItem) -> f64 {
+    (item.difficulty_level as f64 / 10_000.0).clamp(0.0, 1.0)
+}
+
+fn compute_composure_score(items: &[EliteScoredItem]) -> BasisPoints {
+    compute_composure_score_refs(&items.iter().collect::<Vec<_>>())
+}
+
+fn compute_composure_score_refs(items: &[&EliteScoredItem]) -> BasisPoints {
+    let split_index = (items.len() / 2).max(1);
+    let first_half = &items[..split_index];
+    let second_half = &items[split_index..];
+    let first_accuracy = average_accuracy(first_half);
+    let second_accuracy = average_accuracy(second_half);
+    let hold = (second_accuracy / first_accuracy.max(0.2)).clamp(0.0, 1.0);
+    to_bp(0.55 * hold + 0.45 * second_accuracy)
+}
+
+fn compute_consistency_score(items: &[EliteScoredItem]) -> BasisPoints {
+    compute_consistency_score_refs(&items.iter().collect::<Vec<_>>())
+}
+
+fn compute_consistency_score_refs(items: &[&EliteScoredItem]) -> BasisPoints {
+    if items.is_empty() {
+        return 0;
+    }
+    let window_size = (items.len() / 3).max(1);
+    let mut accuracies = Vec::new();
+    for chunk in items.chunks(window_size) {
+        accuracies.push(average_accuracy(chunk));
+    }
+    let mean = accuracies.iter().sum::<f64>() / accuracies.len() as f64;
+    let variance = accuracies
+        .iter()
+        .map(|value| (value - mean).powi(2))
+        .sum::<f64>()
+        / accuracies.len() as f64;
+    let stability = (1.0 - variance.sqrt()).clamp(0.0, 1.0);
+    to_bp(stability)
+}
+
+fn average_accuracy(items: &[&EliteScoredItem]) -> f64 {
+    if items.is_empty() {
+        return 0.0;
+    }
+    items.iter().filter(|item| item.is_correct).count() as f64 / items.len() as f64
+}
+
+fn compute_eps_score(
+    session_class: &str,
+    accuracy_score: BasisPoints,
+    precision_score: BasisPoints,
+    speed_score: BasisPoints,
+    depth_score: BasisPoints,
+    trap_resistance_score: BasisPoints,
+    composure_score: BasisPoints,
+    consistency_score: BasisPoints,
+) -> BasisPoints {
+    let weights = match session_class {
+        "precision_lab" => (0.16, 0.32, 0.12, 0.08, 0.17, 0.08, 0.07),
+        "elite_sprint" => (0.18, 0.10, 0.28, 0.06, 0.12, 0.16, 0.10),
+        "depth_lab" => (0.18, 0.10, 0.08, 0.28, 0.10, 0.14, 0.12),
+        "endurance_track" => (0.20, 0.12, 0.10, 0.10, 0.08, 0.16, 0.24),
+        "perfect_run" => (0.22, 0.18, 0.12, 0.10, 0.12, 0.14, 0.12),
+        "apex_mock" => (0.20, 0.16, 0.15, 0.10, 0.10, 0.15, 0.14),
+        _ => (0.30, 0.20, 0.15, 0.10, 0.05, 0.10, 0.10),
+    };
+
+    clamp_bp(
+        (weights.0 * accuracy_score as f64
+            + weights.1 * precision_score as f64
+            + weights.2 * speed_score as f64
+            + weights.3 * depth_score as f64
+            + weights.4 * trap_resistance_score as f64
+            + weights.5 * composure_score as f64
+            + weights.6 * consistency_score as f64)
+            .round() as i64,
+    ) as BasisPoints
+}
+
+fn elite_label_from_score(score: BasisPoints) -> &'static str {
+    match score {
+        0..=5499 => "building",
+        5500..=6999 => "core",
+        7000..=8499 => "apex",
+        _ => "legend_run",
+    }
+}
+
+fn elite_tier_from_score(score: BasisPoints) -> &'static str {
+    match score {
+        0..=5999 => "foundation",
+        6000..=7499 => "core",
+        7500..=8999 => "apex",
+        _ => "legend",
+    }
+}
+
+fn elite_debrief_text(
+    accuracy_score: BasisPoints,
+    precision_score: BasisPoints,
+    speed_score: BasisPoints,
+    depth_score: BasisPoints,
+    trap_resistance_score: BasisPoints,
+    composure_score: BasisPoints,
+) -> String {
+    if precision_score + 1500 < accuracy_score {
+        "Knowledge is ahead of discipline right now. Precision loss is still leaking marks."
+            .to_string()
+    } else if speed_score + 2000 < accuracy_score {
+        "Your knowledge is ahead of your timing. Speed is now the limiting factor.".to_string()
+    } else if trap_resistance_score < 6000 {
+        "Trap vulnerability is still costing you under close distractors and near-miss options."
+            .to_string()
+    } else if composure_score < 6500 {
+        "Your late-session control dipped. Composure needs work so strong starts still finish cleanly.".to_string()
+    } else if depth_score < 6500 {
+        "You handled direct work well, but reasoning density is still below your best level."
+            .to_string()
+    } else {
+        "Strong elite control. The session stayed clean across precision, pace, and pressure."
+            .to_string()
+    }
+}
+
+fn elite_recommendation(
+    precision_score: BasisPoints,
+    speed_score: BasisPoints,
+    depth_score: BasisPoints,
+    trap_resistance_score: BasisPoints,
+    composure_score: BasisPoints,
+    consistency_score: BasisPoints,
+) -> &'static str {
+    let mut pairs = [
+        ("precision_lab", precision_score),
+        ("elite_sprint", speed_score),
+        ("depth_lab", depth_score),
+        ("trapsense", trap_resistance_score),
+        ("endurance_track", consistency_score.min(composure_score)),
+    ];
+    pairs.sort_by_key(|(_, score)| *score);
+    pairs[0].0
+}

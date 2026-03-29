@@ -9,6 +9,67 @@ This plan is backend-only. It distinguishes:
 - `Strong inference`: strongly implied by the corpus
 - `Recommendation`: my implementation choice where the corpus leaves room
 
+## 0. Source of Truth and Ideas Coverage
+
+Primary source of truth for this implementation plan:
+- `idea1.txt` through `idea38.txt`
+- `adeo eCoachGames - IDEAS & CONCEPTS.txt`
+
+Secondary reconciliation only:
+- `backend_execution_plan.md`
+- `detailed_backend_implementation_plan.md`
+
+Rule:
+- the existing Markdown plans do not override the ideas corpus
+- where they add useful runtime specificity, they are included only if they remain consistent with the ideas documents
+
+Ideas-to-implementation coverage map:
+
+- `idea1`: offline-first exam-performance operating system, mock centre, question reactor, local Rust runtime
+- `idea2`: journey graph, subject progression, route recalculation, retention/reactivation, subject packs
+- `idea3`: local multi-user model, student/parent/admin roles, PIN auth, role-scoped shells
+- `idea4`: weak-learner transformation engine, daily growth, rescue/stabilize/accelerate logic
+- `idea5`: elite-performance layer, advanced scoring, domination states, entitlement overlay
+- `idea6`: knowledge-gap engine, gap-vs-priority logic, blocker tracing, repair planning
+- `idea7`: memory mode, spaced proof, decay and rescue logic
+- `idea8`: duplicate memory-mode reinforcement of `idea7`
+- `idea9`: cognitive question taxonomy, question factory, structured concept records
+- `idea10`: game-runtime implications, especially answer-linked stateful play
+- `idea11`: wrong-answer intelligence, distractor intent, recognition-failure diagnosis
+- `idea12`: premium parent command-center outputs, risk/intervention/readiness projection
+- `idea13`: past-paper intelligence, family graph, recurrence/co-appearance/replacement analytics
+- `idea14`: customized testing / prepare-for-my-test orchestration and session blueprinting
+- `idea15`: missing-core systems, especially Teach Mode, Mistake Lab, Mission Control, retention loops
+- `idea16`: Library as knowledge hub with typed objects, shelves, and recommendation/state engines
+- `idea17`: Glossary Lab, knowledge graph, bundles, audio programs, transfer-oriented glossary testing
+- `idea18`: multi-session diagnostic battery, learning-MRI profiling, root-cause inference
+- `idea19`: coach-orchestrated topic learning, missions, calendar-aware planning, evented runtime
+- `idea20`: deterministic coach state machine, next-action resolver, capability orchestration
+- `idea21`: resource intelligence/orchestration, coverage sufficiency, retrieval/generation fallback rules
+- `idea22`: multi-axis question-intelligence engine, taxonomy governance, review thresholds
+- `idea23`: local coach brain, causal diagnosis, doctrine rules, tension/interference handling
+- `idea24`: autonomous offline academic coach, evidence-led readiness proof, learner digital twin
+- `idea25`: intelligence constitution, governed engine lattice, proof gates, audit/governance substrate
+- `idea26`: curriculum intelligence portal and Academic Foundry, provenance, publish gates, delta enrichment
+- `idea27`: content intelligence engine / knowledge refinery, verified internal retrieval, source tiers
+- `idea28`: expansion from current 6-engine nucleus to shared fabrics, hard gates, DB ownership, recompute chain
+- `idea29`: pedagogy-to-backend instructional platform, content-type-aware teaching runtime, review-as-diagnosis
+- `idea30`: time orchestration, live session awareness, counted-time truth, replanning
+- `idea31`: versioned executable central curriculum graph, update diff/impact/regeneration controls
+- `idea32`: academic decay and recall resilience subsystem, event-sourced memory state
+- `idea33`: Traps / contrast engine for confusable concepts, reusable contrast profiles and evidence atoms
+- `idea34`: one-session adaptive DNA diagnostic, problem-cause-fix outputs, constrained diagnostic generation
+- `idea35`: rebuild discipline, Rust-first delivery guidance, vertical-slice backend sequencing
+- `idea36`: CoachHub operational model, multi-goal orchestration, upload bundle intelligence, admin oversight
+- `idea37`: meta-architecture, directive/read-model layer, Content OS, capability-to-diagnosis registry
+- `idea38`: top-level local-first academic intelligence OS, policy-layer premium/elite, shared student/content truth
+- `adeo eCoachGames - IDEAS & CONCEPTS`: expansion game ideas informing future game-runtime architecture only
+
+Implementation rule:
+- if a future revision removes or weakens a major area above, that revision should explicitly say which idea file(s) it is intentionally deferring
+- no major backend module should exist without at least one idea-source justification
+- no major idea-family should be silently dropped from roadmap scope
+
 ## 1. Implementation Intent
 
 Build eCoach as a local-first academic intelligence platform with two connected backend planes:
@@ -65,6 +126,10 @@ Rule:
 - runtime backend = Rust modular monolith + SQLite + local filesystem asset store
 - foundry backend = Rust control plane + Postgres + object storage
 - optional specialized OCR/ML worker adapters may be separate if needed, but domain logic remains in shared backend modules
+- Tauri v2 is the frontend/backend boundary for the local app
+- SQLite should run in WAL mode
+- runtime background work should use in-process `tokio` tasks
+- all percentage-like scores should use `BasisPoints = u16`
 
 ### 2.4 Decision discipline
 
@@ -375,6 +440,35 @@ Data categories:
 - parent digest
 - library shelves
 
+Runtime storage conventions:
+- table names: `snake_case`
+- timestamps: ISO 8601 text
+- flexible metadata: validated JSON text columns
+- foreign keys: always enabled
+- every hot-query foreign key gets an index
+
+Recommended runtime migration rollout:
+- `001_identity`
+- `002_curriculum`
+- `003_questions`
+- `004_student_state`
+- `005_sessions`
+- `006_coach`
+- `007_memory`
+- `008_mock_centre`
+- `009_knowledge_gap`
+- `010_goals_calendar`
+- `011_content_packs`
+- `012_reporting`
+- `013_glossary`
+- `014_library`
+- `015_games`
+- `016_past_papers`
+- `017_traps`
+- `018_intake`
+- `019_premium`
+- `020_elite`
+
 ## 6.2 Foundry Storage
 
 `Recommendation`
@@ -479,9 +573,73 @@ Cross-domain updates happen through:
 -> publish
 -> compile pack
 
+## 8.6 Concrete Runtime Contracts To Freeze
+
+Identity/auth contract:
+- `accounts`
+- `student_profiles`
+- `parent_profiles`
+- `parent_student_links`
+- `admin_profiles`
+- entitlement tier on account
+- `first_run`
+- failed-attempt lockout
+- `argon2id` PIN hashing
+
+Curriculum/content-pack contract:
+- `curriculum_versions`
+- `subjects`
+- `topics`
+- `academic_nodes`
+- `node_edges`
+- `misconception_patterns`
+- `learning_objectives`
+- signed manifests
+- checksum verification
+- transactional pack install and rollback
+
+Question/evidence contract:
+- `question_families`
+- `questions`
+- `question_options`
+- `question_skill_links`
+- `student_topic_states`
+- `student_error_profiles`
+- `student_question_attempts`
+
+Diagnostic/coach contract:
+- 5-phase diagnostic battery
+- per-topic outputs for mastery, fluency, precision, pressure, flexibility, and stability
+- `coach_plans`
+- `coach_plan_days`
+- `coach_missions`
+- `coach_topic_profiles`
+- `coach_session_evidence`
+- `coach_blockers`
+- strict coach-state resolution order
+
+Memory/repair contract:
+- `memory_states`
+- `memory_evidence_events`
+- `recheck_schedules`
+- `interference_edges`
+- `gap_repair_plans`
+- `gap_repair_plan_items`
+- `solidification_sessions`
+
+Parent reporting contract:
+- backend-generated plain-language summaries
+- child readiness/risk/trend read models
+- milestone and weekly memo outputs
+
 ## 9. APIs / Command Surface
 
 These are backend operations; frontend should stay thin.
+
+Command boundary rules:
+- expose runtime APIs through Tauri DTO-only commands
+- never return raw domain entities directly to frontend
+- every major mutation should emit an append-only domain event with `event_id`, `event_type`, `aggregate_id`, `occurred_at`, `payload`, and `trace_id`
 
 ## 9.1 Runtime commands
 
@@ -553,6 +711,9 @@ These are backend operations; frontend should stay thin.
 - glossary audio pre-generation
 - pack migration
 - stale read-model rebuild
+
+Implementation rule:
+- these run as in-process `tokio` jobs, not an external broker-backed queue, unless the foundry later grows large enough to justify separate workers
 
 ## 10.2 Foundry jobs
 
@@ -741,6 +902,8 @@ tests/
 - domain glossary of canonical terms
 - event naming spec
 - source-of-truth ownership map
+- threshold registry for mastery, readiness, memory, and planner gates
+- frozen appendix for canonical entities, state machines, formulas, and command names
 - pack schema v1
 - migration skeletons
 
