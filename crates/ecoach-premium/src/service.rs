@@ -1,12 +1,14 @@
-use chrono::Utc;
-use ecoach_substrate::{DomainEvent, EcoachError, EcoachResult, EntitlementTier};
+use std::str::FromStr;
+
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, EntitlementTier};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{
     CreateInterventionInput, CreateRiskFlagInput, InterventionRecord, InterventionStatus,
-    InterventionStep, PremiumFeature, RiskDashboard, RiskFlag, RiskFlagStatus, RiskSeverity,
-    StudentEntitlementSnapshot,
+    InterventionStep, PremiumFeature, PremiumPriorityTopic, PremiumStrategySnapshot, RiskDashboard,
+    RiskFlag, RiskFlagStatus, RiskSeverity, StudentEntitlementSnapshot,
 };
 
 // ── Mastery thresholds for auto-detection ──
@@ -434,26 +436,23 @@ impl<'a> PremiumService<'a> {
     }
 
     pub fn get_intervention(&self, intervention_id: i64) -> EcoachResult<InterventionRecord> {
-        self.conn
+        let row = self
+            .conn
             .query_row(
                 "SELECT id, student_id, risk_flag_id, title, status, summary_json, created_at, updated_at
                  FROM intervention_records WHERE id = ?1",
                 [intervention_id],
                 |row| {
-                    let steps_json: String = row.get(5)?;
-                    let steps: Vec<InterventionStep> =
-                        serde_json::from_str(&steps_json).unwrap_or_default();
-                    Ok(InterventionRecord {
-                        id: row.get(0)?,
-                        student_id: row.get(1)?,
-                        risk_flag_id: row.get(2)?,
-                        title: row.get(3)?,
-                        status: row.get(4)?,
-                        progress_percent: 0,
-                        steps,
-                        created_at: row.get(6)?,
-                        updated_at: row.get(7)?,
-                    })
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, Option<i64>>(2)?,
+                        row.get::<_, String>(3)?,
+                        row.get::<_, String>(4)?,
+                        row.get::<_, String>(5)?,
+                        row.get::<_, String>(6)?,
+                        row.get::<_, String>(7)?,
+                    ))
                 },
             )
             .map_err(|e| {
@@ -461,7 +460,9 @@ impl<'a> PremiumService<'a> {
                     "intervention {} not found: {}",
                     intervention_id, e
                 ))
-            })
+            })?;
+
+        self.build_intervention_record(row.0, row.1, row.2, row.3, row.4, row.5, row.6, row.7)
     }
 
     pub fn list_active_interventions(
@@ -480,26 +481,25 @@ impl<'a> PremiumService<'a> {
 
         let rows = stmt
             .query_map([student_id], |row| {
-                let steps_json: String = row.get(5)?;
-                let steps: Vec<InterventionStep> =
-                    serde_json::from_str(&steps_json).unwrap_or_default();
-                Ok(InterventionRecord {
-                    id: row.get(0)?,
-                    student_id: row.get(1)?,
-                    risk_flag_id: row.get(2)?,
-                    title: row.get(3)?,
-                    status: row.get(4)?,
-                    progress_percent: 0,
-                    steps,
-                    created_at: row.get(6)?,
-                    updated_at: row.get(7)?,
-                })
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, i64>(1)?,
+                    row.get::<_, Option<i64>>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, String>(5)?,
+                    row.get::<_, String>(6)?,
+                    row.get::<_, String>(7)?,
+                ))
             })
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let mut interventions = Vec::new();
         for row in rows {
-            interventions.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+            let row = row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+            interventions.push(self.build_intervention_record(
+                row.0, row.1, row.2, row.3, row.4, row.5, row.6, row.7,
+            )?);
         }
         Ok(interventions)
     }
@@ -636,6 +636,336 @@ impl<'a> PremiumService<'a> {
 
     // ── Internal ──
 
+    pub fn get_strategy_snapshot(&self, student_id: i64) -> EcoachResult<PremiumStrategySnapshot> {
+        let tier = self.require_premium_or_elite(student_id)?;
+        let (student_name, exam_target, exam_target_date, profile_budget): (
+            String,
+            Option<String>,
+            Option<String>,
+            Option<i64>,
+        ) = self
+            .conn
+            .query_row(
+                "SELECT a.display_name, sp.exam_target, sp.exam_target_date, sp.daily_study_budget_minutes
+                 FROM accounts a
+                 LEFT JOIN student_profiles sp ON sp.account_id = a.id
+                 WHERE a.id = ?1",
+                [student_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let overall_readiness_score: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(CAST(AVG(mastery_score) AS INTEGER), 0)
+                 FROM student_topic_states
+                 WHERE student_id = ?1",
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let overall_readiness_band = readiness_band(overall_readiness_score).to_string();
+
+        let (active_risk_count, critical_risk_count): (i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT
+                    COUNT(*),
+                    SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END)
+                 FROM risk_flags
+                 WHERE student_id = ?1 AND status IN ('active', 'monitoring')",
+                [student_id],
+                |row| Ok((row.get(0)?, row.get::<_, Option<i64>>(1)?.unwrap_or(0))),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let active_intervention_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM intervention_records
+                 WHERE student_id = ?1 AND status IN ('active', 'review', 'escalated')",
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let overdue_review_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM memory_states
+                 WHERE student_id = ?1
+                   AND review_due_at IS NOT NULL
+                   AND review_due_at <= ?2
+                   AND decay_risk >= 5000",
+                params![student_id, Utc::now().to_rfc3339()],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let (current_phase, plan_budget): (Option<String>, Option<i64>) = self
+            .conn
+            .query_row(
+                "SELECT current_phase, daily_budget_minutes
+                 FROM coach_plans
+                 WHERE student_id = ?1 AND status IN ('active', 'stale')
+                 ORDER BY updated_at DESC, id DESC
+                 LIMIT 1",
+                [student_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))?
+            .unwrap_or((None, None));
+
+        let priority_topics = self.list_priority_topics(student_id, 5)?;
+        let top_risk_titles = self.list_top_risk_titles(student_id, 3)?;
+        let inactive_days = self.inactive_days(student_id)?;
+        let daily_budget_minutes = plan_budget.or(profile_budget);
+        let strategy_mode = resolve_strategy_mode(
+            overall_readiness_score,
+            critical_risk_count,
+            active_risk_count,
+            overdue_review_count,
+            inactive_days,
+        )
+        .to_string();
+        let coach_actions = build_coach_actions(
+            &strategy_mode,
+            &priority_topics,
+            overdue_review_count,
+            active_intervention_count,
+            inactive_days,
+            current_phase.as_deref(),
+        );
+        let household_actions = build_household_actions(
+            &strategy_mode,
+            overdue_review_count,
+            critical_risk_count,
+            active_intervention_count,
+            inactive_days,
+            daily_budget_minutes,
+        );
+
+        Ok(PremiumStrategySnapshot {
+            student_id,
+            student_name,
+            tier: tier.as_str().to_string(),
+            strategy_mode,
+            overall_readiness_score: overall_readiness_score.clamp(0, 10_000) as BasisPoints,
+            overall_readiness_band,
+            exam_target,
+            exam_target_date,
+            current_phase,
+            daily_budget_minutes,
+            inactive_days,
+            overdue_review_count,
+            active_risk_count,
+            critical_risk_count,
+            active_intervention_count,
+            priority_topics,
+            top_risk_titles,
+            coach_actions,
+            household_actions,
+        })
+    }
+
+    fn build_intervention_record(
+        &self,
+        id: i64,
+        student_id: i64,
+        risk_flag_id: Option<i64>,
+        title: String,
+        status: String,
+        steps_json: String,
+        created_at: String,
+        updated_at: String,
+    ) -> EcoachResult<InterventionRecord> {
+        let steps: Vec<InterventionStep> = serde_json::from_str(&steps_json).unwrap_or_default();
+        let progress_percent = self.compute_intervention_progress(student_id, &steps)?;
+        Ok(InterventionRecord {
+            id,
+            student_id,
+            risk_flag_id,
+            title,
+            status,
+            steps,
+            progress_percent: progress_percent.clamp(0, 10_000) as BasisPoints,
+            created_at,
+            updated_at,
+        })
+    }
+
+    fn compute_intervention_progress(
+        &self,
+        student_id: i64,
+        steps: &[InterventionStep],
+    ) -> EcoachResult<i64> {
+        if steps.is_empty() {
+            return Ok(0);
+        }
+
+        let mut total = 0;
+        for step in steps {
+            total += self.score_intervention_step(student_id, step)?;
+        }
+        Ok((total / steps.len() as i64).clamp(0, 10_000))
+    }
+
+    fn score_intervention_step(
+        &self,
+        student_id: i64,
+        step: &InterventionStep,
+    ) -> EcoachResult<i64> {
+        if let Some(topic_id) = step.target_topic_id {
+            let state: Option<(i64, Option<String>, i64)> = self
+                .conn
+                .query_row(
+                    "SELECT mastery_score, last_seen_at, is_blocked
+                     FROM student_topic_states
+                     WHERE student_id = ?1 AND topic_id = ?2",
+                    params![student_id, topic_id],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                )
+                .optional()
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+            if let Some((mastery_score, last_seen_at, is_blocked)) = state {
+                if mastery_score >= 7200 {
+                    return Ok(10_000);
+                }
+                if is_blocked == 1 {
+                    return Ok(1_500);
+                }
+                if was_recent(last_seen_at.as_deref(), 7) {
+                    return Ok(6_500);
+                }
+                if mastery_score >= 5500 {
+                    return Ok(6_000);
+                }
+                if mastery_score >= 4000 {
+                    return Ok(4_000);
+                }
+                return Ok(2_000);
+            }
+        }
+
+        let recent_session_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM sessions
+                 WHERE student_id = ?1
+                   AND started_at >= ?2
+                   AND status IN ('active', 'completed')",
+                params![student_id, (Utc::now() - Duration::days(7)).to_rfc3339()],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        if recent_session_count > 0 {
+            return Ok(5_000);
+        }
+        Ok(2_500)
+    }
+
+    fn list_priority_topics(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<PremiumPriorityTopic>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT sts.topic_id, t.name, sts.mastery_score, sts.gap_score, sts.priority_score,
+                        sts.trend_state, sts.is_blocked, sts.next_review_at
+                 FROM student_topic_states sts
+                 JOIN topics t ON t.id = sts.topic_id
+                 WHERE sts.student_id = ?1
+                 ORDER BY sts.priority_score DESC, sts.gap_score DESC, t.name ASC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, limit as i64], |row| {
+                Ok(PremiumPriorityTopic {
+                    topic_id: row.get(0)?,
+                    topic_name: row.get(1)?,
+                    mastery_score: row.get(2)?,
+                    gap_score: row.get(3)?,
+                    priority_score: row.get(4)?,
+                    trend_state: row.get(5)?,
+                    is_blocked: row.get::<_, i64>(6)? == 1,
+                    next_review_at: row.get(7)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut topics = Vec::new();
+        for row in rows {
+            topics.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(topics)
+    }
+
+    fn list_top_risk_titles(&self, student_id: i64, limit: usize) -> EcoachResult<Vec<String>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT title
+                 FROM risk_flags
+                 WHERE student_id = ?1 AND status IN ('active', 'monitoring')
+                 ORDER BY CASE severity
+                    WHEN 'critical' THEN 0
+                    WHEN 'high' THEN 1
+                    WHEN 'medium' THEN 2
+                    ELSE 3 END,
+                    created_at DESC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, limit as i64], |row| {
+                row.get::<_, String>(0)
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut titles = Vec::new();
+        for row in rows {
+            titles.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(titles)
+    }
+
+    fn inactive_days(&self, student_id: i64) -> EcoachResult<Option<i64>> {
+        let last_activity: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT MAX(activity_at)
+                 FROM (
+                    SELECT MAX(started_at) AS activity_at
+                    FROM sessions
+                    WHERE student_id = ?1 AND status IN ('active', 'completed')
+                    UNION ALL
+                    SELECT MAX(last_seen_at) AS activity_at
+                    FROM student_topic_states
+                    WHERE student_id = ?1
+                 )",
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        Ok(last_activity
+            .as_deref()
+            .and_then(parse_timestamp)
+            .map(|timestamp| (Utc::now() - timestamp).num_days()))
+    }
+
     fn append_event(&self, aggregate_kind: &str, event: DomainEvent) -> EcoachResult<()> {
         let payload_json = serde_json::to_string(&event.payload)
             .map_err(|e| EcoachError::Serialization(e.to_string()))?;
@@ -656,5 +986,365 @@ impl<'a> PremiumService<'a> {
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
         Ok(())
+    }
+}
+
+fn readiness_band(score: i64) -> &'static str {
+    match score {
+        8500..=10000 => "Exam Ready",
+        7000..=8499 => "Strong",
+        5500..=6999 => "Building",
+        4000..=5499 => "At Risk",
+        _ => "Not Ready",
+    }
+}
+
+fn resolve_strategy_mode(
+    readiness_score: i64,
+    critical_risk_count: i64,
+    active_risk_count: i64,
+    overdue_review_count: i64,
+    inactive_days: Option<i64>,
+) -> &'static str {
+    if critical_risk_count > 0 || readiness_score < 4000 {
+        return "rescue";
+    }
+    if inactive_days.unwrap_or(0) >= INACTIVITY_DANGER_DAYS || overdue_review_count >= 3 {
+        return "stabilize";
+    }
+    if active_risk_count >= 3 || readiness_score < 7000 {
+        return "repair";
+    }
+    "accelerate"
+}
+
+fn build_coach_actions(
+    strategy_mode: &str,
+    priority_topics: &[PremiumPriorityTopic],
+    overdue_review_count: i64,
+    active_intervention_count: i64,
+    inactive_days: Option<i64>,
+    current_phase: Option<&str>,
+) -> Vec<String> {
+    let mut actions = Vec::new();
+
+    if matches!(strategy_mode, "rescue" | "repair") {
+        if let Some(topic) = priority_topics.first() {
+            actions.push(format!(
+                "Open a focused repair block for {} before introducing new scope.",
+                topic.topic_name
+            ));
+        }
+    }
+    if overdue_review_count > 0 {
+        actions.push(format!(
+            "Clear {} overdue review obligation(s) before the next expansion mission.",
+            overdue_review_count
+        ));
+    }
+    if active_intervention_count > 0 {
+        actions.push("Keep intervention cases in active review until risks downgrade.".to_string());
+    }
+    if inactive_days.unwrap_or(0) >= INACTIVITY_DANGER_DAYS {
+        actions.push("Re-establish learner rhythm with a same-day study session.".to_string());
+    }
+    if let Some(phase) = current_phase {
+        actions.push(format!(
+            "Current plan phase is {}, so keep sequencing aligned to it.",
+            phase
+        ));
+    }
+    if actions.is_empty() {
+        actions.push(
+            "Maintain the current plan and continue reinforcing priority topics.".to_string(),
+        );
+    }
+
+    actions.truncate(4);
+    actions
+}
+
+fn build_household_actions(
+    strategy_mode: &str,
+    overdue_review_count: i64,
+    critical_risk_count: i64,
+    active_intervention_count: i64,
+    inactive_days: Option<i64>,
+    daily_budget_minutes: Option<i64>,
+) -> Vec<String> {
+    let mut actions = Vec::new();
+
+    if critical_risk_count > 0 || strategy_mode == "rescue" {
+        actions.push("Guardian check-in is needed today to protect study time.".to_string());
+    }
+    if inactive_days.unwrap_or(0) >= INACTIVITY_DANGER_DAYS {
+        actions.push(
+            "Help the learner restart with a short session in the next 24 hours.".to_string(),
+        );
+    }
+    if overdue_review_count > 0 {
+        actions.push("Support a review-first session instead of starting a new topic.".to_string());
+    }
+    if active_intervention_count > 0 {
+        actions.push(
+            "Review active intervention steps together at the next household check-in.".to_string(),
+        );
+    }
+    if let Some(minutes) = daily_budget_minutes {
+        actions.push(format!(
+            "Protect the next {}-minute study window from interruptions.",
+            minutes
+        ));
+    }
+    if actions.is_empty() {
+        actions
+            .push("Keep the current routine steady and encourage daily consistency.".to_string());
+    }
+
+    actions.truncate(4);
+    actions
+}
+
+fn was_recent(raw: Option<&str>, days: i64) -> bool {
+    raw.and_then(parse_timestamp)
+        .map(|timestamp| (Utc::now() - timestamp).num_days() <= days)
+        .unwrap_or(false)
+}
+
+fn parse_timestamp(raw: &str) -> Option<DateTime<Utc>> {
+    if let Ok(timestamp) = DateTime::parse_from_rfc3339(raw) {
+        return Some(timestamp.with_timezone(&Utc));
+    }
+
+    NaiveDateTime::parse_from_str(raw, "%Y-%m-%d %H:%M:%S")
+        .ok()
+        .map(|timestamp| DateTime::<Utc>::from_naive_utc_and_offset(timestamp, Utc))
+        .or_else(|| {
+            DateTime::<Utc>::from_str(raw)
+                .ok()
+                .map(|timestamp| timestamp.with_timezone(&Utc))
+        })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    #[test]
+    fn strategy_snapshot_surfaces_rescue_state_and_priority_topics() {
+        let conn = Connection::open_in_memory().expect("in-memory db");
+        create_test_schema(&conn);
+        seed_premium_features(&conn);
+
+        conn.execute(
+            "INSERT INTO accounts (id, display_name, entitlement_tier) VALUES (1, 'Ama', 'premium')",
+            [],
+        )
+        .expect("student account");
+        conn.execute(
+            "INSERT INTO student_profiles (account_id, exam_target, exam_target_date, daily_study_budget_minutes)
+             VALUES (1, 'BECE', '2026-06-01', 75)",
+            [],
+        )
+        .expect("student profile");
+        conn.execute(
+            "INSERT INTO topics (id, name) VALUES (10, 'Algebra'), (11, 'Geometry')",
+            [],
+        )
+        .expect("topics");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, priority_score, trend_state, is_blocked, next_review_at, last_seen_at
+             ) VALUES
+                (1, 10, 1800, 8200, 9500, 'critical', 1, '2026-03-28T09:00:00Z', '2026-03-20T09:00:00Z'),
+                (1, 11, 6200, 3800, 5000, 'fragile', 0, '2026-03-30T09:00:00Z', '2026-03-28T09:00:00Z')",
+            [],
+        )
+        .expect("topic states");
+        conn.execute(
+            "INSERT INTO risk_flags (student_id, topic_id, severity, title, status, created_at)
+             VALUES
+                (1, 10, 'critical', 'Algebra collapse', 'active', '2026-03-28T09:00:00Z'),
+                (1, 11, 'high', 'Geometry fragile', 'monitoring', '2026-03-27T09:00:00Z')",
+            [],
+        )
+        .expect("risk flags");
+        conn.execute(
+            "INSERT INTO intervention_records (id, student_id, risk_flag_id, title, status, summary_json, created_at, updated_at)
+             VALUES (41, 1, 1, 'Algebra rescue', 'active', ?1, '2026-03-28T09:00:00Z', '2026-03-29T09:00:00Z')",
+            [serde_json::to_string(&vec![InterventionStep {
+                action: "Rebuild algebra basics".to_string(),
+                target_topic_id: Some(10),
+                target_minutes: Some(45),
+            }])
+            .expect("steps json")],
+        )
+        .expect("intervention");
+        conn.execute(
+            "INSERT INTO memory_states (student_id, review_due_at, decay_risk)
+             VALUES (1, '2026-03-28T08:00:00Z', 7000)",
+            [],
+        )
+        .expect("memory risk");
+        conn.execute(
+            "INSERT INTO sessions (student_id, started_at, status)
+             VALUES (1, '2026-03-24T09:00:00Z', 'completed')",
+            [],
+        )
+        .expect("session");
+        conn.execute(
+            "INSERT INTO coach_plans (student_id, current_phase, daily_budget_minutes, status, updated_at)
+             VALUES (1, 'foundation', 90, 'active', '2026-03-29T09:00:00Z')",
+            [],
+        )
+        .expect("coach plan");
+
+        let service = PremiumService::new(&conn);
+        let snapshot = service.get_strategy_snapshot(1).expect("strategy snapshot");
+
+        assert_eq!(snapshot.strategy_mode, "rescue");
+        assert_eq!(snapshot.critical_risk_count, 1);
+        assert_eq!(snapshot.priority_topics[0].topic_name, "Algebra");
+        assert!(!snapshot.coach_actions.is_empty());
+        assert!(!snapshot.household_actions.is_empty());
+    }
+
+    #[test]
+    fn intervention_progress_tracks_topic_recovery() {
+        let conn = Connection::open_in_memory().expect("in-memory db");
+        create_test_schema(&conn);
+        seed_premium_features(&conn);
+
+        conn.execute(
+            "INSERT INTO accounts (id, display_name, entitlement_tier) VALUES (1, 'Kojo', 'premium')",
+            [],
+        )
+        .expect("student account");
+        conn.execute("INSERT INTO topics (id, name) VALUES (7, 'Fractions')", [])
+            .expect("topic");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, priority_score, trend_state, is_blocked, next_review_at, last_seen_at
+             ) VALUES (1, 7, 7600, 2400, 3000, 'improving', 0, NULL, '2026-03-29T09:00:00Z')",
+            [],
+        )
+        .expect("topic state");
+        conn.execute(
+            "INSERT INTO intervention_records (id, student_id, risk_flag_id, title, status, summary_json, created_at, updated_at)
+             VALUES (5, 1, NULL, 'Fractions recovery', 'active', ?1, '2026-03-28T09:00:00Z', '2026-03-29T09:00:00Z')",
+            [serde_json::to_string(&vec![InterventionStep {
+                action: "Practice fractions".to_string(),
+                target_topic_id: Some(7),
+                target_minutes: Some(30),
+            }])
+            .expect("steps json")],
+        )
+        .expect("intervention");
+
+        let service = PremiumService::new(&conn);
+        let intervention = service.get_intervention(5).expect("intervention");
+
+        assert!(intervention.progress_percent >= 9000);
+    }
+
+    fn seed_premium_features(conn: &Connection) {
+        conn.execute(
+            "INSERT INTO premium_features (feature_key, display_name, tier_required)
+             VALUES ('risk_dashboard', 'Risk Dashboard', 'premium')",
+            [],
+        )
+        .expect("premium feature");
+    }
+
+    fn create_test_schema(conn: &Connection) {
+        conn.execute_batch(
+            "
+            CREATE TABLE accounts (
+                id INTEGER PRIMARY KEY,
+                display_name TEXT NOT NULL,
+                entitlement_tier TEXT NOT NULL
+            );
+            CREATE TABLE student_profiles (
+                account_id INTEGER PRIMARY KEY,
+                exam_target TEXT,
+                exam_target_date TEXT,
+                daily_study_budget_minutes INTEGER
+            );
+            CREATE TABLE premium_features (
+                feature_key TEXT PRIMARY KEY,
+                display_name TEXT NOT NULL,
+                tier_required TEXT NOT NULL
+            );
+            CREATE TABLE premium_feature_flags (
+                feature_key TEXT NOT NULL,
+                student_id INTEGER,
+                enabled INTEGER NOT NULL DEFAULT 1
+            );
+            CREATE TABLE risk_flags (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER,
+                severity TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE intervention_records (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                risk_flag_id INTEGER,
+                title TEXT NOT NULL,
+                status TEXT NOT NULL,
+                summary_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE topics (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            CREATE TABLE student_topic_states (
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                mastery_score INTEGER NOT NULL,
+                gap_score INTEGER NOT NULL,
+                priority_score INTEGER NOT NULL,
+                trend_state TEXT NOT NULL,
+                is_blocked INTEGER NOT NULL DEFAULT 0,
+                next_review_at TEXT,
+                last_seen_at TEXT
+            );
+            CREATE TABLE memory_states (
+                student_id INTEGER NOT NULL,
+                review_due_at TEXT,
+                decay_risk INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE sessions (
+                student_id INTEGER NOT NULL,
+                started_at TEXT,
+                status TEXT NOT NULL
+            );
+            CREATE TABLE coach_plans (
+                student_id INTEGER NOT NULL,
+                current_phase TEXT,
+                daily_budget_minutes INTEGER,
+                status TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT
+            );
+            CREATE TABLE runtime_events (
+                event_id TEXT,
+                event_type TEXT,
+                aggregate_kind TEXT,
+                aggregate_id TEXT,
+                trace_id TEXT,
+                payload_json TEXT,
+                occurred_at TEXT
+            );
+            ",
+        )
+        .expect("test schema");
     }
 }

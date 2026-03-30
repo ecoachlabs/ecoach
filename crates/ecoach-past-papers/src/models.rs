@@ -30,3 +30,18 @@ pub struct PastPaperFamilyAnalytics {
     pub paper_count: i64,
     pub last_seen_year: Option<i64>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PastPaperInverseSignal {
+    pub family_id: i64,
+    pub family_code: String,
+    pub family_name: String,
+    pub topic_id: Option<i64>,
+    pub inverse_pressure_score: BasisPoints,
+    pub recurrence_score: BasisPoints,
+    pub coappearance_score: BasisPoints,
+    pub replacement_score: BasisPoints,
+    pub paper_count: i64,
+    pub last_seen_year: Option<i64>,
+    pub rationale: String,
+}

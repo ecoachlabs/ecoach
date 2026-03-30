@@ -841,6 +841,131 @@ mod tests {
         assert!(result.is_correct);
     }
 
+    #[test]
+    fn mindstack_session_updates_board_and_completes_on_overflow() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let identity = IdentityService::new(&conn);
+        let student = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Esi".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student account should be created");
+
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        let (question_id, _correct_option_id, wrong_option_id) =
+            load_fraction_question_options(&conn);
+        let service = GamesService::new(&conn);
+        let session = service
+            .start_game_session(&StartGameInput {
+                student_id: student.id,
+                game_type: GameType::Mindstack,
+                subject_id,
+                topic_ids: vec![topic_id],
+                question_count: 8,
+            })
+            .expect("mindstack session should start");
+
+        let initial_state = service
+            .get_mindstack_state(session.id)
+            .expect("mindstack state should load");
+        assert_eq!(initial_state.board_height, 0);
+
+        let mut last_result = None;
+        for _ in 0..8 {
+            let result = service
+                .submit_answer(&SubmitGameAnswerInput {
+                    game_session_id: session.id,
+                    question_id,
+                    selected_option_id: wrong_option_id,
+                    response_time_ms: 5_800,
+                })
+                .expect("mindstack answer should submit");
+            last_result = Some(result);
+        }
+
+        let final_state = service
+            .get_mindstack_state(session.id)
+            .expect("mindstack state should load after answers");
+        let summary = service
+            .get_summary(session.id)
+            .expect("completed mindstack summary should load");
+        let last_result = last_result.expect("there should be a last result");
+
+        assert!(final_state.board_height >= 15);
+        assert_eq!(summary.rounds_played, 8);
+        assert!(summary.misconception_hits >= 1);
+        assert!(last_result.session_complete);
+        assert_eq!(last_result.effect_type, "stack_overflow_game_over");
+    }
+
+    #[test]
+    fn tug_of_war_session_tracks_position_and_difficulty() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let identity = IdentityService::new(&conn);
+        let student = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Kojo".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student account should be created");
+
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        let (question_id, correct_option_id, _wrong_option_id) =
+            load_fraction_question_options(&conn);
+        let service = GamesService::new(&conn);
+        let session = service
+            .start_game_session(&StartGameInput {
+                student_id: student.id,
+                game_type: GameType::TugOfWar,
+                subject_id,
+                topic_ids: vec![topic_id],
+                question_count: 5,
+            })
+            .expect("tug of war session should start");
+
+        let initial_state = service
+            .get_tug_of_war_state(session.id)
+            .expect("initial tug state should load");
+        assert_eq!(initial_state.position, 0);
+        assert_eq!(initial_state.opponent_difficulty, 5000);
+
+        let mut last_result = None;
+        for _ in 0..5 {
+            let result = service
+                .submit_answer(&SubmitGameAnswerInput {
+                    game_session_id: session.id,
+                    question_id,
+                    selected_option_id: correct_option_id,
+                    response_time_ms: 1_700,
+                })
+                .expect("tug answer should submit");
+            last_result = Some(result);
+        }
+
+        let final_state = service
+            .get_tug_of_war_state(session.id)
+            .expect("tug state should load after answers");
+        let summary = service
+            .get_summary(session.id)
+            .expect("completed tug summary should load");
+        let last_result = last_result.expect("there should be a last result");
+
+        assert_eq!(final_state.position, 10);
+        assert!(final_state.opponent_difficulty > 5000);
+        assert_eq!(summary.rounds_played, 5);
+        assert_eq!(last_result.effect_type, "tug_win");
+        assert!(last_result.session_complete);
+    }
+
     fn open_test_database() -> Connection {
         let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
         run_runtime_migrations(&mut conn).expect("migrations should apply");
@@ -874,6 +999,24 @@ mod tests {
             |row| row.get(0),
         )
         .expect("correct choice should exist")
+    }
+
+    fn load_fraction_question_options(conn: &Connection) -> (i64, i64, i64) {
+        conn.query_row(
+            "SELECT q.id,
+                    MAX(CASE WHEN qo.is_correct = 1 THEN qo.id END) AS correct_option_id,
+                    MAX(CASE WHEN qo.is_correct = 0 THEN qo.id END) AS wrong_option_id
+             FROM questions q
+             INNER JOIN question_options qo ON qo.question_id = q.id
+             INNER JOIN topics t ON t.id = q.topic_id
+             WHERE t.code = 'FRA'
+             GROUP BY q.id
+             ORDER BY q.id ASC
+             LIMIT 1",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .expect("fraction question options should exist")
     }
 
     fn sample_pack_path() -> PathBuf {
@@ -1132,7 +1275,7 @@ impl<'a> GamesService<'a> {
         let explanation: Option<String> = self
             .conn
             .query_row(
-                "SELECT explanation FROM questions WHERE id = ?1",
+                "SELECT explanation_text FROM questions WHERE id = ?1",
                 [input.question_id],
                 |row| row.get(0),
             )

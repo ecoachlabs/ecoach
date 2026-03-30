@@ -3,7 +3,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
 
-use crate::models::{PastPaperFamilyAnalytics, PastPaperSet, PastPaperSetSummary};
+use crate::models::{
+    PastPaperFamilyAnalytics, PastPaperInverseSignal, PastPaperSet, PastPaperSetSummary,
+};
 
 pub struct PastPapersService<'a> {
     conn: &'a Connection,
@@ -272,6 +274,67 @@ impl<'a> PastPapersService<'a> {
         Ok(items)
     }
 
+    pub fn list_inverse_pressure_families(
+        &self,
+        subject_id: i64,
+        topic_id: Option<i64>,
+        limit: usize,
+    ) -> EcoachResult<Vec<PastPaperInverseSignal>> {
+        let analytics = self.list_high_frequency_families(subject_id, topic_id, limit.max(8))?;
+        let max_inverse = analytics
+            .iter()
+            .map(|item| {
+                composite_inverse_pressure(
+                    item.recurrence_score,
+                    item.coappearance_score,
+                    item.replacement_score,
+                )
+            })
+            .max()
+            .unwrap_or(1);
+
+        let mut signals = analytics
+            .into_iter()
+            .map(|item| {
+                let raw_inverse = composite_inverse_pressure(
+                    item.recurrence_score,
+                    item.coappearance_score,
+                    item.replacement_score,
+                );
+                let inverse_pressure_score = scale_score(raw_inverse, max_inverse.max(1));
+                PastPaperInverseSignal {
+                    family_id: item.family_id,
+                    family_code: item.family_code,
+                    family_name: item.family_name,
+                    topic_id: item.topic_id,
+                    inverse_pressure_score,
+                    recurrence_score: item.recurrence_score,
+                    coappearance_score: item.coappearance_score,
+                    replacement_score: item.replacement_score,
+                    paper_count: item.paper_count,
+                    last_seen_year: item.last_seen_year,
+                    rationale: inverse_rationale(
+                        item.recurrence_score,
+                        item.coappearance_score,
+                        item.replacement_score,
+                        item.last_seen_year,
+                    ),
+                }
+            })
+            .collect::<Vec<_>>();
+
+        signals.sort_by(|left, right| {
+            right
+                .inverse_pressure_score
+                .cmp(&left.inverse_pressure_score)
+                .then(right.replacement_score.cmp(&left.replacement_score))
+                .then(right.coappearance_score.cmp(&left.coappearance_score))
+                .then(left.family_name.cmp(&right.family_name))
+        });
+        signals.truncate(limit.max(1));
+        Ok(signals)
+    }
+
     fn load_family_counts(&self, subject_id: i64) -> EcoachResult<BTreeMap<i64, FamilyAggregate>> {
         let mut family_map = BTreeMap::new();
         let mut statement = self
@@ -371,4 +434,153 @@ fn scale_score(value: i64, max_value: i64) -> BasisPoints {
         return 0;
     }
     clamp_bp(((value as f64 / max_value as f64) * 10_000.0).round() as i64) as BasisPoints
+}
+
+fn composite_inverse_pressure(
+    recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
+    replacement_score: BasisPoints,
+) -> i64 {
+    clamp_bp(
+        (0.45 * replacement_score as f64
+            + 0.30 * coappearance_score as f64
+            + 0.25 * recurrence_score as f64)
+            .round() as i64,
+    )
+}
+
+fn inverse_rationale(
+    recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
+    replacement_score: BasisPoints,
+    last_seen_year: Option<i64>,
+) -> String {
+    if replacement_score >= 7_500 && recurrence_score >= 4_500 {
+        format!(
+            "Historically recurring family that has gone quiet since {:?}, so replacement pressure is building.",
+            last_seen_year
+        )
+    } else if coappearance_score >= 7_000 {
+        "Often appears alongside other recurring family patterns, so it is a likely comeback candidate.".to_string()
+    } else if replacement_score >= 6_000 {
+        "Recent absence is now long enough that the family is becoming overdue for a return."
+            .to_string()
+    } else {
+        "Keep this family warm because its paper-history shape suggests hidden comeback risk."
+            .to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rusqlite::{Connection, params};
+
+    use super::*;
+
+    #[test]
+    fn inverse_pressure_families_prioritize_overdue_but_recurrent_patterns() {
+        let conn = Connection::open_in_memory().expect("in-memory db should open");
+        seed_schema(&conn);
+        seed_family_history(&conn);
+
+        let service = PastPapersService::new(&conn);
+        let inverse = service
+            .list_inverse_pressure_families(1, None, 2)
+            .expect("inverse pressure families should compute");
+
+        assert_eq!(inverse.len(), 2);
+        assert_eq!(inverse[0].family_id, 10);
+        assert!(inverse[0].inverse_pressure_score >= inverse[1].inverse_pressure_score);
+        assert!(inverse[0].rationale.contains("Historically recurring"));
+    }
+
+    fn seed_schema(conn: &Connection) {
+        for sql in [
+            "CREATE TABLE question_families (
+                id INTEGER PRIMARY KEY,
+                family_code TEXT NOT NULL,
+                family_name TEXT NOT NULL,
+                subject_id INTEGER NOT NULL,
+                topic_id INTEGER
+            )",
+            "CREATE TABLE questions (
+                id INTEGER PRIMARY KEY,
+                subject_id INTEGER NOT NULL,
+                family_id INTEGER,
+                topic_id INTEGER
+            )",
+            "CREATE TABLE past_paper_sets (
+                id INTEGER PRIMARY KEY,
+                subject_id INTEGER NOT NULL,
+                exam_year INTEGER NOT NULL,
+                title TEXT NOT NULL
+            )",
+            "CREATE TABLE past_paper_question_links (
+                id INTEGER PRIMARY KEY,
+                paper_id INTEGER NOT NULL,
+                question_id INTEGER NOT NULL,
+                section_label TEXT,
+                question_number TEXT
+            )",
+            "CREATE TABLE question_family_analytics (
+                id INTEGER PRIMARY KEY,
+                family_id INTEGER NOT NULL,
+                recurrence_score INTEGER NOT NULL,
+                coappearance_score INTEGER NOT NULL,
+                replacement_score INTEGER NOT NULL,
+                updated_at TEXT
+            )",
+        ] {
+            conn.execute(sql, [])
+                .expect("schema statement should execute");
+        }
+    }
+
+    fn seed_family_history(conn: &Connection) {
+        for (family_id, code, name) in [
+            (10_i64, "ALG_REENTRY", "Algebra Re-entry"),
+            (20, "ALG_SHARED", "Algebra Shared"),
+        ] {
+            conn.execute(
+                "INSERT INTO question_families (id, family_code, family_name, subject_id, topic_id)
+                 VALUES (?1, ?2, ?3, 1, 100)",
+                params![family_id, code, name],
+            )
+            .expect("family should insert");
+        }
+        for (question_id, family_id) in [(1000_i64, 10_i64), (1001, 10), (2000, 20)] {
+            conn.execute(
+                "INSERT INTO questions (id, subject_id, family_id, topic_id) VALUES (?1, 1, ?2, 100)",
+                params![question_id, family_id],
+            )
+            .expect("question should insert");
+        }
+        for (paper_id, year) in [(1_i64, 2021_i64), (2, 2022), (3, 2025)] {
+            conn.execute(
+                "INSERT INTO past_paper_sets (id, subject_id, exam_year, title)
+                 VALUES (?1, 1, ?2, 'Paper')",
+                params![paper_id, year],
+            )
+            .expect("paper should insert");
+        }
+        for (paper_id, question_id) in [(1_i64, 1000_i64), (2, 1001), (3, 2000)] {
+            conn.execute(
+                "INSERT INTO past_paper_question_links (paper_id, question_id) VALUES (?1, ?2)",
+                params![paper_id, question_id],
+            )
+            .expect("paper link should insert");
+        }
+        conn.execute(
+            "INSERT INTO question_family_analytics (family_id, recurrence_score, coappearance_score, replacement_score)
+             VALUES (10, 8400, 7600, 9200)",
+            [],
+        )
+        .expect("first analytics should insert");
+        conn.execute(
+            "INSERT INTO question_family_analytics (family_id, recurrence_score, coappearance_score, replacement_score)
+             VALUES (20, 6600, 5400, 4800)",
+            [],
+        )
+        .expect("second analytics should insert");
+    }
 }

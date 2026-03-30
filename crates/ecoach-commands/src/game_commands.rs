@@ -1,6 +1,5 @@
 use ecoach_games::{
-    GameType, GamesService, StartGameInput, SubmitGameAnswerInput, MindstackState,
-    TugOfWarState,
+    GameType, GamesService, MindstackState, StartGameInput, SubmitGameAnswerInput, TugOfWarState,
 };
 
 use crate::{error::CommandError, state::AppState};

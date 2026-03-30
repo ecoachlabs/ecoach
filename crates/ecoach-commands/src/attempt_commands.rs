@@ -113,11 +113,7 @@ pub fn submit_attempt(
         let snapshot = session_service.get_session_snapshot(input.session_id)?;
         let (session_answered, session_total, session_status) = match &snapshot {
             Some(snap) => {
-                let answered = snap
-                    .items
-                    .iter()
-                    .filter(|i| i.status == "answered")
-                    .count() as i64;
+                let answered = snap.items.iter().filter(|i| i.status == "answered").count() as i64;
                 let total = snap.items.len() as i64;
                 (answered, total, snap.session.status.as_str())
             }

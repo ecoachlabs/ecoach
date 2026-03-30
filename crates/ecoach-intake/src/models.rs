@@ -36,6 +36,15 @@ pub struct BundleProcessReport {
     pub detected_subjects: Vec<String>,
     pub detected_exam_years: Vec<i64>,
     pub question_like_file_count: i64,
+    pub answer_like_file_count: i64,
+    pub ocr_candidate_file_count: i64,
+    pub layout_recovered_file_count: i64,
+    pub estimated_question_count: i64,
+    pub estimated_answer_count: i64,
+    pub reconstructed_document_count: i64,
+    pub bundle_kind: String,
+    pub detected_document_roles: Vec<String>,
+    pub review_reasons: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

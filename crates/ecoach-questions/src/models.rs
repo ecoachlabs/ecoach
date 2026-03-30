@@ -203,6 +203,16 @@ pub struct QuestionFamilyHealth {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionRemediationPlan {
+    pub family_choice: QuestionFamilyChoice,
+    pub variant_mode: String,
+    pub priority_score: BasisPoints,
+    pub source_question_id: Option<i64>,
+    pub request_kind: String,
+    pub rationale: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuestionGraphEdge {
     pub from_question_id: i64,
     pub to_question_id: i64,

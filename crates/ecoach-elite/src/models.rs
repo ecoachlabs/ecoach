@@ -47,3 +47,15 @@ pub struct EliteSessionScore {
     pub recommended_next_session: String,
     pub metadata: Value,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteSessionBlueprint {
+    pub student_id: i64,
+    pub subject_id: i64,
+    pub session_class: String,
+    pub target_topic_ids: Vec<i64>,
+    pub target_family_ids: Vec<i64>,
+    pub authoring_modes: Vec<String>,
+    pub target_question_count: i64,
+    pub rationale: String,
+}

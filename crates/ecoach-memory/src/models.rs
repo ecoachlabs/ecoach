@@ -158,6 +158,38 @@ pub struct RecheckItem {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryReviewQueueItem {
+    pub memory_state_id: i64,
+    pub student_id: i64,
+    pub topic_id: Option<i64>,
+    pub topic_name: Option<String>,
+    pub node_id: Option<i64>,
+    pub node_title: Option<String>,
+    pub memory_state: String,
+    pub schedule_type: String,
+    pub action_type: String,
+    pub priority_score: BasisPoints,
+    pub memory_strength: BasisPoints,
+    pub decay_risk: BasisPoints,
+    pub due_at: Option<String>,
+    pub interference_count: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TopicMemorySummary {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub total_items: i64,
+    pub healthy_items: i64,
+    pub fragile_items: i64,
+    pub collapsed_items: i64,
+    pub overdue_reviews: i64,
+    pub average_strength: BasisPoints,
+    pub next_review_due: Option<String>,
+    pub recommended_action: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecayBatchResult {
     pub items_processed: usize,
     pub items_decayed: usize,

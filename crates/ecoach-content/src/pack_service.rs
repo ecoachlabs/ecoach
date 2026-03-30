@@ -2038,7 +2038,7 @@ fn normalize_taxonomy_value(value: &str) -> String {
         .join("_")
 }
 
-fn slugify(value: &str) -> String {
+pub(crate) fn slugify(value: &str) -> String {
     let mut slug = String::new();
     let mut last_dash = false;
 

@@ -47,7 +47,15 @@ impl EngineRegistry {
                     "Diagnostic Battery Engine",
                     "Builds multi-phase probes and turns weak performance into root-cause evidence.",
                     &["diagnostic_instances", "wrong_answer_diagnoses"],
-                    &["topic_truth", "question_metadata", "session_evidence"],
+                    &[
+                        "topic_truth",
+                        "skill_truth",
+                        "memory_truth",
+                        "question_metadata",
+                        "session_evidence",
+                        "session_outcomes",
+                        "learner_evidence_fabric",
+                    ],
                     &[
                         "diagnostic_battery",
                         "diagnosis_claims",
@@ -63,9 +71,14 @@ impl EngineRegistry {
                     &["coach_plans", "coach_missions", "coach_topic_profiles"],
                     &[
                         "topic_truth",
+                        "skill_truth",
+                        "memory_truth",
                         "diagnosis_claims",
                         "mission_memory",
+                        "mission_memory_inputs",
                         "availability",
+                        "session_outcomes",
+                        "learner_evidence_fabric",
                     ],
                     &["coach_state", "topic_cases", "missions", "next_actions"],
                     &["decide", "route", "repair"],
@@ -80,7 +93,13 @@ impl EngineRegistry {
                         "availability_windows",
                         "beat_yesterday_daily_targets",
                     ],
-                    &["student_truth", "calendar_events", "today_progress"],
+                    &[
+                        "student_truth",
+                        "memory_truth",
+                        "session_outcomes",
+                        "calendar_events",
+                        "today_progress",
+                    ],
                     &["availability", "free_now_recommendations", "daily_replans"],
                     &["schedule", "rebalance", "trigger"],
                     &["ecoach-goals-calendar"],
@@ -90,7 +109,14 @@ impl EngineRegistry {
                     "Session Runtime Engine",
                     "Owns practice, mock, custom test, and mission execution state.",
                     &["sessions", "session_items", "runtime_events"],
-                    &["coach_missions", "question_sets", "student_actions"],
+                    &[
+                        "coach_missions",
+                        "question_sets",
+                        "student_actions",
+                        "topic_truth",
+                        "diagnosis_claims",
+                        "learner_evidence_fabric",
+                    ],
                     &[
                         "session_outcomes",
                         "runtime_events",
@@ -224,5 +250,12 @@ mod tests {
         assert!(registry.find_engine("student_truth").is_some());
         assert!(!registry.engines_producing("topic_cases").is_empty());
         assert!(!registry.engines_consuming("question_failures").is_empty());
+        assert!(
+            !registry
+                .engines_consuming("learner_evidence_fabric")
+                .is_empty()
+        );
+        assert!(!registry.engines_consuming("session_outcomes").is_empty());
+        assert!(!registry.engines_consuming("memory_truth").is_empty());
     }
 }

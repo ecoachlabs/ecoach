@@ -7,8 +7,8 @@ use serde_json::json;
 use crate::models::{
     GeneratedQuestionDraft, Question, QuestionFamilyChoice, QuestionFamilyHealth,
     QuestionGenerationRequest, QuestionGenerationRequestInput, QuestionLineageEdge,
-    QuestionLineageGraph, QuestionLineageNode, QuestionOption, QuestionSlotSpec,
-    QuestionVariantMode,
+    QuestionLineageGraph, QuestionLineageNode, QuestionOption, QuestionRemediationPlan,
+    QuestionSlotSpec, QuestionVariantMode,
 };
 use crate::service::QuestionService;
 
@@ -161,6 +161,123 @@ impl<'a> QuestionReactor<'a> {
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    pub fn recommend_remediation_plan(
+        &self,
+        student_id: i64,
+        slot_spec: &QuestionSlotSpec,
+    ) -> EcoachResult<Option<QuestionRemediationPlan>> {
+        let candidate = self
+            .conn
+            .query_row(
+                "SELECT
+                    q.family_id,
+                    COUNT(*) AS attempts,
+                    COALESCE(SUM(CASE WHEN sqa.is_correct = 0 THEN 1 ELSE 0 END), 0) AS wrong_attempts,
+                    COALESCE(SUM(CASE WHEN sqa.misconception_triggered_id IS NOT NULL THEN 1 ELSE 0 END), 0) AS misconception_hits,
+                    CAST(COALESCE(AVG(COALESCE(sqa.response_time_ms, 0)), 0) AS INTEGER) AS avg_response_time_ms,
+                    MAX(CASE WHEN sqa.is_correct = 0 THEN sqa.question_id ELSE NULL END) AS latest_wrong_question_id
+                 FROM student_question_attempts sqa
+                 INNER JOIN questions q ON q.id = sqa.question_id
+                 WHERE sqa.student_id = ?1
+                   AND q.subject_id = ?2
+                   AND q.family_id IS NOT NULL
+                   AND (?3 = 0 OR q.topic_id = ?4)
+                 GROUP BY q.family_id
+                 ORDER BY wrong_attempts DESC, misconception_hits DESC, avg_response_time_ms DESC, attempts DESC
+                 LIMIT 1",
+                params![
+                    student_id,
+                    slot_spec.subject_id,
+                    if slot_spec.topic_id.is_some() { 1 } else { 0 },
+                    slot_spec.topic_id.unwrap_or_default(),
+                ],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, i64>(2)?,
+                        row.get::<_, i64>(3)?,
+                        row.get::<_, i64>(4)?,
+                        row.get::<_, Option<i64>>(5)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        if let Some((
+            family_id,
+            attempts,
+            wrong_attempts,
+            misconception_hits,
+            avg_response_time_ms,
+            latest_wrong_question_id,
+        )) = candidate
+        {
+            if let Some(family_choice) = self.load_family_choice_for_slot(family_id, slot_spec)? {
+                let (variant_mode, rationale) = if misconception_hits > 0 {
+                    (
+                        QuestionVariantMode::MisconceptionProbe,
+                        format!(
+                            "Student has {} misconception-linked misses in this family; probe the distractor boundary directly.",
+                            misconception_hits
+                        ),
+                    )
+                } else if wrong_attempts >= 2 || avg_response_time_ms >= 45_000 {
+                    (
+                        QuestionVariantMode::Rescue,
+                        format!(
+                            "Student has {} misses across {} attempts in this family, so reduce load and rebuild the core pattern.",
+                            wrong_attempts, attempts
+                        ),
+                    )
+                } else {
+                    (
+                        QuestionVariantMode::RepresentationShift,
+                        "Student has touched this family already; keep the logic but shift the surface form to verify transfer."
+                            .to_string(),
+                    )
+                };
+
+                let speed_pressure = if avg_response_time_ms >= 60_000 {
+                    1_600
+                } else if avg_response_time_ms >= 40_000 {
+                    900
+                } else {
+                    300
+                };
+                let priority_score = clamp_bp(
+                    3_200
+                        + wrong_attempts * 1_100
+                        + misconception_hits * 1_500
+                        + speed_pressure
+                        + ((10_000 - i64::from(family_choice.fit_score)) / 6),
+                ) as BasisPoints;
+
+                return Ok(Some(QuestionRemediationPlan {
+                    family_choice,
+                    variant_mode: variant_mode.as_str().to_string(),
+                    priority_score,
+                    source_question_id: latest_wrong_question_id,
+                    request_kind: "remediation".to_string(),
+                    rationale,
+                }));
+            }
+        }
+
+        let fallback_family = self.get_best_family_for_slot(slot_spec)?;
+        Ok(fallback_family.map(|family_choice| QuestionRemediationPlan {
+            priority_score: family_choice.fit_score,
+            family_choice,
+            variant_mode: QuestionVariantMode::Rescue.as_str().to_string(),
+            source_question_id: None,
+            request_kind: "remediation".to_string(),
+            rationale:
+                "No student-specific failure trace exists yet, so start with the best family fit and a lower-load repair variant."
+                    .to_string(),
+        }))
     }
 
     pub fn create_generation_request(
@@ -429,6 +546,88 @@ impl<'a> QuestionReactor<'a> {
         }
 
         Ok(())
+    }
+
+    fn load_family_choice_for_slot(
+        &self,
+        family_id: i64,
+        slot_spec: &QuestionSlotSpec,
+    ) -> EcoachResult<Option<QuestionFamilyChoice>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT qf.id, qf.family_code, qf.family_name, qf.subject_id, qf.topic_id,
+                        COUNT(q.id) AS total_instances,
+                        COALESCE(SUM(CASE WHEN q.source_type = 'generated' THEN 1 ELSE 0 END), 0) AS generated_instances,
+                        COALESCE(MAX(CASE
+                            WHEN ?3 = '' THEN 0
+                            WHEN q.primary_cognitive_demand = ?3 THEN 1
+                            ELSE 0
+                        END), 0) AS cognitive_match,
+                        COALESCE(MAX(CASE
+                            WHEN ?4 = '' THEN 0
+                            WHEN q.question_format = ?4 THEN 1
+                            ELSE 0
+                        END), 0) AS format_match
+                 FROM question_families qf
+                 LEFT JOIN questions q ON q.family_id = qf.id AND q.is_active = 1
+                 WHERE qf.id = ?1
+                   AND (?2 = 0 OR qf.topic_id = ?5 OR qf.topic_id IS NULL)
+                 GROUP BY qf.id, qf.family_code, qf.family_name, qf.subject_id, qf.topic_id",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        statement
+            .query_row(
+                params![
+                    family_id,
+                    if slot_spec.topic_id.is_some() { 1 } else { 0 },
+                    slot_spec
+                        .target_cognitive_demand
+                        .clone()
+                        .unwrap_or_default(),
+                    slot_spec.target_question_format.clone().unwrap_or_default(),
+                    slot_spec.topic_id.unwrap_or_default(),
+                ],
+                |row| {
+                    let total_instances = row.get::<_, i64>(5)?;
+                    let generated_instances = row.get::<_, i64>(6)?;
+                    let cognitive_match = row.get::<_, i64>(7)?;
+                    let format_match = row.get::<_, i64>(8)?;
+                    let generated_share = if total_instances > 0 {
+                        (generated_instances * 10_000) / total_instances
+                    } else {
+                        0
+                    };
+                    let generated_penalty =
+                        if generated_share > i64::from(slot_spec.max_generated_share) {
+                            ((generated_share - i64::from(slot_spec.max_generated_share)) / 3)
+                                .min(3_000)
+                        } else {
+                            0
+                        };
+                    let fit_score = clamp_bp(
+                        3_500
+                            + total_instances.min(4) * 700
+                            + cognitive_match * 2_200
+                            + format_match * 1_200
+                            - generated_penalty,
+                    ) as BasisPoints;
+
+                    Ok(QuestionFamilyChoice {
+                        family_id: row.get(0)?,
+                        family_code: row.get(1)?,
+                        family_name: row.get(2)?,
+                        subject_id: row.get(3)?,
+                        topic_id: row.get(4)?,
+                        total_instances,
+                        generated_instances,
+                        fit_score,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 }
 
@@ -827,6 +1026,84 @@ mod tests {
         assert_eq!(health.recent_attempts, 1);
         assert_eq!(health.recent_correct_attempts, 1);
         assert!(health.quality_score >= 6_000);
+    }
+
+    #[test]
+    fn remediation_plan_prefers_misconception_probe_when_student_keeps_hitting_traps() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+        let question_id: i64 = conn
+            .query_row(
+                "SELECT id FROM questions WHERE topic_id = ?1 ORDER BY id ASC LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("question should exist");
+        let misconception_id: i64 = conn
+            .query_row(
+                "SELECT misconception_id
+                 FROM question_options
+                 WHERE question_id = ?1 AND misconception_id IS NOT NULL
+                 LIMIT 1",
+                [question_id],
+                |row| row.get(0),
+            )
+            .expect("misconception option should exist");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt)
+             VALUES ('student', 'Remi', 'hash', 'salt')",
+            [],
+        )
+        .expect("student account should insert");
+        let student_id = conn.last_insert_rowid();
+
+        conn.execute(
+            "INSERT INTO student_question_attempts (
+                student_id, question_id, started_at, submitted_at, response_time_ms,
+                selected_option_id, is_correct, misconception_triggered_id
+             ) VALUES (?1, ?2, datetime('now'), datetime('now'), 47000, NULL, 0, ?3)",
+            params![student_id, question_id, misconception_id],
+        )
+        .expect("attempt should insert");
+
+        let reactor = QuestionReactor::new(&conn);
+        let plan = reactor
+            .recommend_remediation_plan(
+                student_id,
+                &QuestionSlotSpec {
+                    subject_id,
+                    topic_id: Some(topic_id),
+                    target_cognitive_demand: Some("recognition".to_string()),
+                    target_question_format: Some("mcq".to_string()),
+                    max_generated_share: 7_000,
+                },
+            )
+            .expect("remediation plan should compute")
+            .expect("remediation plan should exist");
+
+        assert_eq!(
+            plan.variant_mode,
+            QuestionVariantMode::MisconceptionProbe.as_str()
+        );
+        assert_eq!(plan.request_kind, "remediation");
+        assert_eq!(plan.source_question_id, Some(question_id));
+        assert!(plan.rationale.contains("misconception"));
     }
 
     fn open_test_database() -> Connection {

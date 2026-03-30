@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use crate::readiness_engine::ReadinessEngine;
+use crate::topic_case::{TopicCase, build_topic_case};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JourneyRoute {
@@ -58,8 +59,8 @@ impl<'a> JourneyService<'a> {
     ) -> EcoachResult<JourneyRouteSnapshot> {
         let readiness =
             ReadinessEngine::new(self.conn).build_subject_readiness(student_id, subject_id)?;
-        let topic_candidates = self.load_topic_candidates(student_id, subject_id)?;
-        if topic_candidates.is_empty() {
+        let topic_cases = self.load_topic_cases(student_id, subject_id)?;
+        if topic_cases.is_empty() {
             return Err(EcoachError::NotFound(
                 "no topics available to build a journey route".to_string(),
             ));
@@ -74,19 +75,40 @@ impl<'a> JourneyService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        let route_type = if readiness.blocked_topic_count > 0 {
+        let route_type = if readiness.blocked_topic_count > 0
+            || readiness.due_review_count + readiness.due_memory_count >= 2
+        {
             "repair_route"
-        } else if readiness.readiness_score >= 7_800 {
+        } else if target_exam.is_some()
+            && (readiness.readiness_score >= 7_200
+                || readiness.recommended_mock_blueprint.contains("timed"))
+        {
             "exam_route"
         } else {
             "mastery_route"
         };
+        let ordered_cases = order_route_cases(&topic_cases, &readiness);
         let route_summary_json = serde_json::to_string(&json!({
             "generated_from": "journey_service",
             "readiness_score": readiness.readiness_score,
             "readiness_band": readiness.readiness_band,
             "recommended_mock_blueprint": readiness.recommended_mock_blueprint,
-            "topic_count": topic_candidates.len(),
+            "topic_count": ordered_cases.len(),
+            "blocked_topic_count": readiness.blocked_topic_count,
+            "due_review_count": readiness.due_review_count,
+            "due_memory_count": readiness.due_memory_count,
+            "weak_topic_count": readiness.weak_topic_count,
+            "route_intent": route_type,
+            "top_hypotheses": ordered_cases
+                .iter()
+                .take(3)
+                .map(|item| json!({
+                    "topic_id": item.topic_id,
+                    "topic_name": item.topic_name,
+                    "primary_hypothesis_code": item.primary_hypothesis_code,
+                    "recommended_mode": item.recommended_intervention.mode,
+                }))
+                .collect::<Vec<_>>(),
         }))
         .map_err(|err| EcoachError::Serialization(err.to_string()))?;
 
@@ -106,23 +128,49 @@ impl<'a> JourneyService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let route_id = self.conn.last_insert_rowid();
 
-        for (index, candidate) in topic_candidates.iter().enumerate() {
+        for (index, topic_case) in ordered_cases.iter().enumerate() {
             let station_code = format!("station_{:02}", index + 1);
-            let station_type = station_type_for_candidate(
-                candidate.mastery_score,
-                candidate.gap_score,
-                candidate.fragility_score,
+            let station_type = station_type_for_case(
+                topic_case,
+                route_type,
+                index == 0
+                    && (readiness.due_review_count > 0 || readiness.due_memory_count > 0)
+                    && is_review_station_candidate(topic_case),
             );
             let status = if index == 0 { "active" } else { "locked" };
             let entry_rule = if index == 0 {
-                json!({ "entry": "start_immediately" })
+                json!({
+                    "entry": "start_immediately",
+                    "primary_hypothesis_code": topic_case.primary_hypothesis_code,
+                    "requires_probe": topic_case.requires_probe,
+                    "recommended_mode": topic_case.recommended_intervention.mode,
+                })
             } else {
-                json!({ "requires_previous_station": format!("station_{:02}", index) })
+                json!({
+                    "requires_previous_station": format!("station_{:02}", index),
+                    "primary_hypothesis_code": topic_case.primary_hypothesis_code,
+                    "requires_probe": topic_case.requires_probe,
+                })
             };
             let completion_rule = json!({
-                "target_mastery_score": clamp_bp(candidate.mastery_score as i64 + 1500),
-                "target_accuracy_score": clamp_bp(6500 + (index as i64 * 300)),
-                "min_questions": if station_type == "repair" { 6 } else { 4 },
+                "target_mastery_score": clamp_bp(topic_case.mastery_score as i64 + 1500),
+                "target_accuracy_score": target_accuracy_for_station(station_type, topic_case, index as i64),
+                "target_readiness_score": readiness.readiness_score,
+                "min_questions": min_questions_for_station(station_type),
+                "proof_gaps": topic_case.proof_gaps,
+                "requires_delayed_recall": station_type == "review",
+                "requires_timed_success": station_type == "performance",
+                "recommended_mode": topic_case.recommended_intervention.mode,
+            });
+            let evidence = json!({
+                "topic_id": topic_case.topic_id,
+                "topic_name": topic_case.topic_name,
+                "priority_score": topic_case.priority_score,
+                "diagnosis_certainty": topic_case.diagnosis_certainty,
+                "primary_hypothesis_code": topic_case.primary_hypothesis_code,
+                "active_hypotheses": topic_case.active_hypotheses,
+                "recommended_intervention": topic_case.recommended_intervention,
+                "open_questions": topic_case.open_questions,
             });
             self.conn
                 .execute(
@@ -131,21 +179,23 @@ impl<'a> JourneyService<'a> {
                         target_mastery_score, target_accuracy_score, target_readiness_score,
                         status, entry_rule_json, completion_rule_json, evidence_json, unlocked_at
                      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, '{}',
-                               CASE WHEN ?10 = 'active' THEN datetime('now') ELSE NULL END)",
+                                CASE WHEN ?10 = 'active' THEN datetime('now') ELSE NULL END)",
                     params![
                         route_id,
                         station_code,
-                        format!("{} Station", candidate.topic_name),
-                        candidate.topic_id,
+                        station_title_for_case(topic_case, station_type),
+                        topic_case.topic_id,
                         (index + 1) as i64,
                         station_type,
-                        clamp_bp(candidate.mastery_score as i64 + 1500),
-                        clamp_bp(6500 + (index as i64 * 300)),
+                        clamp_bp(topic_case.mastery_score as i64 + 1500),
+                        target_accuracy_for_station(station_type, topic_case, index as i64),
                         readiness.readiness_score,
                         status,
                         serde_json::to_string(&entry_rule)
                             .map_err(|err| EcoachError::Serialization(err.to_string()))?,
                         serde_json::to_string(&completion_rule)
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                        serde_json::to_string(&evidence)
                             .map_err(|err| EcoachError::Serialization(err.to_string()))?,
                     ],
                 )
@@ -168,7 +218,7 @@ impl<'a> JourneyService<'a> {
                 "student_id": student_id,
                 "subject_id": subject_id,
                 "route_type": route_type,
-                "station_count": topic_candidates.len(),
+                "station_count": ordered_cases.len(),
             }),
         ))?;
 
@@ -360,6 +410,33 @@ impl<'a> JourneyService<'a> {
         Ok(items)
     }
 
+    fn load_topic_cases(&self, student_id: i64, subject_id: i64) -> EcoachResult<Vec<TopicCase>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT sts.topic_id
+                 FROM student_topic_states sts
+                 INNER JOIN topics t ON t.id = sts.topic_id
+                 WHERE sts.student_id = ?1 AND t.subject_id = ?2
+                 ORDER BY sts.priority_score DESC,
+                          sts.repair_priority DESC,
+                          sts.gap_score DESC,
+                          sts.topic_id ASC
+                 LIMIT 8",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, subject_id], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            let topic_id = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            items.push(build_topic_case(self.conn, student_id, topic_id)?);
+        }
+        Ok(items)
+    }
+
     fn append_runtime_event(&self, event: DomainEvent) -> EcoachResult<()> {
         let payload_json = serde_json::to_string(&event.payload)
             .map_err(|err| EcoachError::Serialization(err.to_string()))?;
@@ -405,6 +482,107 @@ fn station_type_for_candidate(
     } else {
         "performance"
     }
+}
+
+fn order_route_cases<'a>(
+    topic_cases: &'a [TopicCase],
+    readiness: &crate::readiness_engine::StudentReadinessSnapshot,
+) -> Vec<&'a TopicCase> {
+    let mut ordered = Vec::new();
+    if readiness.due_review_count > 0 || readiness.due_memory_count > 0 {
+        if let Some(review_case) = topic_cases
+            .iter()
+            .find(|item| is_review_station_candidate(item))
+        {
+            ordered.push(review_case);
+        }
+    }
+    for topic_case in topic_cases {
+        if ordered
+            .iter()
+            .any(|item| item.topic_id == topic_case.topic_id)
+        {
+            continue;
+        }
+        ordered.push(topic_case);
+    }
+    ordered
+}
+
+fn is_review_station_candidate(topic_case: &TopicCase) -> bool {
+    matches!(topic_case.primary_hypothesis_code.as_str(), "memory_decay")
+        || matches!(
+            topic_case.memory_state.as_str(),
+            "fragile" | "at_risk" | "fading" | "rebuilding" | "collapsed"
+        )
+}
+
+fn station_type_for_case(
+    topic_case: &TopicCase,
+    route_type: &str,
+    force_review: bool,
+) -> &'static str {
+    if force_review || is_review_station_candidate(topic_case) {
+        "review"
+    } else if topic_case.active_blocker.is_some()
+        || topic_case.primary_hypothesis_code == "knowledge_gap" && topic_case.mastery_score < 4500
+    {
+        "foundation"
+    } else if topic_case.active_blocker.is_some()
+        || matches!(
+            topic_case.primary_hypothesis_code.as_str(),
+            "blocked_topic" | "conceptual_confusion" | "knowledge_gap"
+        )
+    {
+        "repair"
+    } else if topic_case.primary_hypothesis_code == "execution_drift" {
+        "checkpoint"
+    } else if route_type == "exam_route"
+        || topic_case.primary_hypothesis_code == "pressure_collapse"
+        || topic_case.pressure_collapse_index >= 5500
+    {
+        "performance"
+    } else {
+        station_type_for_candidate(
+            topic_case.mastery_score,
+            topic_case.gap_score,
+            topic_case.fragility_score,
+        )
+    }
+}
+
+fn station_title_for_case(topic_case: &TopicCase, station_type: &str) -> String {
+    match station_type {
+        "review" => format!("Reactivate {}", topic_case.topic_name),
+        "foundation" => format!("Rebuild {}", topic_case.topic_name),
+        "repair" => format!("Repair {}", topic_case.topic_name),
+        "checkpoint" => format!("Checkpoint {}", topic_case.topic_name),
+        "performance" => format!("Perform Under Load: {}", topic_case.topic_name),
+        _ => format!("{} Station", topic_case.topic_name),
+    }
+}
+
+fn min_questions_for_station(station_type: &str) -> i64 {
+    match station_type {
+        "review" => 4,
+        "foundation" | "repair" => 6,
+        "performance" => 8,
+        _ => 5,
+    }
+}
+
+fn target_accuracy_for_station(
+    station_type: &str,
+    topic_case: &TopicCase,
+    sequence_index: i64,
+) -> BasisPoints {
+    let base = match station_type {
+        "review" => 7600,
+        "performance" => 7200,
+        "repair" | "foundation" => 6500,
+        _ => 6800,
+    };
+    clamp_bp(base + sequence_index * 150 + (topic_case.diagnosis_certainty as i64 / 20))
 }
 
 fn map_route(row: &rusqlite::Row<'_>) -> rusqlite::Result<JourneyRoute> {

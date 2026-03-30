@@ -1,7 +1,11 @@
 pub mod dashboard;
+pub mod oversight;
 pub mod parent;
 
 pub use dashboard::{DashboardService, StudentDashboard, SubjectSummary};
+pub use oversight::{AdminOversightService, AdminOversightSnapshot, AdminStudentOversight};
 pub use parent::{
-    ParentDashboardSnapshot, ParentInsightService, ParentRiskSummary, ParentStudentSummary,
+    HouseholdActionItem, HouseholdDashboardSnapshot, HouseholdInterventionSummary,
+    HouseholdStudentSnapshot, ParentDashboardSnapshot, ParentInsightService, ParentRiskSummary,
+    ParentStudentSummary,
 };

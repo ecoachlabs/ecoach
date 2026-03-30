@@ -1,5 +1,7 @@
 use chrono::{DateTime, Utc};
-use ecoach_substrate::BasisPoints;
+use ecoach_substrate::{
+    BasisPoints, FabricEvidenceRecord, FabricOrchestrationSummary, FabricSignal,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -74,6 +76,58 @@ pub struct SessionSummary {
     pub answered_questions: i64,
     pub correct_questions: i64,
     pub status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionTopicInterpretation {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub attempts: i64,
+    pub correct_attempts: i64,
+    pub accuracy_score: BasisPoints,
+    pub avg_response_time_ms: Option<i64>,
+    pub dominant_error_type: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionInterpretation {
+    pub session_id: i64,
+    pub student_id: i64,
+    pub session_type: String,
+    pub status: String,
+    pub observed_at: DateTime<Utc>,
+    pub is_timed: bool,
+    pub answered_questions: i64,
+    pub correct_questions: i64,
+    pub incorrect_questions: i64,
+    pub unanswered_questions: i64,
+    pub accuracy_score: Option<BasisPoints>,
+    pub avg_response_time_ms: Option<i64>,
+    pub flagged_count: i64,
+    pub distinct_topic_count: i64,
+    pub misconception_hit_count: i64,
+    pub pressure_breakdown_count: i64,
+    pub transfer_variant_count: i64,
+    pub retention_check_count: i64,
+    pub mixed_context_count: i64,
+    pub supported_answer_count: i64,
+    pub independent_answer_count: i64,
+    pub dominant_error_type: Option<String>,
+    pub interpretation_tags: Vec<String>,
+    pub next_action_hint: String,
+    pub topic_summaries: Vec<SessionTopicInterpretation>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionEvidenceFabric {
+    pub session_id: i64,
+    pub student_id: i64,
+    pub session_type: String,
+    pub status: String,
+    pub interpretation: SessionInterpretation,
+    pub signals: Vec<FabricSignal>,
+    pub evidence_records: Vec<FabricEvidenceRecord>,
+    pub orchestration: FabricOrchestrationSummary,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

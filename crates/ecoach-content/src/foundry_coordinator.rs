@@ -5,7 +5,9 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::{ContentPublishJobReport, ContentPublishService, ResourceReadinessService};
+use crate::{
+    ContentPublishJobReport, ContentPublishService, ResourceReadinessService, pack_service::slugify,
+};
 
 const LOW_CONFIDENCE_THRESHOLD: BasisPoints = 6_500;
 const STRONG_CONFIDENCE_THRESHOLD: BasisPoints = 8_000;
@@ -1047,6 +1049,109 @@ impl<'a> FoundryCoordinatorService<'a> {
             .ok_or_else(|| EcoachError::NotFound(format!("foundry job {} not found", job_id)))
     }
 
+    pub fn run_foundry_job(&self, job_id: i64) -> EcoachResult<FoundryJob> {
+        let job = self
+            .get_foundry_job(job_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("foundry job {} not found", job_id)))?;
+        if job.status == "completed" {
+            return Ok(job);
+        }
+        if job.status == "running" {
+            return Ok(job);
+        }
+
+        let pending_dependencies = self.pending_foundry_dependencies(&job)?;
+        if !pending_dependencies.is_empty() {
+            let result_summary = json!({
+                "blocked_on": pending_dependencies,
+                "job_type": job.job_type,
+                "target_type": job.target_type,
+                "target_id": job.target_id,
+            });
+            self.update_foundry_job_status(
+                job.id,
+                "blocked",
+                Some(&result_summary),
+                Some("waiting for dependent foundry jobs"),
+                false,
+                false,
+            )?;
+            return self
+                .get_foundry_job(job.id)?
+                .ok_or_else(|| EcoachError::NotFound(format!("foundry job {} not found", job.id)));
+        }
+
+        self.update_foundry_job_status(job.id, "running", None, None, false, true)?;
+        let execution = self.execute_foundry_job(&job);
+        match execution {
+            Ok(result_summary) => {
+                self.update_foundry_job_status(
+                    job.id,
+                    "completed",
+                    Some(&result_summary),
+                    None,
+                    true,
+                    false,
+                )?;
+            }
+            Err(err) => {
+                let error_message = err.to_string();
+                self.update_foundry_job_status(
+                    job.id,
+                    "failed",
+                    Some(&json!({
+                        "error": error_message,
+                        "job_type": job.job_type,
+                        "target_type": job.target_type,
+                        "target_id": job.target_id,
+                    })),
+                    Some(&error_message),
+                    true,
+                    false,
+                )?;
+            }
+        }
+
+        self.get_foundry_job(job.id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("foundry job {} not found", job.id)))
+    }
+
+    pub fn run_next_foundry_job(
+        &self,
+        subject_id: Option<i64>,
+    ) -> EcoachResult<Option<FoundryJob>> {
+        let mut candidate_jobs = self.list_foundry_jobs(None, None, subject_id)?;
+        candidate_jobs.retain(|job| matches!(job.status.as_str(), "queued" | "blocked"));
+        candidate_jobs.sort_by(|left, right| {
+            right
+                .priority
+                .cmp(&left.priority)
+                .then_with(|| left.id.cmp(&right.id))
+        });
+
+        for job in candidate_jobs {
+            let pending_dependencies = self.pending_foundry_dependencies(&job)?;
+            if pending_dependencies.is_empty() {
+                return self.run_foundry_job(job.id).map(Some);
+            }
+            let result_summary = json!({
+                "blocked_on": pending_dependencies,
+                "job_type": job.job_type,
+                "target_type": job.target_type,
+                "target_id": job.target_id,
+            });
+            self.update_foundry_job_status(
+                job.id,
+                "blocked",
+                Some(&result_summary),
+                Some("waiting for dependent foundry jobs"),
+                false,
+                false,
+            )?;
+        }
+        Ok(None)
+    }
+
     fn get_source_upload(
         &self,
         source_upload_id: i64,
@@ -1577,6 +1682,1038 @@ impl<'a> FoundryCoordinatorService<'a> {
             }),
         )?;
         Ok(())
+    }
+
+    fn execute_foundry_job(&self, job: &FoundryJob) -> EcoachResult<Value> {
+        match job.job_type.as_str() {
+            "source_review_job" | "duplicate_resolution_job" => {
+                let report = self.finalize_source_parse(job.target_id)?;
+                if report.unresolved_review_count > 0 {
+                    return Ok(json!({
+                        "execution_state": "manual_review_required",
+                        "source_upload_id": job.target_id,
+                        "unresolved_review_count": report.unresolved_review_count,
+                        "recommended_actions": report.recommended_actions,
+                    }));
+                }
+                Ok(json!({
+                    "execution_state": "source_parsed",
+                    "source_upload_id": job.target_id,
+                    "source_status": report.source_upload.source_status,
+                    "approved_candidate_count": report.approved_candidate_count,
+                }))
+            }
+            "source_approval_job" => {
+                let report = self.get_source_report(job.target_id)?.ok_or_else(|| {
+                    EcoachError::NotFound(format!("source upload {} not found", job.target_id))
+                })?;
+                if !report.can_mark_reviewed {
+                    return Err(EcoachError::Validation(format!(
+                        "source upload {} still has unresolved review work",
+                        job.target_id
+                    )));
+                }
+                let reviewed_report = self.mark_source_reviewed(job.target_id)?;
+                let queued_jobs =
+                    self.queue_source_follow_up_jobs(job.target_id, "job_execution")?;
+                Ok(json!({
+                    "execution_state": "source_reviewed",
+                    "source_upload_id": job.target_id,
+                    "source_status": reviewed_report.source_upload.source_status,
+                    "queued_follow_up_jobs": queued_jobs.iter().map(|item| item.job_type.clone()).collect::<Vec<_>>(),
+                }))
+            }
+            "source_acquisition_job" => {
+                let topic_id = job.topic_id.ok_or_else(|| {
+                    EcoachError::Validation(
+                        "source acquisition job requires a topic target".to_string(),
+                    )
+                })?;
+                let subject_id = job.subject_id.ok_or_else(|| {
+                    EcoachError::Validation(
+                        "source acquisition job requires a subject target".to_string(),
+                    )
+                })?;
+                let acquisition_job_id =
+                    self.seed_acquisition_support(subject_id, topic_id, &job.payload)?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "support_seeded",
+                    "topic_id": topic_id,
+                    "acquisition_job_id": acquisition_job_id,
+                    "snapshot": snapshot,
+                }))
+            }
+            "curriculum_enrichment_job" => {
+                let topic_id = job
+                    .topic_id
+                    .or_else(|| job.payload["topic_id"].as_i64())
+                    .ok_or_else(|| {
+                        EcoachError::Validation(
+                            "curriculum enrichment job requires a topic target".to_string(),
+                        )
+                    })?;
+                let seeded = self.seed_curriculum_support(topic_id)?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "curriculum_support_seeded",
+                    "topic_id": topic_id,
+                    "seeded_node_count": seeded["node_count"],
+                    "seeded_objective_count": seeded["objective_count"],
+                    "seeded_edge_count": seeded["edge_count"],
+                    "snapshot": snapshot,
+                }))
+            }
+            "misconception_build_job" => {
+                let topic_id = job
+                    .topic_id
+                    .or_else(|| job.payload["topic_id"].as_i64())
+                    .ok_or_else(|| {
+                        EcoachError::Validation(
+                            "misconception build job requires a topic target".to_string(),
+                        )
+                    })?;
+                let seeded = self.seed_misconception_support(topic_id)?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "misconception_support_seeded",
+                    "topic_id": topic_id,
+                    "misconception_id": seeded,
+                    "snapshot": snapshot,
+                }))
+            }
+            "note_build_job" => {
+                let topic_id = job
+                    .topic_id
+                    .or_else(|| job.payload["topic_id"].as_i64())
+                    .ok_or_else(|| {
+                        EcoachError::Validation(
+                            "note build job requires a topic target".to_string(),
+                        )
+                    })?;
+                let seeded = self.seed_knowledge_support(topic_id, "explanation")?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "note_support_seeded",
+                    "topic_id": topic_id,
+                    "entry_id": seeded,
+                    "snapshot": snapshot,
+                }))
+            }
+            "formula_pack_build_job" => {
+                let topic_id = job
+                    .topic_id
+                    .or_else(|| job.payload["topic_id"].as_i64())
+                    .ok_or_else(|| {
+                        EcoachError::Validation(
+                            "formula build job requires a topic target".to_string(),
+                        )
+                    })?;
+                let seeded = self.seed_knowledge_support(topic_id, "formula")?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "formula_support_seeded",
+                    "topic_id": topic_id,
+                    "entry_id": seeded,
+                    "snapshot": snapshot,
+                }))
+            }
+            "worked_example_build_job" => {
+                let topic_id = job
+                    .topic_id
+                    .or_else(|| job.payload["topic_id"].as_i64())
+                    .ok_or_else(|| {
+                        EcoachError::Validation(
+                            "worked example build job requires a topic target".to_string(),
+                        )
+                    })?;
+                let seeded = self.seed_knowledge_support(topic_id, "worked_example")?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "worked_example_seeded",
+                    "topic_id": topic_id,
+                    "entry_id": seeded,
+                    "snapshot": snapshot,
+                }))
+            }
+            "question_generation_job" => {
+                let topic_id = job
+                    .topic_id
+                    .or_else(|| job.payload["topic_id"].as_i64())
+                    .ok_or_else(|| {
+                        EcoachError::Validation(
+                            "question generation job requires a topic target".to_string(),
+                        )
+                    })?;
+                let seeded = self.seed_question_support(topic_id)?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "question_support_seeded",
+                    "topic_id": topic_id,
+                    "family_id": seeded["family_id"],
+                    "question_id": seeded["question_id"],
+                    "snapshot": snapshot,
+                }))
+            }
+            "contrast_build_job" => {
+                let topic_id = job
+                    .topic_id
+                    .or_else(|| job.payload["topic_id"].as_i64())
+                    .ok_or_else(|| {
+                        EcoachError::Validation(
+                            "contrast build job requires a topic target".to_string(),
+                        )
+                    })?;
+                let seeded = self.seed_contrast_support(topic_id)?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "contrast_support_seeded",
+                    "topic_id": topic_id,
+                    "pair_id": seeded,
+                    "snapshot": snapshot,
+                }))
+            }
+            "publish_job" => {
+                let publish_report = self.stage_publish_for_job(job)?;
+                if let Some(topic_id) = publish_report.job.topic_id {
+                    let _ = self.recompute_topic_package_snapshot(topic_id)?;
+                    let _ = self.queue_topic_foundry_jobs(topic_id, "job_execution");
+                }
+                Ok(json!({
+                    "execution_state": "publish_staged",
+                    "publish_job_id": publish_report.job.id,
+                    "publish_status": publish_report.job.status,
+                    "blocking_report_count": publish_report.blocking_report_count,
+                }))
+            }
+            "quality_review_job" => {
+                let topic_id = job.topic_id.ok_or_else(|| {
+                    EcoachError::Validation(
+                        "quality review job requires a topic target".to_string(),
+                    )
+                })?;
+                let publish_report = self.run_quality_review_for_topic(topic_id)?;
+                let _ = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "quality_reviewed",
+                    "topic_id": topic_id,
+                    "publish_job_id": publish_report.job.id,
+                    "publish_status": publish_report.job.status,
+                    "blocking_report_count": publish_report.blocking_report_count,
+                }))
+            }
+            "publish_activation_job" => {
+                let topic_id = job.topic_id.ok_or_else(|| {
+                    EcoachError::Validation(
+                        "publish activation job requires a topic target".to_string(),
+                    )
+                })?;
+                let publish_job = self.activate_latest_publish_job(topic_id)?;
+                let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                Ok(json!({
+                    "execution_state": "published",
+                    "topic_id": topic_id,
+                    "publish_job_id": publish_job.id,
+                    "publish_status": publish_job.status,
+                    "snapshot": snapshot,
+                }))
+            }
+            other => Ok(json!({
+                "execution_state": "queued_for_manual_backend_work",
+                "job_type": other,
+                "target_type": job.target_type,
+                "target_id": job.target_id,
+            })),
+        }
+    }
+
+    fn pending_foundry_dependencies(&self, job: &FoundryJob) -> EcoachResult<Vec<String>> {
+        let mut pending = Vec::new();
+        for dependency in &job.dependency_refs {
+            let status: Option<String> = self
+                .conn
+                .query_row(
+                    "SELECT status
+                     FROM foundry_jobs
+                     WHERE job_type = ?1
+                       AND target_type = ?2
+                       AND target_id = ?3
+                       AND ((subject_id = ?4) OR (subject_id IS NULL AND ?4 IS NULL))
+                       AND ((topic_id = ?5) OR (topic_id IS NULL AND ?5 IS NULL))
+                     ORDER BY created_at DESC, id DESC
+                     LIMIT 1",
+                    params![
+                        dependency,
+                        job.target_type,
+                        job.target_id,
+                        job.subject_id,
+                        job.topic_id,
+                    ],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if !matches!(status.as_deref(), Some("completed")) {
+                pending.push(dependency.clone());
+            }
+        }
+        Ok(pending)
+    }
+
+    fn stage_publish_for_job(&self, job: &FoundryJob) -> EcoachResult<ContentPublishJobReport> {
+        match job.target_type.as_str() {
+            "source_upload" => self.stage_publish_job(
+                job.target_id,
+                None,
+                job.subject_id,
+                job.topic_id,
+                Some("auto-job"),
+            ),
+            "topic_package" => {
+                let topic_id = job
+                    .topic_id
+                    .or_else(|| job.payload["topic_id"].as_i64())
+                    .ok_or_else(|| {
+                        EcoachError::Validation(
+                            "topic package publish job requires topic_id".to_string(),
+                        )
+                    })?;
+                let source_upload_id = self
+                    .latest_reviewed_source_upload_for_subject(job.subject_id)?
+                    .ok_or_else(|| {
+                        EcoachError::Validation(format!(
+                            "no reviewed source upload available to stage publish for topic {}",
+                            topic_id
+                        ))
+                    })?;
+                self.stage_publish_job(
+                    source_upload_id,
+                    None,
+                    job.subject_id,
+                    Some(topic_id),
+                    Some("auto-job"),
+                )
+            }
+            other => Err(EcoachError::Validation(format!(
+                "unsupported foundry publish target type: {}",
+                other
+            ))),
+        }
+    }
+
+    fn run_quality_review_for_topic(&self, topic_id: i64) -> EcoachResult<ContentPublishJobReport> {
+        let publish_job = self
+            .latest_publish_job_for_topic(
+                topic_id,
+                &[
+                    "gating",
+                    "review_required",
+                    "ready_to_publish",
+                    "publishing",
+                ],
+            )?
+            .ok_or_else(|| {
+                EcoachError::Validation(format!(
+                    "no active publish job available for topic {} quality review",
+                    topic_id
+                ))
+            })?;
+        let snapshot = self
+            .recompute_topic_package_snapshot(topic_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("topic snapshot {} not found", topic_id))
+            })?;
+        let metrics = json!({
+            "resource_readiness_score": snapshot.resource_readiness_score,
+            "completeness_score": snapshot.completeness_score,
+            "quality_score": snapshot.quality_score,
+            "evidence_score": snapshot.evidence_score,
+            "missing_components": snapshot.missing_components,
+        });
+        let report_type = if snapshot.quality_score >= 8_000 {
+            "auto_quality_gate_strong"
+        } else {
+            "auto_quality_gate_review"
+        };
+        let status = if snapshot.quality_score >= 6_500 && snapshot.publishable_artifact_count > 0 {
+            "pass"
+        } else {
+            "needs_review"
+        };
+        ContentPublishService::new(self.conn).add_quality_report(
+            publish_job.id,
+            report_type,
+            status,
+            snapshot.quality_score as i64,
+            &metrics,
+        )?;
+        if status == "pass" {
+            ContentPublishService::new(self.conn).mark_ready_to_publish(
+                publish_job.id,
+                &json!({
+                    "topic_id": topic_id,
+                    "artifact_type": "topic_package",
+                    "quality_gate": report_type,
+                }),
+            )?;
+        }
+        ContentPublishService::new(self.conn)
+            .get_publish_job_report(publish_job.id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("publish job {} not found", publish_job.id))
+            })
+    }
+
+    fn activate_latest_publish_job(&self, topic_id: i64) -> EcoachResult<crate::ContentPublishJob> {
+        let publish_job = self
+            .latest_publish_job_for_topic(topic_id, &["ready_to_publish", "published"])?
+            .ok_or_else(|| {
+                EcoachError::Validation(format!(
+                    "no ready-to-publish job available for topic {}",
+                    topic_id
+                ))
+            })?;
+        if publish_job.status != "published" {
+            ContentPublishService::new(self.conn).mark_published(
+                publish_job.id,
+                &json!({
+                    "topic_id": topic_id,
+                    "artifact_type": "topic_package",
+                    "publish_mode": "auto_foundry_activation",
+                }),
+            )?;
+        }
+        ContentPublishService::new(self.conn)
+            .get_publish_job(publish_job.id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("publish job {} not found", publish_job.id))
+            })
+    }
+
+    fn latest_publish_job_for_topic(
+        &self,
+        topic_id: i64,
+        statuses: &[&str],
+    ) -> EcoachResult<Option<crate::ContentPublishJob>> {
+        let jobs = ContentPublishService::new(self.conn).list_publish_jobs(None)?;
+        Ok(jobs
+            .into_iter()
+            .filter(|job| {
+                job.topic_id == Some(topic_id)
+                    && statuses.iter().any(|status| *status == job.status)
+            })
+            .max_by_key(|job| job.id))
+    }
+
+    fn latest_reviewed_source_upload_for_subject(
+        &self,
+        subject_id: Option<i64>,
+    ) -> EcoachResult<Option<i64>> {
+        let Some(subject_id) = subject_id else {
+            return Ok(None);
+        };
+        let subject_code: String = self
+            .conn
+            .query_row(
+                "SELECT code FROM subjects WHERE id = ?1 LIMIT 1",
+                [subject_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .query_row(
+                "SELECT id
+                 FROM curriculum_source_uploads
+                 WHERE subject_code = ?1
+                   AND source_status = 'reviewed'
+                 ORDER BY updated_at DESC, id DESC
+                 LIMIT 1",
+                [subject_code],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn seed_acquisition_support(
+        &self,
+        subject_id: i64,
+        topic_id: i64,
+        payload: &Value,
+    ) -> EcoachResult<i64> {
+        let topic_name = payload["topic_name"]
+            .as_str()
+            .map(ToString::to_string)
+            .or_else(|| self.topic_identity(topic_id).ok().map(|(_, name)| name))
+            .unwrap_or_else(|| "topic".to_string());
+        let result_summary_json = serialize_json(&json!({
+            "execution_mode": "auto_foundry_seed",
+            "topic_id": topic_id,
+            "topic_name": topic_name,
+        }))?;
+        self.conn
+            .execute(
+                "INSERT INTO content_acquisition_jobs (
+                    subject_id, topic_id, intent_type, query_text, source_scope,
+                    status, result_summary_json, completed_at
+                 ) VALUES (?1, ?2, 'gap_fill', ?3, 'internal', 'completed', ?4, datetime('now'))",
+                params![
+                    subject_id,
+                    topic_id,
+                    format!("Auto foundry evidence seed for {}", topic_name),
+                    result_summary_json,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let acquisition_job_id = self.conn.last_insert_rowid();
+        self.conn
+            .execute(
+                "INSERT INTO acquisition_evidence_candidates (
+                    job_id, source_label, source_url, source_kind, title, snippet,
+                    extracted_payload_json, quality_score, freshness_score, review_status
+                 ) VALUES (?1, ?2, NULL, 'internal', ?3, ?4, ?5, 8300, 7600, 'approved')",
+                params![
+                    acquisition_job_id,
+                    "Foundry Auto Support",
+                    format!("{} support seed", topic_name),
+                    "Auto-approved internal support evidence",
+                    serialize_json(&json!({
+                        "topic_id": topic_id,
+                        "topic_name": topic_name,
+                        "seeded_by": "foundry_job_executor",
+                    }))?,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(acquisition_job_id)
+    }
+
+    fn seed_curriculum_support(&self, topic_id: i64) -> EcoachResult<Value> {
+        let (_, topic_name) = self.topic_subject_and_name(topic_id)?;
+        let (node_id, node_inserted) = self.ensure_primary_node(topic_id, &topic_name)?;
+
+        let objective_inserted = if self.count_learning_objectives(topic_id)? == 0 {
+            self.conn
+                .execute(
+                    "INSERT INTO learning_objectives (
+                        topic_id, objective_text, simplified_text, cognitive_level, display_order
+                     ) VALUES (?1, ?2, ?3, 'understanding', 1)",
+                    params![
+                        topic_id,
+                        format!("Explain the core idea behind {}.", topic_name),
+                        format!("Understand the key idea in {}.", topic_name),
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            1
+        } else {
+            0
+        };
+
+        let edge_inserted = if self.count_topic_edges(topic_id)? == 0 {
+            self.conn
+                .execute(
+                    "INSERT INTO node_edges (
+                        from_node_id, from_node_type, to_node_id, to_node_type, edge_type, strength_score
+                     ) VALUES (?1, 'topic', ?2, 'academic_node', 'part_of', 7800)",
+                    params![topic_id, node_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            1
+        } else {
+            0
+        };
+
+        Ok(json!({
+            "node_count": if node_inserted { 1 } else { 0 },
+            "objective_count": objective_inserted,
+            "edge_count": edge_inserted,
+            "node_id": node_id,
+        }))
+    }
+
+    fn seed_misconception_support(&self, topic_id: i64) -> EcoachResult<i64> {
+        if let Some(existing) = self
+            .conn
+            .query_row(
+                "SELECT id
+                 FROM misconception_patterns
+                 WHERE topic_id = ?1 AND is_active = 1
+                 ORDER BY severity DESC, id ASC
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+        {
+            return Ok(existing);
+        }
+
+        let (_, topic_name) = self.topic_subject_and_name(topic_id)?;
+        let (node_id, _) = self.ensure_primary_node(topic_id, &topic_name)?;
+        self.conn
+            .execute(
+                "INSERT INTO misconception_patterns (
+                    node_id, topic_id, title, misconception_statement, cause_type,
+                    wrong_answer_pattern, correction_hint, severity
+                 ) VALUES (?1, ?2, ?3, ?4, 'overgeneralization', ?5, ?6, 7600)",
+                params![
+                    node_id,
+                    topic_id,
+                    format!("{} surface-rule confusion", topic_name),
+                    format!(
+                        "The learner may be applying a shallow rule for {} without checking the underlying meaning.",
+                        topic_name
+                    ),
+                    format!("Common wrong answer pattern around {}.", topic_name),
+                    format!("Contrast the correct condition for {} with a near-miss example.", topic_name),
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(self.conn.last_insert_rowid())
+    }
+
+    fn seed_knowledge_support(&self, topic_id: i64, entry_type: &str) -> EcoachResult<i64> {
+        if let Some(existing) = self
+            .conn
+            .query_row(
+                "SELECT id
+                 FROM knowledge_entries
+                 WHERE topic_id = ?1 AND entry_type = ?2 AND status = 'active'
+                 ORDER BY importance_score DESC, id ASC
+                 LIMIT 1",
+                params![topic_id, entry_type],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+        {
+            return Ok(existing);
+        }
+
+        let (subject_id, topic_name) = self.topic_subject_and_name(topic_id)?;
+        let (title, short_text, full_text, exam_text) = match entry_type {
+            "explanation" => (
+                format!("{} core explanation", topic_name),
+                format!("A focused explanation of the main idea in {}.", topic_name),
+                format!(
+                    "{} is explained here through its core idea, a common worked path, and the condition that tells the learner when it applies.",
+                    topic_name
+                ),
+                format!(
+                    "Exam use: explain why the chosen method fits {}.",
+                    topic_name
+                ),
+            ),
+            "formula" => (
+                format!("{} key formula", topic_name),
+                format!("A core formula or symbolic rule for {}.", topic_name),
+                format!(
+                    "This formula entry anchors the symbol pattern, meaning, and safest use case for {}.",
+                    topic_name
+                ),
+                format!(
+                    "Exam use: recall and apply the formula in {} under time pressure.",
+                    topic_name
+                ),
+            ),
+            "worked_example" => (
+                format!("{} worked example", topic_name),
+                format!("A worked example that shows the steps for {}.", topic_name),
+                format!(
+                    "This worked example demonstrates a clean, exam-safe solution path for {} and highlights the decision points the learner should notice.",
+                    topic_name
+                ),
+                format!(
+                    "Exam use: mirror this sequence when a similar {} question appears.",
+                    topic_name
+                ),
+            ),
+            _ => (
+                format!("{} definition", topic_name),
+                format!("A core definition for {}.", topic_name),
+                format!(
+                    "This definition fixes the meaning boundary for {} and separates it from common look-alikes.",
+                    topic_name
+                ),
+                format!(
+                    "Exam use: state the meaning of {} precisely before solving.",
+                    topic_name
+                ),
+            ),
+        };
+
+        self.conn
+            .execute(
+                "INSERT INTO knowledge_entries (
+                    subject_id, topic_id, entry_type, title, canonical_name, slug, short_text,
+                    full_text, simple_text, technical_text, exam_text, importance_score,
+                    difficulty_level, grade_band, status
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?8, ?10, 7600, 4500, 'core', 'active')",
+                params![
+                    subject_id,
+                    topic_id,
+                    entry_type,
+                    title,
+                    title,
+                    slugify(&title),
+                    short_text,
+                    full_text,
+                    short_text,
+                    exam_text,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let entry_id = self.conn.last_insert_rowid();
+        self.conn
+            .execute(
+                "INSERT INTO entry_aliases (entry_id, alias_text, alias_type)
+                 VALUES (?1, ?2, 'generated_seed')",
+                params![entry_id, topic_name],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(entry_id)
+    }
+
+    fn seed_question_support(&self, topic_id: i64) -> EcoachResult<Value> {
+        let (subject_id, topic_name) = self.topic_subject_and_name(topic_id)?;
+        let (node_id, _) = self.ensure_primary_node(topic_id, &topic_name)?;
+        let misconception_id = self.seed_misconception_support(topic_id)?;
+
+        let family_id = if let Some(existing) = self
+            .conn
+            .query_row(
+                "SELECT id
+                 FROM question_families
+                 WHERE topic_id = ?1
+                 ORDER BY id ASC
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+        {
+            existing
+        } else {
+            self.conn
+                .execute(
+                    "INSERT INTO question_families (
+                        family_code, family_name, subject_id, topic_id, family_type,
+                        canonical_pattern, description
+                     ) VALUES (?1, ?2, ?3, ?4, 'recurring_pattern', ?5, ?6)",
+                    params![
+                        format!("AUTO-{}-FAM", topic_id),
+                        format!("{} generated family", topic_name),
+                        subject_id,
+                        topic_id,
+                        format!("Generated recognition pattern for {}", topic_name),
+                        format!("Auto-seeded family for foundry coverage on {}", topic_name),
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.conn.last_insert_rowid()
+        };
+
+        let question_id = if let Some(existing) = self
+            .conn
+            .query_row(
+                "SELECT id
+                 FROM questions
+                 WHERE topic_id = ?1 AND family_id = ?2 AND is_active = 1
+                 ORDER BY id ASC
+                 LIMIT 1",
+                params![topic_id, family_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+        {
+            existing
+        } else {
+            self.conn
+                .execute(
+                    "INSERT INTO questions (
+                        subject_id, topic_id, family_id, stem, question_format, explanation_text,
+                        difficulty_level, estimated_time_seconds, marks, source_type,
+                        primary_knowledge_role, primary_cognitive_demand, primary_solve_pattern,
+                        primary_pedagogic_function, classification_confidence, intelligence_snapshot,
+                        primary_skill_id, cognitive_level, is_active, pack_id
+                     ) VALUES (?1, ?2, ?3, ?4, 'mcq', ?5, 4200, 45, 1, 'generated',
+                               'concept_check', 'recognition', 'single_step_identification',
+                               'coverage_seed', 7200, ?6, ?7, 'understanding', 1, NULL)",
+                    params![
+                        subject_id,
+                        topic_id,
+                        family_id,
+                        format!("Which statement best matches the core idea in {}?", topic_name),
+                        format!(
+                            "This generated question checks whether the learner can recognize the main idea in {} before moving into harder variants.",
+                            topic_name
+                        ),
+                        serialize_json(&json!({
+                            "generated_by": "foundry_job_executor",
+                            "topic_id": topic_id,
+                            "family_id": family_id,
+                        }))?,
+                        node_id,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let question_id = self.conn.last_insert_rowid();
+            let distractor_label = format!("Surface rule confusion in {}", topic_name);
+            for (label, option_text, is_correct, misconception) in [
+                (
+                    "A",
+                    format!(
+                        "The explanation that preserves the core meaning of {}",
+                        topic_name
+                    ),
+                    1,
+                    None,
+                ),
+                (
+                    "B",
+                    format!(
+                        "A shallow shortcut that often misleads learners in {}",
+                        topic_name
+                    ),
+                    0,
+                    Some(misconception_id),
+                ),
+                (
+                    "C",
+                    format!(
+                        "An overgeneralized rule that does not always fit {}",
+                        topic_name
+                    ),
+                    0,
+                    Some(misconception_id),
+                ),
+                (
+                    "D",
+                    format!(
+                        "A memorized pattern with no anchor to the concept in {}",
+                        topic_name
+                    ),
+                    0,
+                    Some(misconception_id),
+                ),
+            ] {
+                self.conn
+                    .execute(
+                        "INSERT INTO question_options (
+                            question_id, option_label, option_text, is_correct, misconception_id,
+                            distractor_intent, position
+                         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                        params![
+                            question_id,
+                            label,
+                            option_text,
+                            is_correct,
+                            misconception,
+                            if is_correct == 1 {
+                                None::<String>
+                            } else {
+                                Some(distractor_label.clone())
+                            },
+                            match label {
+                                "A" => 1,
+                                "B" => 2,
+                                "C" => 3,
+                                _ => 4,
+                            },
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            }
+            self.conn
+                .execute(
+                    "INSERT INTO question_skill_links (question_id, node_id, contribution_weight, is_primary)
+                     VALUES (?1, ?2, 10000, 1)",
+                    params![question_id, node_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            question_id
+        };
+
+        Ok(json!({
+            "family_id": family_id,
+            "question_id": question_id,
+        }))
+    }
+
+    fn seed_contrast_support(&self, topic_id: i64) -> EcoachResult<i64> {
+        if let Some(existing) = self
+            .conn
+            .query_row(
+                "SELECT id
+                 FROM contrast_pairs
+                 WHERE topic_id = ?1
+                 ORDER BY id ASC
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+        {
+            return Ok(existing);
+        }
+
+        let (subject_id, topic_name) = self.topic_subject_and_name(topic_id)?;
+        let left_entry_id = self.seed_knowledge_support(topic_id, "definition")?;
+        let right_entry_id = self.seed_knowledge_support(topic_id, "explanation")?;
+
+        self.conn
+            .execute(
+                "INSERT INTO contrast_pairs (
+                    left_entry_id, right_entry_id, title, trap_strength, created_at,
+                    pair_code, subject_id, topic_id, left_label, right_label, summary_text, difficulty_score
+                 ) VALUES (?1, ?2, ?3, 7200, datetime('now'), ?4, ?5, ?6, 'Definition', 'Explanation', ?7, 5200)",
+                params![
+                    left_entry_id,
+                    right_entry_id,
+                    format!("{} definition vs explanation", topic_name),
+                    format!("AUTO-CONTRAST-{}", topic_id),
+                    subject_id,
+                    topic_id,
+                    format!("Use this pair to separate the meaning of {} from a worked explanation of it.", topic_name),
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let pair_id = self.conn.last_insert_rowid();
+
+        for (ownership_type, atom_text, lane, explanation_text, reveal_order) in [
+            (
+                "left_only",
+                format!("States what {} means", topic_name),
+                "meaning",
+                format!(
+                    "A definition should lock the meaning boundary for {}.",
+                    topic_name
+                ),
+                1,
+            ),
+            (
+                "right_only",
+                format!("Shows how to explain or use {}", topic_name),
+                "application",
+                format!(
+                    "An explanation should show why or how {} works in context.",
+                    topic_name
+                ),
+                2,
+            ),
+            (
+                "both",
+                format!("Both refer to the same topic: {}", topic_name),
+                "bridge",
+                format!(
+                    "Both sides stay inside the same topic but serve different learning roles for {}.",
+                    topic_name
+                ),
+                3,
+            ),
+        ] {
+            self.conn
+                .execute(
+                    "INSERT INTO contrast_evidence_atoms (
+                        pair_id, ownership_type, atom_text, created_at, lane, explanation_text,
+                        difficulty_score, is_speed_ready, reveal_order
+                     ) VALUES (?1, ?2, ?3, datetime('now'), ?4, ?5, 5000, 1, ?6)",
+                    params![
+                        pair_id,
+                        ownership_type,
+                        atom_text,
+                        lane,
+                        explanation_text,
+                        reveal_order
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        Ok(pair_id)
+    }
+
+    fn topic_subject_and_name(&self, topic_id: i64) -> EcoachResult<(i64, String)> {
+        self.conn
+            .query_row(
+                "SELECT subject_id, name FROM topics WHERE id = ?1 LIMIT 1",
+                [topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn ensure_primary_node(&self, topic_id: i64, topic_name: &str) -> EcoachResult<(i64, bool)> {
+        if let Some(existing) = self
+            .conn
+            .query_row(
+                "SELECT id
+                 FROM academic_nodes
+                 WHERE topic_id = ?1 AND is_active = 1
+                 ORDER BY foundation_weight DESC, id ASC
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+        {
+            return Ok((existing, false));
+        }
+
+        self.conn
+            .execute(
+                "INSERT INTO academic_nodes (
+                    topic_id, node_type, canonical_title, short_label, description_formal,
+                    description_simple, core_meaning, difficulty_band, exam_relevance_score,
+                    foundation_weight, is_active, metadata_json
+                 ) VALUES (?1, 'concept', ?2, ?3, ?4, ?5, ?6, 'medium', 7600, 8200, 1, ?7)",
+                params![
+                    topic_id,
+                    format!("{} core idea", topic_name),
+                    topic_name,
+                    format!("Formal concept anchor for {}", topic_name),
+                    format!("Simple anchor for {}", topic_name),
+                    format!(
+                        "The learner should recognize the central meaning of {}.",
+                        topic_name
+                    ),
+                    serialize_json(&json!({
+                        "generated_by": "foundry_job_executor",
+                        "seed_kind": "curriculum_support",
+                    }))?,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok((self.conn.last_insert_rowid(), true))
+    }
+
+    fn count_learning_objectives(&self, topic_id: i64) -> EcoachResult<i64> {
+        self.conn
+            .query_row(
+                "SELECT COUNT(*) FROM learning_objectives WHERE topic_id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn count_topic_edges(&self, topic_id: i64) -> EcoachResult<i64> {
+        self.conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM node_edges
+                 WHERE (from_node_type = 'topic' AND from_node_id = ?1)
+                    OR (to_node_type = 'topic' AND to_node_id = ?1)",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
     fn subject_id_for_code(&self, subject_code: &str) -> EcoachResult<Option<i64>> {
@@ -2253,6 +3390,181 @@ mod tests {
                 .iter()
                 .any(|topic| topic.topic_id == topic_id && topic.published_artifact_count >= 1)
         );
+    }
+
+    #[test]
+    fn foundry_run_next_builds_sparse_topic_artifacts_end_to_end() {
+        let conn = open_test_database();
+        seed_admin(&conn);
+        PackService::new(&conn)
+            .install_pack(sample_pack_path())
+            .expect("sample pack should install");
+        let service = FoundryCoordinatorService::new(&conn);
+
+        let subject_code: String = conn
+            .query_row("SELECT code FROM subjects WHERE id = 1", [], |row| {
+                row.get(0)
+            })
+            .expect("subject should exist");
+        let source = service
+            .register_source_upload(SourceUploadInput {
+                uploader_account_id: 1,
+                source_kind: "curriculum_pdf".to_string(),
+                title: "Sparse Topic Builder".to_string(),
+                source_path: Some("C:/tmp/sparse-topic.pdf".to_string()),
+                country_code: Some("GH".to_string()),
+                exam_board: Some("WAEC".to_string()),
+                education_level: Some("JHS".to_string()),
+                subject_code: Some(subject_code),
+                academic_year: Some("2026".to_string()),
+                language_code: Some("en".to_string()),
+                version_label: Some("draft".to_string()),
+                metadata: json!({ "source_trust": "tier_a" }),
+            })
+            .expect("source should register");
+        service
+            .mark_source_reviewed(source.id)
+            .expect("source should become reviewed");
+
+        conn.execute(
+            "INSERT INTO topics (
+                subject_id, code, name, description, node_type, display_order,
+                exam_weight, difficulty_band, importance_weight, is_active
+             ) VALUES (1, 'AUTO-SPARSE', 'Ratio Reasoning Foundations', 'Sparse foundry build target', 'topic', 999, 4500, 'medium', 7200, 1)",
+            [],
+        )
+        .expect("sparse topic should insert");
+        let topic_id = conn.last_insert_rowid();
+
+        let queued_jobs = service
+            .queue_topic_foundry_jobs(topic_id, "snapshot_refresh")
+            .expect("topic jobs should queue");
+        assert!(
+            queued_jobs
+                .iter()
+                .any(|job| job.job_type == "curriculum_enrichment_job"),
+            "curriculum enrichment job should be queued for a sparse topic"
+        );
+        assert!(
+            queued_jobs
+                .iter()
+                .any(|job| job.job_type == "question_generation_job"),
+            "question generation job should be queued for a sparse topic"
+        );
+        assert!(
+            queued_jobs.iter().any(|job| job.job_type == "publish_job"),
+            "publish job should be queued for a sparse topic"
+        );
+
+        let mut completed_job_types = BTreeSet::new();
+        for _ in 0..20 {
+            let Some(job) = service
+                .run_next_foundry_job(Some(1))
+                .expect("running next foundry job should succeed")
+            else {
+                break;
+            };
+            if job.topic_id == Some(topic_id) && job.status == "completed" {
+                completed_job_types.insert(job.job_type);
+            }
+        }
+
+        let node_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM academic_nodes WHERE topic_id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("academic nodes should count");
+        let objective_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM learning_objectives WHERE topic_id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("learning objectives should count");
+        let misconception_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM misconception_patterns WHERE topic_id = ?1 AND is_active = 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("misconceptions should count");
+        let question_family_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM question_families WHERE topic_id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("question families should count");
+        let question_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM questions WHERE topic_id = ?1 AND is_active = 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("questions should count");
+        let explanation_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM knowledge_entries WHERE topic_id = ?1 AND entry_type = 'explanation' AND status = 'active'",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("explanations should count");
+        let formula_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM knowledge_entries WHERE topic_id = ?1 AND entry_type = 'formula' AND status = 'active'",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("formulas should count");
+        let worked_example_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM knowledge_entries WHERE topic_id = ?1 AND entry_type = 'worked_example' AND status = 'active'",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("worked examples should count");
+        let contrast_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM contrast_pairs WHERE topic_id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("contrast pairs should count");
+
+        let latest_publish_job = ContentPublishService::new(&conn)
+            .list_publish_jobs(None)
+            .expect("publish jobs should list")
+            .into_iter()
+            .filter(|job| job.topic_id == Some(topic_id))
+            .max_by_key(|job| job.id)
+            .expect("topic should have a publish job");
+        let snapshot = service
+            .recompute_topic_package_snapshot(topic_id)
+            .expect("snapshot should recompute")
+            .expect("snapshot should exist");
+
+        assert!(completed_job_types.contains("curriculum_enrichment_job"));
+        assert!(completed_job_types.contains("misconception_build_job"));
+        assert!(completed_job_types.contains("question_generation_job"));
+        assert!(completed_job_types.contains("note_build_job"));
+        assert!(completed_job_types.contains("formula_pack_build_job"));
+        assert!(completed_job_types.contains("worked_example_build_job"));
+        assert!(completed_job_types.contains("contrast_build_job"));
+        assert!(completed_job_types.contains("publish_job"));
+        assert!(node_count >= 1);
+        assert!(objective_count >= 1);
+        assert!(misconception_count >= 1);
+        assert!(question_family_count >= 1);
+        assert!(question_count >= 1);
+        assert!(explanation_count >= 1);
+        assert!(formula_count >= 1);
+        assert!(worked_example_count >= 1);
+        assert!(contrast_count >= 1);
+        assert_eq!(latest_publish_job.status, "ready_to_publish");
+        assert!(snapshot.publishable_artifact_count >= 1);
+        assert!(snapshot.resource_readiness_score >= 6_000);
     }
 
     fn open_test_database() -> Connection {

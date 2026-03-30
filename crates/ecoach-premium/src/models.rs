@@ -154,3 +154,38 @@ pub struct RiskDashboard {
     pub flags: Vec<RiskFlag>,
     pub interventions: Vec<InterventionRecord>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PremiumPriorityTopic {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub mastery_score: BasisPoints,
+    pub gap_score: BasisPoints,
+    pub priority_score: BasisPoints,
+    pub trend_state: String,
+    pub is_blocked: bool,
+    pub next_review_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PremiumStrategySnapshot {
+    pub student_id: i64,
+    pub student_name: String,
+    pub tier: String,
+    pub strategy_mode: String,
+    pub overall_readiness_score: BasisPoints,
+    pub overall_readiness_band: String,
+    pub exam_target: Option<String>,
+    pub exam_target_date: Option<String>,
+    pub current_phase: Option<String>,
+    pub daily_budget_minutes: Option<i64>,
+    pub inactive_days: Option<i64>,
+    pub overdue_review_count: i64,
+    pub active_risk_count: i64,
+    pub critical_risk_count: i64,
+    pub active_intervention_count: i64,
+    pub priority_topics: Vec<PremiumPriorityTopic>,
+    pub top_risk_titles: Vec<String>,
+    pub coach_actions: Vec<String>,
+    pub household_actions: Vec<String>,
+}

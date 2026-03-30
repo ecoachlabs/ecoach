@@ -1,3 +1,5 @@
+use std::collections::{BTreeMap, BTreeSet};
+
 use chrono::Utc;
 use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, to_bp};
 use rusqlite::{Connection, OptionalExtension, params};
@@ -10,6 +12,18 @@ use crate::models::{
 
 pub struct MockCentreService<'a> {
     conn: &'a Connection,
+}
+
+#[derive(Debug, Clone)]
+struct MockCandidate {
+    question_id: i64,
+    topic_id: i64,
+    family_id: Option<i64>,
+    estimated_time_seconds: i64,
+    quality_score: i64,
+    recurrence_score: i64,
+    replacement_score: i64,
+    exact_paper_match: bool,
 }
 
 impl<'a> MockCentreService<'a> {
@@ -88,57 +102,8 @@ impl<'a> MockCentreService<'a> {
         session_id: i64,
         input: &CompileMockInput,
     ) -> EcoachResult<()> {
-        // Select questions distributed across topics
-        let question_count = input.question_count as i64;
-
-        let questions: Vec<(i64, i64)> = if input.topic_ids.is_empty() {
-            // All topics in subject
-            let mut stmt = self
-                .conn
-                .prepare(
-                    "SELECT q.id, q.topic_id FROM questions q
-                     INNER JOIN topics t ON t.id = q.topic_id
-                     WHERE t.subject_id = ?1 AND q.status = 'active'
-                     ORDER BY RANDOM()
-                     LIMIT ?2",
-                )
-                .map_err(|e| EcoachError::Storage(e.to_string()))?;
-
-            stmt.query_map(params![input.subject_id, question_count], |row| {
-                Ok((row.get(0)?, row.get(1)?))
-            })
-            .map_err(|e| EcoachError::Storage(e.to_string()))?
-            .filter_map(|r| r.ok())
-            .collect()
-        } else {
-            // Specific topics - distribute evenly
-            let per_topic = (question_count / input.topic_ids.len() as i64).max(1);
-            let mut all_questions = Vec::new();
-
-            for topic_id in &input.topic_ids {
-                let mut stmt = self
-                    .conn
-                    .prepare(
-                        "SELECT q.id, q.topic_id FROM questions q
-                         WHERE q.topic_id = ?1 AND q.status = 'active'
-                         ORDER BY RANDOM()
-                         LIMIT ?2",
-                    )
-                    .map_err(|e| EcoachError::Storage(e.to_string()))?;
-
-                let topic_qs: Vec<(i64, i64)> = stmt
-                    .query_map(params![topic_id, per_topic], |row| {
-                        Ok((row.get(0)?, row.get(1)?))
-                    })
-                    .map_err(|e| EcoachError::Storage(e.to_string()))?
-                    .filter_map(|r| r.ok())
-                    .collect();
-
-                all_questions.extend(topic_qs);
-            }
-            all_questions.truncate(question_count as usize);
-            all_questions
-        };
+        let candidates = self.load_mock_candidates(input)?;
+        let questions = self.select_mock_questions(&candidates, input);
 
         // Insert session_items for the mock
         for (display_order, (question_id, topic_id)) in questions.iter().enumerate() {
@@ -168,6 +133,165 @@ impl<'a> MockCentreService<'a> {
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         Ok(())
+    }
+
+    fn load_mock_candidates(&self, input: &CompileMockInput) -> EcoachResult<Vec<MockCandidate>> {
+        let paper_year_filter = input.paper_year.clone().unwrap_or_default();
+        let sql = if input.topic_ids.is_empty() {
+            "SELECT q.id, q.topic_id, q.family_id, q.estimated_time_seconds,
+                    COALESCE(qfh.quality_score, 5500),
+                    COALESCE(qfa.recurrence_score, 0),
+                    COALESCE(qfa.replacement_score, 0),
+                    EXISTS(
+                        SELECT 1
+                        FROM past_paper_question_links ppql
+                        INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                        WHERE ppql.question_id = q.id
+                          AND (?2 = '' OR CAST(pps.exam_year AS TEXT) = ?2)
+                    ) AS exact_paper_match
+             FROM questions q
+             LEFT JOIN question_family_health qfh ON qfh.family_id = q.family_id
+             LEFT JOIN question_family_analytics qfa ON qfa.family_id = q.family_id
+             WHERE q.subject_id = ?1 AND q.is_active = 1"
+                .to_string()
+        } else {
+            let placeholders = input
+                .topic_ids
+                .iter()
+                .map(|_| "?")
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(
+                "SELECT q.id, q.topic_id, q.family_id, q.estimated_time_seconds,
+                        COALESCE(qfh.quality_score, 5500),
+                        COALESCE(qfa.recurrence_score, 0),
+                        COALESCE(qfa.replacement_score, 0),
+                        EXISTS(
+                            SELECT 1
+                            FROM past_paper_question_links ppql
+                            INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                            WHERE ppql.question_id = q.id
+                              AND (?2 = '' OR CAST(pps.exam_year AS TEXT) = ?2)
+                        ) AS exact_paper_match
+                 FROM questions q
+                 LEFT JOIN question_family_health qfh ON qfh.family_id = q.family_id
+                 LEFT JOIN question_family_analytics qfa ON qfa.family_id = q.family_id
+                 WHERE q.subject_id = ?1 AND q.is_active = 1 AND q.topic_id IN ({})",
+                placeholders
+            )
+        };
+
+        let mut params_vec: Vec<rusqlite::types::Value> =
+            Vec::with_capacity(input.topic_ids.len() + 2);
+        params_vec.push(input.subject_id.into());
+        params_vec.push(paper_year_filter.clone().into());
+        for topic_id in &input.topic_ids {
+            params_vec.push((*topic_id).into());
+        }
+
+        let mut statement = self
+            .conn
+            .prepare(&sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+                Ok(MockCandidate {
+                    question_id: row.get(0)?,
+                    topic_id: row.get(1)?,
+                    family_id: row.get(2)?,
+                    estimated_time_seconds: row.get(3)?,
+                    quality_score: row.get(4)?,
+                    recurrence_score: row.get(5)?,
+                    replacement_score: row.get(6)?,
+                    exact_paper_match: row.get::<_, i64>(7)? == 1,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut candidates = Vec::new();
+        for row in rows {
+            candidates.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(candidates)
+    }
+
+    fn select_mock_questions(
+        &self,
+        candidates: &[MockCandidate],
+        input: &CompileMockInput,
+    ) -> Vec<(i64, i64)> {
+        if candidates.is_empty() {
+            return Vec::new();
+        }
+
+        let mut topic_quotas = BTreeMap::new();
+        let mut ordered_topics = if input.topic_ids.is_empty() {
+            let mut topics = candidates
+                .iter()
+                .map(|item| item.topic_id)
+                .collect::<Vec<_>>();
+            topics.sort_unstable();
+            topics.dedup();
+            topics
+        } else {
+            input.topic_ids.clone()
+        };
+        ordered_topics.sort_unstable();
+        ordered_topics.dedup();
+
+        let base = (input.question_count / ordered_topics.len().max(1)) as i64;
+        let remainder = input.question_count % ordered_topics.len().max(1);
+        for (index, topic_id) in ordered_topics.iter().enumerate() {
+            let quota = base + if index < remainder { 1 } else { 0 };
+            topic_quotas.insert(*topic_id, quota.max(1));
+        }
+
+        let mut ranked = candidates.to_vec();
+        ranked.sort_by(|left, right| {
+            score_mock_candidate(right)
+                .cmp(&score_mock_candidate(left))
+                .then(right.question_id.cmp(&left.question_id))
+        });
+
+        let mut selected = Vec::new();
+        let mut selected_question_ids = BTreeSet::new();
+        let mut family_counts: BTreeMap<i64, i64> = BTreeMap::new();
+        let family_cap = ((input.question_count as i64 + 1) / 2).max(1);
+
+        for candidate in &ranked {
+            if selected.len() >= input.question_count {
+                break;
+            }
+            if selected_question_ids.contains(&candidate.question_id) {
+                continue;
+            }
+            let remaining_quota = topic_quotas.get(&candidate.topic_id).copied().unwrap_or(0);
+            if remaining_quota <= 0 {
+                continue;
+            }
+            if let Some(family_id) = candidate.family_id {
+                if family_counts.get(&family_id).copied().unwrap_or(0) >= family_cap {
+                    continue;
+                }
+                *family_counts.entry(family_id).or_insert(0) += 1;
+            }
+            *topic_quotas.entry(candidate.topic_id).or_insert(0) -= 1;
+            selected_question_ids.insert(candidate.question_id);
+            selected.push((candidate.question_id, candidate.topic_id));
+        }
+
+        if selected.len() < input.question_count {
+            for candidate in &ranked {
+                if selected.len() >= input.question_count {
+                    break;
+                }
+                if selected_question_ids.insert(candidate.question_id) {
+                    selected.push((candidate.question_id, candidate.topic_id));
+                }
+            }
+        }
+
+        selected
     }
 
     // ── Start timed execution ──
@@ -722,4 +846,24 @@ impl<'a> MockCentreService<'a> {
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
         Ok(())
     }
+}
+
+fn score_mock_candidate(candidate: &MockCandidate) -> i64 {
+    let paper_match = if candidate.exact_paper_match {
+        3_200
+    } else {
+        0
+    };
+    let pacing_bonus = if candidate.estimated_time_seconds <= 90 {
+        800
+    } else if candidate.estimated_time_seconds <= 150 {
+        550
+    } else {
+        250
+    };
+    paper_match
+        + (candidate.quality_score / 5)
+        + (candidate.recurrence_score / 4)
+        + (candidate.replacement_score / 3)
+        + pacing_bonus
 }

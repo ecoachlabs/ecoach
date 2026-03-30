@@ -1,10 +1,11 @@
-use std::str::FromStr;
+use std::{collections::BTreeSet, str::FromStr};
 
 use chrono::{DateTime, Duration, Utc};
 use ecoach_questions::{Question, QuestionService};
 use ecoach_substrate::{
-    BasisPoints, DomainEvent, EcoachError, EcoachResult, FabricEvidenceRecord, FabricSignal,
-    LearnerEvidenceFabric, clamp_bp, ema_update, from_bp, to_bp,
+    BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry, FabricEvidenceRecord,
+    FabricOrchestrationSummary, FabricSignal, LearnerEvidenceFabric, clamp_bp, ema_update, from_bp,
+    to_bp,
 };
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
@@ -273,13 +274,20 @@ impl<'a> StudentModelService<'a> {
         }
 
         signals.extend(self.list_recent_mission_signals(student_id, per_stream_limit)?);
+        signals.extend(self.list_recent_session_signals(student_id, per_stream_limit)?);
 
         let mut evidence_records = Vec::new();
         evidence_records.extend(self.list_recent_attempt_evidence(student_id, per_stream_limit)?);
         evidence_records.extend(self.list_recent_memory_evidence(student_id, per_stream_limit)?);
         evidence_records.extend(self.list_recent_diagnosis_evidence(student_id, per_stream_limit)?);
         evidence_records.extend(self.list_recent_mission_evidence(student_id, per_stream_limit)?);
+        evidence_records.extend(self.list_recent_session_evidence(student_id, per_stream_limit)?);
         evidence_records.extend(self.list_recent_runtime_evidence(student_id, per_stream_limit)?);
+
+        let orchestration = FabricOrchestrationSummary::from_available_inputs(
+            &EngineRegistry::core_runtime(),
+            learner_fabric_inputs(&signals, &evidence_records),
+        );
 
         Ok(LearnerEvidenceFabric {
             student_id: snapshot.student_id,
@@ -290,6 +298,7 @@ impl<'a> StudentModelService<'a> {
             due_memory_count: snapshot.due_memory_count,
             signals,
             evidence_records,
+            orchestration,
         })
     }
 
@@ -1401,6 +1410,147 @@ impl<'a> StudentModelService<'a> {
         Ok(items)
     }
 
+    fn list_recent_session_signals(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<FabricSignal>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    s.id,
+                    s.session_type,
+                    s.status,
+                    s.accuracy_score,
+                    COALESCE(s.completed_at, s.last_activity_at, s.started_at),
+                    (
+                        SELECT re.payload_json
+                        FROM runtime_events re
+                        WHERE re.aggregate_kind = 'session'
+                          AND re.aggregate_id = CAST(s.id AS TEXT)
+                          AND re.event_type = 'session.interpreted'
+                        ORDER BY re.occurred_at DESC, re.id DESC
+                        LIMIT 1
+                    )
+                 FROM sessions s
+                 WHERE s.student_id = ?1
+                   AND s.status = 'completed'
+                 ORDER BY COALESCE(s.completed_at, s.last_activity_at, s.started_at) DESC, s.id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, limit as i64], |row| {
+                let payload_json: Option<String> = row.get(5)?;
+                let payload = payload_json
+                    .as_deref()
+                    .map(|value| {
+                        serde_json::from_str::<serde_json::Value>(value).map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                5,
+                                rusqlite::types::Type::Text,
+                                Box::new(err),
+                            )
+                        })
+                    })
+                    .transpose()?
+                    .unwrap_or_else(|| json!({}));
+                let session_id = row.get::<_, i64>(0)?;
+                let session_type = row.get::<_, String>(1)?;
+                let status = row.get::<_, String>(2)?;
+                let accuracy_score = row.get::<_, Option<BasisPoints>>(3)?;
+                let observed_at = row
+                    .get::<_, Option<String>>(4)?
+                    .unwrap_or_else(|| Utc::now().to_rfc3339());
+                let next_action_hint = payload
+                    .get("next_action_hint")
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string)
+                    .or_else(|| Some(status.clone()))
+                    .unwrap_or_else(|| "stabilize_and_review".to_string());
+                Ok(FabricSignal {
+                    engine_key: "session_runtime".to_string(),
+                    signal_type: "session_interpretation".to_string(),
+                    status: Some(next_action_hint),
+                    score: accuracy_score,
+                    topic_id: payload
+                        .get("topic_summaries")
+                        .and_then(|value| value.as_array())
+                        .and_then(|items| {
+                            if items.len() == 1 {
+                                items[0].get("topic_id").and_then(|value| value.as_i64())
+                            } else {
+                                None
+                            }
+                        }),
+                    node_id: None,
+                    question_id: None,
+                    observed_at,
+                    payload: json!({
+                        "session_id": session_id,
+                        "session_type": session_type,
+                        "status": status,
+                        "accuracy_score": accuracy_score,
+                        "interpretation": payload,
+                    }),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            let signal = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            items.push(signal.clone());
+
+            if let Some(topic_summaries) = signal
+                .payload
+                .get("interpretation")
+                .and_then(|value| value.get("topic_summaries"))
+                .and_then(|value| value.as_array())
+            {
+                for topic in topic_summaries {
+                    let Some(topic_id) = topic.get("topic_id").and_then(|value| value.as_i64())
+                    else {
+                        continue;
+                    };
+                    items.push(FabricSignal {
+                        engine_key: "session_runtime".to_string(),
+                        signal_type: "session_topic_outcome".to_string(),
+                        status: Some(
+                            topic
+                                .get("dominant_error_type")
+                                .and_then(|value| value.as_str())
+                                .map(str::to_string)
+                                .unwrap_or_else(|| {
+                                    if topic
+                                        .get("accuracy_score")
+                                        .and_then(|value| value.as_u64())
+                                        .unwrap_or_default()
+                                        >= 7_000
+                                    {
+                                        "stabilize".to_string()
+                                    } else {
+                                        "repair".to_string()
+                                    }
+                                }),
+                        ),
+                        score: topic
+                            .get("accuracy_score")
+                            .and_then(|value| value.as_u64())
+                            .map(|value| value as BasisPoints),
+                        topic_id: Some(topic_id),
+                        node_id: None,
+                        question_id: None,
+                        observed_at: signal.observed_at.clone(),
+                        payload: topic.clone(),
+                    });
+                }
+            }
+        }
+        Ok(items)
+    }
+
     fn list_recent_attempt_evidence(
         &self,
         student_id: i64,
@@ -1437,6 +1587,92 @@ impl<'a> StudentModelService<'a> {
                         "error_type": row.get::<_, Option<String>>(7)?,
                         "confidence_level": row.get::<_, Option<String>>(8)?,
                         "evidence_weight": row.get::<_, BasisPoints>(9)?,
+                    }),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+
+    fn list_recent_session_evidence(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<FabricEvidenceRecord>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    s.id,
+                    s.session_type,
+                    s.status,
+                    s.accuracy_score,
+                    COALESCE(s.completed_at, s.last_activity_at, s.started_at),
+                    (
+                        SELECT re.payload_json
+                        FROM runtime_events re
+                        WHERE re.aggregate_kind = 'session'
+                          AND re.aggregate_id = CAST(s.id AS TEXT)
+                          AND re.event_type = 'session.interpreted'
+                        ORDER BY re.occurred_at DESC, re.id DESC
+                        LIMIT 1
+                    )
+                 FROM sessions s
+                 WHERE s.student_id = ?1
+                   AND s.status = 'completed'
+                 ORDER BY COALESCE(s.completed_at, s.last_activity_at, s.started_at) DESC, s.id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, limit as i64], |row| {
+                let payload_json: Option<String> = row.get(5)?;
+                let interpretation = payload_json
+                    .as_deref()
+                    .map(|value| {
+                        serde_json::from_str::<serde_json::Value>(value).map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                5,
+                                rusqlite::types::Type::Text,
+                                Box::new(err),
+                            )
+                        })
+                    })
+                    .transpose()?
+                    .unwrap_or_else(|| json!({}));
+                let session_type = row.get::<_, String>(1)?;
+                let status = row.get::<_, String>(2)?;
+                let accuracy_score = row.get::<_, Option<BasisPoints>>(3)?;
+                let occurred_at = row
+                    .get::<_, Option<String>>(4)?
+                    .unwrap_or_else(|| Utc::now().to_rfc3339());
+                Ok(FabricEvidenceRecord {
+                    stream: "session_outcomes".to_string(),
+                    reference_id: row.get::<_, i64>(0)?.to_string(),
+                    event_type: "session_completed".to_string(),
+                    topic_id: interpretation
+                        .get("topic_summaries")
+                        .and_then(|value| value.as_array())
+                        .and_then(|items| {
+                            if items.len() == 1 {
+                                items[0].get("topic_id").and_then(|value| value.as_i64())
+                            } else {
+                                None
+                            }
+                        }),
+                    node_id: None,
+                    question_id: None,
+                    occurred_at,
+                    payload: json!({
+                        "session_type": session_type,
+                        "status": status,
+                        "accuracy_score": accuracy_score,
+                        "interpretation": interpretation,
                     }),
                 })
             })
@@ -2172,6 +2408,63 @@ fn bool_to_i64(value: bool) -> i64 {
     if value { 1 } else { 0 }
 }
 
+fn learner_fabric_inputs(
+    signals: &[FabricSignal],
+    evidence_records: &[FabricEvidenceRecord],
+) -> Vec<String> {
+    let mut inputs = BTreeSet::new();
+    inputs.insert("learner_evidence_fabric".to_string());
+
+    for signal in signals {
+        match signal.signal_type.as_str() {
+            "topic_truth" => {
+                inputs.insert("topic_truth".to_string());
+            }
+            "skill_truth" => {
+                inputs.insert("skill_truth".to_string());
+            }
+            "memory_truth" => {
+                inputs.insert("memory_truth".to_string());
+            }
+            "diagnosis_claim" => {
+                inputs.insert("diagnosis_claims".to_string());
+            }
+            "mission_memory" => {
+                inputs.insert("mission_memory".to_string());
+            }
+            "session_interpretation" | "session_topic_outcome" => {
+                inputs.insert("session_outcomes".to_string());
+            }
+            _ => {}
+        }
+    }
+
+    for record in evidence_records {
+        match record.stream.as_str() {
+            "question_attempts" => {
+                inputs.insert("answer_submissions".to_string());
+            }
+            "memory_events" => {
+                inputs.insert("memory_evidence".to_string());
+            }
+            "session_outcomes" => {
+                inputs.insert("session_outcomes".to_string());
+                inputs.insert("session_evidence".to_string());
+                inputs.insert("mission_memory_inputs".to_string());
+            }
+            "wrong_answer_diagnoses" => {
+                inputs.insert("diagnosis_claims".to_string());
+            }
+            "coach_mission_memories" => {
+                inputs.insert("mission_memory".to_string());
+            }
+            _ => {}
+        }
+    }
+
+    inputs.into_iter().collect()
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
@@ -2179,7 +2472,8 @@ mod tests {
     use chrono::{Duration, Utc};
     use ecoach_content::PackService;
     use ecoach_storage::run_runtime_migrations;
-    use rusqlite::Connection;
+    use rusqlite::{Connection, params};
+    use serde_json::json;
 
     use super::*;
 
@@ -2275,6 +2569,13 @@ mod tests {
                 |row| row.get(0),
             )
             .expect("question should exist");
+        let (subject_id, topic_id): (i64, i64) = conn
+            .query_row(
+                "SELECT subject_id, topic_id FROM questions WHERE id = ?1",
+                [question_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("question scope should resolve");
         let wrong_option_id: i64 = conn
             .query_row(
                 "SELECT id FROM question_options
@@ -2285,6 +2586,49 @@ mod tests {
                 |row| row.get(0),
             )
             .expect("wrong option should exist");
+        conn.execute(
+            "INSERT INTO sessions (
+                id, student_id, session_type, subject_id, topic_ids, question_count, total_questions,
+                is_timed, status, started_at, last_activity_at, answered_questions, correct_questions, accuracy_score
+             ) VALUES (?1, ?2, 'practice', ?3, ?4, 1, 1, 1, 'completed', ?5, ?5, 1, 0, 0)",
+            params![
+                11_i64,
+                1_i64,
+                subject_id,
+                serde_json::to_string(&vec![topic_id]).expect("topic ids json"),
+                Utc::now().to_rfc3339(),
+            ],
+        )
+        .expect("session should seed");
+        conn.execute(
+            "INSERT INTO runtime_events (
+                event_id, event_type, aggregate_kind, aggregate_id, trace_id, payload_json, occurred_at
+             ) VALUES (?1, 'session.interpreted', 'session', '11', ?2, ?3, ?4)",
+            params![
+                "session-interpreted-1",
+                "trace-session-1",
+                json!({
+                    "session_id": 11,
+                    "student_id": 1,
+                    "session_type": "practice",
+                    "status": "completed",
+                    "next_action_hint": "repair_required",
+                    "interpretation_tags": ["timed_fragility", "misconception_pressure"],
+                    "topic_summaries": [{
+                        "topic_id": topic_id,
+                        "topic_name": "Fractions",
+                        "attempts": 1,
+                        "correct_attempts": 0,
+                        "accuracy_score": 0,
+                        "avg_response_time_ms": 18000,
+                        "dominant_error_type": "misconception_triggered"
+                    }]
+                })
+                .to_string(),
+                Utc::now().to_rfc3339(),
+            ],
+        )
+        .expect("session interpretation event should seed");
 
         let service = StudentModelService::new(&conn);
         service
@@ -2293,7 +2637,7 @@ mod tests {
                 &AnswerSubmission {
                     question_id,
                     selected_option_id: wrong_option_id,
-                    session_id: None,
+                    session_id: Some(11),
                     session_type: Some("practice".to_string()),
                     started_at: Utc::now() - Duration::seconds(30),
                     submitted_at: Utc::now(),
@@ -2343,6 +2687,18 @@ mod tests {
         );
         assert!(
             fabric
+                .signals
+                .iter()
+                .any(|signal| signal.signal_type == "session_interpretation")
+        );
+        assert!(
+            fabric
+                .signals
+                .iter()
+                .any(|signal| signal.signal_type == "session_topic_outcome")
+        );
+        assert!(
+            fabric
                 .evidence_records
                 .iter()
                 .any(|record| record.stream == "question_attempts")
@@ -2364,6 +2720,26 @@ mod tests {
                 .evidence_records
                 .iter()
                 .any(|record| record.stream == "runtime_events")
+        );
+        assert!(
+            fabric
+                .evidence_records
+                .iter()
+                .any(|record| record.stream == "session_outcomes")
+        );
+        assert!(
+            fabric
+                .orchestration
+                .consumer_targets
+                .iter()
+                .any(|target| target.engine_key == "coach_brain")
+        );
+        assert!(
+            fabric
+                .orchestration
+                .available_inputs
+                .iter()
+                .any(|input| input == "session_outcomes")
         );
     }
 

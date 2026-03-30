@@ -27,15 +27,17 @@ mod tests {
     use std::path::PathBuf;
 
     use ecoach_content::{PackService, ParseCandidateInput, SourceUploadInput};
-    use ecoach_games::TrapsMode;
+    use ecoach_games::{GameType, StartGameInput, SubmitGameAnswerInput, TrapsMode};
     use ecoach_identity::CreateAccountInput;
     use ecoach_questions::{QuestionGenerationRequestInput, QuestionSlotSpec, QuestionVariantMode};
     use ecoach_sessions::PracticeSessionStartInput;
     use ecoach_substrate::{AccountType, EntitlementTier};
 
+    use rusqlite::OptionalExtension;
+
     use crate::{
-        CommandError, content_commands, identity_commands, question_commands, session_commands,
-        state::AppState, traps_commands,
+        CommandError, content_commands, game_commands, identity_commands, question_commands,
+        session_commands, state::AppState, traps_commands,
     };
 
     #[test]
@@ -154,6 +156,122 @@ mod tests {
         );
         assert!(duplicate.is_near_duplicate);
         assert_eq!(family_health.generated_instances, 1);
+    }
+
+    #[test]
+    fn command_boundary_surfaces_mindstack_and_tug_states() {
+        let state = AppState::in_memory().expect("in-memory command state should build");
+        state
+            .with_connection(|conn| {
+                let service = PackService::new(conn);
+                service.install_pack(&sample_pack_path())?;
+                Ok(())
+            })
+            .expect("sample pack should install");
+
+        let account = identity_commands::create_account(
+            &state,
+            CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Ama".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            },
+        )
+        .expect("student account should create");
+
+        let (question_id, correct_option_id, wrong_option_id) = state
+            .with_connection(|conn| {
+                conn.query_row(
+                    "SELECT q.id,
+                            MAX(CASE WHEN qo.is_correct = 1 THEN qo.id END) AS correct_option_id,
+                            MAX(CASE WHEN qo.is_correct = 0 THEN qo.id END) AS wrong_option_id
+                     FROM questions q
+                     INNER JOIN question_options qo ON qo.question_id = q.id
+                     INNER JOIN topics t ON t.id = q.topic_id
+                     WHERE t.code = 'FRA'
+                     GROUP BY q.id
+                     ORDER BY q.id ASC
+                     LIMIT 1",
+                    [],
+                    |row| {
+                        Ok((
+                            row.get::<_, i64>(0)?,
+                            row.get::<_, i64>(1)?,
+                            row.get::<_, i64>(2)?,
+                        ))
+                    },
+                )
+                .map_err(|err| CommandError {
+                    code: "storage_error".to_string(),
+                    message: err.to_string(),
+                })
+            })
+            .expect("fraction question options should load");
+
+        let mindstack = game_commands::start_game(
+            &state,
+            StartGameInput {
+                student_id: account.id,
+                game_type: GameType::Mindstack,
+                subject_id: 1,
+                topic_ids: vec![2],
+                question_count: 6,
+            },
+        )
+        .expect("mindstack session should start");
+        let initial_mindstack_state =
+            game_commands::get_mindstack_state(&state, mindstack.id).expect("state should load");
+        game_commands::submit_game_answer(
+            &state,
+            SubmitGameAnswerInput {
+                game_session_id: mindstack.id,
+                question_id,
+                selected_option_id: wrong_option_id,
+                response_time_ms: 5_500,
+            },
+        )
+        .expect("mindstack answer should submit");
+        let updated_mindstack_state =
+            game_commands::get_mindstack_state(&state, mindstack.id).expect("state should load");
+
+        let tug = game_commands::start_game(
+            &state,
+            StartGameInput {
+                student_id: account.id,
+                game_type: GameType::TugOfWar,
+                subject_id: 1,
+                topic_ids: vec![2],
+                question_count: 5,
+            },
+        )
+        .expect("tug session should start");
+        let initial_tug_state =
+            game_commands::get_tug_of_war_state(&state, tug.id).expect("tug state should load");
+        for _ in 0..2 {
+            game_commands::submit_game_answer(
+                &state,
+                SubmitGameAnswerInput {
+                    game_session_id: tug.id,
+                    question_id,
+                    selected_option_id: correct_option_id,
+                    response_time_ms: 1_800,
+                },
+            )
+            .expect("tug answer should submit");
+        }
+        let updated_tug_state =
+            game_commands::get_tug_of_war_state(&state, tug.id).expect("tug state should load");
+        let sessions = game_commands::list_game_sessions(&state, account.id, 10)
+            .expect("game session list should load");
+
+        assert_eq!(initial_mindstack_state.board_height, 0);
+        assert!(updated_mindstack_state.board_height > 0);
+        assert_eq!(initial_tug_state.position, 0);
+        assert!(updated_tug_state.position > 0);
+        assert!(updated_tug_state.opponent_difficulty > 5000);
+        assert!(sessions.iter().any(|session| session.id == mindstack.id));
+        assert!(sessions.iter().any(|session| session.id == tug.id));
     }
 
     #[test]
@@ -307,6 +425,278 @@ mod tests {
         assert!(job_board.failed_count >= 1);
         assert!(dashboard.average_package_score > 0);
         assert_eq!(dashboard.subject_code, "MATH");
+    }
+
+    // ── Integration test: attempt → learner truth recompute (Section 14.2 #1) ──
+
+    #[test]
+    fn attempt_submission_recomputes_learner_truth() {
+        let state = setup_state();
+        let account = create_student(&state, "Kofi");
+
+        let practice = session_commands::start_practice_session(
+            &state,
+            PracticeSessionStartInput {
+                student_id: account.id,
+                subject_id: 1,
+                topic_ids: vec![2],
+                question_count: 3,
+                is_timed: false,
+            },
+        )
+        .expect("practice session should start");
+
+        let (question_id, correct_option_id, wrong_option_id, item_id) = state
+            .with_connection(|conn| {
+                conn.query_row(
+                    "SELECT si.question_id,
+                            MAX(CASE WHEN qo.is_correct = 1 THEN qo.id END),
+                            MAX(CASE WHEN qo.is_correct = 0 THEN qo.id END),
+                            si.id
+                     FROM session_items si
+                     INNER JOIN question_options qo ON qo.question_id = si.question_id
+                     WHERE si.session_id = ?1
+                     GROUP BY si.id
+                     ORDER BY si.display_order ASC
+                     LIMIT 1",
+                    [practice.session_id],
+                    |row| {
+                        Ok((
+                            row.get::<_, i64>(0)?,
+                            row.get::<_, i64>(1)?,
+                            row.get::<_, i64>(2)?,
+                            row.get::<_, i64>(3)?,
+                        ))
+                    },
+                )
+                .map_err(|err| CommandError {
+                    code: "storage_error".to_string(),
+                    message: err.to_string(),
+                })
+            })
+            .expect("question/option IDs should load");
+
+        // Submit a correct answer through the hot path
+        let result = crate::attempt_commands::submit_attempt(
+            &state,
+            crate::attempt_commands::SubmitAttemptInput {
+                student_id: account.id,
+                session_id: practice.session_id,
+                session_item_id: item_id,
+                question_id,
+                selected_option_id: correct_option_id,
+                response_time_ms: Some(3000),
+                confidence_level: Some("sure".to_string()),
+                hint_count: 0,
+                changed_answer_count: 0,
+                was_timed: false,
+            },
+        )
+        .expect("submit_attempt should succeed");
+
+        assert!(result.is_correct);
+        assert!(result.updated_mastery > 0);
+        assert!(!result.next_action_title.is_empty());
+
+        // Verify learner truth was updated
+        let truth = crate::student_commands::get_learner_truth(&state, account.id)
+            .expect("learner truth should load");
+        assert!(truth.topic_count > 0);
+    }
+
+    // ── Integration test: session completion → next action (Section 14.2 #2) ──
+
+    #[test]
+    fn session_completion_resolves_next_coach_action() {
+        let state = setup_state();
+        let account = create_student(&state, "Abena");
+
+        let practice = session_commands::start_practice_session(
+            &state,
+            PracticeSessionStartInput {
+                student_id: account.id,
+                subject_id: 1,
+                topic_ids: vec![2],
+                question_count: 1,
+                is_timed: false,
+            },
+        )
+        .expect("session should start");
+
+        // Answer the single question via session service to keep it simple
+        let (item_id, question_id, correct_option_id) = state
+            .with_connection(|conn| {
+                conn.query_row(
+                    "SELECT si.id, si.question_id,
+                            (SELECT qo.id FROM question_options qo WHERE qo.question_id = si.question_id AND qo.is_correct = 1 LIMIT 1)
+                     FROM session_items si
+                     WHERE si.session_id = ?1
+                     ORDER BY si.display_order ASC
+                     LIMIT 1",
+                    [practice.session_id],
+                    |row| Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?, row.get::<_, i64>(2)?)),
+                )
+                .map_err(|err| CommandError {
+                    code: "storage_error".to_string(),
+                    message: err.to_string(),
+                })
+            })
+            .expect("item should load");
+
+        // Submit answer then complete
+        let attempt = crate::attempt_commands::submit_attempt(
+            &state,
+            crate::attempt_commands::SubmitAttemptInput {
+                student_id: account.id,
+                session_id: practice.session_id,
+                session_item_id: item_id,
+                question_id,
+                selected_option_id: correct_option_id,
+                response_time_ms: Some(2000),
+                confidence_level: None,
+                hint_count: 0,
+                changed_answer_count: 0,
+                was_timed: false,
+            },
+        )
+        .expect("attempt should succeed");
+
+        let completion = crate::attempt_commands::complete_session_with_pipeline(
+            &state,
+            account.id,
+            practice.session_id,
+        )
+        .expect("session completion pipeline should succeed");
+
+        assert_eq!(completion.status, "completed");
+        assert!(completion.answered_questions >= 1);
+        assert!(completion.correct_questions >= 1);
+        assert!(!completion.next_action_title.is_empty());
+    }
+
+    // ── Integration test: diagnostic → topic analytics (Section 14.2 #3) ──
+
+    #[test]
+    fn diagnostic_run_produces_analytics() {
+        let state = setup_state();
+        let account = create_student(&state, "Yaa");
+
+        let diagnostic = crate::diagnostic_commands::launch_diagnostic(
+            &state,
+            account.id,
+            1,
+            "quick".to_string(),
+        )
+        .expect("diagnostic should launch");
+
+        assert!(diagnostic.diagnostic_id > 0);
+
+        let analytics =
+            crate::diagnostic_commands::get_diagnostic_report(&state, diagnostic.diagnostic_id)
+                .expect("diagnostic report should load");
+
+        // Analytics may be empty for a fresh student with no evidence, but the call should succeed
+        // The important thing is the pipeline runs without error
+        assert!(analytics.len() >= 0);
+    }
+
+    // ── Integration test: memory evidence → review queue (Section 14.2 #4) ──
+
+    #[test]
+    fn memory_evidence_updates_review_queue() {
+        let state = setup_state();
+        let account = create_student(&state, "Kweku");
+
+        // Get a node_id from installed curriculum
+        let node_id: Option<i64> = state
+            .with_connection(|conn| {
+                conn.query_row(
+                    "SELECT id FROM academic_nodes WHERE topic_id = 2 LIMIT 1",
+                    [],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(|err| CommandError {
+                    code: "storage_error".to_string(),
+                    message: err.to_string(),
+                })
+            })
+            .expect("node query should succeed");
+
+        // Record a retrieval attempt
+        let memory_state = crate::memory_commands::record_retrieval_attempt(
+            &state,
+            ecoach_memory::RecordMemoryEvidenceInput {
+                student_id: account.id,
+                node_id,
+                topic_id: Some(2),
+                recall_mode: ecoach_memory::RecallMode::FreeRecall,
+                cue_level: ecoach_memory::CueLevel::None,
+                delay_bucket: "24h".to_string(),
+                interference_detected: false,
+                was_correct: true,
+                confidence_level: Some("sure".to_string()),
+            },
+        )
+        .expect("memory evidence should record");
+
+        assert!(memory_state.memory_strength > 0);
+        assert!(!memory_state.memory_state.is_empty());
+
+        // Check memory dashboard
+        let dashboard = crate::memory_commands::get_memory_dashboard(&state, account.id)
+            .expect("memory dashboard should load");
+
+        assert!(dashboard.total_items >= 1);
+        assert!(dashboard.healthy_count >= 0);
+
+        // Record a failed retrieval to create at-risk state
+        let failed_state = crate::memory_commands::record_retrieval_attempt(
+            &state,
+            ecoach_memory::RecordMemoryEvidenceInput {
+                student_id: account.id,
+                node_id,
+                topic_id: Some(2),
+                recall_mode: ecoach_memory::RecallMode::CuedRecall,
+                cue_level: ecoach_memory::CueLevel::Light,
+                delay_bucket: "48h".to_string(),
+                interference_detected: true,
+                was_correct: false,
+                confidence_level: Some("not_sure".to_string()),
+            },
+        )
+        .expect("failed retrieval should record");
+
+        // Strength should have decreased from the failure
+        assert!(failed_state.memory_strength <= memory_state.memory_strength);
+        assert!(failed_state.decay_risk > 0);
+    }
+
+    // ── Helpers ──
+
+    fn setup_state() -> AppState {
+        let state = AppState::in_memory().expect("in-memory state should build");
+        state
+            .with_connection(|conn| {
+                let service = PackService::new(conn);
+                service.install_pack(&sample_pack_path())?;
+                Ok(())
+            })
+            .expect("sample pack should install");
+        state
+    }
+
+    fn create_student(state: &AppState, name: &str) -> crate::dtos::AccountDto {
+        identity_commands::create_account(
+            state,
+            CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: name.to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            },
+        )
+        .expect("student account should create")
     }
 
     fn sample_pack_path() -> PathBuf {

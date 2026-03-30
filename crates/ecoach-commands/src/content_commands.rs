@@ -214,3 +214,22 @@ pub fn fail_foundry_job(
         Ok(FoundryJobDto::from(job))
     })
 }
+
+pub fn run_foundry_job(state: &AppState, job_id: i64) -> Result<FoundryJobDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = FoundryCoordinatorService::new(conn);
+        let job = service.run_foundry_job(job_id)?;
+        Ok(FoundryJobDto::from(job))
+    })
+}
+
+pub fn run_next_foundry_job(
+    state: &AppState,
+    subject_id: Option<i64>,
+) -> Result<Option<FoundryJobDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = FoundryCoordinatorService::new(conn);
+        let job = service.run_next_foundry_job(subject_id)?;
+        Ok(job.map(FoundryJobDto::from))
+    })
+}

@@ -1,7 +1,11 @@
 use chrono::{Days, NaiveDate, Utc};
-use ecoach_substrate::{DomainEvent, EcoachError, EcoachResult};
+use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
+
+use crate::readiness_engine::ReadinessEngine;
+use crate::topic_case::{TopicCase, list_priority_topic_cases};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoachMissionMemory {
@@ -36,6 +40,38 @@ pub struct PlanRewriteResult {
 
 pub struct PlanEngine<'a> {
     conn: &'a Connection,
+}
+
+#[derive(Debug)]
+struct SessionOutcome {
+    attempt_count: i64,
+    correct_count: i64,
+    accuracy_score: Option<BasisPoints>,
+    timed_accuracy: Option<BasisPoints>,
+    avg_latency_ms: Option<i64>,
+    misconception_tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default)]
+struct SubjectMomentumProfile {
+    current_stage: String,
+    current_mode: String,
+    momentum_score: BasisPoints,
+    strain_score: BasisPoints,
+    recovery_need_score: BasisPoints,
+    streak_days: i64,
+}
+
+#[derive(Debug)]
+struct MissionBlueprint {
+    subject_id: i64,
+    topic_id: i64,
+    activity_type: &'static str,
+    title: &'static str,
+    reason: String,
+    target_minutes: i64,
+    steps: Value,
+    success_criteria: Value,
 }
 
 impl<'a> PlanEngine<'a> {
@@ -224,48 +260,39 @@ impl<'a> PlanEngine<'a> {
 
     pub fn generate_today_mission(&self, student_id: i64) -> EcoachResult<i64> {
         let today = Utc::now().date_naive().to_string();
+        if let Some(existing_mission_id) = self.load_existing_today_mission(student_id, &today)? {
+            return Ok(existing_mission_id);
+        }
+
         let (plan_day_id, plan_day_phase, target_minutes) =
             self.ensure_active_plan_day(student_id, &today)?;
-        let topic_id: Option<i64> = self
-            .conn
-            .query_row(
-                "SELECT topic_id FROM student_topic_states
-                 WHERE student_id = ?1
-                 ORDER BY priority_score DESC, gap_score DESC
-                 LIMIT 1",
-                [student_id],
-                |row| row.get(0),
-            )
-            .optional()
-            .map_err(|err| EcoachError::Storage(err.to_string()))?;
-
-        let topic_id = topic_id
-            .ok_or_else(|| EcoachError::NotFound("no prioritized topic found".to_string()))?;
-        let subject_id: i64 = self
-            .conn
-            .query_row(
-                "SELECT subject_id FROM topics WHERE id = ?1",
-                [topic_id],
-                |row| row.get(0),
-            )
-            .map_err(|err| EcoachError::Storage(err.to_string()))?;
-        let activity_type = self.resolve_activity_type(student_id, topic_id, &plan_day_phase)?;
-        let mission_title = mission_title_for_activity(activity_type);
+        let topic_cases = list_priority_topic_cases(self.conn, student_id, 5)?;
+        let blueprint = self.build_mission_blueprint(
+            student_id,
+            &plan_day_phase,
+            target_minutes,
+            &topic_cases,
+        )?;
 
         self.conn
             .execute(
                 "INSERT INTO coach_missions (
-                    plan_day_id, student_id, title, reason, subject_id, primary_topic_id, activity_type, target_minutes, status
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'pending')",
+                    plan_day_id, student_id, title, reason, subject_id, primary_topic_id,
+                    activity_type, target_minutes, status, steps_json, success_criteria_json
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'pending', ?9, ?10)",
                 params![
                     plan_day_id,
                     student_id,
-                    mission_title,
-                    format!("Planned {} mission for the active coach day", activity_type),
-                    subject_id,
-                    topic_id,
-                    activity_type,
-                    target_minutes,
+                    blueprint.title,
+                    blueprint.reason,
+                    blueprint.subject_id,
+                    blueprint.topic_id,
+                    blueprint.activity_type,
+                    blueprint.target_minutes,
+                    serde_json::to_string(&blueprint.steps)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&blueprint.success_criteria)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
                 ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -275,11 +302,14 @@ impl<'a> PlanEngine<'a> {
             mission_id.to_string(),
             serde_json::json!({
                 "student_id": student_id,
-                "subject_id": subject_id,
-                "topic_id": topic_id,
-                "activity_type": activity_type,
+                "subject_id": blueprint.subject_id,
+                "topic_id": blueprint.topic_id,
+                "activity_type": blueprint.activity_type,
                 "plan_day_id": plan_day_id,
                 "plan_day_phase": plan_day_phase,
+                "target_minutes": blueprint.target_minutes,
+                "steps": blueprint.steps,
+                "success_criteria": blueprint.success_criteria,
             }),
         ))?;
 
@@ -309,28 +339,40 @@ impl<'a> PlanEngine<'a> {
         session_id: Option<i64>,
     ) -> EcoachResult<CoachMissionMemory> {
         let mission = self.load_mission_context(mission_id)?;
-        let (attempt_count, correct_count, accuracy_score, avg_latency_ms, misconception_tags) =
-            self.load_session_outcome(session_id)?;
+        let outcome = self.load_session_outcome(session_id)?;
         let prior_evidence_count =
             self.count_prior_coach_evidence(mission.student_id, mission.topic_id)?;
         let mission_status =
-            derive_mission_status(accuracy_score, attempt_count, prior_evidence_count);
-        let review_due_at = derive_review_due_at(accuracy_score);
-        let next_action_type = derive_next_action_type(&mission_status);
-        let strategy_effect = derive_strategy_effect(accuracy_score, prior_evidence_count);
+            derive_mission_status(&mission.activity_type, &outcome, prior_evidence_count);
+        let review_due_at = derive_review_due_at(
+            &mission.activity_type,
+            &mission_status,
+            outcome.accuracy_score,
+        );
+        let next_action_type = derive_next_action_type(&mission.activity_type, &mission_status);
+        let strategy_effect = derive_strategy_effect(
+            &mission.activity_type,
+            &mission_status,
+            outcome.accuracy_score,
+            prior_evidence_count,
+        );
         let summary_json = serde_json::to_string(&serde_json::json!({
             "mission_title": mission.title,
             "reason": mission.reason,
             "activity_type": mission.activity_type,
-            "attempt_count": attempt_count,
-            "correct_count": correct_count,
-            "accuracy_score": accuracy_score,
-            "avg_latency_ms": avg_latency_ms,
-            "misconception_tags": misconception_tags,
+            "attempt_count": outcome.attempt_count,
+            "correct_count": outcome.correct_count,
+            "accuracy_score": outcome.accuracy_score,
+            "timed_accuracy": outcome.timed_accuracy,
+            "avg_latency_ms": outcome.avg_latency_ms,
+            "misconception_tags": outcome.misconception_tags,
+            "prior_evidence_count": prior_evidence_count,
+            "mission_status": mission_status,
             "next_action_type": next_action_type,
+            "strategy_effect": strategy_effect,
         }))
         .map_err(|err| EcoachError::Serialization(err.to_string()))?;
-        let misconception_tags_json = serde_json::to_string(&misconception_tags)
+        let misconception_tags_json = serde_json::to_string(&outcome.misconception_tags)
             .map_err(|err| EcoachError::Serialization(err.to_string()))?;
 
         self.conn
@@ -347,7 +389,7 @@ impl<'a> PlanEngine<'a> {
                 "UPDATE coach_plan_days
                  SET status = CASE WHEN ?2 > 0 THEN 'completed' ELSE 'partial' END
                  WHERE id = ?1",
-                params![mission.plan_day_id, attempt_count],
+                params![mission.plan_day_id, outcome.attempt_count],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
@@ -356,18 +398,20 @@ impl<'a> PlanEngine<'a> {
                 "INSERT INTO coach_session_evidence (
                     mission_id, student_id, subject_id, topic_id, activity_type, attempt_count,
                     correct_count, accuracy, avg_latency_ms, misconception_tags, completed_at
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, datetime('now'))",
+                    , timed_accuracy
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, datetime('now'), ?11)",
                 params![
                     mission_id,
                     mission.student_id,
                     mission.subject_id,
                     mission.topic_id,
                     mission.activity_type,
-                    attempt_count,
-                    correct_count,
-                    accuracy_score,
-                    avg_latency_ms,
+                    outcome.attempt_count,
+                    outcome.correct_count,
+                    outcome.accuracy_score,
+                    outcome.avg_latency_ms,
                     misconception_tags_json,
+                    outcome.timed_accuracy,
                 ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -375,8 +419,8 @@ impl<'a> PlanEngine<'a> {
         self.sync_coach_topic_profile(
             mission.student_id,
             mission.topic_id,
-            attempt_count,
-            misconception_tags.len() as i64,
+            outcome.attempt_count,
+            outcome.misconception_tags.len() as i64,
             &mission_status,
         )?;
         self.update_blockers(mission.student_id, mission.topic_id, &mission_status)?;
@@ -411,10 +455,10 @@ impl<'a> PlanEngine<'a> {
                     mission.subject_id,
                     mission.topic_id,
                     mission_status,
-                    attempt_count,
-                    correct_count,
-                    accuracy_score,
-                    avg_latency_ms,
+                    outcome.attempt_count,
+                    outcome.correct_count,
+                    outcome.accuracy_score,
+                    outcome.avg_latency_ms,
                     misconception_tags_json,
                     review_due_at,
                     next_action_type,
@@ -424,7 +468,14 @@ impl<'a> PlanEngine<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        let memory_id = self.conn.last_insert_rowid();
+        let memory_id: i64 = self
+            .conn
+            .query_row(
+                "SELECT id FROM coach_mission_memories WHERE mission_id = ?1",
+                [mission_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
         self.append_runtime_event(DomainEvent::new(
             "mission.completed",
             mission_id.to_string(),
@@ -434,6 +485,8 @@ impl<'a> PlanEngine<'a> {
                 "mission_status": mission_status,
                 "review_due_at": review_due_at,
                 "next_action_type": next_action_type,
+                "timed_accuracy": outcome.timed_accuracy,
+                "activity_type": mission.activity_type,
             }),
         ))?;
         self.append_runtime_event(DomainEvent::new(
@@ -519,6 +572,134 @@ impl<'a> PlanEngine<'a> {
                 },
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_existing_today_mission(
+        &self,
+        student_id: i64,
+        today: &str,
+    ) -> EcoachResult<Option<i64>> {
+        self.conn
+            .query_row(
+                "SELECT cm.id
+                 FROM coach_missions cm
+                 INNER JOIN coach_plan_days cpd ON cpd.id = cm.plan_day_id
+                 WHERE cm.student_id = ?1
+                   AND cpd.date = ?2
+                   AND cm.status IN ('pending', 'active')
+                 ORDER BY CASE cm.status WHEN 'active' THEN 0 ELSE 1 END, cm.id DESC
+                 LIMIT 1",
+                params![student_id, today],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn build_mission_blueprint(
+        &self,
+        student_id: i64,
+        plan_day_phase: &str,
+        target_minutes: i64,
+        topic_cases: &[TopicCase],
+    ) -> EcoachResult<MissionBlueprint> {
+        let mission_case = topic_cases
+            .iter()
+            .find(|case| is_priority_repair_case(case))
+            .or_else(|| {
+                if plan_day_phase == "review_day" {
+                    topic_cases
+                        .iter()
+                        .find(|case| is_review_priority_case(case))
+                } else {
+                    None
+                }
+            })
+            .or_else(|| {
+                topic_cases
+                    .iter()
+                    .find(|case| is_review_priority_case(case))
+            })
+            .or_else(|| {
+                if plan_day_phase == "final_revision" || plan_day_phase == "performance" {
+                    topic_cases
+                        .iter()
+                        .find(|case| supports_performance_push(case))
+                } else {
+                    None
+                }
+            })
+            .or_else(|| topic_cases.first())
+            .ok_or_else(|| EcoachError::NotFound("no prioritized topic found".to_string()))?;
+        let subject_id = self.load_subject_id_for_topic(mission_case.topic_id)?;
+        let readiness = ReadinessEngine::new(self.conn)
+            .build_subject_readiness(student_id, subject_id)
+            .ok();
+        let momentum = self.load_subject_momentum_profile(student_id, subject_id)?;
+        let exam_days_remaining = self.load_exam_days_remaining(student_id)?;
+        let activity_type = self.resolve_activity_type(
+            student_id,
+            mission_case,
+            plan_day_phase,
+            readiness.as_ref(),
+            &momentum,
+            exam_days_remaining,
+        )?;
+        let title = mission_title_for_activity(activity_type);
+        let target_minutes =
+            adaptive_target_minutes(target_minutes, mission_case, &momentum, activity_type);
+        let reason = mission_reason(
+            plan_day_phase,
+            mission_case,
+            readiness.as_ref(),
+            &momentum,
+            exam_days_remaining,
+            activity_type,
+        );
+        let steps = json!({
+            "plan_day_phase": plan_day_phase,
+            "topic_id": mission_case.topic_id,
+            "topic_name": mission_case.topic_name,
+            "primary_hypothesis_code": mission_case.primary_hypothesis_code,
+            "diagnosis_certainty": mission_case.diagnosis_certainty,
+            "recommended_intervention": mission_case.recommended_intervention,
+            "proof_gaps": mission_case.proof_gaps,
+            "open_questions": mission_case.open_questions,
+            "coach_memory": {
+                "memory_state": mission_case.memory_state,
+                "memory_strength": mission_case.memory_strength,
+                "decay_risk": mission_case.decay_risk,
+                "recent_accuracy": mission_case.recent_accuracy,
+            },
+            "beat_yesterday": {
+                "current_stage": momentum.current_stage,
+                "current_mode": momentum.current_mode,
+                "momentum_score": momentum.momentum_score,
+                "strain_score": momentum.strain_score,
+                "recovery_need_score": momentum.recovery_need_score,
+                "streak_days": momentum.streak_days,
+            },
+            "steps": mission_steps_for_activity(activity_type, mission_case),
+        });
+        let success_criteria = json!({
+            "activity_type": activity_type,
+            "target_accuracy_score": target_accuracy_for_activity(activity_type, mission_case),
+            "min_attempts": min_attempts_for_activity(activity_type),
+            "max_avg_latency_ms": target_latency_for_activity(activity_type),
+            "proof_goal": proof_goal_for_activity(activity_type, mission_case),
+            "review_due_expected": matches!(activity_type, "memory_reactivation" | "review"),
+        });
+
+        Ok(MissionBlueprint {
+            subject_id,
+            topic_id: mission_case.topic_id,
+            activity_type,
+            title,
+            reason,
+            target_minutes,
+            steps,
+            success_criteria,
+        })
     }
 
     fn load_plan_carryover_topic_ids(
@@ -620,8 +801,11 @@ impl<'a> PlanEngine<'a> {
     fn resolve_activity_type(
         &self,
         student_id: i64,
-        topic_id: i64,
+        topic_case: &TopicCase,
         plan_day_phase: &str,
+        readiness: Option<&crate::readiness_engine::StudentReadinessSnapshot>,
+        momentum: &SubjectMomentumProfile,
+        exam_days_remaining: Option<i64>,
     ) -> EcoachResult<&'static str> {
         let (mastery_score, speed_score, fragility_score): (i64, i64, i64) = self
             .conn
@@ -629,29 +813,90 @@ impl<'a> PlanEngine<'a> {
                 "SELECT mastery_score, speed_score, fragility_score
                  FROM student_topic_states
                  WHERE student_id = ?1 AND topic_id = ?2",
-                params![student_id, topic_id],
+                params![student_id, topic_case.topic_id],
                 |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?
             .unwrap_or((0, 0, 0));
+        let due_review_load = readiness
+            .map(|snapshot| snapshot.due_review_count + snapshot.due_memory_count)
+            .unwrap_or(0);
+        let exam_push = exam_days_remaining.map(|days| days <= 7).unwrap_or(false)
+            || plan_day_phase == "final_revision";
 
-        let activity = if mastery_score < 4500 || fragility_score > 6000 {
+        let activity = if momentum.is_recovery_mode() {
+            if is_review_priority_case(topic_case) {
+                "memory_reactivation"
+            } else {
+                "review"
+            }
+        } else if plan_day_phase == "review_day" {
+            if is_review_priority_case(topic_case) {
+                "memory_reactivation"
+            } else {
+                "review"
+            }
+        } else if due_review_load > 0 && is_review_priority_case(topic_case) {
+            "memory_reactivation"
+        } else if topic_case.active_blocker.is_some() {
             "repair"
         } else {
-            match plan_day_phase {
-                "foundation" => "learn",
-                "strengthening" => "guided_practice",
-                "performance" => {
-                    if speed_score < 4500 {
-                        "speed_drill"
+            match topic_case.primary_hypothesis_code.as_str() {
+                "blocked_topic" => "repair",
+                "conceptual_confusion" => "worked_example",
+                "memory_decay" => "memory_reactivation",
+                "pressure_collapse" => {
+                    if exam_push || plan_day_phase == "performance" {
+                        "pressure_conditioning"
                     } else {
-                        "mixed_test"
+                        "checkpoint"
                     }
                 }
-                "consolidation" | "review_day" => "review",
-                "final_revision" => "pressure_conditioning",
-                _ => "guided_practice",
+                "knowledge_gap" => {
+                    if mastery_score < 3500 || plan_day_phase == "foundation" {
+                        "learn"
+                    } else if fragility_score > 6000 {
+                        "repair"
+                    } else {
+                        "guided_practice"
+                    }
+                }
+                "execution_drift" => "checkpoint",
+                _ => match plan_day_phase {
+                    "foundation" => {
+                        if mastery_score < 5000 {
+                            "learn"
+                        } else {
+                            "guided_practice"
+                        }
+                    }
+                    "strengthening" => {
+                        if fragility_score > 6000 {
+                            "guided_practice"
+                        } else {
+                            "checkpoint"
+                        }
+                    }
+                    "performance" => {
+                        if exam_push || topic_case.pressure_collapse_index >= 5500 {
+                            "pressure_conditioning"
+                        } else if speed_score < 4500 {
+                            "speed_drill"
+                        } else {
+                            "mixed_test"
+                        }
+                    }
+                    "consolidation" => "review",
+                    "final_revision" => {
+                        if topic_case.mastery_score >= 6500 {
+                            "mixed_test"
+                        } else {
+                            "checkpoint"
+                        }
+                    }
+                    _ => "guided_practice",
+                },
             }
         };
 
@@ -680,27 +925,40 @@ impl<'a> PlanEngine<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
-    fn load_session_outcome(
-        &self,
-        session_id: Option<i64>,
-    ) -> EcoachResult<(i64, i64, Option<i64>, Option<i64>, Vec<String>)> {
+    fn load_session_outcome(&self, session_id: Option<i64>) -> EcoachResult<SessionOutcome> {
         let Some(session_id) = session_id else {
-            return Ok((0, 0, None, None, Vec::new()));
+            return Ok(SessionOutcome {
+                attempt_count: 0,
+                correct_count: 0,
+                accuracy_score: None,
+                timed_accuracy: None,
+                avg_latency_ms: None,
+                misconception_tags: Vec::new(),
+            });
         };
 
-        let (attempt_count, correct_count, accuracy_score, avg_latency_ms): (
+        let (attempt_count, correct_count, accuracy_score, avg_latency_ms, is_timed): (
             i64,
             i64,
+            Option<BasisPoints>,
             Option<i64>,
-            Option<i64>,
+            bool,
         ) = self
             .conn
             .query_row(
-                "SELECT answered_questions, correct_questions, accuracy_score, avg_response_time_ms
+                "SELECT answered_questions, correct_questions, accuracy_score, avg_response_time_ms, is_timed
                  FROM sessions
                  WHERE id = ?1",
                 [session_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get::<_, i64>(4)? == 1,
+                    ))
+                },
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
@@ -724,12 +982,76 @@ impl<'a> PlanEngine<'a> {
             misconception_tags.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
         }
 
-        Ok((
+        Ok(SessionOutcome {
             attempt_count,
             correct_count,
             accuracy_score,
+            timed_accuracy: if is_timed { accuracy_score } else { None },
             avg_latency_ms,
             misconception_tags,
+        })
+    }
+
+    fn load_subject_id_for_topic(&self, topic_id: i64) -> EcoachResult<i64> {
+        self.conn
+            .query_row(
+                "SELECT subject_id FROM topics WHERE id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_subject_momentum_profile(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<SubjectMomentumProfile> {
+        self.conn
+            .query_row(
+                "SELECT current_stage, current_mode, momentum_score, strain_score,
+                        recovery_need_score, streak_days
+                 FROM beat_yesterday_profiles
+                 WHERE student_id = ?1 AND subject_id = ?2",
+                params![student_id, subject_id],
+                |row| {
+                    Ok(SubjectMomentumProfile {
+                        current_stage: row.get(0)?,
+                        current_mode: row.get(1)?,
+                        momentum_score: row.get(2)?,
+                        strain_score: row.get(3)?,
+                        recovery_need_score: row.get(4)?,
+                        streak_days: row.get(5)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+            .map(|value| value.unwrap_or_default())
+    }
+
+    fn load_exam_days_remaining(&self, student_id: i64) -> EcoachResult<Option<i64>> {
+        let exam_date = self
+            .conn
+            .query_row(
+                "SELECT exam_date
+                 FROM coach_plans
+                 WHERE student_id = ?1 AND status IN ('active', 'stale')
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [student_id],
+                |row| row.get::<_, Option<String>>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .flatten();
+        let Some(exam_date) = exam_date else {
+            return Ok(None);
+        };
+        let exam_date = NaiveDate::parse_from_str(&exam_date, "%Y-%m-%d")
+            .map_err(|err| EcoachError::Validation(err.to_string()))?;
+        Ok(Some(
+            (exam_date - Utc::now().date_naive()).num_days().max(0),
         ))
     }
 
@@ -806,7 +1128,11 @@ impl<'a> PlanEngine<'a> {
                     misconception_count,
                     attempt_count,
                     if mission_status == "repair_required" { 1 } else { 0 },
-                    if mission_status == "repair_required" { 9000 } else { 3000 },
+                    match mission_status {
+                        "repair_required" => 9000,
+                        "review_due" => 6500,
+                        _ => 2500,
+                    },
                     updated_at,
                 ],
             )
@@ -826,13 +1152,25 @@ impl<'a> PlanEngine<'a> {
         };
 
         if mission_status == "repair_required" {
-            self.conn
+            let updated = self
+                .conn
                 .execute(
-                    "INSERT INTO coach_blockers (student_id, topic_id, reason, severity)
-                     VALUES (?1, ?2, 'repeated low mission accuracy', 'high')",
+                    "UPDATE coach_blockers
+                     SET reason = 'repeated low mission accuracy',
+                         severity = 'high'
+                     WHERE student_id = ?1 AND topic_id = ?2 AND resolved_at IS NULL",
                     params![student_id, topic_id],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if updated == 0 {
+                self.conn
+                    .execute(
+                        "INSERT INTO coach_blockers (student_id, topic_id, reason, severity)
+                         VALUES (?1, ?2, 'repeated low mission accuracy', 'high')",
+                        params![student_id, topic_id],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            }
         } else {
             self.conn
                 .execute(
@@ -887,6 +1225,14 @@ struct PlanContext {
     daily_budget_minutes: i64,
 }
 
+impl SubjectMomentumProfile {
+    fn is_recovery_mode(&self) -> bool {
+        self.current_mode == "recovery_mode"
+            || self.strain_score >= 7000
+            || self.recovery_need_score >= 7000
+    }
+}
+
 fn phase_for_remaining_days(total_days: i64) -> &'static str {
     if total_days > 90 {
         "foundation"
@@ -902,49 +1248,314 @@ fn phase_for_remaining_days(total_days: i64) -> &'static str {
 }
 
 fn derive_mission_status(
-    accuracy_score: Option<i64>,
-    attempt_count: i64,
+    activity_type: &str,
+    outcome: &SessionOutcome,
     prior_evidence_count: i64,
 ) -> &'static str {
-    match (accuracy_score, attempt_count) {
-        (_, 0) => "partial",
-        (Some(score), _) if score < 4000 && prior_evidence_count >= 1 => "repair_required",
-        (Some(score), _) if score < 6500 => "review_due",
-        _ => "completed",
+    let effective_accuracy = outcome
+        .timed_accuracy
+        .or(outcome.accuracy_score)
+        .unwrap_or(0);
+    let misconception_overload = outcome.misconception_tags.len() >= 2;
+    if outcome.attempt_count == 0 {
+        return "partial";
+    }
+
+    match activity_type {
+        "memory_reactivation" => {
+            if effective_accuracy < 4500 && prior_evidence_count >= 1 {
+                "repair_required"
+            } else if effective_accuracy < 7800 || misconception_overload {
+                "review_due"
+            } else {
+                "completed"
+            }
+        }
+        "pressure_conditioning" | "mixed_test" | "speed_drill" | "checkpoint" => {
+            if effective_accuracy < 4500 && prior_evidence_count >= 1 {
+                "repair_required"
+            } else if effective_accuracy < 7000 || misconception_overload {
+                "review_due"
+            } else {
+                "completed"
+            }
+        }
+        _ => {
+            if effective_accuracy < 4000 && prior_evidence_count >= 1 {
+                "repair_required"
+            } else if effective_accuracy < 6500 || misconception_overload {
+                "review_due"
+            } else {
+                "completed"
+            }
+        }
     }
 }
 
-fn derive_review_due_at(accuracy_score: Option<i64>) -> Option<String> {
+fn derive_review_due_at(
+    activity_type: &str,
+    mission_status: &str,
+    accuracy_score: Option<BasisPoints>,
+) -> Option<String> {
     let today = Utc::now().date_naive();
-    let due_date = match accuracy_score {
-        Some(score) if score < 4000 => today.checked_add_days(Days::new(1)),
-        Some(score) if score < 6500 => today.checked_add_days(Days::new(3)),
-        Some(_) => today.checked_add_days(Days::new(7)),
-        None => today.checked_add_days(Days::new(2)),
-    }?;
-    Some(due_date.to_string())
+    let offset_days = match (activity_type, mission_status, accuracy_score.unwrap_or(0)) {
+        (_, "partial", _) => 1,
+        (_, "repair_required", _) => 1,
+        ("memory_reactivation", "completed", _) => 2,
+        ("memory_reactivation", _, _) => 1,
+        ("pressure_conditioning" | "mixed_test" | "speed_drill" | "checkpoint", "completed", _) => {
+            3
+        }
+        ("pressure_conditioning" | "mixed_test" | "speed_drill" | "checkpoint", _, _) => 1,
+        (_, "review_due", _) => 2,
+        (_, _, score) if score < 7000 => 3,
+        _ => 5,
+    };
+    Some(
+        today
+            .checked_add_days(Days::new(offset_days as u64))?
+            .to_string(),
+    )
 }
 
-fn derive_next_action_type(mission_status: &str) -> &'static str {
-    match mission_status {
-        "repair_required" => "start_repair",
-        "review_due" => "review_results",
-        "partial" => "resume_mission",
+fn derive_next_action_type(activity_type: &str, mission_status: &str) -> &'static str {
+    match (activity_type, mission_status) {
+        (_, "repair_required") => "start_repair",
+        (_, "review_due") => "review_results",
+        (_, "partial") => "resume_mission",
+        ("pressure_conditioning" | "mixed_test" | "checkpoint", _) => "start_today_mission",
         _ => "start_today_mission",
     }
 }
 
 fn derive_strategy_effect(
-    accuracy_score: Option<i64>,
+    activity_type: &str,
+    mission_status: &str,
+    accuracy_score: Option<BasisPoints>,
     prior_evidence_count: i64,
 ) -> Option<String> {
-    let effect = match accuracy_score {
-        Some(score) if score < 4000 && prior_evidence_count >= 1 => "escalate_to_repair",
-        Some(score) if score < 6500 => "schedule_short_review",
-        Some(_) => "unlock_next_planned_step",
-        None => "collect_more_evidence",
+    let effect = match (activity_type, mission_status) {
+        (_, "repair_required") if prior_evidence_count >= 1 => "escalate_to_repair",
+        ("memory_reactivation", "completed") => "schedule_memory_recheck",
+        ("memory_reactivation", _) => "schedule_short_review",
+        ("worked_example", "completed") => "shift_to_guided_practice",
+        ("learn", "completed") => "unlock_guided_practice",
+        ("checkpoint", "completed") => "advance_to_mixed_test",
+        ("pressure_conditioning", "completed") => "unlock_exam_push",
+        (_, "review_due") => "schedule_short_review",
+        (_, "partial") => "collect_more_evidence",
+        (_, _) if accuracy_score.unwrap_or(0) >= 8000 => "unlock_next_planned_step",
+        _ => "stabilize_and_probe",
     };
     Some(effect.to_string())
+}
+
+fn is_priority_repair_case(topic_case: &TopicCase) -> bool {
+    topic_case.active_blocker.is_some()
+        || matches!(
+            topic_case.primary_hypothesis_code.as_str(),
+            "blocked_topic" | "conceptual_confusion" | "knowledge_gap"
+        )
+        || topic_case.recommended_intervention.next_action_type == "start_repair"
+}
+
+fn is_review_priority_case(topic_case: &TopicCase) -> bool {
+    matches!(topic_case.primary_hypothesis_code.as_str(), "memory_decay")
+        || matches!(
+            topic_case.memory_state.as_str(),
+            "fragile" | "at_risk" | "fading" | "rebuilding" | "collapsed"
+        )
+        || topic_case
+            .proof_gaps
+            .iter()
+            .any(|gap| gap.contains("Delayed retrieval"))
+}
+
+fn supports_performance_push(topic_case: &TopicCase) -> bool {
+    topic_case.mastery_score >= 6000
+        && topic_case.gap_score <= 6500
+        && topic_case.active_blocker.is_none()
+}
+
+fn adaptive_target_minutes(
+    plan_target_minutes: i64,
+    topic_case: &TopicCase,
+    momentum: &SubjectMomentumProfile,
+    activity_type: &str,
+) -> i64 {
+    let mut minutes = topic_case
+        .recommended_intervention
+        .recommended_minutes
+        .clamp(10, plan_target_minutes.max(10));
+    if momentum.is_recovery_mode() {
+        minutes = minutes.min(15).max(10);
+    } else if matches!(activity_type, "pressure_conditioning" | "mixed_test") {
+        minutes = minutes.max(20);
+    } else if matches!(activity_type, "memory_reactivation" | "review") {
+        minutes = minutes.min(15).max(10);
+    }
+    minutes.min(plan_target_minutes.max(10))
+}
+
+fn mission_reason(
+    plan_day_phase: &str,
+    topic_case: &TopicCase,
+    readiness: Option<&crate::readiness_engine::StudentReadinessSnapshot>,
+    momentum: &SubjectMomentumProfile,
+    exam_days_remaining: Option<i64>,
+    activity_type: &str,
+) -> String {
+    let mut reasons = vec![topic_case.recommended_intervention.reason.clone()];
+    if plan_day_phase == "review_day" {
+        reasons.push("Today's coach day is reserved for review and proof recovery.".to_string());
+    }
+    if momentum.is_recovery_mode() {
+        reasons.push(
+            "Recent strain is elevated, so the coach is protecting load instead of forcing volume."
+                .to_string(),
+        );
+    }
+    if let Some(days_remaining) = exam_days_remaining.filter(|days| *days <= 7) {
+        reasons.push(format!(
+            "Exam mode is active with {} day(s) remaining.",
+            days_remaining
+        ));
+    }
+    if let Some(snapshot) = readiness {
+        if snapshot.due_review_count > 0
+            && matches!(activity_type, "review" | "memory_reactivation")
+        {
+            reasons.push(format!(
+                "{} mission review(s) are still pending in this subject.",
+                snapshot.due_review_count
+            ));
+        }
+        if snapshot.due_memory_count > 0 && activity_type == "memory_reactivation" {
+            reasons.push(format!(
+                "{} topic(s) are overdue for memory proof.",
+                snapshot.due_memory_count
+            ));
+        }
+    }
+    reasons.join(" ")
+}
+
+fn mission_steps_for_activity(activity_type: &str, topic_case: &TopicCase) -> Vec<String> {
+    let first_probe = topic_case
+        .active_hypotheses
+        .first()
+        .and_then(|item| item.recommended_probe.clone());
+    match activity_type {
+        "learn" => vec![
+            format!("Rebuild the core idea behind {}.", topic_case.topic_name),
+            "Work through one guided example slowly.".to_string(),
+            "Close with a short independent check.".to_string(),
+        ],
+        "worked_example" => vec![
+            format!(
+                "Explain why the correct idea for {} differs from the tempting wrong one.",
+                topic_case.topic_name
+            ),
+            "Walk one worked example end to end.".to_string(),
+            "Finish with one contrast check in the learner's own words.".to_string(),
+        ],
+        "memory_reactivation" => vec![
+            format!(
+                "Retrieve {} without rereading first.",
+                topic_case.topic_name
+            ),
+            "Use a short cue ladder only if recall stalls.".to_string(),
+            "End with one delayed recall promise for the next review.".to_string(),
+        ],
+        "pressure_conditioning" => vec![
+            "Start with one calm win.".to_string(),
+            "Repeat under a stricter clock.".to_string(),
+            "Debrief what changed under pressure.".to_string(),
+        ],
+        "checkpoint" => vec![
+            "Run a short independent checkpoint.".to_string(),
+            "Mark the exact leak, not just the final score.".to_string(),
+            "Decide whether the next step is review, repair, or mixed performance.".to_string(),
+        ],
+        "mixed_test" => vec![
+            "Run a mixed performance set.".to_string(),
+            "Track accuracy and pace together.".to_string(),
+            "Escalate only if both stay stable.".to_string(),
+        ],
+        "review" => vec![
+            "Revisit the last weak proof point.".to_string(),
+            "Confirm the topic still holds after a gap.".to_string(),
+            "Log whether the coach can safely move on.".to_string(),
+        ],
+        "speed_drill" => vec![
+            "Run a short pace-focused burst.".to_string(),
+            "Keep method quality visible while the clock is running.".to_string(),
+            "Stop if speed collapses correctness.".to_string(),
+        ],
+        _ => {
+            let mut steps = vec![
+                format!("Repair the main weakness in {}.", topic_case.topic_name),
+                "Run one focused correction set.".to_string(),
+                "Close with one proof item to confirm the leak actually moved.".to_string(),
+            ];
+            if let Some(probe) = first_probe {
+                steps.push(probe);
+            }
+            steps
+        }
+    }
+}
+
+fn target_accuracy_for_activity(activity_type: &str, topic_case: &TopicCase) -> BasisPoints {
+    let base_target = match activity_type {
+        "memory_reactivation" => 7800,
+        "pressure_conditioning" | "mixed_test" | "checkpoint" => 7000,
+        "review" => 7200,
+        _ => 6500,
+    };
+    clamp_bp(base_target.max(topic_case.mastery_score as i64 + 800))
+}
+
+fn min_attempts_for_activity(activity_type: &str) -> i64 {
+    match activity_type {
+        "memory_reactivation" | "review" => 4,
+        "pressure_conditioning" | "mixed_test" => 6,
+        _ => 5,
+    }
+}
+
+fn target_latency_for_activity(activity_type: &str) -> Option<i64> {
+    match activity_type {
+        "speed_drill" => Some(20_000),
+        "pressure_conditioning" => Some(18_000),
+        "mixed_test" => Some(25_000),
+        _ => None,
+    }
+}
+
+fn proof_goal_for_activity(activity_type: &str, topic_case: &TopicCase) -> String {
+    match activity_type {
+        "memory_reactivation" => format!(
+            "Show that {} can still be retrieved after a gap.",
+            topic_case.topic_name
+        ),
+        "pressure_conditioning" => format!(
+            "Hold method quality on {} while the clock is active.",
+            topic_case.topic_name
+        ),
+        "worked_example" => format!(
+            "Explain the concept boundary inside {} without confusion.",
+            topic_case.topic_name
+        ),
+        "checkpoint" => format!(
+            "Produce one clean independent checkpoint on {}.",
+            topic_case.topic_name
+        ),
+        _ => format!(
+            "Move the main weakness in {} with proof, not just exposure.",
+            topic_case.topic_name
+        ),
+    }
 }
 
 fn map_coach_mission_memory(row: &rusqlite::Row<'_>) -> rusqlite::Result<CoachMissionMemory> {
@@ -982,9 +1593,12 @@ fn mission_title_for_activity(activity_type: &str) -> &'static str {
     match activity_type {
         "learn" => "Foundation Learning Mission",
         "guided_practice" => "Guided Practice Mission",
+        "worked_example" => "Concept Repair Mission",
         "speed_drill" => "Speed Conversion Mission",
         "mixed_test" => "Mixed Performance Mission",
         "review" => "Review and Recovery Mission",
+        "memory_reactivation" => "Memory Reactivation Mission",
+        "checkpoint" => "Checkpoint Mission",
         "pressure_conditioning" => "Pressure Conditioning Mission",
         _ => "Priority Repair Mission",
     }

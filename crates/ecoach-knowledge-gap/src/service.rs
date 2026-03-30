@@ -307,7 +307,7 @@ impl<'a> KnowledgeGapService<'a> {
         let mut stmt = self
             .conn
             .prepare(
-                "SELECT gpi.id, gpi.plan_id, gpi.node_id, an.title, gpi.sequence_order,
+                "SELECT gpi.id, gpi.plan_id, gpi.node_id, an.canonical_title, gpi.sequence_order,
                         gpi.repair_action, gpi.status
                  FROM gap_repair_plan_items gpi
                  LEFT JOIN academic_nodes an ON an.id = gpi.node_id

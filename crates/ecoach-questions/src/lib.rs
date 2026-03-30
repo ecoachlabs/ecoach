@@ -8,8 +8,8 @@ pub use models::{
     QuestionFamilyHealth, QuestionGenerationRequest, QuestionGenerationRequestInput,
     QuestionGraphEdge, QuestionIntelligenceLink, QuestionIntelligenceProfile,
     QuestionIntelligenceQuery, QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode,
-    QuestionOption, QuestionSelectionRequest, QuestionSlotSpec, QuestionVariantMode,
-    RelatedQuestion, SelectedQuestion,
+    QuestionOption, QuestionRemediationPlan, QuestionSelectionRequest, QuestionSlotSpec,
+    QuestionVariantMode, RelatedQuestion, SelectedQuestion,
 };
 pub use reactor::QuestionReactor;
 pub use selection::QuestionSelector;

@@ -9,13 +9,17 @@ use ecoach_questions::{
     Question, QuestionGenerationRequestInput, QuestionReactor, QuestionSelectionRequest,
     QuestionSelector, QuestionService, QuestionSlotSpec, QuestionVariantMode, SelectedQuestion,
 };
-use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult};
+use ecoach_substrate::{
+    BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry, FabricEvidenceRecord,
+    FabricOrchestrationSummary, FabricSignal, clamp_bp,
+};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
 
 use crate::models::{
     CustomTestStartInput, MockBlueprint, MockBlueprintInput, PracticeSessionStartInput, Session,
-    SessionAnswerInput, SessionItem, SessionSnapshot, SessionSummary,
+    SessionAnswerInput, SessionEvidenceFabric, SessionInterpretation, SessionItem, SessionSnapshot,
+    SessionSummary, SessionTopicInterpretation,
 };
 
 pub struct SessionService<'a> {
@@ -576,6 +580,11 @@ impl<'a> SessionService<'a> {
                 input.selected_option_id, item.question_id
             )));
         }
+        let question = question_service
+            .get_question(item.question_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("question {} not found", item.question_id))
+            })?;
 
         let answered_at = Utc::now().to_rfc3339();
         let answer_state_json = serde_json::json!({
@@ -607,6 +616,7 @@ impl<'a> SessionService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
         self.refresh_session_progress(session_id, item.display_order)?;
+        let session_meta = self.load_session_runtime_meta(session_id)?;
         self.append_runtime_event(
             "session",
             DomainEvent::new(
@@ -615,8 +625,32 @@ impl<'a> SessionService<'a> {
                 serde_json::json!({
                     "item_id": item.id,
                     "question_id": item.question_id,
+                    "topic_id": question.topic_id,
                     "selected_option_id": input.selected_option_id,
                     "is_correct": option.is_correct,
+                }),
+            ),
+        )?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.answer_interpreted",
+                session_id.to_string(),
+                serde_json::json!({
+                    "item_id": item.id,
+                    "question_id": item.question_id,
+                    "topic_id": question.topic_id,
+                    "node_id": question.primary_skill_id,
+                    "family_id": question.family_id,
+                    "question_format": question.question_format,
+                    "estimated_time_seconds": question.estimated_time_seconds,
+                    "response_time_ms": input.response_time_ms,
+                    "timed_session": session_meta.is_timed,
+                    "session_type": session_meta.session_type,
+                    "selected_option_id": input.selected_option_id,
+                    "is_correct": option.is_correct,
+                    "misconception_triggered": option.misconception_id.is_some(),
+                    "timed_pressure_signal": session_meta.is_timed && !option.is_correct,
                 }),
             ),
         )?;
@@ -698,7 +732,196 @@ impl<'a> SessionService<'a> {
                 }),
             ),
         )?;
+        if let Some(interpretation) = self.get_session_interpretation(session_id)? {
+            self.append_runtime_event(
+                "session",
+                DomainEvent::new(
+                    "session.interpreted",
+                    session_id.to_string(),
+                    json!({
+                        "session_id": interpretation.session_id,
+                        "student_id": interpretation.student_id,
+                        "session_type": interpretation.session_type,
+                        "status": interpretation.status,
+                        "observed_at": interpretation.observed_at.to_rfc3339(),
+                        "is_timed": interpretation.is_timed,
+                        "answered_questions": interpretation.answered_questions,
+                        "correct_questions": interpretation.correct_questions,
+                        "incorrect_questions": interpretation.incorrect_questions,
+                        "unanswered_questions": interpretation.unanswered_questions,
+                        "accuracy_score": interpretation.accuracy_score,
+                        "avg_response_time_ms": interpretation.avg_response_time_ms,
+                        "flagged_count": interpretation.flagged_count,
+                        "distinct_topic_count": interpretation.distinct_topic_count,
+                        "misconception_hit_count": interpretation.misconception_hit_count,
+                        "pressure_breakdown_count": interpretation.pressure_breakdown_count,
+                        "transfer_variant_count": interpretation.transfer_variant_count,
+                        "retention_check_count": interpretation.retention_check_count,
+                        "mixed_context_count": interpretation.mixed_context_count,
+                        "supported_answer_count": interpretation.supported_answer_count,
+                        "independent_answer_count": interpretation.independent_answer_count,
+                        "dominant_error_type": interpretation.dominant_error_type,
+                        "interpretation_tags": interpretation.interpretation_tags,
+                        "next_action_hint": interpretation.next_action_hint,
+                        "topic_summaries": interpretation.topic_summaries,
+                    }),
+                ),
+            )?;
+        }
         self.build_summary(session_id)
+    }
+
+    pub fn get_session_interpretation(
+        &self,
+        session_id: i64,
+    ) -> EcoachResult<Option<SessionInterpretation>> {
+        let session = match self.get_session(session_id)? {
+            Some(session) => session,
+            None => return Ok(None),
+        };
+        let meta = self.load_session_runtime_meta(session_id)?;
+        let summary = self.build_summary(session_id)?;
+        let topic_summaries = self.list_session_topic_interpretations(session_id)?;
+        let metrics = self.load_attempt_metrics(session_id)?;
+        let flagged_count = self.count_flagged_items(session_id)?;
+        let unanswered_questions = (meta.total_questions - summary.answered_questions).max(0);
+        let incorrect_questions = (summary.answered_questions - summary.correct_questions).max(0);
+        let accuracy_score = summary.accuracy_score.map(|value| value as BasisPoints);
+        let interpretation_tags = derive_session_interpretation_tags(
+            meta.is_timed,
+            accuracy_score,
+            unanswered_questions,
+            flagged_count,
+            &metrics,
+        );
+        let next_action_hint = derive_next_action_hint(
+            meta.is_timed,
+            accuracy_score,
+            unanswered_questions,
+            &metrics,
+        );
+        let observed_at = session
+            .completed_at
+            .or(session.last_activity_at)
+            .or(session.started_at)
+            .unwrap_or_else(Utc::now);
+
+        Ok(Some(SessionInterpretation {
+            session_id,
+            student_id: session.student_id,
+            session_type: session.session_type,
+            status: session.status,
+            observed_at,
+            is_timed: meta.is_timed,
+            answered_questions: summary.answered_questions,
+            correct_questions: summary.correct_questions,
+            incorrect_questions,
+            unanswered_questions,
+            accuracy_score,
+            avg_response_time_ms: metrics.avg_response_time_ms,
+            flagged_count,
+            distinct_topic_count: metrics
+                .distinct_topic_count
+                .max(topic_summaries.len() as i64),
+            misconception_hit_count: metrics.misconception_hit_count,
+            pressure_breakdown_count: metrics.pressure_breakdown_count,
+            transfer_variant_count: metrics.transfer_variant_count,
+            retention_check_count: metrics.retention_check_count,
+            mixed_context_count: metrics.mixed_context_count,
+            supported_answer_count: metrics.supported_answer_count,
+            independent_answer_count: metrics.independent_answer_count,
+            dominant_error_type: metrics.dominant_error_type,
+            interpretation_tags,
+            next_action_hint,
+            topic_summaries,
+        }))
+    }
+
+    pub fn get_session_evidence_fabric(
+        &self,
+        session_id: i64,
+        limit_events: usize,
+    ) -> EcoachResult<Option<SessionEvidenceFabric>> {
+        let session = match self.get_session(session_id)? {
+            Some(session) => session,
+            None => return Ok(None),
+        };
+        let interpretation = match self.get_session_interpretation(session_id)? {
+            Some(interpretation) => interpretation,
+            None => return Ok(None),
+        };
+        let observed_at = interpretation.observed_at.to_rfc3339();
+        let mut signals = vec![FabricSignal {
+            engine_key: "session_runtime".to_string(),
+            signal_type: "session_outcome".to_string(),
+            status: Some(interpretation.next_action_hint.clone()),
+            score: interpretation.accuracy_score,
+            topic_id: interpretation
+                .topic_summaries
+                .first()
+                .filter(|_| interpretation.topic_summaries.len() == 1)
+                .map(|topic| topic.topic_id),
+            node_id: None,
+            question_id: None,
+            observed_at: observed_at.clone(),
+            payload: json!({
+                "session_type": interpretation.session_type,
+                "is_timed": interpretation.is_timed,
+                "answered_questions": interpretation.answered_questions,
+                "correct_questions": interpretation.correct_questions,
+                "incorrect_questions": interpretation.incorrect_questions,
+                "unanswered_questions": interpretation.unanswered_questions,
+                "avg_response_time_ms": interpretation.avg_response_time_ms,
+                "flagged_count": interpretation.flagged_count,
+                "distinct_topic_count": interpretation.distinct_topic_count,
+                "dominant_error_type": interpretation.dominant_error_type,
+                "interpretation_tags": interpretation.interpretation_tags,
+            }),
+        }];
+        for topic in &interpretation.topic_summaries {
+            signals.push(FabricSignal {
+                engine_key: "session_runtime".to_string(),
+                signal_type: "session_topic_outcome".to_string(),
+                status: Some(
+                    if topic.accuracy_score >= 7_000 {
+                        "stabilize"
+                    } else {
+                        "repair"
+                    }
+                    .to_string(),
+                ),
+                score: Some(topic.accuracy_score),
+                topic_id: Some(topic.topic_id),
+                node_id: None,
+                question_id: None,
+                observed_at: observed_at.clone(),
+                payload: json!({
+                    "topic_name": topic.topic_name,
+                    "attempts": topic.attempts,
+                    "correct_attempts": topic.correct_attempts,
+                    "avg_response_time_ms": topic.avg_response_time_ms,
+                    "dominant_error_type": topic.dominant_error_type,
+                }),
+            });
+        }
+
+        let evidence_records =
+            self.list_session_runtime_evidence(session_id, limit_events.max(1))?;
+        let orchestration = FabricOrchestrationSummary::from_available_inputs(
+            &EngineRegistry::core_runtime(),
+            session_fabric_inputs(&signals, &evidence_records),
+        );
+
+        Ok(Some(SessionEvidenceFabric {
+            session_id,
+            student_id: session.student_id,
+            session_type: session.session_type,
+            status: session.status,
+            interpretation,
+            signals,
+            evidence_records,
+            orchestration,
+        }))
     }
 
     pub fn get_session(&self, session_id: i64) -> EcoachResult<Option<Session>> {
@@ -774,6 +997,220 @@ impl<'a> SessionService<'a> {
             correct_questions,
             status,
         })
+    }
+
+    fn load_session_runtime_meta(&self, session_id: i64) -> EcoachResult<SessionRuntimeMeta> {
+        self.conn
+            .query_row(
+                "SELECT session_type, COALESCE(is_timed, 0), COALESCE(total_questions, question_count, 0)
+                 FROM sessions
+                 WHERE id = ?1",
+                [session_id],
+                |row| {
+                    Ok(SessionRuntimeMeta {
+                        session_type: row.get(0)?,
+                        is_timed: row.get::<_, i64>(1)? == 1,
+                        total_questions: row.get(2)?,
+                    })
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn count_flagged_items(&self, session_id: i64) -> EcoachResult<i64> {
+        self.conn
+            .query_row(
+                "SELECT COUNT(*) FROM session_items WHERE session_id = ?1 AND flagged = 1",
+                [session_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_attempt_metrics(&self, session_id: i64) -> EcoachResult<AttemptMetrics> {
+        let metrics = self
+            .conn
+            .query_row(
+                "SELECT
+                    COUNT(*),
+                    AVG(response_time_ms),
+                    COALESCE(SUM(CASE WHEN misconception_triggered_id IS NOT NULL OR error_type = 'misconception_triggered' THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN error_type = 'pressure_breakdown' THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN was_transfer_variant = 1 THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN was_retention_check = 1 THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN was_mixed_context = 1 THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN COALESCE(support_level, 'independent') <> 'independent' THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN COALESCE(support_level, 'independent') = 'independent' THEN 1 ELSE 0 END), 0),
+                    COUNT(DISTINCT q.topic_id)
+                 FROM student_question_attempts sqa
+                 INNER JOIN questions q ON q.id = sqa.question_id
+                 WHERE sqa.session_id = ?1",
+                [session_id],
+                |row| {
+                    Ok(AttemptMetrics {
+                        attempt_count: row.get(0)?,
+                        avg_response_time_ms: row
+                            .get::<_, Option<f64>>(1)?
+                            .map(|value| value.round() as i64),
+                        misconception_hit_count: row.get(2)?,
+                        pressure_breakdown_count: row.get(3)?,
+                        transfer_variant_count: row.get(4)?,
+                        retention_check_count: row.get(5)?,
+                        mixed_context_count: row.get(6)?,
+                        supported_answer_count: row.get(7)?,
+                        independent_answer_count: row.get(8)?,
+                        distinct_topic_count: row.get(9)?,
+                        dominant_error_type: None,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .unwrap_or_default();
+
+        let dominant_error_type = self
+            .conn
+            .query_row(
+                "SELECT error_type
+                 FROM student_question_attempts
+                 WHERE session_id = ?1
+                   AND error_type IS NOT NULL
+                 GROUP BY error_type
+                 ORDER BY COUNT(*) DESC, error_type ASC
+                 LIMIT 1",
+                [session_id],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(AttemptMetrics {
+            dominant_error_type,
+            ..metrics
+        })
+    }
+
+    fn list_session_topic_interpretations(
+        &self,
+        session_id: i64,
+    ) -> EcoachResult<Vec<SessionTopicInterpretation>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    q.topic_id,
+                    t.name,
+                    COUNT(*),
+                    COALESCE(SUM(CASE WHEN COALESCE(sqa.is_correct, si.is_correct, 0) = 1 THEN 1 ELSE 0 END), 0),
+                    AVG(COALESCE(sqa.response_time_ms, si.response_time_ms))
+                 FROM session_items si
+                 INNER JOIN questions q ON q.id = si.question_id
+                 LEFT JOIN topics t ON t.id = q.topic_id
+                 LEFT JOIN student_question_attempts sqa
+                   ON sqa.session_id = si.session_id
+                  AND sqa.question_id = si.question_id
+                 WHERE si.session_id = ?1
+                   AND COALESCE(si.selected_option_id, sqa.selected_option_id) IS NOT NULL
+                 GROUP BY q.topic_id, t.name
+                 ORDER BY COUNT(*) DESC, q.topic_id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([session_id], |row| {
+                let topic_id = row.get::<_, i64>(0)?;
+                Ok(SessionTopicInterpretation {
+                    topic_id,
+                    topic_name: row
+                        .get::<_, Option<String>>(1)?
+                        .unwrap_or_else(|| "Unknown".to_string()),
+                    attempts: row.get(2)?,
+                    correct_attempts: row.get(3)?,
+                    accuracy_score: to_topic_accuracy(row.get::<_, i64>(2)?, row.get::<_, i64>(3)?),
+                    avg_response_time_ms: row
+                        .get::<_, Option<f64>>(4)?
+                        .map(|value| value.round() as i64),
+                    dominant_error_type: self.topic_dominant_error_type(session_id, topic_id)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+
+    fn topic_dominant_error_type(
+        &self,
+        session_id: i64,
+        topic_id: i64,
+    ) -> EcoachResult<Option<String>> {
+        self.conn
+            .query_row(
+                "SELECT sqa.error_type
+                 FROM student_question_attempts sqa
+                 INNER JOIN questions q ON q.id = sqa.question_id
+                 WHERE sqa.session_id = ?1
+                   AND q.topic_id = ?2
+                   AND sqa.error_type IS NOT NULL
+                 GROUP BY sqa.error_type
+                 ORDER BY COUNT(*) DESC, sqa.error_type ASC
+                 LIMIT 1",
+                params![session_id, topic_id],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn list_session_runtime_evidence(
+        &self,
+        session_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<FabricEvidenceRecord>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT event_id, event_type, payload_json, occurred_at
+                 FROM runtime_events
+                 WHERE aggregate_kind = 'session'
+                   AND aggregate_id = ?1
+                 ORDER BY occurred_at DESC, id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(
+                params![session_id.to_string(), limit.max(1) as i64],
+                |row| {
+                    let payload_json: String = row.get(2)?;
+                    let payload = serde_json::from_str::<Value>(&payload_json).map_err(|err| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            2,
+                            rusqlite::types::Type::Text,
+                            Box::new(err),
+                        )
+                    })?;
+                    Ok(FabricEvidenceRecord {
+                        stream: "session_runtime_events".to_string(),
+                        reference_id: row.get(0)?,
+                        event_type: row.get(1)?,
+                        topic_id: payload.get("topic_id").and_then(|value| value.as_i64()),
+                        node_id: payload.get("node_id").and_then(|value| value.as_i64()),
+                        question_id: payload.get("question_id").and_then(|value| value.as_i64()),
+                        occurred_at: row.get(3)?,
+                        payload,
+                    })
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
     }
 
     fn persist_selected_items(
@@ -1432,6 +1869,142 @@ impl<'a> SessionService<'a> {
     }
 }
 
+#[derive(Debug, Clone)]
+struct SessionRuntimeMeta {
+    session_type: String,
+    is_timed: bool,
+    total_questions: i64,
+}
+
+#[derive(Debug, Clone, Default)]
+struct AttemptMetrics {
+    attempt_count: i64,
+    avg_response_time_ms: Option<i64>,
+    misconception_hit_count: i64,
+    pressure_breakdown_count: i64,
+    transfer_variant_count: i64,
+    retention_check_count: i64,
+    mixed_context_count: i64,
+    supported_answer_count: i64,
+    independent_answer_count: i64,
+    distinct_topic_count: i64,
+    dominant_error_type: Option<String>,
+}
+
+fn to_topic_accuracy(attempts: i64, correct_attempts: i64) -> BasisPoints {
+    if attempts <= 0 {
+        0
+    } else {
+        clamp_bp(((correct_attempts as f64 / attempts as f64) * 10_000.0).round() as i64)
+    }
+}
+
+fn derive_session_interpretation_tags(
+    is_timed: bool,
+    accuracy_score: Option<BasisPoints>,
+    unanswered_questions: i64,
+    flagged_count: i64,
+    metrics: &AttemptMetrics,
+) -> Vec<String> {
+    let mut tags = Vec::new();
+
+    if is_timed && accuracy_score.unwrap_or(0) < 6_500 {
+        tags.push("timed_fragility".to_string());
+    }
+    if metrics.pressure_breakdown_count > 0 {
+        tags.push("pressure_breakdown".to_string());
+    }
+    if metrics.misconception_hit_count > 0 {
+        tags.push("misconception_pressure".to_string());
+    }
+    if metrics.retention_check_count > 0 && accuracy_score.unwrap_or(0) < 6_000 {
+        tags.push("retention_fragility".to_string());
+    }
+    if metrics.transfer_variant_count > 0 && accuracy_score.unwrap_or(0) < 6_500 {
+        tags.push("transfer_fragility".to_string());
+    }
+    if metrics.mixed_context_count > 0 || metrics.distinct_topic_count > 1 {
+        tags.push("mixed_context".to_string());
+    }
+    if flagged_count > 0 {
+        tags.push("review_requested".to_string());
+    }
+    if unanswered_questions > 0 {
+        tags.push("unfinished".to_string());
+    }
+    if metrics.supported_answer_count > metrics.independent_answer_count
+        && metrics.supported_answer_count > 0
+    {
+        tags.push("support_dependent".to_string());
+    }
+    if metrics.avg_response_time_ms.unwrap_or_default() >= 45_000
+        && accuracy_score.unwrap_or(0) >= 7_000
+    {
+        tags.push("slow_but_secure".to_string());
+    }
+    if tags.is_empty() {
+        tags.push(
+            if accuracy_score.unwrap_or(0) >= 8_000 {
+                "stable_progress"
+            } else {
+                "needs_reinforcement"
+            }
+            .to_string(),
+        );
+    }
+
+    tags
+}
+
+fn derive_next_action_hint(
+    is_timed: bool,
+    accuracy_score: Option<BasisPoints>,
+    unanswered_questions: i64,
+    metrics: &AttemptMetrics,
+) -> String {
+    if unanswered_questions > 0 {
+        return "resume_session".to_string();
+    }
+    if metrics.misconception_hit_count > 0
+        || metrics.dominant_error_type.as_deref() == Some("misconception_triggered")
+    {
+        return "repair_required".to_string();
+    }
+    if is_timed && (metrics.pressure_breakdown_count > 0 || accuracy_score.unwrap_or(0) < 6_500) {
+        return "pressure_repair".to_string();
+    }
+    if accuracy_score.unwrap_or(0) >= 8_500 && metrics.supported_answer_count == 0 {
+        return "advance_or_mix".to_string();
+    }
+    if accuracy_score.unwrap_or(0) >= 6_500 {
+        return "stabilize_and_review".to_string();
+    }
+    "rebuild_support".to_string()
+}
+
+fn session_fabric_inputs(
+    signals: &[FabricSignal],
+    evidence_records: &[FabricEvidenceRecord],
+) -> Vec<String> {
+    let mut inputs = if signals.is_empty() {
+        Vec::new()
+    } else {
+        vec![
+            "session_outcomes".to_string(),
+            "mission_memory_inputs".to_string(),
+        ]
+    };
+    if evidence_records
+        .iter()
+        .any(|record| record.stream == "session_runtime_events")
+    {
+        inputs.push("session_evidence".to_string());
+    }
+    inputs.sort();
+    inputs.dedup();
+    inputs
+}
+
 fn parse_datetime(value: Option<String>) -> Option<DateTime<Utc>> {
     value
         .and_then(|raw| DateTime::<Utc>::from_str(&raw).ok())
@@ -1737,6 +2310,14 @@ mod tests {
         assert_eq!(summary.answered_questions, 1);
         assert_eq!(summary.correct_questions, 0);
         assert_eq!(summary.status, "completed");
+        let interpretation = session_service
+            .get_session_interpretation(session.id)
+            .expect("session interpretation should load")
+            .expect("session interpretation should exist");
+        let session_fabric = session_service
+            .get_session_evidence_fabric(session.id, 6)
+            .expect("session fabric should build")
+            .expect("session fabric should exist");
 
         let plan_engine = PlanEngine::new(&conn);
         let exam_date = (Utc::now() + Duration::days(60)).date_naive().to_string();
@@ -1789,6 +2370,13 @@ mod tests {
                 |row| row.get(0),
             )
             .expect("runtime event count should be queryable");
+        let interpreted_event_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events WHERE event_type = 'session.interpreted' AND aggregate_id = ?1",
+                [session.id.to_string()],
+                |row| row.get(0),
+            )
+            .expect("session interpreted event count should be queryable");
         let reactor_event_count: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM runtime_events WHERE event_type = 'session.reactor_top_up' AND aggregate_id = ?1",
@@ -1803,7 +2391,34 @@ mod tests {
         assert_eq!(memory_state_count, 1);
         assert_eq!(recheck_count, 1);
         assert!(runtime_event_count >= 6);
+        assert_eq!(interpreted_event_count, 1);
         assert_eq!(reactor_event_count, 1);
+        assert_eq!(interpretation.next_action_hint, "repair_required");
+        assert!(
+            interpretation
+                .interpretation_tags
+                .iter()
+                .any(|tag| tag == "misconception_pressure")
+        );
+        assert!(
+            session_fabric
+                .signals
+                .iter()
+                .any(|signal| signal.signal_type == "session_outcome")
+        );
+        assert!(
+            session_fabric
+                .evidence_records
+                .iter()
+                .any(|record| record.event_type == "session.interpreted")
+        );
+        assert!(
+            session_fabric
+                .orchestration
+                .consumer_targets
+                .iter()
+                .any(|target| target.engine_key == "student_truth")
+        );
     }
 
     #[test]
