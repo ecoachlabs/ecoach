@@ -1,7 +1,7 @@
 use ecoach_coach_brain::{
-    assess_content_readiness, list_priority_topic_cases, resolve_coach_state,
-    resolve_next_coach_action, CoachNextAction, CoachStateResolution, ContentReadinessResolution,
-    JourneyRouteSnapshot, JourneyService, PlanEngine, TopicCase,
+    CoachNextAction, CoachStateResolution, ContentReadinessResolution, JourneyRouteSnapshot,
+    JourneyService, PlanEngine, TopicCase, assess_content_readiness, list_priority_topic_cases,
+    resolve_coach_state, resolve_next_coach_action,
 };
 use ecoach_reporting::{DashboardService, StudentDashboard};
 use serde::{Deserialize, Serialize};

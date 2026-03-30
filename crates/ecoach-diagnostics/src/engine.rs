@@ -34,9 +34,6 @@ struct PreviousDiagnosticContext {
 
 #[derive(Debug, Clone)]
 struct HistoricalTopicSnapshot {
-    diagnostic_id: i64,
-    topic_id: i64,
-    topic_name: String,
     mastery_score: BasisPoints,
     pressure_score: BasisPoints,
     flexibility_score: BasisPoints,
@@ -421,8 +418,11 @@ impl<'a> DiagnosticEngine<'a> {
                 &analytics,
                 &hypotheses,
             );
-            let hypotheses =
-                enrich_hypotheses_with_longitudinal_context(hypotheses, &analytics, longitudinal_signal.as_ref());
+            let hypotheses = enrich_hypotheses_with_longitudinal_context(
+                hypotheses,
+                &analytics,
+                longitudinal_signal.as_ref(),
+            );
             self.persist_root_cause_hypotheses(diagnostic_id, topic_id, &hypotheses)?;
             recommended_next_actions.push(analytics.recommended_action.clone());
             for hypothesis in &hypotheses {
@@ -461,8 +461,11 @@ impl<'a> DiagnosticEngine<'a> {
         }
         .to_string();
 
-        let longitudinal_summary =
-            build_longitudinal_summary(previous_context.as_ref(), overall_readiness, &topic_results);
+        let longitudinal_summary = build_longitudinal_summary(
+            previous_context.as_ref(),
+            overall_readiness,
+            &topic_results,
+        );
         let result = DiagnosticResult {
             overall_readiness,
             readiness_band,
@@ -490,7 +493,7 @@ impl<'a> DiagnosticEngine<'a> {
                     "subject_id": subject_id,
                     "previous_diagnostic_id": summary.previous_diagnostic_id,
                     "overall_readiness_delta": summary.overall_readiness_delta,
-                    "trend": summary.trend,
+                    "trend": &summary.trend,
                     "improved_topic_count": summary.improved_topic_count,
                     "declined_topic_count": summary.declined_topic_count,
                     "persistent_cause_count": summary.persistent_cause_count,
@@ -987,7 +990,11 @@ impl<'a> DiagnosticEngine<'a> {
             serde_json::from_str::<DiagnosticResult>(result_json)
                 .ok()
                 .map(|result| result.overall_readiness)
-                .or_else(|| self.load_diagnostic_overall_readiness(diagnostic_id).ok().flatten())
+                .or_else(|| {
+                    self.load_diagnostic_overall_readiness(diagnostic_id)
+                        .ok()
+                        .flatten()
+                })
         } else {
             self.load_diagnostic_overall_readiness(diagnostic_id)?
         };
@@ -1046,14 +1053,15 @@ impl<'a> DiagnosticEngine<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
         let Some((
-            diagnostic_id,
-            topic_id,
-            topic_name,
+            _diagnostic_id,
+            _topic_id,
+            _topic_name,
             mastery_score,
             pressure_score,
             flexibility_score,
             classification,
-        )) = row else {
+        )) = row
+        else {
             return Ok(None);
         };
 
@@ -1066,16 +1074,18 @@ impl<'a> DiagnosticEngine<'a> {
                  ORDER BY confidence_score DESC, id ASC
                  LIMIT 1",
                 params![diagnostic_id, topic_id],
-                |row| Ok((Some(row.get::<_, String>(0)?), Some(row.get::<_, BasisPoints>(1)?))),
+                |row| {
+                    Ok((
+                        Some(row.get::<_, String>(0)?),
+                        Some(row.get::<_, BasisPoints>(1)?),
+                    ))
+                },
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?
             .unwrap_or((None, None));
 
         Ok(Some(HistoricalTopicSnapshot {
-            diagnostic_id,
-            topic_id,
-            topic_name,
             mastery_score,
             pressure_score,
             flexibility_score,
@@ -1619,6 +1629,361 @@ struct TopicBranchSignal {
     avg_response_time_ms: i64,
 }
 
+fn build_topic_longitudinal_signal(
+    previous_context: Option<&PreviousDiagnosticContext>,
+    previous_topic: Option<&HistoricalTopicSnapshot>,
+    analytics: &DiagnosticTopicAnalytics,
+    hypotheses: &[DiagnosticRootCauseHypothesis],
+) -> Option<TopicDiagnosticLongitudinalSignal> {
+    let previous_context = previous_context?;
+    let previous_mastery_score = previous_topic.map(|item| item.mastery_score);
+    let previous_classification = previous_topic.map(|item| item.classification.clone());
+    let mastery_delta =
+        previous_topic.map(|item| analytics.mastery_score as i64 - item.mastery_score as i64);
+    let pressure_delta =
+        previous_topic.map(|item| analytics.pressure_score as i64 - item.pressure_score as i64);
+    let flexibility_delta = previous_topic
+        .map(|item| analytics.flexibility_score as i64 - item.flexibility_score as i64);
+    let cause_evolution =
+        build_cause_evolution(analytics, hypotheses, previous_context, previous_topic);
+    let trend = topic_trend_label(
+        previous_topic,
+        mastery_delta,
+        pressure_delta,
+        flexibility_delta,
+        cause_evolution.as_ref(),
+    )
+    .to_string();
+
+    Some(TopicDiagnosticLongitudinalSignal {
+        previous_diagnostic_id: Some(previous_context.diagnostic_id),
+        previous_completed_at: previous_context.completed_at.clone(),
+        previous_classification,
+        previous_mastery_score,
+        mastery_delta,
+        pressure_delta,
+        flexibility_delta,
+        trend,
+        cause_evolution,
+    })
+}
+
+fn build_cause_evolution(
+    analytics: &DiagnosticTopicAnalytics,
+    hypotheses: &[DiagnosticRootCauseHypothesis],
+    previous_context: &PreviousDiagnosticContext,
+    previous_topic: Option<&HistoricalTopicSnapshot>,
+) -> Option<DiagnosticCauseEvolution> {
+    let current_top = top_hypothesis_snapshot(hypotheses);
+    let current_code = current_top.as_ref().map(|item| item.0.clone());
+    let current_confidence = current_top.as_ref().map(|item| item.1 as i64);
+    let previous_code = previous_topic.and_then(|item| item.top_hypothesis_code.clone());
+    let previous_confidence = previous_topic
+        .and_then(|item| item.top_hypothesis_confidence)
+        .map(|value| value as i64);
+
+    let (evolution_status, recurrence_count) =
+        match (previous_code.as_deref(), current_code.as_deref()) {
+            (Some(previous), Some(current)) if previous == current => {
+                let confidence_delta =
+                    current_confidence.unwrap_or(0) - previous_confidence.unwrap_or(0);
+                if confidence_delta >= 500 {
+                    ("repeated_intensifying", 2)
+                } else if confidence_delta <= -500 {
+                    ("repeated_softening", 2)
+                } else {
+                    ("repeated", 2)
+                }
+            }
+            (Some(_), Some(_)) => ("shifted", 1),
+            (None, Some(_)) => ("new", 1),
+            (Some(_), None) => ("resolved", 0),
+            (None, None) => return None,
+        };
+
+    let confidence_delta = match (current_confidence, previous_confidence) {
+        (Some(current), Some(previous)) => Some(current - previous),
+        _ => None,
+    };
+    let summary = summarize_cause_evolution(
+        &analytics.topic_name,
+        previous_context,
+        previous_topic,
+        analytics.diagnostic_id,
+        current_code.as_deref(),
+        evolution_status,
+        confidence_delta,
+    );
+
+    Some(DiagnosticCauseEvolution {
+        topic_id: analytics.topic_id,
+        topic_name: analytics.topic_name.clone(),
+        current_hypothesis_code: current_code,
+        previous_hypothesis_code: previous_code,
+        evolution_status: evolution_status.to_string(),
+        recurrence_count,
+        confidence_delta,
+        summary,
+    })
+}
+
+fn top_hypothesis_snapshot(
+    hypotheses: &[DiagnosticRootCauseHypothesis],
+) -> Option<(String, BasisPoints)> {
+    hypotheses
+        .iter()
+        .max_by(|left, right| {
+            left.confidence_score
+                .cmp(&right.confidence_score)
+                .then_with(|| left.hypothesis_code.cmp(&right.hypothesis_code))
+        })
+        .map(|item| (item.hypothesis_code.clone(), item.confidence_score))
+}
+
+fn summarize_cause_evolution(
+    topic_name: &str,
+    previous_context: &PreviousDiagnosticContext,
+    previous_topic: Option<&HistoricalTopicSnapshot>,
+    current_diagnostic_id: i64,
+    current_code: Option<&str>,
+    evolution_status: &str,
+    confidence_delta: Option<i64>,
+) -> String {
+    let previous_code = previous_topic.and_then(|item| item.top_hypothesis_code.as_deref());
+    match evolution_status {
+        "repeated" | "repeated_intensifying" | "repeated_softening" => format!(
+            "{} still shows {} across diagnostics {} and {}{}.",
+            topic_name,
+            current_code.unwrap_or("unknown_cause").replace('_', " "),
+            previous_context.diagnostic_id,
+            current_diagnostic_id,
+            confidence_delta
+                .map(|delta| format!(" ({:+} bp confidence)", delta))
+                .unwrap_or_default(),
+        ),
+        "shifted" => format!(
+            "{} shifted from {} to {} between repeated diagnostics.",
+            topic_name,
+            previous_code.unwrap_or("unknown_cause").replace('_', " "),
+            current_code.unwrap_or("unknown_cause").replace('_', " "),
+        ),
+        "new" => format!(
+            "{} now shows {} and the previous diagnostic had no stored dominant cause.",
+            topic_name,
+            current_code.unwrap_or("unknown_cause").replace('_', " "),
+        ),
+        "resolved" => format!(
+            "{} no longer shows the previous dominant cause {}.",
+            topic_name,
+            previous_code.unwrap_or("unknown_cause").replace('_', " "),
+        ),
+        _ => format!(
+            "{} shows mixed cause movement across diagnostics.",
+            topic_name
+        ),
+    }
+}
+
+fn topic_trend_label(
+    previous_topic: Option<&HistoricalTopicSnapshot>,
+    mastery_delta: Option<i64>,
+    pressure_delta: Option<i64>,
+    flexibility_delta: Option<i64>,
+    cause_evolution: Option<&DiagnosticCauseEvolution>,
+) -> &'static str {
+    let Some(previous_topic) = previous_topic else {
+        return "first_measured";
+    };
+    let mastery_delta = mastery_delta.unwrap_or(0);
+    let pressure_delta = pressure_delta.unwrap_or(0);
+    let flexibility_delta = flexibility_delta.unwrap_or(0);
+
+    if mastery_delta >= 700 && pressure_delta >= 0 && flexibility_delta >= 0 {
+        "improving"
+    } else if mastery_delta <= -700 {
+        "declining"
+    } else if pressure_delta <= -700 || flexibility_delta <= -700 {
+        "destabilizing"
+    } else if cause_evolution
+        .map(|item| item.evolution_status.starts_with("repeated"))
+        .unwrap_or(false)
+        && mastery_delta.abs() < 400
+    {
+        "stalled"
+    } else if previous_topic.classification == "fragile_under_pressure"
+        && pressure_delta >= 500
+        && mastery_delta >= 0
+    {
+        "recovering"
+    } else {
+        "stable"
+    }
+}
+
+fn build_longitudinal_summary(
+    previous_context: Option<&PreviousDiagnosticContext>,
+    overall_readiness: BasisPoints,
+    topic_results: &[TopicDiagnosticResult],
+) -> Option<DiagnosticLongitudinalSummary> {
+    let previous_context = previous_context?;
+    let mut improved_topic_count = 0usize;
+    let mut declined_topic_count = 0usize;
+    let mut stable_topic_count = 0usize;
+    let mut persistent_cause_count = 0usize;
+    let mut shifted_cause_count = 0usize;
+    let mut new_cause_count = 0usize;
+    let mut top_regressions = Vec::<(i64, String)>::new();
+    let mut cause_evolution = Vec::new();
+
+    for topic in topic_results {
+        if let Some(signal) = topic.longitudinal_signal.as_ref() {
+            match signal.trend.as_str() {
+                "improving" | "recovering" => improved_topic_count += 1,
+                "declining" | "destabilizing" => declined_topic_count += 1,
+                _ => stable_topic_count += 1,
+            }
+            if let Some(delta) = signal.mastery_delta.filter(|delta| *delta < 0) {
+                top_regressions.push((
+                    delta,
+                    format!(
+                        "{} ({:+} bp mastery, {})",
+                        topic.topic_name, delta, signal.trend
+                    ),
+                ));
+            }
+            if let Some(evolution) = signal.cause_evolution.clone() {
+                match evolution.evolution_status.as_str() {
+                    "repeated" | "repeated_intensifying" | "repeated_softening" => {
+                        persistent_cause_count += 1
+                    }
+                    "shifted" => shifted_cause_count += 1,
+                    "new" => new_cause_count += 1,
+                    _ => {}
+                }
+                cause_evolution.push(evolution);
+            }
+        }
+    }
+
+    top_regressions.sort_by(|left, right| left.0.cmp(&right.0));
+    let overall_readiness_delta = previous_context
+        .overall_readiness
+        .map(|previous| overall_readiness as i64 - previous as i64);
+    let trend = overall_longitudinal_trend(
+        overall_readiness_delta,
+        improved_topic_count,
+        declined_topic_count,
+        persistent_cause_count,
+    )
+    .to_string();
+
+    Some(DiagnosticLongitudinalSummary {
+        previous_diagnostic_id: Some(previous_context.diagnostic_id),
+        previous_completed_at: previous_context.completed_at.clone(),
+        overall_readiness_delta,
+        trend,
+        improved_topic_count,
+        declined_topic_count,
+        stable_topic_count,
+        persistent_cause_count,
+        shifted_cause_count,
+        new_cause_count,
+        top_regressions: top_regressions
+            .into_iter()
+            .take(3)
+            .map(|(_, summary)| summary)
+            .collect(),
+        cause_evolution,
+    })
+}
+
+fn overall_longitudinal_trend(
+    overall_readiness_delta: Option<i64>,
+    improved_topic_count: usize,
+    declined_topic_count: usize,
+    persistent_cause_count: usize,
+) -> &'static str {
+    match overall_readiness_delta.unwrap_or(0) {
+        600..=i64::MAX if declined_topic_count == 0 => "improving",
+        i64::MIN..=-600 => "declining",
+        _ if declined_topic_count > improved_topic_count => "declining",
+        _ if persistent_cause_count > 0 && improved_topic_count == 0 => "stalled",
+        _ if improved_topic_count > declined_topic_count => "recovering",
+        _ => "mixed",
+    }
+}
+
+fn enrich_hypotheses_with_longitudinal_context(
+    hypotheses: Vec<DiagnosticRootCauseHypothesis>,
+    analytics: &DiagnosticTopicAnalytics,
+    longitudinal_signal: Option<&TopicDiagnosticLongitudinalSignal>,
+) -> Vec<DiagnosticRootCauseHypothesis> {
+    let top_hypothesis_code = top_hypothesis_snapshot(&hypotheses).map(|item| item.0);
+    hypotheses
+        .into_iter()
+        .map(|mut hypothesis| {
+            let mut evidence = match hypothesis.evidence {
+                Value::Object(map) => map,
+                other => {
+                    let mut map = Map::new();
+                    map.insert("base_evidence".to_string(), other);
+                    map
+                }
+            };
+            evidence.insert(
+                "diagnostic_snapshot".to_string(),
+                json!({
+                    "diagnostic_id": analytics.diagnostic_id,
+                    "topic_id": analytics.topic_id,
+                    "classification": analytics.classification,
+                    "mastery_score": analytics.mastery_score,
+                    "pressure_score": analytics.pressure_score,
+                    "flexibility_score": analytics.flexibility_score,
+                    "recommended_action": analytics.recommended_action,
+                }),
+            );
+            if let Some(signal) = longitudinal_signal {
+                evidence.insert(
+                    "longitudinal".to_string(),
+                    json!({
+                        "previous_diagnostic_id": signal.previous_diagnostic_id,
+                        "previous_completed_at": &signal.previous_completed_at,
+                        "previous_classification": &signal.previous_classification,
+                        "previous_mastery_score": signal.previous_mastery_score,
+                        "mastery_delta": signal.mastery_delta,
+                        "pressure_delta": signal.pressure_delta,
+                        "flexibility_delta": signal.flexibility_delta,
+                        "trend": &signal.trend,
+                    }),
+                );
+                if top_hypothesis_code
+                    .as_deref()
+                    .map(|code| code == hypothesis.hypothesis_code)
+                    .unwrap_or(false)
+                {
+                    evidence.insert(
+                        "cause_evolution".to_string(),
+                        json!(&signal.cause_evolution),
+                    );
+                    evidence.insert(
+                        "durable_signal".to_string(),
+                        json!(
+                            signal
+                                .cause_evolution
+                                .as_ref()
+                                .map(|item| item.recurrence_count >= 2
+                                    || item.evolution_status == "shifted")
+                                .unwrap_or(false)
+                        ),
+                    );
+                }
+            }
+            hypothesis.evidence = Value::Object(evidence);
+            hypothesis
+        })
+        .collect()
+}
+
 fn latency_to_fluency(latency_ms: Option<i64>) -> BasisPoints {
     let latency_ms = latency_ms.unwrap_or(30_000).max(1) as f64;
     ((30_000.0 / latency_ms).clamp(0.0, 1.0) * 10_000.0).round() as BasisPoints
@@ -1930,7 +2295,7 @@ mod tests {
     use ecoach_content::PackService;
     use ecoach_questions::QuestionService;
     use ecoach_storage::run_runtime_migrations;
-    use rusqlite::Connection;
+    use rusqlite::{Connection, params};
 
     use super::*;
 
@@ -2293,6 +2658,204 @@ mod tests {
         );
     }
 
+    #[test]
+    fn complete_diagnostic_persists_repeated_cause_evolution() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, status) VALUES ('student', 'Naa', 'hash', 'salt', 'active')",
+            [],
+        )
+        .expect("student should be insertable");
+        let student_id = conn.last_insert_rowid();
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("math subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+        let (previous_diagnostic_id, previous_result) =
+            run_pressure_heavy_diagnostic(&conn, student_id, subject_id, topic_id);
+        let previous_target = previous_result
+            .topic_results
+            .iter()
+            .find(|item| item.topic_id == topic_id)
+            .expect("previous topic result should exist");
+        assert!(previous_target.longitudinal_signal.is_none());
+
+        let (diagnostic_id, result) =
+            run_pressure_heavy_diagnostic(&conn, student_id, subject_id, topic_id);
+        let target_topic = result
+            .topic_results
+            .iter()
+            .find(|item| item.topic_id == topic_id)
+            .expect("target topic result should exist");
+        let longitudinal_signal = target_topic
+            .longitudinal_signal
+            .as_ref()
+            .expect("longitudinal signal should be present");
+        let cause_evolution = longitudinal_signal
+            .cause_evolution
+            .as_ref()
+            .expect("cause evolution should be present");
+        let persisted_summary = DiagnosticEngine::new(&conn)
+            .get_longitudinal_summary(diagnostic_id)
+            .expect("summary should load")
+            .expect("summary should exist");
+        let persisted_evolution = DiagnosticEngine::new(&conn)
+            .list_cause_evolution(diagnostic_id)
+            .expect("cause evolution should load");
+        let current_hypothesis_code = cause_evolution
+            .current_hypothesis_code
+            .as_deref()
+            .expect("current hypothesis code should exist");
+        let persisted_hypotheses = DiagnosticEngine::new(&conn)
+            .list_root_cause_hypotheses(diagnostic_id, Some(topic_id))
+            .expect("hypotheses should load");
+        let top_hypothesis = persisted_hypotheses
+            .iter()
+            .find(|item| item.hypothesis_code == current_hypothesis_code)
+            .expect("current dominant hypothesis should exist");
+
+        assert_eq!(
+            longitudinal_signal.previous_diagnostic_id,
+            Some(previous_diagnostic_id)
+        );
+        assert!(cause_evolution.evolution_status.starts_with("repeated"));
+        assert_eq!(
+            cause_evolution.previous_hypothesis_code.as_deref(),
+            Some(current_hypothesis_code)
+        );
+        assert_eq!(
+            cause_evolution.current_hypothesis_code.as_deref(),
+            Some(current_hypothesis_code)
+        );
+        assert_eq!(
+            persisted_summary.previous_diagnostic_id,
+            Some(previous_diagnostic_id)
+        );
+        assert!(
+            persisted_evolution
+                .iter()
+                .any(|item| item.topic_id == topic_id
+                    && item.evolution_status.starts_with("repeated"))
+        );
+        assert_eq!(
+            top_hypothesis
+                .evidence
+                .get("cause_evolution")
+                .and_then(|item| item.get("evolution_status"))
+                .and_then(Value::as_str),
+            Some(cause_evolution.evolution_status.as_str())
+        );
+        assert_eq!(
+            top_hypothesis
+                .evidence
+                .get("durable_signal")
+                .and_then(Value::as_bool),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn complete_diagnostic_marks_shifted_cause_when_root_cause_changes() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, status) VALUES ('student', 'Akosua', 'hash', 'salt', 'active')",
+            [],
+        )
+        .expect("student should be insertable");
+        let student_id = conn.last_insert_rowid();
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("math subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+        let previous_diagnostic_id = insert_completed_diagnostic_history(
+            &conn,
+            student_id,
+            subject_id,
+            topic_id,
+            "2026-03-10T08:00:00Z",
+            3400,
+            3200,
+            3300,
+            "at_risk",
+            "teach_then_guided_practice",
+            "foundation_gap",
+            7600,
+        );
+
+        let (diagnostic_id, result) =
+            run_pressure_heavy_diagnostic(&conn, student_id, subject_id, topic_id);
+        let target_topic = result
+            .topic_results
+            .iter()
+            .find(|item| item.topic_id == topic_id)
+            .expect("target topic result should exist");
+        let cause_evolution = target_topic
+            .longitudinal_signal
+            .as_ref()
+            .and_then(|item| item.cause_evolution.as_ref())
+            .expect("cause evolution should be present");
+        let persisted_evolution = DiagnosticEngine::new(&conn)
+            .list_cause_evolution(diagnostic_id)
+            .expect("cause evolution should load");
+
+        assert_eq!(
+            cause_evolution.previous_hypothesis_code.as_deref(),
+            Some("foundation_gap")
+        );
+        assert_ne!(
+            cause_evolution.current_hypothesis_code.as_deref(),
+            Some("foundation_gap")
+        );
+        assert_eq!(cause_evolution.evolution_status, "shifted");
+        assert!(
+            cause_evolution
+                .summary
+                .contains("shifted from foundation gap")
+        );
+        assert!(persisted_evolution.iter().any(|item| {
+            item.topic_id == topic_id
+                && item.evolution_status == "shifted"
+                && item.previous_hypothesis_code.as_deref() == Some("foundation_gap")
+        }));
+        assert_eq!(
+            result
+                .longitudinal_summary
+                .as_ref()
+                .and_then(|item| item.previous_diagnostic_id),
+            Some(previous_diagnostic_id)
+        );
+    }
+
     fn open_test_database() -> Connection {
         let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
         run_runtime_migrations(&mut conn).expect("migrations should apply");
@@ -2307,5 +2870,139 @@ mod tests {
             .expect("workspace root should exist")
             .join("packs")
             .join("math-bece-sample")
+    }
+
+    fn run_pressure_heavy_diagnostic(
+        conn: &Connection,
+        student_id: i64,
+        subject_id: i64,
+        topic_id: i64,
+    ) -> (i64, DiagnosticResult) {
+        let engine = DiagnosticEngine::new(conn);
+        let battery = engine
+            .start_diagnostic_battery(
+                student_id,
+                subject_id,
+                vec![topic_id],
+                DiagnosticMode::Standard,
+            )
+            .expect("diagnostic battery should build");
+        let question_service = QuestionService::new(conn);
+
+        for phase in &battery.phases {
+            let items = engine
+                .list_phase_items(battery.diagnostic_id, phase.phase_number)
+                .expect("phase items should load");
+            let Some(first_item) = items.first() else {
+                continue;
+            };
+            let options = question_service
+                .list_options(first_item.question_id)
+                .expect("options should load");
+            let correct_option_id = options
+                .iter()
+                .find(|option| option.is_correct)
+                .map(|option| option.id)
+                .expect("correct option should exist");
+            let wrong_option_id = options
+                .iter()
+                .find(|option| !option.is_correct)
+                .map(|option| option.id)
+                .expect("wrong option should exist");
+            let attempt_id: i64 = conn
+                .query_row(
+                    "SELECT id FROM diagnostic_item_attempts
+                     WHERE diagnostic_id = ?1 AND phase_id = ?2 AND question_id = ?3
+                     LIMIT 1",
+                    params![
+                        battery.diagnostic_id,
+                        phase.phase_id,
+                        first_item.question_id
+                    ],
+                    |row| row.get(0),
+                )
+                .expect("attempt should exist");
+            let selected_option_id = match phase.phase_code.as_str() {
+                "pressure" => wrong_option_id,
+                _ => correct_option_id,
+            };
+            engine
+                .submit_phase_attempt(
+                    battery.diagnostic_id,
+                    attempt_id,
+                    selected_option_id,
+                    Some(12_000),
+                    Some("sure"),
+                    0,
+                    false,
+                    false,
+                )
+                .expect("phase attempt should submit");
+        }
+
+        let result = engine
+            .complete_diagnostic(battery.diagnostic_id)
+            .expect("diagnostic should complete");
+        (battery.diagnostic_id, result)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn insert_completed_diagnostic_history(
+        conn: &Connection,
+        student_id: i64,
+        subject_id: i64,
+        topic_id: i64,
+        completed_at: &str,
+        mastery_score: i64,
+        pressure_score: i64,
+        flexibility_score: i64,
+        classification: &str,
+        recommended_action: &str,
+        hypothesis_code: &str,
+        confidence_score: i64,
+    ) -> i64 {
+        conn.execute(
+            "INSERT INTO diagnostic_instances (
+                student_id, subject_id, session_mode, status, started_at, completed_at
+             ) VALUES (?1, ?2, 'standard', 'completed', ?3, ?3)",
+            params![student_id, subject_id, completed_at],
+        )
+        .expect("diagnostic instance should insert");
+        let diagnostic_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO diagnostic_topic_analytics (
+                diagnostic_id, topic_id, mastery_score, fluency_score, precision_score,
+                pressure_score, flexibility_score, stability_score, classification,
+                confidence_score, recommended_action
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![
+                diagnostic_id,
+                topic_id,
+                mastery_score,
+                mastery_score,
+                mastery_score,
+                pressure_score,
+                flexibility_score,
+                ((mastery_score + pressure_score + flexibility_score) / 3),
+                classification,
+                confidence_score,
+                recommended_action,
+            ],
+        )
+        .expect("topic analytics should insert");
+        conn.execute(
+            "INSERT INTO diagnostic_root_cause_hypotheses (
+                diagnostic_id, topic_id, hypothesis_code, confidence_score, recommended_action, evidence_json
+             ) VALUES (?1, ?2, ?3, ?4, ?5, '{}')",
+            params![
+                diagnostic_id,
+                topic_id,
+                hypothesis_code,
+                confidence_score,
+                recommended_action,
+            ],
+        )
+        .expect("root cause hypothesis should insert");
+        diagnostic_id
     }
 }

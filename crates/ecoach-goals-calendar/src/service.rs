@@ -1,3 +1,5 @@
+use std::collections::{BTreeMap, BTreeSet};
+
 use chrono::{Datelike, NaiveDate};
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, to_bp};
 use rusqlite::{Connection, OptionalExtension, params};
@@ -25,6 +27,45 @@ struct PendingMissionWindow {
     title: String,
     activity_type: String,
     primary_topic_id: Option<i64>,
+}
+
+#[derive(Clone)]
+struct RecentSolidificationOutcome {
+    topic_id: i64,
+    topic_name: String,
+    outcome: String,
+    next_action_hint: String,
+    accuracy_score: Option<BasisPoints>,
+}
+
+#[derive(Clone)]
+struct TopicPressureCandidate {
+    topic_id: i64,
+    topic_name: String,
+    priority_score: BasisPoints,
+    gap_score: BasisPoints,
+    repair_priority: BasisPoints,
+    fragility_score: BasisPoints,
+    is_urgent: bool,
+    due_items: i64,
+    fragile_items: i64,
+    collapsed_items: i64,
+}
+
+struct RankedPressureTopic {
+    candidate: TopicPressureCandidate,
+    outcome: Option<RecentSolidificationOutcome>,
+    adjusted_score: BasisPoints,
+}
+
+struct ComebackPressure {
+    focus_topic_ids: Vec<i64>,
+    recommended_topic_id: Option<i64>,
+    pressure_score: BasisPoints,
+    repair_buffer_minutes: i64,
+    recommended_session_type: Option<String>,
+    recent_repair_outcome: Option<String>,
+    rationale: Option<String>,
 }
 
 fn map_daily_target(row: &rusqlite::Row<'_>) -> rusqlite::Result<BeatYesterdayDailyTarget> {
@@ -214,6 +255,20 @@ fn estimate_remaining_target_minutes(
     };
     let blended_progress = (0.65 * attempt_progress + 0.35 * correct_progress).clamp(0.0, 1.0);
     ((total_minutes as f64) * (1.0 - blended_progress)).ceil() as i64
+}
+
+fn merge_topic_ids(primary: &[i64], secondary: &[i64], limit: usize) -> Vec<i64> {
+    let mut seen = BTreeSet::new();
+    let mut merged = Vec::new();
+    for topic_id in primary.iter().chain(secondary.iter()) {
+        if seen.insert(*topic_id) {
+            merged.push(*topic_id);
+        }
+        if merged.len() >= limit {
+            break;
+        }
+    }
+    merged
 }
 
 impl<'a> GoalsCalendarService<'a> {
@@ -476,10 +531,11 @@ impl<'a> GoalsCalendarService<'a> {
     ) -> EcoachResult<FreeNowRecommendation> {
         let available_now = self.is_free_now(student_id, date, minute_of_day)?;
         let window_end_minute = self.current_window_end_minute(student_id, date, minute_of_day)?;
-        let focus_topic_ids = self.load_focus_topic_ids(student_id, subject_id, 3)?;
+        let base_focus_topic_ids = self.load_focus_topic_ids(student_id, subject_id, 3)?;
         let target = self.get_daily_climb_target(student_id, subject_id, date)?;
         let actual = self.load_actual_performance(student_id, subject_id, date)?;
         let active_mission = self.load_active_mission(student_id, subject_id, date)?;
+        let comeback_pressure = self.build_comeback_pressure(student_id, subject_id, date, 3)?;
 
         let carryover_attempts = target
             .as_ref()
@@ -499,10 +555,18 @@ impl<'a> GoalsCalendarService<'a> {
                 suggested_duration_minutes: 0,
                 session_type: "wait_for_window".to_string(),
                 rationale: "The student is currently outside an active study window.".to_string(),
-                focus_topic_ids,
+                focus_topic_ids: merge_topic_ids(
+                    &comeback_pressure.focus_topic_ids,
+                    &base_focus_topic_ids,
+                    3,
+                ),
                 target_id: target.as_ref().map(|item| item.id),
                 carryover_attempts,
                 carryover_correct,
+                pressure_score: comeback_pressure.pressure_score,
+                repair_buffer_minutes: comeback_pressure.repair_buffer_minutes,
+                recommended_comeback_topic_id: comeback_pressure.recommended_topic_id,
+                recent_repair_outcome: comeback_pressure.recent_repair_outcome,
             });
         }
 
@@ -518,46 +582,135 @@ impl<'a> GoalsCalendarService<'a> {
         } else {
             raw_capacity.min(max_session_minutes)
         };
+        let remaining_target_minutes = target
+            .as_ref()
+            .map(|item| estimate_remaining_target_minutes(item, &actual))
+            .unwrap_or(0);
+        let comeback_focus_topic_ids =
+            merge_topic_ids(&comeback_pressure.focus_topic_ids, &base_focus_topic_ids, 3);
+        let should_preempt_target = match comeback_pressure.recommended_session_type.as_deref() {
+            Some("comeback_reteach" | "comeback_repair" | "guided_reinforcement") => true,
+            Some("memory_rescue") => {
+                carryover_attempts <= 2 || remaining_target_minutes <= min_session_minutes
+            }
+            Some("retention_check") => {
+                target.is_none()
+                    || carryover_attempts <= 2
+                    || remaining_target_minutes <= min_session_minutes
+            }
+            _ => false,
+        };
 
         let (session_type, rationale, focus_topic_ids) = if let Some(mission) = active_mission {
-            let mut mission_focus = focus_topic_ids.clone();
+            let mut mission_focus = comeback_focus_topic_ids.clone();
             if let Some(topic_id) = mission.primary_topic_id {
                 mission_focus.retain(|value| *value != topic_id);
                 mission_focus.insert(0, topic_id);
             }
-            (
-                format!("planned_{}", mission.activity_type),
+            let rationale = if mission.primary_topic_id == comeback_pressure.recommended_topic_id
+                && comeback_pressure
+                    .recent_repair_outcome
+                    .as_deref()
+                    .is_some_and(|value| value == "failed")
+            {
+                format!(
+                    "A planned coach mission is already waiting for this window, and it lines up with the latest failed repair comeback on the same topic: {}.",
+                    mission.title
+                )
+            } else {
                 format!(
                     "A planned coach mission is already waiting for this window: {}.",
                     mission.title
-                ),
+                )
+            };
+            (
+                format!("planned_{}", mission.activity_type),
+                rationale,
                 mission_focus,
+            )
+        } else if should_preempt_target {
+            (
+                comeback_pressure
+                    .recommended_session_type
+                    .clone()
+                    .unwrap_or_else(|| "memory_rescue".to_string()),
+                comeback_pressure
+                    .rationale
+                    .clone()
+                    .unwrap_or_else(|| {
+                        "Recent repair pressure should take precedence over the default free-now plan.".to_string()
+                    }),
+                comeback_focus_topic_ids.clone(),
             )
         } else if let Some(target) = target.as_ref() {
             let session_type = free_now_session_type_for_mode(&target.mode);
-            let rationale = format!(
+            let mut rationale = format!(
                 "Use this free window to advance today's {} target while {} attempts and {} correct answers still remain.",
                 target.mode, carryover_attempts, carryover_correct
             );
+            if let Some(extra_rationale) = comeback_pressure.rationale.as_ref() {
+                rationale.push(' ');
+                rationale.push_str(extra_rationale);
+            }
             (
                 session_type.to_string(),
                 rationale,
-                target.focus_topic_ids.clone(),
+                merge_topic_ids(&target.focus_topic_ids, &comeback_focus_topic_ids, 3),
             )
+        } else if let Some(session_type) = comeback_pressure.recommended_session_type.clone() {
+            let rationale = comeback_pressure.rationale.clone().unwrap_or_else(|| {
+                "The best use of this window is to absorb the latest repair pressure.".to_string()
+            });
+            (session_type, rationale, comeback_focus_topic_ids.clone())
         } else if self.count_due_memory_topics(student_id, subject_id, date)? > 0 {
             (
                 "memory_rescue".to_string(),
                 "A spaced review is due, so the best use of this window is retrieval rescue."
                     .to_string(),
-                focus_topic_ids.clone(),
+                comeback_focus_topic_ids.clone(),
             )
         } else {
             (
                 "bonus_priority_push".to_string(),
                 "No hard target is due right now, so this window can safely pull forward a high-priority topic."
                     .to_string(),
-                focus_topic_ids.clone(),
+                comeback_focus_topic_ids.clone(),
             )
+        };
+
+        let lower_floor = if raw_capacity <= 0 {
+            0
+        } else if raw_capacity < min_session_minutes {
+            raw_capacity.max(5)
+        } else {
+            min_session_minutes
+        };
+        let suggested_duration_minutes = match session_type.as_str() {
+            "comeback_reteach" | "comeback_repair" | "guided_reinforcement" | "memory_rescue" => {
+                suggested_duration_minutes.max(
+                    comeback_pressure
+                        .repair_buffer_minutes
+                        .min(raw_capacity)
+                        .min(max_session_minutes)
+                        .max(lower_floor),
+                )
+            }
+            "retention_check" => {
+                let retention_floor = if raw_capacity < min_session_minutes {
+                    raw_capacity.max(5)
+                } else {
+                    lower_floor
+                };
+                suggested_duration_minutes.min(
+                    comeback_pressure
+                        .repair_buffer_minutes
+                        .max(8)
+                        .min(raw_capacity)
+                        .min(max_session_minutes)
+                        .max(retention_floor),
+                )
+            }
+            _ => suggested_duration_minutes,
         };
 
         Ok(FreeNowRecommendation {
@@ -572,6 +725,10 @@ impl<'a> GoalsCalendarService<'a> {
             target_id: target.as_ref().map(|item| item.id),
             carryover_attempts,
             carryover_correct,
+            pressure_score: comeback_pressure.pressure_score,
+            repair_buffer_minutes: comeback_pressure.repair_buffer_minutes,
+            recommended_comeback_topic_id: comeback_pressure.recommended_topic_id,
+            recent_repair_outcome: comeback_pressure.recent_repair_outcome,
         })
     }
 
@@ -587,27 +744,75 @@ impl<'a> GoalsCalendarService<'a> {
             self.remaining_day_capacity_minutes(student_id, date, minute_of_day)?;
         let target = self.get_daily_climb_target(student_id, subject_id, date)?;
         let actual = self.load_actual_performance(student_id, subject_id, date)?;
-        let focus_topic_ids = target
+        let base_focus_topic_ids = target
             .as_ref()
             .map(|item| item.focus_topic_ids.clone())
             .unwrap_or(self.load_focus_topic_ids(student_id, subject_id, 3)?);
-        let remaining_target_minutes = target
+        let base_remaining_target_minutes = target
             .as_ref()
             .map(|item| estimate_remaining_target_minutes(item, &actual))
             .unwrap_or(0);
+        let comeback_pressure = self.build_comeback_pressure(student_id, subject_id, date, 3)?;
+        let should_preempt_target = match comeback_pressure.recommended_session_type.as_deref() {
+            Some(
+                "comeback_reteach" | "comeback_repair" | "guided_reinforcement" | "memory_rescue",
+            ) => true,
+            Some("retention_check") => target.is_none() || base_remaining_target_minutes <= 10,
+            _ => false,
+        };
+        let repair_buffer_minutes = if should_preempt_target
+            || target.is_none()
+            || comeback_pressure
+                .recommended_session_type
+                .as_deref()
+                .is_some_and(|value| value == "retention_check")
+        {
+            comeback_pressure.repair_buffer_minutes
+        } else {
+            0
+        };
+        let focus_topic_ids = if should_preempt_target {
+            merge_topic_ids(&comeback_pressure.focus_topic_ids, &base_focus_topic_ids, 3)
+        } else {
+            merge_topic_ids(&base_focus_topic_ids, &comeback_pressure.focus_topic_ids, 3)
+        };
+        let remaining_target_minutes = base_remaining_target_minutes + repair_buffer_minutes;
         let (_, max_session_minutes) = self.load_session_bounds(student_id)?;
         let recommended_session_count = if remaining_target_minutes == 0 {
             0
         } else {
             ((remaining_target_minutes as f64) / max_session_minutes.max(1) as f64).ceil() as i64
         };
-        let next_session_type = target
-            .as_ref()
-            .map(|item| free_now_session_type_for_mode(&item.mode).to_string())
-            .unwrap_or_else(|| "bonus_priority_push".to_string());
-        let rationale = if remaining_target_minutes == 0 {
+        let next_session_type = if should_preempt_target {
+            comeback_pressure
+                .recommended_session_type
+                .clone()
+                .unwrap_or_else(|| "memory_rescue".to_string())
+        } else if target.is_none()
+            && comeback_pressure
+                .recommended_session_type
+                .as_deref()
+                .is_some_and(|value| value == "retention_check")
+        {
+            "retention_check".to_string()
+        } else {
+            target
+                .as_ref()
+                .map(|item| free_now_session_type_for_mode(&item.mode).to_string())
+                .unwrap_or_else(|| "bonus_priority_push".to_string())
+        };
+        let rationale = if should_preempt_target {
+            comeback_pressure.rationale.clone().unwrap_or_else(|| {
+                "Recent repair pressure should take precedence in the rest-of-day plan.".to_string()
+            })
+        } else if remaining_target_minutes == 0 {
             "Today's scheduled learning load is effectively complete, so any new work is a bonus pull-forward."
                 .to_string()
+        } else if repair_buffer_minutes > 0 {
+            format!(
+                "The original target load is still manageable, but {} extra comeback minute(s) should be reserved because the latest memory or solidification signal still needs follow-through.",
+                repair_buffer_minutes
+            )
         } else if remaining_capacity_minutes < remaining_target_minutes {
             format!(
                 "Today's remaining capacity is tighter than the remaining target load, so the coach should compress the rest of the day into {} focused block(s).",
@@ -630,6 +835,10 @@ impl<'a> GoalsCalendarService<'a> {
             focus_topic_ids,
             target_id: target.as_ref().map(|item| item.id),
             rationale,
+            pressure_score: comeback_pressure.pressure_score,
+            repair_buffer_minutes,
+            recommended_comeback_topic_id: comeback_pressure.recommended_topic_id,
+            recent_repair_outcome: comeback_pressure.recent_repair_outcome,
         })
     }
 
@@ -1115,6 +1324,363 @@ impl<'a> GoalsCalendarService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
+    fn load_recent_solidification_outcomes(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        date: &str,
+        limit: usize,
+    ) -> EcoachResult<BTreeMap<i64, RecentSolidificationOutcome>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    ss.topic_id,
+                    t.name,
+                    re.payload_json
+                 FROM solidification_sessions ss
+                 INNER JOIN topics t ON t.id = ss.topic_id
+                 INNER JOIN sessions s ON s.id = ss.session_id
+                 INNER JOIN runtime_events re
+                    ON re.aggregate_kind = 'session'
+                   AND re.aggregate_id = CAST(s.id AS TEXT)
+                   AND re.event_type = 'session.interpreted'
+                 WHERE ss.student_id = ?1
+                   AND t.subject_id = ?2
+                   AND DATE(COALESCE(ss.completed_at, s.completed_at, re.occurred_at)) >= DATE(?3, '-3 day')
+                 ORDER BY COALESCE(ss.completed_at, s.completed_at, re.occurred_at) DESC, re.id DESC
+                 LIMIT ?4",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let rows = statement
+            .query_map(
+                params![student_id, subject_id, date, limit.max(1) as i64],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                    ))
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut outcomes = BTreeMap::new();
+        for row in rows {
+            let (topic_id, topic_name, payload_json) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if outcomes.contains_key(&topic_id) {
+                continue;
+            }
+            let payload: Value = serde_json::from_str(&payload_json)
+                .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+            outcomes.insert(
+                topic_id,
+                RecentSolidificationOutcome {
+                    topic_id,
+                    topic_name,
+                    outcome: payload
+                        .get("repair_outcome")
+                        .and_then(|value| value.as_str())
+                        .unwrap_or("mixed")
+                        .to_string(),
+                    next_action_hint: payload
+                        .get("next_action_hint")
+                        .and_then(|value| value.as_str())
+                        .unwrap_or("repair_retry")
+                        .to_string(),
+                    accuracy_score: payload
+                        .get("topic_summaries")
+                        .and_then(|value| value.as_array())
+                        .and_then(|items| items.first())
+                        .and_then(|item| item.get("accuracy_score"))
+                        .and_then(|value| value.as_u64())
+                        .map(|value| value as BasisPoints),
+                },
+            );
+        }
+
+        Ok(outcomes)
+    }
+
+    fn load_topic_pressure_candidates(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        date: &str,
+        limit: usize,
+    ) -> EcoachResult<BTreeMap<i64, TopicPressureCandidate>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    sts.topic_id,
+                    t.name,
+                    sts.priority_score,
+                    sts.gap_score,
+                    sts.repair_priority,
+                    sts.fragility_score,
+                    sts.is_urgent,
+                    COALESCE(ms_stats.due_items, 0),
+                    COALESCE(ms_stats.fragile_items, 0),
+                    COALESCE(ms_stats.collapsed_items, 0)
+                 FROM student_topic_states sts
+                 INNER JOIN topics t ON t.id = sts.topic_id
+                 LEFT JOIN (
+                    SELECT
+                        topic_id,
+                        SUM(CASE WHEN review_due_at IS NOT NULL AND DATE(review_due_at) <= DATE(?3) THEN 1 ELSE 0 END) AS due_items,
+                        SUM(CASE WHEN memory_state IN ('fragile', 'at_risk', 'fading', 'rebuilding') THEN 1 ELSE 0 END) AS fragile_items,
+                        SUM(CASE WHEN memory_state = 'collapsed' THEN 1 ELSE 0 END) AS collapsed_items
+                    FROM memory_states
+                    WHERE student_id = ?1
+                      AND topic_id IS NOT NULL
+                    GROUP BY topic_id
+                 ) ms_stats ON ms_stats.topic_id = sts.topic_id
+                 WHERE sts.student_id = ?1
+                   AND t.subject_id = ?2
+                 ORDER BY
+                    sts.is_urgent DESC,
+                    sts.repair_priority DESC,
+                    COALESCE(ms_stats.collapsed_items, 0) DESC,
+                    COALESCE(ms_stats.due_items, 0) DESC,
+                    sts.priority_score DESC
+                 LIMIT ?4",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let rows = statement
+            .query_map(
+                params![student_id, subject_id, date, limit.max(1) as i64],
+                |row| {
+                    Ok(TopicPressureCandidate {
+                        topic_id: row.get(0)?,
+                        topic_name: row.get(1)?,
+                        priority_score: row.get(2)?,
+                        gap_score: row.get(3)?,
+                        repair_priority: row.get(4)?,
+                        fragility_score: row.get(5)?,
+                        is_urgent: row.get::<_, i64>(6)? == 1,
+                        due_items: row.get(7)?,
+                        fragile_items: row.get(8)?,
+                        collapsed_items: row.get(9)?,
+                    })
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut candidates = BTreeMap::new();
+        for row in rows {
+            let candidate = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            candidates.insert(candidate.topic_id, candidate);
+        }
+        Ok(candidates)
+    }
+
+    fn build_comeback_pressure(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        date: &str,
+        limit: usize,
+    ) -> EcoachResult<ComebackPressure> {
+        let outcomes =
+            self.load_recent_solidification_outcomes(student_id, subject_id, date, 12)?;
+        let mut candidates =
+            self.load_topic_pressure_candidates(student_id, subject_id, date, limit.max(6))?;
+
+        for outcome in outcomes.values() {
+            candidates
+                .entry(outcome.topic_id)
+                .or_insert_with(|| TopicPressureCandidate {
+                    topic_id: outcome.topic_id,
+                    topic_name: outcome.topic_name.clone(),
+                    priority_score: 0,
+                    gap_score: 0,
+                    repair_priority: 0,
+                    fragility_score: 0,
+                    is_urgent: false,
+                    due_items: 0,
+                    fragile_items: 0,
+                    collapsed_items: 0,
+                });
+        }
+
+        let mut ranked = candidates
+            .into_values()
+            .map(|candidate| {
+                let outcome = outcomes.get(&candidate.topic_id).cloned();
+                let outcome_bonus = match outcome.as_ref().map(|item| item.outcome.as_str()) {
+                    Some("failed") => 2600,
+                    Some("mixed") => 1200,
+                    Some("success") => -900,
+                    _ => 0,
+                };
+                let accuracy_adjustment =
+                    match outcome.as_ref().and_then(|item| item.accuracy_score) {
+                        Some(score) if score < 3000 => 900,
+                        Some(score) if score >= 8000 => -400,
+                        _ => 0,
+                    };
+                let adjusted_score = clamp_bp(
+                    (candidate.repair_priority as i64 * 45 / 100)
+                        + (candidate.priority_score as i64 * 20 / 100)
+                        + (candidate.gap_score as i64 * 10 / 100)
+                        + (candidate.fragility_score as i64 * 10 / 100)
+                        + candidate.due_items.min(4) * 650
+                        + candidate.fragile_items.min(4) * 450
+                        + candidate.collapsed_items.min(3) * 1200
+                        + if candidate.is_urgent { 1100 } else { 0 }
+                        + outcome_bonus
+                        + accuracy_adjustment,
+                );
+                RankedPressureTopic {
+                    candidate,
+                    outcome,
+                    adjusted_score,
+                }
+            })
+            .collect::<Vec<_>>();
+
+        ranked.sort_by(|left, right| {
+            right
+                .adjusted_score
+                .cmp(&left.adjusted_score)
+                .then(
+                    right
+                        .candidate
+                        .repair_priority
+                        .cmp(&left.candidate.repair_priority),
+                )
+                .then(
+                    right
+                        .candidate
+                        .priority_score
+                        .cmp(&left.candidate.priority_score),
+                )
+                .then(left.candidate.topic_id.cmp(&right.candidate.topic_id))
+        });
+
+        let focus_topic_ids = ranked
+            .iter()
+            .map(|item| item.candidate.topic_id)
+            .take(limit.max(1))
+            .collect::<Vec<_>>();
+
+        let Some(top) = ranked.first() else {
+            return Ok(ComebackPressure {
+                focus_topic_ids,
+                recommended_topic_id: None,
+                pressure_score: 0,
+                repair_buffer_minutes: 0,
+                recommended_session_type: None,
+                recent_repair_outcome: None,
+                rationale: None,
+            });
+        };
+
+        let due_topic_count = ranked
+            .iter()
+            .filter(|item| item.candidate.due_items > 0)
+            .count() as i64;
+        let urgent_topic_count = ranked
+            .iter()
+            .filter(|item| item.candidate.is_urgent || item.candidate.repair_priority >= 7000)
+            .count() as i64;
+
+        let (recommended_session_type, repair_buffer_minutes, rationale) = match top
+            .outcome
+            .as_ref()
+            .map(|item| item.outcome.as_str())
+        {
+            Some("failed") => {
+                let session_type = if top.candidate.collapsed_items > 0
+                    || top
+                        .outcome
+                        .as_ref()
+                        .is_some_and(|item| item.next_action_hint.contains("reteach"))
+                {
+                    "comeback_reteach"
+                } else {
+                    "comeback_repair"
+                };
+                let buffer = (12
+                    + top.candidate.due_items.min(3) * 3
+                    + top.candidate.fragile_items.min(3) * 2
+                    + top.candidate.collapsed_items.min(2) * 5
+                    + if top.candidate.is_urgent { 4 } else { 0 })
+                .clamp(12, 32);
+                let rationale = format!(
+                    "{} did not hold in recent solidification work, and the return loop is still carrying {} due review(s), {} fragile trace(s), and {} collapsed trace(s). Replan around a comeback block before pushing forward.",
+                    top.candidate.topic_name,
+                    top.candidate.due_items,
+                    top.candidate.fragile_items,
+                    top.candidate.collapsed_items,
+                );
+                (Some(session_type.to_string()), buffer, Some(rationale))
+            }
+            Some("mixed") => {
+                let buffer = (10
+                    + top.candidate.due_items.min(3) * 2
+                    + top.candidate.fragile_items.min(3) * 2
+                    + top.candidate.collapsed_items.min(2) * 3)
+                    .clamp(10, 24);
+                let rationale = format!(
+                    "{} only partially held in the last solidification session, so the next block should reinforce the repair while the remaining memory pressure is still visible.",
+                    top.candidate.topic_name
+                );
+                (
+                    Some("guided_reinforcement".to_string()),
+                    buffer,
+                    Some(rationale),
+                )
+            }
+            Some("success")
+                if top.candidate.collapsed_items == 0
+                    && top.candidate.due_items <= 1
+                    && top.candidate.fragile_items <= 1
+                    && top.adjusted_score < 7000 =>
+            {
+                let rationale = format!(
+                    "{} recently held in solidification and the live memory pressure is light, so a short retention check is enough instead of another heavy repair block.",
+                    top.candidate.topic_name
+                );
+                (Some("retention_check".to_string()), 6, Some(rationale))
+            }
+            _ if top.candidate.collapsed_items > 0
+                || top.candidate.due_items > 0
+                || top.candidate.fragile_items > 1
+                || top.candidate.is_urgent
+                || due_topic_count > 1
+                || urgent_topic_count > 0 =>
+            {
+                let buffer = (8
+                    + top.candidate.due_items.min(4) * 2
+                    + top.candidate.collapsed_items.min(2) * 4
+                    + top.candidate.fragile_items.min(3))
+                .clamp(8, 26);
+                let rationale = format!(
+                    "Return-loop pressure is building around {} and {} topic(s) are already due, so the next plan should reserve time for memory rescue before the rest of the day slips.",
+                    top.candidate.topic_name,
+                    due_topic_count.max(1),
+                );
+                (Some("memory_rescue".to_string()), buffer, Some(rationale))
+            }
+            _ => (None, 0, None),
+        };
+
+        Ok(ComebackPressure {
+            focus_topic_ids,
+            recommended_topic_id: Some(top.candidate.topic_id),
+            pressure_score: top.adjusted_score,
+            repair_buffer_minutes,
+            recommended_session_type,
+            recent_repair_outcome: top.outcome.as_ref().map(|item| item.outcome.clone()),
+            rationale,
+        })
+    }
+
     fn get_beat_yesterday_profile(
         &self,
         student_id: i64,
@@ -1274,20 +1840,19 @@ impl<'a> GoalsCalendarService<'a> {
         student_id: i64,
         subject_id: i64,
     ) -> EcoachResult<BasisPoints> {
-        let readiness: Option<i64> = self
+        let readiness: i64 = self
             .conn
             .query_row(
-                "SELECT AVG(sts.mastery_score)
+                "SELECT CAST(COALESCE(AVG(sts.mastery_score), 0) AS INTEGER)
              FROM student_topic_states sts
              INNER JOIN topics t ON t.id = sts.topic_id
              WHERE sts.student_id = ?1 AND t.subject_id = ?2",
                 params![student_id, subject_id],
                 |row| row.get(0),
             )
-            .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        Ok(readiness.unwrap_or(0).clamp(0, 10_000) as BasisPoints)
+        Ok(readiness.clamp(0, 10_000) as BasisPoints)
     }
 
     fn load_focus_topic_ids(
@@ -1303,7 +1868,12 @@ impl<'a> GoalsCalendarService<'a> {
              FROM student_topic_states sts
              INNER JOIN topics t ON t.id = sts.topic_id
              WHERE sts.student_id = ?1 AND t.subject_id = ?2
-             ORDER BY sts.priority_score DESC, sts.gap_score DESC, sts.mastery_score ASC
+             ORDER BY
+                sts.is_urgent DESC,
+                sts.repair_priority DESC,
+                sts.priority_score DESC,
+                sts.gap_score DESC,
+                sts.mastery_score ASC
              LIMIT ?3",
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -1560,6 +2130,185 @@ mod tests {
         assert!(!replan.focus_topic_ids.is_empty());
     }
 
+    #[test]
+    fn free_now_recommendation_preempts_target_after_failed_solidification() {
+        let conn = open_test_database();
+        let student_id = insert_student(&conn);
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let service = GoalsCalendarService::new(&conn);
+        let date = "2026-03-30";
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("math subject should exist");
+        let topic_id: i64 = conn
+            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
+                row.get(0)
+            })
+            .expect("topic should exist");
+
+        seed_availability(&service, student_id);
+        seed_topic_state(&conn, student_id, topic_id);
+        seed_memory_state(&conn, student_id, topic_id, "collapsed", 2200, 8800, Some(date));
+        seed_baseline_session(&conn, student_id, subject_id, topic_id, "2026-03-29");
+        service
+            .generate_daily_climb_target(student_id, subject_id, date)
+            .expect("daily target should generate");
+        seed_solidification_outcome(
+            &conn,
+            student_id,
+            subject_id,
+            topic_id,
+            "failed",
+            "reteach_before_retry",
+            2200,
+            &format!("{date}T17:30:00Z"),
+        );
+
+        let recommendation = service
+            .recommend_free_now_session(student_id, subject_id, date, 19 * 60, 35)
+            .expect("free-now recommendation should resolve");
+
+        assert!(recommendation.available_now);
+        assert_eq!(recommendation.session_type, "comeback_reteach");
+        assert_eq!(
+            recommendation.recommended_comeback_topic_id,
+            Some(topic_id)
+        );
+        assert_eq!(
+            recommendation.recent_repair_outcome.as_deref(),
+            Some("failed")
+        );
+        assert_eq!(recommendation.focus_topic_ids.first().copied(), Some(topic_id));
+        assert!(recommendation.pressure_score >= 7000);
+        assert!(recommendation.repair_buffer_minutes >= 12);
+        assert!(recommendation.rationale.contains("did not hold"));
+    }
+
+    #[test]
+    fn daily_replan_adds_comeback_buffer_after_failed_solidification() {
+        let conn = open_test_database();
+        let student_id = insert_student(&conn);
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let service = GoalsCalendarService::new(&conn);
+        let date = "2026-03-30";
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("math subject should exist");
+        let topic_id: i64 = conn
+            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
+                row.get(0)
+            })
+            .expect("topic should exist");
+
+        seed_availability(&service, student_id);
+        seed_topic_state(&conn, student_id, topic_id);
+        seed_memory_state(&conn, student_id, topic_id, "collapsed", 2200, 9000, Some(date));
+        seed_baseline_session(&conn, student_id, subject_id, topic_id, "2026-03-29");
+        service
+            .generate_daily_climb_target(student_id, subject_id, date)
+            .expect("daily target should generate");
+
+        let baseline_replan = service
+            .replan_remaining_day(student_id, subject_id, date, 19 * 60)
+            .expect("baseline replan should resolve");
+
+        seed_solidification_outcome(
+            &conn,
+            student_id,
+            subject_id,
+            topic_id,
+            "failed",
+            "reteach_before_retry",
+            1800,
+            &format!("{date}T17:45:00Z"),
+        );
+
+        let replan = service
+            .replan_remaining_day(student_id, subject_id, date, 19 * 60)
+            .expect("daily replan should resolve");
+
+        assert_eq!(replan.next_session_type, "comeback_reteach");
+        assert_eq!(replan.recommended_comeback_topic_id, Some(topic_id));
+        assert_eq!(replan.recent_repair_outcome.as_deref(), Some("failed"));
+        assert!(replan.repair_buffer_minutes >= 12);
+        assert!(replan.remaining_target_minutes > baseline_replan.remaining_target_minutes);
+        assert!(replan.rationale.contains("did not hold"));
+    }
+
+    #[test]
+    fn daily_replan_downshifts_to_retention_after_successful_solidification() {
+        let conn = open_test_database();
+        let student_id = insert_student(&conn);
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let service = GoalsCalendarService::new(&conn);
+        let date = "2026-03-30";
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("math subject should exist");
+        let topic_id: i64 = conn
+            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
+                row.get(0)
+            })
+            .expect("topic should exist");
+
+        seed_availability(&service, student_id);
+        seed_stable_topic_state(&conn, student_id, topic_id);
+        seed_memory_state(
+            &conn,
+            student_id,
+            topic_id,
+            "accessible",
+            7600,
+            2100,
+            Some("2026-04-02"),
+        );
+        seed_solidification_outcome(
+            &conn,
+            student_id,
+            subject_id,
+            topic_id,
+            "success",
+            "stabilize_memory",
+            8600,
+            &format!("{date}T16:30:00Z"),
+        );
+
+        let replan = service
+            .replan_remaining_day(student_id, subject_id, date, 19 * 60)
+            .expect("daily replan should resolve");
+
+        assert_eq!(replan.next_session_type, "retention_check");
+        assert_eq!(replan.recommended_comeback_topic_id, Some(topic_id));
+        assert_eq!(replan.recent_repair_outcome.as_deref(), Some("success"));
+        assert_eq!(replan.repair_buffer_minutes, 6);
+        assert_eq!(replan.remaining_target_minutes, 6);
+        assert!(replan.rationale.contains("retention"));
+    }
+
     fn open_test_database() -> Connection {
         let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
         run_runtime_migrations(&mut conn).expect("migrations should apply");
@@ -1607,15 +2356,65 @@ mod tests {
     }
 
     fn seed_topic_state(conn: &Connection, student_id: i64, topic_id: i64) {
+        seed_topic_state_with_scores(conn, student_id, topic_id, 4200, 9200, 7300, 9000, true);
+    }
+
+    fn seed_stable_topic_state(conn: &Connection, student_id: i64, topic_id: i64) {
+        seed_topic_state_with_scores(conn, student_id, topic_id, 7600, 3600, 1800, 2500, false);
+    }
+
+    fn seed_topic_state_with_scores(
+        conn: &Connection,
+        student_id: i64,
+        topic_id: i64,
+        mastery_score: i64,
+        priority_score: i64,
+        fragility_score: i64,
+        repair_priority: i64,
+        is_urgent: bool,
+    ) {
         conn.execute(
             "INSERT INTO student_topic_states (
                 student_id, topic_id, mastery_score, mastery_state, gap_score, priority_score,
                 fragility_score, pressure_collapse_index, decay_risk, memory_strength,
-                evidence_count, repair_priority
-             ) VALUES (?1, ?2, 4200, 'fragile', 8600, 9200, 7300, 5400, 6200, 3400, 3, 9000)",
-            params![student_id, topic_id],
+                evidence_count, repair_priority, is_urgent
+             ) VALUES (?1, ?2, ?3, 'fragile', 8600, ?4, ?5, 5400, 6200, 3400, 3, ?6, ?7)",
+            params![
+                student_id,
+                topic_id,
+                mastery_score,
+                priority_score,
+                fragility_score,
+                repair_priority,
+                if is_urgent { 1 } else { 0 },
+            ],
         )
         .expect("topic state should insert");
+    }
+
+    fn seed_memory_state(
+        conn: &Connection,
+        student_id: i64,
+        topic_id: i64,
+        memory_state: &str,
+        memory_strength: i64,
+        decay_risk: i64,
+        review_due_date: Option<&str>,
+    ) {
+        conn.execute(
+            "INSERT INTO memory_states (
+                student_id, topic_id, memory_state, memory_strength, decay_risk, review_due_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![
+                student_id,
+                topic_id,
+                memory_state,
+                memory_strength,
+                decay_risk,
+                review_due_date.map(|value| format!("{value}T18:00:00Z")),
+            ],
+        )
+        .expect("memory state should insert");
     }
 
     fn seed_baseline_session(
@@ -1673,6 +2472,63 @@ mod tests {
             params![plan_day_id, student_id, subject_id, topic_id],
         )
         .expect("pending mission should insert");
+    }
+
+    fn seed_solidification_outcome(
+        conn: &Connection,
+        student_id: i64,
+        subject_id: i64,
+        topic_id: i64,
+        outcome: &str,
+        next_action_hint: &str,
+        accuracy_score: i64,
+        occurred_at: &str,
+    ) {
+        conn.execute(
+            "INSERT INTO sessions (
+                student_id, session_type, subject_id, topic_ids, status, started_at, completed_at,
+                answered_questions, correct_questions, accuracy_score
+             ) VALUES (?1, 'gap_repair', ?2, ?3, 'completed', ?4, ?4, 4, 3, ?5)",
+            params![
+                student_id,
+                subject_id,
+                format!("[{}]", topic_id),
+                occurred_at,
+                accuracy_score,
+            ],
+        )
+        .expect("gap repair session should insert");
+        let session_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO solidification_sessions (
+                student_id, topic_id, session_id, status, completed_at
+             ) VALUES (?1, ?2, ?3, 'completed', ?4)",
+            params![student_id, topic_id, session_id, occurred_at],
+        )
+        .expect("solidification session should insert");
+        conn.execute(
+            "INSERT INTO runtime_events (
+                event_id, event_type, aggregate_kind, aggregate_id, trace_id, payload_json, occurred_at
+             ) VALUES (?1, 'session.interpreted', 'session', ?2, ?3, ?4, ?5)",
+            params![
+                format!("session-interpreted-{}", session_id),
+                session_id.to_string(),
+                format!("trace-session-{}", session_id),
+                json!({
+                    "repair_outcome": outcome,
+                    "next_action_hint": next_action_hint,
+                    "topic_summaries": [
+                        {
+                            "topic_id": topic_id,
+                            "accuracy_score": accuracy_score
+                        }
+                    ]
+                })
+                .to_string(),
+                occurred_at,
+            ],
+        )
+        .expect("session interpretation event should insert");
     }
 
     fn sample_pack_path() -> PathBuf {

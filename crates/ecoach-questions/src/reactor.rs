@@ -152,16 +152,13 @@ impl<'a> QuestionReactor<'a> {
                     let cognitive_match = row.get::<_, i64>(7)?;
                     let format_match = row.get::<_, i64>(8)?;
                     let freshness_score = row.get::<_, i64>(9)?.clamp(0, 10_000) as BasisPoints;
-                    let calibration_score =
-                        row.get::<_, i64>(10)?.clamp(0, 10_000) as BasisPoints;
+                    let calibration_score = row.get::<_, i64>(10)?.clamp(0, 10_000) as BasisPoints;
                     let quality_score = row.get::<_, i64>(11)?.clamp(0, 10_000) as BasisPoints;
                     let health_status = row.get::<_, String>(12)?;
                     let recent_attempts = row.get::<_, i64>(13)?;
                     let misconception_hit_count = row.get::<_, i64>(14)?;
-                    let recurrence_score =
-                        row.get::<_, i64>(15)?.clamp(0, 10_000) as BasisPoints;
-                    let replacement_score =
-                        row.get::<_, i64>(16)?.clamp(0, 10_000) as BasisPoints;
+                    let recurrence_score = row.get::<_, i64>(15)?.clamp(0, 10_000) as BasisPoints;
+                    let replacement_score = row.get::<_, i64>(16)?.clamp(0, 10_000) as BasisPoints;
                     let family_choice = QuestionFamilyChoice {
                         family_id: row.get(0)?,
                         family_code: row.get(1)?,
@@ -226,9 +223,18 @@ impl<'a> QuestionReactor<'a> {
             right
                 .priority_score
                 .cmp(&left.priority_score)
-                .then(right.family_choice.fit_score.cmp(&left.family_choice.fit_score))
+                .then(
+                    right
+                        .family_choice
+                        .fit_score
+                        .cmp(&left.family_choice.fit_score),
+                )
                 .then(right.replacement_score.cmp(&left.replacement_score))
-                .then(left.family_choice.family_name.cmp(&right.family_choice.family_name))
+                .then(
+                    left.family_choice
+                        .family_name
+                        .cmp(&right.family_choice.family_name),
+                )
         });
         priorities.truncate(limit.max(1));
         Ok(priorities)
@@ -747,10 +753,7 @@ fn compute_family_fit_score(
         0
     };
     clamp_bp(
-        3_500
-            + total_instances.min(4) * 700
-            + cognitive_match * 2_200
-            + format_match * 1_200
+        3_500 + total_instances.min(4) * 700 + cognitive_match * 2_200 + format_match * 1_200
             - generated_penalty,
     ) as BasisPoints
 }
@@ -766,7 +769,8 @@ fn compute_generation_priority_score(
     max_generated_share: BasisPoints,
 ) -> BasisPoints {
     let generated_share = if family_choice.total_instances > 0 {
-        ((family_choice.generated_instances * 10_000) / family_choice.total_instances).clamp(0, 10_000)
+        ((family_choice.generated_instances * 10_000) / family_choice.total_instances)
+            .clamp(0, 10_000)
     } else {
         0
     };
@@ -836,13 +840,17 @@ fn generation_priority_rationale(
     if misconception_hit_count > 0 {
         "Student evidence shows misconception hits in this family, so probe variants should be kept ready.".to_string()
     } else if health_status == "fragile" {
-        "Family health is fragile, so new variants should prioritize repair and calibration.".to_string()
+        "Family health is fragile, so new variants should prioritize repair and calibration."
+            .to_string()
     } else if recent_attempts < 2 || calibration_score < 5_800 {
-        "Family has thin calibration evidence, so it should be expanded with fresh traced variants.".to_string()
+        "Family has thin calibration evidence, so it should be expanded with fresh traced variants."
+            .to_string()
     } else if replacement_score >= 7_200 && recurrence_score >= 5_000 {
-        "Past-paper pressure suggests this family is a comeback risk and should stay warm.".to_string()
+        "Past-paper pressure suggests this family is a comeback risk and should stay warm."
+            .to_string()
     } else {
-        "Family is still useful for coverage, but it does not carry the strongest urgency signal.".to_string()
+        "Family is still useful for coverage, but it does not carry the strongest urgency signal."
+            .to_string()
     }
 }
 

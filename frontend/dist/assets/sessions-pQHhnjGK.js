@@ -1,1 +1,0 @@
-import{t as e}from"./ipc-D58IRgu8.js";function t(t){return e(`start_practice_session`,{input:t})}function n(t){return e(`complete_session`,{sessionId:t})}function r(){return e(`list_installed_packs`)}export{r as n,t as r,n as t};

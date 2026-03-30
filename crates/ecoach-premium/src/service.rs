@@ -3,10 +3,10 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ecoach_substrate::{
-    clamp_bp, BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry, EntitlementTier,
-    FabricOrchestrationSummary,
+    BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry, EntitlementTier,
+    FabricOrchestrationSummary, clamp_bp,
 };
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{
@@ -1461,21 +1461,27 @@ mod tests {
         assert_eq!(snapshot.strategy_mode, "rescue");
         assert_eq!(snapshot.critical_risk_count, 1);
         assert_eq!(snapshot.priority_topics[0].topic_name, "Algebra");
-        assert!(snapshot
-            .recent_focus_signals
-            .iter()
-            .any(|signal| signal == "pressure_breakdown"));
-        assert!(snapshot
-            .recommended_game_modes
-            .iter()
-            .any(|mode| mode == "difference_drill"));
+        assert!(
+            snapshot
+                .recent_focus_signals
+                .iter()
+                .any(|signal| signal == "pressure_breakdown")
+        );
+        assert!(
+            snapshot
+                .recommended_game_modes
+                .iter()
+                .any(|mode| mode == "difference_drill")
+        );
         assert!(!snapshot.coach_actions.is_empty());
         assert!(!snapshot.household_actions.is_empty());
-        assert!(snapshot
-            .orchestration
-            .consumer_targets
-            .iter()
-            .any(|target| target.engine_key == "reporting"));
+        assert!(
+            snapshot
+                .orchestration
+                .consumer_targets
+                .iter()
+                .any(|target| target.engine_key == "reporting")
+        );
     }
 
     #[test]

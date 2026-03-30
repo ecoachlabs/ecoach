@@ -6,8 +6,8 @@ use std::{
 use chrono::{DateTime, Utc};
 use ecoach_coach_brain::ReadinessEngine;
 use ecoach_questions::{
-    Question, QuestionGenerationRequestInput, QuestionReactor, QuestionSelectionRequest,
-    QuestionRemediationPlan, QuestionSelector, QuestionService, QuestionSlotSpec,
+    Question, QuestionGenerationRequestInput, QuestionReactor, QuestionRemediationPlan,
+    QuestionSelectionRequest, QuestionSelector, QuestionService, QuestionSlotSpec,
     QuestionVariantMode, SelectedQuestion,
 };
 use ecoach_substrate::{
@@ -621,14 +621,7 @@ impl<'a> SessionService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        self.insert_session_attempt(
-            &session,
-            &session_meta,
-            &item,
-            &question,
-            &option,
-            input,
-        )?;
+        self.insert_session_attempt(&session, &session_meta, &item, &question, &option, input)?;
         self.refresh_session_progress(session_id, item.display_order)?;
         QuestionReactor::new(self.conn).record_instance_outcome(item.question_id)?;
         self.append_runtime_event(
@@ -933,9 +926,15 @@ impl<'a> SessionService<'a> {
                 topic_id: Some(topic_id),
                 target_cognitive_demand: primary_cognitive_demand,
                 target_question_format: Some(question_format),
-                max_generated_share: if response_time_ms > 45_000 { 6_000 } else { 7_500 },
+                max_generated_share: if response_time_ms > 45_000 {
+                    6_000
+                } else {
+                    7_500
+                },
             };
-            if let Some(plan) = reactor.recommend_remediation_plan(session.student_id, &slot_spec)? {
+            if let Some(plan) =
+                reactor.recommend_remediation_plan(session.student_id, &slot_spec)?
+            {
                 planned_families.insert(plan.family_choice.family_id);
                 remediation_plans.push(plan);
             } else if let Some(family_id) = family_id {
@@ -959,10 +958,11 @@ impl<'a> SessionService<'a> {
         }
 
         remediation_plans.sort_by(|left, right| {
-            right
-                .priority_score
-                .cmp(&left.priority_score)
-                .then(left.family_choice.family_name.cmp(&right.family_choice.family_name))
+            right.priority_score.cmp(&left.priority_score).then(
+                left.family_choice
+                    .family_name
+                    .cmp(&right.family_choice.family_name),
+            )
         });
         remediation_plans.truncate(limit.max(1));
         Ok(remediation_plans)
@@ -1760,10 +1760,8 @@ impl<'a> SessionService<'a> {
                 ),
                 max_generated_share: 8_000,
             };
-            let mut family_priorities = reactor.list_family_generation_priorities(
-                &slot_spec,
-                deficit.clamp(1, 4),
-            )?;
+            let mut family_priorities =
+                reactor.list_family_generation_priorities(&slot_spec, deficit.clamp(1, 4))?;
             if family_priorities.is_empty() {
                 if seed.as_ref().and_then(|item| item.family_id).is_some() {
                     if let Some(family_choice) = reactor.get_best_family_for_slot(&slot_spec)? {
@@ -1788,26 +1786,26 @@ impl<'a> SessionService<'a> {
 
             for offset in 0..deficit {
                 let priority = &family_priorities[offset % family_priorities.len()];
-                let chosen_variant_mode =
-                    resolve_generation_variant_mode(variant_mode, &priority.recommended_variant_mode);
-                let request = reactor.create_generation_request(&QuestionGenerationRequestInput {
-                    slot_spec: slot_spec.clone(),
-                    family_id: Some(priority.family_choice.family_id),
-                    source_question_id: seed.as_ref().and_then(|item| {
-                        if item.family_id == Some(priority.family_choice.family_id) {
-                            item.question_id
-                        } else {
-                            None
-                        }
-                    }),
-                    request_kind: request_kind.to_string(),
-                    variant_mode: chosen_variant_mode,
-                    requested_count: 1,
-                    rationale: Some(format!(
-                        "{} [{}]",
-                        rationale, priority.rationale
-                    )),
-                })?;
+                let chosen_variant_mode = resolve_generation_variant_mode(
+                    variant_mode,
+                    &priority.recommended_variant_mode,
+                );
+                let request =
+                    reactor.create_generation_request(&QuestionGenerationRequestInput {
+                        slot_spec: slot_spec.clone(),
+                        family_id: Some(priority.family_choice.family_id),
+                        source_question_id: seed.as_ref().and_then(|item| {
+                            if item.family_id == Some(priority.family_choice.family_id) {
+                                item.question_id
+                            } else {
+                                None
+                            }
+                        }),
+                        request_kind: request_kind.to_string(),
+                        variant_mode: chosen_variant_mode,
+                        requested_count: 1,
+                        rationale: Some(format!("{} [{}]", rationale, priority.rationale)),
+                    })?;
                 let generated = reactor.process_generation_request(request.id)?;
                 for draft in generated {
                     selected_questions.push(SelectedQuestion {

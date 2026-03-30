@@ -736,8 +736,8 @@ fn build_hypotheses(
         });
     }
 
-    if let Some(diagnostic_hypothesis) = diagnostic_signal
-        .and_then(|signal| build_diagnostic_hypothesis(base, signal))
+    if let Some(diagnostic_hypothesis) =
+        diagnostic_signal.and_then(|signal| build_diagnostic_hypothesis(base, signal))
     {
         merge_topic_case_hypothesis(&mut hypotheses, diagnostic_hypothesis);
     }
@@ -919,8 +919,7 @@ fn build_open_questions(
         .unwrap_or(false)
     {
         open_questions.push(
-            "What changed since the previous diagnostic caused this topic to regress?"
-                .to_string(),
+            "What changed since the previous diagnostic caused this topic to regress?".to_string(),
         );
     }
 
@@ -950,9 +949,8 @@ fn build_diagnostic_hypothesis(
         ));
     }
     if signal.recurrence_count >= 2 {
-        evidence_parts.push(
-            "The same cause persisted across the last two diagnostics.".to_string(),
-        );
+        evidence_parts
+            .push("The same cause persisted across the last two diagnostics.".to_string());
     }
     if let Some(delta) = signal.mastery_delta {
         if delta <= -600 {
@@ -1103,7 +1101,10 @@ fn merge_topic_case_hypothesis(
     hypotheses: &mut Vec<TopicCaseHypothesis>,
     incoming: TopicCaseHypothesis,
 ) {
-    if let Some(existing) = hypotheses.iter_mut().find(|item| item.code == incoming.code) {
+    if let Some(existing) = hypotheses
+        .iter_mut()
+        .find(|item| item.code == incoming.code)
+    {
         let incoming_is_stronger = incoming.confidence_score >= existing.confidence_score;
         existing.confidence_score = existing.confidence_score.max(incoming.confidence_score);
         if !existing.evidence_summary.contains("Recent diagnostic") {
@@ -1590,20 +1591,22 @@ mod tests {
         assert_eq!(older_diagnostic_id + 1, latest_diagnostic_id);
         assert_eq!(case.primary_hypothesis_code, "pressure_collapse");
         assert_eq!(case.recommended_intervention.mode, "pressure_conditioning");
+        assert!(case.active_hypotheses.iter().any(|item| {
+            item.code == "pressure_collapse"
+                && item
+                    .evidence_summary
+                    .contains("persisted across the last two diagnostics")
+        }));
         assert!(
-            case.active_hypotheses.iter().any(|item| {
-                item.code == "pressure_collapse"
-                    && item
-                        .evidence_summary
-                        .contains("persisted across the last two diagnostics")
-            })
+            case.proof_gaps
+                .iter()
+                .any(|item| { item.contains("same root cause across multiple runs") })
         );
-        assert!(case.proof_gaps.iter().any(|item| {
-            item.contains("same root cause across multiple runs")
-        }));
-        assert!(case.open_questions.iter().any(|item| {
-            item.contains("What changed since the previous diagnostic")
-        }));
+        assert!(
+            case.open_questions
+                .iter()
+                .any(|item| { item.contains("What changed since the previous diagnostic") })
+        );
     }
 
     fn open_test_database() -> Connection {

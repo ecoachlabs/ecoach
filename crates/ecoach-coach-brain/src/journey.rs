@@ -267,7 +267,15 @@ impl<'a> JourneyService<'a> {
                  FROM journey_stations
                  WHERE id = ?1",
                 [station_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                    ))
+                },
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let evidence_json = serde_json::to_string(evidence)
@@ -992,7 +1000,10 @@ mod tests {
             )
             .expect("station should remain active");
 
-        assert_eq!(updated.route.current_station_code.as_deref(), Some("station_01"));
+        assert_eq!(
+            updated.route.current_station_code.as_deref(),
+            Some("station_01")
+        );
         assert_eq!(updated.stations[0].status, "active");
         assert_eq!(updated.stations[1].status, "locked");
     }

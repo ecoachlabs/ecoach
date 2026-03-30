@@ -4,15 +4,28 @@ use ecoach_content::{
     CurriculumSourceUpload, FoundryJob, FoundryJobBoard, PackInstallResult, PackSummary,
     ParseCandidateCount, SubjectFoundryDashboard, TopicPackageSnapshot,
 };
+use ecoach_diagnostics::{
+    DiagnosticCauseEvolution, DiagnosticLongitudinalSummary, DiagnosticResult,
+    TopicDiagnosticLongitudinalSignal, TopicDiagnosticResult,
+};
 use ecoach_games::{ContrastPairSummary, TrapRoundResult, TrapSessionReview, TrapSessionSnapshot};
+use ecoach_glossary::KnowledgeBundleSequenceItem;
 use ecoach_identity::{Account, AccountSummary};
 use ecoach_intake::{BundleFile, BundleProcessReport, ExtractedInsight, SubmissionBundle};
+use ecoach_library::{LearningPathStep, PersonalizedLearningPath, TopicRelationshipHint};
+use ecoach_past_papers::PastPaperComebackSignal;
 use ecoach_questions::{
     DuplicateCheckResult, GeneratedQuestionDraft, QuestionFamilyChoice, QuestionFamilyHealth,
     QuestionGenerationRequest, QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode,
-    RelatedQuestion,
+    QuestionRemediationPlan, RelatedQuestion,
 };
-use ecoach_sessions::{MockBlueprint, SessionSnapshot, SessionSummary};
+use ecoach_sessions::{
+    MockBlueprint, SessionEvidenceFabric, SessionInterpretation, SessionSnapshot, SessionSummary,
+    SessionTopicInterpretation,
+};
+use ecoach_substrate::{
+    FabricConsumerTarget, FabricEvidenceRecord, FabricOrchestrationSummary, FabricSignal,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -247,6 +260,126 @@ impl From<BundleProcessReport> for BundleProcessReportDto {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LibraryRelationshipHintDto {
+    pub relation_type: String,
+    pub from_title: String,
+    pub to_title: String,
+    pub explanation: String,
+    pub hop_count: i64,
+    pub strength_score: i64,
+    pub focus_topic_id: Option<i64>,
+}
+
+impl From<TopicRelationshipHint> for LibraryRelationshipHintDto {
+    fn from(value: TopicRelationshipHint) -> Self {
+        Self {
+            relation_type: value.relation_type,
+            from_title: value.from_title,
+            to_title: value.to_title,
+            explanation: value.explanation,
+            hop_count: value.hop_count,
+            strength_score: value.strength_score as i64,
+            focus_topic_id: value.focus_topic_id,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LearningPathStepDto {
+    pub sequence_no: i64,
+    pub step_type: String,
+    pub title: String,
+    pub detail: String,
+    pub topic_id: Option<i64>,
+    pub bundle_id: Option<i64>,
+    pub question_id: Option<i64>,
+}
+
+impl From<LearningPathStep> for LearningPathStepDto {
+    fn from(value: LearningPathStep) -> Self {
+        Self {
+            sequence_no: value.sequence_no,
+            step_type: value.step_type,
+            title: value.title,
+            detail: value.detail,
+            topic_id: value.topic_id,
+            bundle_id: value.bundle_id,
+            question_id: value.question_id,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersonalizedLearningPathDto {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub activity_type: String,
+    pub priority_score: i64,
+    pub reason: String,
+    pub mastery_score: i64,
+    pub gap_score: i64,
+    pub recommended_bundle_ids: Vec<i64>,
+    pub recommended_bundle_titles: Vec<String>,
+    pub related_topic_names: Vec<String>,
+    pub relationship_hints: Vec<LibraryRelationshipHintDto>,
+    pub steps: Vec<LearningPathStepDto>,
+}
+
+impl From<PersonalizedLearningPath> for PersonalizedLearningPathDto {
+    fn from(value: PersonalizedLearningPath) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            activity_type: value.activity_type,
+            priority_score: value.priority_score as i64,
+            reason: value.reason,
+            mastery_score: value.mastery_score,
+            gap_score: value.gap_score,
+            recommended_bundle_ids: value.recommended_bundle_ids,
+            recommended_bundle_titles: value.recommended_bundle_titles,
+            related_topic_names: value.related_topic_names,
+            relationship_hints: value
+                .relationship_hints
+                .into_iter()
+                .map(LibraryRelationshipHintDto::from)
+                .collect(),
+            steps: value
+                .steps
+                .into_iter()
+                .map(LearningPathStepDto::from)
+                .collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct KnowledgeBundleSequenceItemDto {
+    pub bundle_id: i64,
+    pub title: String,
+    pub bundle_type: String,
+    pub sequence_order: i64,
+    pub focus_reason: String,
+    pub due_review_count: i64,
+    pub focus_entry_ids: Vec<i64>,
+    pub focus_entry_titles: Vec<String>,
+}
+
+impl From<KnowledgeBundleSequenceItem> for KnowledgeBundleSequenceItemDto {
+    fn from(value: KnowledgeBundleSequenceItem) -> Self {
+        Self {
+            bundle_id: value.bundle_id,
+            title: value.title,
+            bundle_type: value.bundle_type,
+            sequence_order: value.sequence_order,
+            focus_reason: value.focus_reason,
+            due_review_count: value.due_review_count,
+            focus_entry_ids: value.focus_entry_ids,
+            focus_entry_titles: value.focus_entry_titles,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurriculumSourceUploadDto {
     pub id: i64,
     pub source_kind: String,
@@ -343,6 +476,8 @@ pub struct ContentFoundrySourceReportDto {
     pub recommended_actions: Vec<String>,
     pub parse_candidates: Vec<CurriculumParseCandidateDto>,
     pub review_tasks: Vec<CurriculumReviewTaskDto>,
+    pub fabric_signals: Vec<FabricSignalDto>,
+    pub orchestration: FabricOrchestrationSummaryDto,
 }
 
 impl From<ContentFoundrySourceReport> for ContentFoundrySourceReportDto {
@@ -371,6 +506,12 @@ impl From<ContentFoundrySourceReport> for ContentFoundrySourceReportDto {
                 .into_iter()
                 .map(CurriculumReviewTaskDto::from)
                 .collect(),
+            fabric_signals: value
+                .fabric_signals
+                .into_iter()
+                .map(FabricSignalDto::from)
+                .collect(),
+            orchestration: FabricOrchestrationSummaryDto::from(value.orchestration),
         }
     }
 }
@@ -389,6 +530,8 @@ pub struct TopicPackageSnapshotDto {
     pub published_artifact_count: i64,
     pub missing_components: Vec<String>,
     pub recommended_jobs: Vec<String>,
+    pub fabric_signals: Vec<FabricSignalDto>,
+    pub orchestration: FabricOrchestrationSummaryDto,
 }
 
 impl From<TopicPackageSnapshot> for TopicPackageSnapshotDto {
@@ -406,6 +549,12 @@ impl From<TopicPackageSnapshot> for TopicPackageSnapshotDto {
             published_artifact_count: value.published_artifact_count,
             missing_components: value.missing_components,
             recommended_jobs: value.recommended_jobs,
+            fabric_signals: value
+                .fabric_signals
+                .into_iter()
+                .map(FabricSignalDto::from)
+                .collect(),
+            orchestration: FabricOrchestrationSummaryDto::from(value.orchestration),
         }
     }
 }
@@ -423,6 +572,8 @@ pub struct SubjectFoundryDashboardDto {
     pub weak_topic_count: i64,
     pub strong_topic_count: i64,
     pub topics: Vec<TopicPackageSnapshotDto>,
+    pub fabric_signals: Vec<FabricSignalDto>,
+    pub orchestration: FabricOrchestrationSummaryDto,
 }
 
 impl From<SubjectFoundryDashboard> for SubjectFoundryDashboardDto {
@@ -443,6 +594,12 @@ impl From<SubjectFoundryDashboard> for SubjectFoundryDashboardDto {
                 .into_iter()
                 .map(TopicPackageSnapshotDto::from)
                 .collect(),
+            fabric_signals: value
+                .fabric_signals
+                .into_iter()
+                .map(FabricSignalDto::from)
+                .collect(),
+            orchestration: FabricOrchestrationSummaryDto::from(value.orchestration),
         }
     }
 }
@@ -543,6 +700,343 @@ impl From<SessionSummary> for SessionSummaryDto {
             answered_questions: value.answered_questions,
             correct_questions: value.correct_questions,
             status: value.status,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionTopicInterpretationDto {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub attempts: i64,
+    pub correct_attempts: i64,
+    pub accuracy_score: i64,
+    pub avg_response_time_ms: Option<i64>,
+    pub dominant_error_type: Option<String>,
+}
+
+impl From<SessionTopicInterpretation> for SessionTopicInterpretationDto {
+    fn from(value: SessionTopicInterpretation) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            attempts: value.attempts,
+            correct_attempts: value.correct_attempts,
+            accuracy_score: value.accuracy_score as i64,
+            avg_response_time_ms: value.avg_response_time_ms,
+            dominant_error_type: value.dominant_error_type,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionInterpretationDto {
+    pub session_id: i64,
+    pub student_id: i64,
+    pub session_type: String,
+    pub status: String,
+    pub observed_at: String,
+    pub is_timed: bool,
+    pub answered_questions: i64,
+    pub correct_questions: i64,
+    pub incorrect_questions: i64,
+    pub unanswered_questions: i64,
+    pub accuracy_score: Option<i64>,
+    pub avg_response_time_ms: Option<i64>,
+    pub flagged_count: i64,
+    pub distinct_topic_count: i64,
+    pub misconception_hit_count: i64,
+    pub pressure_breakdown_count: i64,
+    pub transfer_variant_count: i64,
+    pub retention_check_count: i64,
+    pub mixed_context_count: i64,
+    pub supported_answer_count: i64,
+    pub independent_answer_count: i64,
+    pub dominant_error_type: Option<String>,
+    pub interpretation_tags: Vec<String>,
+    pub next_action_hint: String,
+    pub topic_summaries: Vec<SessionTopicInterpretationDto>,
+}
+
+impl From<SessionInterpretation> for SessionInterpretationDto {
+    fn from(value: SessionInterpretation) -> Self {
+        Self {
+            session_id: value.session_id,
+            student_id: value.student_id,
+            session_type: value.session_type,
+            status: value.status,
+            observed_at: value.observed_at.to_rfc3339(),
+            is_timed: value.is_timed,
+            answered_questions: value.answered_questions,
+            correct_questions: value.correct_questions,
+            incorrect_questions: value.incorrect_questions,
+            unanswered_questions: value.unanswered_questions,
+            accuracy_score: value.accuracy_score.map(|score| score as i64),
+            avg_response_time_ms: value.avg_response_time_ms,
+            flagged_count: value.flagged_count,
+            distinct_topic_count: value.distinct_topic_count,
+            misconception_hit_count: value.misconception_hit_count,
+            pressure_breakdown_count: value.pressure_breakdown_count,
+            transfer_variant_count: value.transfer_variant_count,
+            retention_check_count: value.retention_check_count,
+            mixed_context_count: value.mixed_context_count,
+            supported_answer_count: value.supported_answer_count,
+            independent_answer_count: value.independent_answer_count,
+            dominant_error_type: value.dominant_error_type,
+            interpretation_tags: value.interpretation_tags,
+            next_action_hint: value.next_action_hint,
+            topic_summaries: value
+                .topic_summaries
+                .into_iter()
+                .map(SessionTopicInterpretationDto::from)
+                .collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FabricSignalDto {
+    pub engine_key: String,
+    pub signal_type: String,
+    pub status: Option<String>,
+    pub score: Option<i64>,
+    pub topic_id: Option<i64>,
+    pub node_id: Option<i64>,
+    pub question_id: Option<i64>,
+    pub observed_at: String,
+    pub payload: Value,
+}
+
+impl From<FabricSignal> for FabricSignalDto {
+    fn from(value: FabricSignal) -> Self {
+        Self {
+            engine_key: value.engine_key,
+            signal_type: value.signal_type,
+            status: value.status,
+            score: value.score.map(|score| score as i64),
+            topic_id: value.topic_id,
+            node_id: value.node_id,
+            question_id: value.question_id,
+            observed_at: value.observed_at,
+            payload: value.payload,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FabricEvidenceRecordDto {
+    pub stream: String,
+    pub reference_id: String,
+    pub event_type: String,
+    pub topic_id: Option<i64>,
+    pub node_id: Option<i64>,
+    pub question_id: Option<i64>,
+    pub occurred_at: String,
+    pub payload: Value,
+}
+
+impl From<FabricEvidenceRecord> for FabricEvidenceRecordDto {
+    fn from(value: FabricEvidenceRecord) -> Self {
+        Self {
+            stream: value.stream,
+            reference_id: value.reference_id,
+            event_type: value.event_type,
+            topic_id: value.topic_id,
+            node_id: value.node_id,
+            question_id: value.question_id,
+            occurred_at: value.occurred_at,
+            payload: value.payload,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FabricConsumerTargetDto {
+    pub engine_key: String,
+    pub engine_title: String,
+    pub matched_inputs: Vec<String>,
+}
+
+impl From<FabricConsumerTarget> for FabricConsumerTargetDto {
+    fn from(value: FabricConsumerTarget) -> Self {
+        Self {
+            engine_key: value.engine_key,
+            engine_title: value.engine_title,
+            matched_inputs: value.matched_inputs,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FabricOrchestrationSummaryDto {
+    pub available_inputs: Vec<String>,
+    pub consumer_targets: Vec<FabricConsumerTargetDto>,
+}
+
+impl From<FabricOrchestrationSummary> for FabricOrchestrationSummaryDto {
+    fn from(value: FabricOrchestrationSummary) -> Self {
+        Self {
+            available_inputs: value.available_inputs,
+            consumer_targets: value
+                .consumer_targets
+                .into_iter()
+                .map(FabricConsumerTargetDto::from)
+                .collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticCauseEvolutionDto {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub current_hypothesis_code: Option<String>,
+    pub previous_hypothesis_code: Option<String>,
+    pub evolution_status: String,
+    pub recurrence_count: i64,
+    pub confidence_delta: Option<i64>,
+    pub summary: String,
+}
+
+impl From<DiagnosticCauseEvolution> for DiagnosticCauseEvolutionDto {
+    fn from(value: DiagnosticCauseEvolution) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            current_hypothesis_code: value.current_hypothesis_code,
+            previous_hypothesis_code: value.previous_hypothesis_code,
+            evolution_status: value.evolution_status,
+            recurrence_count: value.recurrence_count,
+            confidence_delta: value.confidence_delta,
+            summary: value.summary,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TopicDiagnosticLongitudinalSignalDto {
+    pub previous_diagnostic_id: Option<i64>,
+    pub previous_completed_at: Option<String>,
+    pub previous_classification: Option<String>,
+    pub previous_mastery_score: Option<i64>,
+    pub mastery_delta: Option<i64>,
+    pub pressure_delta: Option<i64>,
+    pub flexibility_delta: Option<i64>,
+    pub trend: String,
+    pub cause_evolution: Option<DiagnosticCauseEvolutionDto>,
+}
+
+impl From<TopicDiagnosticLongitudinalSignal> for TopicDiagnosticLongitudinalSignalDto {
+    fn from(value: TopicDiagnosticLongitudinalSignal) -> Self {
+        Self {
+            previous_diagnostic_id: value.previous_diagnostic_id,
+            previous_completed_at: value.previous_completed_at,
+            previous_classification: value.previous_classification,
+            previous_mastery_score: value.previous_mastery_score.map(|score| score as i64),
+            mastery_delta: value.mastery_delta,
+            pressure_delta: value.pressure_delta,
+            flexibility_delta: value.flexibility_delta,
+            trend: value.trend,
+            cause_evolution: value.cause_evolution.map(DiagnosticCauseEvolutionDto::from),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TopicDiagnosticResultDto {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub mastery_score: i64,
+    pub fluency_score: i64,
+    pub precision_score: i64,
+    pub pressure_score: i64,
+    pub flexibility_score: i64,
+    pub stability_score: i64,
+    pub classification: String,
+    pub longitudinal_signal: Option<TopicDiagnosticLongitudinalSignalDto>,
+}
+
+impl From<TopicDiagnosticResult> for TopicDiagnosticResultDto {
+    fn from(value: TopicDiagnosticResult) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            mastery_score: value.mastery_score as i64,
+            fluency_score: value.fluency_score as i64,
+            precision_score: value.precision_score as i64,
+            pressure_score: value.pressure_score as i64,
+            flexibility_score: value.flexibility_score as i64,
+            stability_score: value.stability_score as i64,
+            classification: value.classification,
+            longitudinal_signal: value
+                .longitudinal_signal
+                .map(TopicDiagnosticLongitudinalSignalDto::from),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticLongitudinalSummaryDto {
+    pub previous_diagnostic_id: Option<i64>,
+    pub previous_completed_at: Option<String>,
+    pub overall_readiness_delta: Option<i64>,
+    pub trend: String,
+    pub improved_topic_count: usize,
+    pub declined_topic_count: usize,
+    pub stable_topic_count: usize,
+    pub persistent_cause_count: usize,
+    pub shifted_cause_count: usize,
+    pub new_cause_count: usize,
+    pub top_regressions: Vec<String>,
+    pub cause_evolution: Vec<DiagnosticCauseEvolutionDto>,
+}
+
+impl From<DiagnosticLongitudinalSummary> for DiagnosticLongitudinalSummaryDto {
+    fn from(value: DiagnosticLongitudinalSummary) -> Self {
+        Self {
+            previous_diagnostic_id: value.previous_diagnostic_id,
+            previous_completed_at: value.previous_completed_at,
+            overall_readiness_delta: value.overall_readiness_delta,
+            trend: value.trend,
+            improved_topic_count: value.improved_topic_count,
+            declined_topic_count: value.declined_topic_count,
+            stable_topic_count: value.stable_topic_count,
+            persistent_cause_count: value.persistent_cause_count,
+            shifted_cause_count: value.shifted_cause_count,
+            new_cause_count: value.new_cause_count,
+            top_regressions: value.top_regressions,
+            cause_evolution: value
+                .cause_evolution
+                .into_iter()
+                .map(DiagnosticCauseEvolutionDto::from)
+                .collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticResultDto {
+    pub overall_readiness: i64,
+    pub readiness_band: String,
+    pub topic_results: Vec<TopicDiagnosticResultDto>,
+    pub recommended_next_actions: Vec<String>,
+    pub longitudinal_summary: Option<DiagnosticLongitudinalSummaryDto>,
+}
+
+impl From<DiagnosticResult> for DiagnosticResultDto {
+    fn from(value: DiagnosticResult) -> Self {
+        Self {
+            overall_readiness: value.overall_readiness as i64,
+            readiness_band: value.readiness_band,
+            topic_results: value
+                .topic_results
+                .into_iter()
+                .map(TopicDiagnosticResultDto::from)
+                .collect(),
+            recommended_next_actions: value.recommended_next_actions,
+            longitudinal_summary: value
+                .longitudinal_summary
+                .map(DiagnosticLongitudinalSummaryDto::from),
         }
     }
 }
@@ -874,6 +1368,105 @@ impl From<QuestionFamilyHealth> for QuestionFamilyHealthDto {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionRemediationPlanDto {
+    pub family_choice: QuestionFamilyChoiceDto,
+    pub variant_mode: String,
+    pub priority_score: i64,
+    pub source_question_id: Option<i64>,
+    pub request_kind: String,
+    pub rationale: String,
+}
+
+impl From<QuestionRemediationPlan> for QuestionRemediationPlanDto {
+    fn from(value: QuestionRemediationPlan) -> Self {
+        Self {
+            family_choice: QuestionFamilyChoiceDto::from(value.family_choice),
+            variant_mode: value.variant_mode,
+            priority_score: value.priority_score as i64,
+            source_question_id: value.source_question_id,
+            request_kind: value.request_kind,
+            rationale: value.rationale,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionEvidenceFabricDto {
+    pub session_id: i64,
+    pub student_id: i64,
+    pub session_type: String,
+    pub status: String,
+    pub interpretation: SessionInterpretationDto,
+    pub remediation_plans: Vec<QuestionRemediationPlanDto>,
+    pub signals: Vec<FabricSignalDto>,
+    pub evidence_records: Vec<FabricEvidenceRecordDto>,
+    pub orchestration: FabricOrchestrationSummaryDto,
+}
+
+impl From<SessionEvidenceFabric> for SessionEvidenceFabricDto {
+    fn from(value: SessionEvidenceFabric) -> Self {
+        Self {
+            session_id: value.session_id,
+            student_id: value.student_id,
+            session_type: value.session_type,
+            status: value.status,
+            interpretation: SessionInterpretationDto::from(value.interpretation),
+            remediation_plans: value
+                .remediation_plans
+                .into_iter()
+                .map(QuestionRemediationPlanDto::from)
+                .collect(),
+            signals: value
+                .signals
+                .into_iter()
+                .map(FabricSignalDto::from)
+                .collect(),
+            evidence_records: value
+                .evidence_records
+                .into_iter()
+                .map(FabricEvidenceRecordDto::from)
+                .collect(),
+            orchestration: FabricOrchestrationSummaryDto::from(value.orchestration),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PastPaperComebackSignalDto {
+    pub family_id: i64,
+    pub family_code: String,
+    pub family_name: String,
+    pub topic_id: Option<i64>,
+    pub comeback_score: i64,
+    pub historical_strength_score: i64,
+    pub dormant_years: i64,
+    pub recurrence_score: i64,
+    pub replacement_score: i64,
+    pub paper_count: i64,
+    pub last_seen_year: Option<i64>,
+    pub rationale: String,
+}
+
+impl From<PastPaperComebackSignal> for PastPaperComebackSignalDto {
+    fn from(value: PastPaperComebackSignal) -> Self {
+        Self {
+            family_id: value.family_id,
+            family_code: value.family_code,
+            family_name: value.family_name,
+            topic_id: value.topic_id,
+            comeback_score: value.comeback_score as i64,
+            historical_strength_score: value.historical_strength_score as i64,
+            dormant_years: value.dormant_years,
+            recurrence_score: value.recurrence_score as i64,
+            replacement_score: value.replacement_score as i64,
+            paper_count: value.paper_count,
+            last_seen_year: value.last_seen_year,
+            rationale: value.rationale,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DuplicateCheckResultDto {
     pub matched_question_id: Option<i64>,
     pub similarity_score: i64,
@@ -928,5 +1521,156 @@ fn last_active_label(last_active_at: Option<DateTime<Utc>>) -> String {
         "Active today".to_string()
     } else {
         format!("Away {} days", delta.num_days())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn sample_fabric_signal(signal_type: &str) -> FabricSignal {
+        FabricSignal {
+            engine_key: "content_foundry".to_string(),
+            signal_type: signal_type.to_string(),
+            status: Some("active".to_string()),
+            score: Some(7_600),
+            topic_id: Some(11),
+            node_id: None,
+            question_id: None,
+            observed_at: "2026-03-30T12:00:00Z".to_string(),
+            payload: json!({ "reason": signal_type }),
+        }
+    }
+
+    fn sample_orchestration() -> FabricOrchestrationSummary {
+        FabricOrchestrationSummary {
+            available_inputs: vec!["content_foundry".to_string(), "topic_package".to_string()],
+            consumer_targets: vec![FabricConsumerTarget {
+                engine_key: "reporting".to_string(),
+                engine_title: "Reporting".to_string(),
+                matched_inputs: vec!["content_foundry".to_string()],
+            }],
+        }
+    }
+
+    #[test]
+    fn content_foundry_source_report_dto_preserves_fabric_metadata() {
+        let dto = ContentFoundrySourceReportDto::from(ContentFoundrySourceReport {
+            source_upload: CurriculumSourceUpload {
+                id: 5,
+                uploader_account_id: 9,
+                source_kind: "pdf".to_string(),
+                title: "WAEC Algebra".to_string(),
+                source_path: Some("packs/algebra.pdf".to_string()),
+                country_code: Some("GH".to_string()),
+                exam_board: Some("WAEC".to_string()),
+                education_level: Some("SHS".to_string()),
+                subject_code: Some("MTH".to_string()),
+                academic_year: Some("2026".to_string()),
+                language_code: "en".to_string(),
+                version_label: Some("v1".to_string()),
+                source_status: "review_required".to_string(),
+                confidence_score: 6_800,
+                metadata: json!({ "pages": 4 }),
+            },
+            candidate_counts: vec![ParseCandidateCount {
+                candidate_type: "topic".to_string(),
+                count: 3,
+            }],
+            parse_candidates: vec![CurriculumParseCandidate {
+                id: 12,
+                source_upload_id: 5,
+                candidate_type: "topic".to_string(),
+                parent_candidate_id: None,
+                raw_label: "Fractions".to_string(),
+                normalized_label: Some("fractions".to_string()),
+                payload: json!({ "span": [1, 2] }),
+                confidence_score: 7_100,
+                review_status: "pending".to_string(),
+            }],
+            review_tasks: vec![CurriculumReviewTask {
+                id: 19,
+                source_upload_id: 5,
+                candidate_id: Some(12),
+                task_type: "validate_topic".to_string(),
+                status: "open".to_string(),
+                severity: "medium".to_string(),
+                notes: Some("Check topic merge".to_string()),
+            }],
+            publish_jobs: Vec::new(),
+            low_confidence_candidate_count: 1,
+            approved_candidate_count: 2,
+            unresolved_review_count: 1,
+            duplicate_label_count: 0,
+            publish_readiness_score: 7_200,
+            can_mark_reviewed: true,
+            recommended_actions: vec!["Resolve topic validation".to_string()],
+            fabric_signals: vec![sample_fabric_signal("content_review_required")],
+            orchestration: sample_orchestration(),
+        });
+
+        assert_eq!(dto.fabric_signals.len(), 1);
+        assert_eq!(dto.fabric_signals[0].signal_type, "content_review_required");
+        assert_eq!(
+            dto.orchestration.consumer_targets[0].engine_key,
+            "reporting"
+        );
+    }
+
+    #[test]
+    fn topic_package_and_dashboard_dtos_preserve_fabric_metadata() {
+        let topic = TopicPackageSnapshot {
+            topic_id: 11,
+            subject_id: 2,
+            topic_name: "Fractions".to_string(),
+            package_state: "publishable".to_string(),
+            live_health_state: "healthy".to_string(),
+            resource_readiness_score: 8_400,
+            completeness_score: 8_600,
+            quality_score: 8_300,
+            evidence_score: 7_900,
+            source_support_count: 4,
+            contrast_pair_count: 2,
+            publishable_artifact_count: 6,
+            published_artifact_count: 5,
+            missing_components: vec!["worked_example".to_string()],
+            recommended_jobs: vec!["publish_topic_package".to_string()],
+            fabric_signals: vec![sample_fabric_signal("topic_publish_ready")],
+            orchestration: sample_orchestration(),
+        };
+
+        let topic_dto = TopicPackageSnapshotDto::from(topic.clone());
+        assert_eq!(
+            topic_dto.fabric_signals[0].signal_type,
+            "topic_publish_ready"
+        );
+        assert_eq!(
+            topic_dto.orchestration.available_inputs,
+            vec!["content_foundry".to_string(), "topic_package".to_string()]
+        );
+
+        let dashboard_dto = SubjectFoundryDashboardDto::from(SubjectFoundryDashboard {
+            subject_id: 2,
+            subject_code: "MTH".to_string(),
+            subject_name: "Mathematics".to_string(),
+            source_upload_count: 3,
+            pending_review_sources: 1,
+            ready_publish_jobs: 2,
+            published_jobs: 4,
+            average_package_score: 8_100,
+            weak_topic_count: 1,
+            strong_topic_count: 6,
+            topics: vec![topic],
+            fabric_signals: vec![sample_fabric_signal("subject_publish_ready")],
+            orchestration: sample_orchestration(),
+        });
+
+        assert_eq!(dashboard_dto.fabric_signals.len(), 1);
+        assert_eq!(
+            dashboard_dto.fabric_signals[0].signal_type,
+            "subject_publish_ready"
+        );
+        assert_eq!(dashboard_dto.topics[0].fabric_signals.len(), 1);
     }
 }

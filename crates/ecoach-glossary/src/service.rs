@@ -1,9 +1,9 @@
 use ecoach_substrate::{EcoachError, EcoachResult};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 
 use crate::models::{
-    GlossaryAudioProgram, GlossaryAudioSegment, KnowledgeBundle, KnowledgeEntry,
-    QuestionKnowledgeLink,
+    GlossaryAudioProgram, GlossaryAudioSegment, KnowledgeBundle, KnowledgeBundleSequenceItem,
+    KnowledgeEntry, QuestionKnowledgeLink,
 };
 
 pub struct GlossaryService<'a> {
@@ -25,6 +25,10 @@ struct AudioProgramContext {
     teaching_mode: String,
     listener_signals: Vec<String>,
     contrast_titles: Vec<String>,
+    recommended_bundles: Vec<KnowledgeBundleSequenceItem>,
+    review_entry_ids: Vec<i64>,
+    review_entry_titles: Vec<String>,
+    relationship_review_prompts: Vec<String>,
 }
 
 impl<'a> GlossaryService<'a> {
@@ -109,6 +113,15 @@ impl<'a> GlossaryService<'a> {
             out.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
         }
         Ok(out)
+    }
+
+    pub fn list_bundle_sequence_for_topic(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<KnowledgeBundleSequenceItem>> {
+        self.load_bundle_sequence_for_topic(student_id, topic_id, limit)
     }
 
     pub fn link_question_entry(
@@ -438,6 +451,69 @@ impl<'a> GlossaryService<'a> {
             });
         }
 
+        if !context.recommended_bundles.is_empty() {
+            let bundle_script = context
+                .recommended_bundles
+                .iter()
+                .map(|bundle| format!("{}: {}", bundle.title, bundle.focus_reason))
+                .collect::<Vec<_>>()
+                .join(" ");
+            segments.push(GlossaryAudioSegment {
+                sequence_no: (segments.len() + 1) as i64,
+                segment_type: "bundle_route".to_string(),
+                title: "Bundle Route".to_string(),
+                script_text: bundle_script.clone(),
+                entry_id: None,
+                prompt_text: Some(
+                    "Pause and name the bundle or explanation set you should return to first."
+                        .to_string(),
+                ),
+                focus_reason: Some(
+                    "Derived from bundle sequencing and learner entry state.".to_string(),
+                ),
+                duration_seconds: estimate_duration_seconds(&bundle_script),
+            });
+        }
+
+        if !context.review_entry_titles.is_empty() {
+            let review_script = format!(
+                "Return to these glossary anchors before practice: {}.",
+                context.review_entry_titles.join(", ")
+            );
+            segments.push(GlossaryAudioSegment {
+                sequence_no: (segments.len() + 1) as i64,
+                segment_type: "review_loop".to_string(),
+                title: "Review Loop".to_string(),
+                script_text: review_script.clone(),
+                entry_id: None,
+                prompt_text: Some(
+                    "Pause and retrieve each anchor from memory before you continue.".to_string(),
+                ),
+                focus_reason: Some(
+                    "Derived from review-due and weak-recall glossary entries.".to_string(),
+                ),
+                duration_seconds: estimate_duration_seconds(&review_script),
+            });
+        }
+
+        if !context.relationship_review_prompts.is_empty() {
+            let relationship_script = context.relationship_review_prompts.join(" ");
+            segments.push(GlossaryAudioSegment {
+                sequence_no: (segments.len() + 1) as i64,
+                segment_type: "relationship_review".to_string(),
+                title: "Relationship Review".to_string(),
+                script_text: relationship_script.clone(),
+                entry_id: None,
+                prompt_text: Some(
+                    "Pause and say the relationship or contrast before solving.".to_string(),
+                ),
+                focus_reason: Some(
+                    "Derived from glossary relationships and contrast pairs.".to_string(),
+                ),
+                duration_seconds: estimate_duration_seconds(&relationship_script),
+            });
+        }
+
         for entry in entry_sources {
             let segment_type = match entry.entry_type.as_str() {
                 "definition" => "definition",
@@ -509,9 +585,13 @@ impl<'a> GlossaryService<'a> {
             topic_id,
             question_id,
             bundle_ids: bundles.iter().map(|bundle| bundle.id).collect(),
+            recommended_bundles: context.recommended_bundles.clone(),
             entry_ids: entry_sources.iter().map(|entry| entry.id).collect(),
             listener_signals: context.listener_signals.clone(),
             contrast_titles: context.contrast_titles.clone(),
+            review_entry_ids: context.review_entry_ids.clone(),
+            review_entry_titles: context.review_entry_titles.clone(),
+            relationship_review_prompts: context.relationship_review_prompts.clone(),
             segments,
         }
     }
@@ -717,6 +797,276 @@ impl<'a> GlossaryService<'a> {
         Ok(entries)
     }
 
+    fn load_bundle_sequence_for_topic(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<KnowledgeBundleSequenceItem>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    kb.id,
+                    kb.title,
+                    kb.bundle_type,
+                    SUM(CASE WHEN ses.review_due_at IS NOT NULL THEN 1 ELSE 0 END) AS due_review_count,
+                    MAX(COALESCE(ses.confusion_score, 0)) AS max_confusion_score,
+                    SUM(CASE WHEN COALESCE(ses.recall_strength, 10000) <= 3500 THEN 1 ELSE 0 END) AS weak_recall_count
+                 FROM knowledge_bundles kb
+                 LEFT JOIN knowledge_bundle_items kbi ON kbi.bundle_id = kb.id
+                 LEFT JOIN student_entry_state ses
+                    ON ses.entry_id = kbi.entry_id
+                   AND ses.user_id = ?1
+                 WHERE kb.topic_id = ?2
+                 GROUP BY kb.id, kb.title, kb.bundle_type, kb.exam_relevance_score, kb.difficulty_level
+                 ORDER BY
+                    due_review_count DESC,
+                    max_confusion_score DESC,
+                    weak_recall_count DESC,
+                    kb.exam_relevance_score DESC,
+                    kb.difficulty_level ASC,
+                    kb.id ASC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, topic_id, limit.max(1) as i64], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, i64>(5)?,
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut bundles = Vec::new();
+        for (index, row) in rows.enumerate() {
+            let (
+                bundle_id,
+                title,
+                bundle_type,
+                due_review_count,
+                max_confusion_score,
+                weak_recall_count,
+            ) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let (focus_entry_ids, focus_entry_titles) =
+                self.list_bundle_focus_entries(student_id, bundle_id, 3)?;
+            let focus_reason = if due_review_count > 0 {
+                format!(
+                    "{} review-due entry(s) make {} the first return loop.",
+                    due_review_count, title
+                )
+            } else if max_confusion_score >= 4500 {
+                format!(
+                    "{} contains the strongest confusion hotspot for this learner.",
+                    title
+                )
+            } else if weak_recall_count > 0 {
+                format!(
+                    "{} is the cleanest bundle for restoring recall before practice.",
+                    title
+                )
+            } else {
+                format!(
+                    "{} is the next best structured bundle for this topic.",
+                    title
+                )
+            };
+
+            bundles.push(KnowledgeBundleSequenceItem {
+                bundle_id,
+                title,
+                bundle_type,
+                sequence_order: (index + 1) as i64,
+                focus_reason,
+                due_review_count,
+                focus_entry_ids,
+                focus_entry_titles,
+            });
+        }
+
+        Ok(bundles)
+    }
+
+    fn list_bundle_focus_entries(
+        &self,
+        student_id: i64,
+        bundle_id: i64,
+        limit: usize,
+    ) -> EcoachResult<(Vec<i64>, Vec<String>)> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    ke.id,
+                    ke.title
+                 FROM knowledge_bundle_items kbi
+                 INNER JOIN knowledge_entries ke ON ke.id = kbi.entry_id
+                 LEFT JOIN student_entry_state ses
+                    ON ses.entry_id = ke.id
+                   AND ses.user_id = ?1
+                 WHERE kbi.bundle_id = ?2
+                 ORDER BY
+                    CASE WHEN ses.review_due_at IS NOT NULL THEN 0 ELSE 1 END,
+                    COALESCE(ses.confusion_score, 0) DESC,
+                    COALESCE(ses.linked_wrong_answer_count, 0) DESC,
+                    COALESCE(ses.recall_strength, 10000) ASC,
+                    kbi.sequence_order ASC,
+                    ke.title ASC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, bundle_id, limit as i64], |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut ids = Vec::new();
+        let mut titles = Vec::new();
+        for row in rows {
+            let (entry_id, title) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            ids.push(entry_id);
+            titles.push(title);
+        }
+        Ok((ids, titles))
+    }
+
+    fn list_review_entries_for_topic(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<(Vec<i64>, Vec<String>)> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    ke.id,
+                    ke.title
+                 FROM knowledge_entries ke
+                 INNER JOIN student_entry_state ses
+                    ON ses.entry_id = ke.id
+                   AND ses.user_id = ?1
+                 WHERE ke.topic_id = ?2
+                   AND (
+                        ses.review_due_at IS NOT NULL
+                        OR ses.confusion_score >= 4500
+                        OR ses.linked_wrong_answer_count > 0
+                        OR ses.recall_strength <= 3500
+                   )
+                 ORDER BY
+                    CASE WHEN ses.review_due_at IS NOT NULL THEN 0 ELSE 1 END,
+                    ses.confusion_score DESC,
+                    ses.linked_wrong_answer_count DESC,
+                    ses.recall_strength ASC,
+                    ke.importance_score DESC,
+                    ke.title ASC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, topic_id, limit as i64], |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut ids = Vec::new();
+        let mut titles = Vec::new();
+        for row in rows {
+            let (entry_id, title) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            ids.push(entry_id);
+            titles.push(title);
+        }
+        Ok((ids, titles))
+    }
+
+    fn list_relationship_review_prompts(
+        &self,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<String>> {
+        let mut prompts = Vec::new();
+
+        let mut contrast_stmt = self
+            .conn
+            .prepare(
+                "SELECT cp.title
+                 FROM contrast_pairs cp
+                 INNER JOIN knowledge_entries left_ke ON left_ke.id = cp.left_entry_id
+                 INNER JOIN knowledge_entries right_ke ON right_ke.id = cp.right_entry_id
+                 WHERE left_ke.topic_id = ?1 OR right_ke.topic_id = ?1
+                 ORDER BY cp.trap_strength DESC, cp.id ASC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = contrast_stmt
+            .query_map(params![topic_id, limit as i64], |row| {
+                row.get::<_, String>(0)
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for row in rows {
+            push_unique_signal(
+                &mut prompts,
+                format!(
+                    "Say the difference inside {} before you move into questions.",
+                    row.map_err(|err| EcoachError::Storage(err.to_string()))?
+                ),
+            );
+        }
+
+        if prompts.len() < limit {
+            let remaining = limit.saturating_sub(prompts.len());
+            let mut relation_stmt = self
+                .conn
+                .prepare(
+                    "SELECT relation_type, from_ke.title, to_ke.title
+                     FROM knowledge_relations kr
+                     INNER JOIN knowledge_entries from_ke ON from_ke.id = kr.from_entry_id
+                     INNER JOIN knowledge_entries to_ke ON to_ke.id = kr.to_entry_id
+                     WHERE (from_ke.topic_id = ?1 OR to_ke.topic_id = ?1)
+                       AND kr.relation_type IN ('prerequisite', 'dependent', 'confused_with', 'contrasts_with', 'related')
+                     ORDER BY kr.strength_score DESC, kr.id ASC
+                     LIMIT ?2",
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let rows = relation_stmt
+                .query_map(params![topic_id, remaining as i64], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                    ))
+                })
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            for row in rows {
+                let (relation_type, from_title, to_title) =
+                    row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+                let prompt = match relation_type.as_str() {
+                    "prerequisite" | "dependent" => format!(
+                        "Name why {} must be secure before {}.",
+                        from_title, to_title
+                    ),
+                    "confused_with" | "contrasts_with" => format!(
+                        "State the clean boundary between {} and {}.",
+                        from_title, to_title
+                    ),
+                    _ => format!("Explain how {} connects to {}.", from_title, to_title),
+                };
+                push_unique_signal(&mut prompts, prompt);
+                if prompts.len() >= limit {
+                    break;
+                }
+            }
+        }
+
+        Ok(prompts)
+    }
+
     fn build_audio_program_context(
         &self,
         student_id: i64,
@@ -831,12 +1181,20 @@ impl<'a> GlossaryService<'a> {
             );
         }
 
+        let recommended_bundles = self.load_bundle_sequence_for_topic(student_id, topic_id, 3)?;
+        let (review_entry_ids, review_entry_titles) =
+            self.list_review_entries_for_topic(student_id, topic_id, 3)?;
         let contrast_titles = self.list_audio_contrast_titles(topic_id, 2)?;
+        let relationship_review_prompts = self.list_relationship_review_prompts(topic_id, 2)?;
 
         Ok(AudioProgramContext {
             teaching_mode,
             listener_signals,
             contrast_titles,
+            recommended_bundles,
+            review_entry_ids,
+            review_entry_titles,
+            relationship_review_prompts,
         })
     }
 
@@ -992,7 +1350,15 @@ mod tests {
                 id INTEGER PRIMARY KEY,
                 title TEXT NOT NULL,
                 bundle_type TEXT NOT NULL,
-                topic_id INTEGER
+                topic_id INTEGER,
+                exam_relevance_score INTEGER NOT NULL DEFAULT 0,
+                difficulty_level INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE knowledge_bundle_items (
+                id INTEGER PRIMARY KEY,
+                bundle_id INTEGER NOT NULL,
+                entry_id INTEGER NOT NULL,
+                sequence_order INTEGER NOT NULL DEFAULT 0
             );
             CREATE TABLE student_entry_state (
                 user_id INTEGER NOT NULL,
@@ -1080,11 +1446,19 @@ mod tests {
         )
         .expect("entry two");
         conn.execute(
-            "INSERT INTO knowledge_bundles (id, title, bundle_type, topic_id)
-             VALUES (1, 'Quadratic repair pack', 'repair', 1)",
+            "INSERT INTO knowledge_bundles (id, title, bundle_type, topic_id, exam_relevance_score, difficulty_level)
+             VALUES (1, 'Quadratic repair pack', 'repair', 1, 9200, 1400)",
             [],
         )
         .expect("bundle");
+        conn.execute(
+            "INSERT INTO knowledge_bundle_items (id, bundle_id, entry_id, sequence_order)
+             VALUES
+                (1, 1, 101, 0),
+                (2, 1, 102, 1)",
+            [],
+        )
+        .expect("bundle items");
         conn.execute(
             "INSERT INTO student_entry_state (
                 user_id, entry_id, confusion_score, recall_strength, linked_wrong_answer_count, review_due_at
@@ -1121,6 +1495,12 @@ mod tests {
             [],
         )
         .expect("contrast pair");
+        conn.execute(
+            "INSERT INTO knowledge_relations (id, from_entry_id, to_entry_id, relation_type, strength_score)
+             VALUES (1, 101, 102, 'contrasts_with', 8900)",
+            [],
+        )
+        .expect("knowledge relation");
 
         let program = GlossaryService::new(&conn)
             .build_personalized_audio_program_for_topic(42, 1, 3)
@@ -1129,22 +1509,58 @@ mod tests {
         assert_eq!(program.source_type, "topic_personalized");
         assert_eq!(program.teaching_mode, "repair");
         assert!(!program.listener_signals.is_empty());
-        assert!(program
-            .contrast_titles
-            .iter()
-            .any(|title| title.contains("Completing the square")));
-        assert!(program
-            .segments
-            .iter()
-            .any(|segment| segment.segment_type == "learner_focus"));
-        assert!(program
-            .segments
-            .iter()
-            .any(|segment| segment.segment_type == "contrast_trap"));
-        assert!(program
-            .segments
-            .iter()
-            .filter_map(|segment| segment.focus_reason.as_ref())
-            .any(|reason| reason.contains("Review is due") || reason.contains("confusion")));
+        assert!(
+            program
+                .contrast_titles
+                .iter()
+                .any(|title| title.contains("Completing the square"))
+        );
+        assert_eq!(program.recommended_bundles.len(), 1);
+        assert_eq!(program.recommended_bundles[0].bundle_id, 1);
+        assert!(program.recommended_bundles[0].due_review_count >= 1);
+        assert!(program.review_entry_ids.contains(&101));
+        assert!(
+            program
+                .relationship_review_prompts
+                .iter()
+                .any(|prompt| prompt.contains("difference") || prompt.contains("boundary"))
+        );
+        assert!(
+            program
+                .segments
+                .iter()
+                .any(|segment| segment.segment_type == "learner_focus")
+        );
+        assert!(
+            program
+                .segments
+                .iter()
+                .any(|segment| segment.segment_type == "contrast_trap")
+        );
+        assert!(
+            program
+                .segments
+                .iter()
+                .any(|segment| segment.segment_type == "bundle_route")
+        );
+        assert!(
+            program
+                .segments
+                .iter()
+                .any(|segment| segment.segment_type == "review_loop")
+        );
+        assert!(
+            program
+                .segments
+                .iter()
+                .any(|segment| segment.segment_type == "relationship_review")
+        );
+        assert!(
+            program
+                .segments
+                .iter()
+                .filter_map(|segment| segment.focus_reason.as_ref())
+                .any(|reason| reason.contains("Review is due") || reason.contains("confusion"))
+        );
     }
 }

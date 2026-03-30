@@ -2,14 +2,14 @@ use std::collections::HashSet;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult};
-use rusqlite::{params, Connection, OptionalExtension};
-use serde_json::{json, Value};
+use rusqlite::{Connection, OptionalExtension, params};
+use serde_json::{Value, json};
 
 use crate::models::{
     ContinueLearningCard, GeneratedLibraryShelf, LearningPathStep, LibraryHomeSnapshot,
-    LibraryItem, LibraryShelfItem, PersonalizedLearningPath, RevisionPackItem,
-    RevisionPackSummary, SaveLibraryItemInput, SavedQuestionCard, TeachActionPlan,
-    TeachActionStep, TopicRelationshipHint,
+    LibraryItem, LibraryShelfItem, PersonalizedLearningPath, RevisionPackItem, RevisionPackSummary,
+    SaveLibraryItemInput, SavedQuestionCard, TeachActionPlan, TeachActionStep,
+    TopicRelationshipHint,
 };
 
 pub struct LibraryService<'a> {
@@ -342,16 +342,23 @@ impl<'a> LibraryService<'a> {
                 next_review_at,
             ) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
             let relationship_hints = self.list_topic_relationship_hints(topic_id, 4)?;
-            let related_topic_names = collect_related_topic_names(&relationship_hints);
+            let related_topic_names = self.related_topic_names_for_hints(&relationship_hints)?;
             let bundle_sequence = self.list_bundle_sequence_for_topic(student_id, topic_id, 2)?;
-            let linked_question_ids = self.list_saved_question_ids_for_topic(student_id, topic_id, 2)?;
-            let practice_question_id = linked_question_ids
-                .first()
-                .copied()
-                .or_else(|| self.list_active_question_ids_for_topic(topic_id, 1).ok().and_then(|ids| ids.first().copied()));
+            let linked_question_ids =
+                self.list_saved_question_ids_for_topic(student_id, topic_id, 2)?;
+            let practice_question_id = linked_question_ids.first().copied().or_else(|| {
+                self.list_active_question_ids_for_topic(topic_id, 1)
+                    .ok()
+                    .and_then(|ids| ids.first().copied())
+            });
 
-            let activity_type =
-                self.learning_path_activity_type(mastery_score, gap_score, decay_risk, is_blocked, &trend_state);
+            let activity_type = self.learning_path_activity_type(
+                mastery_score,
+                gap_score,
+                decay_risk,
+                is_blocked,
+                &trend_state,
+            );
             let reason = self.learning_path_reason(
                 gap_score,
                 decay_risk,
@@ -378,8 +385,14 @@ impl<'a> LibraryService<'a> {
                 reason,
                 mastery_score,
                 gap_score,
-                recommended_bundle_ids: bundle_sequence.iter().map(|bundle| bundle.bundle_id).collect(),
-                recommended_bundle_titles: bundle_sequence.iter().map(|bundle| bundle.title.clone()).collect(),
+                recommended_bundle_ids: bundle_sequence
+                    .iter()
+                    .map(|bundle| bundle.bundle_id)
+                    .collect(),
+                recommended_bundle_titles: bundle_sequence
+                    .iter()
+                    .map(|bundle| bundle.title.clone())
+                    .collect(),
                 related_topic_names,
                 relationship_hints,
                 steps,
@@ -1676,6 +1689,457 @@ impl<'a> LibraryService<'a> {
         steps
     }
 
+    fn learning_path_activity_type(
+        &self,
+        mastery_score: i64,
+        gap_score: i64,
+        decay_risk: i64,
+        is_blocked: bool,
+        trend_state: &str,
+    ) -> String {
+        if is_blocked || gap_score >= 6500 {
+            "topic_repair".to_string()
+        } else if decay_risk >= 6000 {
+            "memory_return".to_string()
+        } else if mastery_score < 5500
+            || matches!(trend_state, "fragile" | "declining" | "critical")
+        {
+            "guided_practice".to_string()
+        } else {
+            "exam_bridge".to_string()
+        }
+    }
+
+    fn learning_path_reason(
+        &self,
+        gap_score: i64,
+        decay_risk: i64,
+        is_blocked: bool,
+        review_due: bool,
+        trend_state: &str,
+        bundle_sequence: &[BundleSequenceCandidate],
+        relationship_hint: Option<&TopicRelationshipHint>,
+    ) -> String {
+        let mut reasons = Vec::new();
+        if is_blocked || gap_score >= 6500 {
+            reasons
+                .push("gap pressure is high, so this topic needs a repair-first path".to_string());
+        } else if decay_risk >= 6000 || review_due {
+            reasons.push(
+                "review timing and decay risk make this the best memory return target".to_string(),
+            );
+        } else if matches!(trend_state, "fragile" | "declining" | "critical") {
+            reasons.push(
+                "recent trend signals show the topic is slipping and needs guided reinforcement"
+                    .to_string(),
+            );
+        }
+        if let Some(bundle) = bundle_sequence.first() {
+            reasons.push(format!(
+                "bundle {} is the cleanest next knowledge route",
+                bundle.title
+            ));
+        }
+        if let Some(hint) = relationship_hint {
+            reasons.push(format!(
+                "{} connects directly to the next repair step",
+                truncate_text(&hint.to_title, 40)
+            ));
+        }
+        if reasons.is_empty() {
+            "this is the highest-priority available learning path right now".to_string()
+        } else {
+            capitalize_first(&format!("{}.", reasons.join(", ")))
+        }
+    }
+
+    fn build_learning_path_steps(
+        &self,
+        topic_id: i64,
+        topic_name: &str,
+        activity_type: &str,
+        relationship_hints: &[TopicRelationshipHint],
+        bundle_sequence: &[BundleSequenceCandidate],
+        practice_question_id: Option<i64>,
+    ) -> Vec<LearningPathStep> {
+        let mut steps = Vec::new();
+        let intro_detail = match activity_type {
+            "topic_repair" => format!(
+                "Reset {} from first principles before asking for fast performance.",
+                topic_name
+            ),
+            "memory_return" => format!(
+                "Bring {} back into active recall before new question work.",
+                topic_name
+            ),
+            "guided_practice" => format!(
+                "Work through {} with support and fade that support across the path.",
+                topic_name
+            ),
+            _ => format!(
+                "Bridge {} into exam-style use without losing the core explanation.",
+                topic_name
+            ),
+        };
+        steps.push(LearningPathStep {
+            sequence_no: 1,
+            step_type: "focus".to_string(),
+            title: format!("Start with {}", topic_name),
+            detail: intro_detail,
+            topic_id: Some(topic_id),
+            bundle_id: None,
+            question_id: None,
+        });
+
+        if let Some(hint) = relationship_hints.first() {
+            let relationship_title = match hint.focus_topic_id {
+                Some(focus_topic_id) if focus_topic_id != topic_id => self
+                    .topic_name(focus_topic_id)
+                    .unwrap_or_else(|_| hint.to_title.clone()),
+                _ => hint.to_title.clone(),
+            };
+            steps.push(LearningPathStep {
+                sequence_no: (steps.len() + 1) as i64,
+                step_type: "relationship".to_string(),
+                title: format!("Use {}", truncate_text(&relationship_title, 40)),
+                detail: hint.explanation.clone(),
+                topic_id: hint.focus_topic_id,
+                bundle_id: None,
+                question_id: None,
+            });
+        }
+
+        if let Some(bundle) = bundle_sequence.first() {
+            steps.push(LearningPathStep {
+                sequence_no: (steps.len() + 1) as i64,
+                step_type: "bundle".to_string(),
+                title: format!("Study {}", bundle.title),
+                detail: bundle.reason.clone(),
+                topic_id: Some(topic_id),
+                bundle_id: Some(bundle.bundle_id),
+                question_id: None,
+            });
+        }
+
+        if let Some(question_id) = practice_question_id {
+            steps.push(LearningPathStep {
+                sequence_no: (steps.len() + 1) as i64,
+                step_type: "practice".to_string(),
+                title: "Check the path in a question".to_string(),
+                detail: "Apply the repaired idea immediately so the explanation turns into usable performance."
+                    .to_string(),
+                topic_id: Some(topic_id),
+                bundle_id: None,
+                question_id: Some(question_id),
+            });
+        }
+
+        steps
+    }
+
+    fn collect_direct_relationship_hints(
+        &self,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<TopicRelationshipHint>> {
+        let mut hints = Vec::new();
+
+        let mut node_stmt = self
+            .conn
+            .prepare(
+                "SELECT
+                    ne.edge_type,
+                    COALESCE(an_from.canonical_title, t_from.name),
+                    COALESCE(an_to.canonical_title, t_to.name),
+                    COALESCE(an_from.topic_id, CASE WHEN ne.from_node_type = 'topic' THEN ne.from_node_id END),
+                    COALESCE(an_to.topic_id, CASE WHEN ne.to_node_type = 'topic' THEN ne.to_node_id END),
+                    ne.strength_score
+                 FROM node_edges ne
+                 LEFT JOIN academic_nodes an_from
+                    ON ne.from_node_type = 'academic_node'
+                   AND an_from.id = ne.from_node_id
+                 LEFT JOIN academic_nodes an_to
+                    ON ne.to_node_type = 'academic_node'
+                   AND an_to.id = ne.to_node_id
+                 LEFT JOIN topics t_from
+                    ON ne.from_node_type = 'topic'
+                   AND t_from.id = ne.from_node_id
+                 LEFT JOIN topics t_to
+                    ON ne.to_node_type = 'topic'
+                   AND t_to.id = ne.to_node_id
+                 WHERE (
+                        an_from.topic_id = ?1
+                        OR an_to.topic_id = ?1
+                        OR (ne.from_node_type = 'topic' AND ne.from_node_id = ?1)
+                        OR (ne.to_node_type = 'topic' AND ne.to_node_id = ?1)
+                 )
+                   AND ne.edge_type IN ('prerequisite', 'related', 'confused_with', 'contrasts_with', 'dependent')
+                 ORDER BY ne.strength_score DESC, ne.id ASC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = node_stmt
+            .query_map(params![topic_id, limit as i64], |row| {
+                let from_topic_id: Option<i64> = row.get(3)?;
+                let to_topic_id: Option<i64> = row.get(4)?;
+                let focus_topic_id = match (from_topic_id, to_topic_id) {
+                    (Some(from_id), Some(to_id)) if from_id == topic_id && to_id != topic_id => {
+                        Some(to_id)
+                    }
+                    (Some(from_id), Some(to_id)) if to_id == topic_id && from_id != topic_id => {
+                        Some(from_id)
+                    }
+                    (Some(from_id), None) if from_id != topic_id => Some(from_id),
+                    (None, Some(to_id)) if to_id != topic_id => Some(to_id),
+                    _ => None,
+                };
+                Ok(TopicRelationshipHint {
+                    relation_type: row.get(0)?,
+                    from_title: row.get(1)?,
+                    to_title: row.get(2)?,
+                    explanation: String::new(),
+                    hop_count: 1,
+                    strength_score: row.get::<_, i64>(5)?.clamp(0, 10_000) as BasisPoints,
+                    focus_topic_id,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for row in rows {
+            let mut hint = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            hint.explanation = self.relationship_explanation(
+                &hint.relation_type,
+                &hint.from_title,
+                &hint.to_title,
+            );
+            push_unique_relationship_hint(&mut hints, hint);
+        }
+
+        let remaining = limit.saturating_sub(hints.len());
+        if remaining > 0 {
+            let mut knowledge_stmt = self
+                .conn
+                .prepare(
+                    "SELECT
+                        kr.relation_type,
+                        from_ke.title,
+                        to_ke.title,
+                        from_ke.topic_id,
+                        to_ke.topic_id,
+                        kr.strength_score
+                     FROM knowledge_relations kr
+                     INNER JOIN knowledge_entries from_ke ON from_ke.id = kr.from_entry_id
+                     INNER JOIN knowledge_entries to_ke ON to_ke.id = kr.to_entry_id
+                     WHERE from_ke.topic_id = ?1 OR to_ke.topic_id = ?1
+                     ORDER BY kr.strength_score DESC, kr.id ASC
+                     LIMIT ?2",
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let rows = knowledge_stmt
+                .query_map(params![topic_id, remaining as i64], |row| {
+                    let from_topic_id: Option<i64> = row.get(3)?;
+                    let to_topic_id: Option<i64> = row.get(4)?;
+                    let focus_topic_id = match (from_topic_id, to_topic_id) {
+                        (Some(from_id), Some(to_id))
+                            if from_id == topic_id && to_id != topic_id =>
+                        {
+                            Some(to_id)
+                        }
+                        (Some(from_id), Some(to_id))
+                            if to_id == topic_id && from_id != topic_id =>
+                        {
+                            Some(from_id)
+                        }
+                        (Some(from_id), None) if from_id != topic_id => Some(from_id),
+                        (None, Some(to_id)) if to_id != topic_id => Some(to_id),
+                        _ => None,
+                    };
+                    Ok(TopicRelationshipHint {
+                        relation_type: row.get(0)?,
+                        from_title: row.get(1)?,
+                        to_title: row.get(2)?,
+                        explanation: String::new(),
+                        hop_count: 1,
+                        strength_score: row.get::<_, i64>(5)?.clamp(0, 10_000) as BasisPoints,
+                        focus_topic_id,
+                    })
+                })
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            for row in rows {
+                let mut hint = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+                hint.explanation = self.relationship_explanation(
+                    &hint.relation_type,
+                    &hint.from_title,
+                    &hint.to_title,
+                );
+                push_unique_relationship_hint(&mut hints, hint);
+            }
+        }
+
+        Ok(hints)
+    }
+
+    fn list_related_topics_for_topic(
+        &self,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<RelationshipTopicCandidate>> {
+        let mut topics = Vec::new();
+        let direct_hints = self.collect_direct_relationship_hints(topic_id, limit * 2)?;
+        for hint in direct_hints {
+            if let Some(related_topic_id) = hint.focus_topic_id {
+                let related_topic_name = if related_topic_id == topic_id {
+                    continue;
+                } else {
+                    self.topic_name(related_topic_id)?
+                };
+                if !topics.iter().any(|existing: &RelationshipTopicCandidate| {
+                    existing.related_topic_id == related_topic_id
+                }) {
+                    topics.push(RelationshipTopicCandidate {
+                        related_topic_id,
+                        related_topic_name,
+                        relation_type: hint.relation_type,
+                        strength_score: hint.strength_score,
+                    });
+                }
+                if topics.len() >= limit {
+                    break;
+                }
+            }
+        }
+        Ok(topics)
+    }
+
+    fn build_bridge_relationship_hint(
+        &self,
+        root_topic_id: i64,
+        root_topic_name: &str,
+        bridge_topic: &RelationshipTopicCandidate,
+    ) -> EcoachResult<Option<TopicRelationshipHint>> {
+        let bridge_hints =
+            self.collect_direct_relationship_hints(bridge_topic.related_topic_id, 4)?;
+        for hint in bridge_hints {
+            if let Some(target_topic_id) = hint.focus_topic_id {
+                if target_topic_id == root_topic_id
+                    || target_topic_id == bridge_topic.related_topic_id
+                {
+                    continue;
+                }
+                let target_topic_name = self.topic_name(target_topic_id)?;
+                return Ok(Some(TopicRelationshipHint {
+                    relation_type: "pathway".to_string(),
+                    from_title: root_topic_name.to_string(),
+                    to_title: target_topic_name.clone(),
+                    explanation: format!(
+                        "Bridge {} through {} via a {} link before expecting stable performance on {}.",
+                        root_topic_name,
+                        bridge_topic.related_topic_name,
+                        bridge_topic.relation_type.replace('_', " "),
+                        target_topic_name
+                    ),
+                    hop_count: 2,
+                    strength_score: bridge_topic.strength_score.min(hint.strength_score),
+                    focus_topic_id: Some(target_topic_id),
+                }));
+            }
+        }
+        Ok(None)
+    }
+
+    fn topic_name(&self, topic_id: i64) -> EcoachResult<String> {
+        self.conn
+            .query_row("SELECT name FROM topics WHERE id = ?1", [topic_id], |row| {
+                row.get(0)
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn related_topic_names_for_hints(
+        &self,
+        hints: &[TopicRelationshipHint],
+    ) -> EcoachResult<Vec<String>> {
+        let mut names = Vec::new();
+        for hint in hints {
+            if let Some(focus_topic_id) = hint.focus_topic_id {
+                push_unique(&mut names, self.topic_name(focus_topic_id)?);
+            }
+        }
+        Ok(names)
+    }
+
+    fn list_bundle_sequence_for_topic(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<BundleSequenceCandidate>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    kb.id,
+                    kb.title,
+                    SUM(CASE WHEN ses.review_due_at IS NOT NULL THEN 1 ELSE 0 END) AS due_review_count,
+                    MAX(COALESCE(ses.confusion_score, 0)) AS max_confusion_score,
+                    SUM(CASE WHEN COALESCE(ses.recall_strength, 10000) <= 3500 THEN 1 ELSE 0 END) AS weak_recall_count
+                 FROM knowledge_bundles kb
+                 LEFT JOIN knowledge_bundle_items kbi ON kbi.bundle_id = kb.id
+                 LEFT JOIN student_entry_state ses
+                    ON ses.entry_id = kbi.entry_id
+                   AND ses.user_id = ?1
+                 WHERE kb.topic_id = ?2
+                 GROUP BY kb.id, kb.title, kb.exam_relevance_score, kb.difficulty_level
+                 ORDER BY
+                    due_review_count DESC,
+                    max_confusion_score DESC,
+                    weak_recall_count DESC,
+                    kb.exam_relevance_score DESC,
+                    kb.difficulty_level ASC,
+                    kb.id ASC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, topic_id, limit as i64], |row| {
+                let title: String = row.get(1)?;
+                let due_review_count: i64 = row.get(2)?;
+                let max_confusion_score: i64 = row.get(3)?;
+                let weak_recall_count: i64 = row.get(4)?;
+                let reason = if due_review_count > 0 {
+                    format!(
+                        "{} has {} review-due glossary anchor(s) to return to first.",
+                        title, due_review_count
+                    )
+                } else if max_confusion_score >= 4500 {
+                    format!(
+                        "{} contains the strongest confusion hotspot for this topic.",
+                        title
+                    )
+                } else if weak_recall_count > 0 {
+                    format!(
+                        "{} is the cleanest bundle for rebuilding recall before practice.",
+                        title
+                    )
+                } else {
+                    format!(
+                        "{} is the best structured bundle to continue with next.",
+                        title
+                    )
+                };
+                Ok(BundleSequenceCandidate {
+                    bundle_id: row.get(0)?,
+                    title,
+                    reason,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut bundles = Vec::new();
+        for row in rows {
+            bundles.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(bundles)
+    }
+
     fn relationship_explanation(
         &self,
         relation_type: &str,
@@ -1812,6 +2276,27 @@ fn readiness_band_for_action(action_type: &str) -> &'static str {
 fn push_unique(values: &mut Vec<String>, value: String) {
     if !values.iter().any(|existing| existing == &value) {
         values.push(value);
+    }
+}
+
+fn push_unique_relationship_hint(
+    hints: &mut Vec<TopicRelationshipHint>,
+    hint: TopicRelationshipHint,
+) {
+    if !hints.iter().any(|existing| {
+        existing.relation_type == hint.relation_type
+            && existing.from_title == hint.from_title
+            && existing.to_title == hint.to_title
+    }) {
+        hints.push(hint);
+    }
+}
+
+fn capitalize_first(value: &str) -> String {
+    let mut chars = value.chars();
+    match chars.next() {
+        Some(first) => format!("{}{}", first.to_uppercase(), chars.collect::<String>()),
+        None => String::new(),
     }
 }
 
@@ -2019,23 +2504,255 @@ mod tests {
         assert_eq!(plan.readiness_band, "repair_now");
         assert_eq!(plan.support_intensity, "high");
         assert!(!plan.diagnostic_focuses.is_empty());
-        assert!(plan
-            .diagnostic_focuses
-            .iter()
-            .any(|focus| focus.contains("Contrast") || focus.contains("contrast")));
-        assert!(plan
-            .recent_diagnoses
-            .iter()
-            .any(|diagnosis| diagnosis.contains("sign confusion")));
+        assert!(
+            plan.diagnostic_focuses
+                .iter()
+                .any(|focus| focus.contains("Contrast") || focus.contains("contrast"))
+        );
+        assert!(
+            plan.recent_diagnoses
+                .iter()
+                .any(|diagnosis| diagnosis.contains("sign confusion"))
+        );
         assert!(!plan.relationship_hints.is_empty());
         assert!(plan.recommended_sequence.len() >= 4);
-        assert!(plan
-            .recommended_sequence
-            .iter()
-            .any(|step| step.step_type == "relationship"));
-        assert!(plan
-            .recommended_sequence
-            .iter()
-            .any(|step| step.step_type == "repair"));
+        assert!(
+            plan.recommended_sequence
+                .iter()
+                .any(|step| step.step_type == "relationship")
+        );
+        assert!(
+            plan.recommended_sequence
+                .iter()
+                .any(|step| step.step_type == "repair")
+        );
+    }
+
+    #[test]
+    fn personalized_learning_paths_prioritize_bundle_and_relationship_route() {
+        let conn = Connection::open_in_memory().expect("in-memory db");
+        conn.execute_batch(
+            "
+            CREATE TABLE topics (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            CREATE TABLE student_topic_states (
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                mastery_score INTEGER NOT NULL,
+                gap_score INTEGER NOT NULL,
+                priority_score INTEGER NOT NULL DEFAULT 0,
+                trend_state TEXT NOT NULL,
+                decay_risk INTEGER NOT NULL DEFAULT 0,
+                is_blocked INTEGER NOT NULL DEFAULT 0,
+                next_review_at TEXT
+            );
+            CREATE TABLE node_edges (
+                id INTEGER PRIMARY KEY,
+                edge_type TEXT NOT NULL,
+                from_node_type TEXT NOT NULL,
+                from_node_id INTEGER NOT NULL,
+                to_node_type TEXT NOT NULL,
+                to_node_id INTEGER NOT NULL,
+                strength_score INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE academic_nodes (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER,
+                canonical_title TEXT NOT NULL
+            );
+            CREATE TABLE knowledge_entries (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER,
+                title TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'active',
+                importance_score INTEGER NOT NULL DEFAULT 0,
+                difficulty_level INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE knowledge_relations (
+                id INTEGER PRIMARY KEY,
+                from_entry_id INTEGER NOT NULL,
+                to_entry_id INTEGER NOT NULL,
+                relation_type TEXT NOT NULL,
+                strength_score INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE knowledge_bundles (
+                id INTEGER PRIMARY KEY,
+                title TEXT NOT NULL,
+                topic_id INTEGER,
+                exam_relevance_score INTEGER NOT NULL DEFAULT 0,
+                difficulty_level INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE knowledge_bundle_items (
+                id INTEGER PRIMARY KEY,
+                bundle_id INTEGER NOT NULL,
+                entry_id INTEGER NOT NULL,
+                sequence_order INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE student_entry_state (
+                user_id INTEGER NOT NULL,
+                entry_id INTEGER NOT NULL,
+                confusion_score INTEGER NOT NULL DEFAULT 0,
+                recall_strength INTEGER NOT NULL DEFAULT 0,
+                linked_wrong_answer_count INTEGER NOT NULL DEFAULT 0,
+                review_due_at TEXT
+            );
+            CREATE TABLE questions (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER NOT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                difficulty_level INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE library_items (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                item_type TEXT NOT NULL,
+                item_ref_id INTEGER NOT NULL,
+                urgency_score INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE coach_missions (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                activity_type TEXT NOT NULL,
+                primary_topic_id INTEGER,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE sessions (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                session_type TEXT NOT NULL,
+                active_item_index INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL,
+                last_activity_at TEXT,
+                updated_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE session_items (
+                id INTEGER PRIMARY KEY,
+                session_id INTEGER NOT NULL,
+                source_topic_id INTEGER,
+                question_id INTEGER,
+                display_order INTEGER NOT NULL DEFAULT 0
+            );
+            ",
+        )
+        .expect("schema");
+
+        conn.execute(
+            "INSERT INTO topics (id, name) VALUES
+                (1, 'Algebraic Fractions'),
+                (2, 'Equivalent Fractions'),
+                (3, 'Factorisation')",
+            [],
+        )
+        .expect("topics");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, priority_score, trend_state, decay_risk, is_blocked, next_review_at
+             ) VALUES (42, 1, 2800, 7600, 9100, 'declining', 6400, 1, '2026-03-29T10:00:00Z')",
+            [],
+        )
+        .expect("topic state");
+        conn.execute(
+            "INSERT INTO node_edges (
+                id, edge_type, from_node_type, from_node_id, to_node_type, to_node_id, strength_score
+             ) VALUES
+                (1, 'prerequisite', 'topic', 2, 'topic', 1, 9300),
+                (2, 'related', 'topic', 3, 'topic', 2, 8600)",
+            [],
+        )
+        .expect("node edges");
+        conn.execute(
+            "INSERT INTO knowledge_entries (id, topic_id, title, status, importance_score, difficulty_level)
+             VALUES
+                (101, 1, 'Simplify before multiplying', 'active', 9000, 1200),
+                (102, 1, 'Common denominator check', 'active', 8700, 1500)",
+            [],
+        )
+        .expect("entries");
+        conn.execute(
+            "INSERT INTO knowledge_bundles (id, title, topic_id, exam_relevance_score, difficulty_level)
+             VALUES (10, 'Fractions Recovery', 1, 9200, 1300)",
+            [],
+        )
+        .expect("bundle");
+        conn.execute(
+            "INSERT INTO knowledge_bundle_items (id, bundle_id, entry_id, sequence_order)
+             VALUES
+                (1, 10, 101, 0),
+                (2, 10, 102, 1)",
+            [],
+        )
+        .expect("bundle items");
+        conn.execute(
+            "INSERT INTO student_entry_state (
+                user_id, entry_id, confusion_score, recall_strength, linked_wrong_answer_count, review_due_at
+             ) VALUES
+                (42, 101, 7200, 2200, 2, '2026-03-29T09:00:00Z'),
+                (42, 102, 4800, 2600, 1, NULL)",
+            [],
+        )
+        .expect("entry states");
+        conn.execute(
+            "INSERT INTO questions (id, topic_id, is_active, difficulty_level)
+             VALUES (50, 1, 1, 1000)",
+            [],
+        )
+        .expect("question");
+        conn.execute(
+            "INSERT INTO library_items (id, student_id, item_type, item_ref_id, urgency_score)
+             VALUES (1, 42, 'question', 50, 8800)",
+            [],
+        )
+        .expect("library item");
+
+        let service = LibraryService::new(&conn);
+        let paths = service
+            .build_personalized_learning_paths(42, 2)
+            .expect("learning paths");
+
+        assert_eq!(paths.len(), 1);
+        assert_eq!(paths[0].topic_id, 1);
+        assert_eq!(paths[0].activity_type, "topic_repair");
+        assert_eq!(
+            paths[0].recommended_bundle_titles,
+            vec!["Fractions Recovery".to_string()]
+        );
+        assert!(
+            paths[0]
+                .related_topic_names
+                .iter()
+                .any(|name| name == "Equivalent Fractions")
+        );
+        assert!(
+            paths[0]
+                .relationship_hints
+                .iter()
+                .any(|hint| hint.hop_count == 2 && hint.to_title == "Factorisation")
+        );
+        assert!(
+            paths[0]
+                .steps
+                .iter()
+                .any(|step| step.step_type == "bundle" && step.bundle_id == Some(10))
+        );
+
+        let continue_card = service
+            .get_continue_learning_card(42)
+            .expect("continue card")
+            .expect("fallback continue card");
+        assert_eq!(continue_card.topic_id, Some(1));
+        assert_eq!(continue_card.recommended_bundle_ids, vec![10]);
+        assert!(
+            continue_card
+                .related_topic_names
+                .iter()
+                .any(|name| name == "Equivalent Fractions")
+        );
+        assert!(continue_card.reason.is_some());
     }
 }

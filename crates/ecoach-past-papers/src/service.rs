@@ -366,8 +366,8 @@ impl<'a> PastPapersService<'a> {
         let scored = analytics
             .into_iter()
             .map(|item| {
-                let dormant_years =
-                    latest_subject_year.saturating_sub(item.last_seen_year.unwrap_or(latest_subject_year));
+                let dormant_years = latest_subject_year
+                    .saturating_sub(item.last_seen_year.unwrap_or(latest_subject_year));
                 let dormant_score = scale_score(dormant_years, year_span);
                 let paper_breadth_score = scale_score(item.paper_count, 6);
                 let historical_strength_score = clamp_bp(
@@ -407,7 +407,11 @@ impl<'a> PastPapersService<'a> {
             right
                 .comeback_score
                 .cmp(&left.comeback_score)
-                .then(right.historical_strength_score.cmp(&left.historical_strength_score))
+                .then(
+                    right
+                        .historical_strength_score
+                        .cmp(&left.historical_strength_score),
+                )
                 .then(right.dormant_years.cmp(&left.dormant_years))
                 .then(left.family_name.cmp(&right.family_name))
         });

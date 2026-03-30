@@ -1110,8 +1110,13 @@ impl<'a> MemoryService<'a> {
                 })
                 .count() as i64;
             let repair_outcome = repair_outcomes.get(&summary.topic_id);
-            let urgency_band =
-                self.return_loop_urgency(&summary, &topic_items, due_count, fragile_count, repair_outcome);
+            let urgency_band = self.return_loop_urgency(
+                &summary,
+                &topic_items,
+                due_count,
+                fragile_count,
+                repair_outcome,
+            );
             let action_type =
                 self.repair_adjusted_action(&summary, &topic_items, &action_type, repair_outcome);
             let estimated_minutes = self.return_loop_minutes(
@@ -1420,7 +1425,9 @@ impl<'a> MemoryService<'a> {
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let rows = stmt
-            .query_map(params![student_id, limit as i64], |row| row.get::<_, String>(0))
+            .query_map(params![student_id, limit as i64], |row| {
+                row.get::<_, String>(0)
+            })
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let mut outcomes = BTreeMap::new();
@@ -1504,4 +1511,242 @@ struct RepairOutcomeSignal {
     outcome: String,
     next_action_hint: String,
     accuracy_score: Option<u16>,
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::{Duration, Utc};
+    use rusqlite::{Connection, params};
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn build_return_loop_escalates_failed_repair_topics() {
+        let conn = test_conn();
+        let now = Utc::now();
+        seed_topic(&conn, 10, "Fractions");
+        seed_memory_item(
+            &conn,
+            1,
+            1,
+            10,
+            100,
+            "collapsed",
+            1800,
+            8400,
+            Some((now - Duration::hours(12)).to_rfc3339()),
+        );
+        seed_recheck(
+            &conn,
+            1,
+            Some(100),
+            (now - Duration::hours(12)).to_rfc3339(),
+        );
+        seed_gap_repair_outcome(&conn, 31, 1, "failed", "reteach_before_retry", 10, 2200);
+
+        let service = MemoryService::new(&conn);
+        let return_loop = service
+            .build_return_loop(1, 4)
+            .expect("return loop should build");
+
+        let session = return_loop
+            .sessions
+            .iter()
+            .find(|session| session.topic_id == Some(10))
+            .expect("fractions session should exist");
+        assert_eq!(session.action_type, "rebuild_foundation");
+        assert_eq!(session.urgency_band, "critical");
+        assert!(session.estimated_minutes >= 20);
+        assert!(session.reason.contains("did not hold"));
+    }
+
+    #[test]
+    fn build_return_loop_downshifts_successful_repair_topics() {
+        let conn = test_conn();
+        let now = Utc::now();
+        seed_topic(&conn, 11, "Equations");
+        seed_memory_item(
+            &conn,
+            2,
+            1,
+            11,
+            101,
+            "accessible",
+            7600,
+            3200,
+            Some((now - Duration::hours(2)).to_rfc3339()),
+        );
+        seed_recheck(&conn, 1, Some(101), (now - Duration::hours(2)).to_rfc3339());
+        seed_gap_repair_outcome(&conn, 32, 1, "success", "stabilize_memory", 11, 8600);
+
+        let service = MemoryService::new(&conn);
+        let return_loop = service
+            .build_return_loop(1, 4)
+            .expect("return loop should build");
+
+        let session = return_loop
+            .sessions
+            .iter()
+            .find(|session| session.topic_id == Some(11))
+            .expect("equations session should exist");
+        assert_eq!(session.action_type, "retention_check");
+        assert_eq!(session.urgency_band, "medium");
+        assert!(session.estimated_minutes <= 12);
+        assert!(session.reason.contains("lighter retention check"));
+    }
+
+    fn test_conn() -> Connection {
+        let conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        conn.execute_batch(
+            "
+            CREATE TABLE topics (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            CREATE TABLE academic_nodes (
+                id INTEGER PRIMARY KEY,
+                canonical_title TEXT
+            );
+            CREATE TABLE memory_states (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER,
+                node_id INTEGER,
+                memory_state TEXT NOT NULL,
+                memory_strength INTEGER NOT NULL,
+                recall_fluency INTEGER NOT NULL DEFAULT 0,
+                decay_risk INTEGER NOT NULL DEFAULT 0,
+                review_due_at TEXT,
+                last_recalled_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE recheck_schedules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                node_id INTEGER,
+                due_at TEXT NOT NULL,
+                schedule_type TEXT NOT NULL,
+                status TEXT NOT NULL
+            );
+            CREATE TABLE interference_edges (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                from_node_id INTEGER NOT NULL,
+                to_node_id INTEGER NOT NULL,
+                strength_score INTEGER NOT NULL,
+                last_seen_at TEXT
+            );
+            CREATE TABLE sessions (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                session_type TEXT NOT NULL
+            );
+            CREATE TABLE runtime_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                aggregate_kind TEXT NOT NULL,
+                aggregate_id TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                occurred_at TEXT NOT NULL
+            );
+            ",
+        )
+        .expect("schema should seed");
+        conn
+    }
+
+    fn seed_topic(conn: &Connection, topic_id: i64, topic_name: &str) {
+        conn.execute(
+            "INSERT INTO topics (id, name) VALUES (?1, ?2)",
+            params![topic_id, topic_name],
+        )
+        .expect("topic should seed");
+    }
+
+    fn seed_memory_item(
+        conn: &Connection,
+        id: i64,
+        student_id: i64,
+        topic_id: i64,
+        node_id: i64,
+        memory_state: &str,
+        memory_strength: i64,
+        decay_risk: i64,
+        review_due_at: Option<String>,
+    ) {
+        conn.execute(
+            "INSERT INTO academic_nodes (id, canonical_title) VALUES (?1, ?2)",
+            params![node_id, format!("Node {}", node_id)],
+        )
+        .expect("node should seed");
+        conn.execute(
+            "INSERT INTO memory_states (
+                id, student_id, topic_id, node_id, memory_state, memory_strength, decay_risk, review_due_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![
+                id,
+                student_id,
+                topic_id,
+                node_id,
+                memory_state,
+                memory_strength,
+                decay_risk,
+                review_due_at,
+            ],
+        )
+        .expect("memory state should seed");
+    }
+
+    fn seed_recheck(conn: &Connection, student_id: i64, node_id: Option<i64>, due_at: String) {
+        conn.execute(
+            "INSERT INTO recheck_schedules (student_id, node_id, due_at, schedule_type, status)
+             VALUES (?1, ?2, ?3, 'spaced_review', 'pending')",
+            params![student_id, node_id, due_at],
+        )
+        .expect("recheck should seed");
+    }
+
+    fn seed_gap_repair_outcome(
+        conn: &Connection,
+        session_id: i64,
+        student_id: i64,
+        outcome: &str,
+        next_action_hint: &str,
+        topic_id: i64,
+        accuracy_score: i64,
+    ) {
+        conn.execute(
+            "INSERT INTO sessions (id, student_id, session_type)
+             VALUES (?1, ?2, 'gap_repair')",
+            params![session_id, student_id],
+        )
+        .expect("gap repair session should seed");
+        conn.execute(
+            "INSERT INTO runtime_events (
+                event_type, aggregate_kind, aggregate_id, payload_json, occurred_at
+             ) VALUES (
+                'session.interpreted',
+                'session',
+                ?1,
+                ?2,
+                datetime('now')
+             )",
+            params![
+                session_id.to_string(),
+                json!({
+                    "repair_outcome": outcome,
+                    "next_action_hint": next_action_hint,
+                    "topic_summaries": [
+                        {
+                            "topic_id": topic_id,
+                            "accuracy_score": accuracy_score
+                        }
+                    ]
+                })
+                .to_string(),
+            ],
+        )
+        .expect("repair outcome event should seed");
+    }
 }

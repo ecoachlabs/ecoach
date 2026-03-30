@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use chrono::Utc;
-use ecoach_substrate::{clamp_bp, to_bp, BasisPoints, DomainEvent, EcoachError, EcoachResult};
-use rusqlite::{params, Connection, OptionalExtension};
-use serde_json::{json, Value};
+use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, clamp_bp, to_bp};
+use rusqlite::{Connection, OptionalExtension, params};
+use serde_json::{Value, json};
 
 use crate::models::{
     ContrastPairSummary, GameAnswerResult, GameLeaderboardEntry, GameSession, GameSummary,
@@ -908,10 +908,11 @@ mod tests {
 
         assert_eq!(state.total_discriminations, 4);
         assert_eq!(review.rounds.len(), 4);
-        assert!(review
-            .rounds
-            .iter()
-            .any(|round| { round.confusion_reason_code.as_deref() == Some("feature_confusion") }));
+        assert!(
+            review.rounds.iter().any(|round| {
+                round.confusion_reason_code.as_deref() == Some("feature_confusion")
+            })
+        );
         assert!(review.weakest_lane.is_some());
         assert!(!review.remediation_actions.is_empty());
         assert!(!review.recommended_next_mode.is_empty());
@@ -920,10 +921,12 @@ mod tests {
             Some("feature_confusion")
         );
         assert_eq!(summary.rounds_played, 4);
-        assert!(summary
-            .focus_signals
-            .iter()
-            .any(|signal| signal == "contrast_discrimination"));
+        assert!(
+            summary
+                .focus_signals
+                .iter()
+                .any(|signal| signal == "contrast_discrimination")
+        );
         assert!(summary.recommended_next_step.is_some());
     }
 
@@ -1034,10 +1037,12 @@ mod tests {
         assert!(final_state.board_height >= 15);
         assert_eq!(summary.rounds_played, 8);
         assert!(summary.misconception_hits >= 1);
-        assert!(summary
-            .focus_signals
-            .iter()
-            .any(|signal| signal == "misconception_pressure"));
+        assert!(
+            summary
+                .focus_signals
+                .iter()
+                .any(|signal| signal == "misconception_pressure")
+        );
         assert!(last_result.session_complete);
         assert_eq!(last_result.effect_type, "stack_overflow_game_over");
     }
@@ -1101,10 +1106,12 @@ mod tests {
         assert_eq!(final_state.position, 10);
         assert!(final_state.opponent_difficulty > 5000);
         assert_eq!(summary.rounds_played, 5);
-        assert!(summary
-            .focus_signals
-            .iter()
-            .any(|signal| signal == "competitive_pressure"));
+        assert!(
+            summary
+                .focus_signals
+                .iter()
+                .any(|signal| signal == "competitive_pressure")
+        );
         assert_eq!(last_result.effect_type, "tug_win");
         assert!(last_result.session_complete);
     }

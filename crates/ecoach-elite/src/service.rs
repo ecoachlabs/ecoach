@@ -1,5 +1,5 @@
-use ecoach_substrate::{clamp_bp, ema_update, to_bp, BasisPoints, EcoachError, EcoachResult};
-use rusqlite::{params, Connection, OptionalExtension};
+use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, ema_update, to_bp};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{EliteProfile, EliteSessionBlueprint, EliteSessionScore, EliteTopicProfile};
@@ -947,7 +947,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use rusqlite::{params, Connection};
+    use rusqlite::{Connection, params};
 
     use super::*;
 
@@ -965,10 +965,12 @@ mod tests {
         assert_eq!(blueprint.session_class, "trapsense");
         assert_eq!(blueprint.target_topic_ids.first().copied(), Some(100));
         assert_eq!(blueprint.target_family_ids.first().copied(), Some(900));
-        assert!(blueprint
-            .authoring_modes
-            .iter()
-            .any(|mode| mode == "misconception_probe"));
+        assert!(
+            blueprint
+                .authoring_modes
+                .iter()
+                .any(|mode| mode == "misconception_probe")
+        );
     }
 
     fn seed_schema(conn: &Connection) {

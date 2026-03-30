@@ -4,14 +4,18 @@ use chrono::{Duration, Utc};
 use ecoach_coach_brain::{JourneyRouteSnapshot, JourneyService, PlanEngine};
 use ecoach_diagnostics::{
     DiagnosticBattery, DiagnosticEngine, DiagnosticMode, DiagnosticPhaseItem, DiagnosticPhasePlan,
-    DiagnosticResult, DiagnosticRootCauseHypothesis, DiagnosticTopicAnalytics,
+    DiagnosticRootCauseHypothesis, DiagnosticTopicAnalytics,
 };
-use ecoach_substrate::{clamp_bp, BasisPoints, DomainEvent, EcoachError};
-use rusqlite::{params, Connection, OptionalExtension};
+use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, clamp_bp};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::{error::CommandError, state::AppState};
+use crate::{
+    dtos::{DiagnosticCauseEvolutionDto, DiagnosticLongitudinalSummaryDto, DiagnosticResultDto},
+    error::CommandError,
+    state::AppState,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticRunDto {
@@ -55,6 +59,9 @@ pub struct DiagnosticCompletionSyncDto {
     pub readiness_band: String,
     pub analytics: Vec<TopicAnalyticsDto>,
     pub top_hypotheses: Vec<DiagnosticRootCauseHypothesisDto>,
+    pub diagnostic_result: DiagnosticResultDto,
+    pub longitudinal_summary: Option<DiagnosticLongitudinalSummaryDto>,
+    pub cause_evolution: Vec<DiagnosticCauseEvolutionDto>,
     pub synced_topic_count: usize,
     pub blocker_count: usize,
     pub rewritten_plan_id: Option<i64>,
@@ -65,7 +72,6 @@ pub struct DiagnosticCompletionSyncDto {
 pub type DiagnosticBatteryDto = DiagnosticBattery;
 pub type DiagnosticPhasePlanDto = DiagnosticPhasePlan;
 pub type DiagnosticPhaseItemDto = DiagnosticPhaseItem;
-pub type DiagnosticResultDto = DiagnosticResult;
 
 pub fn launch_diagnostic(
     state: &AppState,
@@ -214,6 +220,15 @@ pub fn complete_diagnostic_and_sync(
         let synced_topic_count = result.topic_results.len();
         let overall_readiness = result.overall_readiness as i64;
         let readiness_band = result.readiness_band.clone();
+        let diagnostic_result = DiagnosticResultDto::from(result.clone());
+        let longitudinal_summary = result
+            .longitudinal_summary
+            .clone()
+            .map(DiagnosticLongitudinalSummaryDto::from);
+        let cause_evolution = longitudinal_summary
+            .as_ref()
+            .map(|summary| summary.cause_evolution.clone())
+            .unwrap_or_default();
 
         Ok(DiagnosticCompletionSyncDto {
             diagnostic_id,
@@ -224,6 +239,9 @@ pub fn complete_diagnostic_and_sync(
                 .into_values()
                 .map(DiagnosticRootCauseHypothesisDto::from)
                 .collect(),
+            diagnostic_result,
+            longitudinal_summary,
+            cause_evolution,
             synced_topic_count,
             blocker_count,
             rewritten_plan_id,
@@ -241,6 +259,41 @@ pub fn get_diagnostic_report(
         let engine = DiagnosticEngine::new(conn);
         let analytics = engine.list_topic_analytics(diagnostic_id)?;
         Ok(analytics.into_iter().map(TopicAnalyticsDto::from).collect())
+    })
+}
+
+pub fn get_diagnostic_result(
+    state: &AppState,
+    diagnostic_id: i64,
+) -> Result<Option<DiagnosticResultDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .get_diagnostic_result(diagnostic_id)?
+            .map(DiagnosticResultDto::from))
+    })
+}
+
+pub fn get_diagnostic_longitudinal_summary(
+    state: &AppState,
+    diagnostic_id: i64,
+) -> Result<Option<DiagnosticLongitudinalSummaryDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .get_longitudinal_summary(diagnostic_id)?
+            .map(DiagnosticLongitudinalSummaryDto::from))
+    })
+}
+
+pub fn list_diagnostic_cause_evolution(
+    state: &AppState,
+    diagnostic_id: i64,
+) -> Result<Vec<DiagnosticCauseEvolutionDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .list_cause_evolution(diagnostic_id)?
+            .into_iter()
+            .map(DiagnosticCauseEvolutionDto::from)
+            .collect())
     })
 }
 
@@ -749,5 +802,90 @@ impl From<DiagnosticRootCauseHypothesis> for DiagnosticRootCauseHypothesisDto {
             confidence_score: value.confidence_score as i64,
             recommended_action: value.recommended_action,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use ecoach_content::PackService;
+    use ecoach_identity::CreateAccountInput;
+    use ecoach_substrate::{AccountType, EntitlementTier};
+
+    use crate::{identity_commands, state::AppState};
+
+    use super::{
+        complete_diagnostic_and_sync, get_diagnostic_longitudinal_summary, get_diagnostic_result,
+        launch_diagnostic, list_diagnostic_cause_evolution,
+    };
+
+    #[test]
+    fn diagnostic_longitudinal_reads_are_exposed_through_command_layer() {
+        let state = setup_state();
+        let student = identity_commands::create_account(
+            &state,
+            CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Esi".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            },
+        )
+        .expect("student account should create");
+
+        let first = launch_diagnostic(&state, student.id, 1, "quick".to_string())
+            .expect("first diagnostic should launch");
+        complete_diagnostic_and_sync(&state, first.diagnostic_id)
+            .expect("first diagnostic should complete");
+
+        let second = launch_diagnostic(&state, student.id, 1, "quick".to_string())
+            .expect("second diagnostic should launch");
+        let sync = complete_diagnostic_and_sync(&state, second.diagnostic_id)
+            .expect("second diagnostic should complete");
+
+        let result = get_diagnostic_result(&state, second.diagnostic_id)
+            .expect("diagnostic result command should succeed")
+            .expect("diagnostic result should exist");
+        let summary = get_diagnostic_longitudinal_summary(&state, second.diagnostic_id)
+            .expect("longitudinal summary command should succeed")
+            .expect("longitudinal summary should exist");
+        let cause_evolution = list_diagnostic_cause_evolution(&state, second.diagnostic_id)
+            .expect("cause evolution command should succeed");
+
+        assert_eq!(result.readiness_band, sync.readiness_band);
+        assert_eq!(result.overall_readiness, sync.overall_readiness);
+        assert_eq!(result.topic_results.len(), sync.analytics.len());
+        assert_eq!(summary.previous_diagnostic_id, Some(first.diagnostic_id));
+        assert_eq!(
+            sync.longitudinal_summary
+                .as_ref()
+                .and_then(|item| item.previous_diagnostic_id),
+            Some(first.diagnostic_id)
+        );
+        assert_eq!(cause_evolution, sync.cause_evolution);
+        assert_eq!(result.longitudinal_summary, sync.longitudinal_summary);
+    }
+
+    fn setup_state() -> AppState {
+        let state = AppState::in_memory().expect("in-memory command state should build");
+        state
+            .with_connection(|conn| {
+                let service = PackService::new(conn);
+                service.install_pack(&sample_pack_path())?;
+                Ok(())
+            })
+            .expect("sample pack should install");
+        state
+    }
+
+    fn sample_pack_path() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("crate directory should have workspace parent")
+            .parent()
+            .expect("workspace root should exist")
+            .join("packs")
+            .join("math-bece-sample")
     }
 }

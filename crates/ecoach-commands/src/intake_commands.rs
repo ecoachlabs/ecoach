@@ -27,7 +27,7 @@ pub fn add_submission_bundle_file(
 ) -> Result<i64, CommandError> {
     state.with_connection(|conn| {
         let service = IntakeService::new(conn);
-        service.add_bundle_file(bundle_id, &file_name, &file_path)
+        Ok(service.add_bundle_file(bundle_id, &file_name, &file_path)?)
     })
 }
 
@@ -110,13 +110,17 @@ mod tests {
 
         let insights = list_submission_bundle_insights(&state, bundle.id)
             .expect("bundle insights should load");
-        assert!(insights
-            .iter()
-            .any(|item| item.insight_type == "bundle_overview"));
-        assert!(report
-            .insights
-            .iter()
-            .any(|item| item.insight_type == "file_reconstruction"));
+        assert!(
+            insights
+                .iter()
+                .any(|item| item.insight_type == "bundle_overview")
+        );
+        assert!(
+            report
+                .insights
+                .iter()
+                .any(|item| item.insight_type == "file_reconstruction")
+        );
 
         let file_reconstruction = report
             .insights

@@ -1,4 +1,7 @@
-use ecoach_commands::assessment_commands::{EliteSessionBlueprintDto, PastPaperInverseSignalDto};
+use ecoach_commands::assessment_commands::{
+    EliteSessionBlueprintDto, PastPaperComebackSignalDto, PastPaperInverseSignalDto,
+    SessionEvidenceFabricDto, SessionRemediationPlanDto,
+};
 use ecoach_commands::attempt_commands::{
     AttemptResultDto, SessionCompletionResultDto, SubmitAttemptInput,
 };
@@ -37,6 +40,7 @@ use ecoach_commands::repair_commands::{
 };
 use ecoach_commands::reporting_commands::{
     AdminOversightSnapshotDto, HouseholdDashboardSnapshotDto, ParentDashboardSnapshotDto,
+    ReportingStrategySummaryDto,
 };
 use ecoach_commands::student_commands::LearnerTruthDto;
 use ecoach_commands::{
@@ -536,6 +540,30 @@ pub fn complete_diagnostic_and_sync(
     diagnostic_commands::complete_diagnostic_and_sync(&state, diagnostic_id)
 }
 
+#[tauri::command]
+pub fn get_diagnostic_result(
+    state: State<'_, AppState>,
+    diagnostic_id: i64,
+) -> Result<Option<DiagnosticResultDto>, CommandError> {
+    diagnostic_commands::get_diagnostic_result(&state, diagnostic_id)
+}
+
+#[tauri::command]
+pub fn get_diagnostic_longitudinal_summary(
+    state: State<'_, AppState>,
+    diagnostic_id: i64,
+) -> Result<Option<DiagnosticLongitudinalSummaryDto>, CommandError> {
+    diagnostic_commands::get_diagnostic_longitudinal_summary(&state, diagnostic_id)
+}
+
+#[tauri::command]
+pub fn list_diagnostic_cause_evolution(
+    state: State<'_, AppState>,
+    diagnostic_id: i64,
+) -> Result<Vec<DiagnosticCauseEvolutionDto>, CommandError> {
+    diagnostic_commands::list_diagnostic_cause_evolution(&state, diagnostic_id)
+}
+
 // Question intelligence
 
 #[tauri::command]
@@ -603,7 +631,7 @@ pub fn recommend_question_remediation_plan(
     state: State<'_, AppState>,
     student_id: i64,
     slot_spec: QuestionSlotSpec,
-) -> Result<Option<ecoach_commands::question_commands::QuestionRemediationPlanDto>, CommandError> {
+) -> Result<Option<QuestionRemediationPlanDto>, CommandError> {
     question_commands::recommend_question_remediation_plan(&state, student_id, slot_spec)
 }
 
@@ -615,6 +643,34 @@ pub fn list_inverse_pressure_families(
     limit: usize,
 ) -> Result<Vec<PastPaperInverseSignalDto>, CommandError> {
     assessment_commands::list_inverse_pressure_families(&state, subject_id, topic_id, limit)
+}
+
+#[tauri::command]
+pub fn list_comeback_candidate_families(
+    state: State<'_, AppState>,
+    subject_id: i64,
+    topic_id: Option<i64>,
+    limit: usize,
+) -> Result<Vec<PastPaperComebackSignalDto>, CommandError> {
+    assessment_commands::list_comeback_candidate_families(&state, subject_id, topic_id, limit)
+}
+
+#[tauri::command]
+pub fn list_session_remediation_plans(
+    state: State<'_, AppState>,
+    session_id: i64,
+    limit: usize,
+) -> Result<Vec<SessionRemediationPlanDto>, CommandError> {
+    assessment_commands::list_session_remediation_plans(&state, session_id, limit)
+}
+
+#[tauri::command]
+pub fn get_session_evidence_fabric(
+    state: State<'_, AppState>,
+    session_id: i64,
+    limit_events: usize,
+) -> Result<Option<SessionEvidenceFabricDto>, CommandError> {
+    assessment_commands::get_session_evidence_fabric(&state, session_id, limit_events)
 }
 
 #[tauri::command]
@@ -790,6 +846,15 @@ pub fn get_continue_learning_card(
 }
 
 #[tauri::command]
+pub fn list_personalized_learning_paths(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<PersonalizedLearningPathDto>, CommandError> {
+    library_commands::list_personalized_learning_paths(&state, student_id, limit)
+}
+
+#[tauri::command]
 pub fn build_revision_pack(
     state: State<'_, AppState>,
     student_id: i64,
@@ -813,6 +878,16 @@ pub fn list_glossary_bundles_for_topic(
     topic_id: i64,
 ) -> Result<Vec<KnowledgeBundleDto>, CommandError> {
     library_commands::list_glossary_bundles_for_topic(&state, topic_id)
+}
+
+#[tauri::command]
+pub fn list_glossary_bundle_sequence_for_topic(
+    state: State<'_, AppState>,
+    student_id: i64,
+    topic_id: i64,
+    limit: usize,
+) -> Result<Vec<KnowledgeBundleSequenceItemDto>, CommandError> {
+    library_commands::list_glossary_bundle_sequence_for_topic(&state, student_id, topic_id, limit)
 }
 
 #[tauri::command]
@@ -1039,6 +1114,14 @@ pub fn get_admin_oversight_snapshot(
     admin_id: i64,
 ) -> Result<AdminOversightSnapshotDto, CommandError> {
     reporting_commands::get_admin_oversight_snapshot(&state, admin_id)
+}
+
+#[tauri::command]
+pub fn get_reporting_strategy_summary(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<Option<ReportingStrategySummaryDto>, CommandError> {
+    reporting_commands::get_reporting_strategy_summary(&state, student_id)
 }
 
 // Premium

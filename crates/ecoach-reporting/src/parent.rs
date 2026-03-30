@@ -1,10 +1,10 @@
 use chrono::{Datelike, Duration, Utc};
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult};
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 
 use crate::dashboard::{DashboardService, StudentDashboard, SubjectSummary};
-use crate::strategy::{load_strategy_summary, ReportingStrategySummary};
+use crate::strategy::{ReportingStrategySummary, load_strategy_summary};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParentDashboardSnapshot {

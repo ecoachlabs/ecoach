@@ -69,6 +69,10 @@ pub struct FreeNowRecommendation {
     pub target_id: Option<i64>,
     pub carryover_attempts: i64,
     pub carryover_correct: i64,
+    pub pressure_score: BasisPoints,
+    pub repair_buffer_minutes: i64,
+    pub recommended_comeback_topic_id: Option<i64>,
+    pub recent_repair_outcome: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,6 +86,10 @@ pub struct DailyReplan {
     pub focus_topic_ids: Vec<i64>,
     pub target_id: Option<i64>,
     pub rationale: String,
+    pub pressure_score: BasisPoints,
+    pub repair_buffer_minutes: i64,
+    pub recommended_comeback_topic_id: Option<i64>,
+    pub recent_repair_outcome: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

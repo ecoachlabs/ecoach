@@ -39,8 +39,8 @@ mod tests {
     use rusqlite::OptionalExtension;
 
     use crate::{
-        content_commands, game_commands, identity_commands, question_commands, session_commands,
-        state::AppState, traps_commands, CommandError,
+        CommandError, content_commands, game_commands, identity_commands, question_commands,
+        session_commands, state::AppState, traps_commands,
     };
 
     #[test]
@@ -152,9 +152,11 @@ mod tests {
         assert_eq!(traps.round_count, 4);
         assert_eq!(generated.len(), 1);
         assert_eq!(lineage.edge_count, 1);
-        assert!(related
-            .iter()
-            .any(|item| item.relation_type == "same_family"));
+        assert!(
+            related
+                .iter()
+                .any(|item| item.relation_type == "same_family")
+        );
         assert!(duplicate.is_near_duplicate);
         assert_eq!(family_health.generated_instances, 1);
     }

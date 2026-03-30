@@ -1,6 +1,7 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
+    io::Read,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -8,6 +9,7 @@ use std::{
 use ecoach_substrate::{EcoachError, EcoachResult};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::{json, Value};
+use zip::ZipArchive;
 
 use crate::models::{
     AcquisitionEvidenceCandidate, AcquisitionJobReport, BundleFile, BundleProcessReport,
@@ -1002,15 +1004,15 @@ fn analyze_bundle_file(
         &layout,
         text_recovery,
     );
-    let question_like = matches!(
-        document_role.as_str(),
-        "question_paper" | "worksheet" | "mixed_assessment"
-    ) || is_question_like(&file.file_name, sample_text)
-        || layout.question_prompt_count > 0;
-    let answer_like = matches!(
-        document_role.as_str(),
-        "mark_scheme" | "answer_sheet" | "mixed_assessment" | "student_work" | "corrected_script"
-    ) || layout.answer_key_line_count > 0;
+    let question_like = role_supports_question_extraction(&document_role)
+        || (!role_is_answer_focused(&document_role)
+            && (is_question_like(&file.file_name, sample_text)
+                || layout.question_prompt_count > 0));
+    let answer_like = role_supports_answer_extraction(&document_role)
+        || (!role_is_question_focused(&document_role)
+            && (layout.answer_key_line_count > 0
+                || has_answer_reference_name_signal(&file.file_name)
+                || has_answer_sheet_name_signal(&file.file_name)));
     let ocr_candidate = matches!(
         file.file_kind.as_str(),
         "image" | "pdf" | "document" | "spreadsheet"
@@ -1018,7 +1020,9 @@ fn analyze_bundle_file(
         && exists;
     let ocr_recovered = text_recovery.recovered_from_ocr;
     let layout_recovered = sample_text.is_some()
-        && (layout.confidence_score >= 20 || text_recovery.recovered_from_ocr);
+        && (layout.confidence_score >= 20
+            || layout.table_like_line_count >= 2
+            || text_recovery.recovered_from_ocr);
     let estimated_question_count = if question_like {
         layout
             .question_prompt_count
@@ -1701,7 +1705,10 @@ fn build_bundle_alignment_payload(document_groups: &[Value]) -> Value {
             .and_then(Value::as_bool)
             .unwrap_or(false);
 
-        if let Some(items) = summary.get("mismatch_reason_counts").and_then(Value::as_array) {
+        if let Some(items) = summary
+            .get("mismatch_reason_counts")
+            .and_then(Value::as_array)
+        {
             for item in items {
                 let Some(code) = item.get("reason_code").and_then(Value::as_str) else {
                     continue;
@@ -1782,6 +1789,9 @@ fn build_alignment_summary(
                 | "student_work"
         )
     });
+    if !has_question_documents && !has_answer_documents {
+        return AlignmentSummary::default();
+    }
     let answer_number_counts = count_normalized_answer_numbers(&answer_units);
     let question_number_counts = count_normalized_question_numbers(&question_units);
     let mut mismatch_reason_counter: BTreeMap<String, i64> = BTreeMap::new();
@@ -1930,7 +1940,12 @@ fn build_alignment_summary(
             has_question_documents,
             &question_number_counts,
             answer_number_counts
-                .get(answer.normalized_question_number.as_deref().unwrap_or_default())
+                .get(
+                    answer
+                        .normalized_question_number
+                        .as_deref()
+                        .unwrap_or_default(),
+                )
                 .copied()
                 .unwrap_or(0),
         );
@@ -1978,8 +1993,7 @@ fn build_alignment_summary(
         unresolved_answer_count,
         needs_confirmation: unresolved_question_count > 0
             || unresolved_answer_count > 0
-            || low_confidence_alignment_count > 0
-            || roles.iter().any(|role| role == "corrected_script"),
+            || low_confidence_alignment_count > 0,
         confidence_score,
     }
 }
@@ -2424,6 +2438,14 @@ impl TextRecoveryAdapter for SidecarTextRecoveryAdapter {
     }
 }
 
+struct NativeOfficePackageTextRecoveryAdapter;
+
+impl TextRecoveryAdapter for NativeOfficePackageTextRecoveryAdapter {
+    fn recover(&self, path: &Path, file_kind: &str) -> Option<TextRecovery> {
+        recover_native_office_package_text(path, file_kind)
+    }
+}
+
 struct NativeBinaryTextRecoveryAdapter;
 
 impl TextRecoveryAdapter for NativeBinaryTextRecoveryAdapter {
@@ -2433,8 +2455,9 @@ impl TextRecoveryAdapter for NativeBinaryTextRecoveryAdapter {
 }
 
 fn try_text_recovery_adapters(path: &Path, file_kind: &str) -> Option<TextRecovery> {
-    let adapters: [&dyn TextRecoveryAdapter; 2] = [
+    let adapters: [&dyn TextRecoveryAdapter; 3] = [
         &SidecarTextRecoveryAdapter,
+        &NativeOfficePackageTextRecoveryAdapter,
         &NativeBinaryTextRecoveryAdapter,
     ];
     for adapter in adapters {
@@ -2535,6 +2558,585 @@ fn recover_sidecar_text(path: &Path, file_kind: &str) -> Option<TextRecovery> {
     }
 
     None
+}
+
+fn recover_native_office_package_text(path: &Path, file_kind: &str) -> Option<TextRecovery> {
+    match extension_of(path.to_string_lossy().as_ref()).as_deref() {
+        Some("docx") if file_kind == "document" => recover_docx_package_text(path),
+        Some("xlsx") if file_kind == "spreadsheet" => recover_xlsx_package_text(path),
+        _ => None,
+    }
+}
+
+fn recover_docx_package_text(path: &Path) -> Option<TextRecovery> {
+    let mut archive = open_zip_archive(path)?;
+    let entry_names = collect_zip_entry_names(&mut archive);
+    let mut xml_parts = Vec::new();
+
+    if entry_names.iter().any(|name| name == "word/document.xml") {
+        xml_parts.push("word/document.xml".to_string());
+    }
+    for prefix in [
+        "word/header",
+        "word/footer",
+        "word/footnotes",
+        "word/endnotes",
+    ] {
+        let mut matching = entry_names
+            .iter()
+            .filter(|name| name.starts_with(prefix) && name.ends_with(".xml"))
+            .cloned()
+            .collect::<Vec<_>>();
+        matching.sort();
+        xml_parts.extend(matching);
+    }
+
+    let mut paragraphs = Vec::new();
+    for part_name in xml_parts {
+        let Some(xml) = read_zip_entry_text_if_present(&mut archive, &part_name) else {
+            continue;
+        };
+        paragraphs.extend(extract_docx_paragraphs(&xml));
+    }
+
+    if paragraphs.is_empty() {
+        return None;
+    }
+
+    let pages = build_docx_pages_from_paragraphs(&paragraphs, 88);
+    build_text_recovery_from_pages("native_docx_package", pages, 88, false)
+}
+
+fn recover_xlsx_package_text(path: &Path) -> Option<TextRecovery> {
+    let mut archive = open_zip_archive(path)?;
+    let entry_names = collect_zip_entry_names(&mut archive);
+    let shared_strings = read_zip_entry_text_if_present(&mut archive, "xl/sharedStrings.xml")
+        .map(|xml| parse_xlsx_shared_strings(&xml))
+        .unwrap_or_default();
+    let sheet_refs = discover_xlsx_sheet_refs(&mut archive, &entry_names);
+
+    let mut pages = Vec::new();
+    for (index, (sheet_name, entry_name)) in sheet_refs.into_iter().enumerate() {
+        let Some(xml) = read_zip_entry_text_if_present(&mut archive, &entry_name) else {
+            continue;
+        };
+        let rows = extract_xlsx_sheet_rows(&xml, &shared_strings);
+        if rows.is_empty() {
+            continue;
+        }
+        let sheet_text = format!("{sheet_name}\n{}", rows.join("\n"));
+        pages.push(RecoveredPage {
+            page_number: (index + 1) as i64,
+            label: infer_contextual_page_label(&sheet_text, "worksheet_page", Some(&sheet_name)),
+            confidence_score: 86,
+            preview: trim_display_line(&sheet_text, 120),
+            text: sheet_text,
+        });
+    }
+
+    build_text_recovery_from_pages("native_xlsx_package", pages, 86, false)
+}
+
+fn open_zip_archive(path: &Path) -> Option<ZipArchive<fs::File>> {
+    let file = fs::File::open(path).ok()?;
+    ZipArchive::new(file).ok()
+}
+
+fn collect_zip_entry_names(archive: &mut ZipArchive<fs::File>) -> Vec<String> {
+    let mut names = Vec::new();
+    for index in 0..archive.len() {
+        let Ok(file) = archive.by_index(index) else {
+            continue;
+        };
+        names.push(file.name().to_string());
+    }
+    names
+}
+
+fn read_zip_entry_text_if_present(
+    archive: &mut ZipArchive<fs::File>,
+    entry_name: &str,
+) -> Option<String> {
+    let mut file = archive.by_name(entry_name).ok()?;
+    let mut buffer = String::new();
+    file.read_to_string(&mut buffer).ok()?;
+    Some(buffer)
+}
+
+fn build_text_recovery_from_pages(
+    source: &str,
+    pages: Vec<RecoveredPage>,
+    confidence_score: i64,
+    recovered_from_ocr: bool,
+) -> Option<TextRecovery> {
+    if pages.is_empty() {
+        return None;
+    }
+
+    let text = pages
+        .iter()
+        .map(|page| page.text.as_str())
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    let block_count = pages
+        .iter()
+        .map(|page| {
+            page.text
+                .lines()
+                .filter(|line| !line.trim().is_empty())
+                .count() as i64
+        })
+        .sum();
+
+    Some(TextRecovery {
+        source: source.to_string(),
+        text: Some(text),
+        page_count: pages.len() as i64,
+        block_count,
+        confidence_score,
+        page_previews: pages
+            .iter()
+            .filter_map(|page| page.preview.clone())
+            .take(3)
+            .collect(),
+        page_summaries: recovered_page_summaries(&pages),
+        pages,
+        recovered_from_ocr,
+    })
+}
+
+fn extract_docx_paragraphs(xml: &str) -> Vec<String> {
+    let normalized = replace_xml_markers(
+        xml,
+        &[
+            ("</w:p>", "\n"),
+            ("</w:tr>", "\n"),
+            ("</w:tc>", "\t"),
+            ("</w:tbl>", "\n"),
+            ("<w:tab/>", "\t"),
+            ("<w:tab />", "\t"),
+            ("<w:br/>", "\n"),
+            ("<w:br />", "\n"),
+            ("<w:cr/>", "\n"),
+            ("<w:cr />", "\n"),
+        ],
+    );
+    normalize_extracted_lines(&decode_xml_entities(&strip_xml_tags(&normalized)))
+}
+
+fn build_docx_pages_from_paragraphs(
+    paragraphs: &[String],
+    confidence_score: i64,
+) -> Vec<RecoveredPage> {
+    let mut pages = Vec::new();
+    let mut current_page = Vec::new();
+
+    for paragraph in paragraphs {
+        let starts_new_page = !current_page.is_empty()
+            && (current_page.len() >= 12
+                || (office_heading_like(paragraph) && current_page.len() >= 3));
+        if starts_new_page {
+            pages.push(docx_page_from_lines(
+                pages.len() as i64 + 1,
+                &current_page,
+                confidence_score,
+            ));
+            current_page.clear();
+        }
+        current_page.push(paragraph.clone());
+    }
+
+    if !current_page.is_empty() {
+        pages.push(docx_page_from_lines(
+            pages.len() as i64 + 1,
+            &current_page,
+            confidence_score,
+        ));
+    }
+
+    pages
+}
+
+fn docx_page_from_lines(
+    page_number: i64,
+    lines: &[String],
+    confidence_score: i64,
+) -> RecoveredPage {
+    let text = lines.join("\n");
+    let context_hint = lines.first().map(String::as_str);
+    RecoveredPage {
+        page_number,
+        label: infer_contextual_page_label(&text, "document_page", context_hint),
+        confidence_score,
+        preview: trim_display_line(&text, 120),
+        text,
+    }
+}
+
+fn office_heading_like(line: &str) -> bool {
+    is_heading_line(line)
+        || line.ends_with(':')
+        || (line.split_whitespace().count() <= 5
+            && line.chars().any(|ch| ch.is_ascii_uppercase())
+            && !line.chars().any(|ch| ch.is_ascii_digit()))
+}
+
+fn discover_xlsx_sheet_refs(
+    archive: &mut ZipArchive<fs::File>,
+    entry_names: &[String],
+) -> Vec<(String, String)> {
+    let workbook_xml = read_zip_entry_text_if_present(archive, "xl/workbook.xml");
+    let workbook_rels = read_zip_entry_text_if_present(archive, "xl/_rels/workbook.xml.rels");
+    let relationship_targets = workbook_rels
+        .as_deref()
+        .map(parse_relationship_targets)
+        .unwrap_or_default();
+    let mut sheet_refs = Vec::new();
+
+    if let Some(workbook_xml) = workbook_xml.as_deref() {
+        for (index, (sheet_name, rel_id)) in parse_workbook_sheet_refs(workbook_xml)
+            .into_iter()
+            .enumerate()
+        {
+            let target = relationship_targets
+                .get(&rel_id)
+                .map(|value| normalize_xlsx_target(value))
+                .or_else(|| {
+                    Some(format!(
+                        "xl/worksheets/sheet{}.xml",
+                        index.saturating_add(1)
+                    ))
+                });
+            let Some(target) = target else {
+                continue;
+            };
+            if entry_names.iter().any(|name| name == &target) {
+                sheet_refs.push((sheet_name, target));
+            }
+        }
+    }
+
+    if !sheet_refs.is_empty() {
+        return sheet_refs;
+    }
+
+    let mut worksheet_entries = entry_names
+        .iter()
+        .filter(|name| name.starts_with("xl/worksheets/sheet") && name.ends_with(".xml"))
+        .cloned()
+        .collect::<Vec<_>>();
+    worksheet_entries.sort();
+    worksheet_entries
+        .into_iter()
+        .enumerate()
+        .map(|(index, entry_name)| (format!("Sheet {}", index + 1), entry_name))
+        .collect()
+}
+
+fn parse_relationship_targets(xml: &str) -> BTreeMap<String, String> {
+    let mut targets = BTreeMap::new();
+    for block in extract_xml_tag_blocks(xml, "Relationship") {
+        let attrs = parse_xml_attributes(&xml_open_tag(&block));
+        let Some(id) = attrs.get("Id").cloned() else {
+            continue;
+        };
+        let Some(target) = attrs.get("Target").cloned() else {
+            continue;
+        };
+        targets.insert(id, target);
+    }
+    targets
+}
+
+fn parse_workbook_sheet_refs(xml: &str) -> Vec<(String, String)> {
+    let mut sheets = Vec::new();
+    for block in extract_xml_tag_blocks(xml, "sheet") {
+        let attrs = parse_xml_attributes(&xml_open_tag(&block));
+        let Some(name) = attrs.get("name").cloned() else {
+            continue;
+        };
+        let Some(rel_id) = attrs
+            .get("r:id")
+            .cloned()
+            .or_else(|| attrs.get("id").cloned())
+        else {
+            continue;
+        };
+        sheets.push((decode_xml_entities(&name), rel_id));
+    }
+    sheets
+}
+
+fn normalize_xlsx_target(target: &str) -> String {
+    if target.starts_with("xl/") {
+        target.to_string()
+    } else if target.starts_with('/') {
+        target.trim_start_matches('/').to_string()
+    } else {
+        format!("xl/{}", target.trim_start_matches("./"))
+    }
+}
+
+fn parse_xlsx_shared_strings(xml: &str) -> Vec<String> {
+    extract_xml_tag_blocks(xml, "si")
+        .into_iter()
+        .filter_map(|block| {
+            let text = extract_xml_tag_texts(&block, "t").join("");
+            let normalized = normalize_extracted_text(&text);
+            if normalized.is_empty() {
+                None
+            } else {
+                Some(normalized)
+            }
+        })
+        .collect()
+}
+
+fn extract_xlsx_sheet_rows(xml: &str, shared_strings: &[String]) -> Vec<String> {
+    let mut rows = Vec::new();
+    for row_block in extract_xml_tag_blocks(xml, "row") {
+        let mut cells = Vec::new();
+        for cell_block in extract_xml_tag_blocks(&row_block, "c") {
+            if let Some(value) = extract_xlsx_cell_value(&cell_block, shared_strings) {
+                cells.push(value);
+            }
+        }
+        if !cells.is_empty() {
+            rows.push(cells.join("\t"));
+        }
+    }
+    rows
+}
+
+fn extract_xlsx_cell_value(cell_block: &str, shared_strings: &[String]) -> Option<String> {
+    let attrs = parse_xml_attributes(&xml_open_tag(cell_block));
+    let cell_type = attrs.get("t").map(String::as_str).unwrap_or_default();
+
+    let raw_value = match cell_type {
+        "s" => {
+            let index = extract_first_xml_text(cell_block, "v")?
+                .parse::<usize>()
+                .ok()?;
+            shared_strings.get(index).cloned()
+        }
+        "inlineStr" => {
+            let joined = extract_xml_tag_texts(cell_block, "t").join("");
+            Some(joined)
+        }
+        "str" => extract_first_xml_text(cell_block, "v")
+            .or_else(|| Some(extract_xml_tag_texts(cell_block, "t").join(""))),
+        _ => extract_first_xml_text(cell_block, "v")
+            .or_else(|| extract_first_xml_text(cell_block, "f"))
+            .or_else(|| Some(extract_xml_tag_texts(cell_block, "t").join(""))),
+    }?;
+
+    let normalized = normalize_extracted_text(&raw_value);
+    if normalized.is_empty() {
+        None
+    } else {
+        Some(normalized)
+    }
+}
+
+fn replace_xml_markers(source: &str, replacements: &[(&str, &str)]) -> String {
+    let mut updated = source.to_string();
+    for (needle, replacement) in replacements {
+        updated = updated.replace(needle, replacement);
+    }
+    updated
+}
+
+fn strip_xml_tags(xml: &str) -> String {
+    let mut text = String::new();
+    let mut inside_tag = false;
+    for ch in xml.chars() {
+        match ch {
+            '<' => inside_tag = true,
+            '>' => inside_tag = false,
+            _ if !inside_tag => text.push(ch),
+            _ => {}
+        }
+    }
+    text
+}
+
+fn decode_xml_entities(text: &str) -> String {
+    text.replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+        .replace("&#10;", "\n")
+        .replace("&#13;", "\n")
+        .replace("&#9;", "\t")
+}
+
+fn normalize_extracted_lines(text: &str) -> Vec<String> {
+    text.lines()
+        .map(normalize_extracted_text)
+        .filter(|line| !line.is_empty())
+        .collect()
+}
+
+fn normalize_extracted_text(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+fn extract_xml_tag_blocks(xml: &str, tag_name: &str) -> Vec<String> {
+    let mut blocks = Vec::new();
+    let mut cursor = 0usize;
+
+    while let Some(start) = find_xml_tag_start(xml, tag_name, cursor) {
+        let Some(open_end_rel) = xml[start..].find('>') else {
+            break;
+        };
+        let open_end = start + open_end_rel + 1;
+        let open_tag = &xml[start..open_end];
+        if open_tag.trim_end().ends_with("/>") {
+            blocks.push(open_tag.to_string());
+            cursor = open_end;
+            continue;
+        }
+
+        let close_tag = format!("</{tag_name}>");
+        let Some(close_rel) = xml[open_end..].find(&close_tag) else {
+            break;
+        };
+        let block_end = open_end + close_rel + close_tag.len();
+        blocks.push(xml[start..block_end].to_string());
+        cursor = block_end;
+    }
+
+    blocks
+}
+
+fn find_xml_tag_start(xml: &str, tag_name: &str, start_index: usize) -> Option<usize> {
+    let needle = format!("<{tag_name}");
+    let mut cursor = start_index;
+    while let Some(found) = xml[cursor..].find(&needle) {
+        let start = cursor + found;
+        let boundary = xml[start + needle.len()..].chars().next();
+        if matches!(
+            boundary,
+            Some(' ') | Some('\t') | Some('\n') | Some('\r') | Some('>') | Some('/')
+        ) {
+            return Some(start);
+        }
+        cursor = start + needle.len();
+    }
+    None
+}
+
+fn xml_open_tag(block: &str) -> String {
+    match block.find('>') {
+        Some(index) => block[..=index].to_string(),
+        None => block.to_string(),
+    }
+}
+
+fn parse_xml_attributes(open_tag: &str) -> BTreeMap<String, String> {
+    let trimmed = open_tag
+        .trim()
+        .trim_start_matches('<')
+        .trim_end_matches('>')
+        .trim_end_matches('/')
+        .trim();
+    let Some(space_index) = trimmed.find(char::is_whitespace) else {
+        return BTreeMap::new();
+    };
+    let attr_text = &trimmed[space_index..];
+    let bytes = attr_text.as_bytes();
+    let mut attrs = BTreeMap::new();
+    let mut index = 0usize;
+
+    while index < bytes.len() {
+        while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+            index += 1;
+        }
+        if index >= bytes.len() {
+            break;
+        }
+
+        let key_start = index;
+        while index < bytes.len() && !bytes[index].is_ascii_whitespace() && bytes[index] != b'=' {
+            index += 1;
+        }
+        if key_start == index {
+            break;
+        }
+        let key = attr_text[key_start..index].trim();
+        while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+            index += 1;
+        }
+        if index >= bytes.len() || bytes[index] != b'=' {
+            continue;
+        }
+        index += 1;
+        while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+            index += 1;
+        }
+        if index >= bytes.len() {
+            break;
+        }
+
+        let quote = bytes[index];
+        let value;
+        if matches!(quote, b'"' | b'\'') {
+            index += 1;
+            let value_start = index;
+            while index < bytes.len() && bytes[index] != quote {
+                index += 1;
+            }
+            value = attr_text[value_start..index].to_string();
+            if index < bytes.len() {
+                index += 1;
+            }
+        } else {
+            let value_start = index;
+            while index < bytes.len() && !bytes[index].is_ascii_whitespace() {
+                index += 1;
+            }
+            value = attr_text[value_start..index].to_string();
+        }
+
+        attrs.insert(key.to_string(), decode_xml_entities(&value));
+    }
+
+    attrs
+}
+
+fn extract_first_xml_text(xml: &str, tag_name: &str) -> Option<String> {
+    extract_xml_tag_texts(xml, tag_name).into_iter().next()
+}
+
+fn extract_xml_tag_texts(xml: &str, tag_name: &str) -> Vec<String> {
+    extract_xml_tag_blocks(xml, tag_name)
+        .into_iter()
+        .filter_map(|block| {
+            let inner = xml_block_inner(&block, tag_name);
+            let normalized =
+                normalize_extracted_text(&decode_xml_entities(&strip_xml_tags(&inner)));
+            if normalized.is_empty() {
+                None
+            } else {
+                Some(normalized)
+            }
+        })
+        .collect()
+}
+
+fn xml_block_inner(block: &str, tag_name: &str) -> String {
+    let Some(open_end) = block.find('>') else {
+        return String::new();
+    };
+    if block[..=open_end].trim_end().ends_with("/>") {
+        return String::new();
+    }
+    let close_tag = format!("</{tag_name}>");
+    let Some(close_start) = block.rfind(&close_tag) else {
+        return String::new();
+    };
+    block[open_end + 1..close_start].to_string()
 }
 
 fn recover_native_binary_text(path: &Path, file_kind: &str) -> Option<TextRecovery> {
@@ -2676,7 +3278,11 @@ fn read_json_sidecar_recovery(path: &Path) -> Option<TextRecovery> {
             if let Some(preview) = &page.preview {
                 page_previews.push(format!("Page {}: {}", page.page_number, preview));
             }
-            block_count += page.text.lines().filter(|line| !line.trim().is_empty()).count() as i64;
+            block_count += page
+                .text
+                .lines()
+                .filter(|line| !line.trim().is_empty())
+                .count() as i64;
             page_texts.push(page.text.clone());
             pages.push(page);
         }
@@ -2814,7 +3420,10 @@ fn extract_structured_sidecar_pages(payload: &Value) -> Option<Vec<RecoveredPage
         }
     }
 
-    if payload.get("paragraphs").and_then(Value::as_array).is_some()
+    if payload
+        .get("paragraphs")
+        .and_then(Value::as_array)
+        .is_some()
         || payload.get("rows").and_then(Value::as_array).is_some()
         || payload.get("tables").and_then(Value::as_array).is_some()
     {
@@ -3059,6 +3668,9 @@ fn build_layout_signals(sample_text: Option<&str>) -> LayoutSignals {
 
     let mut signals = LayoutSignals::default();
     for line in text.lines() {
+        let raw_line = line.trim();
+        let has_tabular_signal =
+            raw_line.contains('\t') || raw_line.contains('|') || raw_line.matches(',').count() >= 3;
         let Some(trimmed) = trim_display_line(line, 180) else {
             continue;
         };
@@ -3093,7 +3705,7 @@ fn build_layout_signals(sample_text: Option<&str>) -> LayoutSignals {
                 signals.formula_candidates.push(trimmed.clone());
             }
         }
-        if trimmed.contains('|') || trimmed.matches(',').count() >= 3 || trimmed.contains('\t') {
+        if has_tabular_signal {
             signals.table_like_line_count += 1;
         }
         if contains_diagram_signal(&trimmed) {
@@ -3140,17 +3752,7 @@ fn detect_document_role(
     let lowered_text = sample_text.unwrap_or_default().to_ascii_lowercase();
     let score_signal_count = extract_score_signals(sample_text).len();
     let remark_signal_count = extract_remark_lines(sample_text).len();
-    let has_answer_name_signal = [
-        "markscheme",
-        "mark scheme",
-        "marking scheme",
-        "answer key",
-        "solutions",
-        "solution",
-        "memo",
-    ]
-    .iter()
-    .any(|needle| lowered_name.contains(needle));
+    let has_answer_name_signal = has_answer_reference_name_signal(&lowered_name);
     let has_note_name_signal = ["notes", "note", "summary", "revision", "lesson"]
         .iter()
         .any(|needle| lowered_name.contains(needle));
@@ -3160,9 +3762,7 @@ fn detect_document_role(
     let has_worksheet_signal = ["worksheet", "exercise"]
         .iter()
         .any(|needle| lowered_name.contains(needle));
-    let has_answer_sheet_signal = ["answer sheet", "answer booklet"]
-        .iter()
-        .any(|needle| lowered_name.contains(needle));
+    let has_answer_sheet_signal = has_answer_sheet_name_signal(&lowered_name);
     let has_teacher_handout_signal = [
         "handout",
         "teacher",
@@ -3374,7 +3974,8 @@ fn build_stitched_segments(
                         .stitch_reason_codes
                         .retain(|code| code != "single_page_segment");
                     push_unique_limited(&mut segment.stitch_reason_codes, stitch_reason, 6);
-                    segment.preview = stitched_segment_preview(segment.preview.clone(), page.preview.clone());
+                    segment.preview =
+                        stitched_segment_preview(segment.preview.clone(), page.preview.clone());
                 }
                 Some(segment) => {
                     segments.push(segment.clone());
@@ -3603,6 +4204,122 @@ fn answer_unit_payload(unit: &AnswerUnit) -> Value {
     })
 }
 
+fn role_supports_question_extraction(document_role: &str) -> bool {
+    matches!(
+        document_role,
+        "question_paper" | "worksheet" | "mixed_assessment" | "corrected_script"
+    )
+}
+
+fn role_supports_answer_extraction(document_role: &str) -> bool {
+    matches!(
+        document_role,
+        "mark_scheme" | "answer_sheet" | "corrected_script" | "mixed_assessment" | "student_work"
+    )
+}
+
+fn role_is_answer_focused(document_role: &str) -> bool {
+    matches!(
+        document_role,
+        "mark_scheme" | "answer_sheet" | "student_work"
+    )
+}
+
+fn role_is_question_focused(document_role: &str) -> bool {
+    matches!(
+        document_role,
+        "question_paper" | "worksheet" | "teacher_handout" | "study_notes" | "text_reference"
+    )
+}
+
+fn has_answer_reference_name_signal(file_name: &str) -> bool {
+    let lowered = file_name.to_ascii_lowercase();
+    contains_any(
+        &lowered,
+        &[
+            "markscheme",
+            "mark scheme",
+            "marking scheme",
+            "answer key",
+            "solutions",
+            "solution",
+            "memo",
+        ],
+    )
+}
+
+fn has_answer_sheet_name_signal(file_name: &str) -> bool {
+    let lowered = file_name.to_ascii_lowercase();
+    contains_any(
+        &lowered,
+        &[
+            "answer sheet",
+            "answer booklet",
+            "answers",
+            "responses",
+            "response booklet",
+        ],
+    )
+}
+
+fn segment_supports_question_extraction(segment: &StitchedSegment, document_role: &str) -> bool {
+    match segment.label.as_str() {
+        "question_page" | "text_sidecar" => true,
+        "answer_page" | "marked_answer_page" | "score_summary_page" => {
+            matches!(document_role, "corrected_script" | "mixed_assessment")
+        }
+        "native_binary" | "single_segment" | "ocr_page" => {
+            role_supports_question_extraction(document_role)
+        }
+        _ => role_supports_question_extraction(document_role),
+    }
+}
+
+fn segment_supports_answer_extraction(segment: &StitchedSegment, document_role: &str) -> bool {
+    match segment.label.as_str() {
+        "answer_page" | "marked_answer_page" => true,
+        "question_page" | "text_sidecar" => {
+            matches!(document_role, "corrected_script" | "mixed_assessment")
+        }
+        "score_summary_page" => matches!(document_role, "corrected_script"),
+        "native_binary" | "single_segment" | "ocr_page" => {
+            role_supports_answer_extraction(document_role)
+        }
+        _ => role_supports_answer_extraction(document_role),
+    }
+}
+
+fn numbered_line_looks_like_answer(line: &str) -> bool {
+    let lowered = line.to_ascii_lowercase();
+    is_answer_key_line(line)
+        || contains_any(
+            &lowered,
+            &[
+                "award ",
+                "accept ",
+                "reject ",
+                "mark scheme",
+                "correct answer",
+                "final answer",
+                "working:",
+            ],
+        )
+}
+
+fn is_structural_answer_heading(line: &str) -> bool {
+    let lowered = line.trim().to_ascii_lowercase();
+    matches!(
+        lowered.as_str(),
+        "mark scheme"
+            | "marking scheme"
+            | "mark scheme continued"
+            | "correct answer"
+            | "correct answers"
+            | "answer key"
+            | "memo"
+    )
+}
+
 fn extract_question_units(
     file_id: i64,
     file_name: &str,
@@ -3613,13 +4330,7 @@ fn extract_question_units(
     let mut order_index = 0i64;
 
     for segment in segments {
-        if !matches!(
-            segment.label.as_str(),
-            "question_page" | "text_sidecar" | "native_binary" | "single_segment" | "ocr_page"
-        ) && !matches!(
-            document_role,
-            "question_paper" | "mixed_assessment" | "worksheet" | "corrected_script"
-        ) {
+        if !segment_supports_question_extraction(segment, document_role) {
             continue;
         }
 
@@ -3636,6 +4347,15 @@ fn extract_question_units(
             }
 
             if let Some((question_number, remainder)) = extract_question_number_prefix(&trimmed) {
+                if role_supports_answer_extraction(document_role)
+                    && !matches!(document_role, "question_paper" | "worksheet")
+                    && numbered_line_looks_like_answer(&trimmed)
+                {
+                    if let Some(unit) = current_unit.take() {
+                        units.push(unit);
+                    }
+                    continue;
+                }
                 if let Some(unit) = current_unit.take() {
                     units.push(unit);
                 }
@@ -3692,22 +4412,7 @@ fn extract_answer_units(
     let mut order_index = 0i64;
 
     for segment in segments {
-        if !matches!(
-            segment.label.as_str(),
-            "answer_page"
-                | "marked_answer_page"
-                | "score_summary_page"
-                | "native_binary"
-                | "single_segment"
-                | "ocr_page"
-        ) && !matches!(
-            document_role,
-            "mark_scheme"
-                | "answer_sheet"
-                | "corrected_script"
-                | "mixed_assessment"
-                | "student_work"
-        ) {
+        if !segment_supports_answer_extraction(segment, document_role) {
             continue;
         }
 
@@ -3724,6 +4429,18 @@ fn extract_answer_units(
             }
 
             if let Some((question_number, remainder)) = extract_question_number_prefix(&trimmed) {
+                if role_supports_question_extraction(document_role)
+                    && !matches!(
+                        document_role,
+                        "mark_scheme" | "answer_sheet" | "student_work"
+                    )
+                    && !numbered_line_looks_like_answer(&trimmed)
+                {
+                    if let Some(unit) = current_unit.take() {
+                        units.push(unit);
+                    }
+                    continue;
+                }
                 if let Some(unit) = current_unit.take() {
                     units.push(unit);
                 }
@@ -3749,6 +4466,9 @@ fn extract_answer_units(
             }
 
             if is_answer_key_line(&trimmed) && current_unit.is_none() {
+                if is_structural_answer_heading(&trimmed) {
+                    continue;
+                }
                 order_index += 1;
                 current_unit = Some(AnswerUnit {
                     source_file_id: file_id,
@@ -3894,7 +4614,8 @@ fn mine_document_intelligence(
     let detected_dates = extract_date_hints(sample_text);
     let detected_topics = extract_topic_hints(sample_text);
     let question_blocks = extract_question_blocks(sample_text);
-    let question_units = extract_question_units(file_id, file_name, &stitched_segments, document_role);
+    let question_units =
+        extract_question_units(file_id, file_name, &stitched_segments, document_role);
     let answer_units = extract_answer_units(file_id, file_name, &stitched_segments, document_role);
     let score_signals = extract_score_signals(sample_text);
     let remark_signals = extract_remark_lines(sample_text);
@@ -4959,9 +5680,197 @@ mod tests {
     use ecoach_storage::run_runtime_migrations;
     use rusqlite::Connection;
     use std::{
-        env, process,
+        env,
+        io::Write,
+        process,
         time::{SystemTime, UNIX_EPOCH},
     };
+    use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
+
+    fn xml_escape(value: &str) -> String {
+        value
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+            .replace('\'', "&apos;")
+    }
+
+    fn write_minimal_docx(path: &Path, paragraphs: &[&str]) {
+        let file = fs::File::create(path).expect("docx file should create");
+        let mut zip = ZipWriter::new(file);
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+        let body = paragraphs
+            .iter()
+            .map(|paragraph| format!("<w:p><w:r><w:t>{}</w:t></w:r></w:p>", xml_escape(paragraph)))
+            .collect::<Vec<_>>()
+            .join("");
+
+        zip.start_file("[Content_Types].xml", options)
+            .expect("content types should write");
+        zip.write_all(
+            br#"<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>"#,
+        )
+        .expect("content types payload should write");
+
+        zip.add_directory("_rels/", options)
+            .expect("rels dir should write");
+        zip.start_file("_rels/.rels", options)
+            .expect("rels file should write");
+        zip.write_all(
+            br#"<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>"#,
+        )
+        .expect("rels payload should write");
+
+        zip.add_directory("word/", options)
+            .expect("word dir should write");
+        zip.start_file("word/document.xml", options)
+            .expect("document xml should write");
+        zip.write_all(
+            format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>{body}</w:body>
+</w:document>"#
+            )
+            .as_bytes(),
+        )
+        .expect("document payload should write");
+        zip.finish().expect("docx zip should finish");
+    }
+
+    fn write_minimal_xlsx(path: &Path, sheets: &[(&str, Vec<Vec<&str>>)]) {
+        let file = fs::File::create(path).expect("xlsx file should create");
+        let mut zip = ZipWriter::new(file);
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+
+        zip.start_file("[Content_Types].xml", options)
+            .expect("content types should write");
+        zip.write_all(
+            br#"<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+</Types>"#,
+        )
+        .expect("content types payload should write");
+
+        zip.add_directory("_rels/", options)
+            .expect("rels dir should write");
+        zip.start_file("_rels/.rels", options)
+            .expect("root rels should write");
+        zip.write_all(
+            br#"<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>"#,
+        )
+        .expect("root rels payload should write");
+
+        zip.add_directory("xl/_rels/", options)
+            .expect("xl rels dir should write");
+        zip.start_file("xl/_rels/workbook.xml.rels", options)
+            .expect("workbook rels should write");
+        let workbook_rels = sheets
+            .iter()
+            .enumerate()
+            .map(|(index, _)| {
+                format!(
+                    r#"<Relationship Id="rId{}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet{}.xml"/>"#,
+                    index + 1,
+                    index + 1
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("");
+        zip.write_all(
+            format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{workbook_rels}</Relationships>"#
+            )
+            .as_bytes(),
+        )
+        .expect("workbook rels payload should write");
+
+        zip.add_directory("xl/worksheets/", options)
+            .expect("worksheets dir should write");
+        for (index, (_, rows)) in sheets.iter().enumerate() {
+            zip.start_file(format!("xl/worksheets/sheet{}.xml", index + 1), options)
+                .expect("worksheet xml should write");
+            let row_xml = rows
+                .iter()
+                .enumerate()
+                .map(|(row_index, row)| {
+                    let cells = row
+                        .iter()
+                        .enumerate()
+                        .map(|(col_index, value)| {
+                            format!(
+                                r#"<c r="{}{}" t="inlineStr"><is><t>{}</t></is></c>"#,
+                                ((b'A' + col_index as u8) as char),
+                                row_index + 1,
+                                xml_escape(value)
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                        .join("");
+                    format!(r#"<row r="{}">{cells}</row>"#, row_index + 1)
+                })
+                .collect::<Vec<_>>()
+                .join("");
+            zip.write_all(
+                format!(
+                    r#"<?xml version="1.0" encoding="UTF-8"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetData>{row_xml}</sheetData>
+</worksheet>"#
+                )
+                .as_bytes(),
+            )
+            .expect("worksheet payload should write");
+        }
+
+        zip.add_directory("xl/", options)
+            .expect("xl dir should write");
+        zip.start_file("xl/workbook.xml", options)
+            .expect("workbook xml should write");
+        let sheet_xml = sheets
+            .iter()
+            .enumerate()
+            .map(|(index, (sheet_name, _))| {
+                format!(
+                    r#"<sheet name="{}" sheetId="{}" r:id="rId{}"/>"#,
+                    xml_escape(sheet_name),
+                    index + 1,
+                    index + 1
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("");
+        zip.write_all(
+            format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+          xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>{sheet_xml}</sheets>
+</workbook>"#
+            )
+            .as_bytes(),
+        )
+        .expect("workbook payload should write");
+
+        zip.finish().expect("xlsx zip should finish");
+    }
 
     #[test]
     fn reconstruct_bundle_groups_paired_assessment_documents_with_confidence() {
@@ -5095,6 +6004,172 @@ mod tests {
                 .pointer("/quality_signals/review_priority")
                 .and_then(Value::as_str),
             Some("high")
+        );
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn reconstruct_bundle_extracts_native_docx_without_sidecar() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_docx_native");
+        let doc_path = temp_dir.join("Teacher Revision Guide.docx");
+        write_minimal_docx(
+            &doc_path,
+            &[
+                "Teacher Revision Guide",
+                "Topic: Algebraic Expressions",
+                "Definition: coefficient",
+                "Practice Questions",
+                "1. Expand 2(x + 3).",
+                "2. Simplify 3a + 2a.",
+            ],
+        );
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Native docx upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&doc_path),
+                doc_path.to_string_lossy().as_ref(),
+            )
+            .expect("docx file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+
+        assert_eq!(report.bundle.status, "completed");
+        assert_eq!(report.bundle_kind, "study_bundle");
+        assert_eq!(report.ocr_candidate_file_count, 0);
+        assert_eq!(report.ocr_recovered_file_count, 0);
+        assert!(report.layout_recovered_file_count >= 1);
+        assert!(report.extracted_question_block_count >= 1);
+        assert!(report
+            .detected_topics
+            .contains(&"algebraic expressions".to_string()));
+
+        let file_reconstruction = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "file_reconstruction")
+            .expect("file reconstruction insight should exist");
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/text_recovery/source")
+                .and_then(Value::as_str),
+            Some("native_docx_package")
+        );
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/ocr_recovery/status")
+                .and_then(Value::as_str),
+            Some("not_needed")
+        );
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .get("document_role")
+                .and_then(Value::as_str),
+            Some("teacher_handout")
+        );
+        assert!(file_reconstruction
+            .payload
+            .pointer("/document_intelligence/question_units")
+            .and_then(Value::as_array)
+            .map(|items| items.len() >= 2)
+            .unwrap_or(false));
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn reconstruct_bundle_extracts_native_xlsx_without_sidecar() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_xlsx_native");
+        let sheet_path = temp_dir.join("Term 2 Results.xlsx");
+        write_minimal_xlsx(
+            &sheet_path,
+            &[(
+                "Results",
+                vec![
+                    vec!["Subject", "Score", "Remark"],
+                    vec!["Mathematics", "42%", "Weak in algebra"],
+                    vec!["English", "71%", "Good effort"],
+                ],
+            )],
+        );
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Native xlsx upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&sheet_path),
+                sheet_path.to_string_lossy().as_ref(),
+            )
+            .expect("xlsx file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+
+        assert_eq!(report.bundle.status, "completed");
+        assert_eq!(report.bundle_kind, "performance_evidence_bundle");
+        assert_eq!(report.ocr_candidate_file_count, 0);
+        assert_eq!(report.ocr_recovered_file_count, 0);
+        assert!(report.layout_recovered_file_count >= 1);
+        assert!(report.score_signal_count >= 2);
+        assert!(report.remark_signal_count >= 1);
+        assert!(report
+            .detected_subjects
+            .contains(&"mathematics".to_string()));
+
+        let file_reconstruction = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "file_reconstruction")
+            .expect("file reconstruction insight should exist");
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/text_recovery/source")
+                .and_then(Value::as_str),
+            Some("native_xlsx_package")
+        );
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/ocr_recovery/status")
+                .and_then(Value::as_str),
+            Some("not_needed")
+        );
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .get("document_role")
+                .and_then(Value::as_str),
+            Some("report_card")
+        );
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/page_recovery/pages/0/label")
+                .and_then(Value::as_str),
+            Some("score_summary_page")
         );
 
         let _ = fs::remove_dir_all(temp_dir);
@@ -5315,6 +6390,13 @@ mod tests {
                 .and_then(Value::as_i64),
             Some(3)
         );
+        assert_eq!(
+            groups[0]
+                .pointer("/alignment_summary/mismatch_reason_counts")
+                .and_then(Value::as_array)
+                .map(|items| items.len()),
+            Some(0)
+        );
         assert!(groups[0]
             .pointer("/alignment_summary/alignments")
             .and_then(Value::as_array)
@@ -5327,6 +6409,26 @@ mod tests {
                     .any(|code| code.as_str() == Some("explicit_number_match"))
             })
             .unwrap_or(false));
+
+        let bundle_alignment = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "question_answer_alignment")
+            .expect("bundle alignment insight should exist");
+        assert_eq!(
+            bundle_alignment
+                .payload
+                .get("aligned_question_pair_count")
+                .and_then(Value::as_i64),
+            Some(3)
+        );
+        assert_eq!(
+            bundle_alignment
+                .payload
+                .get("unresolved_question_count")
+                .and_then(Value::as_i64),
+            Some(0)
+        );
 
         let question_reconstruction = report
             .insights
@@ -5344,6 +6446,320 @@ mod tests {
                 .and_then(Value::as_i64),
             Some(2)
         );
+        assert!(question_reconstruction
+            .payload
+            .pointer("/page_recovery/stitched_segments/0/stitch_reason_codes")
+            .and_then(Value::as_array)
+            .map(|codes| {
+                codes.iter().any(|code| {
+                    matches!(
+                        code.as_str(),
+                        Some("same_page_label") | Some("sequential_question_numbering")
+                    )
+                })
+            })
+            .unwrap_or(false));
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn reconstruct_bundle_surfaces_alignment_mismatch_reason_codes() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_alignment_mismatch");
+        let question_path = temp_dir.join("Science 2025 Mock Questions.png");
+        let answer_path = temp_dir.join("Science 2025 Mock Answers.png");
+        fs::write(&question_path, [137, 80, 78, 71]).expect("question scan should write");
+        fs::write(&answer_path, [137, 80, 78, 71]).expect("answer scan should write");
+        fs::write(
+            temp_dir.join("Science 2025 Mock Questions.ocr.json"),
+            serde_json::to_string_pretty(&json!({
+                "source": "ocr_sidecar_json",
+                "pages": [{
+                    "page_number": 1,
+                    "confidence_score": 83,
+                    "text": "INTEGRATED SCIENCE\nSECTION B\n1. Define osmosis.\n2. Explain diffusion.\n3. State one use of a microscope."
+                }]
+            }))
+            .expect("question sidecar should serialize"),
+        )
+        .expect("question sidecar should write");
+        fs::write(
+            temp_dir.join("Science 2025 Mock Answers.ocr.json"),
+            serde_json::to_string_pretty(&json!({
+                "source": "ocr_sidecar_json",
+                "pages": [{
+                    "page_number": 1,
+                    "confidence_score": 79,
+                    "text": "SECTION B\n1. movement of water molecules\n5. magnification\nThis response was rushed."
+                }]
+            }))
+            .expect("answer sidecar should serialize"),
+        )
+        .expect("answer sidecar should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Mismatch OCR upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&question_path),
+                question_path.to_string_lossy().as_ref(),
+            )
+            .expect("question file should insert");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&answer_path),
+                answer_path.to_string_lossy().as_ref(),
+            )
+            .expect("answer file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+
+        assert_eq!(report.bundle.status, "review_required");
+        assert_eq!(report.aligned_question_pair_count, 1);
+        assert!(report.unresolved_alignment_count >= 1);
+        assert!(report.needs_confirmation);
+
+        let bundle_alignment = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "question_answer_alignment")
+            .expect("bundle alignment insight should exist");
+        assert_eq!(
+            bundle_alignment
+                .payload
+                .get("unresolved_question_count")
+                .and_then(Value::as_i64),
+            Some(2)
+        );
+        assert_eq!(
+            bundle_alignment
+                .payload
+                .get("unresolved_answer_count")
+                .and_then(Value::as_i64),
+            Some(1)
+        );
+        assert!(bundle_alignment
+            .payload
+            .get("mismatch_reason_counts")
+            .and_then(Value::as_array)
+            .map(|items| items.iter().any(|item| {
+                item.get("reason_code").and_then(Value::as_str)
+                    == Some("question_number_not_found_in_answers")
+            }))
+            .unwrap_or(false));
+        assert!(bundle_alignment
+            .payload
+            .get("mismatch_reason_counts")
+            .and_then(Value::as_array)
+            .map(|items| items.iter().any(|item| {
+                item.get("reason_code").and_then(Value::as_str)
+                    == Some("answer_number_not_found_in_questions")
+            }))
+            .unwrap_or(false));
+        assert!(bundle_alignment
+            .payload
+            .get("unresolved_items")
+            .and_then(Value::as_array)
+            .map(|items| items.iter().any(|item| {
+                item.get("item_type").and_then(Value::as_str) == Some("question")
+                    && item
+                        .get("reason_codes")
+                        .and_then(Value::as_array)
+                        .map(|codes| {
+                            codes.iter().any(|code| {
+                                code.as_str() == Some("question_number_not_found_in_answers")
+                            })
+                        })
+                        .unwrap_or(false)
+            }))
+            .unwrap_or(false));
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn reconstruct_bundle_recovers_structured_docx_sidecar_sections() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_docx_sidecar");
+        let doc_path = temp_dir.join("Teacher Revision Guide.docx");
+        fs::write(&doc_path, [80, 75, 3, 4]).expect("docx file should write");
+        fs::write(
+            temp_dir.join("Teacher Revision Guide.json"),
+            serde_json::to_string_pretty(&json!({
+                "source": "derived_sidecar_json",
+                "sections": [
+                    {
+                        "title": "Topic Overview",
+                        "paragraphs": [
+                            { "text": "Teacher Revision Guide" },
+                            { "text": "Topic: Algebraic Expressions" },
+                            { "text": "Definition: coefficient" }
+                        ],
+                        "confidence_score": 87
+                    },
+                    {
+                        "title": "Practice Questions",
+                        "paragraphs": [
+                            { "text": "1. Expand 2(x + 3)." },
+                            { "text": "2. Simplify 3a + 2a." }
+                        ],
+                        "confidence_score": 84
+                    }
+                ]
+            }))
+            .expect("docx sidecar should serialize"),
+        )
+        .expect("docx sidecar should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Docx upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&doc_path),
+                doc_path.to_string_lossy().as_ref(),
+            )
+            .expect("docx file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+
+        assert_eq!(report.ocr_recovered_file_count, 1);
+        assert!(report.extracted_question_block_count >= 1);
+        assert!(report
+            .detected_topics
+            .contains(&"algebraic expressions".to_string()));
+
+        let file_reconstruction = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "file_reconstruction")
+            .expect("file reconstruction insight should exist");
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .get("document_role")
+                .and_then(Value::as_str),
+            Some("teacher_handout")
+        );
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/page_recovery/pages/1/label")
+                .and_then(Value::as_str),
+            Some("question_page")
+        );
+        assert!(file_reconstruction
+            .payload
+            .pointer("/document_intelligence/question_units")
+            .and_then(Value::as_array)
+            .map(|items| items.len() >= 2)
+            .unwrap_or(false));
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn reconstruct_bundle_recovers_structured_xlsx_sidecar_scores() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_xlsx_sidecar");
+        let sheet_path = temp_dir.join("Term 2 Results.xlsx");
+        fs::write(&sheet_path, [80, 75, 3, 4]).expect("xlsx file should write");
+        fs::write(
+            temp_dir.join("Term 2 Results.json"),
+            serde_json::to_string_pretty(&json!({
+                "source": "derived_sidecar_json",
+                "worksheets": [
+                    {
+                        "name": "Results",
+                        "rows": [
+                            ["Subject", "Score", "Remark"],
+                            ["Mathematics", "42%", "Weak in algebra"],
+                            ["English", "71%", "Good effort"]
+                        ],
+                        "confidence_score": 88
+                    },
+                    {
+                        "name": "Summary",
+                        "rows": [
+                            ["Date", "12 March 2026"],
+                            ["Average", "56%"],
+                            ["Comment", "Needs urgent intervention"]
+                        ],
+                        "confidence_score": 86
+                    }
+                ]
+            }))
+            .expect("xlsx sidecar should serialize"),
+        )
+        .expect("xlsx sidecar should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Spreadsheet upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&sheet_path),
+                sheet_path.to_string_lossy().as_ref(),
+            )
+            .expect("xlsx file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+
+        assert_eq!(report.bundle_kind, "performance_evidence_bundle");
+        assert_eq!(report.ocr_recovered_file_count, 1);
+        assert!(report.score_signal_count >= 2);
+        assert!(report.remark_signal_count >= 1);
+        assert!(report.detected_topics.contains(&"algebra".to_string()));
+
+        let file_reconstruction = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "file_reconstruction")
+            .expect("file reconstruction insight should exist");
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .get("document_role")
+                .and_then(Value::as_str),
+            Some("report_card")
+        );
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/page_recovery/pages/0/label")
+                .and_then(Value::as_str),
+            Some("score_summary_page")
+        );
+        assert!(file_reconstruction
+            .payload
+            .pointer("/document_intelligence/score_signals")
+            .and_then(Value::as_array)
+            .map(|items| items.len() >= 2)
+            .unwrap_or(false));
 
         let _ = fs::remove_dir_all(temp_dir);
     }

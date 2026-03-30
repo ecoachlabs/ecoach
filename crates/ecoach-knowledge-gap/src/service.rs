@@ -477,7 +477,10 @@ impl<'a> KnowledgeGapService<'a> {
         ))?;
 
         // If an item is finished, advance the plan to the next pending repair step.
-        if matches!(new_status, RepairItemStatus::Completed | RepairItemStatus::Skipped) {
+        if matches!(
+            new_status,
+            RepairItemStatus::Completed | RepairItemStatus::Skipped
+        ) {
             self.conn
                 .execute(
                     "UPDATE gap_repair_plan_items SET status = 'active'
@@ -641,18 +644,23 @@ impl<'a> KnowledgeGapService<'a> {
         solidification_id: i64,
     ) -> EcoachResult<SolidificationSession> {
         let now = Utc::now().to_rfc3339();
-        let (student_id, topic_id, repair_plan_id, session_id): (i64, i64, Option<i64>, Option<i64>) =
-            self.conn
-                .query_row(
-                    "SELECT student_id, topic_id, repair_plan_id, session_id
+        let (student_id, topic_id, repair_plan_id, session_id): (
+            i64,
+            i64,
+            Option<i64>,
+            Option<i64>,
+        ) = self
+            .conn
+            .query_row(
+                "SELECT student_id, topic_id, repair_plan_id, session_id
                      FROM solidification_sessions
                      WHERE id = ?1",
-                    [solidification_id],
-                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
-                )
-                .map_err(|e| {
-                    EcoachError::NotFound(format!("solidification session not found: {}", e))
-                })?;
+                [solidification_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .map_err(|e| {
+                EcoachError::NotFound(format!("solidification session not found: {}", e))
+            })?;
         let affected = self
             .conn
             .execute(
@@ -691,7 +699,10 @@ impl<'a> KnowledgeGapService<'a> {
                         now,
                         outcome.as_ref().map(|item| item.engaged_count).unwrap_or(0),
                         outcome.as_ref().map(|item| item.correct_count).unwrap_or(0),
-                        outcome.as_ref().map(|item| item.accuracy_score).unwrap_or(0),
+                        outcome
+                            .as_ref()
+                            .map(|item| item.accuracy_score)
+                            .unwrap_or(0),
                         outcome.as_ref().and_then(|item| item.avg_response_time_ms),
                         sid,
                     ],
@@ -824,7 +835,8 @@ impl<'a> KnowledgeGapService<'a> {
         topic_id: i64,
         repair_plan_id: Option<i64>,
     ) -> EcoachResult<(Option<i64>, i64, i64)> {
-        let repair_item: Option<(i64, Option<i64>, String)> = if let Some(plan_id) = repair_plan_id {
+        let repair_item: Option<(i64, Option<i64>, String)> = if let Some(plan_id) = repair_plan_id
+        {
             self.conn
                 .query_row(
                     "SELECT id, node_id, repair_action
@@ -884,8 +896,8 @@ impl<'a> KnowledgeGapService<'a> {
         }
 
         let question_count = question_ids.len() as i64;
-        let estimated_minutes = self.suggested_duration_minutes(&repair_action)
-            + question_count.saturating_sub(1) * 2;
+        let estimated_minutes =
+            self.suggested_duration_minutes(&repair_action) + question_count.saturating_sub(1) * 2;
         self.conn
             .execute(
                 "UPDATE sessions
@@ -927,20 +939,22 @@ impl<'a> KnowledgeGapService<'a> {
         };
         let payload: serde_json::Value = serde_json::from_str(&payload_json)
             .map_err(|e| EcoachError::Serialization(e.to_string()))?;
-        Ok(payload.get("repair_item_id").and_then(|value| value.as_i64()))
+        Ok(payload
+            .get("repair_item_id")
+            .and_then(|value| value.as_i64()))
     }
 
     fn evaluate_solidification_session(
         &self,
         session_id: i64,
     ) -> EcoachResult<SolidificationOutcome> {
-        let (
-            total_count,
-            answered_count,
-            skipped_count,
-            correct_count,
-            avg_response_time_ms,
-        ): (i64, i64, i64, i64, Option<i64>) = self
+        let (total_count, answered_count, skipped_count, correct_count, avg_response_time_ms): (
+            i64,
+            i64,
+            i64,
+            i64,
+            Option<i64>,
+        ) = self
             .conn
             .query_row(
                 "SELECT
@@ -984,14 +998,20 @@ impl<'a> KnowledgeGapService<'a> {
                     "failed".to_string(),
                     "repair_retry".to_string(),
                     "repair_seed_missing".to_string(),
-                    vec!["gap_repair_failed".to_string(), "gap_session_empty".to_string()],
+                    vec![
+                        "gap_repair_failed".to_string(),
+                        "gap_session_empty".to_string(),
+                    ],
                 )
             } else if blended_score >= 7600 && accuracy_score >= 7000 {
                 (
                     "success".to_string(),
                     "stabilize_memory".to_string(),
                     "repair_success".to_string(),
-                    vec!["gap_repair_success".to_string(), "ready_for_progression".to_string()],
+                    vec![
+                        "gap_repair_success".to_string(),
+                        "ready_for_progression".to_string(),
+                    ],
                 )
             } else if blended_score >= 4500 {
                 (
@@ -1005,7 +1025,10 @@ impl<'a> KnowledgeGapService<'a> {
                     "failed".to_string(),
                     "reteach_before_retry".to_string(),
                     "repair_failed".to_string(),
-                    vec!["gap_repair_failed".to_string(), "reteach_required".to_string()],
+                    vec![
+                        "gap_repair_failed".to_string(),
+                        "reteach_required".to_string(),
+                    ],
                 )
             };
 
@@ -1484,4 +1507,365 @@ struct SolidificationOutcome {
     next_action_hint: String,
     dominant_signal: String,
     interpretation_tags: Vec<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use rusqlite::{Connection, params};
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn complete_solidification_session_advances_plan_on_success() {
+        let conn = test_conn();
+        seed_gap_topic(&conn, 10, "Fractions");
+        seed_active_plan(&conn, 1, 1, 10, 11, 100);
+        seed_gap_session(&conn, 31, 21, 1, 10, Some(1), Some(11));
+        seed_question(&conn, 501, 10, Some(100));
+        seed_question(&conn, 502, 10, Some(100));
+        conn.execute(
+            "INSERT INTO session_items (session_id, question_id, display_order, status, is_correct, response_time_ms)
+             VALUES (21, 501, 0, 'answered', 1, 12000),
+                    (21, 502, 1, 'answered', 1, 10000)",
+            [],
+        )
+        .expect("session items should seed");
+
+        let service = KnowledgeGapService::new(&conn);
+        service
+            .complete_solidification_session(31)
+            .expect("solidification should complete");
+
+        let plan_status: String = conn
+            .query_row(
+                "SELECT status FROM gap_repair_plans WHERE id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("plan status should query");
+        assert_eq!(plan_status, "completed");
+
+        let item_status: String = conn
+            .query_row(
+                "SELECT status FROM gap_repair_plan_items WHERE id = 11",
+                [],
+                |row| row.get(0),
+            )
+            .expect("item status should query");
+        assert_eq!(item_status, "completed");
+
+        let session_rollup: (i64, i64, i64) = conn
+            .query_row(
+                "SELECT answered_questions, correct_questions, accuracy_score
+                 FROM sessions WHERE id = 21",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("session rollup should query");
+        assert_eq!(session_rollup.0, 2);
+        assert_eq!(session_rollup.1, 2);
+        assert_eq!(session_rollup.2, 10_000);
+
+        let interpreted_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events
+                 WHERE aggregate_kind = 'session'
+                   AND aggregate_id = '21'
+                   AND event_type = 'session.interpreted'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("session interpretation count should query");
+        assert_eq!(interpreted_count, 1);
+    }
+
+    #[test]
+    fn complete_solidification_session_keeps_plan_active_on_failure() {
+        let conn = test_conn();
+        seed_gap_topic(&conn, 10, "Fractions");
+        seed_active_plan(&conn, 1, 1, 10, 11, 100);
+        seed_gap_session(&conn, 31, 21, 1, 10, Some(1), Some(11));
+        seed_question(&conn, 501, 10, Some(100));
+        seed_question(&conn, 502, 10, Some(100));
+        conn.execute(
+            "INSERT INTO session_items (session_id, question_id, display_order, status, is_correct, response_time_ms)
+             VALUES (21, 501, 0, 'answered', 0, 18000),
+                    (21, 502, 1, 'skipped', 0, NULL)",
+            [],
+        )
+        .expect("session items should seed");
+
+        let service = KnowledgeGapService::new(&conn);
+        service
+            .complete_solidification_session(31)
+            .expect("solidification should complete");
+
+        let plan_status: String = conn
+            .query_row(
+                "SELECT status FROM gap_repair_plans WHERE id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("plan status should query");
+        assert_eq!(plan_status, "active");
+
+        let item_status: String = conn
+            .query_row(
+                "SELECT status FROM gap_repair_plan_items WHERE id = 11",
+                [],
+                |row| row.get(0),
+            )
+            .expect("item status should query");
+        assert_eq!(item_status, "active");
+
+        let topic_repair_signal: (i64, i64) = conn
+            .query_row(
+                "SELECT repair_priority, is_urgent
+                 FROM student_topic_states
+                 WHERE student_id = 1 AND topic_id = 10",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("topic repair signal should query");
+        assert!(topic_repair_signal.0 > 7000);
+        assert_eq!(topic_repair_signal.1, 1);
+    }
+
+    fn test_conn() -> Connection {
+        let conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        conn.execute_batch(
+            "
+            CREATE TABLE topics (
+                id INTEGER PRIMARY KEY,
+                subject_id INTEGER,
+                name TEXT NOT NULL
+            );
+            CREATE TABLE gap_repair_plans (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                priority_score INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE gap_repair_plan_items (
+                id INTEGER PRIMARY KEY,
+                plan_id INTEGER NOT NULL,
+                node_id INTEGER,
+                sequence_order INTEGER NOT NULL DEFAULT 0,
+                repair_action TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE solidification_sessions (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                repair_plan_id INTEGER,
+                session_id INTEGER,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                completed_at TEXT
+            );
+            CREATE TABLE sessions (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                session_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                answered_questions INTEGER NOT NULL DEFAULT 0,
+                correct_questions INTEGER NOT NULL DEFAULT 0,
+                accuracy_score INTEGER,
+                avg_response_time_ms INTEGER,
+                completed_at TEXT,
+                updated_at TEXT
+            );
+            CREATE TABLE session_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER NOT NULL,
+                question_id INTEGER NOT NULL,
+                display_order INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                is_correct INTEGER,
+                response_time_ms INTEGER
+            );
+            CREATE TABLE runtime_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id TEXT NOT NULL UNIQUE,
+                event_type TEXT NOT NULL,
+                aggregate_kind TEXT NOT NULL,
+                aggregate_id TEXT NOT NULL,
+                trace_id TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                occurred_at TEXT NOT NULL
+            );
+            CREATE TABLE student_topic_states (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                mastery_score INTEGER NOT NULL DEFAULT 0,
+                gap_score INTEGER NOT NULL DEFAULT 0,
+                repair_priority INTEGER NOT NULL DEFAULT 0,
+                is_urgent INTEGER NOT NULL DEFAULT 0,
+                last_decline_at TEXT,
+                updated_at TEXT
+            );
+            CREATE TABLE academic_nodes (
+                id INTEGER PRIMARY KEY,
+                canonical_title TEXT,
+                node_type TEXT
+            );
+            CREATE TABLE student_error_profiles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                knowledge_gap_score INTEGER NOT NULL DEFAULT 0,
+                conceptual_confusion_score INTEGER NOT NULL DEFAULT 0,
+                recognition_failure_score INTEGER NOT NULL DEFAULT 0,
+                execution_error_score INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE questions (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER NOT NULL,
+                family_id INTEGER,
+                difficulty_level INTEGER NOT NULL DEFAULT 5000,
+                primary_skill_id INTEGER,
+                is_active INTEGER NOT NULL DEFAULT 1
+            );
+            CREATE TABLE question_skill_links (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question_id INTEGER NOT NULL,
+                node_id INTEGER NOT NULL,
+                is_primary INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE misconception_patterns (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                node_id INTEGER,
+                topic_id INTEGER,
+                title TEXT NOT NULL,
+                severity INTEGER NOT NULL DEFAULT 5000,
+                is_active INTEGER NOT NULL DEFAULT 1
+            );
+            CREATE TABLE knowledge_entries (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER,
+                title TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'active',
+                importance_score INTEGER NOT NULL DEFAULT 5000,
+                difficulty_level INTEGER NOT NULL DEFAULT 5000
+            );
+            CREATE TABLE question_glossary_links (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question_id INTEGER NOT NULL,
+                entry_id INTEGER NOT NULL,
+                confidence_score INTEGER NOT NULL DEFAULT 5000,
+                is_primary INTEGER NOT NULL DEFAULT 0
+            );
+            ",
+        )
+        .expect("schema should seed");
+        conn
+    }
+
+    fn seed_gap_topic(conn: &Connection, topic_id: i64, topic_name: &str) {
+        conn.execute(
+            "INSERT INTO topics (id, subject_id, name) VALUES (?1, 1, ?2)",
+            params![topic_id, topic_name],
+        )
+        .expect("topic should seed");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                id, student_id, topic_id, mastery_score, gap_score, repair_priority, is_urgent, updated_at
+             ) VALUES (1, 1, ?1, 3000, 7000, 7000, 1, datetime('now'))",
+            [topic_id],
+        )
+        .expect("topic state should seed");
+    }
+
+    fn seed_active_plan(
+        conn: &Connection,
+        plan_id: i64,
+        student_id: i64,
+        topic_id: i64,
+        item_id: i64,
+        node_id: i64,
+    ) {
+        conn.execute(
+            "INSERT INTO academic_nodes (id, canonical_title, node_type)
+             VALUES (?1, 'Equivalent fractions', 'concept')",
+            [node_id],
+        )
+        .expect("node should seed");
+        conn.execute(
+            "INSERT INTO gap_repair_plans (id, student_id, topic_id, status, priority_score)
+             VALUES (?1, ?2, ?3, 'active', 7000)",
+            params![plan_id, student_id, topic_id],
+        )
+        .expect("plan should seed");
+        conn.execute(
+            "INSERT INTO gap_repair_plan_items (id, plan_id, node_id, sequence_order, repair_action, status)
+             VALUES (?1, ?2, ?3, 0, 'teach_concept', 'active')",
+            params![item_id, plan_id, node_id],
+        )
+        .expect("plan item should seed");
+    }
+
+    fn seed_gap_session(
+        conn: &Connection,
+        solidification_id: i64,
+        session_id: i64,
+        student_id: i64,
+        topic_id: i64,
+        repair_plan_id: Option<i64>,
+        repair_item_id: Option<i64>,
+    ) {
+        conn.execute(
+            "INSERT INTO sessions (id, student_id, session_type, status, updated_at)
+             VALUES (?1, ?2, 'gap_repair', 'active', datetime('now'))",
+            params![session_id, student_id],
+        )
+        .expect("session should seed");
+        conn.execute(
+            "INSERT INTO solidification_sessions (id, student_id, topic_id, repair_plan_id, session_id, status)
+             VALUES (?1, ?2, ?3, ?4, ?5, 'active')",
+            params![solidification_id, student_id, topic_id, repair_plan_id, session_id],
+        )
+        .expect("solidification should seed");
+        conn.execute(
+            "INSERT INTO runtime_events (
+                event_id, event_type, aggregate_kind, aggregate_id, trace_id, payload_json, occurred_at
+             ) VALUES (
+                'solid-start-1',
+                'gap.solidification_started',
+                'gap',
+                ?1,
+                'trace-gap-1',
+                ?2,
+                datetime('now')
+             )",
+            params![
+                solidification_id.to_string(),
+                json!({ "repair_item_id": repair_item_id }).to_string(),
+            ],
+        )
+        .expect("solidification start event should seed");
+    }
+
+    fn seed_question(conn: &Connection, question_id: i64, topic_id: i64, node_id: Option<i64>) {
+        conn.execute(
+            "INSERT INTO questions (id, topic_id, primary_skill_id, is_active)
+             VALUES (?1, ?2, ?3, 1)",
+            params![question_id, topic_id, node_id],
+        )
+        .expect("question should seed");
+        if let Some(node_id) = node_id {
+            conn.execute(
+                "INSERT INTO question_skill_links (question_id, node_id, is_primary)
+                 VALUES (?1, ?2, 1)",
+                params![question_id, node_id],
+            )
+            .expect("question skill link should seed");
+        }
+    }
 }

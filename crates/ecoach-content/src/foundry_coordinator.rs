@@ -1,15 +1,15 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use ecoach_substrate::{
-    clamp_bp, now_utc, BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry,
-    FabricOrchestrationSummary, FabricSignal,
+    BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry,
+    FabricOrchestrationSummary, FabricSignal, clamp_bp, now_utc,
 };
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::{
-    pack_service::slugify, ContentPublishJobReport, ContentPublishService, ResourceReadinessService,
+    ContentPublishJobReport, ContentPublishService, ResourceReadinessService, pack_service::slugify,
 };
 
 const LOW_CONFIDENCE_THRESHOLD: BasisPoints = 6_500;
@@ -4545,20 +4545,26 @@ mod tests {
 
         assert_eq!(report.source_upload.source_status, "review_required");
         assert!(report.unresolved_review_count >= 2);
-        assert!(report
-            .review_tasks
-            .iter()
-            .any(|task| task.task_type == "normalization"));
-        assert!(report
-            .review_tasks
-            .iter()
-            .any(|task| task.task_type == "duplicate_check"));
+        assert!(
+            report
+                .review_tasks
+                .iter()
+                .any(|task| task.task_type == "normalization")
+        );
+        assert!(
+            report
+                .review_tasks
+                .iter()
+                .any(|task| task.task_type == "duplicate_check")
+        );
         assert!(!report.fabric_signals.is_empty());
-        assert!(report
-            .orchestration
-            .consumer_targets
-            .iter()
-            .any(|target| target.engine_key == "content_packs"));
+        assert!(
+            report
+                .orchestration
+                .consumer_targets
+                .iter()
+                .any(|target| target.engine_key == "content_packs")
+        );
     }
 
     #[test]
@@ -4685,19 +4691,25 @@ mod tests {
         assert_eq!(failed_job.status, "failed");
         assert!(board.failed_count >= 1);
         assert!(board.completed_count >= 1);
-        assert!(dashboard
-            .topics
-            .iter()
-            .any(|topic| topic.topic_id == topic_id && topic.published_artifact_count >= 1));
-        assert!(dashboard
-            .topics
-            .iter()
-            .any(|topic| !topic.fabric_signals.is_empty()));
-        assert!(dashboard
-            .orchestration
-            .consumer_targets
-            .iter()
-            .any(|target| target.engine_key == "library"));
+        assert!(
+            dashboard
+                .topics
+                .iter()
+                .any(|topic| topic.topic_id == topic_id && topic.published_artifact_count >= 1)
+        );
+        assert!(
+            dashboard
+                .topics
+                .iter()
+                .any(|topic| !topic.fabric_signals.is_empty())
+        );
+        assert!(
+            dashboard
+                .orchestration
+                .consumer_targets
+                .iter()
+                .any(|target| target.engine_key == "library")
+        );
     }
 
     #[test]

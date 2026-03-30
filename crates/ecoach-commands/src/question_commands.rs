@@ -1,19 +1,16 @@
 use ecoach_questions::{
-    QuestionGenerationRequestInput, QuestionReactor, QuestionRemediationPlan, QuestionService,
-    QuestionSlotSpec,
+    QuestionGenerationRequestInput, QuestionReactor, QuestionService, QuestionSlotSpec,
 };
 
 use crate::{
     dtos::{
         DuplicateCheckResultDto, GeneratedQuestionDraftDto, QuestionFamilyChoiceDto,
         QuestionFamilyHealthDto, QuestionGenerationRequestDto, QuestionLineageGraphDto,
-        RelatedQuestionDto,
+        QuestionRemediationPlanDto, RelatedQuestionDto,
     },
     error::CommandError,
     state::AppState,
 };
-
-pub type QuestionRemediationPlanDto = QuestionRemediationPlan;
 
 pub fn choose_reactor_family(
     state: &AppState,
@@ -113,6 +110,8 @@ pub fn recommend_question_remediation_plan(
 ) -> Result<Option<QuestionRemediationPlanDto>, CommandError> {
     state.with_connection(|conn| {
         let reactor = QuestionReactor::new(conn);
-        Ok(reactor.recommend_remediation_plan(student_id, &slot_spec)?)
+        Ok(reactor
+            .recommend_remediation_plan(student_id, &slot_spec)?
+            .map(QuestionRemediationPlanDto::from))
     })
 }

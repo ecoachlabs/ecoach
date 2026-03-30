@@ -995,9 +995,7 @@ impl<'a> StudentModelService<'a> {
         state.next_review_at = parse_datetime(next_review_at.clone());
 
         let structural_fragility = if memory_item_count > 0 {
-            ((fragile_item_count * 5000)
-                + (collapsed_item_count * 9000)
-                + (due_item_count * 2500))
+            ((fragile_item_count * 5000) + (collapsed_item_count * 9000) + (due_item_count * 2500))
                 / memory_item_count.max(1)
         } else {
             0
@@ -1069,8 +1067,9 @@ impl<'a> StudentModelService<'a> {
             ),
         )?;
 
-        self.find_topic_state(student_id, topic_id)?
-            .ok_or_else(|| EcoachError::Storage("topic state disappeared after recompute".to_string()))
+        self.find_topic_state(student_id, topic_id)?.ok_or_else(|| {
+            EcoachError::Storage("topic state disappeared after recompute".to_string())
+        })
     }
 
     fn sync_active_gap_repair_plans(
@@ -2995,8 +2994,8 @@ mod tests {
                 "SELECT COUNT(*) FROM recheck_schedules WHERE student_id = 1 AND status = 'missed'",
                 [],
                 |row| row.get(0),
-        )
-        .expect("missed count should query");
+            )
+            .expect("missed count should query");
         assert!(missed_count >= 1);
     }
 
