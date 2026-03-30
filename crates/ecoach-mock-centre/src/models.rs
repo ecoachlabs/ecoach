@@ -144,6 +144,7 @@ pub struct MockReport {
     pub questions_unanswered: i64,
     pub topic_breakdown: Vec<MockTopicScore>,
     pub improvement_vs_last: Option<ImprovementDelta>,
+    pub deep_diagnosis: Option<crate::diagnosis::MockDeepDiagnosis>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

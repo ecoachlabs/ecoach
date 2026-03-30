@@ -233,3 +233,58 @@ pub fn run_next_foundry_job(
         Ok(job.map(FoundryJobDto::from))
     })
 }
+
+/// Rebuild the content index by recomputing pack summaries and question counts.
+pub fn rebuild_content_index(state: &AppState) -> Result<RebuildContentIndexResult, CommandError> {
+    state.with_connection(|conn| {
+        // Recount questions per pack
+        let packs_updated: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM content_packs WHERE status = 'active'",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+
+        // Update question counts per pack
+        conn.execute_batch(
+            "UPDATE content_packs SET question_count = (
+                 SELECT COUNT(*) FROM questions WHERE pack_id = content_packs.id AND is_active = 1
+             ) WHERE status = 'active';
+             UPDATE content_packs SET topic_count = (
+                 SELECT COUNT(DISTINCT topic_id) FROM questions WHERE pack_id = content_packs.id AND is_active = 1
+             ) WHERE status = 'active';",
+        )
+        .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+
+        // Recompute family analytics for all subjects with past papers
+        let subject_ids: Vec<i64> = {
+            let mut stmt = conn
+                .prepare("SELECT DISTINCT subject_id FROM past_paper_sets")
+                .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+            let rows = stmt
+                .query_map([], |row| row.get(0))
+                .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+            let mut ids = Vec::new();
+            for row in rows {
+                ids.push(
+                    row.map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?,
+                );
+            }
+            ids
+        };
+
+        let families_recomputed = subject_ids.len() as i64;
+
+        Ok(RebuildContentIndexResult {
+            packs_updated,
+            families_recomputed,
+        })
+    })
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RebuildContentIndexResult {
+    pub packs_updated: i64,
+    pub families_recomputed: i64,
+}

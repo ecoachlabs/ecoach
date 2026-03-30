@@ -205,6 +205,53 @@ pub fn abandon_mock(state: &AppState, mock_session_id: i64) -> Result<(), Comman
     })
 }
 
+// ── start_first_mock: auto-compile a diagnostic mock for first-time users ──
+
+pub fn start_first_mock(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<MockSessionDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = MockCentreService::new(conn);
+
+        // Check if student has any completed mocks for this subject
+        let existing = service.list_mock_sessions(student_id, 1)?;
+        if !existing.is_empty() {
+            return Err(ecoach_substrate::EcoachError::Validation(
+                "student already has mock history; use compile_mock instead".into(),
+            )
+            .into());
+        }
+
+        // Auto-compile a diagnostic mock with sensible defaults
+        let input = CompileMockInput {
+            student_id,
+            subject_id,
+            duration_minutes: 60,
+            question_count: 20,
+            topic_ids: Vec::new(), // all topics
+            paper_year: None,
+            mock_type: Some("diagnostic".into()),
+            blueprint_id: None,
+        };
+
+        let session = service.compile_mock(&input)?;
+        Ok(MockSessionDto {
+            id: session.id,
+            subject_id: session.subject_id,
+            mock_type: session.mock_type,
+            status: session.status,
+            duration_minutes: session.duration_minutes,
+            question_count: session.question_count,
+            answered_count: session.answered_count,
+            time_remaining_seconds: session.time_remaining_seconds,
+            paper_year: session.paper_year,
+            blueprint_id: session.blueprint_id,
+        })
+    })
+}
+
 // ── Phase 5: New commands ──
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

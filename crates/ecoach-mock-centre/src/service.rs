@@ -821,6 +821,10 @@ impl<'a> MockCentreService<'a> {
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
+        // Run deep diagnosis (best effort — don't fail the report if diagnosis fails)
+        let diagnosis_engine = crate::diagnosis::MockDiagnosisEngine::new(self.conn);
+        let deep_diagnosis = diagnosis_engine.diagnose(mock_session_id).ok();
+
         Ok(MockReport {
             mock_session_id,
             student_id: mock.student_id,
@@ -837,6 +841,7 @@ impl<'a> MockCentreService<'a> {
             questions_unanswered: total - answered,
             topic_breakdown,
             improvement_vs_last: improvement,
+            deep_diagnosis,
         })
     }
 
@@ -1050,6 +1055,99 @@ impl<'a> MockCentreService<'a> {
             sessions.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
         }
         Ok(sessions)
+    }
+
+    // ── Section pacing ──
+
+    pub fn start_section(
+        &self,
+        mock_session_id: i64,
+        section_number: i64,
+    ) -> EcoachResult<()> {
+        // Validate mock is active
+        let status: String = self
+            .conn
+            .query_row(
+                "SELECT status FROM mock_sessions WHERE id = ?1",
+                [mock_session_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| {
+                EcoachError::NotFound(format!("mock session {} not found: {}", mock_session_id, e))
+            })?;
+
+        if status != "active" {
+            return Err(EcoachError::Validation(
+                "mock session is not active".to_string(),
+            ));
+        }
+
+        let now = Utc::now().to_rfc3339();
+        let affected = self
+            .conn
+            .execute(
+                "UPDATE mock_sections SET status = 'active', started_at = ?1
+                 WHERE mock_session_id = ?2 AND section_number = ?3",
+                params![now, mock_session_id, section_number],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        if affected == 0 {
+            return Err(EcoachError::NotFound(format!(
+                "section {} not found for mock session {}",
+                section_number, mock_session_id
+            )));
+        }
+
+        Ok(())
+    }
+
+    pub fn complete_section(
+        &self,
+        mock_session_id: i64,
+        section_number: i64,
+    ) -> EcoachResult<()> {
+        let now = Utc::now().to_rfc3339();
+        let affected = self
+            .conn
+            .execute(
+                "UPDATE mock_sections SET status = 'completed', completed_at = ?1
+                 WHERE mock_session_id = ?2 AND section_number = ?3",
+                params![now, mock_session_id, section_number],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        if affected == 0 {
+            return Err(EcoachError::NotFound(format!(
+                "section {} not found for mock session {}",
+                section_number, mock_session_id
+            )));
+        }
+
+        // Auto-start the next section if one exists
+        let next_section = section_number + 1;
+        let next_exists: bool = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM mock_sections
+                 WHERE mock_session_id = ?1 AND section_number = ?2",
+                params![mock_session_id, next_section],
+                |row| Ok(row.get::<_, i64>(0)? > 0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        if next_exists {
+            let now = Utc::now().to_rfc3339();
+            self.conn
+                .execute(
+                    "UPDATE mock_sections SET status = 'active', started_at = ?1
+                     WHERE mock_session_id = ?2 AND section_number = ?3",
+                    params![now, mock_session_id, next_section],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        }
+
+        Ok(())
     }
 
     // ── Internal ──

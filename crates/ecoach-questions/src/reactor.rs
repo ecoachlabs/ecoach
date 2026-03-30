@@ -1103,6 +1103,82 @@ impl<'a> QuestionReactor<'a> {
         })
     }
 
+    // -----------------------------------------------------------------------
+    // Family promotion and quarantine
+    // -----------------------------------------------------------------------
+
+    pub fn promote_family(&self, family_id: i64) -> EcoachResult<()> {
+        let affected = self
+            .conn
+            .execute(
+                "UPDATE question_family_health SET health_status = 'promoted' WHERE family_id = ?1",
+                params![family_id],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        if affected == 0 {
+            self.conn
+                .execute(
+                    "INSERT INTO question_family_health (family_id, health_status) VALUES (?1, 'promoted')",
+                    params![family_id],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        }
+
+        Ok(())
+    }
+
+    pub fn quarantine_family(&self, family_id: i64) -> EcoachResult<()> {
+        let affected = self
+            .conn
+            .execute(
+                "UPDATE question_family_health SET health_status = 'quarantined' WHERE family_id = ?1",
+                params![family_id],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        if affected == 0 {
+            self.conn
+                .execute(
+                    "INSERT INTO question_family_health (family_id, health_status) VALUES (?1, 'quarantined')",
+                    params![family_id],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        }
+
+        self.conn
+            .execute(
+                "UPDATE questions SET is_active = 0 WHERE family_id = ?1",
+                params![family_id],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        Ok(())
+    }
+
+    pub fn list_quarantined_families(&self, subject_id: i64) -> EcoachResult<Vec<(i64, String)>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT qfh.family_id, qf.family_name
+                 FROM question_family_health qfh
+                 INNER JOIN question_families qf ON qf.id = qfh.family_id
+                 WHERE qfh.health_status = 'quarantined' AND qf.subject_id = ?1
+                 ORDER BY qf.family_name",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![subject_id], |row| Ok((row.get(0)?, row.get(1)?)))
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut result = Vec::new();
+        for row in rows {
+            result.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(result)
+    }
+
     fn load_family_choice_for_slot(
         &self,
         family_id: i64,

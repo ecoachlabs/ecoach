@@ -187,6 +187,10 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "044_calibration_crosswalk",
         sql: include_str!("../../../migrations/runtime/044_calibration_crosswalk.sql"),
     },
+    Migration {
+        id: "045_remaining_gaps",
+        sql: include_str!("../../../migrations/runtime/045_remaining_gaps.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {
