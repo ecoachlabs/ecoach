@@ -1,76 +1,64 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import * as reportingIpc from '@/ipc/reporting'
-import type { ParentDashboardSnapshot } from '@/types'
+import { buildParentDashboard, type ParentDashboardSnapshot } from '@/ipc/reporting'
+import PageHeader from '@/components/layout/PageHeader.vue'
+import ChildCard from '@/components/parent/ChildCard.vue'
+import WeeklyMemo from '@/components/parent/WeeklyMemo.vue'
+import AppButton from '@/components/ui/AppButton.vue'
 
 const auth = useAuthStore()
+const router = useRouter()
 const dashboard = ref<ParentDashboardSnapshot | null>(null)
 const loading = ref(true)
 
 onMounted(async () => {
   if (!auth.currentAccount) return
   try {
-    dashboard.value = await reportingIpc.buildParentDashboard(auth.currentAccount.id)
-  } catch {
-    // Handle error
-  } finally {
-    loading.value = false
+    dashboard.value = await buildParentDashboard(auth.currentAccount.id)
+  } catch (e) {
+    console.error('Failed to load parent dashboard:', e)
   }
+  loading.value = false
 })
 </script>
 
 <template>
-  <div>
-    <h1 class="text-2xl font-semibold mb-6" :style="{ color: 'var(--text)' }">Family Overview</h1>
+  <div class="reveal-stagger">
+    <PageHeader title="Family Overview" subtitle="Your children's academic progress at a glance." />
 
-    <div v-if="loading" class="text-center py-16">
-      <p :style="{ color: 'var(--text-muted)' }">Loading...</p>
+    <div v-if="loading" class="space-y-4">
+      <div v-for="i in 2" :key="i" class="h-32 rounded-xl animate-pulse" :style="{backgroundColor:'var(--border-soft)'}" />
     </div>
 
-    <div v-else-if="dashboard" class="space-y-4">
-      <div
-        v-for="student in dashboard.students"
-        :key="student.student_id"
-        class="p-6 rounded-xl border"
-        :style="{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }"
-      >
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-medium" :style="{ color: 'var(--text)' }">{{ student.student_name }}</h2>
-          <span class="text-sm capitalize px-3 py-1 rounded-full bg-blue-50 text-blue-700">
-            {{ student.overall_readiness_band }}
-          </span>
-        </div>
-
-        <div v-if="student.active_risks.length" class="space-y-2 mb-3">
-          <div
-            v-for="(risk, i) in student.active_risks"
-            :key="i"
-            class="text-sm p-3 rounded-lg"
-            :class="{
-              'bg-red-50 text-red-700': risk.severity === 'high',
-              'bg-yellow-50 text-yellow-700': risk.severity === 'medium',
-              'bg-blue-50 text-blue-700': risk.severity === 'low',
-            }"
-          >
-            <strong>{{ risk.title }}</strong>: {{ risk.description }}
-          </div>
-        </div>
-
-        <div v-if="student.recommendations.length" class="space-y-1">
-          <p v-for="(rec, i) in student.recommendations" :key="i" class="text-sm" :style="{ color: 'var(--text-secondary)' }">
-            {{ rec }}
-          </p>
-        </div>
-
-        <RouterLink
-          :to="'/parent/child/' + student.student_id"
-          class="inline-block mt-3 text-sm font-medium"
-          :style="{ color: 'var(--info)' }"
-        >
-          View details &rarr;
-        </RouterLink>
+    <template v-else-if="dashboard">
+      <!-- Child cards -->
+      <div class="space-y-4 mb-8">
+        <ChildCard
+          v-for="student in dashboard.students"
+          :key="student.student_id"
+          :student-id="student.student_id"
+          :student-name="student.student_name"
+          :readiness-band="student.overall_readiness_band"
+          :exam-target="student.exam_target ?? undefined"
+          :risks="student.active_risks"
+          :recommendations="student.recommendations"
+          @click="router.push('/parent/child/' + student.student_id)"
+        />
       </div>
+
+      <!-- Weekly memo (first child) -->
+      <WeeklyMemo v-if="dashboard.students[0]?.weekly_memo"
+        :date="new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })"
+        :content="dashboard.students[0].weekly_memo"
+        :highlights="dashboard.students[0].trend_summary?.filter((_, i) => i < 3)"
+        :concerns="dashboard.students[0].active_risks?.map(r => r.title)"
+      />
+    </template>
+
+    <div v-else class="text-center py-16">
+      <p class="text-sm" :style="{color:'var(--text-3)'}">No children linked to your account yet.</p>
     </div>
   </div>
 </template>
