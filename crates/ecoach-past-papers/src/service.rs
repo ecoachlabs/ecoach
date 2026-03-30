@@ -441,12 +441,12 @@ fn composite_inverse_pressure(
     coappearance_score: BasisPoints,
     replacement_score: BasisPoints,
 ) -> i64 {
-    clamp_bp(
+    i64::from(clamp_bp(
         (0.45 * replacement_score as f64
             + 0.30 * coappearance_score as f64
             + 0.25 * recurrence_score as f64)
             .round() as i64,
-    )
+    ))
 }
 
 fn inverse_rationale(

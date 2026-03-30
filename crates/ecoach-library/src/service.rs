@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use crate::models::{
     ContinueLearningCard, GeneratedLibraryShelf, LibraryHomeSnapshot, LibraryItem,
     LibraryShelfItem, RevisionPackItem, RevisionPackSummary, SaveLibraryItemInput,
-    SavedQuestionCard,
+    SavedQuestionCard, TeachActionPlan, TopicRelationshipHint,
 };
 
 pub struct LibraryService<'a> {
@@ -478,6 +478,211 @@ impl<'a> LibraryService<'a> {
         Ok(items)
     }
 
+    pub fn build_teach_action_plan(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<TeachActionPlan> {
+        let topic_name: String = self
+            .conn
+            .query_row("SELECT name FROM topics WHERE id = ?1", [topic_id], |row| {
+                row.get(0)
+            })
+            .map_err(|err| EcoachError::NotFound(format!("topic not found: {}", err)))?;
+
+        let (mastery_score, gap_score): (i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT mastery_score, gap_score
+                 FROM student_topic_states
+                 WHERE student_id = ?1 AND topic_id = ?2",
+                params![student_id, topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .unwrap_or((0, 10_000));
+
+        let fragile_memory_count = self.count_scalar(
+            "SELECT COUNT(*)
+             FROM memory_states
+             WHERE student_id = ?1
+               AND topic_id = ?2
+               AND memory_state IN ('fragile', 'at_risk', 'fading', 'collapsed', 'rebuilding')",
+            params![student_id, topic_id],
+        )?;
+
+        let action_type = if gap_score >= 6500 {
+            "reteach_foundation"
+        } else if fragile_memory_count > 0 {
+            "memory_reactivation"
+        } else if mastery_score < 5500 {
+            "guided_practice"
+        } else {
+            "exam_linking"
+        }
+        .to_string();
+
+        let mut linked_question_ids =
+            self.list_saved_question_ids_for_topic(student_id, topic_id, limit)?;
+        if linked_question_ids.len() < limit {
+            for question_id in self.list_active_question_ids_for_topic(
+                topic_id,
+                limit.saturating_sub(linked_question_ids.len()),
+            )? {
+                if !linked_question_ids.contains(&question_id) {
+                    linked_question_ids.push(question_id);
+                }
+            }
+        }
+
+        let linked_entries = self.list_topic_entries(topic_id, limit)?;
+        let linked_entry_ids = linked_entries.iter().map(|(id, _)| *id).collect::<Vec<_>>();
+        let linked_entry_titles = linked_entries
+            .iter()
+            .map(|(_, title)| title.clone())
+            .collect::<Vec<_>>();
+        let target_node_titles = self.list_target_node_titles(topic_id, limit)?;
+        let relationship_hints = self.list_topic_relationship_hints(topic_id, limit)?;
+        let primary_prompt = self.build_teach_prompt(
+            &topic_name,
+            &action_type,
+            mastery_score,
+            gap_score,
+            fragile_memory_count,
+            &linked_entry_titles,
+            &target_node_titles,
+        );
+
+        Ok(TeachActionPlan {
+            student_id,
+            topic_id,
+            topic_name,
+            action_type,
+            primary_prompt,
+            linked_question_ids,
+            linked_entry_ids,
+            linked_entry_titles,
+            target_node_titles,
+            relationship_hints,
+        })
+    }
+
+    pub fn list_topic_relationship_hints(
+        &self,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<TopicRelationshipHint>> {
+        let mut hints = Vec::new();
+
+        let mut node_stmt = self
+            .conn
+            .prepare(
+                "SELECT
+                    ne.edge_type,
+                    COALESCE(an_from.canonical_title, t_from.name),
+                    COALESCE(an_to.canonical_title, t_to.name)
+                 FROM node_edges ne
+                 LEFT JOIN academic_nodes an_from
+                    ON ne.from_node_type = 'academic_node'
+                   AND an_from.id = ne.from_node_id
+                 LEFT JOIN academic_nodes an_to
+                    ON ne.to_node_type = 'academic_node'
+                   AND an_to.id = ne.to_node_id
+                 LEFT JOIN topics t_from
+                    ON ne.from_node_type = 'topic'
+                   AND t_from.id = ne.from_node_id
+                 LEFT JOIN topics t_to
+                    ON ne.to_node_type = 'topic'
+                   AND t_to.id = ne.to_node_id
+                 WHERE (
+                        an_from.topic_id = ?1
+                        OR an_to.topic_id = ?1
+                        OR (ne.from_node_type = 'topic' AND ne.from_node_id = ?1)
+                        OR (ne.to_node_type = 'topic' AND ne.to_node_id = ?1)
+                 )
+                   AND ne.edge_type IN ('prerequisite', 'related', 'confused_with', 'contrasts_with', 'dependent')
+                 ORDER BY ne.strength_score DESC, ne.id ASC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = node_stmt
+            .query_map(params![topic_id, limit as i64], |row| {
+                Ok(TopicRelationshipHint {
+                    relation_type: row.get(0)?,
+                    from_title: row.get(1)?,
+                    to_title: row.get(2)?,
+                    explanation: String::new(),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for row in rows {
+            let mut hint = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            hint.explanation = self.relationship_explanation(
+                &hint.relation_type,
+                &hint.from_title,
+                &hint.to_title,
+            );
+            if !hints.iter().any(|existing: &TopicRelationshipHint| {
+                existing.relation_type == hint.relation_type
+                    && existing.from_title == hint.from_title
+                    && existing.to_title == hint.to_title
+            }) {
+                hints.push(hint);
+            }
+        }
+
+        if hints.len() < limit {
+            let remaining = limit.saturating_sub(hints.len());
+            let mut knowledge_stmt = self
+                .conn
+                .prepare(
+                    "SELECT
+                        kr.relation_type,
+                        from_ke.title,
+                        to_ke.title
+                     FROM knowledge_relations kr
+                     INNER JOIN knowledge_entries from_ke ON from_ke.id = kr.from_entry_id
+                     INNER JOIN knowledge_entries to_ke ON to_ke.id = kr.to_entry_id
+                     WHERE from_ke.topic_id = ?1 OR to_ke.topic_id = ?1
+                     ORDER BY kr.strength_score DESC, kr.id ASC
+                     LIMIT ?2",
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let rows = knowledge_stmt
+                .query_map(params![topic_id, remaining as i64], |row| {
+                    Ok(TopicRelationshipHint {
+                        relation_type: row.get(0)?,
+                        from_title: row.get(1)?,
+                        to_title: row.get(2)?,
+                        explanation: String::new(),
+                    })
+                })
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            for row in rows {
+                let mut hint = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+                hint.explanation = self.relationship_explanation(
+                    &hint.relation_type,
+                    &hint.from_title,
+                    &hint.to_title,
+                );
+                if !hints.iter().any(|existing: &TopicRelationshipHint| {
+                    existing.relation_type == hint.relation_type
+                        && existing.from_title == hint.from_title
+                        && existing.to_title == hint.to_title
+                }) {
+                    hints.push(hint);
+                }
+                if hints.len() >= limit {
+                    break;
+                }
+            }
+        }
+
+        Ok(hints)
+    }
+
     fn build_generated_shelves(
         &self,
         student_id: i64,
@@ -920,6 +1125,120 @@ impl<'a> LibraryService<'a> {
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn list_topic_entries(&self, topic_id: i64, limit: usize) -> EcoachResult<Vec<(i64, String)>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, title
+                 FROM knowledge_entries
+                 WHERE topic_id = ?1
+                   AND status = 'active'
+                 ORDER BY importance_score DESC, difficulty_level ASC, id ASC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![topic_id, limit as i64], |row| {
+                Ok((row.get(0)?, row.get(1)?))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut entries = Vec::new();
+        for row in rows {
+            entries.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(entries)
+    }
+
+    fn list_target_node_titles(&self, topic_id: i64, limit: usize) -> EcoachResult<Vec<String>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT canonical_title
+                 FROM academic_nodes
+                 WHERE topic_id = ?1
+                   AND is_active = 1
+                 ORDER BY foundation_weight DESC, exam_relevance_score DESC, id ASC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![topic_id, limit as i64], |row| row.get(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut titles = Vec::new();
+        for row in rows {
+            titles.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(titles)
+    }
+
+    fn build_teach_prompt(
+        &self,
+        topic_name: &str,
+        action_type: &str,
+        mastery_score: i64,
+        gap_score: i64,
+        fragile_memory_count: i64,
+        linked_entry_titles: &[String],
+        target_node_titles: &[String],
+    ) -> String {
+        let anchor_entry = linked_entry_titles
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "the key definition set".to_string());
+        let anchor_node = target_node_titles
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "the core concept".to_string());
+        match action_type {
+            "reteach_foundation" => format!(
+                "Reteach {} from first principles. Anchor on {}, then walk the learner through {} before moving to questions. Current mastery is {} and gap pressure is {}.",
+                topic_name, anchor_entry, anchor_node, mastery_score, gap_score
+            ),
+            "memory_reactivation" => format!(
+                "Reactivate {} through quick retrieval on {} and {}. There are {} fragile memory traces, so start with recall before fresh drilling.",
+                topic_name, anchor_entry, anchor_node, fragile_memory_count
+            ),
+            "guided_practice" => format!(
+                "Guide the learner through {} using {} as the explanation anchor, then shift into scaffolded practice around {}.",
+                topic_name, anchor_entry, anchor_node
+            ),
+            _ => format!(
+                "Link {} to exam-style performance. Use {} and {} to connect knowledge to timed question work.",
+                topic_name, anchor_entry, anchor_node
+            ),
+        }
+    }
+
+    fn relationship_explanation(
+        &self,
+        relation_type: &str,
+        from_title: &str,
+        to_title: &str,
+    ) -> String {
+        match relation_type {
+            "prerequisite" | "dependent" => {
+                format!(
+                    "Teach {} before expecting stable performance on {}.",
+                    from_title, to_title
+                )
+            }
+            "confused_with" | "contrasts_with" => {
+                format!(
+                    "Contrast {} with {} explicitly because learners can mix them up.",
+                    from_title, to_title
+                )
+            }
+            "related" => format!(
+                "Connect {} to {} so the learner sees the wider structure.",
+                from_title, to_title
+            ),
+            _ => format!(
+                "Use the relationship between {} and {} during explanation.",
+                from_title, to_title
+            ),
+        }
     }
 
     fn count_scalar<P>(&self, sql: &str, params: P) -> EcoachResult<i64>

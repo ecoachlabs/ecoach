@@ -1,4 +1,7 @@
-use ecoach_memory::{MemoryService, RecordMemoryEvidenceInput};
+use ecoach_memory::{
+    MemoryReturnLoop, MemoryReviewQueueItem, MemoryService, RecordMemoryEvidenceInput,
+    TopicMemorySummary,
+};
 
 use crate::{error::CommandError, state::AppState};
 use serde::{Deserialize, Serialize};
@@ -47,6 +50,10 @@ pub struct DecayBatchResultDto {
     pub items_collapsed: usize,
     pub new_rechecks_scheduled: usize,
 }
+
+pub type MemoryReviewQueueItemDto = MemoryReviewQueueItem;
+pub type TopicMemorySummaryDto = TopicMemorySummary;
+pub type MemoryReturnLoopDto = MemoryReturnLoop;
 
 pub fn get_review_queue(
     state: &AppState,
@@ -135,4 +142,31 @@ pub fn complete_recheck(state: &AppState, recheck_id: i64) -> Result<(), Command
         service.complete_recheck(recheck_id)?;
         Ok(())
     })
+}
+
+pub fn build_review_queue(
+    state: &AppState,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<MemoryReviewQueueItemDto>, CommandError> {
+    state
+        .with_connection(|conn| Ok(MemoryService::new(conn).build_review_queue(student_id, limit)?))
+}
+
+pub fn list_memory_topic_summaries(
+    state: &AppState,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<TopicMemorySummaryDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(MemoryService::new(conn).list_topic_summaries(student_id, limit)?)
+    })
+}
+
+pub fn build_memory_return_loop(
+    state: &AppState,
+    student_id: i64,
+    limit: usize,
+) -> Result<MemoryReturnLoopDto, CommandError> {
+    state.with_connection(|conn| Ok(MemoryService::new(conn).build_return_loop(student_id, limit)?))
 }

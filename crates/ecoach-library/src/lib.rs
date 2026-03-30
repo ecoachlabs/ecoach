@@ -4,6 +4,6 @@ pub mod service;
 pub use models::{
     ContinueLearningCard, GeneratedLibraryShelf, LibraryHomeSnapshot, LibraryItem,
     LibraryShelfItem, RevisionPackItem, RevisionPackSummary, SaveLibraryItemInput,
-    SavedQuestionCard,
+    SavedQuestionCard, TeachActionPlan, TopicRelationshipHint,
 };
 pub use service::LibraryService;

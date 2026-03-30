@@ -148,6 +148,7 @@ impl<'a> DiagnosticEngine<'a> {
             .conn
             .prepare(
                 "SELECT
+                    dia.id,
                     dia.phase_id,
                     dia.question_id,
                     dia.display_order,
@@ -166,13 +167,14 @@ impl<'a> DiagnosticEngine<'a> {
         let rows = statement
             .query_map(params![diagnostic_id, phase_number], |row| {
                 Ok(DiagnosticPhaseItem {
-                    phase_id: row.get(0)?,
-                    question_id: row.get(1)?,
-                    display_order: row.get(2)?,
-                    condition_type: row.get(3)?,
-                    stem: row.get(4)?,
-                    question_format: row.get(5)?,
-                    topic_id: row.get(6)?,
+                    attempt_id: row.get(0)?,
+                    phase_id: row.get(1)?,
+                    question_id: row.get(2)?,
+                    display_order: row.get(3)?,
+                    condition_type: row.get(4)?,
+                    stem: row.get(5)?,
+                    question_format: row.get(6)?,
+                    topic_id: row.get(7)?,
                 })
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;

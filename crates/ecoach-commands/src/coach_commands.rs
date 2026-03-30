@@ -1,10 +1,11 @@
 use ecoach_coach_brain::{
-    CoachNextAction, CoachStateResolution, ContentReadinessResolution, TopicCase,
-    assess_content_readiness, list_priority_topic_cases, resolve_coach_state,
-    resolve_next_coach_action,
+    CoachNextAction, CoachStateResolution, ContentReadinessResolution, JourneyRouteSnapshot,
+    JourneyService, PlanEngine, TopicCase, assess_content_readiness, list_priority_topic_cases,
+    resolve_coach_state, resolve_next_coach_action,
 };
 use ecoach_reporting::{DashboardService, StudentDashboard};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::{error::CommandError, state::AppState};
 
@@ -150,6 +151,8 @@ impl From<StudentDashboard> for StudentDashboardDto {
     }
 }
 
+pub type JourneyRouteSnapshotDto = JourneyRouteSnapshot;
+
 pub fn get_coach_state(state: &AppState, student_id: i64) -> Result<CoachStateDto, CommandError> {
     state.with_connection(|conn| {
         let resolution = resolve_coach_state(conn, student_id)?;
@@ -197,4 +200,43 @@ pub fn get_student_dashboard(
         let dashboard = service.get_student_dashboard(student_id)?;
         Ok(StudentDashboardDto::from(dashboard))
     })
+}
+
+pub fn build_or_refresh_journey_route(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    target_exam: Option<String>,
+) -> Result<JourneyRouteSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(JourneyService::new(conn).build_or_refresh_route(
+            student_id,
+            subject_id,
+            target_exam.as_deref(),
+        )?)
+    })
+}
+
+pub fn get_active_journey_route(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Option<JourneyRouteSnapshotDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(JourneyService::new(conn).get_active_route(student_id, subject_id)?)
+    })
+}
+
+pub fn complete_journey_station(
+    state: &AppState,
+    station_id: i64,
+    evidence: Value,
+) -> Result<JourneyRouteSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(JourneyService::new(conn).complete_station(station_id, &evidence)?)
+    })
+}
+
+pub fn generate_today_mission(state: &AppState, student_id: i64) -> Result<i64, CommandError> {
+    state.with_connection(|conn| Ok(PlanEngine::new(conn).generate_today_mission(student_id)?))
 }

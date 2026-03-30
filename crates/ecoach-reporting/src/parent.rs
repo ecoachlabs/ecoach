@@ -4,6 +4,7 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 
 use crate::dashboard::{DashboardService, StudentDashboard, SubjectSummary};
+use crate::strategy::{ReportingStrategySummary, load_strategy_summary};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParentDashboardSnapshot {
@@ -37,6 +38,10 @@ pub struct ParentRiskSummary {
 pub struct HouseholdDashboardSnapshot {
     pub parent_id: i64,
     pub parent_name: String,
+    pub household_attention_level: String,
+    pub students_needing_attention: usize,
+    pub active_interventions: usize,
+    pub household_actions: Vec<HouseholdActionItem>,
     pub students: Vec<HouseholdStudentSnapshot>,
     pub generated_at: String,
 }
@@ -49,6 +54,7 @@ pub struct HouseholdStudentSnapshot {
     pub attention_level: String,
     pub exam_target: Option<String>,
     pub exam_target_date: Option<String>,
+    pub strategy_summary: Option<ReportingStrategySummary>,
     pub active_risks: Vec<ParentRiskSummary>,
     pub active_interventions: Vec<HouseholdInterventionSummary>,
     pub household_actions: Vec<HouseholdActionItem>,
@@ -158,6 +164,7 @@ impl<'a> ParentInsightService<'a> {
         let generated_at = Utc::now().to_rfc3339();
 
         let mut summaries = Vec::new();
+        let mut aggregate_actions: Vec<HouseholdActionItem> = Vec::new();
         for (student_id, student_name) in students {
             let student_dashboard = dashboard_service.get_student_dashboard(student_id)?;
             let active_risks = self.sync_derived_risks(student_id, &student_dashboard)?;
@@ -178,6 +185,7 @@ impl<'a> ParentInsightService<'a> {
             )?;
 
             let exam_target_date = self.student_exam_target_date(student_id)?;
+            let strategy_summary = load_strategy_summary(self.conn, student_id)?;
             let active_interventions = self.list_household_interventions(student_id)?;
             let attention_level = derive_attention_level(
                 &student_dashboard.overall_readiness_band,
@@ -187,9 +195,16 @@ impl<'a> ParentInsightService<'a> {
             let household_actions = self.build_household_actions(
                 student_id,
                 &student_dashboard,
+                strategy_summary.as_ref(),
                 &active_risks,
                 &active_interventions,
             )?;
+            aggregate_actions.extend(
+                household_actions
+                    .iter()
+                    .filter(|item| item.urgency != "low")
+                    .cloned(),
+            );
 
             summaries.push(HouseholdStudentSnapshot {
                 student_id,
@@ -198,6 +213,7 @@ impl<'a> ParentInsightService<'a> {
                 attention_level,
                 exam_target: student_dashboard.exam_target.clone(),
                 exam_target_date,
+                strategy_summary,
                 active_risks,
                 active_interventions,
                 household_actions,
@@ -206,9 +222,40 @@ impl<'a> ParentInsightService<'a> {
             });
         }
 
+        let students_needing_attention = summaries
+            .iter()
+            .filter(|student| student.attention_level != "low")
+            .count();
+        let active_interventions = summaries
+            .iter()
+            .map(|student| student.active_interventions.len())
+            .sum();
+        let household_attention_level = if summaries
+            .iter()
+            .any(|student| student.attention_level == "high")
+        {
+            "high".to_string()
+        } else if students_needing_attention > 0 {
+            "medium".to_string()
+        } else {
+            "low".to_string()
+        };
+        let mut household_actions = dedupe_household_actions(aggregate_actions);
+        if household_actions.is_empty() {
+            household_actions.push(HouseholdActionItem {
+                urgency: "low".to_string(),
+                title: "Maintain the household study routine".to_string(),
+                detail: "No household-level escalation is needed right now beyond protecting normal study time.".to_string(),
+            });
+        }
+
         Ok(HouseholdDashboardSnapshot {
             parent_id,
             parent_name,
+            household_attention_level,
+            students_needing_attention,
+            active_interventions,
+            household_actions,
             students: summaries,
             generated_at,
         })
@@ -630,6 +677,7 @@ impl<'a> ParentInsightService<'a> {
         &self,
         student_id: i64,
         dashboard: &StudentDashboard,
+        strategy_summary: Option<&ReportingStrategySummary>,
         risks: &[ParentRiskSummary],
         interventions: &[HouseholdInterventionSummary],
     ) -> EcoachResult<Vec<HouseholdActionItem>> {
@@ -670,6 +718,30 @@ impl<'a> ParentInsightService<'a> {
             });
         }
 
+        if let Some(strategy_summary) = strategy_summary {
+            if let Some(topic_name) = strategy_summary.priority_topics.first() {
+                actions.push(HouseholdActionItem {
+                    urgency: if strategy_summary.strategy_mode == "rescue" {
+                        "high".to_string()
+                    } else {
+                        "medium".to_string()
+                    },
+                    title: format!("Support the {} strategy", strategy_summary.strategy_mode),
+                    detail: format!(
+                        "The current premium strategy is centered on {}, so protect time for {} first.",
+                        strategy_summary.strategy_mode, topic_name
+                    ),
+                });
+            }
+            if let Some(action) = strategy_summary.household_actions.first() {
+                actions.push(HouseholdActionItem {
+                    urgency: "medium".to_string(),
+                    title: "Follow the premium household guidance".to_string(),
+                    detail: action.clone(),
+                });
+            }
+        }
+
         if self.has_memory_risk(student_id)? {
             actions.push(HouseholdActionItem {
                 urgency: "medium".to_string(),
@@ -689,8 +761,7 @@ impl<'a> ParentInsightService<'a> {
             });
         }
 
-        actions.truncate(4);
-        Ok(actions)
+        Ok(dedupe_household_actions(actions))
     }
 
     fn compute_intervention_progress(
@@ -843,6 +914,23 @@ fn format_intervention_step(step: &InterventionStepRecord, topic_name: Option<&s
     detail
 }
 
+fn dedupe_household_actions(actions: Vec<HouseholdActionItem>) -> Vec<HouseholdActionItem> {
+    let mut deduped = Vec::new();
+    for action in actions {
+        if deduped
+            .iter()
+            .any(|existing: &HouseholdActionItem| existing.title == action.title)
+        {
+            continue;
+        }
+        deduped.push(action);
+        if deduped.len() == 4 {
+            break;
+        }
+    }
+    deduped
+}
+
 fn was_recent(raw: Option<&str>, days: i64) -> bool {
     raw.and_then(parse_timestamp)
         .map(|timestamp| (Utc::now() - timestamp).num_days() <= days)
@@ -914,7 +1002,8 @@ mod tests {
         create_test_schema(&conn);
 
         conn.execute(
-            "INSERT INTO accounts (id, display_name) VALUES (1, 'Parent'), (2, 'Learner')",
+            "INSERT INTO accounts (id, display_name, entitlement_tier)
+             VALUES (1, 'Parent', 'standard'), (2, 'Learner', 'premium')",
             [],
         )
         .expect("accounts");
@@ -925,8 +1014,8 @@ mod tests {
         )
         .expect("link");
         conn.execute(
-            "INSERT INTO student_profiles (account_id, exam_target, exam_target_date)
-             VALUES (2, 'BECE', '2026-06-01')",
+            "INSERT INTO student_profiles (account_id, exam_target, exam_target_date, daily_study_budget_minutes)
+             VALUES (2, 'BECE', '2026-06-01', 75)",
             [],
         )
         .expect("profile");
@@ -942,8 +1031,8 @@ mod tests {
         .expect("topic");
         conn.execute(
             "INSERT INTO student_topic_states (
-                student_id, topic_id, mastery_score, priority_score, gap_score, trend_state, last_seen_at, is_blocked
-             ) VALUES (2, 11, 2200, 9000, 7800, 'critical', '2026-03-28T09:00:00Z', 1)",
+                student_id, topic_id, mastery_score, priority_score, gap_score, trend_state, last_seen_at, is_blocked, next_review_at
+             ) VALUES (2, 11, 2200, 9000, 7800, 'critical', '2026-03-28T09:00:00Z', 1, '2026-03-30T09:00:00Z')",
             [],
         )
         .expect("topic state");
@@ -971,6 +1060,12 @@ mod tests {
             [],
         )
         .expect("memory state");
+        conn.execute(
+            "INSERT INTO coach_plans (student_id, current_phase, daily_budget_minutes, status, updated_at)
+             VALUES (2, 'foundation', 90, 'active', '2026-03-29T09:00:00Z')",
+            [],
+        )
+        .expect("coach plan");
 
         let service = ParentInsightService::new(&conn);
         let snapshot = service
@@ -978,7 +1073,15 @@ mod tests {
             .expect("household dashboard");
 
         assert_eq!(snapshot.students.len(), 1);
+        assert_eq!(snapshot.household_attention_level, "high");
         assert_eq!(snapshot.students[0].attention_level, "high");
+        assert_eq!(
+            snapshot.students[0]
+                .strategy_summary
+                .as_ref()
+                .map(|strategy| strategy.strategy_mode.as_str()),
+            Some("rescue")
+        );
         assert_eq!(snapshot.students[0].active_interventions.len(), 1);
         assert!(!snapshot.students[0].household_actions.is_empty());
     }
@@ -988,7 +1091,8 @@ mod tests {
             "
             CREATE TABLE accounts (
                 id INTEGER PRIMARY KEY,
-                display_name TEXT NOT NULL
+                display_name TEXT NOT NULL,
+                entitlement_tier TEXT NOT NULL
             );
             CREATE TABLE parent_student_links (
                 parent_account_id INTEGER NOT NULL,
@@ -997,7 +1101,8 @@ mod tests {
             CREATE TABLE student_profiles (
                 account_id INTEGER PRIMARY KEY,
                 exam_target TEXT,
-                exam_target_date TEXT
+                exam_target_date TEXT,
+                daily_study_budget_minutes INTEGER
             );
             CREATE TABLE subjects (
                 id INTEGER PRIMARY KEY,
@@ -1017,7 +1122,8 @@ mod tests {
                 gap_score INTEGER NOT NULL,
                 trend_state TEXT NOT NULL,
                 last_seen_at TEXT,
-                is_blocked INTEGER NOT NULL DEFAULT 0
+                is_blocked INTEGER NOT NULL DEFAULT 0,
+                next_review_at TEXT
             );
             CREATE TABLE risk_flags (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1065,6 +1171,14 @@ mod tests {
                 student_id INTEGER NOT NULL,
                 started_at TEXT,
                 status TEXT NOT NULL
+            );
+            CREATE TABLE coach_plans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                current_phase TEXT,
+                daily_budget_minutes INTEGER,
+                status TEXT NOT NULL,
+                updated_at TEXT NOT NULL
             );
             ",
         )

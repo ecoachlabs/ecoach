@@ -129,6 +129,7 @@ pub struct DiagnosticPhasePlan {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticPhaseItem {
+    pub attempt_id: i64,
     pub phase_id: i64,
     pub question_id: i64,
     pub display_order: i64,

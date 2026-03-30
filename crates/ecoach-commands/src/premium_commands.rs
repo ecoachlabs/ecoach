@@ -1,4 +1,7 @@
-use ecoach_premium::{CreateInterventionInput, InterventionStatus, PremiumService, RiskFlagStatus};
+use ecoach_premium::{
+    CreateInterventionInput, InterventionStatus, PremiumService, PremiumStrategySnapshot,
+    RiskFlagStatus,
+};
 
 use crate::{error::CommandError, state::AppState};
 use serde::{Deserialize, Serialize};
@@ -41,6 +44,8 @@ pub struct EntitlementSnapshotDto {
     pub active_interventions: i64,
     pub premium_features_enabled: Vec<String>,
 }
+
+pub type PremiumStrategySnapshotDto = PremiumStrategySnapshot;
 
 pub fn get_risk_dashboard(
     state: &AppState,
@@ -182,4 +187,11 @@ pub fn is_feature_enabled(
         let enabled = service.is_feature_enabled(student_id, &feature_key)?;
         Ok(enabled)
     })
+}
+
+pub fn get_strategy_snapshot(
+    state: &AppState,
+    student_id: i64,
+) -> Result<PremiumStrategySnapshotDto, CommandError> {
+    state.with_connection(|conn| Ok(PremiumService::new(conn).get_strategy_snapshot(student_id)?))
 }

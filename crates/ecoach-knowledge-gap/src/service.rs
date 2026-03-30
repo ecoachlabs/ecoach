@@ -4,8 +4,8 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{
-    CreateGapRepairPlanInput, GapDashboard, GapRepairPlan, GapRepairPlanItem, GapScoreCard,
-    RepairItemStatus, SolidificationProgress, SolidificationSession,
+    CreateGapRepairPlanInput, GapDashboard, GapRepairFocus, GapRepairPlan, GapRepairPlanItem,
+    GapScoreCard, RepairItemStatus, SolidificationProgress, SolidificationSession,
 };
 
 // ── Gap severity thresholds ──
@@ -184,13 +184,27 @@ impl<'a> KnowledgeGapService<'a> {
         topic_id: i64,
         gap_card: &GapScoreCard,
     ) -> EcoachResult<()> {
-        // Get academic nodes for this topic, ordered by prerequisite depth
+        // Get academic nodes for this topic, ordered from foundation-first to advanced.
+        // The curriculum schema does not currently store depth/sequence columns on academic_nodes,
+        // so we derive a stable instructional order from prerequisite edges and node weights.
         let mut stmt = self
             .conn
             .prepare(
-                "SELECT an.id FROM academic_nodes an
+                "SELECT an.id
+                 FROM academic_nodes an
                  WHERE an.topic_id = ?1
-                 ORDER BY an.depth ASC, an.sequence_order ASC",
+                   AND an.is_active = 1
+                 ORDER BY
+                    COALESCE((
+                        SELECT COUNT(*)
+                        FROM node_edges ne
+                        WHERE ne.to_node_id = an.id
+                          AND ne.to_node_type = 'academic_node'
+                          AND ne.edge_type IN ('prerequisite', 'soft_prerequisite')
+                    ), 0) ASC,
+                    an.foundation_weight DESC,
+                    an.exam_relevance_score DESC,
+                    an.id ASC",
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
@@ -218,12 +232,13 @@ impl<'a> KnowledgeGapService<'a> {
                 1 => "practice_with_scaffolding",
                 _ => "independent_drill",
             };
+            let status = if seq == 0 { "active" } else { "pending" };
 
             self.conn
                 .execute(
                     "INSERT INTO gap_repair_plan_items (plan_id, node_id, sequence_order, repair_action, status, created_at)
-                     VALUES (?1, ?2, ?3, ?4, 'pending', datetime('now'))",
-                    params![plan_id, node_id, seq as i64, action],
+                     VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'))",
+                    params![plan_id, node_id, seq as i64, action, status],
                 )
                 .map_err(|e| EcoachError::Storage(e.to_string()))?;
         }
@@ -233,7 +248,7 @@ impl<'a> KnowledgeGapService<'a> {
             self.conn
                 .execute(
                     "INSERT INTO gap_repair_plan_items (plan_id, node_id, sequence_order, repair_action, status, created_at)
-                     VALUES (?1, NULL, 0, ?2, 'pending', datetime('now'))",
+                     VALUES (?1, NULL, 0, ?2, 'active', datetime('now'))",
                     params![plan_id, dominant_action],
                 )
                 .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -279,7 +294,12 @@ impl<'a> KnowledgeGapService<'a> {
             .optional()
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let items = self.get_plan_items(plan_id)?;
+        let gap_card = self.compute_gap_score_card(student_id, topic_id).ok();
+        let dominant_focus = gap_card
+            .as_ref()
+            .map(|card| self.dominant_focus_key(card))
+            .unwrap_or_else(|| "knowledge_gap".to_string());
+        let items = self.get_plan_items(plan_id, topic_id, &dominant_focus)?;
 
         let total = items.len() as i64;
         let completed = items.iter().filter(|i| i.status == "completed").count() as i64;
@@ -288,6 +308,21 @@ impl<'a> KnowledgeGapService<'a> {
         } else {
             0
         };
+        let severity_label = gap_card
+            .as_ref()
+            .map(|card| card.severity_label.clone())
+            .unwrap_or_else(|| "medium".to_string());
+        let recommended_session_type = self.recommended_session_type(&dominant_focus).to_string();
+        let rationale = gap_card
+            .as_ref()
+            .map(|card| self.plan_rationale(card))
+            .unwrap_or_else(|| {
+                "Repair sequence built from topic evidence; run the active item first.".to_string()
+            });
+        let focus_breakdown = gap_card
+            .as_ref()
+            .map(|card| self.focus_breakdown(card))
+            .unwrap_or_default();
 
         Ok(GapRepairPlan {
             id,
@@ -296,6 +331,11 @@ impl<'a> KnowledgeGapService<'a> {
             topic_name,
             status,
             priority_score: clamp_bp(priority),
+            severity_label,
+            dominant_focus,
+            recommended_session_type,
+            rationale,
+            focus_breakdown,
             items,
             progress_percent,
             created_at,
@@ -303,12 +343,17 @@ impl<'a> KnowledgeGapService<'a> {
         })
     }
 
-    fn get_plan_items(&self, plan_id: i64) -> EcoachResult<Vec<GapRepairPlanItem>> {
+    fn get_plan_items(
+        &self,
+        plan_id: i64,
+        topic_id: i64,
+        dominant_focus: &str,
+    ) -> EcoachResult<Vec<GapRepairPlanItem>> {
         let mut stmt = self
             .conn
             .prepare(
-                "SELECT gpi.id, gpi.plan_id, gpi.node_id, an.canonical_title, gpi.sequence_order,
-                        gpi.repair_action, gpi.status
+                "SELECT gpi.id, gpi.plan_id, gpi.node_id, an.canonical_title, an.node_type,
+                        gpi.sequence_order, gpi.repair_action, gpi.status
                  FROM gap_repair_plan_items gpi
                  LEFT JOIN academic_nodes an ON an.id = gpi.node_id
                  WHERE gpi.plan_id = ?1
@@ -318,21 +363,55 @@ impl<'a> KnowledgeGapService<'a> {
 
         let rows = stmt
             .query_map([plan_id], |row| {
-                Ok(GapRepairPlanItem {
-                    id: row.get(0)?,
-                    plan_id: row.get(1)?,
-                    node_id: row.get(2)?,
-                    node_title: row.get(3)?,
-                    sequence_order: row.get(4)?,
-                    repair_action: row.get(5)?,
-                    status: row.get(6)?,
-                })
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, i64>(1)?,
+                    row.get::<_, Option<i64>>(2)?,
+                    row.get::<_, Option<String>>(3)?,
+                    row.get::<_, Option<String>>(4)?,
+                    row.get::<_, i64>(5)?,
+                    row.get::<_, String>(6)?,
+                    row.get::<_, String>(7)?,
+                ))
             })
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let mut items = Vec::new();
         for row in rows {
-            items.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+            let (
+                id,
+                plan_id,
+                node_id,
+                node_title,
+                node_type,
+                sequence_order,
+                repair_action,
+                status,
+            ) = row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let candidate_question_ids = self.list_candidate_question_ids(topic_id, node_id, 4)?;
+            let misconception_titles = self.list_misconception_titles(topic_id, node_id, 3)?;
+            let resource_titles =
+                self.list_resource_titles(topic_id, &candidate_question_ids, 3)?;
+            items.push(GapRepairPlanItem {
+                id,
+                plan_id,
+                node_id,
+                node_title: node_title.clone(),
+                node_type: node_type.clone(),
+                sequence_order,
+                repair_action: repair_action.clone(),
+                status,
+                reason: self.item_reason(&repair_action, dominant_focus, node_title.as_deref()),
+                target_outcome: self.item_target_outcome(
+                    &repair_action,
+                    node_type.as_deref(),
+                    node_title.as_deref(),
+                ),
+                suggested_duration_minutes: self.suggested_duration_minutes(&repair_action),
+                candidate_question_ids,
+                misconception_titles,
+                resource_titles,
+            });
         }
         Ok(items)
     }
@@ -608,5 +687,300 @@ impl<'a> KnowledgeGapService<'a> {
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
         Ok(())
+    }
+
+    fn dominant_focus_key(&self, gap_card: &GapScoreCard) -> String {
+        let focus_scores = [
+            ("knowledge_gap", gap_card.knowledge_gap_score),
+            ("conceptual_confusion", gap_card.conceptual_confusion_score),
+            ("recognition_failure", gap_card.recognition_failure_score),
+            ("execution_error", gap_card.execution_error_score),
+        ];
+
+        focus_scores
+            .into_iter()
+            .max_by_key(|(_, score)| *score)
+            .map(|(key, _)| key.to_string())
+            .unwrap_or_else(|| "knowledge_gap".to_string())
+    }
+
+    fn focus_breakdown(&self, gap_card: &GapScoreCard) -> Vec<GapRepairFocus> {
+        let mut focus = vec![
+            GapRepairFocus {
+                focus_key: "knowledge_gap".to_string(),
+                score: gap_card.knowledge_gap_score,
+                label: "Missing foundation".to_string(),
+            },
+            GapRepairFocus {
+                focus_key: "conceptual_confusion".to_string(),
+                score: gap_card.conceptual_confusion_score,
+                label: "Concept confusion".to_string(),
+            },
+            GapRepairFocus {
+                focus_key: "recognition_failure".to_string(),
+                score: gap_card.recognition_failure_score,
+                label: "Recognition failure".to_string(),
+            },
+            GapRepairFocus {
+                focus_key: "execution_error".to_string(),
+                score: gap_card.execution_error_score,
+                label: "Execution weakness".to_string(),
+            },
+        ];
+        focus.sort_by(|left, right| right.score.cmp(&left.score));
+        focus
+    }
+
+    fn recommended_session_type(&self, dominant_focus: &str) -> &'static str {
+        match dominant_focus {
+            "conceptual_confusion" => "contrast_and_reteach",
+            "recognition_failure" => "rapid_recognition_drill",
+            "execution_error" => "worked_example_then_independent",
+            _ => "teach_then_practice",
+        }
+    }
+
+    fn plan_rationale(&self, gap_card: &GapScoreCard) -> String {
+        format!(
+            "This repair plan is prioritizing {} because the topic gap is {} and that error pattern is the strongest signal.",
+            self.recommended_session_type(&self.dominant_focus_key(gap_card))
+                .replace('_', " "),
+            gap_card.severity_label
+        )
+    }
+
+    fn item_reason(
+        &self,
+        repair_action: &str,
+        dominant_focus: &str,
+        node_title: Option<&str>,
+    ) -> String {
+        let node_label = node_title.unwrap_or("this topic");
+        match repair_action {
+            "teach_concept" => format!(
+                "Start by reteaching {} because {} is the dominant gap signal.",
+                node_label,
+                dominant_focus.replace('_', " ")
+            ),
+            "clarify_confusion" => format!(
+                "Use {} to separate closely-confused ideas before drilling.",
+                node_label
+            ),
+            "drill_recognition" => format!(
+                "Run quick recognition work on {} to improve pattern recall.",
+                node_label
+            ),
+            "practice_with_scaffolding" => format!(
+                "Practice {} with support so the learner can convert explanation into execution.",
+                node_label
+            ),
+            "independent_drill" => format!(
+                "Finish with independent questions on {} to verify the repair is holding.",
+                node_label
+            ),
+            _ => format!("Repair {} with a focused intervention.", node_label),
+        }
+    }
+
+    fn item_target_outcome(
+        &self,
+        repair_action: &str,
+        node_type: Option<&str>,
+        node_title: Option<&str>,
+    ) -> String {
+        let node_label = node_title.unwrap_or("the topic");
+        let node_hint = node_type.unwrap_or("concept");
+        match repair_action {
+            "teach_concept" => format!(
+                "Explain {} as a usable {} in the learner's own words.",
+                node_label, node_hint
+            ),
+            "clarify_confusion" => format!(
+                "Separate {} from its nearby confusions with clear contrasts.",
+                node_label
+            ),
+            "drill_recognition" => format!(
+                "Recognize {} quickly and accurately in mixed question sets.",
+                node_label
+            ),
+            "practice_with_scaffolding" => {
+                format!("Apply {} correctly with guided steps.", node_label)
+            }
+            "independent_drill" => format!(
+                "Solve {} questions independently without prompts.",
+                node_label
+            ),
+            _ => format!(
+                "Strengthen {} enough to reduce repeated breakdowns.",
+                node_label
+            ),
+        }
+    }
+
+    fn suggested_duration_minutes(&self, repair_action: &str) -> i64 {
+        match repair_action {
+            "teach_concept" | "clarify_confusion" => 15,
+            "practice_with_scaffolding" => 12,
+            "drill_recognition" => 10,
+            "independent_drill" => 8,
+            _ => 10,
+        }
+    }
+
+    fn list_candidate_question_ids(
+        &self,
+        topic_id: i64,
+        node_id: Option<i64>,
+        limit: usize,
+    ) -> EcoachResult<Vec<i64>> {
+        let mut ids = Vec::new();
+        if let Some(node_id) = node_id {
+            let mut stmt = self
+                .conn
+                .prepare(
+                    "SELECT q.id
+                     FROM question_skill_links qsl
+                     INNER JOIN questions q ON q.id = qsl.question_id
+                     WHERE q.topic_id = ?1
+                       AND qsl.node_id = ?2
+                       AND q.is_active = 1
+                     ORDER BY qsl.is_primary DESC, q.difficulty_level ASC, q.id ASC
+                     LIMIT ?3",
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let rows = stmt
+                .query_map(params![topic_id, node_id, limit as i64], |row| row.get(0))
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            for row in rows {
+                ids.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+            }
+        }
+
+        if ids.len() < limit {
+            let remaining = limit.saturating_sub(ids.len());
+            let mut stmt = self
+                .conn
+                .prepare(
+                    "SELECT q.id
+                     FROM questions q
+                     WHERE q.topic_id = ?1
+                       AND q.is_active = 1
+                       AND (?2 IS NULL OR COALESCE(q.primary_skill_id, -1) != ?2)
+                     ORDER BY q.difficulty_level ASC, q.id ASC
+                     LIMIT ?3",
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let rows = stmt
+                .query_map(params![topic_id, node_id, remaining as i64], |row| {
+                    row.get(0)
+                })
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            for row in rows {
+                let question_id = row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+                if !ids.contains(&question_id) {
+                    ids.push(question_id);
+                }
+            }
+        }
+
+        Ok(ids)
+    }
+
+    fn list_misconception_titles(
+        &self,
+        topic_id: i64,
+        node_id: Option<i64>,
+        limit: usize,
+    ) -> EcoachResult<Vec<String>> {
+        let sql = if node_id.is_some() {
+            "SELECT title
+             FROM misconception_patterns
+             WHERE is_active = 1 AND node_id = ?1
+             ORDER BY severity DESC, id ASC
+             LIMIT ?2"
+        } else {
+            "SELECT title
+             FROM misconception_patterns
+             WHERE is_active = 1 AND topic_id = ?1
+             ORDER BY severity DESC, id ASC
+             LIMIT ?2"
+        };
+        let anchor_id = node_id.unwrap_or(topic_id);
+        let mut stmt = self
+            .conn
+            .prepare(sql)
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let rows = stmt
+            .query_map(params![anchor_id, limit as i64], |row| row.get(0))
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let mut titles = Vec::new();
+        for row in rows {
+            titles.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        if titles.is_empty() && node_id.is_some() {
+            return self.list_misconception_titles(topic_id, None, limit);
+        }
+        Ok(titles)
+    }
+
+    fn list_resource_titles(
+        &self,
+        topic_id: i64,
+        candidate_question_ids: &[i64],
+        limit: usize,
+    ) -> EcoachResult<Vec<String>> {
+        let mut titles = Vec::new();
+        for question_id in candidate_question_ids {
+            let mut stmt = self
+                .conn
+                .prepare(
+                    "SELECT ke.title
+                     FROM question_glossary_links qgl
+                     INNER JOIN knowledge_entries ke ON ke.id = qgl.entry_id
+                     WHERE qgl.question_id = ?1
+                     ORDER BY qgl.is_primary DESC, qgl.confidence_score DESC, ke.importance_score DESC, ke.id ASC
+                     LIMIT ?2",
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let rows = stmt
+                .query_map(params![question_id, limit as i64], |row| row.get(0))
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            for row in rows {
+                let title: String = row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+                if !titles.contains(&title) {
+                    titles.push(title);
+                }
+                if titles.len() >= limit {
+                    return Ok(titles);
+                }
+            }
+        }
+
+        if titles.len() < limit {
+            let mut stmt = self
+                .conn
+                .prepare(
+                    "SELECT title
+                     FROM knowledge_entries
+                     WHERE topic_id = ?1 AND status = 'active'
+                     ORDER BY importance_score DESC, difficulty_level ASC, id ASC
+                     LIMIT ?2",
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let rows = stmt
+                .query_map(params![topic_id, limit as i64], |row| row.get(0))
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            for row in rows {
+                let title: String = row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+                if !titles.contains(&title) {
+                    titles.push(title);
+                }
+                if titles.len() >= limit {
+                    break;
+                }
+            }
+        }
+
+        Ok(titles)
     }
 }

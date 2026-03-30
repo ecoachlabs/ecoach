@@ -1,5 +1,6 @@
 use ecoach_questions::{
-    QuestionGenerationRequestInput, QuestionReactor, QuestionService, QuestionSlotSpec,
+    QuestionGenerationRequestInput, QuestionReactor, QuestionRemediationPlan, QuestionService,
+    QuestionSlotSpec,
 };
 
 use crate::{
@@ -11,6 +12,8 @@ use crate::{
     error::CommandError,
     state::AppState,
 };
+
+pub type QuestionRemediationPlanDto = QuestionRemediationPlan;
 
 pub fn choose_reactor_family(
     state: &AppState,
@@ -100,5 +103,16 @@ pub fn detect_near_duplicate(
         Ok(DuplicateCheckResultDto::from(
             service.detect_near_duplicate(&stem, family_id, topic_id)?,
         ))
+    })
+}
+
+pub fn recommend_question_remediation_plan(
+    state: &AppState,
+    student_id: i64,
+    slot_spec: QuestionSlotSpec,
+) -> Result<Option<QuestionRemediationPlanDto>, CommandError> {
+    state.with_connection(|conn| {
+        let reactor = QuestionReactor::new(conn);
+        Ok(reactor.recommend_remediation_plan(student_id, &slot_spec)?)
     })
 }

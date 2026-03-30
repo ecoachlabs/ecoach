@@ -104,9 +104,9 @@ impl<'a> JourneyService<'a> {
                 .take(3)
                 .map(|item| json!({
                     "topic_id": item.topic_id,
-                    "topic_name": item.topic_name,
-                    "primary_hypothesis_code": item.primary_hypothesis_code,
-                    "recommended_mode": item.recommended_intervention.mode,
+                    "topic_name": &item.topic_name,
+                    "primary_hypothesis_code": &item.primary_hypothesis_code,
+                    "recommended_mode": &item.recommended_intervention.mode,
                 }))
                 .collect::<Vec<_>>(),
         }))
@@ -141,14 +141,14 @@ impl<'a> JourneyService<'a> {
             let entry_rule = if index == 0 {
                 json!({
                     "entry": "start_immediately",
-                    "primary_hypothesis_code": topic_case.primary_hypothesis_code,
+                    "primary_hypothesis_code": &topic_case.primary_hypothesis_code,
                     "requires_probe": topic_case.requires_probe,
-                    "recommended_mode": topic_case.recommended_intervention.mode,
+                    "recommended_mode": &topic_case.recommended_intervention.mode,
                 })
             } else {
                 json!({
                     "requires_previous_station": format!("station_{:02}", index),
-                    "primary_hypothesis_code": topic_case.primary_hypothesis_code,
+                    "primary_hypothesis_code": &topic_case.primary_hypothesis_code,
                     "requires_probe": topic_case.requires_probe,
                 })
             };
@@ -157,20 +157,20 @@ impl<'a> JourneyService<'a> {
                 "target_accuracy_score": target_accuracy_for_station(station_type, topic_case, index as i64),
                 "target_readiness_score": readiness.readiness_score,
                 "min_questions": min_questions_for_station(station_type),
-                "proof_gaps": topic_case.proof_gaps,
+                "proof_gaps": &topic_case.proof_gaps,
                 "requires_delayed_recall": station_type == "review",
                 "requires_timed_success": station_type == "performance",
-                "recommended_mode": topic_case.recommended_intervention.mode,
+                "recommended_mode": &topic_case.recommended_intervention.mode,
             });
             let evidence = json!({
                 "topic_id": topic_case.topic_id,
-                "topic_name": topic_case.topic_name,
+                "topic_name": &topic_case.topic_name,
                 "priority_score": topic_case.priority_score,
                 "diagnosis_certainty": topic_case.diagnosis_certainty,
-                "primary_hypothesis_code": topic_case.primary_hypothesis_code,
-                "active_hypotheses": topic_case.active_hypotheses,
-                "recommended_intervention": topic_case.recommended_intervention,
-                "open_questions": topic_case.open_questions,
+                "primary_hypothesis_code": &topic_case.primary_hypothesis_code,
+                "active_hypotheses": &topic_case.active_hypotheses,
+                "recommended_intervention": &topic_case.recommended_intervention,
+                "open_questions": &topic_case.open_questions,
             });
             self.conn
                 .execute(
@@ -178,7 +178,7 @@ impl<'a> JourneyService<'a> {
                         route_id, station_code, title, topic_id, sequence_no, station_type,
                         target_mastery_score, target_accuracy_score, target_readiness_score,
                         status, entry_rule_json, completion_rule_json, evidence_json, unlocked_at
-                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, '{}',
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13,
                                 CASE WHEN ?10 = 'active' THEN datetime('now') ELSE NULL END)",
                     params![
                         route_id,
@@ -702,6 +702,71 @@ mod tests {
             .expect("station should complete");
 
         assert_eq!(updated.stations[0].status, "completed");
+    }
+
+    #[test]
+    fn journey_service_prioritizes_review_station_when_memory_is_due() {
+        let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_ids = {
+            let mut statement = conn
+                .prepare("SELECT id FROM topics WHERE subject_id = ?1 ORDER BY id ASC LIMIT 2")
+                .expect("statement should prepare");
+            let rows = statement
+                .query_map([subject_id], |row| row.get::<_, i64>(0))
+                .expect("topic rows should query");
+            let mut ids = Vec::new();
+            for row in rows {
+                ids.push(row.expect("topic id should map"));
+            }
+            ids
+        };
+        let priority_topic_id = topic_ids[0];
+        let fading_topic_id = topic_ids[1];
+
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, fragility_score, priority_score,
+                pressure_collapse_index, memory_strength, decay_risk, evidence_count, repair_priority
+             ) VALUES (1, ?1, 6400, 4200, 2800, 9800, 1800, 7200, 1800, 4, 2000)",
+            [priority_topic_id],
+        )
+        .expect("priority topic state should insert");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, fragility_score, priority_score,
+                pressure_collapse_index, memory_strength, decay_risk, evidence_count, repair_priority
+             ) VALUES (1, ?1, 6100, 5100, 4300, 6200, 2200, 2600, 8400, 4, 2500)",
+            [fading_topic_id],
+        )
+        .expect("fading topic state should insert");
+        conn.execute(
+            "INSERT INTO memory_states (
+                student_id, topic_id, memory_state, memory_strength, recall_fluency, decay_risk, review_due_at
+             ) VALUES (1, ?1, 'fading', 2400, 1800, 8600, datetime('now', '-1 day'))",
+            [fading_topic_id],
+        )
+        .expect("memory state should insert");
+
+        let service = JourneyService::new(&conn);
+        let snapshot = service
+            .build_or_refresh_route(1, subject_id, Some("BECE"))
+            .expect("route should build");
+
+        assert_eq!(snapshot.stations[0].topic_id, Some(fading_topic_id));
+        assert_eq!(snapshot.stations[0].station_type, "review");
+        assert_eq!(snapshot.stations[0].status, "active");
     }
 
     fn seed_student(conn: &Connection) {

@@ -1,33 +1,50 @@
+use ecoach_commands::assessment_commands::{EliteSessionBlueprintDto, PastPaperInverseSignalDto};
 use ecoach_commands::attempt_commands::{
     AttemptResultDto, SessionCompletionResultDto, SubmitAttemptInput,
 };
 use ecoach_commands::coach_commands::{
-    CoachNextActionDto, CoachStateDto, ContentReadinessDto, StudentDashboardDto, TopicCaseDto,
+    CoachNextActionDto, CoachStateDto, ContentReadinessDto, JourneyRouteSnapshotDto,
+    StudentDashboardDto, TopicCaseDto,
 };
 use ecoach_commands::curriculum_commands::{SubjectDto, TopicDto};
-use ecoach_commands::diagnostic_commands::{DiagnosticRunDto, TopicAnalyticsDto};
+use ecoach_commands::diagnostic_commands::{
+    DiagnosticBatteryDto, DiagnosticCompletionSyncDto, DiagnosticPhaseItemDto,
+    DiagnosticPhasePlanDto, DiagnosticRunDto, SubmitDiagnosticAttemptInput, TopicAnalyticsDto,
+};
 use ecoach_commands::game_commands::{
     GameAnswerResultDto, GameSessionDto, GameSummaryDto, LeaderboardEntryDto, MindstackStateDto,
     TugOfWarStateDto,
 };
-use ecoach_commands::library_commands::{GlossaryEntryDto, LibraryShelfDto};
+use ecoach_commands::library_commands::{
+    ContinueLearningCardDto, GlossaryAudioProgramDto, GlossaryEntryDto, KnowledgeBundleDto,
+    LibraryHomeSnapshotDto, LibraryShelfDto, QuestionKnowledgeLinkDto, RevisionPackItemDto,
+    RevisionPackSummaryDto, TeachActionPlanDto, TopicRelationshipHintDto,
+};
 use ecoach_commands::memory_commands::{
-    DecayBatchResultDto, MemoryDashboardDto, MemoryStateDto, RecheckItemDto,
+    DecayBatchResultDto, MemoryDashboardDto, MemoryReturnLoopDto, MemoryReviewQueueItemDto,
+    MemoryStateDto, RecheckItemDto, TopicMemorySummaryDto,
 };
 use ecoach_commands::mock_commands::{
     MockAnswerResultDto, MockReportDto, MockSessionDto, MockSessionSummaryDto,
 };
 use ecoach_commands::premium_commands::{
-    EntitlementSnapshotDto, InterventionDto, RiskDashboardDto, RiskFlagDto,
+    EntitlementSnapshotDto, InterventionDto, PremiumStrategySnapshotDto, RiskDashboardDto,
+    RiskFlagDto,
 };
 use ecoach_commands::readiness_commands::{ParentDigestDto, ReadinessReportDto};
-use ecoach_commands::repair_commands::{GapDashboardDto, GapRepairPlanDto, GapScoreCardDto};
+use ecoach_commands::repair_commands::{
+    GapDashboardDto, GapRepairPlanDetailDto, GapRepairPlanDto, GapScoreCardDto,
+};
+use ecoach_commands::reporting_commands::{
+    AdminOversightSnapshotDto, HouseholdDashboardSnapshotDto, ParentDashboardSnapshotDto,
+};
 use ecoach_commands::student_commands::LearnerTruthDto;
 use ecoach_commands::{
-    AppState, CommandError, attempt_commands, coach_commands, content_commands,
-    curriculum_commands, diagnostic_commands, dtos::*, game_commands, identity_commands,
-    library_commands, memory_commands, mock_commands, premium_commands, question_commands,
-    readiness_commands, repair_commands, session_commands, student_commands, traps_commands,
+    AppState, CommandError, assessment_commands, attempt_commands, coach_commands,
+    content_commands, curriculum_commands, diagnostic_commands, dtos::*, game_commands,
+    identity_commands, library_commands, memory_commands, mock_commands, premium_commands,
+    question_commands, readiness_commands, repair_commands, reporting_commands, session_commands,
+    student_commands, traps_commands,
 };
 use ecoach_content::{ParseCandidateInput, SourceUploadInput};
 use ecoach_games::{
@@ -108,6 +125,42 @@ pub fn get_student_dashboard(
     student_id: i64,
 ) -> Result<StudentDashboardDto, CommandError> {
     coach_commands::get_student_dashboard(&state, student_id)
+}
+
+#[tauri::command]
+pub fn build_or_refresh_journey_route(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+    target_exam: Option<String>,
+) -> Result<JourneyRouteSnapshotDto, CommandError> {
+    coach_commands::build_or_refresh_journey_route(&state, student_id, subject_id, target_exam)
+}
+
+#[tauri::command]
+pub fn get_active_journey_route(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Option<JourneyRouteSnapshotDto>, CommandError> {
+    coach_commands::get_active_journey_route(&state, student_id, subject_id)
+}
+
+#[tauri::command]
+pub fn complete_journey_station(
+    state: State<'_, AppState>,
+    station_id: i64,
+    evidence: Value,
+) -> Result<JourneyRouteSnapshotDto, CommandError> {
+    coach_commands::complete_journey_station(&state, station_id, evidence)
+}
+
+#[tauri::command]
+pub fn generate_today_mission(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<i64, CommandError> {
+    coach_commands::generate_today_mission(&state, student_id)
 }
 
 // Curriculum
@@ -388,11 +441,54 @@ pub fn launch_diagnostic(
 }
 
 #[tauri::command]
+pub fn get_diagnostic_battery(
+    state: State<'_, AppState>,
+    diagnostic_id: i64,
+) -> Result<DiagnosticBatteryDto, CommandError> {
+    diagnostic_commands::get_diagnostic_battery(&state, diagnostic_id)
+}
+
+#[tauri::command]
+pub fn list_diagnostic_phase_items(
+    state: State<'_, AppState>,
+    diagnostic_id: i64,
+    phase_number: i64,
+) -> Result<Vec<DiagnosticPhaseItemDto>, CommandError> {
+    diagnostic_commands::list_diagnostic_phase_items(&state, diagnostic_id, phase_number)
+}
+
+#[tauri::command]
+pub fn submit_diagnostic_attempt(
+    state: State<'_, AppState>,
+    diagnostic_id: i64,
+    input: SubmitDiagnosticAttemptInput,
+) -> Result<(), CommandError> {
+    diagnostic_commands::submit_diagnostic_attempt(&state, diagnostic_id, input)
+}
+
+#[tauri::command]
+pub fn advance_diagnostic_phase(
+    state: State<'_, AppState>,
+    diagnostic_id: i64,
+    completed_phase_number: i64,
+) -> Result<Option<DiagnosticPhasePlanDto>, CommandError> {
+    diagnostic_commands::advance_diagnostic_phase(&state, diagnostic_id, completed_phase_number)
+}
+
+#[tauri::command]
 pub fn get_diagnostic_report(
     state: State<'_, AppState>,
     diagnostic_id: i64,
 ) -> Result<Vec<TopicAnalyticsDto>, CommandError> {
     diagnostic_commands::get_diagnostic_report(&state, diagnostic_id)
+}
+
+#[tauri::command]
+pub fn complete_diagnostic_and_sync(
+    state: State<'_, AppState>,
+    diagnostic_id: i64,
+) -> Result<DiagnosticCompletionSyncDto, CommandError> {
+    diagnostic_commands::complete_diagnostic_and_sync(&state, diagnostic_id)
 }
 
 // Question intelligence
@@ -455,6 +551,34 @@ pub fn detect_near_duplicate(
     topic_id: Option<i64>,
 ) -> Result<DuplicateCheckResultDto, CommandError> {
     question_commands::detect_near_duplicate(&state, stem, family_id, topic_id)
+}
+
+#[tauri::command]
+pub fn recommend_question_remediation_plan(
+    state: State<'_, AppState>,
+    student_id: i64,
+    slot_spec: QuestionSlotSpec,
+) -> Result<Option<ecoach_commands::question_commands::QuestionRemediationPlanDto>, CommandError> {
+    question_commands::recommend_question_remediation_plan(&state, student_id, slot_spec)
+}
+
+#[tauri::command]
+pub fn list_inverse_pressure_families(
+    state: State<'_, AppState>,
+    subject_id: i64,
+    topic_id: Option<i64>,
+    limit: usize,
+) -> Result<Vec<PastPaperInverseSignalDto>, CommandError> {
+    assessment_commands::list_inverse_pressure_families(&state, subject_id, topic_id, limit)
+}
+
+#[tauri::command]
+pub fn build_elite_session_blueprint(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<EliteSessionBlueprintDto, CommandError> {
+    assessment_commands::build_elite_session_blueprint(&state, student_id, subject_id)
 }
 
 // Games
@@ -604,6 +728,93 @@ pub fn search_glossary(
     library_commands::search_glossary(&state, query)
 }
 
+#[tauri::command]
+pub fn get_library_snapshot(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<LibraryHomeSnapshotDto, CommandError> {
+    library_commands::get_library_snapshot(&state, student_id)
+}
+
+#[tauri::command]
+pub fn get_continue_learning_card(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<Option<ContinueLearningCardDto>, CommandError> {
+    library_commands::get_continue_learning_card(&state, student_id)
+}
+
+#[tauri::command]
+pub fn build_revision_pack(
+    state: State<'_, AppState>,
+    student_id: i64,
+    title: String,
+    question_limit: usize,
+) -> Result<RevisionPackSummaryDto, CommandError> {
+    library_commands::build_revision_pack(&state, student_id, title, question_limit)
+}
+
+#[tauri::command]
+pub fn list_revision_pack_items(
+    state: State<'_, AppState>,
+    pack_id: i64,
+) -> Result<Vec<RevisionPackItemDto>, CommandError> {
+    library_commands::list_revision_pack_items(&state, pack_id)
+}
+
+#[tauri::command]
+pub fn list_glossary_bundles_for_topic(
+    state: State<'_, AppState>,
+    topic_id: i64,
+) -> Result<Vec<KnowledgeBundleDto>, CommandError> {
+    library_commands::list_glossary_bundles_for_topic(&state, topic_id)
+}
+
+#[tauri::command]
+pub fn list_glossary_entries_for_question(
+    state: State<'_, AppState>,
+    question_id: i64,
+) -> Result<Vec<QuestionKnowledgeLinkDto>, CommandError> {
+    library_commands::list_glossary_entries_for_question(&state, question_id)
+}
+
+#[tauri::command]
+pub fn build_glossary_audio_program_for_topic(
+    state: State<'_, AppState>,
+    topic_id: i64,
+    limit: usize,
+) -> Result<GlossaryAudioProgramDto, CommandError> {
+    library_commands::build_glossary_audio_program_for_topic(&state, topic_id, limit)
+}
+
+#[tauri::command]
+pub fn build_glossary_audio_program_for_question(
+    state: State<'_, AppState>,
+    question_id: i64,
+    limit: usize,
+) -> Result<GlossaryAudioProgramDto, CommandError> {
+    library_commands::build_glossary_audio_program_for_question(&state, question_id, limit)
+}
+
+#[tauri::command]
+pub fn build_teach_action_plan(
+    state: State<'_, AppState>,
+    student_id: i64,
+    topic_id: i64,
+    limit: usize,
+) -> Result<TeachActionPlanDto, CommandError> {
+    library_commands::build_teach_action_plan(&state, student_id, topic_id, limit)
+}
+
+#[tauri::command]
+pub fn list_topic_relationship_hints(
+    state: State<'_, AppState>,
+    topic_id: i64,
+    limit: usize,
+) -> Result<Vec<TopicRelationshipHintDto>, CommandError> {
+    library_commands::list_topic_relationship_hints(&state, topic_id, limit)
+}
+
 // Memory
 
 #[tauri::command]
@@ -644,6 +855,33 @@ pub fn complete_recheck(state: State<'_, AppState>, recheck_id: i64) -> Result<(
     memory_commands::complete_recheck(&state, recheck_id)
 }
 
+#[tauri::command]
+pub fn build_memory_review_queue(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<MemoryReviewQueueItemDto>, CommandError> {
+    memory_commands::build_review_queue(&state, student_id, limit)
+}
+
+#[tauri::command]
+pub fn list_memory_topic_summaries(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<TopicMemorySummaryDto>, CommandError> {
+    memory_commands::list_memory_topic_summaries(&state, student_id, limit)
+}
+
+#[tauri::command]
+pub fn build_memory_return_loop(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit: usize,
+) -> Result<MemoryReturnLoopDto, CommandError> {
+    memory_commands::build_memory_return_loop(&state, student_id, limit)
+}
+
 // Knowledge gaps and repair
 
 #[tauri::command]
@@ -662,6 +900,14 @@ pub fn generate_repair_plan(
     topic_id: i64,
 ) -> Result<GapRepairPlanDto, CommandError> {
     repair_commands::generate_repair_plan(&state, student_id, topic_id)
+}
+
+#[tauri::command]
+pub fn get_repair_plan(
+    state: State<'_, AppState>,
+    plan_id: i64,
+) -> Result<GapRepairPlanDetailDto, CommandError> {
+    repair_commands::get_repair_plan(&state, plan_id)
 }
 
 #[tauri::command]
@@ -697,6 +943,30 @@ pub fn generate_parent_digest(
     parent_id: i64,
 ) -> Result<ParentDigestDto, CommandError> {
     readiness_commands::generate_parent_digest(&state, parent_id)
+}
+
+#[tauri::command]
+pub fn get_parent_dashboard(
+    state: State<'_, AppState>,
+    parent_id: i64,
+) -> Result<ParentDashboardSnapshotDto, CommandError> {
+    reporting_commands::get_parent_dashboard(&state, parent_id)
+}
+
+#[tauri::command]
+pub fn get_household_dashboard(
+    state: State<'_, AppState>,
+    parent_id: i64,
+) -> Result<HouseholdDashboardSnapshotDto, CommandError> {
+    reporting_commands::get_household_dashboard(&state, parent_id)
+}
+
+#[tauri::command]
+pub fn get_admin_oversight_snapshot(
+    state: State<'_, AppState>,
+    admin_id: i64,
+) -> Result<AdminOversightSnapshotDto, CommandError> {
+    reporting_commands::get_admin_oversight_snapshot(&state, admin_id)
 }
 
 // Premium
@@ -756,6 +1026,14 @@ pub fn is_feature_enabled(
     feature_key: String,
 ) -> Result<bool, CommandError> {
     premium_commands::is_feature_enabled(&state, student_id, feature_key)
+}
+
+#[tauri::command]
+pub fn get_premium_strategy_snapshot(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<PremiumStrategySnapshotDto, CommandError> {
+    premium_commands::get_strategy_snapshot(&state, student_id)
 }
 
 // Mock centre

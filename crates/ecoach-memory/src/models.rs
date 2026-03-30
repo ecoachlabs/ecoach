@@ -190,6 +190,32 @@ pub struct TopicMemorySummary {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryReturnSession {
+    pub topic_id: Option<i64>,
+    pub topic_name: Option<String>,
+    pub action_type: String,
+    pub urgency_band: String,
+    pub estimated_minutes: i64,
+    pub due_count: i64,
+    pub fragile_count: i64,
+    pub collapsed_count: i64,
+    pub item_ids: Vec<i64>,
+    pub node_ids: Vec<i64>,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryReturnLoop {
+    pub student_id: i64,
+    pub total_due_items: i64,
+    pub total_topics_in_play: i64,
+    pub recommended_today_minutes: i64,
+    pub dominant_mode: String,
+    pub next_review_due: Option<String>,
+    pub sessions: Vec<MemoryReturnSession>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecayBatchResult {
     pub items_processed: usize,
     pub items_decayed: usize,

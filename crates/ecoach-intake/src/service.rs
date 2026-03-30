@@ -132,6 +132,11 @@ impl<'a> IntakeService<'a> {
         let bundle_reconstruction_payload = json!({
             "bundle_kind": &bundle_overview.bundle_kind,
             "document_groups": &document_groups,
+            "quality_signals": {
+                "reconstruction_confidence_score": bundle_overview.reconstruction_confidence_score,
+                "review_priority": &bundle_overview.review_priority,
+                "paired_assessment_document_count": bundle_overview.paired_assessment_document_count,
+            },
             "files_requiring_review": analyses
                 .iter()
                 .filter(|analysis| !analysis.review_reasons.is_empty())
@@ -160,6 +165,9 @@ impl<'a> IntakeService<'a> {
             "estimated_question_count": bundle_overview.estimated_question_count,
             "estimated_answer_count": bundle_overview.estimated_answer_count,
             "reconstructed_document_count": reconstructed_document_count,
+            "paired_assessment_document_count": bundle_overview.paired_assessment_document_count,
+            "reconstruction_confidence_score": bundle_overview.reconstruction_confidence_score,
+            "review_priority": &bundle_overview.review_priority,
             "bundle_kind": &bundle_overview.bundle_kind,
             "detected_document_roles": &bundle_overview.document_roles,
             "detected_subjects": &bundle_overview.detected_subjects,
@@ -226,6 +234,9 @@ impl<'a> IntakeService<'a> {
         let mut estimated_question_count = 0i64;
         let mut estimated_answer_count = 0i64;
         let mut reconstructed_document_count = 0i64;
+        let mut paired_assessment_document_count = 0i64;
+        let mut reconstruction_confidence_score = 0i64;
+        let mut review_priority = "low".to_string();
         let mut bundle_kind = "unknown".to_string();
         let mut detected_document_roles = BTreeSet::new();
         let mut review_reasons = BTreeSet::new();
@@ -286,6 +297,27 @@ impl<'a> IntakeService<'a> {
                 {
                     reconstructed_document_count = count;
                 }
+                if let Some(count) = insight
+                    .payload
+                    .get("paired_assessment_document_count")
+                    .and_then(Value::as_i64)
+                {
+                    paired_assessment_document_count = count;
+                }
+                if let Some(score) = insight
+                    .payload
+                    .get("reconstruction_confidence_score")
+                    .and_then(Value::as_i64)
+                {
+                    reconstruction_confidence_score = score;
+                }
+                if let Some(priority) = insight
+                    .payload
+                    .get("review_priority")
+                    .and_then(Value::as_str)
+                {
+                    review_priority = priority.to_string();
+                }
                 if let Some(kind) = insight.payload.get("bundle_kind").and_then(Value::as_str) {
                     bundle_kind = kind.to_string();
                 }
@@ -311,6 +343,9 @@ impl<'a> IntakeService<'a> {
             estimated_question_count,
             estimated_answer_count,
             reconstructed_document_count,
+            paired_assessment_document_count,
+            reconstruction_confidence_score,
+            review_priority,
             bundle_kind,
             detected_document_roles: detected_document_roles.into_iter().collect(),
             review_reasons: review_reasons.into_iter().collect(),
@@ -553,6 +588,8 @@ struct FileReconstruction {
     estimated_answer_count: i64,
     layout_kind: String,
     layout_confidence_score: i64,
+    reconstruction_confidence_score: i64,
+    review_priority: String,
     review_reasons: Vec<String>,
     payload: Value,
 }
@@ -595,6 +632,9 @@ struct BundleOverviewSummary {
     layout_recovered_file_count: i64,
     estimated_question_count: i64,
     estimated_answer_count: i64,
+    paired_assessment_document_count: i64,
+    reconstruction_confidence_score: i64,
+    review_priority: String,
     bundle_kind: String,
     document_roles: Vec<String>,
     review_reasons: Vec<String>,
@@ -666,6 +706,17 @@ fn analyze_bundle_file(
     );
     let content_signals =
         build_content_signals(&document_role, question_like, answer_like, &layout);
+    let reconstruction_confidence_score = score_reconstruction_confidence(
+        exists,
+        sample_text.is_some(),
+        &detected_subjects,
+        &detected_exam_years,
+        &document_role,
+        ocr_candidate,
+        &layout,
+        &review_reasons,
+    );
+    let review_priority = review_priority_from_reasons(&review_reasons);
     let document_key = build_document_key(
         file.id,
         &file.file_name,
@@ -753,6 +804,14 @@ fn analyze_bundle_file(
             "formula_candidates": &layout.formula_candidates,
             "content_signals": &content_signals,
         },
+        "quality_signals": {
+            "reconstruction_confidence_score": reconstruction_confidence_score,
+            "review_priority": &review_priority,
+            "has_text_recovery": sample_text.is_some(),
+            "has_subject_signal": !detected_subjects.is_empty(),
+            "has_exam_year_signal": !detected_exam_years.is_empty(),
+            "layout_confidence_score": layout.confidence_score,
+        },
         "review_reasons": &review_reasons,
     });
 
@@ -771,6 +830,8 @@ fn analyze_bundle_file(
         estimated_answer_count,
         layout_kind: layout.layout_kind,
         layout_confidence_score: layout.confidence_score,
+        reconstruction_confidence_score,
+        review_priority,
         review_reasons,
         payload,
     }
@@ -790,6 +851,7 @@ fn summarize_bundle(
     let mut layout_recovered_file_count = 0i64;
     let mut estimated_question_count = 0i64;
     let mut estimated_answer_count = 0i64;
+    let mut reconstruction_confidence_total = 0i64;
 
     for analysis in analyses {
         for subject in &analysis.detected_subjects {
@@ -816,7 +878,18 @@ fn summarize_bundle(
         }
         estimated_question_count += analysis.estimated_question_count;
         estimated_answer_count += analysis.estimated_answer_count;
+        reconstruction_confidence_total += analysis.reconstruction_confidence_score;
     }
+
+    let paired_assessment_document_count = count_paired_assessment_documents(analyses);
+    let reconstruction_confidence_score = if analyses.is_empty() {
+        0
+    } else {
+        let avg = reconstruction_confidence_total / analyses.len() as i64;
+        let pairing_bonus = (paired_assessment_document_count * 8).min(16);
+        (avg + pairing_bonus).clamp(0, 100)
+    };
+    let review_priority = bundle_review_priority(analyses, &review_reasons);
 
     BundleOverviewSummary {
         detected_subjects: detected_subjects.into_iter().collect(),
@@ -827,10 +900,99 @@ fn summarize_bundle(
         layout_recovered_file_count,
         estimated_question_count,
         estimated_answer_count,
+        paired_assessment_document_count,
+        reconstruction_confidence_score,
+        review_priority,
         bundle_kind: classify_bundle_kind(analyses, reconstructed_document_count),
         document_roles: document_roles.into_iter().collect(),
         review_reasons: review_reasons.into_iter().collect(),
     }
+}
+
+fn count_paired_assessment_documents(analyses: &[FileReconstruction]) -> i64 {
+    let mut grouped_roles: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+    for analysis in analyses {
+        grouped_roles
+            .entry(&analysis.document_key)
+            .or_default()
+            .insert(analysis.document_role.as_str());
+    }
+
+    grouped_roles
+        .values()
+        .filter(|roles| roles.contains("question_paper") && roles.contains("mark_scheme"))
+        .count() as i64
+}
+
+fn bundle_review_priority(
+    analyses: &[FileReconstruction],
+    review_reasons: &BTreeSet<String>,
+) -> String {
+    if analyses
+        .iter()
+        .any(|analysis| analysis.review_priority == "high")
+    {
+        return "high".to_string();
+    }
+    if !review_reasons.is_empty()
+        || analyses
+            .iter()
+            .any(|analysis| analysis.review_priority == "medium")
+    {
+        return "medium".to_string();
+    }
+
+    "low".to_string()
+}
+
+fn score_reconstruction_confidence(
+    exists: bool,
+    has_text_recovery: bool,
+    detected_subjects: &[String],
+    detected_exam_years: &[i64],
+    document_role: &str,
+    ocr_candidate: bool,
+    layout: &LayoutSignals,
+    review_reasons: &[String],
+) -> i64 {
+    let mut score = 0i64;
+    if exists {
+        score += 25;
+    }
+    if has_text_recovery {
+        score += 25;
+    }
+    score += (layout.confidence_score / 2).min(25);
+    if !detected_subjects.is_empty() {
+        score += 10;
+    }
+    if !detected_exam_years.is_empty() {
+        score += 5;
+    }
+    if document_role != "unknown" {
+        score += 10;
+    }
+    if ocr_candidate {
+        score -= 15;
+    }
+    score -= (review_reasons.len() as i64 * 10).min(35);
+    score.clamp(0, 100)
+}
+
+fn review_priority_from_reasons(review_reasons: &[String]) -> String {
+    if review_reasons.iter().any(|reason| {
+        matches!(
+            reason.as_str(),
+            "missing_file" | "ocr_required" | "archive_unpack_required" | "ambiguous_document_role"
+        )
+    }) {
+        return "high".to_string();
+    }
+    if !review_reasons.is_empty() {
+        return "medium".to_string();
+    }
+
+    "low".to_string()
 }
 
 fn reconstruct_document_groups(analyses: &[FileReconstruction]) -> Vec<Value> {
@@ -852,6 +1014,7 @@ fn reconstruct_document_groups(analyses: &[FileReconstruction]) -> Vec<Value> {
             let mut estimated_question_count = 0i64;
             let mut estimated_answer_count = 0i64;
             let mut ocr_candidate_file_count = 0i64;
+            let mut confidence_total = 0i64;
 
             for member in &members {
                 roles.insert(member.document_role.clone());
@@ -869,6 +1032,7 @@ fn reconstruct_document_groups(analyses: &[FileReconstruction]) -> Vec<Value> {
                 if member.ocr_candidate {
                     ocr_candidate_file_count += 1;
                 }
+                confidence_total += member.reconstruction_confidence_score;
             }
 
             let member_files = members
@@ -880,17 +1044,35 @@ fn reconstruct_document_groups(analyses: &[FileReconstruction]) -> Vec<Value> {
                         "document_role": member.document_role,
                         "layout_kind": member.layout_kind,
                         "layout_confidence_score": member.layout_confidence_score,
+                        "reconstruction_confidence_score": member.reconstruction_confidence_score,
+                        "review_priority": member.review_priority,
                         "ocr_candidate": member.ocr_candidate,
                     })
                 })
                 .collect::<Vec<_>>();
             let role_list = roles.into_iter().collect::<Vec<_>>();
             let reason_list = review_reasons.into_iter().collect::<Vec<_>>();
+            let confidence_score = if members.is_empty() {
+                0
+            } else {
+                let avg = confidence_total / members.len() as i64;
+                let pairing_bonus = if role_list.iter().any(|role| role == "question_paper")
+                    && role_list.iter().any(|role| role == "mark_scheme")
+                {
+                    10
+                } else {
+                    0
+                };
+                (avg + pairing_bonus).clamp(0, 100)
+            };
+            let review_priority = review_priority_from_reasons(&reason_list);
             json!({
                 "document_key": document_key,
                 "canonical_label": document_key.replace("__", " "),
                 "document_kind": derive_document_group_kind(&role_list),
                 "alignment_status": derive_group_alignment_status(&role_list, &reason_list),
+                "confidence_score": confidence_score,
+                "review_priority": review_priority,
                 "member_count": members.len(),
                 "member_files": member_files,
                 "roles": role_list,
@@ -1158,15 +1340,15 @@ fn detect_document_role(
     if has_student_work_signal {
         return "student_work".to_string();
     }
-    if layout.question_prompt_count > 0 && layout.answer_key_line_count > 0 {
-        return "mixed_assessment".to_string();
-    }
     if has_answer_name_signal
         || lowered_text.contains("mark scheme")
         || lowered_text.contains("correct answer")
         || layout.answer_key_line_count >= 2
     {
         return "mark_scheme".to_string();
+    }
+    if layout.question_prompt_count > 0 && layout.answer_key_line_count > 0 {
+        return "mixed_assessment".to_string();
     }
     if has_worksheet_signal {
         return "worksheet".to_string();
@@ -1602,10 +1784,22 @@ fn detect_subject_hints(text: &str) -> Vec<String> {
         ("math", "mathematics"),
         ("english", "english"),
         ("science", "science"),
+        ("integrated science", "science"),
         ("social", "social_studies"),
+        ("social studies", "social_studies"),
         ("biology", "biology"),
         ("chemistry", "chemistry"),
         ("physics", "physics"),
+        ("economics", "economics"),
+        ("geography", "geography"),
+        ("history", "history"),
+        ("literature", "literature"),
+        ("government", "government"),
+        ("civic", "civic_education"),
+        ("ict", "ict"),
+        ("computer", "ict"),
+        ("agric", "agriculture"),
+        ("agriculture", "agriculture"),
     ] {
         if lowered.contains(needle) {
             subjects.insert(label.to_string());
@@ -1654,4 +1848,185 @@ fn is_question_like(file_name: &str, text: Option<&str>) -> bool {
     }
 
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ecoach_storage::run_runtime_migrations;
+    use rusqlite::Connection;
+    use std::{
+        env, process,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    #[test]
+    fn reconstruct_bundle_groups_paired_assessment_documents_with_confidence() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_pairing");
+        let question_path = temp_dir.join("Mathematics 2024 Paper 1 Questions.txt");
+        let scheme_path = temp_dir.join("Mathematics 2024 Paper 1 Mark Scheme.txt");
+        fs::write(
+            &question_path,
+            "MATHEMATICS PAPER 1\nAnswer all questions.\n1. What is 2 + 2?\na) 3\nb) 4\n2. Solve for x if x + 2 = 5.\n",
+        )
+        .expect("question file should write");
+        fs::write(
+            &scheme_path,
+            "MARK SCHEME\n1. B\n2. x = 3\nAward 1 mark for each correct answer.\n",
+        )
+        .expect("scheme file should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Mock upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&question_path),
+                question_path.to_string_lossy().as_ref(),
+            )
+            .expect("question file should insert");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&scheme_path),
+                scheme_path.to_string_lossy().as_ref(),
+            )
+            .expect("scheme file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+
+        assert_eq!(report.bundle.status, "completed");
+        assert_eq!(report.bundle_kind, "assessment_bundle");
+        assert_eq!(report.reconstructed_document_count, 1);
+        assert_eq!(report.paired_assessment_document_count, 1);
+        assert!(report.reconstruction_confidence_score >= 75);
+        assert_eq!(report.review_priority, "low");
+        assert!(
+            report
+                .detected_subjects
+                .contains(&"mathematics".to_string())
+        );
+        assert!(report.estimated_question_count >= 2);
+        assert!(report.answer_like_file_count >= 1);
+
+        let bundle_reconstruction = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "bundle_reconstruction")
+            .expect("bundle reconstruction insight should exist");
+        let groups = bundle_reconstruction
+            .payload
+            .get("document_groups")
+            .and_then(Value::as_array)
+            .expect("document groups should be present");
+        assert_eq!(groups.len(), 1);
+        assert_eq!(
+            groups[0].get("alignment_status").and_then(Value::as_str),
+            Some("paired_question_and_mark_scheme")
+        );
+        assert!(
+            groups[0]
+                .get("confidence_score")
+                .and_then(Value::as_i64)
+                .expect("confidence score should exist")
+                >= 75
+        );
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn reconstruct_bundle_marks_ocr_candidates_high_priority() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_ocr");
+        let scan_path = temp_dir.join("Biology leaf diagram scan.png");
+        fs::write(&scan_path, [137, 80, 78, 71]).expect("scan file should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Scan upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&scan_path),
+                scan_path.to_string_lossy().as_ref(),
+            )
+            .expect("scan file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+
+        assert_eq!(report.bundle.status, "review_required");
+        assert_eq!(report.bundle_kind, "single_scan_bundle");
+        assert_eq!(report.ocr_candidate_file_count, 1);
+        assert_eq!(report.review_priority, "high");
+        assert!(report.reconstruction_confidence_score <= 40);
+        assert!(report.review_reasons.contains(&"ocr_required".to_string()));
+
+        let file_reconstruction = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "file_reconstruction")
+            .expect("file reconstruction insight should exist");
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/ocr_recovery/required")
+                .and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            file_reconstruction
+                .payload
+                .pointer("/quality_signals/review_priority")
+                .and_then(Value::as_str),
+            Some("high")
+        );
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    fn seed_student(conn: &Connection) {
+        conn.execute(
+            "INSERT INTO accounts (id, account_type, display_name, pin_hash, pin_salt, status, first_run)
+             VALUES (1, 'student', 'Ama', 'hash', 'salt', 'active', 0)",
+            [],
+        )
+        .expect("student should insert");
+        conn.execute(
+            "INSERT INTO student_profiles (account_id, preferred_subjects, daily_study_budget_minutes)
+             VALUES (1, '[\"mathematics\"]', 60)",
+            [],
+        )
+        .expect("student profile should insert");
+    }
+
+    fn test_temp_dir(prefix: &str) -> PathBuf {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos();
+        let dir = env::temp_dir().join(format!("{}_{}_{}", prefix, process::id(), unique));
+        fs::create_dir_all(&dir).expect("temp dir should create");
+        dir
+    }
+
+    fn file_name(path: &Path) -> &str {
+        path.file_name()
+            .and_then(|value| value.to_str())
+            .expect("file name should be unicode")
+    }
 }

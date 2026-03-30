@@ -1129,7 +1129,7 @@ impl<'a> SessionService<'a> {
                     avg_response_time_ms: row
                         .get::<_, Option<f64>>(4)?
                         .map(|value| value.round() as i64),
-                    dominant_error_type: self.topic_dominant_error_type(session_id, topic_id)?,
+                    dominant_error_type: None,
                 })
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -1137,6 +1137,9 @@ impl<'a> SessionService<'a> {
         let mut items = Vec::new();
         for row in rows {
             items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        for item in &mut items {
+            item.dominant_error_type = self.topic_dominant_error_type(session_id, item.topic_id)?;
         }
         Ok(items)
     }

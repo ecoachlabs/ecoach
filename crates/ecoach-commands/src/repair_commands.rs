@@ -1,4 +1,6 @@
-use ecoach_knowledge_gap::{CreateGapRepairPlanInput, KnowledgeGapService, RepairItemStatus};
+use ecoach_knowledge_gap::{
+    CreateGapRepairPlanInput, GapRepairPlan, KnowledgeGapService, RepairItemStatus,
+};
 
 use crate::{error::CommandError, state::AppState};
 use serde::{Deserialize, Serialize};
@@ -21,9 +23,14 @@ pub struct GapRepairPlanDto {
     pub topic_name: Option<String>,
     pub status: String,
     pub priority_score: i64,
+    pub severity_label: String,
+    pub dominant_focus: String,
+    pub recommended_session_type: String,
     pub item_count: usize,
     pub progress_percent: i64,
 }
+
+pub type GapRepairPlanDetailDto = GapRepairPlan;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GapDashboardDto {
@@ -74,10 +81,20 @@ pub fn generate_repair_plan(
             topic_name: plan.topic_name,
             status: plan.status,
             priority_score: plan.priority_score as i64,
+            severity_label: plan.severity_label,
+            dominant_focus: plan.dominant_focus,
+            recommended_session_type: plan.recommended_session_type,
             item_count: plan.items.len(),
             progress_percent: plan.progress_percent as i64,
         })
     })
+}
+
+pub fn get_repair_plan(
+    state: &AppState,
+    plan_id: i64,
+) -> Result<GapRepairPlanDetailDto, CommandError> {
+    state.with_connection(|conn| Ok(KnowledgeGapService::new(conn).get_repair_plan(plan_id)?))
 }
 
 pub fn advance_repair_item(
@@ -99,6 +116,9 @@ pub fn advance_repair_item(
             topic_name: plan.topic_name,
             status: plan.status,
             priority_score: plan.priority_score as i64,
+            severity_label: plan.severity_label,
+            dominant_focus: plan.dominant_focus,
+            recommended_session_type: plan.recommended_session_type,
             item_count: plan.items.len(),
             progress_percent: plan.progress_percent as i64,
         })
@@ -138,6 +158,9 @@ pub fn get_gap_dashboard(
                     topic_name: p.topic_name,
                     status: p.status,
                     priority_score: p.priority_score as i64,
+                    severity_label: p.severity_label,
+                    dominant_focus: p.dominant_focus,
+                    recommended_session_type: p.recommended_session_type,
                     item_count: p.items.len(),
                     progress_percent: p.progress_percent as i64,
                 })

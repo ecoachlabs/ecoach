@@ -1,10 +1,11 @@
 use chrono::Utc;
 use ecoach_substrate::EcoachResult;
 use ecoach_substrate::{BasisPoints, EcoachError};
-use rusqlite::{Connection, OptionalExtension, params};
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
 use crate::dashboard::DashboardService;
+use crate::strategy::{ReportingStrategySummary, load_strategy_summary};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdminOversightSnapshot {
@@ -25,6 +26,7 @@ pub struct AdminStudentOversight {
     pub parent_count: i64,
     pub entitlement_tier: String,
     pub overall_readiness_band: String,
+    pub strategy_summary: Option<ReportingStrategySummary>,
     pub weak_topic_count: usize,
     pub active_risk_count: i64,
     pub critical_risk_count: i64,
@@ -73,6 +75,7 @@ impl<'a> AdminOversightService<'a> {
 
         for (student_id, student_name, entitlement_tier) in students {
             let dashboard = dashboard_service.get_student_dashboard(student_id)?;
+            let strategy_summary = load_strategy_summary(self.conn, student_id)?;
             let parent_count = self.parent_count(student_id)?;
             let (active_risk_count, critical_risk_count) = self.risk_counts(student_id)?;
             let intervention_count = self.active_intervention_count(student_id)?;
@@ -95,6 +98,7 @@ impl<'a> AdminOversightService<'a> {
             );
             let follow_up_actions = build_follow_up_actions(
                 &dashboard.overall_readiness_band,
+                strategy_summary.as_ref(),
                 parent_count,
                 critical_risk_count,
                 intervention_count,
@@ -121,6 +125,7 @@ impl<'a> AdminOversightService<'a> {
                 parent_count,
                 entitlement_tier,
                 overall_readiness_band: dashboard.overall_readiness_band,
+                strategy_summary,
                 weak_topic_count,
                 active_risk_count,
                 critical_risk_count,
@@ -306,6 +311,7 @@ fn derive_attention_level(
 
 fn build_follow_up_actions(
     readiness_band: &str,
+    strategy_summary: Option<&ReportingStrategySummary>,
     parent_count: i64,
     critical_risk_count: i64,
     intervention_count: i64,
@@ -325,6 +331,12 @@ fn build_follow_up_actions(
     }
     if inactive_days.unwrap_or(0) >= 4 {
         actions.push("Trigger a re-engagement check because recent activity is low.".to_string());
+    }
+    if let Some(strategy_summary) = strategy_summary {
+        actions.push(format!(
+            "Current premium strategy mode is {}, so keep follow-up aligned to that plan.",
+            strategy_summary.strategy_mode
+        ));
     }
     if parent_count == 0 {
         actions.push("No linked household is present, so admin follow-up is required.".to_string());
@@ -384,8 +396,8 @@ mod tests {
         )
         .expect("link");
         conn.execute(
-            "INSERT INTO student_profiles (account_id, exam_target)
-             VALUES (2, 'BECE')",
+            "INSERT INTO student_profiles (account_id, exam_target, exam_target_date, daily_study_budget_minutes)
+             VALUES (2, 'BECE', '2026-06-01', 75)",
             [],
         )
         .expect("profile");
@@ -397,8 +409,9 @@ mod tests {
         )
         .expect("topic");
         conn.execute(
-            "INSERT INTO student_topic_states (student_id, topic_id, mastery_score, last_seen_at)
-             VALUES (2, 11, 2200, '2026-03-20T09:00:00Z')",
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, priority_score, trend_state, is_blocked, next_review_at, last_seen_at
+             ) VALUES (2, 11, 2200, 7800, 9000, 'critical', 1, '2026-03-30T09:00:00Z', '2026-03-20T09:00:00Z')",
             [],
         )
         .expect("topic state");
@@ -426,6 +439,12 @@ mod tests {
             [],
         )
         .expect("session");
+        conn.execute(
+            "INSERT INTO coach_plans (student_id, current_phase, daily_budget_minutes, status, updated_at)
+             VALUES (2, 'foundation', 90, 'active', '2026-03-29T09:00:00Z')",
+            [],
+        )
+        .expect("coach plan");
 
         let service = AdminOversightService::new(&conn);
         let snapshot = service
@@ -436,6 +455,13 @@ mod tests {
         assert_eq!(snapshot.critical_students, 1);
         assert_eq!(snapshot.households_needing_attention, 1);
         assert_eq!(snapshot.students[0].attention_level, "high");
+        assert_eq!(
+            snapshot.students[0]
+                .strategy_summary
+                .as_ref()
+                .map(|strategy| strategy.strategy_mode.as_str()),
+            Some("rescue")
+        );
         assert!(!snapshot.students[0].follow_up_actions.is_empty());
     }
 
@@ -455,7 +481,9 @@ mod tests {
             );
             CREATE TABLE student_profiles (
                 account_id INTEGER PRIMARY KEY,
-                exam_target TEXT
+                exam_target TEXT,
+                exam_target_date TEXT,
+                daily_study_budget_minutes INTEGER
             );
             CREATE TABLE subjects (
                 id INTEGER PRIMARY KEY,
@@ -471,6 +499,11 @@ mod tests {
                 student_id INTEGER NOT NULL,
                 topic_id INTEGER NOT NULL,
                 mastery_score INTEGER NOT NULL,
+                gap_score INTEGER NOT NULL,
+                priority_score INTEGER NOT NULL,
+                trend_state TEXT NOT NULL,
+                is_blocked INTEGER NOT NULL DEFAULT 0,
+                next_review_at TEXT,
                 last_seen_at TEXT
             );
             CREATE TABLE risk_flags (
@@ -495,6 +528,14 @@ mod tests {
                 student_id INTEGER NOT NULL,
                 started_at TEXT,
                 status TEXT NOT NULL
+            );
+            CREATE TABLE coach_plans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                current_phase TEXT,
+                daily_budget_minutes INTEGER,
+                status TEXT NOT NULL,
+                updated_at TEXT NOT NULL
             );
             ",
         )

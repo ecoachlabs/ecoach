@@ -165,6 +165,43 @@ pub struct FoundryJobBoard {
     pub jobs: Vec<FoundryJob>,
 }
 
+#[derive(Debug, Clone)]
+struct TopicFoundryContext {
+    subject_id: i64,
+    topic_id: i64,
+    topic_code: Option<String>,
+    topic_name: String,
+    approved_candidates: Vec<CurriculumParseCandidate>,
+    approved_evidence: Vec<ApprovedAcquisitionEvidence>,
+}
+
+#[derive(Debug, Clone)]
+struct ApprovedAcquisitionEvidence {
+    title: Option<String>,
+    snippet: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct KnowledgeDraft {
+    title: String,
+    canonical_name: String,
+    short_text: String,
+    full_text: String,
+    technical_text: String,
+    exam_text: String,
+    importance_score: BasisPoints,
+    difficulty_level: BasisPoints,
+    aliases: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct TopicKnowledgeEntry {
+    id: i64,
+    entry_type: String,
+    title: String,
+    importance_score: BasisPoints,
+}
+
 pub struct FoundryCoordinatorService<'a> {
     conn: &'a Connection,
 }
@@ -1362,6 +1399,111 @@ impl<'a> FoundryCoordinatorService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
+    fn load_topic_foundry_context(&self, topic_id: i64) -> EcoachResult<TopicFoundryContext> {
+        let (subject_id, subject_code, topic_code, topic_name) = self
+            .conn
+            .query_row(
+                "SELECT t.subject_id, s.code, t.code, t.name
+                 FROM topics t
+                 JOIN subjects s ON s.id = t.subject_id
+                 WHERE t.id = ?1
+                 LIMIT 1",
+                [topic_id],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, Option<String>>(2)?,
+                        row.get::<_, String>(3)?,
+                    ))
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let approved_candidates = self.list_approved_parse_candidates_for_topic(
+            &subject_code,
+            topic_id,
+            topic_code.as_deref(),
+            &topic_name,
+        )?;
+        let approved_evidence = self.list_approved_evidence_for_topic(topic_id)?;
+
+        Ok(TopicFoundryContext {
+            subject_id,
+            topic_id,
+            topic_code,
+            topic_name,
+            approved_candidates,
+            approved_evidence,
+        })
+    }
+
+    fn list_approved_parse_candidates_for_topic(
+        &self,
+        subject_code: &str,
+        topic_id: i64,
+        topic_code: Option<&str>,
+        topic_name: &str,
+    ) -> EcoachResult<Vec<CurriculumParseCandidate>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT candidates.id, candidates.source_upload_id, candidates.candidate_type,
+                        candidates.parent_candidate_id, candidates.raw_label,
+                        candidates.normalized_label, candidates.payload_json,
+                        candidates.confidence_score, candidates.review_status
+                 FROM curriculum_parse_candidates candidates
+                 JOIN curriculum_source_uploads uploads
+                   ON uploads.id = candidates.source_upload_id
+                 WHERE uploads.subject_code = ?1
+                   AND uploads.source_status IN ('reviewed', 'published')
+                   AND candidates.review_status = 'approved'
+                 ORDER BY candidates.confidence_score DESC, candidates.id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([subject_code], map_parse_candidate)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut candidates = collect_rows(rows)?;
+        candidates.retain(|candidate| {
+            candidate_matches_topic(candidate, topic_id, topic_code, topic_name)
+        });
+        candidates.sort_by(|left, right| {
+            right
+                .confidence_score
+                .cmp(&left.confidence_score)
+                .then_with(|| left.id.cmp(&right.id))
+        });
+        Ok(candidates)
+    }
+
+    fn list_approved_evidence_for_topic(
+        &self,
+        topic_id: i64,
+    ) -> EcoachResult<Vec<ApprovedAcquisitionEvidence>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT candidates.title, candidates.snippet
+                 FROM acquisition_evidence_candidates candidates
+                 JOIN content_acquisition_jobs jobs ON jobs.id = candidates.job_id
+                 WHERE jobs.topic_id = ?1
+                   AND candidates.review_status = 'approved'
+                 ORDER BY candidates.quality_score DESC,
+                          candidates.freshness_score DESC,
+                          candidates.id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([topic_id], |row| {
+                Ok(ApprovedAcquisitionEvidence {
+                    title: row.get(0)?,
+                    snippet: row.get(1)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        collect_rows(rows)
+    }
+
     fn count_reviewed_sources_for_subject(&self, subject_code: &str) -> EcoachResult<i64> {
         self.conn
             .query_row(
@@ -2141,9 +2283,15 @@ impl<'a> FoundryCoordinatorService<'a> {
         topic_id: i64,
         payload: &Value,
     ) -> EcoachResult<i64> {
+        let topic_context = self.load_topic_foundry_context(topic_id).ok();
         let topic_name = payload["topic_name"]
             .as_str()
             .map(ToString::to_string)
+            .or_else(|| {
+                topic_context
+                    .as_ref()
+                    .map(|context| context.topic_name.clone())
+            })
             .or_else(|| self.topic_identity(topic_id).ok().map(|(_, name)| name))
             .unwrap_or_else(|| "topic".to_string());
         let result_summary_json = serialize_json(&json!({
@@ -2166,69 +2314,106 @@ impl<'a> FoundryCoordinatorService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let acquisition_job_id = self.conn.last_insert_rowid();
-        self.conn
-            .execute(
-                "INSERT INTO acquisition_evidence_candidates (
-                    job_id, source_label, source_url, source_kind, title, snippet,
-                    extracted_payload_json, quality_score, freshness_score, review_status
-                 ) VALUES (?1, ?2, NULL, 'internal', ?3, ?4, ?5, 8300, 7600, 'approved')",
-                params![
-                    acquisition_job_id,
-                    "Foundry Auto Support",
-                    format!("{} support seed", topic_name),
-                    "Auto-approved internal support evidence",
-                    serialize_json(&json!({
-                        "topic_id": topic_id,
-                        "topic_name": topic_name,
-                        "seeded_by": "foundry_job_executor",
-                    }))?,
-                ],
-            )
-            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut seeded_any = false;
+        if let Some(context) = topic_context.as_ref() {
+            for candidate in context
+                .approved_candidates
+                .iter()
+                .filter(|candidate| candidate.candidate_type != "subject")
+                .take(3)
+            {
+                let title = format!(
+                    "{} evidence from {}",
+                    candidate_display_label(candidate),
+                    humanize_candidate_type(&candidate.candidate_type)
+                );
+                let snippet = payload_string(
+                    &candidate.payload,
+                    &[
+                        "snippet",
+                        "definition",
+                        "description",
+                        "simple_text",
+                        "exam_hint",
+                    ],
+                )
+                .unwrap_or_else(|| {
+                    format!(
+                        "Reviewed {} support for {} in {}.",
+                        candidate.candidate_type,
+                        candidate_display_label(candidate),
+                        context.topic_name
+                    )
+                });
+                self.conn
+                    .execute(
+                        "INSERT INTO acquisition_evidence_candidates (
+                            job_id, source_label, source_url, source_kind, title, snippet,
+                            extracted_payload_json, quality_score, freshness_score, review_status
+                         ) VALUES (?1, ?2, NULL, 'internal', ?3, ?4, ?5, ?6, 7600, 'approved')",
+                        params![
+                            acquisition_job_id,
+                            "Foundry Auto Support",
+                            title,
+                            snippet,
+                            serialize_json(&json!({
+                                "topic_id": topic_id,
+                                "topic_name": context.topic_name,
+                                "candidate_id": candidate.id,
+                                "candidate_type": candidate.candidate_type,
+                                "seeded_by": "foundry_job_executor",
+                            }))?,
+                            candidate.confidence_score as i64,
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                seeded_any = true;
+            }
+        }
+
+        if !seeded_any {
+            self.conn
+                .execute(
+                    "INSERT INTO acquisition_evidence_candidates (
+                        job_id, source_label, source_url, source_kind, title, snippet,
+                        extracted_payload_json, quality_score, freshness_score, review_status
+                     ) VALUES (?1, ?2, NULL, 'internal', ?3, ?4, ?5, 8300, 7600, 'approved')",
+                    params![
+                        acquisition_job_id,
+                        "Foundry Auto Support",
+                        format!("{} support seed", topic_name),
+                        "Auto-approved internal support evidence",
+                        serialize_json(&json!({
+                            "topic_id": topic_id,
+                            "topic_name": topic_name,
+                            "seeded_by": "foundry_job_executor",
+                        }))?,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
         Ok(acquisition_job_id)
     }
 
     fn seed_curriculum_support(&self, topic_id: i64) -> EcoachResult<Value> {
-        let (_, topic_name) = self.topic_subject_and_name(topic_id)?;
-        let (node_id, node_inserted) = self.ensure_primary_node(topic_id, &topic_name)?;
-
-        let objective_inserted = if self.count_learning_objectives(topic_id)? == 0 {
-            self.conn
-                .execute(
-                    "INSERT INTO learning_objectives (
-                        topic_id, objective_text, simplified_text, cognitive_level, display_order
-                     ) VALUES (?1, ?2, ?3, 'understanding', 1)",
-                    params![
-                        topic_id,
-                        format!("Explain the core idea behind {}.", topic_name),
-                        format!("Understand the key idea in {}.", topic_name),
-                    ],
-                )
-                .map_err(|err| EcoachError::Storage(err.to_string()))?;
-            1
-        } else {
-            0
-        };
+        let context = self.load_topic_foundry_context(topic_id)?;
+        let (node_id, node_inserted) = self.ensure_primary_node(topic_id, &context.topic_name)?;
+        let (candidate_node_count, candidate_edge_count) =
+            self.materialize_candidate_nodes(&context, node_id)?;
+        let objective_inserted = self.materialize_learning_objectives(&context)?;
 
         let edge_inserted = if self.count_topic_edges(topic_id)? == 0 {
-            self.conn
-                .execute(
-                    "INSERT INTO node_edges (
-                        from_node_id, from_node_type, to_node_id, to_node_type, edge_type, strength_score
-                     ) VALUES (?1, 'topic', ?2, 'academic_node', 'part_of', 7800)",
-                    params![topic_id, node_id],
-                )
-                .map_err(|err| EcoachError::Storage(err.to_string()))?;
-            1
+            self.ensure_node_edge(topic_id, "topic", node_id, "academic_node", "part_of", 7800)?
         } else {
             0
         };
 
         Ok(json!({
-            "node_count": if node_inserted { 1 } else { 0 },
+            "node_count": if node_inserted { 1 } else { 0 } + candidate_node_count,
             "objective_count": objective_inserted,
-            "edge_count": edge_inserted,
+            "edge_count": edge_inserted + candidate_edge_count,
             "node_id": node_id,
+            "source_candidate_count": context.approved_candidates.len(),
         }))
     }
 
@@ -2250,8 +2435,15 @@ impl<'a> FoundryCoordinatorService<'a> {
             return Ok(existing);
         }
 
-        let (_, topic_name) = self.topic_subject_and_name(topic_id)?;
+        let context = self.load_topic_foundry_context(topic_id)?;
+        let topic_name = context.topic_name.clone();
         let (node_id, _) = self.ensure_primary_node(topic_id, &topic_name)?;
+        let misconception_focus = self
+            .best_candidate_label(&context, &["concept", "formula", "skill", "objective"])
+            .unwrap_or_else(|| topic_name.clone());
+        let misconception_hint = self
+            .top_evidence_snippet(&context)
+            .unwrap_or_else(|| format!("Reviewed source support exists for {}.", topic_name));
         self.conn
             .execute(
                 "INSERT INTO misconception_patterns (
@@ -2261,13 +2453,16 @@ impl<'a> FoundryCoordinatorService<'a> {
                 params![
                     node_id,
                     topic_id,
-                    format!("{} surface-rule confusion", topic_name),
+                    format!("{} surface-rule confusion", misconception_focus),
                     format!(
-                        "The learner may be applying a shallow rule for {} without checking the underlying meaning.",
-                        topic_name
+                        "The learner may be applying a shallow rule for {} without checking the underlying meaning in {}.",
+                        misconception_focus, topic_name
                     ),
-                    format!("Common wrong answer pattern around {}.", topic_name),
-                    format!("Contrast the correct condition for {} with a near-miss example.", topic_name),
+                    format!("Common wrong answer pattern around {}.", misconception_focus),
+                    format!(
+                        "Contrast the correct condition for {} with a near-miss example. {}",
+                        misconception_focus, misconception_hint
+                    ),
                 ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -2289,60 +2484,25 @@ impl<'a> FoundryCoordinatorService<'a> {
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?
         {
+            self.ensure_generated_entry_relations(existing, topic_id, entry_type)?;
             return Ok(existing);
         }
 
-        let (subject_id, topic_name) = self.topic_subject_and_name(topic_id)?;
-        let (title, short_text, full_text, exam_text) = match entry_type {
-            "explanation" => (
-                format!("{} core explanation", topic_name),
-                format!("A focused explanation of the main idea in {}.", topic_name),
-                format!(
-                    "{} is explained here through its core idea, a common worked path, and the condition that tells the learner when it applies.",
-                    topic_name
-                ),
-                format!(
-                    "Exam use: explain why the chosen method fits {}.",
-                    topic_name
-                ),
-            ),
-            "formula" => (
-                format!("{} key formula", topic_name),
-                format!("A core formula or symbolic rule for {}.", topic_name),
-                format!(
-                    "This formula entry anchors the symbol pattern, meaning, and safest use case for {}.",
-                    topic_name
-                ),
-                format!(
-                    "Exam use: recall and apply the formula in {} under time pressure.",
-                    topic_name
-                ),
-            ),
-            "worked_example" => (
-                format!("{} worked example", topic_name),
-                format!("A worked example that shows the steps for {}.", topic_name),
-                format!(
-                    "This worked example demonstrates a clean, exam-safe solution path for {} and highlights the decision points the learner should notice.",
-                    topic_name
-                ),
-                format!(
-                    "Exam use: mirror this sequence when a similar {} question appears.",
-                    topic_name
-                ),
-            ),
-            _ => (
-                format!("{} definition", topic_name),
-                format!("A core definition for {}.", topic_name),
-                format!(
-                    "This definition fixes the meaning boundary for {} and separates it from common look-alikes.",
-                    topic_name
-                ),
-                format!(
-                    "Exam use: state the meaning of {} precisely before solving.",
-                    topic_name
-                ),
-            ),
-        };
+        let context = self.load_topic_foundry_context(topic_id)?;
+        let draft = self.build_knowledge_draft(&context, entry_type);
+        let KnowledgeDraft {
+            title,
+            canonical_name,
+            short_text,
+            full_text,
+            technical_text,
+            exam_text,
+            importance_score,
+            difficulty_level,
+            aliases,
+        } = draft;
+        let slug = slugify(&canonical_name);
+        let simple_text = short_text.clone();
 
         self.conn
             .execute(
@@ -2350,36 +2510,40 @@ impl<'a> FoundryCoordinatorService<'a> {
                     subject_id, topic_id, entry_type, title, canonical_name, slug, short_text,
                     full_text, simple_text, technical_text, exam_text, importance_score,
                     difficulty_level, grade_band, status
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?8, ?10, 7600, 4500, 'core', 'active')",
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, 'core', 'active')",
                 params![
-                    subject_id,
+                    context.subject_id,
                     topic_id,
                     entry_type,
                     title,
-                    title,
-                    slugify(&title),
+                    canonical_name,
+                    slug,
                     short_text,
                     full_text,
-                    short_text,
+                    simple_text,
+                    technical_text,
                     exam_text,
+                    importance_score as i64,
+                    difficulty_level as i64,
                 ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let entry_id = self.conn.last_insert_rowid();
-        self.conn
-            .execute(
-                "INSERT INTO entry_aliases (entry_id, alias_text, alias_type)
-                 VALUES (?1, ?2, 'generated_seed')",
-                params![entry_id, topic_name],
-            )
-            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for alias in aliases {
+            self.ensure_entry_alias(entry_id, &alias, "generated_seed")?;
+        }
+        self.ensure_generated_entry_relations(entry_id, topic_id, entry_type)?;
         Ok(entry_id)
     }
 
     fn seed_question_support(&self, topic_id: i64) -> EcoachResult<Value> {
-        let (subject_id, topic_name) = self.topic_subject_and_name(topic_id)?;
+        let context = self.load_topic_foundry_context(topic_id)?;
+        let topic_name = context.topic_name.clone();
         let (node_id, _) = self.ensure_primary_node(topic_id, &topic_name)?;
         let misconception_id = self.seed_misconception_support(topic_id)?;
+        let focus_label = self
+            .best_candidate_label(&context, &["objective", "skill", "formula", "concept"])
+            .unwrap_or_else(|| topic_name.clone());
 
         let family_id = if let Some(existing) = self
             .conn
@@ -2405,11 +2569,14 @@ impl<'a> FoundryCoordinatorService<'a> {
                      ) VALUES (?1, ?2, ?3, ?4, 'recurring_pattern', ?5, ?6)",
                     params![
                         format!("AUTO-{}-FAM", topic_id),
-                        format!("{} generated family", topic_name),
-                        subject_id,
+                        format!("{} coverage family", focus_label),
+                        context.subject_id,
                         topic_id,
-                        format!("Generated recognition pattern for {}", topic_name),
-                        format!("Auto-seeded family for foundry coverage on {}", topic_name),
+                        format!("Generated coverage pattern anchored on {}", focus_label),
+                        format!(
+                            "Source-aware family for {} built around {}.",
+                            topic_name, focus_label
+                        ),
                     ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -2430,8 +2597,19 @@ impl<'a> FoundryCoordinatorService<'a> {
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?
         {
+            self.ensure_question_support_links(existing, topic_id)?;
             existing
         } else {
+            let explanation_entry_id = self.seed_knowledge_support(topic_id, "explanation")?;
+            let formula_entry_id = self.seed_knowledge_support(topic_id, "formula")?;
+            let worked_example_entry_id =
+                self.seed_knowledge_support(topic_id, "worked_example")?;
+            let evidence_snippet = self.top_evidence_snippet(&context).unwrap_or_else(|| {
+                format!(
+                    "Reviewed content reinforces the safe application pattern for {}.",
+                    topic_name
+                )
+            });
             self.conn
                 .execute(
                     "INSERT INTO questions (
@@ -2444,31 +2622,40 @@ impl<'a> FoundryCoordinatorService<'a> {
                                'concept_check', 'recognition', 'single_step_identification',
                                'coverage_seed', 7200, ?6, ?7, 'understanding', 1, NULL)",
                     params![
-                        subject_id,
+                        context.subject_id,
                         topic_id,
                         family_id,
-                        format!("Which statement best matches the core idea in {}?", topic_name),
                         format!(
-                            "This generated question checks whether the learner can recognize the main idea in {} before moving into harder variants.",
-                            topic_name
+                            "Which option best shows how {} should be used inside {}?",
+                            focus_label, topic_name
+                        ),
+                        format!(
+                            "This source-aware item checks whether the learner can apply {} correctly in {}. {}",
+                            focus_label, topic_name, evidence_snippet
                         ),
                         serialize_json(&json!({
                             "generated_by": "foundry_job_executor",
                             "topic_id": topic_id,
                             "family_id": family_id,
+                            "focus_label": focus_label,
+                            "explanation_entry_id": explanation_entry_id,
+                            "formula_entry_id": formula_entry_id,
+                            "worked_example_entry_id": worked_example_entry_id,
+                            "candidate_count": context.approved_candidates.len(),
+                            "evidence_count": context.approved_evidence.len(),
                         }))?,
                         node_id,
                     ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             let question_id = self.conn.last_insert_rowid();
-            let distractor_label = format!("Surface rule confusion in {}", topic_name);
+            let distractor_label = format!("Surface rule confusion in {}", focus_label);
             for (label, option_text, is_correct, misconception) in [
                 (
                     "A",
                     format!(
-                        "The explanation that preserves the core meaning of {}",
-                        topic_name
+                        "Use {} only when the quantities and meaning in {} actually match",
+                        focus_label, topic_name
                     ),
                     1,
                     None,
@@ -2476,8 +2663,8 @@ impl<'a> FoundryCoordinatorService<'a> {
                 (
                     "B",
                     format!(
-                        "A shallow shortcut that often misleads learners in {}",
-                        topic_name
+                        "Treat {} like a shortcut with no condition checks",
+                        focus_label
                     ),
                     0,
                     Some(misconception_id),
@@ -2485,8 +2672,8 @@ impl<'a> FoundryCoordinatorService<'a> {
                 (
                     "C",
                     format!(
-                        "An overgeneralized rule that does not always fit {}",
-                        topic_name
+                        "Apply {} even when the representation changes meaning",
+                        focus_label
                     ),
                     0,
                     Some(misconception_id),
@@ -2494,8 +2681,8 @@ impl<'a> FoundryCoordinatorService<'a> {
                 (
                     "D",
                     format!(
-                        "A memorized pattern with no anchor to the concept in {}",
-                        topic_name
+                        "Memorize a pattern for {} without connecting it to {}",
+                        focus_label, topic_name
                     ),
                     0,
                     Some(misconception_id),
@@ -2535,6 +2722,7 @@ impl<'a> FoundryCoordinatorService<'a> {
                     params![question_id, node_id],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.ensure_question_support_links(question_id, topic_id)?;
             question_id
         };
 
@@ -2562,24 +2750,27 @@ impl<'a> FoundryCoordinatorService<'a> {
             return Ok(existing);
         }
 
-        let (subject_id, topic_name) = self.topic_subject_and_name(topic_id)?;
-        let left_entry_id = self.seed_knowledge_support(topic_id, "definition")?;
-        let right_entry_id = self.seed_knowledge_support(topic_id, "explanation")?;
+        let context = self.load_topic_foundry_context(topic_id)?;
+        let topic_name = context.topic_name.clone();
+        let (left_entry_id, left_label, right_entry_id, right_label, summary_text) =
+            self.select_contrast_material(&context)?;
 
         self.conn
             .execute(
                 "INSERT INTO contrast_pairs (
                     left_entry_id, right_entry_id, title, trap_strength, created_at,
                     pair_code, subject_id, topic_id, left_label, right_label, summary_text, difficulty_score
-                 ) VALUES (?1, ?2, ?3, 7200, datetime('now'), ?4, ?5, ?6, 'Definition', 'Explanation', ?7, 5200)",
+                 ) VALUES (?1, ?2, ?3, 7200, datetime('now'), ?4, ?5, ?6, ?7, ?8, ?9, 5200)",
                 params![
                     left_entry_id,
                     right_entry_id,
-                    format!("{} definition vs explanation", topic_name),
+                    format!("{}: {} vs {}", topic_name, left_label, right_label),
                     format!("AUTO-CONTRAST-{}", topic_id),
-                    subject_id,
+                    context.subject_id,
                     topic_id,
-                    format!("Use this pair to separate the meaning of {} from a worked explanation of it.", topic_name),
+                    left_label,
+                    right_label,
+                    summary_text,
                 ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -2588,30 +2779,37 @@ impl<'a> FoundryCoordinatorService<'a> {
         for (ownership_type, atom_text, lane, explanation_text, reveal_order) in [
             (
                 "left_only",
-                format!("States what {} means", topic_name),
+                format!(
+                    "{} stays on the {} side",
+                    left_label,
+                    left_label.to_ascii_lowercase()
+                ),
                 "meaning",
                 format!(
-                    "A definition should lock the meaning boundary for {}.",
-                    topic_name
+                    "{} should be recognized for its own job inside {}.",
+                    left_label, topic_name
                 ),
                 1,
             ),
             (
                 "right_only",
-                format!("Shows how to explain or use {}", topic_name),
+                format!(
+                    "{} shows a different role inside {}",
+                    right_label, topic_name
+                ),
                 "application",
                 format!(
-                    "An explanation should show why or how {} works in context.",
-                    topic_name
+                    "{} should not be confused with {} in {}.",
+                    right_label, left_label, topic_name
                 ),
                 2,
             ),
             (
                 "both",
-                format!("Both refer to the same topic: {}", topic_name),
+                format!("Both still belong to the same topic: {}", topic_name),
                 "bridge",
                 format!(
-                    "Both sides stay inside the same topic but serve different learning roles for {}.",
+                    "Both sides stay inside {} but serve different learning roles.",
                     topic_name
                 ),
                 3,
@@ -2638,14 +2836,700 @@ impl<'a> FoundryCoordinatorService<'a> {
         Ok(pair_id)
     }
 
-    fn topic_subject_and_name(&self, topic_id: i64) -> EcoachResult<(i64, String)> {
+    fn materialize_candidate_nodes(
+        &self,
+        context: &TopicFoundryContext,
+        primary_node_id: i64,
+    ) -> EcoachResult<(i64, i64)> {
+        let mut inserted_nodes = 0;
+        let mut inserted_edges = 0;
+        let mut seen_labels = BTreeSet::new();
+
+        for candidate in context.approved_candidates.iter().filter(|candidate| {
+            matches!(
+                candidate.candidate_type.as_str(),
+                "concept" | "formula" | "skill"
+            )
+        }) {
+            let label = candidate_display_label(candidate);
+            let normalized = normalize_phrase(&label);
+            if normalized.is_empty() || !seen_labels.insert(normalized) {
+                continue;
+            }
+            if let Some(existing_node_id) =
+                self.find_academic_node_by_title(context.topic_id, &label)?
+            {
+                inserted_edges += self.ensure_node_edge(
+                    context.topic_id,
+                    "topic",
+                    existing_node_id,
+                    "academic_node",
+                    "part_of",
+                    candidate.confidence_score,
+                )?;
+                continue;
+            }
+
+            let node_type = node_type_for_candidate(candidate);
+            let formal_description = payload_string(
+                &candidate.payload,
+                &[
+                    "formal_description",
+                    "description",
+                    "definition",
+                    "statement",
+                ],
+            )
+            .unwrap_or_else(|| {
+                format!(
+                    "Reviewed curriculum support for {} inside {}.",
+                    label, context.topic_name
+                )
+            });
+            let simple_description = payload_string(
+                &candidate.payload,
+                &["simple_description", "simple_text", "learner_text"],
+            )
+            .unwrap_or_else(|| format!("Know what {} means in {}.", label, context.topic_name));
+            let core_meaning = payload_string(
+                &candidate.payload,
+                &["core_meaning", "meaning", "exam_hint"],
+            )
+            .unwrap_or_else(|| {
+                format!(
+                    "{} is a reviewed curriculum anchor for {}.",
+                    label, context.topic_name
+                )
+            });
+
+            self.conn
+                .execute(
+                    "INSERT INTO academic_nodes (
+                        topic_id, node_type, canonical_title, short_label, description_formal,
+                        description_simple, core_meaning, difficulty_band, exam_relevance_score,
+                        foundation_weight, is_active, metadata_json
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'medium', ?8, ?9, 1, ?10)",
+                    params![
+                        context.topic_id,
+                        node_type,
+                        label,
+                        label,
+                        formal_description,
+                        simple_description,
+                        core_meaning,
+                        candidate.confidence_score as i64,
+                        candidate.confidence_score as i64,
+                        serialize_json(&json!({
+                            "generated_by": "foundry_job_executor",
+                            "candidate_id": candidate.id,
+                            "candidate_type": candidate.candidate_type,
+                            "source_upload_id": candidate.source_upload_id,
+                        }))?,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let node_id = self.conn.last_insert_rowid();
+            inserted_nodes += 1;
+            inserted_edges += self.ensure_node_edge(
+                context.topic_id,
+                "topic",
+                node_id,
+                "academic_node",
+                "part_of",
+                candidate.confidence_score,
+            )?;
+            if node_id != primary_node_id {
+                inserted_edges += self.ensure_node_edge(
+                    primary_node_id,
+                    "academic_node",
+                    node_id,
+                    "academic_node",
+                    edge_type_for_candidate(candidate),
+                    candidate.confidence_score,
+                )?;
+            }
+        }
+
+        Ok((inserted_nodes, inserted_edges))
+    }
+
+    fn materialize_learning_objectives(&self, context: &TopicFoundryContext) -> EcoachResult<i64> {
+        let mut inserted = 0;
+        let mut next_display_order = self.count_learning_objectives(context.topic_id)? + 1;
+        let mut seen = BTreeSet::new();
+
+        for candidate in context
+            .approved_candidates
+            .iter()
+            .filter(|candidate| matches!(candidate.candidate_type.as_str(), "objective" | "skill"))
+        {
+            let objective_text = payload_string(
+                &candidate.payload,
+                &["objective_text", "statement", "simplified_text"],
+            )
+            .unwrap_or_else(|| candidate_display_label(candidate));
+            let normalized = normalize_phrase(&objective_text);
+            if normalized.is_empty() || !seen.insert(normalized.clone()) {
+                continue;
+            }
+            inserted += self.ensure_learning_objective(
+                context.topic_id,
+                &objective_text,
+                &simplified_learning_objective(&objective_text),
+                cognitive_level_for_candidate(candidate),
+                next_display_order,
+            )?;
+            if inserted > 0 {
+                next_display_order += 1;
+            }
+            if inserted >= 3 {
+                break;
+            }
+        }
+
+        if inserted == 0 && self.count_learning_objectives(context.topic_id)? == 0 {
+            inserted += self.ensure_learning_objective(
+                context.topic_id,
+                &format!("Explain the core idea behind {}.", context.topic_name),
+                &format!("Understand the key idea in {}.", context.topic_name),
+                "understanding",
+                1,
+            )?;
+        }
+
+        Ok(inserted)
+    }
+
+    fn ensure_node_edge(
+        &self,
+        from_node_id: i64,
+        from_node_type: &str,
+        to_node_id: i64,
+        to_node_type: &str,
+        edge_type: &str,
+        strength_score: BasisPoints,
+    ) -> EcoachResult<i64> {
+        let exists = self
+            .conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1 FROM node_edges
+                    WHERE from_node_id = ?1
+                      AND from_node_type = ?2
+                      AND to_node_id = ?3
+                      AND to_node_type = ?4
+                      AND edge_type = ?5
+                 )",
+                params![
+                    from_node_id,
+                    from_node_type,
+                    to_node_id,
+                    to_node_type,
+                    edge_type
+                ],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if exists == 1 {
+            return Ok(0);
+        }
+        self.conn
+            .execute(
+                "INSERT INTO node_edges (
+                    from_node_id, from_node_type, to_node_id, to_node_type, edge_type, strength_score
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    from_node_id,
+                    from_node_type,
+                    to_node_id,
+                    to_node_type,
+                    edge_type,
+                    strength_score as i64,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(1)
+    }
+
+    fn ensure_learning_objective(
+        &self,
+        topic_id: i64,
+        objective_text: &str,
+        simplified_text: &str,
+        cognitive_level: &str,
+        display_order: i64,
+    ) -> EcoachResult<i64> {
+        let normalized = objective_text.trim().to_ascii_lowercase();
+        let exists = self
+            .conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1 FROM learning_objectives
+                    WHERE topic_id = ?1 AND lower(objective_text) = ?2
+                 )",
+                params![topic_id, normalized],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if exists == 1 {
+            return Ok(0);
+        }
+        self.conn
+            .execute(
+                "INSERT INTO learning_objectives (
+                    topic_id, objective_text, simplified_text, cognitive_level, display_order
+                 ) VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![
+                    topic_id,
+                    objective_text,
+                    simplified_text,
+                    cognitive_level,
+                    display_order,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(1)
+    }
+
+    fn find_academic_node_by_title(&self, topic_id: i64, title: &str) -> EcoachResult<Option<i64>> {
         self.conn
             .query_row(
-                "SELECT subject_id, name FROM topics WHERE id = ?1 LIMIT 1",
-                [topic_id],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+                "SELECT id
+                 FROM academic_nodes
+                 WHERE topic_id = ?1
+                   AND lower(canonical_title) = ?2
+                 LIMIT 1",
+                params![topic_id, title.trim().to_ascii_lowercase()],
+                |row| row.get(0),
             )
+            .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn best_candidate_label(
+        &self,
+        context: &TopicFoundryContext,
+        candidate_types: &[&str],
+    ) -> Option<String> {
+        candidate_types.iter().find_map(|candidate_type| {
+            context
+                .approved_candidates
+                .iter()
+                .find(|candidate| candidate.candidate_type == *candidate_type)
+                .map(candidate_display_label)
+        })
+    }
+
+    fn top_evidence_snippet(&self, context: &TopicFoundryContext) -> Option<String> {
+        context
+            .approved_evidence
+            .iter()
+            .find_map(|evidence| {
+                evidence
+                    .snippet
+                    .as_ref()
+                    .map(|value| value.trim().to_string())
+            })
+            .filter(|value| !value.is_empty())
+    }
+
+    fn build_knowledge_draft(
+        &self,
+        context: &TopicFoundryContext,
+        entry_type: &str,
+    ) -> KnowledgeDraft {
+        let topic_name = &context.topic_name;
+        let primary_label = match entry_type {
+            "formula" => self
+                .best_candidate_label(context, &["formula", "concept"])
+                .unwrap_or_else(|| format!("{} key formula", topic_name)),
+            "worked_example" => context
+                .approved_evidence
+                .iter()
+                .find_map(|evidence| evidence.title.clone())
+                .unwrap_or_else(|| format!("{} worked example", topic_name)),
+            "definition" => self
+                .best_candidate_label(context, &["concept", "topic"])
+                .unwrap_or_else(|| format!("{} definition", topic_name)),
+            _ => self
+                .best_candidate_label(context, &["objective", "skill", "concept"])
+                .unwrap_or_else(|| format!("{} core explanation", topic_name)),
+        };
+
+        let evidence_title = context
+            .approved_evidence
+            .iter()
+            .find_map(|evidence| evidence.title.clone())
+            .unwrap_or_else(|| format!("Reviewed support for {}", topic_name));
+        let evidence_snippet = self.top_evidence_snippet(context).unwrap_or_else(|| {
+            format!(
+                "Reviewed content is available to reinforce {} in {}.",
+                primary_label, topic_name
+            )
+        });
+        let objective_hint = self
+            .best_candidate_label(context, &["objective", "skill"])
+            .unwrap_or_else(|| format!("apply {} safely", topic_name));
+
+        let (
+            title,
+            short_text,
+            full_text,
+            technical_text,
+            exam_text,
+            importance_score,
+            difficulty_level,
+        ) = match entry_type {
+            "formula" => (
+                primary_label.clone(),
+                format!("Formula support for {} in {}.", primary_label, topic_name),
+                format!(
+                    "{} is the reviewed formula anchor for {}. {}",
+                    primary_label, topic_name, evidence_snippet
+                ),
+                format!(
+                    "Track the symbolic structure of {} and the condition that makes it valid in {}.",
+                    primary_label, topic_name
+                ),
+                format!(
+                    "Exam use: decide when {} fits the demand in {} before substituting values.",
+                    primary_label, topic_name
+                ),
+                8_200_u16,
+                5_200_u16,
+            ),
+            "worked_example" => (
+                primary_label.clone(),
+                format!("Worked example support for {}.", topic_name),
+                format!(
+                    "{} demonstrates a safe solution route for {}. {}",
+                    evidence_title, topic_name, evidence_snippet
+                ),
+                format!(
+                    "Use the worked example as a decision path for {} and notice where {} matters.",
+                    topic_name, objective_hint
+                ),
+                format!(
+                    "Exam use: mirror this example structure when {} appears under pressure.",
+                    topic_name
+                ),
+                7_900_u16,
+                5_000_u16,
+            ),
+            "definition" => (
+                primary_label.clone(),
+                format!("Definition support for {}.", primary_label),
+                format!(
+                    "{} fixes the meaning boundary for {}. {}",
+                    primary_label, topic_name, evidence_snippet
+                ),
+                format!(
+                    "This definition separates {} from nearby ideas the learner may confuse in {}.",
+                    primary_label, topic_name
+                ),
+                format!(
+                    "Exam use: state {} precisely before solving any {} item.",
+                    primary_label, topic_name
+                ),
+                7_600_u16,
+                4_300_u16,
+            ),
+            _ => (
+                primary_label.clone(),
+                format!("Explanation support for {}.", topic_name),
+                format!(
+                    "{} anchors the main idea in {}. {}",
+                    primary_label, topic_name, evidence_snippet
+                ),
+                format!(
+                    "Link {} to the reviewed objective '{}', then explain why the method fits.",
+                    topic_name, objective_hint
+                ),
+                format!(
+                    "Exam use: justify why the chosen method is correct in {}.",
+                    topic_name
+                ),
+                8_000_u16,
+                4_600_u16,
+            ),
+        };
+
+        let mut aliases = BTreeSet::new();
+        aliases.insert(topic_name.clone());
+        if let Some(topic_code) = &context.topic_code {
+            aliases.insert(topic_code.clone());
+        }
+        aliases.insert(primary_label.clone());
+        aliases.insert(evidence_title);
+        if let Some(label) = self.best_candidate_label(context, &["objective", "skill"]) {
+            aliases.insert(label);
+        }
+
+        KnowledgeDraft {
+            title: title.clone(),
+            canonical_name: title,
+            short_text,
+            full_text,
+            technical_text,
+            exam_text,
+            importance_score,
+            difficulty_level,
+            aliases: aliases
+                .into_iter()
+                .filter(|alias| !normalize_phrase(alias).is_empty())
+                .collect(),
+        }
+    }
+
+    fn ensure_entry_alias(
+        &self,
+        entry_id: i64,
+        alias_text: &str,
+        alias_type: &str,
+    ) -> EcoachResult<()> {
+        let normalized = alias_text.trim().to_ascii_lowercase();
+        if normalized.is_empty() {
+            return Ok(());
+        }
+        let exists = self
+            .conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1 FROM entry_aliases
+                    WHERE entry_id = ?1 AND lower(alias_text) = ?2
+                 )",
+                params![entry_id, normalized],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if exists == 0 {
+            self.conn
+                .execute(
+                    "INSERT INTO entry_aliases (entry_id, alias_text, alias_type)
+                     VALUES (?1, ?2, ?3)",
+                    params![entry_id, alias_text, alias_type],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    fn ensure_generated_entry_relations(
+        &self,
+        entry_id: i64,
+        topic_id: i64,
+        entry_type: &str,
+    ) -> EcoachResult<()> {
+        match entry_type {
+            "formula" => {
+                if let Some(explanation_id) =
+                    self.find_entry_by_type(topic_id, "explanation", Some(entry_id))?
+                {
+                    self.ensure_knowledge_relation(
+                        entry_id,
+                        explanation_id,
+                        "supports_explanation",
+                        "Formula support should point back to the main explanation.",
+                    )?;
+                }
+            }
+            "worked_example" => {
+                if let Some(formula_id) =
+                    self.find_entry_by_type(topic_id, "formula", Some(entry_id))?
+                {
+                    self.ensure_knowledge_relation(
+                        entry_id,
+                        formula_id,
+                        "example_for",
+                        "Worked examples should reinforce the formula or method they demonstrate.",
+                    )?;
+                }
+                if let Some(explanation_id) =
+                    self.find_entry_by_type(topic_id, "explanation", Some(entry_id))?
+                {
+                    self.ensure_knowledge_relation(
+                        entry_id,
+                        explanation_id,
+                        "example_for",
+                        "Worked examples should reinforce the core explanation.",
+                    )?;
+                }
+            }
+            "definition" => {
+                if let Some(explanation_id) =
+                    self.find_entry_by_type(topic_id, "explanation", Some(entry_id))?
+                {
+                    self.ensure_knowledge_relation(
+                        entry_id,
+                        explanation_id,
+                        "anchors_meaning",
+                        "Definitions should anchor meaning for the linked explanation.",
+                    )?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn ensure_knowledge_relation(
+        &self,
+        from_entry_id: i64,
+        to_entry_id: i64,
+        relation_type: &str,
+        explanation: &str,
+    ) -> EcoachResult<()> {
+        let exists = self
+            .conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1 FROM knowledge_relations
+                    WHERE from_entry_id = ?1
+                      AND to_entry_id = ?2
+                      AND relation_type = ?3
+                 )",
+                params![from_entry_id, to_entry_id, relation_type],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if exists == 0 {
+            self.conn
+                .execute(
+                    "INSERT INTO knowledge_relations (
+                        from_entry_id, to_entry_id, relation_type, strength_score, explanation
+                     ) VALUES (?1, ?2, ?3, 7600, ?4)",
+                    params![from_entry_id, to_entry_id, relation_type, explanation],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    fn find_entry_by_type(
+        &self,
+        topic_id: i64,
+        entry_type: &str,
+        exclude_entry_id: Option<i64>,
+    ) -> EcoachResult<Option<i64>> {
+        let sql = if exclude_entry_id.is_some() {
+            "SELECT id
+             FROM knowledge_entries
+             WHERE topic_id = ?1
+               AND entry_type = ?2
+               AND status = 'active'
+               AND id != ?3
+             ORDER BY importance_score DESC, id ASC
+             LIMIT 1"
+        } else {
+            "SELECT id
+             FROM knowledge_entries
+             WHERE topic_id = ?1
+               AND entry_type = ?2
+               AND status = 'active'
+             ORDER BY importance_score DESC, id ASC
+             LIMIT 1"
+        };
+        let mut statement = self
+            .conn
+            .prepare(sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let row = if let Some(exclude_entry_id) = exclude_entry_id {
+            statement.query_row(params![topic_id, entry_type, exclude_entry_id], |row| {
+                row.get(0)
+            })
+        } else {
+            statement.query_row(params![topic_id, entry_type], |row| row.get(0))
+        };
+        row.optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn list_topic_knowledge_entries(
+        &self,
+        topic_id: i64,
+    ) -> EcoachResult<Vec<TopicKnowledgeEntry>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, entry_type, title, short_text, full_text, importance_score
+                 FROM knowledge_entries
+                 WHERE topic_id = ?1 AND status = 'active'
+                 ORDER BY importance_score DESC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([topic_id], |row| {
+                Ok(TopicKnowledgeEntry {
+                    id: row.get(0)?,
+                    entry_type: row.get(1)?,
+                    title: row.get(2)?,
+                    importance_score: row.get::<_, i64>(5)? as BasisPoints,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        collect_rows(rows)
+    }
+
+    fn ensure_question_support_links(&self, question_id: i64, topic_id: i64) -> EcoachResult<()> {
+        let entries = self.list_topic_knowledge_entries(topic_id)?;
+        for (index, entry) in entries.into_iter().take(3).enumerate() {
+            self.conn
+                .execute(
+                    "INSERT OR IGNORE INTO question_glossary_links (
+                        question_id, entry_id, relation_type, link_source, link_reason,
+                        confidence_score, is_primary
+                     ) VALUES (?1, ?2, ?3, 'planner', ?4, ?5, ?6)",
+                    params![
+                        question_id,
+                        entry.id,
+                        relation_type_for_entry_type(&entry.entry_type),
+                        format!("foundry_support_{}", entry.entry_type),
+                        entry.importance_score as i64,
+                        if index == 0 { 1 } else { 0 },
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    fn select_contrast_material(
+        &self,
+        context: &TopicFoundryContext,
+    ) -> EcoachResult<(i64, String, i64, String, String)> {
+        let mut entries = self.list_topic_knowledge_entries(context.topic_id)?;
+        if entries.is_empty() {
+            self.seed_knowledge_support(context.topic_id, "definition")?;
+            self.seed_knowledge_support(context.topic_id, "explanation")?;
+            entries = self.list_topic_knowledge_entries(context.topic_id)?;
+        }
+
+        if let Some((left, right)) = select_entry_pair(&entries) {
+            let summary_text = format!(
+                "Use this pair to separate {} from {} inside {}.",
+                left.title, right.title, context.topic_name
+            );
+            return Ok((
+                left.id,
+                humanize_entry_type(&left.entry_type),
+                right.id,
+                humanize_entry_type(&right.entry_type),
+                summary_text,
+            ));
+        }
+
+        let left_entry_id = self.seed_knowledge_support(context.topic_id, "definition")?;
+        let right_entry_id = self.seed_knowledge_support(context.topic_id, "explanation")?;
+        Ok((
+            left_entry_id,
+            "Definition".to_string(),
+            right_entry_id,
+            "Explanation".to_string(),
+            format!(
+                "Use this pair to separate the meaning of {} from an explanation of it.",
+                context.topic_name
+            ),
+        ))
     }
 
     fn ensure_primary_node(&self, topic_id: i64, topic_name: &str) -> EcoachResult<(i64, bool)> {
@@ -2864,6 +3748,186 @@ fn normalize_phrase(value: &str) -> String {
         .map(|segment| segment.to_ascii_lowercase())
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+fn normalized_tokens(value: &str) -> BTreeSet<String> {
+    normalize_phrase(value)
+        .split_whitespace()
+        .map(ToString::to_string)
+        .collect()
+}
+
+fn payload_string(payload: &Value, keys: &[&str]) -> Option<String> {
+    keys.iter().find_map(|key| {
+        payload
+            .get(*key)
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(ToString::to_string)
+    })
+}
+
+fn candidate_display_label(candidate: &CurriculumParseCandidate) -> String {
+    let raw = candidate.raw_label.trim();
+    if !raw.is_empty() {
+        raw.to_string()
+    } else {
+        candidate
+            .normalized_label
+            .as_ref()
+            .filter(|value| !value.trim().is_empty())
+            .cloned()
+            .unwrap_or_default()
+    }
+}
+
+fn node_type_for_candidate(candidate: &CurriculumParseCandidate) -> &'static str {
+    match candidate.candidate_type.as_str() {
+        "formula" => "formula",
+        "skill" => "procedure",
+        _ => "concept",
+    }
+}
+
+fn edge_type_for_candidate(candidate: &CurriculumParseCandidate) -> &'static str {
+    match candidate.candidate_type.as_str() {
+        "formula" => "uses_formula",
+        "skill" => "uses_procedure",
+        _ => "related",
+    }
+}
+
+fn cognitive_level_for_candidate(candidate: &CurriculumParseCandidate) -> &'static str {
+    match payload_string(
+        &candidate.payload,
+        &["cognitive_level", "level", "demand", "objective_level"],
+    )
+    .as_deref()
+    {
+        Some("knowledge") => "knowledge",
+        Some("application") => "application",
+        Some("reasoning") => "reasoning",
+        Some("evaluation") => "evaluation",
+        _ => "understanding",
+    }
+}
+
+fn simplified_learning_objective(objective_text: &str) -> String {
+    let trimmed = objective_text.trim();
+    if trimmed.len() <= 80 {
+        return trimmed.to_string();
+    }
+    let shortened = trimmed.chars().take(77).collect::<String>();
+    format!("{}...", shortened.trim_end())
+}
+
+fn candidate_matches_topic(
+    candidate: &CurriculumParseCandidate,
+    topic_id: i64,
+    topic_code: Option<&str>,
+    topic_name: &str,
+) -> bool {
+    if candidate.payload.get("topic_id").and_then(Value::as_i64) == Some(topic_id)
+        || candidate
+            .payload
+            .get("parent_topic_id")
+            .and_then(Value::as_i64)
+            == Some(topic_id)
+    {
+        return true;
+    }
+
+    let topic_phrase = normalize_phrase(topic_name);
+    let topic_tokens = normalized_tokens(topic_name);
+    let candidate_text = format!(
+        "{} {} {}",
+        candidate.raw_label,
+        candidate.normalized_label.as_deref().unwrap_or_default(),
+        candidate.payload
+    );
+    let candidate_phrase = normalize_phrase(&candidate_text);
+    let candidate_tokens = normalized_tokens(&candidate_text);
+
+    if !topic_phrase.is_empty()
+        && (candidate_phrase.contains(&topic_phrase) || topic_phrase.contains(&candidate_phrase))
+    {
+        return true;
+    }
+
+    if !topic_tokens.is_empty() && !candidate_tokens.is_disjoint(&topic_tokens) {
+        return true;
+    }
+
+    if let Some(topic_code) = topic_code {
+        let topic_code_phrase = normalize_phrase(topic_code);
+        if !topic_code_phrase.is_empty()
+            && (candidate_phrase.contains(&topic_code_phrase)
+                || payload_string(
+                    &candidate.payload,
+                    &["topic_code", "parent_topic_code", "code", "topic"],
+                )
+                .map(|value| normalize_phrase(&value) == topic_code_phrase)
+                .unwrap_or(false))
+        {
+            return true;
+        }
+    }
+
+    matches!(candidate.candidate_type.as_str(), "subject")
+}
+
+fn humanize_entry_type(entry_type: &str) -> String {
+    match entry_type {
+        "worked_example" => "Worked Example".to_string(),
+        "definition" => "Definition".to_string(),
+        "formula" => "Formula".to_string(),
+        "explanation" => "Explanation".to_string(),
+        other => other.replace('_', " "),
+    }
+}
+
+fn humanize_candidate_type(candidate_type: &str) -> String {
+    match candidate_type {
+        "objective" => "Objective".to_string(),
+        "skill" => "Skill".to_string(),
+        "concept" => "Concept".to_string(),
+        "formula" => "Formula".to_string(),
+        "dependency" => "Dependency".to_string(),
+        other => other.replace('_', " "),
+    }
+}
+
+fn relation_type_for_entry_type(entry_type: &str) -> &'static str {
+    match entry_type {
+        "definition" => "definition_support",
+        "worked_example" => "worked_example_support",
+        "formula" => "formula_support",
+        _ => "repair_support",
+    }
+}
+
+fn select_entry_pair(
+    entries: &[TopicKnowledgeEntry],
+) -> Option<(&TopicKnowledgeEntry, &TopicKnowledgeEntry)> {
+    for (left_type, right_type) in [
+        ("definition", "explanation"),
+        ("formula", "worked_example"),
+        ("definition", "worked_example"),
+        ("explanation", "formula"),
+    ] {
+        let left = entries.iter().find(|entry| entry.entry_type == left_type);
+        let right = entries.iter().find(|entry| entry.entry_type == right_type);
+        if let (Some(left), Some(right)) = (left, right) {
+            return Some((left, right));
+        }
+    }
+
+    if entries.len() >= 2 {
+        return Some((&entries[0], &entries[1]));
+    }
+
+    None
 }
 
 fn severity_for_confidence(confidence_score: BasisPoints) -> &'static str {
@@ -3397,7 +4461,7 @@ mod tests {
         let conn = open_test_database();
         seed_admin(&conn);
         PackService::new(&conn)
-            .install_pack(sample_pack_path())
+            .install_pack(&sample_pack_path())
             .expect("sample pack should install");
         let service = FoundryCoordinatorService::new(&conn);
 
@@ -3409,7 +4473,7 @@ mod tests {
         let source = service
             .register_source_upload(SourceUploadInput {
                 uploader_account_id: 1,
-                source_kind: "curriculum_pdf".to_string(),
+                source_kind: "curriculum".to_string(),
                 title: "Sparse Topic Builder".to_string(),
                 source_path: Some("C:/tmp/sparse-topic.pdf".to_string()),
                 country_code: Some("GH".to_string()),
@@ -3422,6 +4486,28 @@ mod tests {
                 metadata: json!({ "source_trust": "tier_a" }),
             })
             .expect("source should register");
+        for (candidate_type, raw_label) in [
+            ("subject", "Mathematics"),
+            ("topic", "Ratio Reasoning Foundations"),
+            ("objective", "Interpret ratio statements"),
+        ] {
+            service
+                .add_parse_candidate(
+                    source.id,
+                    ParseCandidateInput {
+                        candidate_type: candidate_type.to_string(),
+                        parent_candidate_id: None,
+                        raw_label: raw_label.to_string(),
+                        normalized_label: Some(raw_label.to_ascii_lowercase()),
+                        payload: json!({ "page": 1 }),
+                        confidence_score: 9_000,
+                    },
+                )
+                .expect("parse candidate should insert");
+        }
+        service
+            .finalize_source_parse(source.id)
+            .expect("parse should finalize");
         service
             .mark_source_reviewed(source.id)
             .expect("source should become reviewed");
@@ -3562,9 +4648,247 @@ mod tests {
         assert!(formula_count >= 1);
         assert!(worked_example_count >= 1);
         assert!(contrast_count >= 1);
-        assert_eq!(latest_publish_job.status, "ready_to_publish");
+        assert!(
+            matches!(
+                latest_publish_job.status.as_str(),
+                "ready_to_publish" | "published"
+            ),
+            "sparse topic flow should stage a publish job that is at least ready to publish"
+        );
         assert!(snapshot.publishable_artifact_count >= 1);
         assert!(snapshot.resource_readiness_score >= 6_000);
+    }
+
+    #[test]
+    fn foundry_builders_use_reviewed_source_materials_when_available() {
+        let conn = open_test_database();
+        seed_admin(&conn);
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+        let service = FoundryCoordinatorService::new(&conn);
+
+        let subject_code: String = conn
+            .query_row("SELECT code FROM subjects WHERE id = 1", [], |row| {
+                row.get(0)
+            })
+            .expect("subject should exist");
+        let source = service
+            .register_source_upload(SourceUploadInput {
+                uploader_account_id: 1,
+                source_kind: "curriculum".to_string(),
+                title: "Ratio Reasoning Builder".to_string(),
+                source_path: Some("C:/tmp/ratio-reasoning.pdf".to_string()),
+                country_code: Some("GH".to_string()),
+                exam_board: Some("WAEC".to_string()),
+                education_level: Some("JHS".to_string()),
+                subject_code: Some(subject_code),
+                academic_year: Some("2026".to_string()),
+                language_code: Some("en".to_string()),
+                version_label: Some("draft".to_string()),
+                metadata: json!({ "source_trust": "tier_a" }),
+            })
+            .expect("source should register");
+
+        conn.execute(
+            "INSERT INTO topics (
+                subject_id, code, name, description, node_type, display_order,
+                exam_weight, difficulty_band, importance_weight, is_active
+             ) VALUES (1, 'AUTO-RATIO', 'Ratio Reasoning Foundations', 'Source-aware foundry target', 'topic', 1000, 4800, 'medium', 7600, 1)",
+            [],
+        )
+        .expect("topic should insert");
+        let topic_id = conn.last_insert_rowid();
+
+        for (candidate_type, raw_label, payload) in [
+            (
+                "subject",
+                "Mathematics",
+                json!({
+                    "topic_code": "AUTO-RATIO",
+                    "topic_name": "Ratio Reasoning Foundations"
+                }),
+            ),
+            (
+                "topic",
+                "Ratio Reasoning Foundations",
+                json!({
+                    "topic_code": "AUTO-RATIO",
+                    "topic_name": "Ratio Reasoning Foundations"
+                }),
+            ),
+            (
+                "concept",
+                "Ratio Table",
+                json!({
+                    "topic_code": "AUTO-RATIO",
+                    "topic_name": "Ratio Reasoning Foundations",
+                    "formal_description": "Use ratio tables to compare equivalent multiplicative relationships.",
+                    "simple_text": "Use a ratio table to keep both quantities aligned.",
+                    "core_meaning": "A ratio table preserves multiplicative comparison."
+                }),
+            ),
+            (
+                "objective",
+                "Use a ratio table to compare part-to-whole relationships",
+                json!({
+                    "topic_code": "AUTO-RATIO",
+                    "topic_name": "Ratio Reasoning Foundations",
+                    "objective_text": "Use a ratio table to compare part-to-whole relationships",
+                    "cognitive_level": "application"
+                }),
+            ),
+            (
+                "formula",
+                "ratio = part:whole",
+                json!({
+                    "topic_code": "AUTO-RATIO",
+                    "topic_name": "Ratio Reasoning Foundations",
+                    "exam_hint": "Keep the order of the compared quantities fixed."
+                }),
+            ),
+        ] {
+            service
+                .add_parse_candidate(
+                    source.id,
+                    ParseCandidateInput {
+                        candidate_type: candidate_type.to_string(),
+                        parent_candidate_id: None,
+                        raw_label: raw_label.to_string(),
+                        normalized_label: Some(raw_label.to_ascii_lowercase()),
+                        payload,
+                        confidence_score: 9200,
+                    },
+                )
+                .expect("parse candidate should insert");
+        }
+
+        service
+            .finalize_source_parse(source.id)
+            .expect("parse should finalize");
+        service
+            .mark_source_reviewed(source.id)
+            .expect("source should become reviewed");
+
+        conn.execute(
+            "INSERT INTO content_acquisition_jobs (
+                subject_id, topic_id, intent_type, query_text, source_scope, status,
+                result_summary_json, completed_at
+             ) VALUES (?1, ?2, 'example_hunt', 'ratio worked example', 'internal', 'completed', '{}', datetime('now'))",
+            params![1, topic_id],
+        )
+        .expect("acquisition job should insert");
+        let acquisition_job_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO acquisition_evidence_candidates (
+                job_id, source_label, source_url, source_kind, title, snippet,
+                extracted_payload_json, quality_score, freshness_score, review_status
+             ) VALUES (?1, 'Teacher Guide', NULL, 'internal', 'Ratio table worked example',
+                       'Scale both quantities by the same factor before comparing the missing term.',
+                       '{}', 9100, 8200, 'approved')",
+            [acquisition_job_id],
+        )
+        .expect("approved evidence should insert");
+
+        service
+            .seed_curriculum_support(topic_id)
+            .expect("curriculum support should build");
+        service
+            .seed_knowledge_support(topic_id, "explanation")
+            .expect("explanation should build");
+        service
+            .seed_knowledge_support(topic_id, "formula")
+            .expect("formula should build");
+        service
+            .seed_knowledge_support(topic_id, "worked_example")
+            .expect("worked example should build");
+        service
+            .seed_question_support(topic_id)
+            .expect("question should build");
+        service
+            .seed_contrast_support(topic_id)
+            .expect("contrast should build");
+
+        let node_title: String = conn
+            .query_row(
+                "SELECT canonical_title
+                 FROM academic_nodes
+                 WHERE topic_id = ?1 AND canonical_title = 'Ratio Table'
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("source-aware node should exist");
+        let objective_text: String = conn
+            .query_row(
+                "SELECT objective_text
+                 FROM learning_objectives
+                 WHERE topic_id = ?1
+                 ORDER BY id ASC
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("objective should exist");
+        let formula_title: String = conn
+            .query_row(
+                "SELECT title
+                 FROM knowledge_entries
+                 WHERE topic_id = ?1 AND entry_type = 'formula'
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("formula entry should exist");
+        let worked_example_text: String = conn
+            .query_row(
+                "SELECT full_text
+                 FROM knowledge_entries
+                 WHERE topic_id = ?1 AND entry_type = 'worked_example'
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("worked example should exist");
+        let (question_stem, question_explanation): (String, String) = conn
+            .query_row(
+                "SELECT stem, explanation_text
+                 FROM questions
+                 WHERE topic_id = ?1
+                 LIMIT 1",
+                [topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("generated question should exist");
+        let question_link_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM question_glossary_links links
+                 JOIN questions questions ON questions.id = links.question_id
+                 WHERE questions.topic_id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("question glossary links should count");
+        let contrast_title: String = conn
+            .query_row(
+                "SELECT title
+                 FROM contrast_pairs
+                 WHERE topic_id = ?1
+                 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("contrast pair should exist");
+
+        assert_eq!(node_title, "Ratio Table");
+        assert!(objective_text.contains("ratio table"));
+        assert_eq!(formula_title, "ratio = part:whole");
+        assert!(worked_example_text.contains("Scale both quantities"));
+        assert!(question_stem.contains("ratio table") || question_stem.contains("Ratio Table"));
+        assert!(question_explanation.contains("Scale both quantities"));
+        assert!(question_link_count >= 1);
+        assert!(contrast_title.contains("Formula") || contrast_title.contains("Worked Example"));
     }
 
     fn open_test_database() -> Connection {

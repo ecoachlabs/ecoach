@@ -1,5 +1,10 @@
-use ecoach_glossary::GlossaryService;
-use ecoach_library::LibraryService;
+use ecoach_glossary::{
+    GlossaryAudioProgram, GlossaryService, KnowledgeBundle, QuestionKnowledgeLink,
+};
+use ecoach_library::{
+    ContinueLearningCard, LibraryHomeSnapshot, LibraryService, RevisionPackItem,
+    RevisionPackSummary, TeachActionPlan, TopicRelationshipHint,
+};
 
 use crate::{error::CommandError, state::AppState};
 use serde::{Deserialize, Serialize};
@@ -28,6 +33,16 @@ pub struct GlossaryEntryDto {
     pub short_text: Option<String>,
     pub topic_id: Option<i64>,
 }
+
+pub type LibraryHomeSnapshotDto = LibraryHomeSnapshot;
+pub type ContinueLearningCardDto = ContinueLearningCard;
+pub type RevisionPackSummaryDto = RevisionPackSummary;
+pub type RevisionPackItemDto = RevisionPackItem;
+pub type KnowledgeBundleDto = KnowledgeBundle;
+pub type QuestionKnowledgeLinkDto = QuestionKnowledgeLink;
+pub type GlossaryAudioProgramDto = GlossaryAudioProgram;
+pub type TeachActionPlanDto = TeachActionPlan;
+pub type TopicRelationshipHintDto = TopicRelationshipHint;
 
 pub fn get_library_home(
     state: &AppState,
@@ -78,5 +93,97 @@ pub fn search_glossary(
                 topic_id: e.topic_id,
             })
             .collect())
+    })
+}
+
+pub fn get_library_snapshot(
+    state: &AppState,
+    student_id: i64,
+) -> Result<LibraryHomeSnapshotDto, CommandError> {
+    state.with_connection(|conn| Ok(LibraryService::new(conn).build_home_snapshot(student_id, 20)?))
+}
+
+pub fn get_continue_learning_card(
+    state: &AppState,
+    student_id: i64,
+) -> Result<Option<ContinueLearningCardDto>, CommandError> {
+    state.with_connection(|conn| {
+        let snapshot = LibraryService::new(conn).build_home_snapshot(student_id, 20)?;
+        Ok(snapshot.continue_card)
+    })
+}
+
+pub fn build_revision_pack(
+    state: &AppState,
+    student_id: i64,
+    title: String,
+    question_limit: usize,
+) -> Result<RevisionPackSummaryDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(LibraryService::new(conn).build_revision_pack(student_id, &title, question_limit)?)
+    })
+}
+
+pub fn list_revision_pack_items(
+    state: &AppState,
+    pack_id: i64,
+) -> Result<Vec<RevisionPackItemDto>, CommandError> {
+    state.with_connection(|conn| Ok(LibraryService::new(conn).list_revision_pack_items(pack_id)?))
+}
+
+pub fn list_glossary_bundles_for_topic(
+    state: &AppState,
+    topic_id: i64,
+) -> Result<Vec<KnowledgeBundleDto>, CommandError> {
+    state.with_connection(|conn| Ok(GlossaryService::new(conn).list_bundles_for_topic(topic_id)?))
+}
+
+pub fn list_glossary_entries_for_question(
+    state: &AppState,
+    question_id: i64,
+) -> Result<Vec<QuestionKnowledgeLinkDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GlossaryService::new(conn).list_entries_for_question(question_id)?)
+    })
+}
+
+pub fn build_glossary_audio_program_for_topic(
+    state: &AppState,
+    topic_id: i64,
+    limit: usize,
+) -> Result<GlossaryAudioProgramDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GlossaryService::new(conn).build_audio_program_for_topic(topic_id, limit)?)
+    })
+}
+
+pub fn build_glossary_audio_program_for_question(
+    state: &AppState,
+    question_id: i64,
+    limit: usize,
+) -> Result<GlossaryAudioProgramDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GlossaryService::new(conn).build_audio_program_for_question(question_id, limit)?)
+    })
+}
+
+pub fn build_teach_action_plan(
+    state: &AppState,
+    student_id: i64,
+    topic_id: i64,
+    limit: usize,
+) -> Result<TeachActionPlanDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(LibraryService::new(conn).build_teach_action_plan(student_id, topic_id, limit)?)
+    })
+}
+
+pub fn list_topic_relationship_hints(
+    state: &AppState,
+    topic_id: i64,
+    limit: usize,
+) -> Result<Vec<TopicRelationshipHintDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(LibraryService::new(conn).list_topic_relationship_hints(topic_id, limit)?)
     })
 }

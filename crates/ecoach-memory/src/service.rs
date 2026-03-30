@@ -4,8 +4,9 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{
-    DecayBatchResult, InterferenceEdge, MemoryDashboard, MemoryReviewQueueItem, MemoryState,
-    MemoryStateRecord, RecallMode, RecheckItem, RecordMemoryEvidenceInput, TopicMemorySummary,
+    DecayBatchResult, InterferenceEdge, MemoryDashboard, MemoryReturnLoop, MemoryReturnSession,
+    MemoryReviewQueueItem, MemoryState, MemoryStateRecord, RecallMode, RecheckItem,
+    RecordMemoryEvidenceInput, TopicMemorySummary,
 };
 
 // ── Decay model constants ──
@@ -1046,6 +1047,110 @@ impl<'a> MemoryService<'a> {
 
     // ── Internal ──
 
+    pub fn build_return_loop(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<MemoryReturnLoop> {
+        let queue_limit = (limit.max(3) * 4).min(48);
+        let queue = self.build_review_queue(student_id, queue_limit)?;
+        let summaries = self.list_topic_summaries(student_id, limit.max(6))?;
+        let dashboard = self.get_memory_dashboard(student_id)?;
+
+        let mut sessions = Vec::new();
+        for summary in summaries {
+            let topic_items: Vec<&MemoryReviewQueueItem> = queue
+                .iter()
+                .filter(|item| item.topic_id == Some(summary.topic_id))
+                .collect();
+            if topic_items.is_empty()
+                && summary.overdue_reviews == 0
+                && summary.fragile_items == 0
+                && summary.collapsed_items == 0
+            {
+                continue;
+            }
+
+            let action_type = topic_items
+                .first()
+                .map(|item| item.action_type.clone())
+                .unwrap_or_else(|| summary.recommended_action.clone());
+            let item_ids = topic_items
+                .iter()
+                .map(|item| item.memory_state_id)
+                .take(6)
+                .collect::<Vec<_>>();
+            let node_ids = topic_items
+                .iter()
+                .filter_map(|item| item.node_id)
+                .take(6)
+                .collect::<Vec<_>>();
+            let due_count = topic_items
+                .iter()
+                .filter(|item| item.due_at.is_some())
+                .count() as i64;
+            let fragile_count = topic_items
+                .iter()
+                .filter(|item| {
+                    matches!(
+                        item.memory_state.as_str(),
+                        "fragile" | "at_risk" | "fading" | "rebuilding"
+                    )
+                })
+                .count() as i64;
+            let urgency_band =
+                self.return_loop_urgency(&summary, &topic_items, due_count, fragile_count);
+            let estimated_minutes = self.return_loop_minutes(
+                &action_type,
+                due_count,
+                fragile_count,
+                summary.collapsed_items,
+            );
+            let reason = self.return_loop_reason(&summary, &topic_items, &action_type);
+
+            sessions.push(MemoryReturnSession {
+                topic_id: Some(summary.topic_id),
+                topic_name: Some(summary.topic_name.clone()),
+                action_type,
+                urgency_band,
+                estimated_minutes,
+                due_count,
+                fragile_count,
+                collapsed_count: summary.collapsed_items,
+                item_ids,
+                node_ids,
+                reason,
+            });
+        }
+
+        sessions.sort_by(|left, right| {
+            self.urgency_rank(&right.urgency_band)
+                .cmp(&self.urgency_rank(&left.urgency_band))
+                .then(right.estimated_minutes.cmp(&left.estimated_minutes))
+        });
+        sessions.truncate(limit.max(1));
+
+        let recommended_today_minutes = sessions
+            .iter()
+            .map(|session| session.estimated_minutes)
+            .sum::<i64>()
+            .min(90);
+        let dominant_mode = sessions
+            .first()
+            .map(|session| session.action_type.clone())
+            .unwrap_or_else(|| "maintenance_review".to_string());
+
+        Ok(MemoryReturnLoop {
+            student_id,
+            total_due_items: dashboard.overdue_reviews,
+            total_topics_in_play: sessions.len() as i64,
+            recommended_today_minutes,
+            dominant_mode,
+            next_review_due: dashboard.next_review_due,
+            sessions,
+        })
+    }
+
     fn review_priority_score(
         &self,
         memory_state: &str,
@@ -1112,6 +1217,91 @@ impl<'a> MemoryService<'a> {
             "reinforce_topic"
         } else {
             "maintain_retention"
+        }
+    }
+
+    fn return_loop_urgency(
+        &self,
+        summary: &TopicMemorySummary,
+        topic_items: &[&MemoryReviewQueueItem],
+        due_count: i64,
+        fragile_count: i64,
+    ) -> String {
+        if summary.collapsed_items > 0 || due_count >= 3 {
+            return "critical".to_string();
+        }
+        if fragile_count >= 2
+            || topic_items
+                .iter()
+                .any(|item| item.action_type == "interference_repair")
+        {
+            return "high".to_string();
+        }
+        if summary.overdue_reviews > 0 || summary.average_strength < 5000 {
+            return "medium".to_string();
+        }
+        "maintenance".to_string()
+    }
+
+    fn return_loop_minutes(
+        &self,
+        action_type: &str,
+        due_count: i64,
+        fragile_count: i64,
+        collapsed_count: i64,
+    ) -> i64 {
+        let base = match action_type {
+            "rebuild_foundation" => 20,
+            "urgent_recall_repair" | "interference_repair" => 18,
+            "guided_reinforcement" => 15,
+            "stabilize_memory" => 12,
+            "retention_check" => 10,
+            _ => 8,
+        };
+        (base + due_count.min(4) * 3 + fragile_count.min(3) * 2 + collapsed_count.min(2) * 4)
+            .min(30)
+    }
+
+    fn return_loop_reason(
+        &self,
+        summary: &TopicMemorySummary,
+        topic_items: &[&MemoryReviewQueueItem],
+        action_type: &str,
+    ) -> String {
+        if summary.collapsed_items > 0 {
+            return format!(
+                "{} has collapsed memory traces, so the next return should rebuild the foundation before more drilling.",
+                summary.topic_name
+            );
+        }
+        if topic_items
+            .iter()
+            .any(|item| item.action_type == "interference_repair")
+        {
+            return format!(
+                "{} is showing interference patterns, so the return loop should separate confused nodes before recall practice.",
+                summary.topic_name
+            );
+        }
+        if summary.overdue_reviews > 0 {
+            return format!(
+                "{} has overdue reviews waiting, so the return loop should clear them before memory weakens further.",
+                summary.topic_name
+            );
+        }
+        format!(
+            "{} is being kept alive with a {} pass so the learner does not slide backward.",
+            summary.topic_name,
+            action_type.replace('_', " ")
+        )
+    }
+
+    fn urgency_rank(&self, urgency_band: &str) -> i64 {
+        match urgency_band {
+            "critical" => 4,
+            "high" => 3,
+            "medium" => 2,
+            _ => 1,
         }
     }
 

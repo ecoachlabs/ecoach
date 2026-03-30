@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use ecoach_substrate::{EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
@@ -33,6 +35,7 @@ pub struct ContentQualityReport {
 pub struct ContentPublishJobReport {
     pub job: ContentPublishJob,
     pub quality_reports: Vec<ContentQualityReport>,
+    pub active_quality_reports: Vec<ContentQualityReport>,
     pub blocking_report_count: i64,
     pub is_ready_to_publish: bool,
 }
@@ -267,7 +270,8 @@ impl<'a> ContentPublishService<'a> {
             quality_reports.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
         }
 
-        let blocking_report_count = quality_reports
+        let active_quality_reports = latest_active_quality_reports(&quality_reports);
+        let blocking_report_count = active_quality_reports
             .iter()
             .filter(|report| matches!(report.status.as_str(), "fail" | "needs_review"))
             .count() as i64;
@@ -280,6 +284,7 @@ impl<'a> ContentPublishService<'a> {
                 ),
             job,
             quality_reports,
+            active_quality_reports,
             blocking_report_count,
         }))
     }
@@ -324,6 +329,34 @@ fn parse_json_column(column_index: usize, raw: &str) -> rusqlite::Result<Value> 
             Box::new(err),
         )
     })
+}
+
+fn latest_active_quality_reports(
+    quality_reports: &[ContentQualityReport],
+) -> Vec<ContentQualityReport> {
+    let mut active_quality_reports = Vec::new();
+    let mut seen_gate_keys = HashSet::new();
+
+    for report in quality_reports {
+        let gate_key = quality_report_gate_key(&report.report_type);
+        if seen_gate_keys.insert(gate_key) {
+            active_quality_reports.push(report.clone());
+        }
+    }
+
+    active_quality_reports
+}
+
+fn quality_report_gate_key(report_type: &str) -> String {
+    for suffix in ["_strong", "_review"] {
+        if let Some(base) = report_type.strip_suffix(suffix) {
+            if base.ends_with("_gate") {
+                return base.to_string();
+            }
+        }
+    }
+
+    report_type.to_string()
 }
 
 #[cfg(test)]
@@ -433,6 +466,124 @@ mod tests {
         assert!(report.job.published_at.is_some());
         assert_eq!(report.blocking_report_count, 0);
         assert!(report.is_ready_to_publish);
+    }
+
+    #[test]
+    fn latest_quality_report_replaces_stale_blocking_result_for_same_gate() {
+        let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_admin_and_source(&conn);
+
+        let service = ContentPublishService::new(&conn);
+        let publish_job_id = service
+            .create_publish_job(
+                1,
+                None,
+                Some(1),
+                None,
+                None,
+                Some("v4"),
+                &json!({ "source_status": "parsed" }),
+            )
+            .expect("publish job should insert");
+        service
+            .add_quality_report(
+                publish_job_id,
+                "coverage_gate",
+                "needs_review",
+                5100,
+                &json!({ "missing_topics": 3 }),
+            )
+            .expect("blocking report should insert");
+        service
+            .add_quality_report(
+                publish_job_id,
+                "coverage_gate",
+                "pass",
+                9100,
+                &json!({ "missing_topics": 0 }),
+            )
+            .expect("replacement report should insert");
+
+        let report = service
+            .get_publish_job_report(publish_job_id)
+            .expect("publish report should load")
+            .expect("publish report should exist");
+
+        assert_eq!(report.quality_reports.len(), 2);
+        assert_eq!(report.active_quality_reports.len(), 1);
+        assert_eq!(report.active_quality_reports[0].status, "pass");
+        assert_eq!(report.blocking_report_count, 0);
+        assert!(!report.is_ready_to_publish);
+
+        service
+            .mark_ready_to_publish(publish_job_id, &json!({ "artifact_count": 12 }))
+            .expect("cleared gate should allow ready transition");
+
+        let report = service
+            .get_publish_job_report(publish_job_id)
+            .expect("publish report should reload")
+            .expect("publish report should exist");
+        assert_eq!(report.job.status, "ready_to_publish");
+        assert!(report.is_ready_to_publish);
+    }
+
+    #[test]
+    fn stronger_auto_quality_gate_supersedes_older_review_variant() {
+        let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_admin_and_source(&conn);
+
+        let service = ContentPublishService::new(&conn);
+        let publish_job_id = service
+            .create_publish_job(
+                1,
+                None,
+                Some(1),
+                None,
+                None,
+                Some("v5"),
+                &json!({ "source_status": "reviewed" }),
+            )
+            .expect("publish job should insert");
+        service
+            .add_quality_report(
+                publish_job_id,
+                "auto_quality_gate_review",
+                "needs_review",
+                6200,
+                &json!({ "quality_score": 6200 }),
+            )
+            .expect("review gate should insert");
+        service
+            .add_quality_report(
+                publish_job_id,
+                "auto_quality_gate_strong",
+                "pass",
+                8600,
+                &json!({ "quality_score": 8600 }),
+            )
+            .expect("strong gate should insert");
+
+        let report = service
+            .get_publish_job_report(publish_job_id)
+            .expect("publish report should load")
+            .expect("publish report should exist");
+
+        assert_eq!(report.quality_reports.len(), 2);
+        assert_eq!(report.active_quality_reports.len(), 1);
+        assert_eq!(
+            report.active_quality_reports[0].report_type,
+            "auto_quality_gate_strong"
+        );
+        assert_eq!(report.blocking_report_count, 0);
+
+        service
+            .mark_ready_to_publish(
+                publish_job_id,
+                &json!({ "artifact_type": "topic_package", "topic_id": 11 }),
+            )
+            .expect("latest gate family result should control readiness");
     }
 
     fn seed_admin_and_source(conn: &Connection) {

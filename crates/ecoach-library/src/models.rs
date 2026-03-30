@@ -102,3 +102,25 @@ pub struct LibraryHomeSnapshot {
     pub generated_shelves: Vec<GeneratedLibraryShelf>,
     pub saved_questions: Vec<SavedQuestionCard>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TopicRelationshipHint {
+    pub relation_type: String,
+    pub from_title: String,
+    pub to_title: String,
+    pub explanation: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TeachActionPlan {
+    pub student_id: i64,
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub action_type: String,
+    pub primary_prompt: String,
+    pub linked_question_ids: Vec<i64>,
+    pub linked_entry_ids: Vec<i64>,
+    pub linked_entry_titles: Vec<String>,
+    pub target_node_titles: Vec<String>,
+    pub relationship_hints: Vec<TopicRelationshipHint>,
+}

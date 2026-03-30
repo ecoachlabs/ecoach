@@ -75,10 +75,22 @@ pub struct GapRepairPlan {
     pub topic_name: Option<String>,
     pub status: String,
     pub priority_score: BasisPoints,
+    pub severity_label: String,
+    pub dominant_focus: String,
+    pub recommended_session_type: String,
+    pub rationale: String,
+    pub focus_breakdown: Vec<GapRepairFocus>,
     pub items: Vec<GapRepairPlanItem>,
     pub progress_percent: BasisPoints,
     pub created_at: String,
     pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GapRepairFocus {
+    pub focus_key: String,
+    pub score: BasisPoints,
+    pub label: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -87,9 +99,16 @@ pub struct GapRepairPlanItem {
     pub plan_id: i64,
     pub node_id: Option<i64>,
     pub node_title: Option<String>,
+    pub node_type: Option<String>,
     pub sequence_order: i64,
     pub repair_action: String,
     pub status: String,
+    pub reason: String,
+    pub target_outcome: String,
+    pub suggested_duration_minutes: i64,
+    pub candidate_question_ids: Vec<i64>,
+    pub misconception_titles: Vec<String>,
+    pub resource_titles: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

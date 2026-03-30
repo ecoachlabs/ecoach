@@ -1,3 +1,4 @@
+pub mod assessment_commands;
 pub mod attempt_commands;
 pub mod coach_commands;
 pub mod content_commands;
@@ -14,6 +15,7 @@ pub mod premium_commands;
 pub mod question_commands;
 pub mod readiness_commands;
 pub mod repair_commands;
+pub mod reporting_commands;
 pub mod session_commands;
 pub mod state;
 pub mod student_commands;
@@ -446,7 +448,7 @@ mod tests {
         )
         .expect("practice session should start");
 
-        let (question_id, correct_option_id, wrong_option_id, item_id) = state
+        let (question_id, correct_option_id, _wrong_option_id, item_id) = state
             .with_connection(|conn| {
                 conn.query_row(
                     "SELECT si.question_id,
@@ -544,7 +546,7 @@ mod tests {
             .expect("item should load");
 
         // Submit answer then complete
-        let attempt = crate::attempt_commands::submit_attempt(
+        let _attempt = crate::attempt_commands::submit_attempt(
             &state,
             crate::attempt_commands::SubmitAttemptInput {
                 student_id: account.id,
@@ -591,13 +593,32 @@ mod tests {
 
         assert!(diagnostic.diagnostic_id > 0);
 
+        let battery =
+            crate::diagnostic_commands::get_diagnostic_battery(&state, diagnostic.diagnostic_id)
+                .expect("diagnostic battery should load");
+        assert!(!battery.phases.is_empty());
+
+        let phase_items = crate::diagnostic_commands::list_diagnostic_phase_items(
+            &state,
+            diagnostic.diagnostic_id,
+            1,
+        )
+        .expect("diagnostic phase items should load");
+        assert!(!phase_items.is_empty());
+        assert!(phase_items[0].attempt_id > 0);
+
+        let sync = crate::diagnostic_commands::complete_diagnostic_and_sync(
+            &state,
+            diagnostic.diagnostic_id,
+        )
+        .expect("diagnostic sync should succeed");
+        assert_eq!(sync.diagnostic_id, diagnostic.diagnostic_id);
+
         let analytics =
             crate::diagnostic_commands::get_diagnostic_report(&state, diagnostic.diagnostic_id)
                 .expect("diagnostic report should load");
 
-        // Analytics may be empty for a fresh student with no evidence, but the call should succeed
-        // The important thing is the pipeline runs without error
-        assert!(analytics.len() >= 0);
+        assert_eq!(sync.analytics.len(), analytics.len());
     }
 
     // ── Integration test: memory evidence → review queue (Section 14.2 #4) ──
