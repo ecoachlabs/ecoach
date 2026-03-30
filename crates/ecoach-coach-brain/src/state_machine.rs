@@ -85,6 +85,18 @@ pub struct CoachNextAction {
     pub context: Value,
 }
 
+#[derive(Debug, Clone)]
+struct ActiveJourneySignal {
+    route_id: i64,
+    route_type: String,
+    target_exam: Option<String>,
+    station_id: i64,
+    station_code: String,
+    station_type: String,
+    topic_id: Option<i64>,
+    retry_count: i64,
+}
+
 pub fn assess_content_readiness(
     conn: &Connection,
     student_id: i64,
@@ -298,6 +310,47 @@ pub fn resolve_next_coach_action(
             route: "/coach/plan/refresh".to_string(),
             context: serde_json::json!({ "reason": resolution.reason }),
         },
+        LearnerJourneyState::ReviewDay => {
+            let journey = load_active_journey_signal(conn, student_id)?;
+            CoachNextAction {
+                state: resolution.state,
+                action_type: CoachActionType::StartTodayMission,
+                title: "Run today's review mission".to_string(),
+                subtitle: "Journey is waiting on review proof before it can move forward."
+                    .to_string(),
+                estimated_minutes: Some(15),
+                route: "/coach/mission/today".to_string(),
+                context: serde_json::json!({
+                    "reason": resolution.reason,
+                    "journey_route_id": journey.as_ref().map(|item| item.route_id),
+                    "journey_station_id": journey.as_ref().map(|item| item.station_id),
+                    "journey_station_code": journey.as_ref().map(|item| item.station_code.clone()),
+                    "journey_station_type": journey.as_ref().map(|item| item.station_type.clone()),
+                    "journey_topic_id": journey.as_ref().and_then(|item| item.topic_id),
+                }),
+            }
+        }
+        LearnerJourneyState::ExamMode => {
+            let journey = load_active_journey_signal(conn, student_id)?;
+            CoachNextAction {
+                state: resolution.state,
+                action_type: CoachActionType::StartTodayMission,
+                title: "Run today's performance mission".to_string(),
+                subtitle: "Journey is in performance mode and expects exam-style proof."
+                    .to_string(),
+                estimated_minutes: Some(20),
+                route: "/coach/mission/today".to_string(),
+                context: serde_json::json!({
+                    "reason": resolution.reason,
+                    "journey_route_id": journey.as_ref().map(|item| item.route_id),
+                    "journey_station_id": journey.as_ref().map(|item| item.station_id),
+                    "journey_station_code": journey.as_ref().map(|item| item.station_code.clone()),
+                    "journey_station_type": journey.as_ref().map(|item| item.station_type.clone()),
+                    "journey_topic_id": journey.as_ref().and_then(|item| item.topic_id),
+                    "target_exam": journey.as_ref().and_then(|item| item.target_exam.clone()),
+                }),
+            }
+        }
         LearnerJourneyState::ReadyForTodayMission => CoachNextAction {
             state: resolution.state,
             action_type: CoachActionType::StartTodayMission,
@@ -306,7 +359,17 @@ pub fn resolve_next_coach_action(
                 .to_string(),
             estimated_minutes: Some(20),
             route: "/coach/mission/today".to_string(),
-            context: serde_json::json!({ "subject_codes": readiness.subject_codes }),
+            context: serde_json::json!({
+                "subject_codes": readiness.subject_codes,
+                "journey": load_active_journey_signal(conn, student_id)?.map(|item| serde_json::json!({
+                    "route_id": item.route_id,
+                    "route_type": item.route_type,
+                    "station_id": item.station_id,
+                    "station_code": item.station_code,
+                    "station_type": item.station_type,
+                    "topic_id": item.topic_id,
+                })),
+            }),
         },
         _ => CoachNextAction {
             state: resolution.state,
@@ -454,10 +517,74 @@ pub fn resolve_coach_state(
         ));
     }
 
+    if let Some(journey) = load_active_journey_signal(conn, student_id)? {
+        if journey.retry_count >= 2 {
+            return Ok(CoachStateResolution::new(
+                LearnerJourneyState::PlanAdjustmentRequired,
+                Some(format!(
+                    "journey station {} has stalled after repeated retries",
+                    journey.station_code
+                )),
+            ));
+        }
+        if journey.station_type == "review" {
+            return Ok(CoachStateResolution::new(
+                LearnerJourneyState::ReviewDay,
+                Some(format!(
+                    "journey station {} is waiting on review proof",
+                    journey.station_code
+                )),
+            ));
+        }
+        if journey.station_type == "performance" && journey.target_exam.is_some() {
+            return Ok(CoachStateResolution::new(
+                LearnerJourneyState::ExamMode,
+                Some(format!(
+                    "journey station {} is in performance mode",
+                    journey.station_code
+                )),
+            ));
+        }
+    }
+
     Ok(CoachStateResolution::new(
         LearnerJourneyState::ReadyForTodayMission,
         Some("ready for mission generation".to_string()),
     ))
+}
+
+fn load_active_journey_signal(
+    conn: &Connection,
+    student_id: i64,
+) -> EcoachResult<Option<ActiveJourneySignal>> {
+    conn.query_row(
+        "SELECT jr.id, jr.route_type, jr.target_exam,
+                js.id, js.station_code, js.station_type, js.topic_id,
+                COALESCE(CAST(json_extract(js.evidence_json, '$.retry_count') AS INTEGER), 0)
+         FROM journey_routes jr
+         INNER JOIN journey_stations js
+            ON js.route_id = jr.id
+           AND js.status = 'active'
+         WHERE jr.student_id = ?1
+           AND jr.status = 'active'
+         ORDER BY jr.id DESC, js.sequence_no ASC
+         LIMIT 1",
+        [student_id],
+        |row| {
+            Ok(ActiveJourneySignal {
+                route_id: row.get(0)?,
+                route_type: row.get(1)?,
+                target_exam: row.get(2)?,
+                station_id: row.get(3)?,
+                station_code: row.get(4)?,
+                station_type: row.get(5)?,
+                topic_id: row.get(6)?,
+                retry_count: row.get(7)?,
+            })
+        },
+    )
+    .optional()
+    .map_err(|err| EcoachError::Storage(err.to_string()))
 }
 
 fn load_selected_subject_codes(conn: &Connection, student_id: i64) -> EcoachResult<Vec<String>> {
@@ -512,6 +639,7 @@ mod tests {
     use rusqlite::{Connection, params};
 
     use super::*;
+    use crate::journey::JourneyService;
 
     #[test]
     fn coach_resolver_requires_content_before_diagnostic() {
@@ -609,6 +737,107 @@ mod tests {
 
         assert_eq!(state.state, LearnerJourneyState::MissionReviewRequired);
         assert_eq!(next_action.action_type, CoachActionType::ReviewResults);
+    }
+
+    #[test]
+    fn coach_resolver_uses_active_journey_review_and_stall_signals() {
+        let conn = open_test_database();
+        let student_id = insert_student(&conn, true);
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO diagnostic_instances (student_id, subject_id, session_mode, status, started_at, completed_at, result_json)
+             VALUES (?1, (SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1), 'standard', 'completed', datetime('now'), datetime('now'), '{}')",
+            [student_id],
+        )
+        .expect("diagnostic should insert");
+        conn.execute(
+            "INSERT INTO coach_plans (student_id, exam_target, exam_date, start_date, total_days, daily_budget_minutes, current_phase, status, plan_data_json)
+             VALUES (?1, 'BECE', '2030-01-01', date('now'), 30, 60, 'performance', 'active', '{}')",
+            [student_id],
+        )
+        .expect("plan should insert");
+
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_ids = {
+            let mut statement = conn
+                .prepare("SELECT id FROM topics WHERE subject_id = ?1 ORDER BY id ASC LIMIT 2")
+                .expect("statement should prepare");
+            let rows = statement
+                .query_map([subject_id], |row| row.get::<_, i64>(0))
+                .expect("topic rows should query");
+            let mut ids = Vec::new();
+            for row in rows {
+                ids.push(row.expect("topic id should map"));
+            }
+            ids
+        };
+        let performance_topic_id = topic_ids[0];
+        let review_topic_id = topic_ids[1];
+
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, fragility_score, priority_score,
+                pressure_collapse_index, memory_strength, decay_risk, evidence_count, repair_priority
+             ) VALUES (?1, ?2, 8200, 1800, 2200, 9800, 1800, 7600, 1500, 5, 2200)",
+            params![student_id, performance_topic_id],
+        )
+        .expect("performance topic state should insert");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, fragility_score, priority_score,
+                pressure_collapse_index, memory_strength, decay_risk, evidence_count, repair_priority
+             ) VALUES (?1, ?2, 6100, 5100, 4300, 6200, 2200, 2600, 8400, 4, 2500)",
+            params![student_id, review_topic_id],
+        )
+        .expect("review topic state should insert");
+        conn.execute(
+            "INSERT INTO memory_states (
+                student_id, topic_id, memory_state, memory_strength, recall_fluency, decay_risk, review_due_at
+             ) VALUES (?1, ?2, 'fading', 2400, 1800, 8600, datetime('now', '-1 day'))",
+            params![student_id, review_topic_id],
+        )
+        .expect("memory state should insert");
+
+        let route = JourneyService::new(&conn)
+            .build_or_refresh_route(student_id, subject_id, Some("BECE"))
+            .expect("route should build");
+        let active_station = route
+            .stations
+            .iter()
+            .find(|station| station.status == "active")
+            .expect("active station should exist");
+        assert_eq!(active_station.station_type, "review");
+
+        let state = resolve_coach_state(&conn, student_id).expect("state should resolve");
+        let next_action =
+            resolve_next_coach_action(&conn, student_id).expect("next action should resolve");
+        assert_eq!(state.state, LearnerJourneyState::ReviewDay);
+        assert_eq!(next_action.action_type, CoachActionType::StartTodayMission);
+
+        conn.execute(
+            "UPDATE journey_stations
+             SET evidence_json = json_set(evidence_json, '$.retry_count', 2)
+             WHERE id = ?1",
+            [active_station.id],
+        )
+        .expect("retry count should update");
+
+        let stalled_state =
+            resolve_coach_state(&conn, student_id).expect("stalled state should resolve");
+        assert_eq!(
+            stalled_state.state,
+            LearnerJourneyState::PlanAdjustmentRequired
+        );
     }
 
     fn open_test_database() -> Connection {

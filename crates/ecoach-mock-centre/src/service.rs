@@ -5,6 +5,8 @@ use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, to_b
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
+use ecoach_forecast::{BlueprintResolver, ForecastEngine, MockType};
+
 use crate::models::{
     CompileMockInput, ImprovementDelta, MockAnswerResult, MockGrade, MockReport, MockSession,
     MockSessionSummary, MockTopicScore, SubmitMockAnswerInput,
@@ -37,6 +39,7 @@ impl<'a> MockCentreService<'a> {
         let now = Utc::now().to_rfc3339();
         let topic_ids_json = serde_json::to_string(&input.topic_ids)
             .map_err(|e| EcoachError::Serialization(e.to_string()))?;
+        let mock_type_str = input.mock_type.as_deref().unwrap_or("forecast");
 
         // Create the underlying session record
         self.conn
@@ -58,13 +61,13 @@ impl<'a> MockCentreService<'a> {
 
         let session_id = self.conn.last_insert_rowid();
 
-        // Create the mock_sessions record
+        // Create the mock_sessions record with mock_type and blueprint_id
         self.conn
             .execute(
                 "INSERT INTO mock_sessions (
                     student_id, subject_id, session_id, status, duration_minutes,
-                    question_count, paper_year, created_at
-                 ) VALUES (?1, ?2, ?3, 'created', ?4, ?5, ?6, ?7)",
+                    question_count, paper_year, mock_type, blueprint_id, created_at
+                 ) VALUES (?1, ?2, ?3, 'created', ?4, ?5, ?6, ?7, ?8, ?9)",
                 params![
                     input.student_id,
                     input.subject_id,
@@ -72,6 +75,8 @@ impl<'a> MockCentreService<'a> {
                     input.duration_minutes,
                     input.question_count as i64,
                     input.paper_year,
+                    mock_type_str,
+                    input.blueprint_id,
                     now,
                 ],
             )
@@ -103,7 +108,14 @@ impl<'a> MockCentreService<'a> {
         input: &CompileMockInput,
     ) -> EcoachResult<()> {
         let candidates = self.load_mock_candidates(input)?;
-        let questions = self.select_mock_questions(&candidates, input);
+
+        // If a blueprint_id is provided, use the forecast-driven MockSelect formula.
+        // Otherwise fall back to the original scoring method.
+        let questions = if let Some(blueprint_id) = input.blueprint_id {
+            self.select_with_blueprint(&candidates, input, blueprint_id)?
+        } else {
+            self.select_mock_questions(&candidates, input)
+        };
 
         // Insert session_items for the mock
         for (display_order, (question_id, topic_id)) in questions.iter().enumerate() {
@@ -292,6 +304,215 @@ impl<'a> MockCentreService<'a> {
         }
 
         selected
+    }
+
+    /// Blueprint-driven question selection using the MockSelect formula:
+    /// MockSelect(f) = 0.30*BlueprintFit + 0.20*DiagnosticNeed + 0.15*CoverageNeed
+    ///               + 0.10*InfoValue + 0.10*RepresentationNeed + 0.10*Variety
+    ///               + 0.05*SurpriseRisk - 0.25*AntiRepeat
+    fn select_with_blueprint(
+        &self,
+        candidates: &[MockCandidate],
+        input: &CompileMockInput,
+        _blueprint_id: i64,
+    ) -> EcoachResult<Vec<(i64, i64)>> {
+        let engine = ForecastEngine::new(self.conn);
+        let blueprint = engine
+            .get_latest_blueprint(input.subject_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound("no forecast blueprint found for subject".into())
+            })?;
+
+        let mock_type = parse_mock_type(input.mock_type.as_deref().unwrap_or("forecast"));
+        let resolver = BlueprintResolver::new(self.conn);
+        let quotas = resolver.resolve(&blueprint, mock_type, input.question_count, input.student_id)?;
+
+        // Build a lookup of topic quotas
+        let mut topic_remaining: BTreeMap<i64, usize> = BTreeMap::new();
+        for tq in &quotas.topic_quotas {
+            *topic_remaining.entry(tq.topic_id).or_insert(0) += tq.target_count;
+        }
+
+        // Load student weakness signals for DiagnosticNeed scoring
+        let weakness_map = self.load_weakness_map(input.student_id)?;
+
+        // Load recently seen question IDs for anti-repeat
+        let recent_ids = self.load_recent_question_ids(input.student_id, 200)?;
+
+        // Score each candidate with MockSelect formula
+        let mut scored: Vec<(i64, i64, f64)> = candidates
+            .iter()
+            .map(|c| {
+                let blueprint_fit = if topic_remaining.contains_key(&c.topic_id) {
+                    1.0
+                } else {
+                    0.2
+                };
+
+                let diagnostic_need = weakness_map
+                    .get(&c.topic_id)
+                    .map(|gap| *gap as f64 / 10_000.0)
+                    .unwrap_or(0.3);
+
+                let coverage_need = if topic_remaining.get(&c.topic_id).copied().unwrap_or(0) > 0 {
+                    1.0
+                } else {
+                    0.1
+                };
+
+                let info_value = c.quality_score as f64 / 10_000.0;
+
+                let variety = if c.estimated_time_seconds <= 90 {
+                    0.8
+                } else if c.estimated_time_seconds <= 150 {
+                    0.6
+                } else {
+                    0.4
+                };
+
+                let surprise_risk = if c.replacement_score > 7000 {
+                    0.8
+                } else {
+                    0.2
+                };
+
+                let anti_repeat = if recent_ids.contains(&c.question_id) {
+                    1.0
+                } else {
+                    0.0
+                };
+
+                // Adjust weights based on mock type
+                let (w_bf, w_dn, w_cn, w_iv, w_rn, w_v, w_sr, w_ar) = match mock_type {
+                    MockType::Forecast | MockType::FinalExam => {
+                        (0.40, 0.15, 0.15, 0.10, 0.05, 0.10, 0.05, 0.25)
+                    }
+                    MockType::Diagnostic => {
+                        (0.15, 0.35, 0.15, 0.15, 0.05, 0.10, 0.05, 0.25)
+                    }
+                    MockType::Remediation => {
+                        (0.10, 0.30, 0.25, 0.10, 0.10, 0.10, 0.05, 0.25)
+                    }
+                    MockType::Shock => {
+                        (0.25, 0.10, 0.10, 0.10, 0.10, 0.10, 0.25, 0.25)
+                    }
+                    MockType::Wisdom => {
+                        (0.30, 0.20, 0.15, 0.15, 0.05, 0.10, 0.05, 0.25)
+                    }
+                };
+
+                let score = w_bf * blueprint_fit
+                    + w_dn * diagnostic_need
+                    + w_cn * coverage_need
+                    + w_iv * info_value
+                    + w_rn * 0.5 // representation need: neutral without per-question format data
+                    + w_v * variety
+                    + w_sr * surprise_risk
+                    - w_ar * anti_repeat;
+
+                (c.question_id, c.topic_id, score)
+            })
+            .collect();
+
+        // Sort by score descending
+        scored.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Greedy selection respecting topic quotas and family caps
+        let mut selected = Vec::new();
+        let mut selected_ids = BTreeSet::new();
+        let mut family_counts: BTreeMap<i64, usize> = BTreeMap::new();
+        let family_cap = ((input.question_count + 1) / 2).max(1);
+
+        for (qid, tid, _score) in &scored {
+            if selected.len() >= input.question_count {
+                break;
+            }
+            if selected_ids.contains(qid) {
+                continue;
+            }
+
+            // Respect topic quotas first
+            let remaining = topic_remaining.get(tid).copied().unwrap_or(0);
+            if remaining == 0 {
+                continue;
+            }
+
+            // Family cap
+            if let Some(c) = candidates.iter().find(|c| c.question_id == *qid) {
+                if let Some(fid) = c.family_id {
+                    if family_counts.get(&fid).copied().unwrap_or(0) >= family_cap {
+                        continue;
+                    }
+                    *family_counts.entry(fid).or_insert(0) += 1;
+                }
+            }
+
+            *topic_remaining.entry(*tid).or_insert(0) = remaining.saturating_sub(1);
+            selected_ids.insert(*qid);
+            selected.push((*qid, *tid));
+        }
+
+        // Backfill if we couldn't fill all quotas
+        if selected.len() < input.question_count {
+            for (qid, tid, _) in &scored {
+                if selected.len() >= input.question_count {
+                    break;
+                }
+                if selected_ids.insert(*qid) {
+                    selected.push((*qid, *tid));
+                }
+            }
+        }
+
+        Ok(selected)
+    }
+
+    fn load_weakness_map(&self, student_id: i64) -> EcoachResult<BTreeMap<i64, i64>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT topic_id, gap_score FROM student_topic_states WHERE student_id = ?1",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map([student_id], |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?))
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut map = BTreeMap::new();
+        for row in rows {
+            let (tid, gap) = row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+            map.insert(tid, gap);
+        }
+        Ok(map)
+    }
+
+    fn load_recent_question_ids(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<BTreeSet<i64>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT question_id FROM student_question_attempts
+                 WHERE student_id = ?1
+                 ORDER BY created_at DESC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, limit as i64], |row| row.get(0))
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut ids = BTreeSet::new();
+        for row in rows {
+            ids.insert(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(ids)
     }
 
     // ── Start timed execution ──
@@ -724,7 +945,8 @@ impl<'a> MockCentreService<'a> {
                         ms.duration_minutes, ms.question_count, ms.paper_year,
                         ms.started_at, ms.completed_at, ms.created_at,
                         COALESCE(ms.time_banked_seconds, 0), ms.resumed_at,
-                        s.answered_questions
+                        s.answered_questions,
+                        COALESCE(ms.mock_type, 'forecast'), ms.blueprint_id
                  FROM mock_sessions ms
                  INNER JOIN sessions s ON s.id = ms.session_id
                  WHERE ms.id = ?1",
@@ -736,6 +958,8 @@ impl<'a> MockCentreService<'a> {
                     let banked_seconds: i64 = row.get(11)?;
                     let resumed_at: Option<String> = row.get(12)?;
                     let answered: i64 = row.get(13)?;
+                    let mock_type: String = row.get(14)?;
+                    let blueprint_id: Option<i64> = row.get(15)?;
 
                     // Calculate time remaining
                     let time_remaining = if status == "active" {
@@ -769,11 +993,13 @@ impl<'a> MockCentreService<'a> {
                         subject_id: row.get(2)?,
                         session_id: row.get(3)?,
                         status,
+                        mock_type,
                         duration_minutes: duration_min,
                         time_remaining_seconds: time_remaining,
                         question_count: row.get(6)?,
                         answered_count: answered,
                         paper_year: row.get(7)?,
+                        blueprint_id,
                         started_at,
                         completed_at: row.get(9)?,
                         created_at: row.get(10)?,
@@ -795,7 +1021,8 @@ impl<'a> MockCentreService<'a> {
         let mut stmt = self
             .conn
             .prepare(
-                "SELECT id, subject_id, grade, percentage, status, paper_year, created_at
+                "SELECT id, subject_id, COALESCE(mock_type, 'forecast'), grade, percentage,
+                        status, paper_year, created_at
                  FROM mock_sessions
                  WHERE student_id = ?1
                  ORDER BY created_at DESC
@@ -808,11 +1035,12 @@ impl<'a> MockCentreService<'a> {
                 Ok(MockSessionSummary {
                     id: row.get(0)?,
                     subject_id: row.get(1)?,
-                    grade: row.get(2)?,
-                    percentage: row.get(3)?,
-                    status: row.get(4)?,
-                    paper_year: row.get(5)?,
-                    created_at: row.get(6)?,
+                    mock_type: row.get(2)?,
+                    grade: row.get(3)?,
+                    percentage: row.get(4)?,
+                    status: row.get(5)?,
+                    paper_year: row.get(6)?,
+                    created_at: row.get(7)?,
                 })
             })
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -845,6 +1073,18 @@ impl<'a> MockCentreService<'a> {
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
         Ok(())
+    }
+}
+
+fn parse_mock_type(s: &str) -> MockType {
+    match s {
+        "forecast" => MockType::Forecast,
+        "diagnostic" => MockType::Diagnostic,
+        "remediation" => MockType::Remediation,
+        "final_exam" => MockType::FinalExam,
+        "shock" => MockType::Shock,
+        "wisdom" => MockType::Wisdom,
+        _ => MockType::Forecast,
     }
 }
 

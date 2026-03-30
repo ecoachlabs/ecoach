@@ -2,7 +2,11 @@ use ecoach_games::{
     GameType, GamesService, MindstackState, StartGameInput, SubmitGameAnswerInput, TugOfWarState,
 };
 
-use crate::{error::CommandError, state::AppState};
+use crate::{
+    dtos::{TrapRoundCardDto, TrapSessionSnapshotDto},
+    error::CommandError,
+    state::AppState,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,6 +30,7 @@ pub struct GameAnswerResultDto {
     pub effect_type: String,
     pub round_number: i64,
     pub session_complete: bool,
+    pub explanation: Option<String>,
     pub misconception_triggered: bool,
 }
 
@@ -37,7 +42,11 @@ pub struct GameSummaryDto {
     pub accuracy_bp: i64,
     pub rounds_played: i64,
     pub best_streak: i64,
+    pub average_response_time_ms: i64,
+    pub misconception_hits: i64,
     pub performance_label: String,
+    pub focus_signals: Vec<String>,
+    pub recommended_next_step: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +121,7 @@ pub fn submit_game_answer(
             effect_type: result.effect_type,
             round_number: result.round_number,
             session_complete: result.session_complete,
+            explanation: result.explanation,
             misconception_triggered: result.misconception_triggered,
         })
     })
@@ -128,8 +138,35 @@ pub fn get_game_summary(state: &AppState, session_id: i64) -> Result<GameSummary
             accuracy_bp: summary.accuracy_bp as i64,
             rounds_played: summary.rounds_played,
             best_streak: summary.best_streak,
+            average_response_time_ms: summary.average_response_time_ms,
+            misconception_hits: summary.misconception_hits,
             performance_label: summary.performance_label,
+            focus_signals: summary.focus_signals,
+            recommended_next_step: summary.recommended_next_step,
         })
+    })
+}
+
+pub fn get_trap_session_snapshot(
+    state: &AppState,
+    session_id: i64,
+) -> Result<TrapSessionSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = GamesService::new(conn);
+        let snapshot = service.get_traps_snapshot(session_id)?;
+        Ok(TrapSessionSnapshotDto::from(snapshot))
+    })
+}
+
+pub fn reveal_trap_unmask_clue(
+    state: &AppState,
+    session_id: i64,
+    round_id: i64,
+) -> Result<TrapRoundCardDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = GamesService::new(conn);
+        let round = service.reveal_unmask_clue(session_id, round_id)?;
+        Ok(TrapRoundCardDto::from(round))
     })
 }
 

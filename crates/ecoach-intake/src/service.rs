@@ -8,12 +8,14 @@ use std::{
 
 use ecoach_substrate::{EcoachError, EcoachResult};
 use rusqlite::{params, Connection, OptionalExtension};
+use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
 use zip::ZipArchive;
 
 use crate::models::{
     AcquisitionEvidenceCandidate, AcquisitionJobReport, BundleFile, BundleProcessReport,
-    ContentAcquisitionJob, ExtractedInsight, SubmissionBundle,
+    CoachGoalSignal, ContentAcquisitionJob, ExtractedInsight, FollowUpRecommendation,
+    SubmissionBundle, TopicActionSummary,
 };
 
 pub struct IntakeService<'a> {
@@ -204,6 +206,7 @@ impl<'a> IntakeService<'a> {
             "needs_confirmation": bundle_overview.needs_confirmation,
             "unresolved_alignment_count": unresolved_alignment_count,
             "review_priority": &bundle_overview.review_priority,
+            "reconstruction_confidence_band": &bundle_overview.reconstruction_confidence_band,
             "bundle_kind": &bundle_overview.bundle_kind,
             "detected_document_roles": &bundle_overview.document_roles,
             "weakness_signals": &bundle_overview.weakness_signals,
@@ -211,6 +214,9 @@ impl<'a> IntakeService<'a> {
             "detected_subjects": &bundle_overview.detected_subjects,
             "detected_exam_years": &bundle_overview.detected_exam_years,
             "review_reasons": &bundle_overview.review_reasons,
+            "coach_goal_signals": &bundle_overview.coach_goal_signals,
+            "topic_action_summaries": &bundle_overview.topic_action_summaries,
+            "follow_up_recommendations": &bundle_overview.follow_up_recommendations,
             "requires_review": !bundle_overview.review_reasons.is_empty(),
         });
         self.insert_insight(bundle_id, "bundle_overview", &overview_payload)?;
@@ -287,11 +293,15 @@ impl<'a> IntakeService<'a> {
         let mut needs_confirmation = false;
         let mut unresolved_alignment_count = 0i64;
         let mut review_priority = "low".to_string();
+        let mut reconstruction_confidence_band = String::new();
         let mut bundle_kind = "unknown".to_string();
         let mut detected_document_roles = BTreeSet::new();
         let mut weakness_signals = BTreeSet::new();
         let mut recommended_actions = BTreeSet::new();
         let mut review_reasons = BTreeSet::new();
+        let mut coach_goal_signals = Vec::new();
+        let mut topic_action_summaries = Vec::new();
+        let mut follow_up_recommendations = Vec::new();
         for insight in &insights {
             if insight.insight_type == "bundle_overview" {
                 for subject in collect_string_values(&insight.payload, "detected_subjects") {
@@ -446,6 +456,13 @@ impl<'a> IntakeService<'a> {
                 {
                     review_priority = priority.to_string();
                 }
+                if let Some(band) = insight
+                    .payload
+                    .get("reconstruction_confidence_band")
+                    .and_then(Value::as_str)
+                {
+                    reconstruction_confidence_band = band.to_string();
+                }
                 if let Some(kind) = insight.payload.get("bundle_kind").and_then(Value::as_str) {
                     bundle_kind = kind.to_string();
                 }
@@ -461,7 +478,53 @@ impl<'a> IntakeService<'a> {
                 for reason in collect_string_values(&insight.payload, "review_reasons") {
                     review_reasons.insert(reason);
                 }
+                coach_goal_signals = collect_typed_values(&insight.payload, "coach_goal_signals");
+                topic_action_summaries =
+                    collect_typed_values(&insight.payload, "topic_action_summaries");
+                follow_up_recommendations =
+                    collect_typed_values(&insight.payload, "follow_up_recommendations");
             }
+        }
+
+        let detected_topics = detected_topics.into_iter().collect::<Vec<_>>();
+        let detected_document_roles = detected_document_roles.into_iter().collect::<Vec<_>>();
+        let weakness_signals = weakness_signals.into_iter().collect::<Vec<_>>();
+        let recommended_actions = recommended_actions.into_iter().collect::<Vec<_>>();
+        let review_reasons = review_reasons.into_iter().collect::<Vec<_>>();
+        if reconstruction_confidence_band.is_empty() {
+            reconstruction_confidence_band =
+                confidence_band_for_score(reconstruction_confidence_score);
+        }
+        if topic_action_summaries.is_empty() {
+            topic_action_summaries = build_topic_action_summaries(
+                &detected_topics,
+                &weakness_signals,
+                &recommended_actions,
+                &detected_document_roles,
+                &review_priority,
+                &reconstruction_confidence_band,
+            );
+        }
+        if coach_goal_signals.is_empty() {
+            coach_goal_signals = build_coach_goal_signals(
+                &detected_topics,
+                &weakness_signals,
+                &recommended_actions,
+                &detected_document_roles,
+                &review_priority,
+                &reconstruction_confidence_band,
+                needs_confirmation,
+            );
+        }
+        if follow_up_recommendations.is_empty() {
+            follow_up_recommendations = build_follow_up_recommendations(
+                &topic_action_summaries,
+                &recommended_actions,
+                &detected_document_roles,
+                &review_priority,
+                &reconstruction_confidence_band,
+                needs_confirmation,
+            );
         }
 
         Ok(BundleProcessReport {
@@ -470,7 +533,7 @@ impl<'a> IntakeService<'a> {
             insights,
             detected_subjects: detected_subjects.into_iter().collect(),
             detected_exam_years: detected_exam_years.into_iter().collect(),
-            detected_topics: detected_topics.into_iter().collect(),
+            detected_topics,
             detected_dates: detected_dates.into_iter().collect(),
             question_like_file_count,
             answer_like_file_count,
@@ -492,11 +555,15 @@ impl<'a> IntakeService<'a> {
             needs_confirmation,
             unresolved_alignment_count,
             review_priority,
+            reconstruction_confidence_band,
             bundle_kind,
-            detected_document_roles: detected_document_roles.into_iter().collect(),
-            weakness_signals: weakness_signals.into_iter().collect(),
-            recommended_actions: recommended_actions.into_iter().collect(),
-            review_reasons: review_reasons.into_iter().collect(),
+            detected_document_roles,
+            weakness_signals,
+            recommended_actions,
+            review_reasons,
+            coach_goal_signals,
+            topic_action_summaries,
+            follow_up_recommendations,
         })
     }
 
@@ -750,6 +817,7 @@ struct FileReconstruction {
     review_priority: String,
     weakness_signals: Vec<String>,
     recommended_actions: Vec<String>,
+    student_model_updates: Vec<String>,
     review_reasons: Vec<String>,
     payload: Value,
 }
@@ -850,11 +918,25 @@ struct BundleOverviewSummary {
     remark_signal_count: i64,
     needs_confirmation: bool,
     review_priority: String,
+    reconstruction_confidence_band: String,
     bundle_kind: String,
     document_roles: Vec<String>,
     weakness_signals: Vec<String>,
     recommended_actions: Vec<String>,
     review_reasons: Vec<String>,
+    coach_goal_signals: Vec<CoachGoalSignal>,
+    topic_action_summaries: Vec<TopicActionSummary>,
+    follow_up_recommendations: Vec<FollowUpRecommendation>,
+}
+
+#[derive(Default)]
+struct TopicSummaryAccumulator {
+    recommended_actions: BTreeSet<String>,
+    weakness_signals: BTreeSet<String>,
+    source_document_roles: BTreeSet<String>,
+    confidence_total: i64,
+    evidence_count: i64,
+    max_review_priority_rank: i64,
 }
 
 #[derive(Clone)]
@@ -1237,6 +1319,7 @@ fn analyze_bundle_file(
         review_priority,
         weakness_signals: document_intelligence.weakness_signals,
         recommended_actions: document_intelligence.coach_actions,
+        student_model_updates: document_intelligence.student_model_updates,
         review_reasons,
         payload,
     }
@@ -1255,6 +1338,8 @@ fn summarize_bundle(
     let mut weakness_signals = BTreeSet::new();
     let mut recommended_actions = BTreeSet::new();
     let mut review_reasons = BTreeSet::new();
+    let mut student_model_updates = BTreeSet::new();
+    let mut topic_summaries = BTreeMap::<String, TopicSummaryAccumulator>::new();
     let mut question_like_file_count = 0i64;
     let mut answer_like_file_count = 0i64;
     let mut ocr_candidate_file_count = 0i64;
@@ -1300,8 +1385,28 @@ fn summarize_bundle(
         for action in &analysis.recommended_actions {
             recommended_actions.insert(action.clone());
         }
+        for update in &analysis.student_model_updates {
+            student_model_updates.insert(update.clone());
+        }
         for reason in &analysis.review_reasons {
             review_reasons.insert(reason.clone());
+        }
+        for topic in &analysis.detected_topics {
+            let summary = topic_summaries.entry(topic.clone()).or_default();
+            for weakness in &analysis.weakness_signals {
+                summary.weakness_signals.insert(weakness.clone());
+            }
+            for action in &analysis.recommended_actions {
+                summary.recommended_actions.insert(action.clone());
+            }
+            summary
+                .source_document_roles
+                .insert(analysis.document_role.clone());
+            summary.confidence_total += analysis.reconstruction_confidence_score;
+            summary.evidence_count += 1;
+            summary.max_review_priority_rank = summary
+                .max_review_priority_rank
+                .max(priority_rank(&analysis.review_priority));
         }
         if analysis.question_like {
             question_like_file_count += 1;
@@ -1339,12 +1444,50 @@ fn summarize_bundle(
         (avg + pairing_bonus).clamp(0, 100)
     };
     let review_priority = bundle_review_priority(analyses, &review_reasons);
+    let reconstruction_confidence_band = confidence_band_for_score(reconstruction_confidence_score);
+    let detected_subjects = detected_subjects.into_iter().collect::<Vec<_>>();
+    let detected_exam_years = detected_exam_years.into_iter().collect::<Vec<_>>();
+    let detected_topics = detected_topics.into_iter().collect::<Vec<_>>();
+    let detected_dates = detected_dates.into_iter().collect::<Vec<_>>();
+    let document_roles = document_roles.into_iter().collect::<Vec<_>>();
+    let weakness_signals = weakness_signals.into_iter().collect::<Vec<_>>();
+    let recommended_actions = recommended_actions.into_iter().collect::<Vec<_>>();
+    let review_reasons = review_reasons.into_iter().collect::<Vec<_>>();
+    let student_model_updates = student_model_updates.into_iter().collect::<Vec<_>>();
+    let needs_confirmation = !review_reasons.is_empty() || alignment_needs_confirmation;
+    let topic_action_summaries = build_topic_action_summaries_from_accumulators(
+        topic_summaries,
+        &detected_topics,
+        &weakness_signals,
+        &recommended_actions,
+        &document_roles,
+        &review_priority,
+        &reconstruction_confidence_band,
+    );
+    let coach_goal_signals = build_coach_goal_signals_from_summary(
+        &detected_topics,
+        &weakness_signals,
+        &recommended_actions,
+        &student_model_updates,
+        &document_roles,
+        &review_priority,
+        &reconstruction_confidence_band,
+        needs_confirmation,
+    );
+    let follow_up_recommendations = build_follow_up_recommendations(
+        &topic_action_summaries,
+        &recommended_actions,
+        &document_roles,
+        &review_priority,
+        &reconstruction_confidence_band,
+        needs_confirmation,
+    );
 
     BundleOverviewSummary {
-        detected_subjects: detected_subjects.into_iter().collect(),
-        detected_exam_years: detected_exam_years.into_iter().collect(),
-        detected_topics: detected_topics.into_iter().collect(),
-        detected_dates: detected_dates.into_iter().collect(),
+        detected_subjects,
+        detected_exam_years,
+        detected_topics,
+        detected_dates,
         question_like_file_count,
         answer_like_file_count,
         ocr_candidate_file_count,
@@ -1361,13 +1504,17 @@ fn summarize_bundle(
         low_confidence_alignment_count,
         score_signal_count,
         remark_signal_count,
-        needs_confirmation: !review_reasons.is_empty() || alignment_needs_confirmation,
+        needs_confirmation,
         review_priority,
+        reconstruction_confidence_band,
         bundle_kind: classify_bundle_kind(analyses, reconstructed_document_count),
-        document_roles: document_roles.into_iter().collect(),
-        weakness_signals: weakness_signals.into_iter().collect(),
-        recommended_actions: recommended_actions.into_iter().collect(),
-        review_reasons: review_reasons.into_iter().collect(),
+        document_roles,
+        weakness_signals,
+        recommended_actions,
+        review_reasons,
+        coach_goal_signals,
+        topic_action_summaries,
+        follow_up_recommendations,
     }
 }
 
@@ -2375,6 +2522,19 @@ fn collect_i64_values(payload: &Value, key: &str) -> Vec<i64> {
         .get(key)
         .and_then(Value::as_array)
         .map(|values| values.iter().filter_map(Value::as_i64).collect())
+        .unwrap_or_default()
+}
+
+fn collect_typed_values<T: DeserializeOwned>(payload: &Value, key: &str) -> Vec<T> {
+    payload
+        .get(key)
+        .and_then(Value::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(|value| serde_json::from_value::<T>(value.clone()).ok())
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -5674,6 +5834,563 @@ fn is_question_like(file_name: &str, text: Option<&str>) -> bool {
     false
 }
 
+fn confidence_band_for_score(score: i64) -> String {
+    match score {
+        80.. => "high".to_string(),
+        55.. => "medium".to_string(),
+        _ => "low".to_string(),
+    }
+}
+
+fn build_topic_action_summaries_from_accumulators(
+    topic_summaries: BTreeMap<String, TopicSummaryAccumulator>,
+    detected_topics: &[String],
+    weakness_signals: &[String],
+    recommended_actions: &[String],
+    source_document_roles: &[String],
+    review_priority: &str,
+    confidence_band: &str,
+) -> Vec<TopicActionSummary> {
+    let mut items = topic_summaries
+        .into_iter()
+        .map(|(topic_label, summary)| {
+            let recommended_actions = summary.recommended_actions.into_iter().collect::<Vec<_>>();
+            let weakness_signals = summary.weakness_signals.into_iter().collect::<Vec<_>>();
+            let source_document_roles = summary
+                .source_document_roles
+                .into_iter()
+                .collect::<Vec<_>>();
+            let average_confidence = if summary.evidence_count == 0 {
+                0
+            } else {
+                summary.confidence_total / summary.evidence_count
+            };
+            let priority = topic_priority(
+                &recommended_actions,
+                &weakness_signals,
+                summary.max_review_priority_rank,
+            );
+            TopicActionSummary {
+                summary: build_topic_action_summary_text(
+                    &topic_label,
+                    &recommended_actions,
+                    &weakness_signals,
+                    &source_document_roles,
+                ),
+                priority,
+                confidence_band: confidence_band_for_score(average_confidence),
+                recommended_actions,
+                weakness_signals,
+                source_document_roles,
+                topic_label,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    if items.is_empty() {
+        items = build_topic_action_summaries(
+            detected_topics,
+            weakness_signals,
+            recommended_actions,
+            source_document_roles,
+            review_priority,
+            confidence_band,
+        );
+    }
+
+    items.sort_by(|left, right| {
+        priority_rank(&right.priority)
+            .cmp(&priority_rank(&left.priority))
+            .then_with(|| left.topic_label.cmp(&right.topic_label))
+    });
+    items
+}
+
+fn build_topic_action_summaries(
+    detected_topics: &[String],
+    weakness_signals: &[String],
+    recommended_actions: &[String],
+    source_document_roles: &[String],
+    review_priority: &str,
+    confidence_band: &str,
+) -> Vec<TopicActionSummary> {
+    detected_topics
+        .iter()
+        .map(|topic_label| TopicActionSummary {
+            topic_label: topic_label.clone(),
+            summary: build_topic_action_summary_text(
+                topic_label,
+                recommended_actions,
+                weakness_signals,
+                source_document_roles,
+            ),
+            priority: topic_priority(
+                recommended_actions,
+                weakness_signals,
+                priority_rank(review_priority),
+            ),
+            confidence_band: confidence_band.to_string(),
+            recommended_actions: recommended_actions.to_vec(),
+            weakness_signals: weakness_signals.to_vec(),
+            source_document_roles: source_document_roles.to_vec(),
+        })
+        .collect()
+}
+
+fn build_coach_goal_signals_from_summary(
+    detected_topics: &[String],
+    weakness_signals: &[String],
+    recommended_actions: &[String],
+    student_model_updates: &[String],
+    source_document_roles: &[String],
+    review_priority: &str,
+    confidence_band: &str,
+    needs_confirmation: bool,
+) -> Vec<CoachGoalSignal> {
+    let mut signals = Vec::new();
+    let action_set = recommended_actions
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    let update_set = student_model_updates
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    let high_attention = review_priority == "high"
+        || weakness_signals.iter().any(|signal| {
+            matches!(
+                signal.as_str(),
+                "critical_score" | "low_score" | "teacher_concern"
+            )
+        });
+    let detected_topics = detected_topics.iter().take(6).cloned().collect::<Vec<_>>();
+    let source_document_roles = source_document_roles.to_vec();
+
+    if !weakness_signals.is_empty()
+        || action_set.contains("schedule_intervention")
+        || action_set.contains("create_goal")
+        || update_set.contains("known_weaknesses")
+    {
+        signals.push(CoachGoalSignal {
+            signal_key: "stabilize_detected_weaknesses".to_string(),
+            title: "Stabilize detected weak areas".to_string(),
+            summary: format!(
+                "Turn {} into a coach goal using {}.",
+                describe_topics_for_summary(&detected_topics),
+                describe_roles_for_summary(&source_document_roles)
+            ),
+            priority: if high_attention {
+                "high".to_string()
+            } else {
+                "medium".to_string()
+            },
+            confidence_band: confidence_band.to_string(),
+            supporting_topics: detected_topics.clone(),
+            source_document_roles: source_document_roles.clone(),
+        });
+    }
+
+    if action_set.contains("build_personalized_test") || update_set.contains("assessment_evidence")
+    {
+        signals.push(CoachGoalSignal {
+            signal_key: "convert_evidence_into_targeted_practice".to_string(),
+            title: "Convert evidence into targeted practice".to_string(),
+            summary: format!(
+                "Build a short targeted check around {} before new content is assigned.",
+                describe_topics_for_summary(&detected_topics)
+            ),
+            priority: if high_attention {
+                "high".to_string()
+            } else {
+                "medium".to_string()
+            },
+            confidence_band: confidence_band.to_string(),
+            supporting_topics: detected_topics.clone(),
+            source_document_roles: source_document_roles.clone(),
+        });
+    }
+
+    if action_set.contains("create_glossary_review") || update_set.contains("resource_availability")
+    {
+        signals.push(CoachGoalSignal {
+            signal_key: "activate_concept_review_support".to_string(),
+            title: "Activate concept review support".to_string(),
+            summary: format!(
+                "Use the bundle to prepare glossary or worked-example review for {}.",
+                describe_topics_for_summary(&detected_topics)
+            ),
+            priority: if high_attention {
+                "medium".to_string()
+            } else {
+                "low".to_string()
+            },
+            confidence_band: confidence_band.to_string(),
+            supporting_topics: detected_topics.clone(),
+            source_document_roles: source_document_roles.clone(),
+        });
+    }
+
+    if action_set.contains("teacher_aligned_recommendation")
+        || update_set.contains("teacher_expectations")
+    {
+        signals.push(CoachGoalSignal {
+            signal_key: "mirror_teacher_expectations".to_string(),
+            title: "Mirror teacher expectations".to_string(),
+            summary: "Keep the next intervention aligned to explicit teacher evidence from intake."
+                .to_string(),
+            priority: if high_attention {
+                "high".to_string()
+            } else {
+                "medium".to_string()
+            },
+            confidence_band: confidence_band.to_string(),
+            supporting_topics: detected_topics.clone(),
+            source_document_roles: source_document_roles.clone(),
+        });
+    }
+
+    if action_set.contains("attach_to_campaign") || update_set.contains("topic_coverage") {
+        signals.push(CoachGoalSignal {
+            signal_key: "carry_topics_forward_into_planning".to_string(),
+            title: "Carry topics forward into planning".to_string(),
+            summary: format!(
+                "Feed {} into the student model and next coach planning pass.",
+                describe_topics_for_summary(&detected_topics)
+            ),
+            priority: if high_attention {
+                "medium".to_string()
+            } else {
+                "low".to_string()
+            },
+            confidence_band: confidence_band.to_string(),
+            supporting_topics: detected_topics.clone(),
+            source_document_roles: source_document_roles.clone(),
+        });
+    }
+
+    if needs_confirmation {
+        signals.push(CoachGoalSignal {
+            signal_key: "alignment_confirmation".to_string(),
+            title: "Confirm evidence before automation".to_string(),
+            summary: "Recovered bundle evidence still needs confirmation before it should drive stronger automation.".to_string(),
+            priority: "high".to_string(),
+            confidence_band: confidence_band.to_string(),
+            supporting_topics: detected_topics,
+            source_document_roles,
+        });
+    }
+
+    signals.sort_by(|left, right| {
+        priority_rank(&right.priority)
+            .cmp(&priority_rank(&left.priority))
+            .then_with(|| left.title.cmp(&right.title))
+    });
+    signals
+}
+
+fn build_coach_goal_signals(
+    detected_topics: &[String],
+    weakness_signals: &[String],
+    recommended_actions: &[String],
+    source_document_roles: &[String],
+    review_priority: &str,
+    confidence_band: &str,
+    needs_confirmation: bool,
+) -> Vec<CoachGoalSignal> {
+    build_coach_goal_signals_from_summary(
+        detected_topics,
+        weakness_signals,
+        recommended_actions,
+        &[],
+        source_document_roles,
+        review_priority,
+        confidence_band,
+        needs_confirmation,
+    )
+}
+
+fn build_follow_up_recommendations(
+    topic_action_summaries: &[TopicActionSummary],
+    recommended_actions: &[String],
+    source_document_roles: &[String],
+    review_priority: &str,
+    confidence_band: &str,
+    needs_confirmation: bool,
+) -> Vec<FollowUpRecommendation> {
+    let mut recommendations = Vec::new();
+    let top_topic = topic_action_summaries
+        .first()
+        .map(|summary| summary.topic_label.clone());
+
+    if let Some(priority_topic) = topic_action_summaries
+        .iter()
+        .find(|summary| summary.priority == "high")
+    {
+        recommendations.push(FollowUpRecommendation {
+            audience: "coach".to_string(),
+            recommendation_key: "open_priority_topic_goal".to_string(),
+            summary: format!(
+                "Open or refresh a coach goal for {} using the recovered bundle evidence.",
+                priority_topic.topic_label
+            ),
+            priority: "high".to_string(),
+            confidence_band: priority_topic.confidence_band.clone(),
+            topic_label: Some(priority_topic.topic_label.clone()),
+        });
+    }
+
+    if let Some(practice_topic) = topic_action_summaries.iter().find(|summary| {
+        summary
+            .recommended_actions
+            .iter()
+            .any(|action| action == "build_personalized_test" || action == "schedule_intervention")
+    }) {
+        recommendations.push(FollowUpRecommendation {
+            audience: "learner".to_string(),
+            recommendation_key: "complete_targeted_practice".to_string(),
+            summary: format!(
+                "Complete a short targeted practice pass on {} before moving on.",
+                practice_topic.topic_label
+            ),
+            priority: if practice_topic.priority == "high" {
+                "high".to_string()
+            } else {
+                "medium".to_string()
+            },
+            confidence_band: practice_topic.confidence_band.clone(),
+            topic_label: Some(practice_topic.topic_label.clone()),
+        });
+    }
+
+    if let Some(review_topic) = topic_action_summaries.iter().find(|summary| {
+        summary
+            .recommended_actions
+            .iter()
+            .any(|action| action == "create_glossary_review")
+    }) {
+        recommendations.push(FollowUpRecommendation {
+            audience: "learner".to_string(),
+            recommendation_key: "review_key_terms_before_retry".to_string(),
+            summary: format!(
+                "Review key terms and worked examples for {} before the next retry.",
+                review_topic.topic_label
+            ),
+            priority: if review_topic.priority == "high" {
+                "high".to_string()
+            } else {
+                "medium".to_string()
+            },
+            confidence_band: review_topic.confidence_band.clone(),
+            topic_label: Some(review_topic.topic_label.clone()),
+        });
+    } else if recommended_actions
+        .iter()
+        .any(|action| action == "create_glossary_review")
+    {
+        recommendations.push(FollowUpRecommendation {
+            audience: "learner".to_string(),
+            recommendation_key: "review_key_terms_before_retry".to_string(),
+            summary: "Review glossary support extracted from this bundle before the next attempt."
+                .to_string(),
+            priority: "medium".to_string(),
+            confidence_band: confidence_band.to_string(),
+            topic_label: top_topic.clone(),
+        });
+    }
+
+    if needs_confirmation
+        || source_document_roles
+            .iter()
+            .any(|role| role == "teacher_handout")
+    {
+        recommendations.push(FollowUpRecommendation {
+            audience: "coach".to_string(),
+            recommendation_key: "verify_bundle_before_planning".to_string(),
+            summary: "Review the recovered bundle before promoting it into stronger coach actions."
+                .to_string(),
+            priority: "high".to_string(),
+            confidence_band: confidence_band.to_string(),
+            topic_label: top_topic.clone(),
+        });
+    }
+
+    if recommendations.is_empty() && !recommended_actions.is_empty() {
+        recommendations.push(FollowUpRecommendation {
+            audience: "coach".to_string(),
+            recommendation_key: "triage_detected_actions".to_string(),
+            summary: format!(
+                "Triage the recovered bundle actions ({}) before the next planning pass.",
+                recommended_actions.join(", ")
+            ),
+            priority: review_priority.to_string(),
+            confidence_band: confidence_band.to_string(),
+            topic_label: top_topic,
+        });
+    }
+
+    recommendations.sort_by(|left, right| {
+        priority_rank(&right.priority)
+            .cmp(&priority_rank(&left.priority))
+            .then_with(|| left.recommendation_key.cmp(&right.recommendation_key))
+    });
+    recommendations.truncate(4);
+    recommendations
+}
+
+fn build_topic_action_summary_text(
+    topic_label: &str,
+    recommended_actions: &[String],
+    weakness_signals: &[String],
+    source_document_roles: &[String],
+) -> String {
+    let weakness_summary = if weakness_signals.is_empty() {
+        "recovered bundle evidence".to_string()
+    } else {
+        format!(
+            "{}",
+            list_for_summary(
+                &weakness_signals
+                    .iter()
+                    .map(|signal| describe_weakness(signal).to_string())
+                    .collect::<Vec<_>>()
+            )
+        )
+    };
+    let action_summary = if recommended_actions.is_empty() {
+        "keep monitoring progress".to_string()
+    } else {
+        format!(
+            "next actions {}",
+            list_for_summary(
+                &recommended_actions
+                    .iter()
+                    .map(|action| describe_action(action).to_string())
+                    .collect::<Vec<_>>()
+            )
+        )
+    };
+    format!(
+        "{} shows {} from {}. {}.",
+        title_case(topic_label),
+        weakness_summary,
+        describe_roles_for_summary(source_document_roles),
+        action_summary
+    )
+}
+
+fn topic_priority(
+    recommended_actions: &[String],
+    weakness_signals: &[String],
+    max_review_priority_rank: i64,
+) -> String {
+    if max_review_priority_rank >= 3
+        || weakness_signals.iter().any(|signal| {
+            matches!(
+                signal.as_str(),
+                "critical_score" | "low_score" | "teacher_concern"
+            )
+        })
+        || recommended_actions.iter().any(|action| {
+            matches!(
+                action.as_str(),
+                "schedule_intervention" | "create_goal" | "add_to_weakness_map"
+            )
+        })
+    {
+        return "high".to_string();
+    }
+    if max_review_priority_rank >= 2
+        || !weakness_signals.is_empty()
+        || !recommended_actions.is_empty()
+    {
+        return "medium".to_string();
+    }
+    "low".to_string()
+}
+
+fn priority_rank(priority: &str) -> i64 {
+    match priority {
+        "high" => 3,
+        "medium" => 2,
+        _ => 1,
+    }
+}
+
+fn describe_topics_for_summary(topics: &[String]) -> String {
+    if topics.is_empty() {
+        return "the uploaded learning evidence".to_string();
+    }
+    list_for_summary(topics)
+}
+
+fn describe_roles_for_summary(source_document_roles: &[String]) -> String {
+    if source_document_roles.is_empty() {
+        return "the uploaded bundle".to_string();
+    }
+    format!(
+        "{} evidence",
+        list_for_summary(
+            &source_document_roles
+                .iter()
+                .map(|role| describe_role(role).to_string())
+                .collect::<Vec<_>>()
+        )
+    )
+}
+
+fn list_for_summary(items: &[String]) -> String {
+    match items.len() {
+        0 => "the uploaded bundle".to_string(),
+        1 => items[0].clone(),
+        2 => format!("{} and {}", items[0], items[1]),
+        _ => format!("{}, {}, and {} more", items[0], items[1], items.len() - 2),
+    }
+}
+
+fn title_case(value: &str) -> String {
+    let mut chars = value.chars();
+    match chars.next() {
+        Some(first) => format!("{}{}", first.to_ascii_uppercase(), chars.as_str()),
+        None => String::new(),
+    }
+}
+
+fn describe_action(action: &str) -> &'static str {
+    match action {
+        "build_personalized_test" => "build targeted practice",
+        "create_glossary_review" => "review key terms",
+        "attach_to_campaign" => "carry the topic into planning",
+        "schedule_intervention" => "schedule intervention",
+        "create_goal" => "open a coach goal",
+        "add_to_weakness_map" => "update the weakness map",
+        "teacher_aligned_recommendation" => "align to teacher guidance",
+        "notify_parent" => "escalate household follow-through",
+        _ => "review the extracted evidence",
+    }
+}
+
+fn describe_weakness(signal: &str) -> &'static str {
+    match signal {
+        "critical_score" => "critical performance risk",
+        "low_score" => "low score evidence",
+        "teacher_concern" => "teacher concern",
+        "topic_intervention_candidate" => "topic-specific intervention need",
+        _ => "learning risk",
+    }
+}
+
+fn describe_role(role: &str) -> &'static str {
+    match role {
+        "question_paper" => "question paper",
+        "mark_scheme" => "mark scheme",
+        "answer_sheet" => "answer sheet",
+        "corrected_script" => "corrected script",
+        "report_card" => "report card",
+        "student_work" => "student work",
+        _ => "bundle",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -6814,6 +7531,42 @@ mod tests {
         assert!(report
             .recommended_actions
             .contains(&"notify_parent".to_string()));
+        assert_eq!(report.reconstruction_confidence_band, "high");
+        assert!(report
+            .coach_goal_signals
+            .iter()
+            .any(
+                |signal| signal.signal_key == "stabilize_detected_weaknesses"
+                    && signal.priority == "high"
+                    && signal
+                        .supporting_topics
+                        .iter()
+                        .any(|topic| topic == "algebra")
+            ));
+        assert!(report
+            .topic_action_summaries
+            .iter()
+            .any(|summary| summary.topic_label == "algebra"
+                && summary.priority == "high"
+                && summary
+                    .recommended_actions
+                    .iter()
+                    .any(|action| action == "create_goal")));
+        assert!(report
+            .follow_up_recommendations
+            .iter()
+            .any(
+                |recommendation| recommendation.recommendation_key == "open_priority_topic_goal"
+                    && recommendation.audience == "coach"
+                    && recommendation.topic_label.as_deref() == Some("algebra")
+            ));
+        assert!(report
+            .follow_up_recommendations
+            .iter()
+            .any(|recommendation| recommendation.recommendation_key
+                == "complete_targeted_practice"
+                && recommendation.audience == "learner"
+                && recommendation.topic_label.as_deref() == Some("algebra")));
 
         let file_reconstruction = report
             .insights
@@ -6829,6 +7582,180 @@ mod tests {
         );
 
         let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn summarize_bundle_adds_review_follow_through_for_low_confidence_bundle() {
+        let analyses = vec![FileReconstruction {
+            file_id: 10,
+            file_name: "unclear_scan.pdf".to_string(),
+            document_role: "unknown".to_string(),
+            document_origin: "unknown".to_string(),
+            document_key: "unclear".to_string(),
+            detected_subjects: vec!["mathematics".to_string()],
+            detected_exam_years: vec![],
+            detected_topics: vec!["fractions".to_string()],
+            detected_dates: vec![],
+            question_units: Vec::new(),
+            answer_units: Vec::new(),
+            question_like: false,
+            answer_like: false,
+            ocr_candidate: true,
+            ocr_recovered: false,
+            layout_recovered: false,
+            estimated_question_count: 0,
+            estimated_answer_count: 0,
+            extracted_question_block_count: 0,
+            score_signal_count: 0,
+            remark_signal_count: 1,
+            needs_confirmation: true,
+            layout_kind: "unknown".to_string(),
+            layout_confidence_score: 20,
+            reconstruction_confidence_score: 28,
+            review_priority: "high".to_string(),
+            weakness_signals: vec!["teacher_concern".to_string()],
+            recommended_actions: vec!["schedule_intervention".to_string()],
+            student_model_updates: vec!["known_weaknesses".to_string()],
+            review_reasons: vec!["ocr_required".to_string()],
+            payload: json!({}),
+        }];
+
+        let summary = summarize_bundle(&analyses, &[], 1);
+
+        assert_eq!(summary.reconstruction_confidence_band, "low");
+        assert!(summary
+            .coach_goal_signals
+            .iter()
+            .any(
+                |signal| signal.signal_key == "alignment_confirmation" && signal.priority == "high"
+            ));
+        assert!(summary
+            .topic_action_summaries
+            .iter()
+            .any(|topic| topic.topic_label == "fractions"
+                && topic.priority == "high"
+                && topic.confidence_band == "low"));
+        assert!(summary
+            .follow_up_recommendations
+            .iter()
+            .any(|recommendation| recommendation.recommendation_key
+                == "verify_bundle_before_planning"
+                && recommendation.audience == "coach"));
+    }
+
+    #[test]
+    fn summarize_bundle_prioritizes_topic_goals_and_learner_follow_up() {
+        let analyses = vec![
+            FileReconstruction {
+                file_id: 11,
+                file_name: "corrected_algebra.txt".to_string(),
+                document_role: "corrected_script".to_string(),
+                document_origin: "teacher_provided".to_string(),
+                document_key: "algebra".to_string(),
+                detected_subjects: vec!["mathematics".to_string()],
+                detected_exam_years: vec![2025],
+                detected_topics: vec!["algebra".to_string()],
+                detected_dates: vec!["12 March 2026".to_string()],
+                question_units: Vec::new(),
+                answer_units: Vec::new(),
+                question_like: true,
+                answer_like: true,
+                ocr_candidate: false,
+                ocr_recovered: false,
+                layout_recovered: false,
+                estimated_question_count: 4,
+                estimated_answer_count: 4,
+                extracted_question_block_count: 4,
+                score_signal_count: 2,
+                remark_signal_count: 1,
+                needs_confirmation: false,
+                layout_kind: "assessment_sheet".to_string(),
+                layout_confidence_score: 82,
+                reconstruction_confidence_score: 88,
+                review_priority: "medium".to_string(),
+                weakness_signals: vec![
+                    "low_score".to_string(),
+                    "topic_intervention_candidate".to_string(),
+                ],
+                recommended_actions: vec![
+                    "schedule_intervention".to_string(),
+                    "create_goal".to_string(),
+                    "build_personalized_test".to_string(),
+                ],
+                student_model_updates: vec![
+                    "assessment_evidence".to_string(),
+                    "known_weaknesses".to_string(),
+                ],
+                review_reasons: Vec::new(),
+                payload: json!({}),
+            },
+            FileReconstruction {
+                file_id: 12,
+                file_name: "glossary_terms.txt".to_string(),
+                document_role: "student_work".to_string(),
+                document_origin: "student_uploaded".to_string(),
+                document_key: "algebra_notes".to_string(),
+                detected_subjects: vec!["mathematics".to_string()],
+                detected_exam_years: vec![],
+                detected_topics: vec!["algebra".to_string(), "equations".to_string()],
+                detected_dates: vec![],
+                question_units: Vec::new(),
+                answer_units: Vec::new(),
+                question_like: false,
+                answer_like: false,
+                ocr_candidate: false,
+                ocr_recovered: false,
+                layout_recovered: false,
+                estimated_question_count: 0,
+                estimated_answer_count: 0,
+                extracted_question_block_count: 0,
+                score_signal_count: 0,
+                remark_signal_count: 0,
+                needs_confirmation: false,
+                layout_kind: "notes".to_string(),
+                layout_confidence_score: 76,
+                reconstruction_confidence_score: 78,
+                review_priority: "low".to_string(),
+                weakness_signals: Vec::new(),
+                recommended_actions: vec!["create_glossary_review".to_string()],
+                student_model_updates: vec!["resource_availability".to_string()],
+                review_reasons: Vec::new(),
+                payload: json!({}),
+            },
+        ];
+
+        let summary = summarize_bundle(&analyses, &[], 2);
+
+        assert_eq!(summary.reconstruction_confidence_band, "high");
+        assert!(summary
+            .coach_goal_signals
+            .iter()
+            .any(
+                |signal| signal.signal_key == "convert_evidence_into_targeted_practice"
+                    && signal.priority == "high"
+            ));
+        assert!(summary
+            .topic_action_summaries
+            .iter()
+            .any(|topic| topic.topic_label == "algebra"
+                && topic.priority == "high"
+                && topic
+                    .recommended_actions
+                    .iter()
+                    .any(|action| action == "build_personalized_test")));
+        assert!(summary
+            .follow_up_recommendations
+            .iter()
+            .any(|recommendation| recommendation.recommendation_key
+                == "complete_targeted_practice"
+                && recommendation.audience == "learner"
+                && recommendation.topic_label.as_deref() == Some("algebra")));
+        assert!(summary
+            .follow_up_recommendations
+            .iter()
+            .any(|recommendation| recommendation.recommendation_key
+                == "review_key_terms_before_retry"
+                && recommendation.audience == "learner"));
     }
 
     fn seed_student(conn: &Connection) {

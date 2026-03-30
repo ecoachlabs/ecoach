@@ -270,6 +270,7 @@ impl<'a> SessionService<'a> {
             &readiness,
         )?;
         let compiled_questions = self.compile_mock_questions(
+            input.subject_id,
             &candidates,
             &quotas,
             input.target_difficulty,
@@ -874,6 +875,15 @@ impl<'a> SessionService<'a> {
             Some(subject_id) => subject_id,
             None => return Ok(Vec::new()),
         };
+        let session_is_timed = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(is_timed, 0) FROM sessions WHERE id = ?1",
+                [session_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            != 0;
 
         let reactor = QuestionReactor::new(self.conn);
         let mut statement = self
@@ -905,8 +915,7 @@ impl<'a> SessionService<'a> {
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        let mut remediation_plans = Vec::new();
-        let mut planned_families = BTreeSet::new();
+        let mut observations = Vec::new();
         for row in rows {
             let (
                 topic_id,
@@ -916,6 +925,25 @@ impl<'a> SessionService<'a> {
                 question_id,
                 response_time_ms,
             ) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            observations.push(SessionRemediationObservation {
+                topic_id,
+                question_format,
+                primary_cognitive_demand,
+                family_id,
+                question_id,
+                response_time_ms,
+            });
+        }
+
+        let family_ids = observations
+            .iter()
+            .filter_map(|item| item.family_id)
+            .collect::<BTreeSet<_>>();
+        let runtime_signals = self.load_family_runtime_signals(subject_id, &family_ids)?;
+        let mut remediation_plans = Vec::new();
+        let mut planned_families = BTreeSet::new();
+        for observation in observations {
+            let family_id = observation.family_id;
             if let Some(family_id) = family_id {
                 if planned_families.contains(&family_id) {
                     continue;
@@ -923,34 +951,52 @@ impl<'a> SessionService<'a> {
             }
             let slot_spec = QuestionSlotSpec {
                 subject_id,
-                topic_id: Some(topic_id),
-                target_cognitive_demand: primary_cognitive_demand,
-                target_question_format: Some(question_format),
-                max_generated_share: if response_time_ms > 45_000 {
+                topic_id: Some(observation.topic_id),
+                target_cognitive_demand: observation.primary_cognitive_demand.clone(),
+                target_question_format: Some(observation.question_format.clone()),
+                max_generated_share: if observation.response_time_ms > 45_000 {
                     6_000
                 } else {
                     7_500
                 },
             };
-            if let Some(plan) =
-                reactor.recommend_remediation_plan(session.student_id, &slot_spec)?
-            {
-                planned_families.insert(plan.family_choice.family_id);
-                remediation_plans.push(plan);
-            } else if let Some(family_id) = family_id {
-                let fallback_choice = reactor.get_best_family_for_slot(&slot_spec)?;
-                if let Some(family_choice) = fallback_choice {
-                    let _ = family_id;
-                    planned_families.insert(family_choice.family_id);
-                    remediation_plans.push(QuestionRemediationPlan {
-                        family_choice,
-                        variant_mode: QuestionVariantMode::Rescue.as_str().to_string(),
-                        priority_score: 6_200,
-                        source_question_id: Some(question_id),
-                        request_kind: "remediation".to_string(),
-                        rationale: "Session error had no direct student-history match, so a rescue family was selected from the current slot.".to_string(),
-                    });
-                }
+            let base_plan = reactor
+                .recommend_remediation_plan(session.student_id, &slot_spec)?
+                .or_else(|| {
+                    reactor
+                        .list_family_generation_priorities(&slot_spec, 4)
+                        .ok()
+                        .and_then(|priorities| {
+                            priorities.into_iter().find_map(|priority| {
+                                if planned_families.contains(&priority.family_choice.family_id) {
+                                    None
+                                } else {
+                                    Some(QuestionRemediationPlan {
+                                        family_choice: priority.family_choice,
+                                        variant_mode: priority.recommended_variant_mode,
+                                        priority_score: priority.priority_score,
+                                        source_question_id: Some(observation.question_id),
+                                        request_kind: "remediation".to_string(),
+                                        rationale: format!(
+                                            "Session error had no direct student-history match, so the highest-pressure family for the slot was chosen. {}",
+                                            priority.rationale
+                                        ),
+                                    })
+                                }
+                            })
+                        })
+                });
+            if let Some(plan) = base_plan {
+                let family_choice_id = plan.family_choice.family_id;
+                let enriched = enrich_remediation_plan(
+                    plan,
+                    &session.session_type,
+                    session_is_timed,
+                    observation.response_time_ms,
+                    runtime_signals.get(&family_choice_id),
+                );
+                planned_families.insert(enriched.family_choice.family_id);
+                remediation_plans.push(enriched);
             }
             if remediation_plans.len() >= limit.max(1) {
                 break;
@@ -1633,6 +1679,7 @@ impl<'a> SessionService<'a> {
 
     fn compile_mock_questions(
         &self,
+        subject_id: i64,
         candidates: &[Question],
         quotas: &[MockTopicQuota],
         target_difficulty: Option<BasisPoints>,
@@ -1645,6 +1692,13 @@ impl<'a> SessionService<'a> {
             .iter()
             .map(|quota| (quota.topic_id, quota.clone()))
             .collect::<BTreeMap<_, _>>();
+        let family_ids = candidates
+            .iter()
+            .filter_map(|question| question.family_id)
+            .collect::<BTreeSet<_>>();
+        let runtime_signals = self
+            .load_family_runtime_signals(subject_id, &family_ids)
+            .unwrap_or_default();
         let mut buckets = BTreeMap::<i64, Vec<RankedQuestion>>::new();
 
         for question in candidates {
@@ -1652,7 +1706,16 @@ impl<'a> SessionService<'a> {
             let topic_priority = quota
                 .map(|item| item.priority_weight as f64 / 10_000.0)
                 .unwrap_or(0.5);
-            let score = mock_candidate_fit(question, target_difficulty, is_timed, topic_priority);
+            let score = mock_candidate_fit(
+                question,
+                target_difficulty,
+                is_timed,
+                topic_priority,
+                quota.map(|item| item.is_weak_topic).unwrap_or(false),
+                question
+                    .family_id
+                    .and_then(|family_id| runtime_signals.get(&family_id)),
+            );
             buckets
                 .entry(question.topic_id)
                 .or_default()
@@ -1762,6 +1825,13 @@ impl<'a> SessionService<'a> {
             };
             let mut family_priorities =
                 reactor.list_family_generation_priorities(&slot_spec, deficit.clamp(1, 4))?;
+            let runtime_signals = self.load_family_runtime_signals(
+                subject_id,
+                &family_priorities
+                    .iter()
+                    .map(|priority| priority.family_choice.family_id)
+                    .collect::<BTreeSet<_>>(),
+            )?;
             if family_priorities.is_empty() {
                 if seed.as_ref().and_then(|item| item.family_id).is_some() {
                     if let Some(family_choice) = reactor.get_best_family_for_slot(&slot_spec)? {
@@ -1783,12 +1853,34 @@ impl<'a> SessionService<'a> {
             if family_priorities.is_empty() {
                 continue;
             }
+            family_priorities.sort_by(|left, right| {
+                enrich_generation_priority_score(
+                    right.priority_score,
+                    runtime_signals.get(&right.family_choice.family_id),
+                    is_timed,
+                )
+                .cmp(&enrich_generation_priority_score(
+                    left.priority_score,
+                    runtime_signals.get(&left.family_choice.family_id),
+                    is_timed,
+                ))
+                .then(right.priority_score.cmp(&left.priority_score))
+                .then(
+                    right
+                        .family_choice
+                        .fit_score
+                        .cmp(&left.family_choice.fit_score),
+                )
+            });
 
             for offset in 0..deficit {
                 let priority = &family_priorities[offset % family_priorities.len()];
-                let chosen_variant_mode = resolve_generation_variant_mode(
+                let family_signal = runtime_signals.get(&priority.family_choice.family_id);
+                let chosen_variant_mode = resolve_runtime_generation_variant_mode(
                     variant_mode,
                     &priority.recommended_variant_mode,
+                    family_signal,
+                    is_timed,
                 );
                 let request =
                     reactor.create_generation_request(&QuestionGenerationRequestInput {
@@ -1804,7 +1896,12 @@ impl<'a> SessionService<'a> {
                         request_kind: request_kind.to_string(),
                         variant_mode: chosen_variant_mode,
                         requested_count: 1,
-                        rationale: Some(format!("{} [{}]", rationale, priority.rationale)),
+                        rationale: Some(format!(
+                            "{} [{}{}]",
+                            rationale,
+                            priority.rationale,
+                            runtime_signal_rationale_suffix(family_signal)
+                        )),
                     })?;
                 let generated = reactor.process_generation_request(request.id)?;
                 for draft in generated {
@@ -1814,6 +1911,11 @@ impl<'a> SessionService<'a> {
                             target_difficulty,
                             is_timed,
                             0.75,
+                            false,
+                            draft
+                                .question
+                                .family_id
+                                .and_then(|family_id| runtime_signals.get(&family_id)),
                         ),
                         question: draft.question,
                     });
@@ -1854,6 +1956,103 @@ impl<'a> SessionService<'a> {
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_family_runtime_signals(
+        &self,
+        subject_id: i64,
+        family_ids: &BTreeSet<i64>,
+    ) -> EcoachResult<BTreeMap<i64, FamilyRuntimeSignal>> {
+        if family_ids.is_empty() {
+            return Ok(BTreeMap::new());
+        }
+
+        let (latest_subject_year, subject_year_span) = load_subject_year_bounds(self.conn, subject_id)?;
+        let placeholders = family_ids
+            .iter()
+            .map(|_| "?")
+            .collect::<Vec<_>>()
+            .join(", ");
+        let sql = format!(
+            "SELECT qf.id,
+                    COALESCE(qfh.health_status, 'warming') AS health_status,
+                    COALESCE(qfh.quality_score, 5400) AS quality_score,
+                    COALESCE(qfh.calibration_score, 5200) AS calibration_score,
+                    COALESCE(qfa.recurrence_score, 0) AS recurrence_score,
+                    COALESCE(qfa.coappearance_score, 0) AS coappearance_score,
+                    COALESCE(qfa.replacement_score, 0) AS replacement_score,
+                    COALESCE((
+                        SELECT COUNT(DISTINCT ppql.paper_id)
+                        FROM past_paper_question_links ppql
+                        INNER JOIN questions history_q ON history_q.id = ppql.question_id
+                        WHERE history_q.family_id = qf.id
+                    ), 0) AS paper_count,
+                    (
+                        SELECT MAX(pps.exam_year)
+                        FROM past_paper_question_links ppql
+                        INNER JOIN questions history_q ON history_q.id = ppql.question_id
+                        INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                        WHERE history_q.family_id = qf.id
+                    ) AS last_seen_year
+             FROM question_families qf
+             LEFT JOIN question_family_health qfh ON qfh.family_id = qf.id
+             LEFT JOIN question_family_analytics qfa ON qfa.family_id = qf.id
+             WHERE qf.id IN ({})",
+            placeholders
+        );
+
+        let params_vec = family_ids
+            .iter()
+            .map(|family_id| rusqlite::types::Value::from(*family_id))
+            .collect::<Vec<_>>();
+        let mut statement = self
+            .conn
+            .prepare(&sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+                let recurrence_score = row.get::<_, i64>(4)?.clamp(0, 10_000) as BasisPoints;
+                let coappearance_score = row.get::<_, i64>(5)?.clamp(0, 10_000) as BasisPoints;
+                let replacement_score = row.get::<_, i64>(6)?.clamp(0, 10_000) as BasisPoints;
+                let paper_count = row.get::<_, i64>(7)?;
+                let last_seen_year = row.get::<_, Option<i64>>(8)?;
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    FamilyRuntimeSignal {
+                        health_status: row.get::<_, String>(1)?,
+                        quality_score: row.get::<_, i64>(2)?.clamp(0, 10_000) as BasisPoints,
+                        calibration_score: row.get::<_, i64>(3)?.clamp(0, 10_000)
+                            as BasisPoints,
+                        recurrence_score,
+                        coappearance_score,
+                        replacement_score,
+                        paper_count,
+                        last_seen_year,
+                        inverse_pressure_score: composite_inverse_pressure(
+                            recurrence_score,
+                            coappearance_score,
+                            replacement_score,
+                        ),
+                        comeback_score: compute_comeback_pressure(
+                            recurrence_score,
+                            coappearance_score,
+                            replacement_score,
+                            paper_count,
+                            last_seen_year,
+                            latest_subject_year,
+                            subject_year_span,
+                        ),
+                    },
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut signal_map = BTreeMap::new();
+        for row in rows {
+            let (family_id, signal) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            signal_map.insert(family_id, signal);
+        }
+        Ok(signal_map)
     }
 
     fn build_mock_coverage(
@@ -2367,6 +2566,30 @@ struct ReactorSeed {
     primary_cognitive_demand: Option<String>,
 }
 
+#[derive(Debug, Clone)]
+struct FamilyRuntimeSignal {
+    health_status: String,
+    quality_score: BasisPoints,
+    calibration_score: BasisPoints,
+    recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
+    replacement_score: BasisPoints,
+    paper_count: i64,
+    last_seen_year: Option<i64>,
+    inverse_pressure_score: BasisPoints,
+    comeback_score: BasisPoints,
+}
+
+#[derive(Debug, Clone)]
+struct SessionRemediationObservation {
+    topic_id: i64,
+    question_format: String,
+    primary_cognitive_demand: Option<String>,
+    family_id: Option<i64>,
+    question_id: i64,
+    response_time_ms: i64,
+}
+
 fn map_mock_blueprint(row: &rusqlite::Row<'_>) -> rusqlite::Result<MockBlueprint> {
     let coverage_json: String = row.get(9)?;
     let quota_json: String = row.get(10)?;
@@ -2413,6 +2636,8 @@ fn mock_candidate_fit(
     target_difficulty: Option<BasisPoints>,
     is_timed: bool,
     topic_priority: f64,
+    is_weak_topic: bool,
+    family_signal: Option<&FamilyRuntimeSignal>,
 ) -> f64 {
     let difficulty_fit = target_difficulty
         .map(|target| {
@@ -2426,12 +2651,288 @@ fn mock_candidate_fit(
     } else {
         0.8
     };
-    let family_bonus = if question.family_id.is_some() {
+    let family_presence = if question.family_id.is_some() {
         0.85
     } else {
         0.55
     };
-    0.35 * difficulty_fit + 0.25 * topic_priority + 0.20 * timed_fit + 0.20 * family_bonus
+    let family_quality = family_signal
+        .map(|signal| signal.quality_score as f64 / 10_000.0)
+        .unwrap_or(family_presence);
+    let family_calibration = family_signal
+        .map(|signal| signal.calibration_score as f64 / 10_000.0)
+        .unwrap_or(0.55);
+    let pressure_alignment = family_signal
+        .map(|signal| {
+            if is_timed {
+                (0.55 * bp_ratio(signal.inverse_pressure_score)
+                    + 0.45 * bp_ratio(signal.comeback_score))
+                .clamp(0.0, 1.0)
+            } else if is_weak_topic {
+                (0.45 * bp_ratio(signal.inverse_pressure_score)
+                    + 0.25 * bp_ratio(signal.comeback_score)
+                    + 0.30 * health_alignment(signal.health_status.as_str(), true))
+                .clamp(0.0, 1.0)
+            } else {
+                (0.55 * bp_ratio(signal.inverse_pressure_score)
+                    + 0.20 * bp_ratio(signal.comeback_score)
+                    + 0.25 * family_quality)
+                .clamp(0.0, 1.0)
+            }
+        })
+        .unwrap_or(0.45);
+    let health_fit = family_signal
+        .map(|signal| health_alignment(signal.health_status.as_str(), is_weak_topic))
+        .unwrap_or(0.55);
+
+    0.28 * difficulty_fit
+        + 0.18 * topic_priority
+        + 0.14 * timed_fit
+        + 0.06 * family_presence
+        + 0.10 * family_quality
+        + 0.08 * family_calibration
+        + 0.10 * pressure_alignment
+        + 0.06 * health_fit
+}
+
+fn load_subject_year_bounds(conn: &Connection, subject_id: i64) -> EcoachResult<(i64, i64)> {
+    let latest_subject_year = conn
+        .query_row(
+            "SELECT MAX(exam_year) FROM past_paper_sets WHERE subject_id = ?1",
+            [subject_id],
+            |row| row.get::<_, Option<i64>>(0),
+        )
+        .map_err(|err| EcoachError::Storage(err.to_string()))?
+        .unwrap_or(0);
+    let earliest_subject_year = conn
+        .query_row(
+            "SELECT MIN(exam_year) FROM past_paper_sets WHERE subject_id = ?1",
+            [subject_id],
+            |row| row.get::<_, Option<i64>>(0),
+        )
+        .map_err(|err| EcoachError::Storage(err.to_string()))?
+        .unwrap_or(latest_subject_year);
+
+    Ok((latest_subject_year, (latest_subject_year - earliest_subject_year).max(1)))
+}
+
+fn composite_inverse_pressure(
+    recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
+    replacement_score: BasisPoints,
+) -> BasisPoints {
+    clamp_bp(
+        (0.45 * replacement_score as f64
+            + 0.30 * coappearance_score as f64
+            + 0.25 * recurrence_score as f64)
+            .round() as i64,
+    ) as BasisPoints
+}
+
+fn compute_comeback_pressure(
+    recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
+    replacement_score: BasisPoints,
+    paper_count: i64,
+    last_seen_year: Option<i64>,
+    latest_subject_year: i64,
+    subject_year_span: i64,
+) -> BasisPoints {
+    let dormant_years =
+        latest_subject_year.saturating_sub(last_seen_year.unwrap_or(latest_subject_year));
+    let dormant_score = scale_score(dormant_years, subject_year_span.max(1));
+    let paper_breadth_score = scale_score(paper_count, 6);
+    let historical_strength_score = clamp_bp(
+        ((0.60 * recurrence_score as f64)
+            + (0.25 * coappearance_score as f64)
+            + (0.15 * paper_breadth_score as f64))
+            .round() as i64,
+    );
+
+    clamp_bp(
+        ((f64::from(historical_strength_score) * f64::from(dormant_score)) / 10_000.0).round()
+            as i64
+            + (i64::from(replacement_score) / 4),
+    ) as BasisPoints
+}
+
+fn scale_score(value: i64, max_value: i64) -> BasisPoints {
+    if value <= 0 || max_value <= 0 {
+        0
+    } else {
+        clamp_bp(((value as f64 / max_value as f64) * 10_000.0).round() as i64) as BasisPoints
+    }
+}
+
+fn bp_ratio(score: BasisPoints) -> f64 {
+    (score as f64 / 10_000.0).clamp(0.0, 1.0)
+}
+
+fn health_alignment(health_status: &str, is_weak_topic: bool) -> f64 {
+    if is_weak_topic {
+        match health_status {
+            "fragile" => 1.0,
+            "warming" => 0.86,
+            "missing" => 0.78,
+            "active" => 0.60,
+            "gold" => 0.42,
+            _ => 0.68,
+        }
+    } else {
+        match health_status {
+            "gold" => 1.0,
+            "active" => 0.86,
+            "warming" => 0.68,
+            "fragile" => 0.48,
+            "missing" => 0.28,
+            _ => 0.58,
+        }
+    }
+}
+
+fn enrich_generation_priority_score(
+    base_score: BasisPoints,
+    family_signal: Option<&FamilyRuntimeSignal>,
+    is_timed: bool,
+) -> BasisPoints {
+    let Some(signal) = family_signal else {
+        return base_score;
+    };
+    let timed_pressure_bonus = if is_timed {
+        i64::from(signal.inverse_pressure_score.max(signal.comeback_score)) / 5
+    } else {
+        i64::from(signal.inverse_pressure_score.max(signal.comeback_score)) / 8
+    };
+    let health_bonus = match signal.health_status.as_str() {
+        "fragile" => 900,
+        "warming" => 550,
+        "active" => 250,
+        "gold" => 120,
+        "missing" => 1_100,
+        _ => 300,
+    };
+    clamp_bp(i64::from(base_score) + timed_pressure_bonus + health_bonus) as BasisPoints
+}
+
+fn resolve_runtime_generation_variant_mode(
+    default_mode: QuestionVariantMode,
+    recommended_mode: &str,
+    family_signal: Option<&FamilyRuntimeSignal>,
+    is_timed: bool,
+) -> QuestionVariantMode {
+    let resolved = resolve_generation_variant_mode(default_mode, recommended_mode);
+    let Some(signal) = family_signal else {
+        return resolved;
+    };
+    if matches!(resolved, QuestionVariantMode::MisconceptionProbe | QuestionVariantMode::Rescue) {
+        return resolved;
+    }
+    if signal.health_status == "fragile" || signal.calibration_score < 5_400 {
+        return QuestionVariantMode::Rescue;
+    }
+    if is_timed
+        && (signal.inverse_pressure_score >= 7_100 || signal.comeback_score >= 6_600)
+        && signal.health_status != "missing"
+    {
+        return QuestionVariantMode::RepresentationShift;
+    }
+    resolved
+}
+
+fn runtime_signal_rationale_suffix(family_signal: Option<&FamilyRuntimeSignal>) -> String {
+    let Some(signal) = family_signal else {
+        return String::new();
+    };
+    if signal.comeback_score >= 6_600 {
+        " Past-paper comeback pressure is elevated.".to_string()
+    } else if signal.inverse_pressure_score >= 7_100 {
+        " Past-paper inverse pressure is elevated.".to_string()
+    } else {
+        String::new()
+    }
+}
+
+fn enrich_remediation_plan(
+    mut plan: QuestionRemediationPlan,
+    session_type: &str,
+    is_timed: bool,
+    response_time_ms: i64,
+    family_signal: Option<&FamilyRuntimeSignal>,
+) -> QuestionRemediationPlan {
+    let mut rationale_parts = vec![plan.rationale.clone()];
+    let mut priority_score = i64::from(plan.priority_score);
+
+    if let Some(signal) = family_signal {
+        let pressure_peak = signal.inverse_pressure_score.max(signal.comeback_score);
+        priority_score += i64::from(pressure_peak) / if is_timed { 5 } else { 7 };
+        priority_score += (10_000 - i64::from(signal.calibration_score)).clamp(0, 10_000) / 6;
+        priority_score += match signal.health_status.as_str() {
+            "fragile" => 1_400,
+            "warming" => 700,
+            "missing" => 1_800,
+            "active" => 250,
+            "gold" => 80,
+            _ => 450,
+        };
+
+        if plan.variant_mode != QuestionVariantMode::MisconceptionProbe.as_str()
+            && (signal.health_status == "fragile" || signal.calibration_score < 5_400)
+        {
+            plan.variant_mode = QuestionVariantMode::Rescue.as_str().to_string();
+            rationale_parts.push(format!(
+                "Family health is {} with low calibration, so remediation should lower load before rebuilding speed.",
+                signal.health_status
+            ));
+        } else if plan.variant_mode != QuestionVariantMode::MisconceptionProbe.as_str()
+            && plan.variant_mode != QuestionVariantMode::Rescue.as_str()
+            && is_timed
+            && (signal.inverse_pressure_score >= 7_000 || signal.comeback_score >= 6_500)
+        {
+            plan.variant_mode = QuestionVariantMode::RepresentationShift.as_str().to_string();
+            rationale_parts.push(
+                "Past-paper inverse/comeback pressure is high, so rehearse this family under exam-like surface variation."
+                    .to_string(),
+            );
+        }
+
+        if signal.comeback_score >= 6_500 {
+            rationale_parts.push(format!(
+                "Dormant paper history still points to comeback risk for this family ({} papers, last seen {:?}).",
+                signal.paper_count, signal.last_seen_year
+            ));
+        } else if signal.inverse_pressure_score >= 7_000 {
+            rationale_parts.push(format!(
+                "Recurring co-appearance and replacement pressure keep this family exam-relevant (recurrence {}, co-appearance {}, replacement {}).",
+                signal.recurrence_score, signal.coappearance_score, signal.replacement_score
+            ));
+        }
+    }
+
+    if response_time_ms >= 55_000
+        && plan.variant_mode != QuestionVariantMode::MisconceptionProbe.as_str()
+    {
+        priority_score += 900;
+        plan.variant_mode = QuestionVariantMode::Rescue.as_str().to_string();
+        rationale_parts.push(
+            "Response speed broke down under live conditions, so the next step should reduce load before restretching."
+                .to_string(),
+        );
+    } else if is_timed && response_time_ms >= 40_000 {
+        priority_score += 450;
+        rationale_parts.push(
+            "Timed conditions amplified the miss, so keep pressure rehearsal in the repair path."
+                .to_string(),
+        );
+    }
+
+    if session_type == "mock" && plan.variant_mode == QuestionVariantMode::RepresentationShift.as_str()
+    {
+        priority_score += 300;
+    }
+
+    plan.priority_score = clamp_bp(priority_score) as BasisPoints;
+    plan.rationale = rationale_parts.join(" ");
+    plan
 }
 
 fn distribute_topic_targets(
@@ -2470,7 +2971,10 @@ fn resolve_generation_variant_mode(
     match default_mode {
         QuestionVariantMode::Stretch
         | QuestionVariantMode::Rescue
-        | QuestionVariantMode::MisconceptionProbe => default_mode,
+        | QuestionVariantMode::MisconceptionProbe
+        | QuestionVariantMode::Fission
+        | QuestionVariantMode::Fusion
+        | QuestionVariantMode::Adversary => default_mode,
         QuestionVariantMode::RepresentationShift | QuestionVariantMode::Isomorphic => {
             match recommended_mode {
                 "representation_shift" => QuestionVariantMode::RepresentationShift,
@@ -2984,6 +3488,94 @@ mod tests {
         assert_eq!(blueprint.status, "compiled");
         assert!(event_count >= 2);
         assert_eq!(blueprint_reactor_event_count, 1);
+    }
+
+    #[test]
+    fn mock_candidate_fit_rewards_exam_pressure_for_timed_blueprints() {
+        let question = Question {
+            id: 1,
+            subject_id: 1,
+            topic_id: 10,
+            subtopic_id: None,
+            family_id: Some(100),
+            stem: "Solve".to_string(),
+            question_format: "mcq".to_string(),
+            explanation_text: None,
+            difficulty_level: 6_200,
+            estimated_time_seconds: 55,
+            marks: 1,
+            primary_skill_id: None,
+        };
+        let low_pressure = FamilyRuntimeSignal {
+            health_status: "active".to_string(),
+            quality_score: 7_400,
+            calibration_score: 7_100,
+            recurrence_score: 4_200,
+            coappearance_score: 3_900,
+            replacement_score: 2_200,
+            paper_count: 1,
+            last_seen_year: Some(2025),
+            inverse_pressure_score: 3_100,
+            comeback_score: 2_400,
+        };
+        let high_pressure = FamilyRuntimeSignal {
+            health_status: "active".to_string(),
+            quality_score: 7_400,
+            calibration_score: 7_100,
+            recurrence_score: 7_800,
+            coappearance_score: 7_100,
+            replacement_score: 9_000,
+            paper_count: 3,
+            last_seen_year: Some(2022),
+            inverse_pressure_score: 8_150,
+            comeback_score: 7_250,
+        };
+
+        let low_score = mock_candidate_fit(&question, Some(6_500), true, 0.7, false, Some(&low_pressure));
+        let high_score =
+            mock_candidate_fit(&question, Some(6_500), true, 0.7, false, Some(&high_pressure));
+
+        assert!(high_score > low_score);
+    }
+
+    #[test]
+    fn remediation_enrichment_uses_family_pressure_and_health() {
+        let base_plan = QuestionRemediationPlan {
+            family_choice: ecoach_questions::QuestionFamilyChoice {
+                family_id: 44,
+                family_code: "ALG_CORE".to_string(),
+                family_name: "Algebra Core".to_string(),
+                subject_id: 1,
+                topic_id: Some(10),
+                total_instances: 3,
+                generated_instances: 0,
+                fit_score: 6_900,
+            },
+            variant_mode: QuestionVariantMode::RepresentationShift.as_str().to_string(),
+            priority_score: 5_800,
+            source_question_id: Some(900),
+            request_kind: "remediation".to_string(),
+            rationale: "Base remediation plan.".to_string(),
+        };
+        let signal = FamilyRuntimeSignal {
+            health_status: "fragile".to_string(),
+            quality_score: 6_400,
+            calibration_score: 4_900,
+            recurrence_score: 7_300,
+            coappearance_score: 6_800,
+            replacement_score: 8_900,
+            paper_count: 4,
+            last_seen_year: Some(2022),
+            inverse_pressure_score: 8_000,
+            comeback_score: 7_100,
+        };
+
+        let enriched = enrich_remediation_plan(base_plan, "mock", true, 58_000, Some(&signal));
+
+        assert_eq!(enriched.variant_mode, QuestionVariantMode::Rescue.as_str());
+        assert!(enriched.priority_score > 5_800);
+        assert!(enriched.rationale.contains("Past-paper") || enriched.rationale.contains("Dormant"));
+        assert!(enriched.rationale.contains("fragile"));
     }
 
     fn open_test_database() -> Connection {

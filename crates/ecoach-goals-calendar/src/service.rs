@@ -2156,7 +2156,15 @@ mod tests {
 
         seed_availability(&service, student_id);
         seed_topic_state(&conn, student_id, topic_id);
-        seed_memory_state(&conn, student_id, topic_id, "collapsed", 2200, 8800, Some(date));
+        seed_memory_state(
+            &conn,
+            student_id,
+            topic_id,
+            "collapsed",
+            2200,
+            8800,
+            Some(date),
+        );
         seed_baseline_session(&conn, student_id, subject_id, topic_id, "2026-03-29");
         service
             .generate_daily_climb_target(student_id, subject_id, date)
@@ -2178,15 +2186,15 @@ mod tests {
 
         assert!(recommendation.available_now);
         assert_eq!(recommendation.session_type, "comeback_reteach");
-        assert_eq!(
-            recommendation.recommended_comeback_topic_id,
-            Some(topic_id)
-        );
+        assert_eq!(recommendation.recommended_comeback_topic_id, Some(topic_id));
         assert_eq!(
             recommendation.recent_repair_outcome.as_deref(),
             Some("failed")
         );
-        assert_eq!(recommendation.focus_topic_ids.first().copied(), Some(topic_id));
+        assert_eq!(
+            recommendation.focus_topic_ids.first().copied(),
+            Some(topic_id)
+        );
         assert!(recommendation.pressure_score >= 7000);
         assert!(recommendation.repair_buffer_minutes >= 12);
         assert!(recommendation.rationale.contains("did not hold"));
@@ -2218,7 +2226,15 @@ mod tests {
 
         seed_availability(&service, student_id);
         seed_topic_state(&conn, student_id, topic_id);
-        seed_memory_state(&conn, student_id, topic_id, "collapsed", 2200, 9000, Some(date));
+        seed_memory_state(
+            &conn,
+            student_id,
+            topic_id,
+            "collapsed",
+            2200,
+            9000,
+            Some(date),
+        );
         seed_baseline_session(&conn, student_id, subject_id, topic_id, "2026-03-29");
         service
             .generate_daily_climb_target(student_id, subject_id, date)

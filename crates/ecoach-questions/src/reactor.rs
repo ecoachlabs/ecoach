@@ -5,10 +5,11 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{
-    GeneratedQuestionDraft, Question, QuestionFamilyChoice, QuestionFamilyGenerationPriority,
-    QuestionFamilyHealth, QuestionGenerationRequest, QuestionGenerationRequestInput,
-    QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode, QuestionOption,
-    QuestionRemediationPlan, QuestionSlotSpec, QuestionVariantMode,
+    GeneratedQuestionDraft, QualityGateResult, Question, QuestionFamilyChoice,
+    QuestionFamilyGenerationPriority, QuestionFamilyHealth, QuestionGenerationRequest,
+    QuestionGenerationRequestInput, QuestionLineageEdge, QuestionLineageGraph,
+    QuestionLineageNode, QuestionOption, QuestionRemediationPlan, QuestionSlotSpec,
+    QuestionVariantMode,
 };
 use crate::service::QuestionService;
 
@@ -76,6 +77,12 @@ struct FractionToken {
     text: String,
 }
 
+#[derive(Debug, Clone, Copy)]
+struct FamilyPressureSignals {
+    inverse_pressure_score: BasisPoints,
+    comeback_score: BasisPoints,
+}
+
 impl<'a> QuestionReactor<'a> {
     pub fn new(conn: &'a Connection) -> Self {
         Self { conn }
@@ -97,6 +104,8 @@ impl<'a> QuestionReactor<'a> {
         slot_spec: &QuestionSlotSpec,
         limit: usize,
     ) -> EcoachResult<Vec<QuestionFamilyGenerationPriority>> {
+        let (latest_subject_year, subject_year_span) =
+            self.load_subject_year_bounds(slot_spec.subject_id)?;
         let mut statement = self
             .conn
             .prepare(
@@ -120,7 +129,21 @@ impl<'a> QuestionReactor<'a> {
                         COALESCE(qfh.recent_attempts, 0) AS recent_attempts,
                         COALESCE(qfh.misconception_hit_count, 0) AS misconception_hit_count,
                         COALESCE(qfa.recurrence_score, 0) AS recurrence_score,
-                        COALESCE(qfa.replacement_score, 0) AS replacement_score
+                        COALESCE(qfa.coappearance_score, 0) AS coappearance_score,
+                        COALESCE(qfa.replacement_score, 0) AS replacement_score,
+                        COALESCE((
+                            SELECT COUNT(DISTINCT ppql.paper_id)
+                            FROM past_paper_question_links ppql
+                            INNER JOIN questions history_q ON history_q.id = ppql.question_id
+                            WHERE history_q.family_id = qf.id
+                        ), 0) AS paper_count,
+                        (
+                            SELECT MAX(pps.exam_year)
+                            FROM past_paper_question_links ppql
+                            INNER JOIN questions history_q ON history_q.id = ppql.question_id
+                            INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                            WHERE history_q.family_id = qf.id
+                        ) AS last_seen_year
                  FROM question_families qf
                  LEFT JOIN questions q ON q.family_id = qf.id AND q.is_active = 1
                  LEFT JOIN question_family_health qfh ON qfh.family_id = qf.id
@@ -130,7 +153,7 @@ impl<'a> QuestionReactor<'a> {
                  GROUP BY qf.id, qf.family_code, qf.family_name, qf.subject_id, qf.topic_id,
                           qfh.freshness_score, qfh.calibration_score, qfh.quality_score,
                           qfh.health_status, qfh.recent_attempts, qfh.misconception_hit_count,
-                          qfa.recurrence_score, qfa.replacement_score",
+                          qfa.recurrence_score, qfa.coappearance_score, qfa.replacement_score",
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
@@ -158,7 +181,18 @@ impl<'a> QuestionReactor<'a> {
                     let recent_attempts = row.get::<_, i64>(13)?;
                     let misconception_hit_count = row.get::<_, i64>(14)?;
                     let recurrence_score = row.get::<_, i64>(15)?.clamp(0, 10_000) as BasisPoints;
-                    let replacement_score = row.get::<_, i64>(16)?.clamp(0, 10_000) as BasisPoints;
+                    let coappearance_score =
+                        row.get::<_, i64>(16)?.clamp(0, 10_000) as BasisPoints;
+                    let replacement_score = row.get::<_, i64>(17)?.clamp(0, 10_000) as BasisPoints;
+                    let pressure_signals = build_family_pressure_signals(
+                        recurrence_score,
+                        coappearance_score,
+                        replacement_score,
+                        row.get::<_, i64>(18)?,
+                        row.get::<_, Option<i64>>(19)?,
+                        latest_subject_year,
+                        subject_year_span,
+                    );
                     let family_choice = QuestionFamilyChoice {
                         family_id: row.get(0)?,
                         family_code: row.get(1)?,
@@ -180,6 +214,8 @@ impl<'a> QuestionReactor<'a> {
                         rationale: generation_priority_rationale(
                             &health_status,
                             calibration_score,
+                            pressure_signals.inverse_pressure_score,
+                            pressure_signals.comeback_score,
                             replacement_score,
                             recurrence_score,
                             recent_attempts,
@@ -189,6 +225,8 @@ impl<'a> QuestionReactor<'a> {
                             &health_status,
                             calibration_score,
                             quality_score,
+                            pressure_signals.inverse_pressure_score,
+                            pressure_signals.comeback_score,
                             replacement_score,
                             misconception_hit_count,
                         )
@@ -199,7 +237,10 @@ impl<'a> QuestionReactor<'a> {
                             calibration_score,
                             quality_score,
                             recurrence_score,
+                            coappearance_score,
                             replacement_score,
+                            pressure_signals.inverse_pressure_score,
+                            pressure_signals.comeback_score,
                             recent_attempts,
                             slot_spec.max_generated_share,
                         ),
@@ -229,6 +270,7 @@ impl<'a> QuestionReactor<'a> {
                         .fit_score
                         .cmp(&left.family_choice.fit_score),
                 )
+                .then(right.recurrence_score.cmp(&left.recurrence_score))
                 .then(right.replacement_score.cmp(&left.replacement_score))
                 .then(
                     left.family_choice
@@ -294,7 +336,24 @@ impl<'a> QuestionReactor<'a> {
         )) = candidate
         {
             if let Some(family_choice) = self.load_family_choice_for_slot(family_id, slot_spec)? {
-                let (variant_mode, rationale) = if misconception_hits > 0 {
+                let pressure_signals =
+                    self.load_family_pressure_signals(slot_spec.subject_id, family_id)?;
+                let family_health = self.get_family_health(family_id)?;
+                let health_status = family_health
+                    .as_ref()
+                    .map(|health| health.health_status.as_str())
+                    .unwrap_or("warming");
+                let calibration_score = family_health
+                    .as_ref()
+                    .map(|health| health.calibration_score)
+                    .unwrap_or(5_200);
+                let pressure_is_high = pressure_signals
+                    .map(|signals| {
+                        signals.inverse_pressure_score >= 7_200
+                            || signals.comeback_score >= 6_700
+                    })
+                    .unwrap_or(false);
+                let (variant_mode, mut rationale) = if misconception_hits > 0 {
                     (
                         QuestionVariantMode::MisconceptionProbe,
                         format!(
@@ -302,13 +361,23 @@ impl<'a> QuestionReactor<'a> {
                             misconception_hits
                         ),
                     )
-                } else if wrong_attempts >= 2 || avg_response_time_ms >= 45_000 {
+                } else if wrong_attempts >= 2
+                    || avg_response_time_ms >= 45_000
+                    || health_status == "fragile"
+                    || calibration_score < 5_400
+                {
                     (
                         QuestionVariantMode::Rescue,
                         format!(
-                            "Student has {} misses across {} attempts in this family, so reduce load and rebuild the core pattern.",
-                            wrong_attempts, attempts
+                            "Student has {} misses across {} attempts in this family, and family health is {}, so reduce load and rebuild the core pattern.",
+                            wrong_attempts, attempts, health_status
                         ),
+                    )
+                } else if pressure_is_high {
+                    (
+                        QuestionVariantMode::RepresentationShift,
+                        "Student has seen this family before and paper-history pressure is high, so keep the logic stable but rehearse it under a fresh exam-like surface."
+                            .to_string(),
                     )
                 } else {
                     (
@@ -325,11 +394,35 @@ impl<'a> QuestionReactor<'a> {
                 } else {
                     300
                 };
+                if let Some(signals) = pressure_signals {
+                    if signals.comeback_score >= 6_700 {
+                        rationale.push_str(" Historical dormancy plus strong recurrence makes this family a credible comeback risk.");
+                    } else if signals.inverse_pressure_score >= 7_200 {
+                        rationale.push_str(" Past-paper inverse pressure is elevated, so this family should stay warm.");
+                    }
+                }
+                let calibration_gap = (10_000 - i64::from(calibration_score)).clamp(0, 10_000);
+                let health_pressure = match health_status {
+                    "fragile" => 1_800,
+                    "warming" => 950,
+                    "missing" => 2_100,
+                    "active" => 400,
+                    "gold" => 120,
+                    _ => 650,
+                };
+                let paper_pressure = pressure_signals
+                    .map(|signals| {
+                        i64::from(signals.inverse_pressure_score.max(signals.comeback_score)) / 5
+                    })
+                    .unwrap_or(0);
                 let priority_score = clamp_bp(
-                    3_200
+                    2_900
                         + wrong_attempts * 1_100
                         + misconception_hits * 1_500
                         + speed_pressure
+                        + health_pressure
+                        + (calibration_gap / 5)
+                        + paper_pressure
                         + ((10_000 - i64::from(family_choice.fit_score)) / 6),
                 ) as BasisPoints;
 
@@ -355,6 +448,75 @@ impl<'a> QuestionReactor<'a> {
                 "No student-specific failure trace exists yet, so start with the best family fit and a lower-load repair variant."
                     .to_string(),
         }))
+    }
+
+    fn load_subject_year_bounds(&self, subject_id: i64) -> EcoachResult<(i64, i64)> {
+        let latest_subject_year = self
+            .conn
+            .query_row(
+                "SELECT MAX(exam_year) FROM past_paper_sets WHERE subject_id = ?1",
+                [subject_id],
+                |row| row.get::<_, Option<i64>>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .unwrap_or(0);
+        let earliest_subject_year = self
+            .conn
+            .query_row(
+                "SELECT MIN(exam_year) FROM past_paper_sets WHERE subject_id = ?1",
+                [subject_id],
+                |row| row.get::<_, Option<i64>>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .unwrap_or(latest_subject_year);
+
+        Ok((latest_subject_year, (latest_subject_year - earliest_subject_year).max(1)))
+    }
+
+    fn load_family_pressure_signals(
+        &self,
+        subject_id: i64,
+        family_id: i64,
+    ) -> EcoachResult<Option<FamilyPressureSignals>> {
+        let (latest_subject_year, subject_year_span) = self.load_subject_year_bounds(subject_id)?;
+
+        self.conn
+            .query_row(
+                "SELECT
+                    COALESCE(qfa.recurrence_score, 0) AS recurrence_score,
+                    COALESCE(qfa.coappearance_score, 0) AS coappearance_score,
+                    COALESCE(qfa.replacement_score, 0) AS replacement_score,
+                    COALESCE((
+                        SELECT COUNT(DISTINCT ppql.paper_id)
+                        FROM past_paper_question_links ppql
+                        INNER JOIN questions history_q ON history_q.id = ppql.question_id
+                        WHERE history_q.family_id = ?1
+                    ), 0) AS paper_count,
+                    (
+                        SELECT MAX(pps.exam_year)
+                        FROM past_paper_question_links ppql
+                        INNER JOIN questions history_q ON history_q.id = ppql.question_id
+                        INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                        WHERE history_q.family_id = ?1
+                    ) AS last_seen_year
+                 FROM question_families qf
+                 LEFT JOIN question_family_analytics qfa ON qfa.family_id = qf.id
+                 WHERE qf.id = ?1",
+                [family_id],
+                |row| {
+                    Ok(build_family_pressure_signals(
+                        row.get::<_, i64>(0)?.clamp(0, 10_000) as BasisPoints,
+                        row.get::<_, i64>(1)?.clamp(0, 10_000) as BasisPoints,
+                        row.get::<_, i64>(2)?.clamp(0, 10_000) as BasisPoints,
+                        row.get::<_, i64>(3)?,
+                        row.get::<_, Option<i64>>(4)?,
+                        latest_subject_year,
+                        subject_year_span,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
     pub fn create_generation_request(
@@ -625,6 +787,322 @@ impl<'a> QuestionReactor<'a> {
         Ok(())
     }
 
+    // -----------------------------------------------------------------------
+    // Fission: create a generation request to split a question
+    // -----------------------------------------------------------------------
+
+    pub fn fission_question(
+        &self,
+        question_id: i64,
+    ) -> EcoachResult<Vec<GeneratedQuestionDraft>> {
+        let source = self.load_source_question(question_id)?.ok_or_else(|| {
+            EcoachError::NotFound("requested source question was not found".to_string())
+        })?;
+        let family_id = source.family_id;
+
+        let request = self.create_generation_request(&QuestionGenerationRequestInput {
+            slot_spec: QuestionSlotSpec {
+                subject_id: source.subject_id,
+                topic_id: Some(source.topic_id),
+                target_cognitive_demand: None,
+                target_question_format: Some(source.question_format.clone()),
+                max_generated_share: 100,
+            },
+            family_id: Some(family_id),
+            source_question_id: Some(question_id),
+            request_kind: "fission".into(),
+            variant_mode: QuestionVariantMode::Fission,
+            requested_count: 2,
+            rationale: Some("Split multi-step question into isolated sub-questions".into()),
+        })?;
+
+        self.process_generation_request(request.id)
+    }
+
+    // -----------------------------------------------------------------------
+    // Fusion: create a request to combine related questions
+    // -----------------------------------------------------------------------
+
+    pub fn fuse_questions(
+        &self,
+        question_ids: &[i64],
+    ) -> EcoachResult<Vec<GeneratedQuestionDraft>> {
+        if question_ids.len() < 2 {
+            return Err(EcoachError::Validation(
+                "fusion requires at least 2 questions".into(),
+            ));
+        }
+
+        let source = self.load_source_question(question_ids[0])?.ok_or_else(|| {
+            EcoachError::NotFound("requested source question was not found".to_string())
+        })?;
+        let family_id = source.family_id;
+
+        let request = self.create_generation_request(&QuestionGenerationRequestInput {
+            slot_spec: QuestionSlotSpec {
+                subject_id: source.subject_id,
+                topic_id: Some(source.topic_id),
+                target_cognitive_demand: None,
+                target_question_format: Some(source.question_format.clone()),
+                max_generated_share: 100,
+            },
+            family_id: Some(family_id),
+            source_question_id: Some(question_ids[0]),
+            request_kind: "fusion".into(),
+            variant_mode: QuestionVariantMode::Fusion,
+            requested_count: 1,
+            rationale: Some(format!(
+                "Combine {} related questions into synthesis question",
+                question_ids.len()
+            )),
+        })?;
+
+        self.process_generation_request(request.id)
+    }
+
+    // -----------------------------------------------------------------------
+    // Adversary: generate anti-gaming variants
+    // -----------------------------------------------------------------------
+
+    pub fn generate_adversary_variant(
+        &self,
+        question_id: i64,
+        student_id: i64,
+    ) -> EcoachResult<Option<Vec<GeneratedQuestionDraft>>> {
+        let source = self.load_source_question(question_id)?.ok_or_else(|| {
+            EcoachError::NotFound("requested source question was not found".to_string())
+        })?;
+        let family_id = source.family_id;
+
+        // Check if student shows memorization patterns on this family
+        let memorization_risk = self.detect_memorization_risk(student_id, family_id)?;
+        if !memorization_risk {
+            return Ok(None);
+        }
+
+        let request = self.create_generation_request(&QuestionGenerationRequestInput {
+            slot_spec: QuestionSlotSpec {
+                subject_id: source.subject_id,
+                topic_id: Some(source.topic_id),
+                target_cognitive_demand: None,
+                target_question_format: Some(source.question_format.clone()),
+                max_generated_share: 100,
+            },
+            family_id: Some(family_id),
+            source_question_id: Some(question_id),
+            request_kind: "adversary".into(),
+            variant_mode: QuestionVariantMode::Adversary,
+            requested_count: 1,
+            rationale: Some(format!(
+                "Student {} shows memorization risk on family {}",
+                student_id, family_id
+            )),
+        })?;
+
+        let drafts = self.process_generation_request(request.id)?;
+        Ok(Some(drafts))
+    }
+
+    /// Detect if a student has memorization risk on a family:
+    /// high accuracy + fast response time on repeated encounters.
+    pub fn detect_memorization_risk(
+        &self,
+        student_id: i64,
+        family_id: i64,
+    ) -> EcoachResult<bool> {
+        let result: Option<(i64, i64, i64)> = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*), SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END),
+                        COALESCE(AVG(response_time_ms), 0)
+                 FROM student_question_attempts sqa
+                 INNER JOIN questions q ON q.id = sqa.question_id
+                 WHERE sqa.student_id = ?1 AND q.family_id = ?2",
+                params![student_id, family_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        match result {
+            Some((attempts, correct, avg_time)) => {
+                let accuracy = if attempts > 0 {
+                    correct as f64 / attempts as f64
+                } else {
+                    0.0
+                };
+                Ok(attempts >= 3 && accuracy >= 0.90 && avg_time < 15_000)
+            }
+            None => Ok(false),
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Distractor health
+    // -----------------------------------------------------------------------
+
+    pub fn refresh_distractor_health(&self, question_id: i64) -> EcoachResult<()> {
+        let total_shown: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM student_question_attempts WHERE question_id = ?1",
+                [question_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+
+        if total_shown == 0 {
+            return Ok(());
+        }
+
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id FROM question_options WHERE question_id = ?1")
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let option_ids: Vec<i64> = stmt
+            .query_map([question_id], |row| row.get(0))
+            .map_err(|e| EcoachError::Storage(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        for option_id in option_ids {
+            let times_selected: i64 = self
+                .conn
+                .query_row(
+                    "SELECT COUNT(*) FROM student_question_attempts
+                     WHERE question_id = ?1 AND selected_option_id = ?2",
+                    params![question_id, option_id],
+                    |row| row.get(0),
+                )
+                .unwrap_or(0);
+
+            let selection_rate = if total_shown > 0 {
+                clamp_bp(((times_selected as f64 / total_shown as f64) * 10_000.0).round() as i64)
+            } else {
+                0
+            };
+
+            let is_dead = total_shown >= 10 && times_selected == 0;
+
+            self.conn
+                .execute(
+                    "INSERT OR REPLACE INTO distractor_health
+                        (option_id, question_id, times_selected, times_shown, selection_rate_bp, is_dead)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                    params![option_id, question_id, times_selected, total_shown, selection_rate as i64, is_dead as i64],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        }
+
+        Ok(())
+    }
+
+    pub fn list_dead_distractors(&self, family_id: i64) -> EcoachResult<Vec<(i64, i64)>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT dh.option_id, dh.question_id
+                 FROM distractor_health dh
+                 INNER JOIN questions q ON q.id = dh.question_id
+                 WHERE q.family_id = ?1 AND dh.is_dead = 1
+                 ORDER BY dh.times_shown DESC",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map([family_id], |row| Ok((row.get(0)?, row.get(1)?)))
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut result = Vec::new();
+        for row in rows {
+            result.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(result)
+    }
+
+    // -----------------------------------------------------------------------
+    // Quality gate: 7-check validation for generated questions
+    // -----------------------------------------------------------------------
+
+    pub fn run_quality_gates(
+        &self,
+        draft: &GeneratedQuestionDraft,
+    ) -> EcoachResult<QualityGateResult> {
+        let mut passed = true;
+        let mut failures = Vec::new();
+
+        // 1. Single correctness: stem must not be empty
+        if draft.question.stem.trim().is_empty() {
+            passed = false;
+            failures.push("empty_stem".into());
+        }
+
+        // 2. Clarity / anti-ambiguity: stem length check
+        if draft.question.stem.len() < 10 {
+            passed = false;
+            failures.push("stem_too_short".into());
+        }
+
+        // 3. Misconception integrity: at least one correct option
+        if !draft.options.is_empty() {
+            let has_correct = draft.options.iter().any(|o| o.is_correct);
+            if !has_correct {
+                passed = false;
+                failures.push("no_correct_option".into());
+            }
+            let correct_count = draft.options.iter().filter(|o| o.is_correct).count();
+            if correct_count > 1 {
+                passed = false;
+                failures.push("multiple_correct_options".into());
+            }
+        }
+
+        // 4. Novelty: check near-duplicate
+        if let Some(family_id) = draft.question.family_id {
+            let question_service = QuestionService::new(self.conn);
+            let fingerprint = fingerprint_for(&draft.question.stem, &draft.options);
+            let dup = self.detect_duplicate_candidate(
+                &question_service,
+                &draft.question.stem,
+                &fingerprint,
+                family_id,
+                draft.question.topic_id,
+            )?;
+            if dup.is_exact_duplicate {
+                passed = false;
+                failures.push("exact_duplicate".into());
+            }
+        }
+
+        // 5. Difficulty fit: must be in valid range
+        if draft.question.difficulty_level > 10_000 {
+            passed = false;
+            failures.push("difficulty_out_of_range".into());
+        }
+
+        // 6. Traceability: must have a source question
+        if draft.source_question_id == 0 {
+            passed = false;
+            failures.push("no_traceability".into());
+        }
+
+        // 7. Coverage contribution: variant mode must be recognized
+        let valid_modes = [
+            "isomorphic", "representation_shift", "misconception_probe",
+            "rescue", "stretch", "fission", "fusion", "adversary",
+        ];
+        if !valid_modes.contains(&draft.variant_mode.as_str()) {
+            failures.push("unknown_variant_mode".into());
+        }
+
+        Ok(QualityGateResult {
+            passed,
+            failures,
+            checks_run: 7,
+        })
+    }
+
     fn load_family_choice_for_slot(
         &self,
         family_id: i64,
@@ -764,7 +1242,10 @@ fn compute_generation_priority_score(
     calibration_score: BasisPoints,
     quality_score: BasisPoints,
     recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
     replacement_score: BasisPoints,
+    inverse_pressure_score: BasisPoints,
+    comeback_score: BasisPoints,
     recent_attempts: i64,
     max_generated_share: BasisPoints,
 ) -> BasisPoints {
@@ -796,11 +1277,14 @@ fn compute_generation_priority_score(
     };
 
     clamp_bp(
-        ((0.30 * family_choice.fit_score as f64)
-            + (0.22 * replacement_score as f64)
-            + (0.14 * recurrence_score as f64)
-            + (0.14 * calibration_gap as f64)
-            + (0.10 * inventory_pressure as f64)
+        ((0.28 * family_choice.fit_score as f64)
+            + (0.16 * inverse_pressure_score as f64)
+            + (0.12 * comeback_score as f64)
+            + (0.10 * replacement_score as f64)
+            + (0.08 * recurrence_score as f64)
+            + (0.06 * coappearance_score as f64)
+            + (0.12 * calibration_gap as f64)
+            + (0.08 * inventory_pressure as f64)
             + (0.05 * freshness_gap as f64)
             + (0.03 * quality_gap as f64)
             + (0.02 * generation_headroom as f64))
@@ -813,15 +1297,19 @@ fn recommended_generation_variant(
     health_status: &str,
     calibration_score: BasisPoints,
     quality_score: BasisPoints,
+    inverse_pressure_score: BasisPoints,
+    comeback_score: BasisPoints,
     replacement_score: BasisPoints,
     misconception_hit_count: i64,
 ) -> &'static str {
     if misconception_hit_count > 0 || health_status == "fragile" {
         QuestionVariantMode::MisconceptionProbe.as_str()
+    } else if calibration_score < 5_200 || quality_score < 5_600 {
+        QuestionVariantMode::Rescue.as_str()
+    } else if inverse_pressure_score >= 7_300 || comeback_score >= 6_900 {
+        QuestionVariantMode::RepresentationShift.as_str()
     } else if calibration_score < 5_800 {
         QuestionVariantMode::RepresentationShift.as_str()
-    } else if quality_score < 6_200 {
-        QuestionVariantMode::Rescue.as_str()
     } else if replacement_score >= 7_200 {
         QuestionVariantMode::Stretch.as_str()
     } else {
@@ -832,6 +1320,8 @@ fn recommended_generation_variant(
 fn generation_priority_rationale(
     health_status: &str,
     calibration_score: BasisPoints,
+    inverse_pressure_score: BasisPoints,
+    comeback_score: BasisPoints,
     replacement_score: BasisPoints,
     recurrence_score: BasisPoints,
     recent_attempts: i64,
@@ -845,12 +1335,93 @@ fn generation_priority_rationale(
     } else if recent_attempts < 2 || calibration_score < 5_800 {
         "Family has thin calibration evidence, so it should be expanded with fresh traced variants."
             .to_string()
+    } else if comeback_score >= 6_900 {
+        "Past-paper dormancy and historical strength both signal comeback pressure, so this family should stay warm."
+            .to_string()
+    } else if inverse_pressure_score >= 7_300 {
+        "Past-paper inverse pressure is elevated, so this family deserves fresh variants before it reappears."
+            .to_string()
     } else if replacement_score >= 7_200 && recurrence_score >= 5_000 {
         "Past-paper pressure suggests this family is a comeback risk and should stay warm."
             .to_string()
     } else {
         "Family is still useful for coverage, but it does not carry the strongest urgency signal."
             .to_string()
+    }
+}
+
+fn build_family_pressure_signals(
+    recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
+    replacement_score: BasisPoints,
+    paper_count: i64,
+    last_seen_year: Option<i64>,
+    latest_subject_year: i64,
+    subject_year_span: i64,
+) -> FamilyPressureSignals {
+    FamilyPressureSignals {
+        inverse_pressure_score: composite_inverse_pressure(
+            recurrence_score,
+            coappearance_score,
+            replacement_score,
+        ),
+        comeback_score: compute_comeback_pressure(
+            recurrence_score,
+            coappearance_score,
+            replacement_score,
+            paper_count,
+            last_seen_year,
+            latest_subject_year,
+            subject_year_span,
+        ),
+    }
+}
+
+fn composite_inverse_pressure(
+    recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
+    replacement_score: BasisPoints,
+) -> BasisPoints {
+    clamp_bp(
+        (0.45 * replacement_score as f64
+            + 0.30 * coappearance_score as f64
+            + 0.25 * recurrence_score as f64)
+            .round() as i64,
+    ) as BasisPoints
+}
+
+fn compute_comeback_pressure(
+    recurrence_score: BasisPoints,
+    coappearance_score: BasisPoints,
+    replacement_score: BasisPoints,
+    paper_count: i64,
+    last_seen_year: Option<i64>,
+    latest_subject_year: i64,
+    subject_year_span: i64,
+) -> BasisPoints {
+    let dormant_years =
+        latest_subject_year.saturating_sub(last_seen_year.unwrap_or(latest_subject_year));
+    let dormant_score = scale_score(dormant_years, subject_year_span.max(1));
+    let paper_breadth_score = scale_score(paper_count, 6);
+    let historical_strength_score = clamp_bp(
+        ((0.60 * recurrence_score as f64)
+            + (0.25 * coappearance_score as f64)
+            + (0.15 * paper_breadth_score as f64))
+            .round() as i64,
+    );
+
+    clamp_bp(
+        ((f64::from(historical_strength_score) * f64::from(dormant_score)) / 10_000.0).round()
+            as i64
+            + (i64::from(replacement_score) / 4),
+    ) as BasisPoints
+}
+
+fn scale_score(value: i64, max_value: i64) -> BasisPoints {
+    if value <= 0 || max_value <= 0 {
+        0
+    } else {
+        clamp_bp(((value as f64 / max_value as f64) * 10_000.0).round() as i64) as BasisPoints
     }
 }
 
@@ -861,6 +1432,9 @@ fn variant_multiplier(variant_mode: QuestionVariantMode, offset: i64) -> i64 {
         QuestionVariantMode::RepresentationShift => 4 + offset.rem_euclid(2),
         QuestionVariantMode::MisconceptionProbe => 3,
         QuestionVariantMode::Stretch => 5 + offset.rem_euclid(2),
+        QuestionVariantMode::Fission => 2 + offset.rem_euclid(3),
+        QuestionVariantMode::Fusion => 6 + offset.rem_euclid(2),
+        QuestionVariantMode::Adversary => 4 + offset.rem_euclid(3),
     }
 }
 
@@ -870,6 +1444,9 @@ fn variant_mode_graph_relation(variant_mode: QuestionVariantMode) -> &'static st
         QuestionVariantMode::Isomorphic => "isomorphic_cluster",
         QuestionVariantMode::Stretch | QuestionVariantMode::Rescue => "difficulty_ladder",
         QuestionVariantMode::MisconceptionProbe => "misconception_pair",
+        QuestionVariantMode::Fission => "fission",
+        QuestionVariantMode::Fusion => "fusion",
+        QuestionVariantMode::Adversary => "adversary",
     }
 }
 
@@ -905,6 +1482,15 @@ fn rewrite_stem_for_mode(stem: &str, variant_mode: QuestionVariantMode, ordinal:
                 format!("{} (variant {})", stem, ordinal)
             }
         }
+        QuestionVariantMode::Fission => {
+            format!("Focus on one part of the problem: {}", stem)
+        }
+        QuestionVariantMode::Fusion => {
+            format!("Combine the ideas: {}", stem)
+        }
+        QuestionVariantMode::Adversary => {
+            format!("Look carefully at the details: {}", stem)
+        }
     }
 }
 
@@ -919,6 +1505,9 @@ fn fallback_variant_stem(stem: &str, variant_mode: QuestionVariantMode, ordinal:
             format!("Choose the matching idea in a new wording: {}", stem)
         }
         QuestionVariantMode::Isomorphic => format!("{} (family variant {})", stem, ordinal),
+        QuestionVariantMode::Fission => format!("Isolate one step: {}", stem),
+        QuestionVariantMode::Fusion => format!("Synthesize the combined idea: {}", stem),
+        QuestionVariantMode::Adversary => format!("Watch for the twist: {}", stem),
     }
 }
 
@@ -1344,6 +1933,19 @@ mod tests {
             [],
         )
         .expect("repair analytics should insert");
+        conn.execute(
+            "INSERT INTO past_paper_sets (id, subject_id, exam_year, title)
+             VALUES (90010, ?1, 2021, 'Paper 2021'),
+                    (90011, ?1, 2025, 'Paper 2025')",
+            params![subject_id],
+        )
+        .expect("past paper sets should insert");
+        conn.execute(
+            "INSERT INTO past_paper_question_links (paper_id, question_id, section_label, question_number)
+             VALUES (90010, 900100, 'A', '1')",
+            [],
+        )
+        .expect("past paper link should insert");
 
         let reactor = QuestionReactor::new(&conn);
         let priorities = reactor
@@ -1366,6 +1968,117 @@ mod tests {
             QuestionVariantMode::MisconceptionProbe.as_str()
         );
         assert!(priorities[0].priority_score >= priorities[0].family_choice.fit_score);
+        assert!(priorities[0].rationale.contains("Past-paper"));
+    }
+
+    #[test]
+    fn remediation_plan_surfaces_past_paper_pressure_for_exam_relevant_family() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+        let (question_id, family_id): (i64, i64) = conn
+            .query_row(
+                "SELECT id, family_id
+                 FROM questions
+                 WHERE topic_id = ?1 AND family_id IS NOT NULL
+                 ORDER BY id ASC
+                 LIMIT 1",
+                [topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("question family should exist");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt)
+             VALUES ('student', 'Exam', 'hash', 'salt')",
+            [],
+        )
+        .expect("student account should insert");
+        let student_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO question_family_health (
+                family_id, total_instances, generated_instances, active_instances, recent_attempts,
+                recent_correct_attempts, avg_response_time_ms, misconception_hit_count,
+                freshness_score, calibration_score, quality_score, health_status
+             ) VALUES (?1, 3, 0, 3, 2, 1, 34000, 0, 6800, 7300, 7600, 'active')
+             ON CONFLICT(family_id) DO UPDATE SET
+                recent_attempts = excluded.recent_attempts,
+                recent_correct_attempts = excluded.recent_correct_attempts,
+                avg_response_time_ms = excluded.avg_response_time_ms,
+                freshness_score = excluded.freshness_score,
+                calibration_score = excluded.calibration_score,
+                quality_score = excluded.quality_score,
+                health_status = excluded.health_status",
+            [family_id],
+        )
+        .expect("family health should upsert");
+        conn.execute(
+            "INSERT INTO question_family_analytics (
+                family_id, recurrence_score, coappearance_score, replacement_score
+             ) VALUES (?1, 7800, 7100, 9100)
+             ON CONFLICT(family_id) DO UPDATE SET
+                recurrence_score = excluded.recurrence_score,
+                coappearance_score = excluded.coappearance_score,
+                replacement_score = excluded.replacement_score",
+            [family_id],
+        )
+        .expect("family analytics should upsert");
+        conn.execute(
+            "INSERT INTO past_paper_sets (id, subject_id, exam_year, title)
+             VALUES (91000, ?1, 2022, 'Paper 2022'),
+                    (91001, ?1, 2025, 'Paper 2025')",
+            params![subject_id],
+        )
+        .expect("past paper sets should insert");
+        conn.execute(
+            "INSERT INTO past_paper_question_links (paper_id, question_id, section_label, question_number)
+             VALUES (91000, ?1, 'A', '2')",
+            [question_id],
+        )
+        .expect("past paper link should insert");
+        conn.execute(
+            "INSERT INTO student_question_attempts (
+                student_id, question_id, started_at, submitted_at, response_time_ms,
+                selected_option_id, is_correct, misconception_triggered_id
+             ) VALUES (?1, ?2, datetime('now'), datetime('now'), 32000, NULL, 0, NULL)",
+            params![student_id, question_id],
+        )
+        .expect("attempt should insert");
+
+        let reactor = QuestionReactor::new(&conn);
+        let plan = reactor
+            .recommend_remediation_plan(
+                student_id,
+                &QuestionSlotSpec {
+                    subject_id,
+                    topic_id: Some(topic_id),
+                    target_cognitive_demand: Some("recognition".to_string()),
+                    target_question_format: Some("mcq".to_string()),
+                    max_generated_share: 7_000,
+                },
+            )
+            .expect("remediation plan should compute")
+            .expect("remediation plan should exist");
+
+        assert_eq!(
+            plan.variant_mode,
+            QuestionVariantMode::RepresentationShift.as_str()
+        );
+        assert!(plan.rationale.contains("Past-paper") || plan.rationale.contains("comeback"));
     }
 
     fn open_test_database() -> Connection {
@@ -1734,6 +2447,9 @@ impl<'a> QuestionReactor<'a> {
                 (source_question.difficulty_level + 900).min(9_000)
             }
             QuestionVariantMode::Isomorphic => source_question.difficulty_level,
+            QuestionVariantMode::Fission => (source_question.difficulty_level - 800).max(1_200),
+            QuestionVariantMode::Fusion => (source_question.difficulty_level + 1_200).min(9_500),
+            QuestionVariantMode::Adversary => (source_question.difficulty_level + 500).min(9_000),
         };
         let estimated_time_seconds = match variant_mode {
             QuestionVariantMode::Rescue => (source_question.estimated_time_seconds - 10).max(20),
@@ -1765,6 +2481,15 @@ impl<'a> QuestionReactor<'a> {
             }
             QuestionVariantMode::Stretch => {
                 "Raised the demand with a denser but still family-faithful variant".to_string()
+            }
+            QuestionVariantMode::Fission => {
+                "Split a multi-step question into an isolated sub-question".to_string()
+            }
+            QuestionVariantMode::Fusion => {
+                format!("Fused related questions into a synthesis variant with multiplier {}", multiplier)
+            }
+            QuestionVariantMode::Adversary => {
+                "Generated an anti-gaming adversary variant with shuffled surface features".to_string()
             }
         };
 

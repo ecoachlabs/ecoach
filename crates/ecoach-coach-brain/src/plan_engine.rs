@@ -4,6 +4,7 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
+use crate::journey::JourneyService;
 use crate::readiness_engine::ReadinessEngine;
 use crate::topic_case::{TopicCase, list_priority_topic_cases};
 
@@ -72,6 +73,38 @@ struct MissionBlueprint {
     target_minutes: i64,
     steps: Value,
     success_criteria: Value,
+}
+
+#[derive(Debug, Clone)]
+struct ActiveJourneyStation {
+    route_id: i64,
+    route_type: String,
+    target_exam: Option<String>,
+    station_id: i64,
+    station_code: String,
+    station_type: String,
+    topic_id: Option<i64>,
+}
+
+#[derive(Debug, Clone)]
+struct MissionJourneyBinding {
+    route_id: i64,
+    station_id: i64,
+    station_code: String,
+    station_type: String,
+}
+
+#[derive(Debug, Clone)]
+struct JourneyMissionFeedback {
+    route_id: i64,
+    route_status: String,
+    transition: &'static str,
+    completed_station_code: String,
+    completed_station_type: String,
+    retry_count: i64,
+    active_station_code: Option<String>,
+    active_station_type: Option<String>,
+    active_topic_id: Option<i64>,
 }
 
 impl<'a> PlanEngine<'a> {
@@ -498,12 +531,19 @@ impl<'a> PlanEngine<'a> {
                 "student_id": mission.student_id,
             }),
         ))?;
+        let journey_feedback = self.sync_journey_progress_from_mission(
+            mission_id,
+            &mission,
+            &outcome,
+            &mission_status,
+        )?;
         self.apply_mission_feedback_to_plan(
             mission_id,
             &mission,
             &outcome,
             &mission_status,
             prior_evidence_count,
+            journey_feedback.as_ref(),
         )?;
 
         self.get_pending_mission_review(mission.student_id)?
@@ -603,6 +643,67 @@ impl<'a> PlanEngine<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
+    fn load_active_journey_station(
+        &self,
+        student_id: i64,
+        topic_cases: &[TopicCase],
+        plan_day_phase: &str,
+    ) -> EcoachResult<Option<ActiveJourneyStation>> {
+        if topic_cases.is_empty() {
+            return Ok(None);
+        }
+        let topic_order = topic_cases
+            .iter()
+            .enumerate()
+            .map(|(index, case)| (case.topic_id, index as i64))
+            .collect::<std::collections::HashMap<_, _>>();
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT jr.id, jr.route_type, jr.target_exam,
+                        js.id, js.station_code, js.station_type, js.topic_id
+                 FROM journey_routes jr
+                 INNER JOIN journey_stations js ON js.route_id = jr.id
+                 WHERE jr.student_id = ?1
+                   AND jr.status = 'active'
+                   AND js.status = 'active'
+                 ORDER BY jr.id DESC, js.sequence_no ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([student_id], |row| {
+                Ok(ActiveJourneyStation {
+                    route_id: row.get(0)?,
+                    route_type: row.get(1)?,
+                    target_exam: row.get(2)?,
+                    station_id: row.get(3)?,
+                    station_code: row.get(4)?,
+                    station_type: row.get(5)?,
+                    topic_id: row.get(6)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut best: Option<(i64, ActiveJourneyStation)> = None;
+        for row in rows {
+            let station = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let Some(topic_id) = station.topic_id else {
+                continue;
+            };
+            let Some(topic_rank) = topic_order.get(&topic_id) else {
+                continue;
+            };
+            let fit_score = station_fit_score(&station.station_type, plan_day_phase);
+            let score = fit_score + ((topic_cases.len() as i64 - *topic_rank).max(1) * 10);
+            match &best {
+                Some((best_score, _)) if *best_score >= score => {}
+                _ => best = Some((score, station)),
+            }
+        }
+
+        Ok(best.map(|(_, station)| station))
+    }
+
     fn build_mission_blueprint(
         &self,
         student_id: i64,
@@ -610,9 +711,20 @@ impl<'a> PlanEngine<'a> {
         target_minutes: i64,
         topic_cases: &[TopicCase],
     ) -> EcoachResult<MissionBlueprint> {
-        let mission_case = topic_cases
-            .iter()
-            .find(|case| is_priority_repair_case(case))
+        let journey_station =
+            self.load_active_journey_station(student_id, topic_cases, plan_day_phase)?;
+        let mission_case = journey_station
+            .as_ref()
+            .and_then(|station| {
+                station
+                    .topic_id
+                    .and_then(|topic_id| topic_cases.iter().find(|case| case.topic_id == topic_id))
+            })
+            .or_else(|| {
+                topic_cases
+                    .iter()
+                    .find(|case| is_priority_repair_case(case))
+            })
             .or_else(|| {
                 if plan_day_phase == "review_day" {
                     topic_cases
@@ -652,6 +764,17 @@ impl<'a> PlanEngine<'a> {
             &momentum,
             exam_days_remaining,
         )?;
+        let activity_type = journey_station
+            .as_ref()
+            .map(|station| {
+                align_activity_type_with_station(
+                    activity_type,
+                    &station.station_type,
+                    mission_case,
+                    exam_days_remaining,
+                )
+            })
+            .unwrap_or(activity_type);
         let title = mission_title_for_activity(activity_type);
         let target_minutes =
             adaptive_target_minutes(target_minutes, mission_case, &momentum, activity_type);
@@ -662,6 +785,7 @@ impl<'a> PlanEngine<'a> {
             &momentum,
             exam_days_remaining,
             activity_type,
+            journey_station.as_ref(),
         );
         let steps = json!({
             "plan_day_phase": plan_day_phase,
@@ -686,6 +810,15 @@ impl<'a> PlanEngine<'a> {
                 "recovery_need_score": momentum.recovery_need_score,
                 "streak_days": momentum.streak_days,
             },
+            "journey": journey_station.as_ref().map(|station| json!({
+                "route_id": station.route_id,
+                "route_type": station.route_type,
+                "target_exam": station.target_exam,
+                "station_id": station.station_id,
+                "station_code": station.station_code,
+                "station_type": station.station_type,
+                "topic_id": station.topic_id,
+            })),
             "steps": mission_steps_for_activity(activity_type, mission_case),
         });
         let success_criteria = json!({
@@ -695,6 +828,8 @@ impl<'a> PlanEngine<'a> {
             "max_avg_latency_ms": target_latency_for_activity(activity_type),
             "proof_goal": proof_goal_for_activity(activity_type, mission_case),
             "review_due_expected": matches!(activity_type, "memory_reactivation" | "review"),
+            "journey_station_type": journey_station.as_ref().map(|station| station.station_type.clone()),
+            "journey_station_code": journey_station.as_ref().map(|station| station.station_code.clone()),
         });
 
         Ok(MissionBlueprint {
@@ -716,6 +851,7 @@ impl<'a> PlanEngine<'a> {
         outcome: &SessionOutcome,
         mission_status: &str,
         prior_evidence_count: i64,
+        journey_feedback: Option<&JourneyMissionFeedback>,
     ) -> EcoachResult<()> {
         let has_open_plan: bool = self
             .conn
@@ -737,6 +873,11 @@ impl<'a> PlanEngine<'a> {
         let timed_collapse = outcome.timed_accuracy.unwrap_or(10_000) < 5_500;
         let rewrite_reason = if mission_status == "repair_required" {
             Some("mission_repair_required")
+        } else if journey_feedback
+            .map(|feedback| feedback.retry_count >= 2)
+            .unwrap_or(false)
+        {
+            Some("journey_station_stalled")
         } else if mission_status == "review_due" && (timed_collapse || prior_evidence_count >= 2) {
             Some("mission_regression_requires_replan")
         } else {
@@ -761,32 +902,65 @@ impl<'a> PlanEngine<'a> {
             return Ok(());
         }
 
-        let carryover_minutes = match mission_status {
-            "review_due" => {
-                if mission.activity_type == "memory_reactivation" {
-                    20
-                } else {
-                    15
+        let (phase_override, carryover_minutes) = if let Some(feedback) = journey_feedback {
+            let phase = feedback
+                .active_station_type
+                .as_deref()
+                .map(plan_phase_for_station_type)
+                .or_else(|| {
+                    if mission_status == "review_due"
+                        && mission.activity_type == "memory_reactivation"
+                    {
+                        Some("review_day")
+                    } else {
+                        None
+                    }
+                });
+            let carryover = match feedback.transition {
+                "retry_required" => carryover_minutes_for_station_retry(
+                    feedback
+                        .active_station_type
+                        .as_deref()
+                        .unwrap_or(&feedback.completed_station_type),
+                    mission_status,
+                ),
+                "advanced" => carryover_minutes_for_next_station(
+                    feedback.active_station_type.as_deref(),
+                    mission_status,
+                ),
+                "route_completed" => 0,
+                _ => 0,
+            };
+            (phase, carryover)
+        } else {
+            let phase = if mission.activity_type == "memory_reactivation" {
+                Some("review_day")
+            } else {
+                None
+            };
+            let carryover = match mission_status {
+                "review_due" => {
+                    if mission.activity_type == "memory_reactivation" {
+                        20
+                    } else {
+                        15
+                    }
                 }
-            }
-            "partial" => 10,
-            _ => 0,
+                "partial" => 10,
+                _ => 0,
+            };
+            (phase, carryover)
         };
-        if carryover_minutes == 0 {
+        if carryover_minutes == 0 && phase_override.is_none() {
             return Ok(());
         }
 
-        let phase_override = if mission.activity_type == "memory_reactivation" {
-            Some("review_day")
-        } else {
-            None
-        };
         let updated_rows = self
             .conn
             .execute(
                 "UPDATE coach_plan_days
                  SET carryover_minutes = carryover_minutes + ?1,
-                     target_minutes = target_minutes + ?1,
+                     target_minutes = MAX(target_minutes, 15) + ?1,
                      phase = COALESCE(?2, phase)
                  WHERE id = (
                     SELECT cpd.id
@@ -810,14 +984,124 @@ impl<'a> PlanEngine<'a> {
                     "student_id": mission.student_id,
                     "topic_id": mission.topic_id,
                     "mission_status": mission_status,
-                    "mode": "carryover",
+                    "mode": if journey_feedback.is_some() { "journey_alignment" } else { "carryover" },
                     "carryover_minutes": carryover_minutes,
                     "phase_override": phase_override,
+                    "journey_feedback": journey_feedback.as_ref().map(|feedback| json!({
+                        "route_id": feedback.route_id,
+                        "route_status": feedback.route_status,
+                        "transition": feedback.transition,
+                        "completed_station_code": feedback.completed_station_code,
+                        "completed_station_type": feedback.completed_station_type,
+                        "retry_count": feedback.retry_count,
+                        "active_station_code": feedback.active_station_code,
+                        "active_station_type": feedback.active_station_type,
+                        "active_topic_id": feedback.active_topic_id,
+                    })),
                 }),
             ))?;
         }
 
         Ok(())
+    }
+
+    fn sync_journey_progress_from_mission(
+        &self,
+        mission_id: i64,
+        mission: &MissionContext,
+        outcome: &SessionOutcome,
+        mission_status: &str,
+    ) -> EcoachResult<Option<JourneyMissionFeedback>> {
+        let Some(binding) = mission_journey_binding(&mission.steps) else {
+            return Ok(None);
+        };
+        let evidence =
+            self.build_journey_station_evidence(mission_id, mission, outcome, mission_status)?;
+        let snapshot =
+            JourneyService::new(self.conn).complete_station(binding.station_id, &evidence)?;
+        let active_station = snapshot
+            .stations
+            .iter()
+            .find(|station| station.status == "active");
+        let retry_count = active_station
+            .filter(|station| station.id == binding.station_id)
+            .and_then(|station| station.evidence.get("retry_count"))
+            .and_then(Value::as_i64)
+            .unwrap_or(0);
+        let transition = if snapshot.route.status == "completed" {
+            "route_completed"
+        } else if active_station
+            .map(|station| station.id == binding.station_id)
+            .unwrap_or(false)
+        {
+            "retry_required"
+        } else {
+            "advanced"
+        };
+
+        Ok(Some(JourneyMissionFeedback {
+            route_id: binding.route_id,
+            route_status: snapshot.route.status.clone(),
+            transition,
+            completed_station_code: binding.station_code,
+            completed_station_type: binding.station_type,
+            retry_count,
+            active_station_code: active_station.map(|station| station.station_code.clone()),
+            active_station_type: active_station.map(|station| station.station_type.clone()),
+            active_topic_id: active_station.and_then(|station| station.topic_id),
+        }))
+    }
+
+    fn build_journey_station_evidence(
+        &self,
+        mission_id: i64,
+        mission: &MissionContext,
+        outcome: &SessionOutcome,
+        mission_status: &str,
+    ) -> EcoachResult<Value> {
+        let mastery_score = match mission.topic_id {
+            Some(topic_id) => self
+                .conn
+                .query_row(
+                    "SELECT mastery_score
+                     FROM student_topic_states
+                     WHERE student_id = ?1 AND topic_id = ?2",
+                    params![mission.student_id, topic_id],
+                    |row| row.get::<_, Option<i64>>(0),
+                )
+                .optional()
+                .map_err(|err| EcoachError::Storage(err.to_string()))?
+                .flatten(),
+            None => None,
+        };
+        let readiness_score = match mission.subject_id {
+            Some(subject_id) => Some(
+                ReadinessEngine::new(self.conn)
+                    .build_subject_readiness(mission.student_id, subject_id)?
+                    .readiness_score as i64,
+            ),
+            None => None,
+        };
+
+        Ok(json!({
+            "status": if mission_status == "completed" { "passed" } else { "needs_retry" },
+            "mission_id": mission_id,
+            "mission_status": mission_status,
+            "activity_type": mission.activity_type,
+            "answered_questions": outcome.attempt_count,
+            "attempt_count": outcome.attempt_count,
+            "correct_count": outcome.correct_count,
+            "accuracy_score": outcome.accuracy_score.map(|score| score as i64),
+            "timed_accuracy": outcome.timed_accuracy.map(|score| score as i64),
+            "avg_latency_ms": outcome.avg_latency_ms,
+            "timed_success": mission_status == "completed"
+                && outcome.timed_accuracy.unwrap_or(0) >= 7_000,
+            "delayed_recall_passed": mission_status == "completed"
+                && matches!(mission.activity_type.as_str(), "memory_reactivation" | "review"),
+            "mastery_score": mastery_score,
+            "readiness_score": readiness_score,
+            "misconception_tags": outcome.misconception_tags,
+        }))
     }
 
     fn load_plan_carryover_topic_ids(
@@ -1024,11 +1308,12 @@ impl<'a> PlanEngine<'a> {
     fn load_mission_context(&self, mission_id: i64) -> EcoachResult<MissionContext> {
         self.conn
             .query_row(
-                "SELECT plan_day_id, student_id, title, reason, subject_id, primary_topic_id, activity_type
+                "SELECT plan_day_id, student_id, title, reason, subject_id, primary_topic_id, activity_type, steps_json
                  FROM coach_missions
                  WHERE id = ?1",
                 [mission_id],
                 |row| {
+                    let steps_json: String = row.get(7)?;
                     Ok(MissionContext {
                         plan_day_id: row.get(0)?,
                         student_id: row.get(1)?,
@@ -1037,6 +1322,13 @@ impl<'a> PlanEngine<'a> {
                         subject_id: row.get(4)?,
                         topic_id: row.get(5)?,
                         activity_type: row.get(6)?,
+                        steps: serde_json::from_str::<Value>(&steps_json).map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                7,
+                                rusqlite::types::Type::Text,
+                                Box::new(err),
+                            )
+                        })?,
                     })
                 },
             )
@@ -1333,6 +1625,7 @@ struct MissionContext {
     subject_id: Option<i64>,
     topic_id: Option<i64>,
     activity_type: String,
+    steps: Value,
 }
 
 #[derive(Debug)]
@@ -1522,6 +1815,7 @@ fn mission_reason(
     momentum: &SubjectMomentumProfile,
     exam_days_remaining: Option<i64>,
     activity_type: &str,
+    journey_station: Option<&ActiveJourneyStation>,
 ) -> String {
     let mut reasons = vec![topic_case.recommended_intervention.reason.clone()];
     if plan_day_phase == "review_day" {
@@ -1554,6 +1848,13 @@ fn mission_reason(
                 snapshot.due_memory_count
             ));
         }
+    }
+    if let Some(station) = journey_station {
+        reasons.push(format!(
+            "Journey is actively routing this topic through a {} station ({}).",
+            station.station_type.replace('_', " "),
+            station.station_code
+        ));
     }
     reasons.join(" ")
 }
@@ -1676,6 +1977,109 @@ fn proof_goal_for_activity(activity_type: &str, topic_case: &TopicCase) -> Strin
     }
 }
 
+fn align_activity_type_with_station(
+    default_activity: &'static str,
+    station_type: &str,
+    topic_case: &TopicCase,
+    exam_days_remaining: Option<i64>,
+) -> &'static str {
+    match station_type {
+        "review" => {
+            if is_review_priority_case(topic_case) {
+                "memory_reactivation"
+            } else {
+                "review"
+            }
+        }
+        "foundation" => {
+            if topic_case.mastery_score < 3500
+                || topic_case.primary_hypothesis_code == "knowledge_gap"
+            {
+                "learn"
+            } else {
+                "repair"
+            }
+        }
+        "repair" => {
+            if topic_case.primary_hypothesis_code == "conceptual_confusion" {
+                "worked_example"
+            } else {
+                "repair"
+            }
+        }
+        "checkpoint" => "checkpoint",
+        "performance" => {
+            if topic_case.pressure_collapse_index >= 5500
+                || exam_days_remaining.map(|days| days <= 7).unwrap_or(false)
+            {
+                "pressure_conditioning"
+            } else if default_activity == "speed_drill" {
+                "speed_drill"
+            } else {
+                "mixed_test"
+            }
+        }
+        _ => default_activity,
+    }
+}
+
+fn station_fit_score(station_type: &str, plan_day_phase: &str) -> i64 {
+    match (station_type, plan_day_phase) {
+        ("review", "review_day") => 100,
+        ("performance" | "checkpoint", "performance" | "final_revision") => 90,
+        ("foundation" | "repair", "foundation") => 85,
+        ("checkpoint", "strengthening") => 75,
+        ("repair", "strengthening") => 70,
+        ("review", _) => 60,
+        ("performance", _) => 55,
+        _ => 40,
+    }
+}
+
+fn plan_phase_for_station_type(station_type: &str) -> &'static str {
+    match station_type {
+        "review" => "review_day",
+        "foundation" => "foundation",
+        "repair" | "checkpoint" => "strengthening",
+        "performance" => "performance",
+        _ => "strengthening",
+    }
+}
+
+fn carryover_minutes_for_station_retry(station_type: &str, mission_status: &str) -> i64 {
+    match (station_type, mission_status) {
+        ("review", _) => 20,
+        ("performance", "review_due") => 20,
+        ("performance", _) => 15,
+        ("foundation" | "repair", _) => 25,
+        (_, "partial") => 10,
+        _ => 15,
+    }
+}
+
+fn carryover_minutes_for_next_station(
+    next_station_type: Option<&str>,
+    mission_status: &str,
+) -> i64 {
+    match (next_station_type, mission_status) {
+        (Some("review"), _) => 5,
+        (Some("performance"), "completed") => 10,
+        (Some("foundation" | "repair"), _) => 10,
+        (_, "review_due") => 10,
+        (_, _) => 0,
+    }
+}
+
+fn mission_journey_binding(steps: &Value) -> Option<MissionJourneyBinding> {
+    let journey = steps.get("journey")?;
+    Some(MissionJourneyBinding {
+        route_id: journey.get("route_id")?.as_i64()?,
+        station_id: journey.get("station_id")?.as_i64()?,
+        station_code: journey.get("station_code")?.as_str()?.to_string(),
+        station_type: journey.get("station_type")?.as_str()?.to_string(),
+    })
+}
+
 fn map_coach_mission_memory(row: &rusqlite::Row<'_>) -> rusqlite::Result<CoachMissionMemory> {
     let misconception_json: String = row.get(12)?;
     let misconception_tags =
@@ -1731,6 +2135,7 @@ mod tests {
     use rusqlite::{Connection, params};
 
     use super::*;
+    use crate::journey::JourneyService;
 
     #[test]
     fn generate_plan_creates_multiday_schedule_and_today_mission() {
@@ -1965,6 +2370,160 @@ mod tests {
         assert_eq!(stale_plan_count, 1);
         assert_ne!(new_active_plan_id, original_plan_id);
         assert_eq!(adjustment_event_count, 1);
+    }
+
+    #[test]
+    fn mission_generation_and_completion_follow_active_journey_station() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, status, first_run)
+             VALUES ('student', 'Abena', 'hash', 'salt', 'active', 0)",
+            [],
+        )
+        .expect("student should insert");
+        let student_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO student_profiles (account_id, preferred_subjects, daily_study_budget_minutes)
+             VALUES (?1, '[\"MATH\"]', 60)",
+            [student_id],
+        )
+        .expect("student profile should insert");
+
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_ids = {
+            let mut statement = conn
+                .prepare("SELECT id FROM topics WHERE subject_id = ?1 ORDER BY id ASC LIMIT 2")
+                .expect("statement should prepare");
+            let rows = statement
+                .query_map([subject_id], |row| row.get::<_, i64>(0))
+                .expect("topic rows should query");
+            let mut ids = Vec::new();
+            for row in rows {
+                ids.push(row.expect("topic id should map"));
+            }
+            ids
+        };
+        let performance_topic_id = topic_ids[0];
+        let review_topic_id = topic_ids[1];
+
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, fragility_score, priority_score,
+                pressure_collapse_index, memory_strength, decay_risk, evidence_count, repair_priority, speed_score
+             ) VALUES (?1, ?2, 8200, 1800, 2200, 9800, 1800, 7600, 1500, 5, 2200, 7200)",
+            params![student_id, performance_topic_id],
+        )
+        .expect("performance topic state should insert");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, fragility_score, priority_score,
+                pressure_collapse_index, memory_strength, decay_risk, evidence_count, repair_priority, speed_score
+             ) VALUES (?1, ?2, 6100, 5100, 4300, 6200, 2200, 2600, 8400, 4, 2500, 4800)",
+            params![student_id, review_topic_id],
+        )
+        .expect("review topic state should insert");
+        conn.execute(
+            "INSERT INTO memory_states (
+                student_id, topic_id, memory_state, memory_strength, recall_fluency, decay_risk, review_due_at
+             ) VALUES (?1, ?2, 'fading', 2400, 1800, 8600, datetime('now', '-1 day'))",
+            params![student_id, review_topic_id],
+        )
+        .expect("memory state should insert");
+
+        let route = JourneyService::new(&conn)
+            .build_or_refresh_route(student_id, subject_id, Some("BECE"))
+            .expect("route should build");
+        assert_eq!(route.stations[0].topic_id, Some(review_topic_id));
+        assert_eq!(route.stations[0].station_type, "review");
+
+        let engine = PlanEngine::new(&conn);
+        let exam_date = Utc::now()
+            .date_naive()
+            .checked_add_days(Days::new(14))
+            .expect("future date should exist")
+            .to_string();
+        engine
+            .generate_plan(student_id, "BECE", &exam_date, 60)
+            .expect("plan should generate");
+        let mission_id = engine
+            .generate_today_mission(student_id)
+            .expect("mission should generate");
+
+        let (mission_topic_id, activity_type, steps_json): (i64, String, String) = conn
+            .query_row(
+                "SELECT primary_topic_id, activity_type, steps_json
+                 FROM coach_missions
+                 WHERE id = ?1",
+                [mission_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("mission should query");
+        let steps: Value =
+            serde_json::from_str(&steps_json).expect("mission steps should deserialize");
+
+        assert_eq!(mission_topic_id, review_topic_id);
+        assert_eq!(activity_type, "memory_reactivation");
+        assert_eq!(steps["journey"]["station_type"].as_str(), Some("review"));
+
+        conn.execute(
+            "INSERT INTO sessions (
+                student_id, session_type, subject_id, topic_ids, question_count, total_questions,
+                is_timed, status, started_at, completed_at, answered_questions, correct_questions,
+                accuracy_score, avg_response_time_ms
+             ) VALUES (?1, 'coach_mission', ?2, ?3, 5, 5, 0, 'completed', datetime('now'), datetime('now'), 5, 5, 8600, 9000)",
+            params![student_id, subject_id, format!("[{}]", review_topic_id)],
+        )
+        .expect("session should insert");
+        let session_id = conn.last_insert_rowid();
+
+        engine
+            .complete_mission_from_session(mission_id, Some(session_id))
+            .expect("mission should complete");
+
+        let refreshed_route = JourneyService::new(&conn)
+            .get_active_route(student_id, subject_id)
+            .expect("active route should load")
+            .expect("active route should remain");
+        let active_station = refreshed_route
+            .stations
+            .iter()
+            .find(|station| station.status == "active")
+            .expect("next station should activate");
+        let (next_plan_phase, next_plan_carryover): (String, i64) = conn
+            .query_row(
+                "SELECT phase, carryover_minutes
+                 FROM coach_plan_days cpd
+                 INNER JOIN coach_plans cp ON cp.id = cpd.plan_id
+                 WHERE cp.student_id = ?1
+                   AND cp.status = 'active'
+                   AND cpd.date > date('now')
+                 ORDER BY cpd.date ASC, cpd.id ASC
+                 LIMIT 1",
+                [student_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("future plan day should query");
+
+        assert_eq!(
+            refreshed_route.route.current_station_code.as_deref(),
+            Some(active_station.station_code.as_str())
+        );
+        assert_eq!(
+            next_plan_phase,
+            plan_phase_for_station_type(&active_station.station_type)
+        );
+        assert!(next_plan_carryover > 0);
     }
 
     #[test]

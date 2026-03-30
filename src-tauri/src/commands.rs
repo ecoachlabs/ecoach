@@ -44,11 +44,11 @@ use ecoach_commands::reporting_commands::{
 };
 use ecoach_commands::student_commands::LearnerTruthDto;
 use ecoach_commands::{
-    assessment_commands, attempt_commands, coach_commands, content_commands, curriculum_commands,
-    diagnostic_commands, dtos::*, game_commands, identity_commands, intake_commands,
-    library_commands, memory_commands, mock_commands, premium_commands, question_commands,
-    readiness_commands, repair_commands, reporting_commands, session_commands, student_commands,
-    traps_commands, AppState, CommandError,
+    AppState, CommandError, assessment_commands, attempt_commands, coach_commands,
+    content_commands, curriculum_commands, diagnostic_commands, dtos::*, game_commands,
+    identity_commands, intake_commands, library_commands, memory_commands, mock_commands,
+    premium_commands, question_commands, readiness_commands, repair_commands, reporting_commands,
+    session_commands, student_commands, traps_commands,
 };
 use ecoach_content::{ParseCandidateInput, SourceUploadInput};
 use ecoach_games::{
@@ -165,6 +165,36 @@ pub fn generate_today_mission(
     student_id: i64,
 ) -> Result<i64, CommandError> {
     coach_commands::generate_today_mission(&state, student_id)
+}
+
+#[tauri::command]
+pub fn recommend_free_now_session(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+    date: String,
+    minute_of_day: i64,
+    available_minutes: i64,
+) -> Result<FreeNowRecommendationDto, CommandError> {
+    coach_commands::recommend_free_now_session(
+        &state,
+        student_id,
+        subject_id,
+        &date,
+        minute_of_day,
+        available_minutes,
+    )
+}
+
+#[tauri::command]
+pub fn replan_remaining_day(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+    date: String,
+    minute_of_day: i64,
+) -> Result<DailyReplanDto, CommandError> {
+    coach_commands::replan_remaining_day(&state, student_id, subject_id, &date, minute_of_day)
 }
 
 // Curriculum
@@ -682,6 +712,34 @@ pub fn build_elite_session_blueprint(
     assessment_commands::build_elite_session_blueprint(&state, student_id, subject_id)
 }
 
+#[tauri::command]
+pub fn get_elite_profile(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Option<EliteProfileDto>, CommandError> {
+    assessment_commands::get_elite_profile(&state, student_id, subject_id)
+}
+
+#[tauri::command]
+pub fn list_elite_topic_domination(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+    limit: usize,
+) -> Result<Vec<EliteTopicProfileDto>, CommandError> {
+    assessment_commands::list_elite_topic_domination(&state, student_id, subject_id, limit)
+}
+
+#[tauri::command]
+pub fn build_elite_session_blueprint_report(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<EliteBlueprintReportDto, CommandError> {
+    assessment_commands::build_elite_session_blueprint_report(&state, student_id, subject_id)
+}
+
 // Games
 
 #[tauri::command]
@@ -706,6 +764,23 @@ pub fn get_game_summary(
     session_id: i64,
 ) -> Result<GameSummaryDto, CommandError> {
     game_commands::get_game_summary(&state, session_id)
+}
+
+#[tauri::command]
+pub fn get_trap_session_snapshot(
+    state: State<'_, AppState>,
+    session_id: i64,
+) -> Result<TrapSessionSnapshotDto, CommandError> {
+    game_commands::get_trap_session_snapshot(&state, session_id)
+}
+
+#[tauri::command]
+pub fn reveal_trap_unmask_clue(
+    state: State<'_, AppState>,
+    session_id: i64,
+    round_id: i64,
+) -> Result<TrapRoundCardDto, CommandError> {
+    game_commands::reveal_trap_unmask_clue(&state, session_id, round_id)
 }
 
 #[tauri::command]

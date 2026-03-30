@@ -819,6 +819,7 @@ dependencies = [
  "ecoach-curriculum",
  "ecoach-diagnostics",
  "ecoach-elite",
+ "ecoach-forecast",
  "ecoach-games",
  "ecoach-glossary",
  "ecoach-goals-calendar",
@@ -883,6 +884,17 @@ dependencies = [
 name = "ecoach-elite"
 version = "0.1.0"
 dependencies = [
+ "ecoach-substrate",
+ "rusqlite",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ecoach-forecast"
+version = "0.1.0"
+dependencies = [
+ "ecoach-storage",
  "ecoach-substrate",
  "rusqlite",
  "serde",
@@ -991,6 +1003,7 @@ name = "ecoach-mock-centre"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "ecoach-forecast",
  "ecoach-substrate",
  "rusqlite",
  "serde",

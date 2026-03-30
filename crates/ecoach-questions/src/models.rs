@@ -99,6 +99,9 @@ pub enum QuestionVariantMode {
     MisconceptionProbe,
     Rescue,
     Stretch,
+    Fission,
+    Fusion,
+    Adversary,
 }
 
 impl QuestionVariantMode {
@@ -109,6 +112,9 @@ impl QuestionVariantMode {
             Self::MisconceptionProbe => "misconception_probe",
             Self::Rescue => "rescue",
             Self::Stretch => "stretch",
+            Self::Fission => "fission",
+            Self::Fusion => "fusion",
+            Self::Adversary => "adversary",
         }
     }
 
@@ -119,6 +125,9 @@ impl QuestionVariantMode {
             Self::Rescue => "repair_variant",
             Self::Stretch => "difficulty_ladder",
             Self::Isomorphic => "variant_of",
+            Self::Fission => "fission",
+            Self::Fusion => "fusion",
+            Self::Adversary => "adversary",
         }
     }
 }
@@ -157,6 +166,13 @@ pub struct GeneratedQuestionDraft {
     pub options: Vec<QuestionOption>,
     pub variant_mode: String,
     pub transform_summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QualityGateResult {
+    pub passed: bool,
+    pub failures: Vec<String>,
+    pub checks_run: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

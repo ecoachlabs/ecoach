@@ -1,3 +1,4 @@
+use chrono::Utc;
 use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
@@ -88,6 +89,12 @@ impl<'a> JourneyService<'a> {
             "mastery_route"
         };
         let ordered_cases = order_route_cases(&topic_cases, &readiness);
+        let first_station_type = station_type_for_case(
+            ordered_cases[0],
+            route_type,
+            (readiness.due_review_count > 0 || readiness.due_memory_count > 0)
+                && is_review_station_candidate(ordered_cases[0]),
+        );
         let route_summary_json = serde_json::to_string(&json!({
             "generated_from": "journey_service",
             "readiness_score": readiness.readiness_score,
@@ -99,6 +106,12 @@ impl<'a> JourneyService<'a> {
             "due_memory_count": readiness.due_memory_count,
             "weak_topic_count": readiness.weak_topic_count,
             "route_intent": route_type,
+            "current_station_code": "station_01",
+            "current_station_type": first_station_type,
+            "current_topic_id": ordered_cases[0].topic_id,
+            "completed_station_count": 0,
+            "retry_count": 0,
+            "last_transition": "route_built",
             "top_hypotheses": ordered_cases
                 .iter()
                 .take(3)
@@ -254,16 +267,26 @@ impl<'a> JourneyService<'a> {
         station_id: i64,
         evidence: &Value,
     ) -> EcoachResult<JourneyRouteSnapshot> {
-        let (route_id, sequence_no, station_code, station_type, completion_rule_json): (
+        let (
+            route_id,
+            sequence_no,
+            station_code,
+            station_type,
+            topic_id,
+            completion_rule_json,
+            existing_evidence_json,
+        ): (
             i64,
             i64,
             String,
+            String,
+            Option<i64>,
             String,
             String,
         ) = self
             .conn
             .query_row(
-                "SELECT route_id, sequence_no, station_code, station_type, completion_rule_json
+                "SELECT route_id, sequence_no, station_code, station_type, topic_id, completion_rule_json, evidence_json
                  FROM journey_stations
                  WHERE id = ?1",
                 [station_id],
@@ -274,15 +297,27 @@ impl<'a> JourneyService<'a> {
                         row.get(2)?,
                         row.get(3)?,
                         row.get(4)?,
+                        row.get(5)?,
+                        row.get(6)?,
                     ))
                 },
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
-        let evidence_json = serde_json::to_string(evidence)
-            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
-        let completion_rule = parse_json_value(4, &completion_rule_json)
+        let completion_rule = parse_json_value(5, &completion_rule_json)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let existing_evidence = parse_json_value(6, &existing_evidence_json)
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let decision = evaluate_station_progression(&station_type, &completion_rule, evidence);
+        let merged_evidence = merge_station_evidence(
+            &existing_evidence,
+            evidence,
+            &station_code,
+            &station_type,
+            topic_id,
+            &decision,
+        );
+        let merged_evidence_json = serde_json::to_string(&merged_evidence)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
         if !decision.passed {
             self.conn
                 .execute(
@@ -291,9 +326,21 @@ impl<'a> JourneyService<'a> {
                          evidence_json = ?1,
                          updated_at = datetime('now')
                      WHERE id = ?2",
-                    params![evidence_json, station_id],
+                    params![merged_evidence_json, station_id],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.refresh_route_summary(
+                route_id,
+                "retry_required",
+                Some(&station_code),
+                Some(&station_type),
+                topic_id,
+                merged_evidence
+                    .get("retry_count")
+                    .and_then(Value::as_i64)
+                    .unwrap_or(1),
+                Some(&decision.missing_criteria),
+            )?;
             self.append_runtime_event(DomainEvent::new(
                 "journey.station_retry_required",
                 route_id.to_string(),
@@ -316,7 +363,7 @@ impl<'a> JourneyService<'a> {
                      completed_at = datetime('now'),
                      updated_at = datetime('now')
                  WHERE id = ?2",
-                params![evidence_json, station_id],
+                params![merged_evidence_json, station_id],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
@@ -349,6 +396,28 @@ impl<'a> JourneyService<'a> {
                     params![next_station_code, route_id],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let next_station_meta: Option<(String, Option<i64>)> = self
+                .conn
+                .query_row(
+                    "SELECT station_type, topic_id
+                     FROM journey_stations
+                     WHERE id = ?1",
+                    [next_station_id],
+                    |row| Ok((row.get(0)?, row.get(1)?)),
+                )
+                .optional()
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if let Some((next_station_type, next_topic_id)) = next_station_meta {
+                self.refresh_route_summary(
+                    route_id,
+                    "advanced",
+                    Some(&next_station_code),
+                    Some(&next_station_type),
+                    next_topic_id,
+                    0,
+                    None,
+                )?;
+            }
         } else {
             self.conn
                 .execute(
@@ -358,6 +427,7 @@ impl<'a> JourneyService<'a> {
                     [route_id],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.refresh_route_summary(route_id, "route_completed", None, None, None, 0, None)?;
         }
 
         self.append_runtime_event(DomainEvent::new(
@@ -410,6 +480,83 @@ impl<'a> JourneyService<'a> {
         }
 
         Ok(Some(JourneyRouteSnapshot { route, stations }))
+    }
+
+    fn refresh_route_summary(
+        &self,
+        route_id: i64,
+        last_transition: &str,
+        active_station_code: Option<&str>,
+        active_station_type: Option<&str>,
+        active_topic_id: Option<i64>,
+        retry_count: i64,
+        missing_criteria: Option<&[String]>,
+    ) -> EcoachResult<()> {
+        let existing_summary_json: String = self
+            .conn
+            .query_row(
+                "SELECT route_summary_json
+                 FROM journey_routes
+                 WHERE id = ?1",
+                [route_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut summary = parse_json_value(0, &existing_summary_json)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let completed_station_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM journey_stations
+                 WHERE route_id = ?1 AND status = 'completed'",
+                [route_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        if let Some(summary_map) = summary.as_object_mut() {
+            summary_map.insert(
+                "current_station_code".to_string(),
+                active_station_code.map_or(Value::Null, |value| json!(value)),
+            );
+            summary_map.insert(
+                "current_station_type".to_string(),
+                active_station_type.map_or(Value::Null, |value| json!(value)),
+            );
+            summary_map.insert(
+                "current_topic_id".to_string(),
+                active_topic_id.map_or(Value::Null, Value::from),
+            );
+            summary_map.insert(
+                "completed_station_count".to_string(),
+                Value::from(completed_station_count),
+            );
+            summary_map.insert("retry_count".to_string(), Value::from(retry_count));
+            summary_map.insert("last_transition".to_string(), json!(last_transition));
+            summary_map.insert(
+                "last_transition_at".to_string(),
+                json!(Utc::now().to_rfc3339()),
+            );
+            summary_map.insert(
+                "last_missing_criteria".to_string(),
+                missing_criteria.map_or(Value::Array(Vec::new()), |value| json!(value)),
+            );
+        }
+
+        let summary_json = serde_json::to_string(&summary)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        self.conn
+            .execute(
+                "UPDATE journey_routes
+                 SET route_summary_json = ?1,
+                     current_station_code = ?2,
+                     updated_at = datetime('now')
+                 WHERE id = ?3",
+                params![summary_json, active_station_code, route_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
     }
 
     fn load_topic_candidates(
@@ -756,6 +903,67 @@ fn evaluate_station_progression(
     }
 }
 
+fn merge_station_evidence(
+    existing: &Value,
+    submitted: &Value,
+    station_code: &str,
+    station_type: &str,
+    topic_id: Option<i64>,
+    decision: &StationProgressDecision,
+) -> Value {
+    let mut merged = existing.as_object().cloned().unwrap_or_default();
+    let prior_retry_count = existing
+        .get("retry_count")
+        .and_then(Value::as_i64)
+        .unwrap_or(0);
+    let retry_count = if decision.passed {
+        0
+    } else {
+        prior_retry_count + 1
+    };
+
+    merged.insert("station_code".to_string(), json!(station_code));
+    merged.insert("station_type".to_string(), json!(station_type));
+    merged.insert(
+        "topic_id".to_string(),
+        topic_id.map_or(Value::Null, Value::from),
+    );
+    merged.insert("latest_submission".to_string(), submitted.clone());
+    merged.insert(
+        "last_progression".to_string(),
+        json!({
+            "passed": decision.passed,
+            "missing_criteria": decision.missing_criteria,
+            "updated_at": Utc::now().to_rfc3339(),
+        }),
+    );
+    merged.insert("retry_count".to_string(), Value::from(retry_count));
+
+    for key in [
+        "status",
+        "answered_questions",
+        "attempt_count",
+        "correct_count",
+        "accuracy_score",
+        "timed_accuracy",
+        "avg_latency_ms",
+        "timed_success",
+        "delayed_recall_passed",
+        "mastery_score",
+        "readiness_score",
+        "misconception_tags",
+        "mission_id",
+        "mission_status",
+        "activity_type",
+    ] {
+        if let Some(value) = submitted.get(key) {
+            merged.insert(key.to_string(), value.clone());
+        }
+    }
+
+    Value::Object(merged)
+}
+
 fn map_route(row: &rusqlite::Row<'_>) -> rusqlite::Result<JourneyRoute> {
     let route_summary_json: String = row.get(7)?;
     let route_summary = serde_json::from_str::<Value>(&route_summary_json).map_err(|err| {
@@ -1006,6 +1214,93 @@ mod tests {
         );
         assert_eq!(updated.stations[0].status, "active");
         assert_eq!(updated.stations[1].status, "locked");
+    }
+
+    #[test]
+    fn journey_station_retry_persists_retry_count_and_route_summary() {
+        let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_ids = {
+            let mut statement = conn
+                .prepare("SELECT id FROM topics WHERE subject_id = ?1 ORDER BY id ASC LIMIT 2")
+                .expect("statement should prepare");
+            let rows = statement
+                .query_map([subject_id], |row| row.get::<_, i64>(0))
+                .expect("topic rows should query");
+            let mut ids = Vec::new();
+            for row in rows {
+                ids.push(row.expect("topic id should map"));
+            }
+            ids
+        };
+        for (index, topic_id) in topic_ids.iter().enumerate() {
+            conn.execute(
+                "INSERT INTO student_topic_states (
+                    student_id, topic_id, mastery_score, gap_score, fragility_score, priority_score
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    1,
+                    topic_id,
+                    3000 + (index as i64 * 1500),
+                    8000 - (index as i64 * 1000),
+                    6000 - (index as i64 * 500),
+                    9000 - (index as i64 * 1000),
+                ],
+            )
+            .expect("topic state should insert");
+        }
+
+        let service = JourneyService::new(&conn);
+        let snapshot = service
+            .build_or_refresh_route(1, subject_id, Some("BECE"))
+            .expect("route should build");
+        let updated = service
+            .complete_station(
+                snapshot.stations[0].id,
+                &json!({
+                    "accuracy_score": 4200,
+                    "answered_questions": 2,
+                    "status": "needs_retry"
+                }),
+            )
+            .expect("station should remain active");
+        let retried = service
+            .complete_station(
+                snapshot.stations[0].id,
+                &json!({
+                    "accuracy_score": 4300,
+                    "answered_questions": 3,
+                    "status": "needs_retry"
+                }),
+            )
+            .expect("second retry should remain active");
+        let active_station = retried
+            .stations
+            .iter()
+            .find(|station| station.status == "active")
+            .expect("station should still be active");
+
+        assert_eq!(
+            updated.stations[0].evidence["retry_count"].as_i64(),
+            Some(1)
+        );
+        assert_eq!(active_station.evidence["retry_count"].as_i64(), Some(2));
+        assert_eq!(
+            retried.route.route_summary["last_transition"].as_str(),
+            Some("retry_required")
+        );
+        assert_eq!(retried.route.route_summary["retry_count"].as_i64(), Some(2));
     }
 
     fn seed_student(conn: &Connection) {

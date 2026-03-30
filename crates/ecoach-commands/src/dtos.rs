@@ -8,8 +8,16 @@ use ecoach_diagnostics::{
     DiagnosticCauseEvolution, DiagnosticLongitudinalSummary, DiagnosticResult,
     TopicDiagnosticLongitudinalSignal, TopicDiagnosticResult,
 };
-use ecoach_games::{ContrastPairSummary, TrapRoundResult, TrapSessionReview, TrapSessionSnapshot};
+use ecoach_elite::{
+    EliteBlueprintFamilyTarget, EliteBlueprintReport, EliteBlueprintTopicTarget, EliteProfile,
+    EliteSessionBlueprint, EliteTopicProfile, EliteTrapBlueprintSignal,
+};
+use ecoach_games::{
+    ContrastPairSummary, TrapChoiceOption, TrapReviewRound, TrapRoundCard, TrapRoundResult,
+    TrapSessionReview, TrapSessionSnapshot,
+};
 use ecoach_glossary::KnowledgeBundleSequenceItem;
+use ecoach_goals_calendar::{DailyReplan, FreeNowRecommendation};
 use ecoach_identity::{Account, AccountSummary};
 use ecoach_intake::{BundleFile, BundleProcessReport, ExtractedInsight, SubmissionBundle};
 use ecoach_library::{LearningPathStep, PersonalizedLearningPath, TopicRelationshipHint};
@@ -348,6 +356,84 @@ impl From<PersonalizedLearningPath> for PersonalizedLearningPathDto {
                 .into_iter()
                 .map(LearningPathStepDto::from)
                 .collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FreeNowRecommendationDto {
+    pub date: String,
+    pub minute_of_day: i64,
+    pub available_now: bool,
+    pub window_end_minute: Option<i64>,
+    pub suggested_duration_minutes: i64,
+    pub session_type: String,
+    pub rationale: String,
+    pub focus_topic_ids: Vec<i64>,
+    pub target_id: Option<i64>,
+    pub carryover_attempts: i64,
+    pub carryover_correct: i64,
+    pub pressure_score: i64,
+    pub repair_buffer_minutes: i64,
+    pub recommended_comeback_topic_id: Option<i64>,
+    pub recent_repair_outcome: Option<String>,
+}
+
+impl From<FreeNowRecommendation> for FreeNowRecommendationDto {
+    fn from(value: FreeNowRecommendation) -> Self {
+        Self {
+            date: value.date,
+            minute_of_day: value.minute_of_day,
+            available_now: value.available_now,
+            window_end_minute: value.window_end_minute,
+            suggested_duration_minutes: value.suggested_duration_minutes,
+            session_type: value.session_type,
+            rationale: value.rationale,
+            focus_topic_ids: value.focus_topic_ids,
+            target_id: value.target_id,
+            carryover_attempts: value.carryover_attempts,
+            carryover_correct: value.carryover_correct,
+            pressure_score: value.pressure_score as i64,
+            repair_buffer_minutes: value.repair_buffer_minutes,
+            recommended_comeback_topic_id: value.recommended_comeback_topic_id,
+            recent_repair_outcome: value.recent_repair_outcome,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DailyReplanDto {
+    pub date: String,
+    pub available_now: bool,
+    pub remaining_capacity_minutes: i64,
+    pub remaining_target_minutes: i64,
+    pub recommended_session_count: i64,
+    pub next_session_type: String,
+    pub focus_topic_ids: Vec<i64>,
+    pub target_id: Option<i64>,
+    pub rationale: String,
+    pub pressure_score: i64,
+    pub repair_buffer_minutes: i64,
+    pub recommended_comeback_topic_id: Option<i64>,
+    pub recent_repair_outcome: Option<String>,
+}
+
+impl From<DailyReplan> for DailyReplanDto {
+    fn from(value: DailyReplan) -> Self {
+        Self {
+            date: value.date,
+            available_now: value.available_now,
+            remaining_capacity_minutes: value.remaining_capacity_minutes,
+            remaining_target_minutes: value.remaining_target_minutes,
+            recommended_session_count: value.recommended_session_count,
+            next_session_type: value.next_session_type,
+            focus_topic_ids: value.focus_topic_ids,
+            target_id: value.target_id,
+            rationale: value.rationale,
+            pressure_score: value.pressure_score as i64,
+            repair_buffer_minutes: value.repair_buffer_minutes,
+            recommended_comeback_topic_id: value.recommended_comeback_topic_id,
+            recent_repair_outcome: value.recent_repair_outcome,
         }
     }
 }
@@ -1042,6 +1128,201 @@ impl From<DiagnosticResult> for DiagnosticResultDto {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteProfileDto {
+    pub student_id: i64,
+    pub subject_id: i64,
+    pub eps_score: i64,
+    pub tier: String,
+    pub precision_score: i64,
+    pub speed_score: i64,
+    pub depth_score: i64,
+    pub composure_score: i64,
+}
+
+impl From<EliteProfile> for EliteProfileDto {
+    fn from(value: EliteProfile) -> Self {
+        Self {
+            student_id: value.student_id,
+            subject_id: value.subject_id,
+            eps_score: value.eps_score as i64,
+            tier: value.tier,
+            precision_score: value.precision_score as i64,
+            speed_score: value.speed_score as i64,
+            depth_score: value.depth_score as i64,
+            composure_score: value.composure_score as i64,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteTopicProfileDto {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub precision_score: i64,
+    pub speed_score: i64,
+    pub depth_score: i64,
+    pub composure_score: i64,
+    pub consistency_score: i64,
+    pub trap_resistance_score: i64,
+    pub domination_score: i64,
+    pub status: String,
+}
+
+impl From<EliteTopicProfile> for EliteTopicProfileDto {
+    fn from(value: EliteTopicProfile) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            precision_score: value.precision_score as i64,
+            speed_score: value.speed_score as i64,
+            depth_score: value.depth_score as i64,
+            composure_score: value.composure_score as i64,
+            consistency_score: value.consistency_score as i64,
+            trap_resistance_score: value.trap_resistance_score as i64,
+            domination_score: value.domination_score as i64,
+            status: value.status,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteSessionBlueprintDto {
+    pub student_id: i64,
+    pub subject_id: i64,
+    pub session_class: String,
+    pub target_topic_ids: Vec<i64>,
+    pub target_family_ids: Vec<i64>,
+    pub authoring_modes: Vec<String>,
+    pub target_question_count: i64,
+    pub rationale: String,
+}
+
+impl From<EliteSessionBlueprint> for EliteSessionBlueprintDto {
+    fn from(value: EliteSessionBlueprint) -> Self {
+        Self {
+            student_id: value.student_id,
+            subject_id: value.subject_id,
+            session_class: value.session_class,
+            target_topic_ids: value.target_topic_ids,
+            target_family_ids: value.target_family_ids,
+            authoring_modes: value.authoring_modes,
+            target_question_count: value.target_question_count,
+            rationale: value.rationale,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteBlueprintTopicTargetDto {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub domination_score: i64,
+    pub precision_score: i64,
+    pub trap_resistance_score: i64,
+    pub status: String,
+    pub selection_reason: String,
+}
+
+impl From<EliteBlueprintTopicTarget> for EliteBlueprintTopicTargetDto {
+    fn from(value: EliteBlueprintTopicTarget) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            domination_score: value.domination_score as i64,
+            precision_score: value.precision_score as i64,
+            trap_resistance_score: value.trap_resistance_score as i64,
+            status: value.status,
+            selection_reason: value.selection_reason,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteBlueprintFamilyTargetDto {
+    pub family_id: i64,
+    pub family_code: Option<String>,
+    pub family_name: String,
+    pub topic_id: Option<i64>,
+    pub topic_name: Option<String>,
+    pub health_status: Option<String>,
+    pub recurrence_score: i64,
+    pub replacement_score: i64,
+    pub selection_reason: String,
+}
+
+impl From<EliteBlueprintFamilyTarget> for EliteBlueprintFamilyTargetDto {
+    fn from(value: EliteBlueprintFamilyTarget) -> Self {
+        Self {
+            family_id: value.family_id,
+            family_code: value.family_code,
+            family_name: value.family_name,
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            health_status: value.health_status,
+            recurrence_score: value.recurrence_score as i64,
+            replacement_score: value.replacement_score as i64,
+            selection_reason: value.selection_reason,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteTrapBlueprintSignalDto {
+    pub topic_id: Option<i64>,
+    pub topic_name: Option<String>,
+    pub confusion_score: i64,
+    pub similarity_trap_bp: i64,
+    pub which_is_which_bp: i64,
+    pub timed_out_count: i64,
+    pub force_trapsense: bool,
+    pub rationale: Option<String>,
+}
+
+impl From<EliteTrapBlueprintSignal> for EliteTrapBlueprintSignalDto {
+    fn from(value: EliteTrapBlueprintSignal) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            confusion_score: value.confusion_score as i64,
+            similarity_trap_bp: value.similarity_trap_bp as i64,
+            which_is_which_bp: value.which_is_which_bp as i64,
+            timed_out_count: value.timed_out_count,
+            force_trapsense: value.force_trapsense,
+            rationale: value.rationale,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteBlueprintReportDto {
+    pub blueprint: EliteSessionBlueprintDto,
+    pub profile: Option<EliteProfileDto>,
+    pub topic_targets: Vec<EliteBlueprintTopicTargetDto>,
+    pub family_targets: Vec<EliteBlueprintFamilyTargetDto>,
+    pub trap_signal: Option<EliteTrapBlueprintSignalDto>,
+}
+
+impl From<EliteBlueprintReport> for EliteBlueprintReportDto {
+    fn from(value: EliteBlueprintReport) -> Self {
+        Self {
+            blueprint: EliteSessionBlueprintDto::from(value.blueprint),
+            profile: value.profile.map(EliteProfileDto::from),
+            topic_targets: value
+                .topic_targets
+                .into_iter()
+                .map(EliteBlueprintTopicTargetDto::from)
+                .collect(),
+            family_targets: value
+                .family_targets
+                .into_iter()
+                .map(EliteBlueprintFamilyTargetDto::from)
+                .collect(),
+            trap_signal: value.trap_signal.map(EliteTrapBlueprintSignalDto::from),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MockBlueprintDto {
     pub id: i64,
     pub title: String,
@@ -1071,22 +1352,86 @@ impl From<MockBlueprint> for MockBlueprintDto {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContrastPairSummaryDto {
     pub pair_id: i64,
+    pub pair_code: Option<String>,
     pub title: String,
     pub left_label: String,
     pub right_label: String,
+    pub summary_text: Option<String>,
+    pub trap_strength: i64,
+    pub difficulty_score: i64,
     pub confusion_score: i64,
+    pub last_accuracy_bp: i64,
     pub recommended_mode: String,
+    pub available_modes: Vec<String>,
 }
 
 impl From<ContrastPairSummary> for ContrastPairSummaryDto {
     fn from(value: ContrastPairSummary) -> Self {
         Self {
             pair_id: value.pair_id,
+            pair_code: value.pair_code,
             title: value.title,
             left_label: value.left_label,
             right_label: value.right_label,
+            summary_text: value.summary_text,
+            trap_strength: value.trap_strength as i64,
+            difficulty_score: value.difficulty_score as i64,
             confusion_score: value.confusion_score as i64,
+            last_accuracy_bp: value.last_accuracy_bp as i64,
             recommended_mode: value.recommended_mode,
+            available_modes: value.available_modes,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrapChoiceOptionDto {
+    pub code: String,
+    pub label: String,
+}
+
+impl From<TrapChoiceOption> for TrapChoiceOptionDto {
+    fn from(value: TrapChoiceOption) -> Self {
+        Self {
+            code: value.code,
+            label: value.label,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrapRoundCardDto {
+    pub id: i64,
+    pub round_number: i64,
+    pub pair_id: i64,
+    pub mode: String,
+    pub lane: String,
+    pub prompt_text: String,
+    pub prompt_payload: Value,
+    pub answer_options: Vec<TrapChoiceOptionDto>,
+    pub reveal_count: i64,
+    pub max_reveal_count: i64,
+    pub status: String,
+}
+
+impl From<TrapRoundCard> for TrapRoundCardDto {
+    fn from(value: TrapRoundCard) -> Self {
+        Self {
+            id: value.id,
+            round_number: value.round_number,
+            pair_id: value.pair_id,
+            mode: value.mode,
+            lane: value.lane,
+            prompt_text: value.prompt_text,
+            prompt_payload: value.prompt_payload,
+            answer_options: value
+                .answer_options
+                .into_iter()
+                .map(TrapChoiceOptionDto::from)
+                .collect(),
+            reveal_count: value.reveal_count,
+            max_reveal_count: value.max_reveal_count,
+            status: value.status,
         }
     }
 }
@@ -1094,24 +1439,48 @@ impl From<ContrastPairSummary> for ContrastPairSummaryDto {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrapSessionSnapshotDto {
     pub session_id: i64,
+    pub session_state: String,
+    pub score: i64,
     pub mode: String,
+    pub pair_id: i64,
     pub pair_title: String,
     pub left_label: String,
     pub right_label: String,
+    pub summary_text: Option<String>,
+    pub recommended_mode: String,
+    pub correct_discriminations: i64,
+    pub total_discriminations: i64,
+    pub confusion_score: i64,
+    pub current_round_id: Option<i64>,
     pub round_count: usize,
     pub active_round_number: i64,
+    pub rounds: Vec<TrapRoundCardDto>,
 }
 
 impl From<TrapSessionSnapshot> for TrapSessionSnapshotDto {
     fn from(value: TrapSessionSnapshot) -> Self {
         Self {
             session_id: value.session.id,
+            session_state: value.session.session_state,
+            score: value.session.score,
             mode: value.state.mode,
+            pair_id: value.state.pair_id,
             pair_title: value.state.pair_title,
             left_label: value.left_label,
             right_label: value.right_label,
+            summary_text: value.summary_text,
+            recommended_mode: value.recommended_mode,
+            correct_discriminations: value.state.correct_discriminations,
+            total_discriminations: value.state.total_discriminations,
+            confusion_score: value.state.confusion_score as i64,
+            current_round_id: value.state.current_round_id,
             round_count: value.rounds.len(),
             active_round_number: value.state.current_round_number,
+            rounds: value
+                .rounds
+                .into_iter()
+                .map(TrapRoundCardDto::from)
+                .collect(),
         }
     }
 }
@@ -1122,8 +1491,15 @@ pub struct TrapRoundResultDto {
     pub round_number: i64,
     pub is_correct: bool,
     pub score_earned: i64,
+    pub new_score: i64,
+    pub streak: i64,
+    pub selected_choice_code: Option<String>,
+    pub selected_choice_label: Option<String>,
+    pub correct_choice_code: String,
     pub correct_choice_label: String,
     pub explanation_text: String,
+    pub confusion_signal: String,
+    pub next_round_id: Option<i64>,
     pub session_complete: bool,
 }
 
@@ -1134,9 +1510,53 @@ impl From<TrapRoundResult> for TrapRoundResultDto {
             round_number: value.round_number,
             is_correct: value.is_correct,
             score_earned: value.score_earned,
+            new_score: value.new_score,
+            streak: value.streak,
+            selected_choice_code: value.selected_choice_code,
+            selected_choice_label: value.selected_choice_label,
+            correct_choice_code: value.correct_choice_code,
             correct_choice_label: value.correct_choice_label,
             explanation_text: value.explanation_text,
+            confusion_signal: value.confusion_signal,
+            next_round_id: value.next_round_id,
             session_complete: value.session_complete,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrapReviewRoundDto {
+    pub round_id: i64,
+    pub round_number: i64,
+    pub mode: String,
+    pub lane: String,
+    pub prompt_text: String,
+    pub selected_choice_label: Option<String>,
+    pub correct_choice_label: String,
+    pub is_correct: bool,
+    pub timed_out: bool,
+    pub response_time_ms: Option<i64>,
+    pub confusion_reason_code: Option<String>,
+    pub confusion_reason_text: Option<String>,
+    pub explanation_text: String,
+}
+
+impl From<TrapReviewRound> for TrapReviewRoundDto {
+    fn from(value: TrapReviewRound) -> Self {
+        Self {
+            round_id: value.round_id,
+            round_number: value.round_number,
+            mode: value.mode,
+            lane: value.lane,
+            prompt_text: value.prompt_text,
+            selected_choice_label: value.selected_choice_label,
+            correct_choice_label: value.correct_choice_label,
+            is_correct: value.is_correct,
+            timed_out: value.timed_out,
+            response_time_ms: value.response_time_ms,
+            confusion_reason_code: value.confusion_reason_code,
+            confusion_reason_text: value.confusion_reason_text,
+            explanation_text: value.explanation_text,
         }
     }
 }
@@ -1144,24 +1564,42 @@ impl From<TrapRoundResult> for TrapRoundResultDto {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrapReviewDto {
     pub session_id: i64,
+    pub pair_id: i64,
     pub pair_title: String,
     pub mode: String,
     pub score: i64,
     pub accuracy_bp: i64,
     pub confusion_score: i64,
+    pub weakest_lane: Option<String>,
+    pub timed_out_count: i64,
+    pub recommended_next_mode: String,
+    pub dominant_confusion_reason: Option<String>,
+    pub remediation_actions: Vec<String>,
     pub round_count: usize,
+    pub rounds: Vec<TrapReviewRoundDto>,
 }
 
 impl From<TrapSessionReview> for TrapReviewDto {
     fn from(value: TrapSessionReview) -> Self {
         Self {
             session_id: value.session_id,
+            pair_id: value.pair_id,
             pair_title: value.pair_title,
             mode: value.mode,
             score: value.score,
             accuracy_bp: value.accuracy_bp as i64,
             confusion_score: value.confusion_score as i64,
+            weakest_lane: value.weakest_lane,
+            timed_out_count: value.timed_out_count,
+            recommended_next_mode: value.recommended_next_mode,
+            dominant_confusion_reason: value.dominant_confusion_reason,
+            remediation_actions: value.remediation_actions,
             round_count: value.rounds.len(),
+            rounds: value
+                .rounds
+                .into_iter()
+                .map(TrapReviewRoundDto::from)
+                .collect(),
         }
     }
 }
@@ -1526,6 +1964,8 @@ fn last_active_label(last_active_at: Option<DateTime<Utc>>) -> String {
 
 #[cfg(test)]
 mod tests {
+    use ecoach_games::{GameSession, TrapsState};
+
     use super::*;
     use serde_json::json;
 
@@ -1672,5 +2112,183 @@ mod tests {
             "subject_publish_ready"
         );
         assert_eq!(dashboard_dto.topics[0].fabric_signals.len(), 1);
+    }
+
+    #[test]
+    fn elite_blueprint_report_dto_preserves_targets_and_trap_signal() {
+        let dto = EliteBlueprintReportDto::from(EliteBlueprintReport {
+            blueprint: EliteSessionBlueprint {
+                student_id: 7,
+                subject_id: 3,
+                session_class: "trapsense".to_string(),
+                target_topic_ids: vec![11, 12],
+                target_family_ids: vec![21],
+                authoring_modes: vec![
+                    "misconception_probe".to_string(),
+                    "representation_shift".to_string(),
+                ],
+                target_question_count: 10,
+                rationale: "Recent trap pressure is still active.".to_string(),
+            },
+            profile: Some(EliteProfile {
+                student_id: 7,
+                subject_id: 3,
+                eps_score: 8_100,
+                tier: "apex".to_string(),
+                precision_score: 6_200,
+                speed_score: 7_500,
+                depth_score: 7_800,
+                composure_score: 7_300,
+            }),
+            topic_targets: vec![EliteBlueprintTopicTarget {
+                topic_id: 11,
+                topic_name: "Fractions".to_string(),
+                domination_score: 4_200,
+                precision_score: 5_000,
+                trap_resistance_score: 4_700,
+                status: "fragile".to_string(),
+                selection_reason: "Trap pressure moved this topic to the front.".to_string(),
+            }],
+            family_targets: vec![EliteBlueprintFamilyTarget {
+                family_id: 21,
+                family_code: Some("ALG_TRAP".to_string()),
+                family_name: "Algebra Trap".to_string(),
+                topic_id: Some(11),
+                topic_name: Some("Fractions".to_string()),
+                health_status: Some("fragile".to_string()),
+                recurrence_score: 7_400,
+                replacement_score: 8_100,
+                selection_reason: "Replacement pressure is high.".to_string(),
+            }],
+            trap_signal: Some(EliteTrapBlueprintSignal {
+                topic_id: Some(11),
+                topic_name: Some("Fractions".to_string()),
+                confusion_score: 8_200,
+                similarity_trap_bp: 4_400,
+                which_is_which_bp: 4_900,
+                timed_out_count: 3,
+                force_trapsense: true,
+                rationale: Some("Trap evidence is still fragile.".to_string()),
+            }),
+        });
+
+        assert_eq!(dto.blueprint.session_class, "trapsense");
+        assert_eq!(
+            dto.profile.as_ref().map(|profile| profile.tier.as_str()),
+            Some("apex")
+        );
+        assert_eq!(
+            dto.topic_targets[0].selection_reason,
+            "Trap pressure moved this topic to the front."
+        );
+        assert_eq!(
+            dto.family_targets[0].family_code.as_deref(),
+            Some("ALG_TRAP")
+        );
+        assert_eq!(
+            dto.trap_signal
+                .as_ref()
+                .map(|signal| signal.force_trapsense),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn trap_dtos_preserve_rounds_and_remediation_detail() {
+        let snapshot = TrapSessionSnapshotDto::from(TrapSessionSnapshot {
+            session: GameSession {
+                id: 41,
+                student_id: 7,
+                game_type: "traps".to_string(),
+                subject_id: 3,
+                session_state: "active".to_string(),
+                score: 120,
+                rounds_total: 5,
+                rounds_played: 2,
+                streak: 1,
+                best_streak: 2,
+                created_at: "2026-03-30T10:00:00Z".to_string(),
+                completed_at: None,
+            },
+            state: TrapsState {
+                pair_id: 91,
+                pair_title: "Distance vs Displacement".to_string(),
+                mode: "unmask".to_string(),
+                correct_discriminations: 1,
+                total_discriminations: 2,
+                confusion_score: 6_700,
+                current_round_id: Some(501),
+                current_round_number: 3,
+            },
+            left_label: "Distance".to_string(),
+            right_label: "Displacement".to_string(),
+            summary_text: Some("Students swap scalar and vector meaning.".to_string()),
+            recommended_mode: "which_is_which".to_string(),
+            rounds: vec![TrapRoundCard {
+                id: 501,
+                round_number: 3,
+                pair_id: 91,
+                mode: "unmask".to_string(),
+                lane: "which_is_which".to_string(),
+                prompt_text: "Which term includes direction?".to_string(),
+                prompt_payload: json!({ "clue": "vector" }),
+                answer_options: vec![
+                    TrapChoiceOption {
+                        code: "left".to_string(),
+                        label: "Distance".to_string(),
+                    },
+                    TrapChoiceOption {
+                        code: "right".to_string(),
+                        label: "Displacement".to_string(),
+                    },
+                ],
+                reveal_count: 1,
+                max_reveal_count: 2,
+                status: "active".to_string(),
+            }],
+        });
+
+        let review = TrapReviewDto::from(TrapSessionReview {
+            session_id: 41,
+            pair_id: 91,
+            pair_title: "Distance vs Displacement".to_string(),
+            mode: "unmask".to_string(),
+            score: 120,
+            accuracy_bp: 6_500,
+            confusion_score: 6_700,
+            weakest_lane: Some("which_is_which".to_string()),
+            timed_out_count: 1,
+            recommended_next_mode: "difference_drill".to_string(),
+            dominant_confusion_reason: Some("near_miss_language".to_string()),
+            remediation_actions: vec![
+                "Replay the pair in difference drill.".to_string(),
+                "Review the vector cue.".to_string(),
+            ],
+            rounds: vec![TrapReviewRound {
+                round_id: 501,
+                round_number: 3,
+                mode: "unmask".to_string(),
+                lane: "which_is_which".to_string(),
+                prompt_text: "Which term includes direction?".to_string(),
+                selected_choice_label: Some("Distance".to_string()),
+                correct_choice_label: "Displacement".to_string(),
+                is_correct: false,
+                timed_out: false,
+                response_time_ms: Some(4_200),
+                confusion_reason_code: Some("near_miss_language".to_string()),
+                confusion_reason_text: Some("Both sounded like movement.".to_string()),
+                explanation_text: "Displacement includes direction.".to_string(),
+            }],
+        });
+
+        assert_eq!(snapshot.session_state, "active");
+        assert_eq!(snapshot.rounds[0].answer_options.len(), 2);
+        assert_eq!(snapshot.recommended_mode, "which_is_which");
+        assert_eq!(review.weakest_lane.as_deref(), Some("which_is_which"));
+        assert_eq!(review.remediation_actions.len(), 2);
+        assert_eq!(
+            review.rounds[0].confusion_reason_code.as_deref(),
+            Some("near_miss_language")
+        );
     }
 }

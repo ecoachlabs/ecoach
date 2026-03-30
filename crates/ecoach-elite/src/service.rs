@@ -2,7 +2,10 @@ use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, ema_upd
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
-use crate::models::{EliteProfile, EliteSessionBlueprint, EliteSessionScore, EliteTopicProfile};
+use crate::models::{
+    EliteBlueprintFamilyTarget, EliteBlueprintReport, EliteBlueprintTopicTarget, EliteProfile,
+    EliteSessionBlueprint, EliteSessionScore, EliteTopicProfile, EliteTrapBlueprintSignal,
+};
 
 pub struct EliteService<'a> {
     conn: &'a Connection,
@@ -241,6 +244,47 @@ impl<'a> EliteService<'a> {
         student_id: i64,
         subject_id: i64,
     ) -> EcoachResult<EliteSessionBlueprint> {
+        Ok(self.resolve_blueprint(student_id, subject_id)?.blueprint)
+    }
+
+    pub fn build_session_blueprint_report(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<EliteBlueprintReport> {
+        let resolved = self.resolve_blueprint(student_id, subject_id)?;
+        let trap_signal = resolved.trap_signal.as_public_signal().filter(|signal| {
+            signal.force_trapsense
+                || signal.topic_id.is_some()
+                || signal.rationale.is_some()
+                || signal.confusion_score > 0
+        });
+        let topic_targets = self.load_blueprint_topic_targets(
+            student_id,
+            subject_id,
+            &resolved.blueprint.target_topic_ids,
+            trap_signal.as_ref(),
+        )?;
+        let family_targets = self.load_blueprint_family_targets(
+            subject_id,
+            &resolved.blueprint.target_family_ids,
+            &resolved.blueprint.session_class,
+        )?;
+
+        Ok(EliteBlueprintReport {
+            blueprint: resolved.blueprint,
+            profile: resolved.profile,
+            topic_targets,
+            family_targets,
+            trap_signal,
+        })
+    }
+
+    fn resolve_blueprint(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<ResolvedBlueprint> {
         let profile = self.get_profile(student_id, subject_id)?;
         let mut session_class = profile
             .as_ref()
@@ -282,7 +326,7 @@ impl<'a> EliteService<'a> {
                 "{} is the next elite lane because no weak-topic history exists yet; start from the strongest exam-facing families.",
                 session_class
             )
-        } else if let Some(reason) = trap_signal.rationale {
+        } else if let Some(reason) = trap_signal.rationale.as_deref() {
             format!(
                 "{} now targets topics {:?} with families {:?} because {}.",
                 session_class, target_topic_ids, target_family_ids, reason
@@ -294,16 +338,141 @@ impl<'a> EliteService<'a> {
             )
         };
 
-        Ok(EliteSessionBlueprint {
-            student_id,
-            subject_id,
-            session_class,
-            target_topic_ids,
-            target_family_ids,
-            authoring_modes,
-            target_question_count,
-            rationale,
+        Ok(ResolvedBlueprint {
+            profile,
+            blueprint: EliteSessionBlueprint {
+                student_id,
+                subject_id,
+                session_class,
+                target_topic_ids,
+                target_family_ids,
+                authoring_modes,
+                target_question_count,
+                rationale,
+            },
+            trap_signal,
         })
+    }
+
+    fn load_blueprint_topic_targets(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        topic_ids: &[i64],
+        trap_signal: Option<&EliteTrapBlueprintSignal>,
+    ) -> EcoachResult<Vec<EliteBlueprintTopicTarget>> {
+        let mut targets = Vec::new();
+        for (index, topic_id) in topic_ids.iter().copied().enumerate() {
+            let topic = self
+                .conn
+                .query_row(
+                    "SELECT t.id,
+                            t.name,
+                            COALESCE(etp.domination_score, 0),
+                            COALESCE(etp.precision_score, 0),
+                            COALESCE(etp.trap_resistance_score, 0),
+                            COALESCE(etp.status, 'unranked')
+                     FROM topics t
+                     LEFT JOIN elite_topic_profiles etp
+                        ON etp.student_id = ?1
+                       AND etp.subject_id = ?2
+                       AND etp.topic_id = t.id
+                     WHERE t.id = ?3",
+                    params![student_id, subject_id, topic_id],
+                    |row| {
+                        Ok(EliteBlueprintTopicTarget {
+                            topic_id: row.get(0)?,
+                            topic_name: row.get(1)?,
+                            domination_score: clamp_bp(row.get::<_, i64>(2)?),
+                            precision_score: clamp_bp(row.get::<_, i64>(3)?),
+                            trap_resistance_score: clamp_bp(row.get::<_, i64>(4)?),
+                            status: row.get(5)?,
+                            selection_reason: String::new(),
+                        })
+                    },
+                )
+                .optional()
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            let Some(mut topic) = topic else {
+                continue;
+            };
+            topic.selection_reason = if trap_signal.and_then(|signal| signal.topic_id)
+                == Some(topic.topic_id)
+            {
+                "Trap pressure moved this topic to the front of the elite blueprint.".to_string()
+            } else if index == 0 {
+                "This is the lowest-domination topic in the current elite profile.".to_string()
+            } else {
+                "This stays in the blueprint as the next supporting pressure topic.".to_string()
+            };
+            targets.push(topic);
+        }
+        Ok(targets)
+    }
+
+    fn load_blueprint_family_targets(
+        &self,
+        subject_id: i64,
+        family_ids: &[i64],
+        session_class: &str,
+    ) -> EcoachResult<Vec<EliteBlueprintFamilyTarget>> {
+        let mut families = Vec::new();
+        for family_id in family_ids {
+            let family = self
+                .conn
+                .query_row(
+                    "SELECT qf.id,
+                            qf.family_code,
+                            qf.family_name,
+                            qf.topic_id,
+                            t.name,
+                            qfh.health_status,
+                            COALESCE(qfa.recurrence_score, 0),
+                            COALESCE(qfa.replacement_score, 0)
+                     FROM question_families qf
+                     LEFT JOIN topics t ON t.id = qf.topic_id
+                     LEFT JOIN question_family_health qfh ON qfh.family_id = qf.id
+                     LEFT JOIN question_family_analytics qfa ON qfa.family_id = qf.id
+                     WHERE qf.subject_id = ?1 AND qf.id = ?2",
+                    params![subject_id, family_id],
+                    |row| {
+                        Ok(EliteBlueprintFamilyTarget {
+                            family_id: row.get(0)?,
+                            family_code: row.get(1)?,
+                            family_name: row.get(2)?,
+                            topic_id: row.get(3)?,
+                            topic_name: row.get(4)?,
+                            health_status: row.get(5)?,
+                            recurrence_score: clamp_bp(row.get::<_, i64>(6)?),
+                            replacement_score: clamp_bp(row.get::<_, i64>(7)?),
+                            selection_reason: String::new(),
+                        })
+                    },
+                )
+                .optional()
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            let Some(mut family) = family else {
+                continue;
+            };
+            family.selection_reason = match (
+                session_class,
+                family.health_status.as_deref(),
+                family.replacement_score >= family.recurrence_score,
+            ) {
+                ("trapsense", Some("fragile"), _) => {
+                    "Fragile family with trap pressure; keep it live in remediation authoring."
+                        .to_string()
+                }
+                (_, _, true) => {
+                    "Replacement pressure makes this family exam-important right now.".to_string()
+                }
+                _ => "Recurring family selected to stabilize the blueprint topic set.".to_string(),
+            };
+            families.push(family);
+        }
+        Ok(families)
     }
 
     fn update_profile_rollup(
@@ -645,10 +814,11 @@ impl<'a> EliteService<'a> {
             return Ok(TrapBlueprintSignal::default());
         }
 
-        let mut sql = "SELECT cp.topic_id, scs.confusion_score, scs.similarity_trap_bp,
+        let mut sql = "SELECT cp.topic_id, t.name, scs.confusion_score, scs.similarity_trap_bp,
                               scs.which_is_which_bp, scs.timed_out_count
                        FROM student_contrast_states scs
                        INNER JOIN contrast_pairs cp ON cp.id = scs.pair_id
+                       LEFT JOIN topics t ON t.id = cp.topic_id
                        WHERE scs.student_id = ?1 AND cp.subject_id = ?2"
             .to_string();
         let mut params_vec: Vec<rusqlite::types::Value> =
@@ -667,16 +837,27 @@ impl<'a> EliteService<'a> {
         let signal = self
             .conn
             .query_row(&sql, rusqlite::params_from_iter(params_vec.iter()), |row| {
+                let topic_id = row.get::<_, Option<i64>>(0)?;
+                let topic_name = row.get::<_, Option<String>>(1)?;
+                let confusion_score = clamp_bp(row.get::<_, i64>(2)?);
+                let similarity_trap_bp = clamp_bp(row.get::<_, i64>(3)?);
+                let which_is_which_bp = clamp_bp(row.get::<_, i64>(4)?);
+                let timed_out_count = row.get::<_, i64>(5)?;
                 Ok(TrapBlueprintSignal {
-                    topic_id: row.get(0)?,
-                    force_trapsense: row.get::<_, i64>(1)? >= 6800
-                        || row.get::<_, i64>(2)? < 5500
-                        || row.get::<_, i64>(3)? < 5500
-                        || row.get::<_, i64>(4)? >= 2,
+                    topic_id,
+                    topic_name,
+                    confusion_score,
+                    similarity_trap_bp,
+                    which_is_which_bp,
+                    timed_out_count,
+                    force_trapsense: confusion_score >= 6800
+                        || similarity_trap_bp < 5500
+                        || which_is_which_bp < 5500
+                        || timed_out_count >= 2,
                     rationale: Some(format!(
                         "recent trap evidence is still fragile for topic {} with confusion {} bp",
-                        row.get::<_, Option<i64>>(0)?.unwrap_or_default(),
-                        row.get::<_, i64>(1)?
+                        topic_id.unwrap_or_default(),
+                        confusion_score
                     )),
                 })
             })
@@ -707,11 +888,48 @@ struct EliteSessionHeader {
     subject_id: Option<i64>,
 }
 
+struct ResolvedBlueprint {
+    profile: Option<EliteProfile>,
+    blueprint: EliteSessionBlueprint,
+    trap_signal: TrapBlueprintSignal,
+}
+
 #[derive(Default)]
 struct TrapBlueprintSignal {
     topic_id: Option<i64>,
+    topic_name: Option<String>,
+    confusion_score: BasisPoints,
+    similarity_trap_bp: BasisPoints,
+    which_is_which_bp: BasisPoints,
+    timed_out_count: i64,
     force_trapsense: bool,
     rationale: Option<String>,
+}
+
+impl TrapBlueprintSignal {
+    fn as_public_signal(&self) -> Option<EliteTrapBlueprintSignal> {
+        if self.topic_id.is_none()
+            && !self.force_trapsense
+            && self.rationale.is_none()
+            && self.confusion_score == 0
+            && self.similarity_trap_bp == 0
+            && self.which_is_which_bp == 0
+            && self.timed_out_count == 0
+        {
+            return None;
+        }
+
+        Some(EliteTrapBlueprintSignal {
+            topic_id: self.topic_id,
+            topic_name: self.topic_name.clone(),
+            confusion_score: self.confusion_score,
+            similarity_trap_bp: self.similarity_trap_bp,
+            which_is_which_bp: self.which_is_which_bp,
+            timed_out_count: self.timed_out_count,
+            force_trapsense: self.force_trapsense,
+            rationale: self.rationale.clone(),
+        })
+    }
 }
 
 struct EliteScoredItem {
@@ -970,6 +1188,53 @@ mod tests {
                 .authoring_modes
                 .iter()
                 .any(|mode| mode == "misconception_probe")
+        );
+    }
+
+    #[test]
+    fn blueprint_report_exposes_profile_targets_and_trap_signal() {
+        let conn = Connection::open_in_memory().expect("in-memory db should open");
+        seed_schema(&conn);
+        seed_blueprint_fixture(&conn);
+
+        let service = EliteService::new(&conn);
+        let report = service
+            .build_session_blueprint_report(7, 1)
+            .expect("blueprint report should build");
+
+        assert_eq!(report.blueprint.session_class, "trapsense");
+        assert_eq!(
+            report.profile.as_ref().map(|profile| profile.tier.as_str()),
+            Some("apex")
+        );
+        assert_eq!(
+            report.topic_targets.first().map(|topic| topic.topic_id),
+            Some(100)
+        );
+        assert_eq!(
+            report
+                .topic_targets
+                .first()
+                .map(|topic| topic.topic_name.as_str()),
+            Some("Topic")
+        );
+        assert_eq!(
+            report
+                .trap_signal
+                .as_ref()
+                .map(|signal| signal.force_trapsense),
+            Some(true)
+        );
+        assert_eq!(
+            report.family_targets.first().map(|family| family.family_id),
+            Some(900)
+        );
+        assert!(
+            report
+                .family_targets
+                .first()
+                .map(|family| !family.selection_reason.is_empty())
+                .unwrap_or(false)
         );
     }
 

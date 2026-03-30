@@ -3,6 +3,7 @@ pub mod service;
 
 pub use models::{
     AcquisitionEvidenceCandidate, AcquisitionJobReport, BundleFile, BundleProcessReport,
-    ContentAcquisitionJob, ExtractedInsight, SubmissionBundle,
+    CoachGoalSignal, ContentAcquisitionJob, ExtractedInsight, FollowUpRecommendation,
+    SubmissionBundle, TopicActionSummary,
 };
 pub use service::IntakeService;

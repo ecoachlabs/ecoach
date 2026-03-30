@@ -4,13 +4,13 @@ pub mod selection;
 pub mod service;
 
 pub use models::{
-    DuplicateCheckResult, GeneratedQuestionDraft, Question, QuestionFamilyChoice,
-    QuestionFamilyGenerationPriority, QuestionFamilyHealth, QuestionGenerationRequest,
-    QuestionGenerationRequestInput, QuestionGraphEdge, QuestionIntelligenceLink,
-    QuestionIntelligenceProfile, QuestionIntelligenceQuery, QuestionLineageEdge,
-    QuestionLineageGraph, QuestionLineageNode, QuestionOption, QuestionRemediationPlan,
-    QuestionSelectionRequest, QuestionSlotSpec, QuestionVariantMode, RelatedQuestion,
-    SelectedQuestion,
+    DuplicateCheckResult, GeneratedQuestionDraft, QualityGateResult, Question,
+    QuestionFamilyChoice, QuestionFamilyGenerationPriority, QuestionFamilyHealth,
+    QuestionGenerationRequest, QuestionGenerationRequestInput, QuestionGraphEdge,
+    QuestionIntelligenceLink, QuestionIntelligenceProfile, QuestionIntelligenceQuery,
+    QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode, QuestionOption,
+    QuestionRemediationPlan, QuestionSelectionRequest, QuestionSlotSpec, QuestionVariantMode,
+    RelatedQuestion, SelectedQuestion,
 };
 pub use reactor::QuestionReactor;
 pub use selection::QuestionSelector;

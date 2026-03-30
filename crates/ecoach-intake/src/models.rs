@@ -2,6 +2,38 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachGoalSignal {
+    pub signal_key: String,
+    pub title: String,
+    pub summary: String,
+    pub priority: String,
+    pub confidence_band: String,
+    pub supporting_topics: Vec<String>,
+    pub source_document_roles: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TopicActionSummary {
+    pub topic_label: String,
+    pub summary: String,
+    pub priority: String,
+    pub confidence_band: String,
+    pub recommended_actions: Vec<String>,
+    pub weakness_signals: Vec<String>,
+    pub source_document_roles: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FollowUpRecommendation {
+    pub audience: String,
+    pub recommendation_key: String,
+    pub summary: String,
+    pub priority: String,
+    pub confidence_band: String,
+    pub topic_label: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubmissionBundle {
     pub id: i64,
     pub student_id: i64,
@@ -57,11 +89,15 @@ pub struct BundleProcessReport {
     pub needs_confirmation: bool,
     pub unresolved_alignment_count: i64,
     pub review_priority: String,
+    pub reconstruction_confidence_band: String,
     pub bundle_kind: String,
     pub detected_document_roles: Vec<String>,
     pub weakness_signals: Vec<String>,
     pub recommended_actions: Vec<String>,
     pub review_reasons: Vec<String>,
+    pub coach_goal_signals: Vec<CoachGoalSignal>,
+    pub topic_action_summaries: Vec<TopicActionSummary>,
+    pub follow_up_recommendations: Vec<FollowUpRecommendation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -196,6 +196,25 @@ struct ApprovedAcquisitionEvidence {
     snippet: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct AutoReviewTaskSpec {
+    candidate_id: Option<i64>,
+    task_type: String,
+    severity: String,
+    notes: String,
+}
+
+impl AutoReviewTaskSpec {
+    fn new(candidate_id: Option<i64>, task_type: &str, severity: &str, notes: String) -> Self {
+        Self {
+            candidate_id,
+            task_type: task_type.to_string(),
+            severity: severity.to_string(),
+            notes,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct KnowledgeDraft {
     title: String,
@@ -307,14 +326,14 @@ impl<'a> FoundryCoordinatorService<'a> {
         source_upload_id: i64,
     ) -> EcoachResult<ContentFoundrySourceReport> {
         let candidates = self.list_parse_candidates(source_upload_id)?;
+        let mut desired_auto_tasks = Vec::new();
         if candidates.is_empty() {
-            self.ensure_review_task(
-                source_upload_id,
+            desired_auto_tasks.push(AutoReviewTaskSpec::new(
                 None,
                 "publish_gate",
                 "high",
-                "No parse candidates were extracted. Re-run parsing before review.",
-            )?;
+                "No parse candidates were extracted. Re-run parsing before review.".to_string(),
+            ));
         }
 
         let mut duplicate_counts = BTreeMap::<(String, String), i64>::new();
@@ -343,16 +362,16 @@ impl<'a> FoundryCoordinatorService<'a> {
             if candidate.confidence_score < LOW_CONFIDENCE_THRESHOLD
                 || candidate.normalized_label.is_none()
             {
-                self.ensure_review_task(
-                    source_upload_id,
+                self.set_candidate_review_status(candidate.id, "pending")?;
+                desired_auto_tasks.push(AutoReviewTaskSpec::new(
                     Some(candidate.id),
                     "normalization",
                     severity_for_confidence(candidate.confidence_score),
-                    &format!(
+                    format!(
                         "Candidate '{}' ({}) needs normalization review at {} bp confidence.",
                         candidate.raw_label, candidate.candidate_type, candidate.confidence_score
                     ),
-                )?;
+                ));
             } else {
                 self.set_candidate_review_status(candidate.id, "approved")?;
             }
@@ -360,46 +379,44 @@ impl<'a> FoundryCoordinatorService<'a> {
 
         for ((candidate_type, normalized_label), count) in duplicate_counts {
             if count > 1 {
-                self.ensure_review_task(
-                    source_upload_id,
+                desired_auto_tasks.push(AutoReviewTaskSpec::new(
                     None,
                     "duplicate_check",
                     "medium",
-                    &format!(
+                    format!(
                         "Duplicate candidate label detected for {}:{}.",
                         candidate_type, normalized_label
                     ),
-                )?;
+                ));
             }
         }
 
         if !has_subject {
-            self.ensure_review_task(
-                source_upload_id,
+            desired_auto_tasks.push(AutoReviewTaskSpec::new(
                 None,
                 "hierarchy_fix",
                 "high",
-                "No subject node was extracted from this source.",
-            )?;
+                "No subject node was extracted from this source.".to_string(),
+            ));
         }
         if !has_topic {
-            self.ensure_review_task(
-                source_upload_id,
+            desired_auto_tasks.push(AutoReviewTaskSpec::new(
                 None,
                 "hierarchy_fix",
                 "high",
-                "No topic or subtopic nodes were extracted from this source.",
-            )?;
+                "No topic or subtopic nodes were extracted from this source.".to_string(),
+            ));
         }
         if !has_objective {
-            self.ensure_review_task(
-                source_upload_id,
+            desired_auto_tasks.push(AutoReviewTaskSpec::new(
                 None,
                 "publish_gate",
                 "medium",
-                "No objective or skill nodes were extracted from this source.",
-            )?;
+                "No objective or skill nodes were extracted from this source.".to_string(),
+            ));
         }
+
+        self.sync_auto_review_tasks(source_upload_id, &desired_auto_tasks)?;
 
         let unresolved_review_count = self
             .list_review_tasks(source_upload_id)?
@@ -713,7 +730,13 @@ impl<'a> FoundryCoordinatorService<'a> {
         let contrast_pair_count = self.count_contrast_pairs(topic_id)?;
         let publishable_artifact_count = self.count_publish_jobs_for_topic(
             topic_id,
-            &["ready_to_publish", "publishing", "published"],
+            &[
+                "gating",
+                "review_required",
+                "ready_to_publish",
+                "publishing",
+                "published",
+            ],
         )?;
         let published_artifact_count =
             self.count_publish_jobs_for_topic(topic_id, &["published"])?;
@@ -1390,6 +1413,64 @@ impl<'a> FoundryCoordinatorService<'a> {
         Ok(())
     }
 
+    fn sync_auto_review_tasks(
+        &self,
+        source_upload_id: i64,
+        desired_tasks: &[AutoReviewTaskSpec],
+    ) -> EcoachResult<()> {
+        let desired_tasks = desired_tasks.iter().cloned().collect::<BTreeSet<_>>();
+        let desired_keys = desired_tasks
+            .iter()
+            .map(|task| auto_review_task_key(task.candidate_id, &task.task_type, &task.notes))
+            .collect::<BTreeSet<_>>();
+
+        for task in self.list_review_tasks(source_upload_id)? {
+            if task.status == "resolved" || !is_auto_review_task_type(&task.task_type) {
+                continue;
+            }
+            let key = auto_review_task_key(
+                task.candidate_id,
+                &task.task_type,
+                task.notes.as_deref().unwrap_or(""),
+            );
+            if !desired_keys.contains(&key) {
+                self.auto_resolve_review_task(task.id, task.notes.as_deref())?;
+            }
+        }
+
+        for task in desired_tasks {
+            self.ensure_review_task(
+                source_upload_id,
+                task.candidate_id,
+                &task.task_type,
+                &task.severity,
+                &task.notes,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn auto_resolve_review_task(
+        &self,
+        task_id: i64,
+        existing_notes: Option<&str>,
+    ) -> EcoachResult<()> {
+        let notes = append_review_task_note(
+            existing_notes,
+            "Auto-resolution: latest parse refresh no longer requires this task.",
+        );
+        self.conn
+            .execute(
+                "UPDATE curriculum_review_tasks
+                 SET status = 'resolved', notes = ?1, resolved_at = datetime('now')
+                 WHERE id = ?2",
+                params![notes, task_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
     fn refresh_source_confidence(&self, source_upload_id: i64) -> EcoachResult<()> {
         let average_confidence = self
             .conn
@@ -1656,7 +1737,13 @@ impl<'a> FoundryCoordinatorService<'a> {
                  FROM content_quality_reports reports
                  JOIN content_publish_jobs jobs ON jobs.id = reports.publish_job_id
                  WHERE jobs.topic_id = ?1
-                   AND jobs.status IN ('ready_to_publish', 'publishing', 'published')",
+                   AND jobs.status IN (
+                        'gating',
+                        'review_required',
+                        'ready_to_publish',
+                        'publishing',
+                        'published'
+                   )",
                 [topic_id],
                 |row| row.get::<_, Option<f64>>(0),
             )
@@ -1892,11 +1979,14 @@ impl<'a> FoundryCoordinatorService<'a> {
                         "recommended_actions": report.recommended_actions,
                     }));
                 }
+                let queued_follow_up_jobs =
+                    self.queue_source_follow_up_jobs(job.target_id, "job_execution")?;
                 Ok(json!({
                     "execution_state": "source_parsed",
                     "source_upload_id": job.target_id,
                     "source_status": report.source_upload.source_status,
                     "approved_candidate_count": report.approved_candidate_count,
+                    "queued_follow_up_jobs": queued_follow_up_jobs.iter().map(|item| item.job_type.clone()).collect::<Vec<_>>(),
                 }))
             }
             "source_approval_job" => {
@@ -1933,11 +2023,14 @@ impl<'a> FoundryCoordinatorService<'a> {
                 let acquisition_job_id =
                     self.seed_acquisition_support(subject_id, topic_id, &job.payload)?;
                 let snapshot = self.recompute_topic_package_snapshot(topic_id)?;
+                let queued_follow_up_jobs =
+                    self.queue_topic_foundry_jobs(topic_id, "job_execution")?;
                 Ok(json!({
                     "execution_state": "support_seeded",
                     "topic_id": topic_id,
                     "acquisition_job_id": acquisition_job_id,
                     "snapshot": snapshot,
+                    "queued_follow_up_jobs": queued_follow_up_jobs.iter().map(|item| item.job_type.clone()).collect::<Vec<_>>(),
                 }))
             }
             "curriculum_enrichment_job" => {
@@ -4216,6 +4309,28 @@ fn derive_live_health_state(
     }
 }
 
+fn is_auto_review_task_type(task_type: &str) -> bool {
+    matches!(
+        task_type,
+        "normalization" | "duplicate_check" | "hierarchy_fix" | "publish_gate"
+    )
+}
+
+fn auto_review_task_key(
+    candidate_id: Option<i64>,
+    task_type: &str,
+    notes: &str,
+) -> (Option<i64>, String, String) {
+    (candidate_id, task_type.to_string(), notes.to_string())
+}
+
+fn append_review_task_note(existing: Option<&str>, appended: &str) -> String {
+    match existing {
+        Some(current) if !current.is_empty() => format!("{current}\n{appended}"),
+        _ => appended.to_string(),
+    }
+}
+
 fn dedupe_and_sort(items: &mut Vec<String>) {
     let mut seen = BTreeSet::new();
     for item in items.drain(..) {
@@ -4277,9 +4392,18 @@ fn dependencies_for_topic_job(job_type: &str, snapshot: &TopicPackageSnapshot) -
                 dependencies.push((*needed).to_string());
             }
         }
+        if job_type == "publish_activation_job"
+            && snapshot
+                .recommended_jobs
+                .iter()
+                .any(|job| job == "quality_review_job")
+        {
+            dependencies.push("quality_review_job".to_string());
+        }
     } else if job_type == "quality_review_job" && snapshot.publishable_artifact_count == 0 {
         dependencies.push("publish_job".to_string());
     }
+    dedupe_and_sort(&mut dependencies);
     dependencies
 }
 
@@ -4568,6 +4692,124 @@ mod tests {
     }
 
     #[test]
+    fn foundry_finalize_source_parse_reconciles_auto_review_tasks() {
+        let conn = open_test_database();
+        seed_admin(&conn);
+        let service = FoundryCoordinatorService::new(&conn);
+        let source = service
+            .register_source_upload(SourceUploadInput {
+                uploader_account_id: 1,
+                source_kind: "curriculum".to_string(),
+                title: "Math Curriculum Refresh".to_string(),
+                source_path: Some("C:/curriculum/math-refresh.pdf".to_string()),
+                country_code: Some("GH".to_string()),
+                exam_board: Some("WAEC".to_string()),
+                education_level: Some("JHS".to_string()),
+                subject_code: Some("MATH".to_string()),
+                academic_year: Some("2026".to_string()),
+                language_code: Some("en".to_string()),
+                version_label: Some("v-refresh".to_string()),
+                metadata: json!({ "source_trust": "tier_a" }),
+            })
+            .expect("source should register");
+
+        for (candidate_type, raw_label, confidence) in [
+            ("subject", "Mathematics", 9_200),
+            ("topic", "Fractions", 5_900),
+            ("topic", "Fractions", 8_400),
+        ] {
+            service
+                .add_parse_candidate(
+                    source.id,
+                    ParseCandidateInput {
+                        candidate_type: candidate_type.to_string(),
+                        parent_candidate_id: None,
+                        raw_label: raw_label.to_string(),
+                        normalized_label: Some(raw_label.to_ascii_lowercase()),
+                        payload: json!({ "page": 2 }),
+                        confidence_score: confidence,
+                    },
+                )
+                .expect("parse candidate should insert");
+        }
+
+        let initial_report = service
+            .finalize_source_parse(source.id)
+            .expect("initial parse should finalize");
+        assert_eq!(
+            initial_report.source_upload.source_status,
+            "review_required"
+        );
+        assert!(initial_report.unresolved_review_count >= 2);
+
+        let low_confidence_candidate_id: i64 = conn
+            .query_row(
+                "SELECT id
+                 FROM curriculum_parse_candidates
+                 WHERE source_upload_id = ?1
+                   AND confidence_score = 5900
+                 LIMIT 1",
+                [source.id],
+                |row| row.get(0),
+            )
+            .expect("low confidence candidate should exist");
+        conn.execute(
+            "UPDATE curriculum_parse_candidates
+             SET raw_label = 'Fractions Foundations',
+                 normalized_label = 'fractions foundations',
+                 confidence_score = 9100,
+                 updated_at = datetime('now')
+             WHERE id = ?1",
+            [low_confidence_candidate_id],
+        )
+        .expect("candidate refresh should persist");
+        service
+            .add_parse_candidate(
+                source.id,
+                ParseCandidateInput {
+                    candidate_type: "objective".to_string(),
+                    parent_candidate_id: None,
+                    raw_label: "Identify equivalent fractions".to_string(),
+                    normalized_label: Some("identify equivalent fractions".to_string()),
+                    payload: json!({ "page": 3 }),
+                    confidence_score: 9_000,
+                },
+            )
+            .expect("objective candidate should insert");
+
+        let refreshed_report = service
+            .finalize_source_parse(source.id)
+            .expect("refresh parse should finalize");
+        let follow_up_jobs = service
+            .queue_source_follow_up_jobs(source.id, "parse_refresh")
+            .expect("follow-up jobs should queue");
+
+        assert_eq!(refreshed_report.source_upload.source_status, "parsed");
+        assert_eq!(refreshed_report.unresolved_review_count, 0);
+        assert!(
+            refreshed_report
+                .review_tasks
+                .iter()
+                .all(|task| task.status == "resolved")
+        );
+        assert!(
+            follow_up_jobs
+                .iter()
+                .any(|job| job.job_type == "source_approval_job")
+        );
+        let refreshed_candidate_status: String = conn
+            .query_row(
+                "SELECT review_status
+                 FROM curriculum_parse_candidates
+                 WHERE id = ?1",
+                [low_confidence_candidate_id],
+                |row| row.get(0),
+            )
+            .expect("candidate status should load");
+        assert_eq!(refreshed_candidate_status, "approved");
+    }
+
+    #[test]
     fn foundry_stages_publish_jobs_and_persists_topic_health() {
         let conn = open_test_database();
         seed_admin(&conn);
@@ -4709,6 +4951,125 @@ mod tests {
                 .consumer_targets
                 .iter()
                 .any(|target| target.engine_key == "library")
+        );
+    }
+
+    #[test]
+    fn foundry_stage_publish_job_prefers_quality_follow_up_over_duplicate_publish_job() {
+        let conn = open_test_database();
+        seed_admin(&conn);
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let service = FoundryCoordinatorService::new(&conn);
+        let source = service
+            .register_source_upload(SourceUploadInput {
+                uploader_account_id: 1,
+                source_kind: "curriculum".to_string(),
+                title: "Quality Gate Topic".to_string(),
+                source_path: Some("C:/curriculum/quality-gate.pdf".to_string()),
+                country_code: Some("GH".to_string()),
+                exam_board: Some("WAEC".to_string()),
+                education_level: Some("JHS".to_string()),
+                subject_code: Some("MATH".to_string()),
+                academic_year: Some("2026".to_string()),
+                language_code: Some("en".to_string()),
+                version_label: Some("gate-v1".to_string()),
+                metadata: json!({ "source_trust": "tier_a" }),
+            })
+            .expect("source should register");
+
+        for (candidate_type, raw_label) in [
+            ("subject", "Mathematics"),
+            ("topic", "Ratio Review Topic"),
+            ("objective", "Interpret ratio tables"),
+        ] {
+            service
+                .add_parse_candidate(
+                    source.id,
+                    ParseCandidateInput {
+                        candidate_type: candidate_type.to_string(),
+                        parent_candidate_id: None,
+                        raw_label: raw_label.to_string(),
+                        normalized_label: Some(raw_label.to_ascii_lowercase()),
+                        payload: json!({ "page": 1 }),
+                        confidence_score: 6_000,
+                    },
+                )
+                .expect("parse candidate should insert");
+        }
+        let review_report = service
+            .finalize_source_parse(source.id)
+            .expect("parse should finalize");
+        for task in review_report.review_tasks {
+            service
+                .resolve_review_task(
+                    task.id,
+                    "manual approval for trusted curriculum draft",
+                    true,
+                )
+                .expect("review task should resolve");
+        }
+        service
+            .mark_source_reviewed(source.id)
+            .expect("source should become reviewed");
+
+        conn.execute(
+            "INSERT INTO topics (
+                subject_id, code, name, description, node_type, display_order,
+                exam_weight, difficulty_band, importance_weight, is_active
+             ) VALUES (1, 'AUTO-GATE', 'Ratio Review Topic', 'Sparse quality gate topic', 'topic', 1200, 4500, 'medium', 6500, 1)",
+            [],
+        )
+        .expect("gate topic should insert");
+        let topic_id = conn.last_insert_rowid();
+
+        let publish_report = service
+            .stage_publish_job(source.id, Some(1), Some(1), Some(topic_id), Some("gate-v1"))
+            .expect("publish job should stage");
+        let snapshot = service
+            .recompute_topic_package_snapshot(topic_id)
+            .expect("snapshot should recompute")
+            .expect("snapshot should exist");
+        let queued_jobs = service
+            .queue_topic_foundry_jobs(topic_id, "snapshot_refresh")
+            .expect("follow-up jobs should queue");
+
+        assert!(
+            matches!(
+                publish_report.job.status.as_str(),
+                "review_required" | "gating"
+            ),
+            "sparse topic should stage into a blocked quality state first"
+        );
+        assert!(snapshot.publishable_artifact_count >= 1);
+        assert!(
+            snapshot
+                .recommended_jobs
+                .iter()
+                .any(|job| job == "quality_review_job")
+        );
+        assert!(
+            !snapshot
+                .recommended_jobs
+                .iter()
+                .any(|job| job == "publish_job")
+        );
+        assert!(
+            queued_jobs
+                .iter()
+                .any(|job| job.job_type == "quality_review_job")
+        );
+        let activation_job = queued_jobs
+            .iter()
+            .find(|job| job.job_type == "publish_activation_job")
+            .expect("publish activation job should queue");
+        assert!(
+            activation_job
+                .dependency_refs
+                .iter()
+                .any(|dependency| dependency == "quality_review_job")
         );
     }
 

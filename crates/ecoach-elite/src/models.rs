@@ -59,3 +59,48 @@ pub struct EliteSessionBlueprint {
     pub target_question_count: i64,
     pub rationale: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteBlueprintTopicTarget {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub domination_score: BasisPoints,
+    pub precision_score: BasisPoints,
+    pub trap_resistance_score: BasisPoints,
+    pub status: String,
+    pub selection_reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteBlueprintFamilyTarget {
+    pub family_id: i64,
+    pub family_code: Option<String>,
+    pub family_name: String,
+    pub topic_id: Option<i64>,
+    pub topic_name: Option<String>,
+    pub health_status: Option<String>,
+    pub recurrence_score: BasisPoints,
+    pub replacement_score: BasisPoints,
+    pub selection_reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteTrapBlueprintSignal {
+    pub topic_id: Option<i64>,
+    pub topic_name: Option<String>,
+    pub confusion_score: BasisPoints,
+    pub similarity_trap_bp: BasisPoints,
+    pub which_is_which_bp: BasisPoints,
+    pub timed_out_count: i64,
+    pub force_trapsense: bool,
+    pub rationale: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EliteBlueprintReport {
+    pub blueprint: EliteSessionBlueprint,
+    pub profile: Option<EliteProfile>,
+    pub topic_targets: Vec<EliteBlueprintTopicTarget>,
+    pub family_targets: Vec<EliteBlueprintFamilyTarget>,
+    pub trap_signal: Option<EliteTrapBlueprintSignal>,
+}

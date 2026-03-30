@@ -83,6 +83,10 @@ pub struct CompileMockInput {
     pub topic_ids: Vec<i64>,
     /// Paper year for past paper simulation (optional)
     pub paper_year: Option<String>,
+    /// Mock type: forecast, diagnostic, remediation, final_exam, shock, wisdom
+    pub mock_type: Option<String>,
+    /// Link to a forecast blueprint snapshot for blueprint-driven assembly
+    pub blueprint_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -102,11 +106,13 @@ pub struct MockSession {
     pub subject_id: i64,
     pub session_id: i64,
     pub status: String,
+    pub mock_type: String,
     pub duration_minutes: i64,
     pub time_remaining_seconds: Option<i64>,
     pub question_count: i64,
     pub answered_count: i64,
     pub paper_year: Option<String>,
+    pub blueprint_id: Option<i64>,
     pub started_at: Option<String>,
     pub completed_at: Option<String>,
     pub created_at: String,
@@ -161,6 +167,7 @@ pub struct ImprovementDelta {
 pub struct MockSessionSummary {
     pub id: i64,
     pub subject_id: i64,
+    pub mock_type: String,
     pub grade: Option<String>,
     pub percentage: Option<f64>,
     pub status: String,

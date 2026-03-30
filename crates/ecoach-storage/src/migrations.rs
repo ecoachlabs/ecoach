@@ -140,6 +140,10 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         sql: include_str!("../../../migrations/runtime/033_mock_and_journey_runtime.sql"),
     },
     Migration {
+        id: "033b_mock_centre",
+        sql: include_str!("../../../migrations/runtime/033b_mock_centre.sql"),
+    },
+    Migration {
         id: "034_diagnostic_analytics",
         sql: include_str!("../../../migrations/runtime/034_diagnostic_analytics.sql"),
     },
@@ -162,6 +166,26 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
     Migration {
         id: "039_foundry_jobs",
         sql: include_str!("../../../migrations/runtime/039_foundry_jobs.sql"),
+    },
+    Migration {
+        id: "040_forecast",
+        sql: include_str!("../../../migrations/runtime/040_forecast.sql"),
+    },
+    Migration {
+        id: "041_mock_extensions",
+        sql: include_str!("../../../migrations/runtime/041_mock_extensions.sql"),
+    },
+    Migration {
+        id: "042_mock_diagnosis",
+        sql: include_str!("../../../migrations/runtime/042_mock_diagnosis.sql"),
+    },
+    Migration {
+        id: "043_distractor_health",
+        sql: include_str!("../../../migrations/runtime/043_distractor_health.sql"),
+    },
+    Migration {
+        id: "044_calibration_crosswalk",
+        sql: include_str!("../../../migrations/runtime/044_calibration_crosswalk.sql"),
     },
 ];
 

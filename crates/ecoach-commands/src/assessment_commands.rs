@@ -1,11 +1,14 @@
-use ecoach_elite::{EliteService, EliteSessionBlueprint};
+use ecoach_elite::EliteService;
 use ecoach_past_papers::{PastPaperInverseSignal, PastPapersService};
 use ecoach_sessions::SessionService;
 
 use crate::{dtos, error::CommandError, state::AppState};
 
 pub type PastPaperInverseSignalDto = PastPaperInverseSignal;
-pub type EliteSessionBlueprintDto = EliteSessionBlueprint;
+pub type EliteProfileDto = dtos::EliteProfileDto;
+pub type EliteTopicProfileDto = dtos::EliteTopicProfileDto;
+pub type EliteSessionBlueprintDto = dtos::EliteSessionBlueprintDto;
+pub type EliteBlueprintReportDto = dtos::EliteBlueprintReportDto;
 pub type PastPaperComebackSignalDto = dtos::PastPaperComebackSignalDto;
 pub type SessionRemediationPlanDto = dtos::QuestionRemediationPlanDto;
 pub type SessionEvidenceFabricDto = dtos::SessionEvidenceFabricDto;
@@ -28,7 +31,48 @@ pub fn build_elite_session_blueprint(
     subject_id: i64,
 ) -> Result<EliteSessionBlueprintDto, CommandError> {
     state.with_connection(|conn| {
-        Ok(EliteService::new(conn).build_session_blueprint(student_id, subject_id)?)
+        Ok(EliteService::new(conn)
+            .build_session_blueprint(student_id, subject_id)?
+            .into())
+    })
+}
+
+pub fn get_elite_profile(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Option<EliteProfileDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(EliteService::new(conn)
+            .get_profile(student_id, subject_id)?
+            .map(EliteProfileDto::from))
+    })
+}
+
+pub fn list_elite_topic_domination(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    limit: usize,
+) -> Result<Vec<EliteTopicProfileDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(EliteService::new(conn)
+            .list_topic_domination(student_id, subject_id, limit)?
+            .into_iter()
+            .map(EliteTopicProfileDto::from)
+            .collect())
+    })
+}
+
+pub fn build_elite_session_blueprint_report(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<EliteBlueprintReportDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(EliteService::new(conn)
+            .build_session_blueprint_report(student_id, subject_id)?
+            .into())
     })
 }
 
@@ -108,7 +152,7 @@ mod tests {
         )
         .expect("account should create");
 
-        let (subject_id, topic_id, session_id) = state
+        let (subject_id, _topic_id, session_id) = state
             .with_connection(|conn| {
                 let question_id: i64 = conn.query_row(
                     "SELECT id FROM questions WHERE family_id IS NOT NULL ORDER BY id ASC LIMIT 1",
@@ -125,7 +169,10 @@ mod tests {
                     .map_err(storage_error)?;
                 let topic_id: i64 = conn
                     .query_row(
-                        "SELECT topic_id FROM questions WHERE id = ?1",
+                        "SELECT COALESCE(qf.topic_id, q.topic_id)
+                         FROM questions q
+                         LEFT JOIN question_families qf ON qf.id = q.family_id
+                         WHERE q.id = ?1",
                         [question_id],
                         |row| row.get(0),
                     )
@@ -170,7 +217,7 @@ mod tests {
             })
             .expect("seed data should prepare");
 
-        let comeback = list_comeback_candidate_families(&state, subject_id, Some(topic_id), 5)
+        let comeback = list_comeback_candidate_families(&state, subject_id, None, 5)
             .expect("comeback candidates should load");
         let remediation = list_session_remediation_plans(&state, session_id, 3)
             .expect("session remediation plans should load");
