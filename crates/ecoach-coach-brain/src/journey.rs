@@ -35,6 +35,11 @@ pub struct JourneyStation {
     pub entry_rule: Value,
     pub completion_rule: Value,
     pub evidence: Value,
+    pub progress_score: BasisPoints,
+    pub blocking_skill_ids_json: Option<String>,
+    pub completion_confidence: BasisPoints,
+    pub times_entered: i64,
+    pub times_reactivated: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -318,6 +323,24 @@ impl<'a> JourneyService<'a> {
         );
         let merged_evidence_json = serde_json::to_string(&merged_evidence)
             .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+
+        // Increment times_entered on the first submission for this station.
+        let prior_times_entered = existing_evidence
+            .get("times_entered")
+            .and_then(Value::as_i64)
+            .unwrap_or(0);
+        if prior_times_entered == 0 {
+            self.conn
+                .execute(
+                    "UPDATE journey_stations
+                     SET times_entered = COALESCE(times_entered, 0) + 1,
+                         updated_at = datetime('now')
+                     WHERE id = ?1",
+                    [station_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
         if !decision.passed {
             self.conn
                 .execute(
@@ -465,7 +488,12 @@ impl<'a> JourneyService<'a> {
             .prepare(
                 "SELECT id, route_id, station_code, title, topic_id, sequence_no, station_type,
                         target_mastery_score, target_accuracy_score, target_readiness_score,
-                        status, entry_rule_json, completion_rule_json, evidence_json
+                        status, entry_rule_json, completion_rule_json, evidence_json,
+                        COALESCE(progress_score, 0),
+                        blocking_skill_ids_json,
+                        COALESCE(completion_confidence, 0),
+                        COALESCE(times_entered, 0),
+                        COALESCE(times_reactivated, 0)
                  FROM journey_stations
                  WHERE route_id = ?1
                  ORDER BY sequence_no ASC",
@@ -729,6 +757,10 @@ fn station_type_for_case(
         "repair"
     } else if topic_case.primary_hypothesis_code == "execution_drift" {
         "checkpoint"
+    } else if topic_case.recommended_intervention.mode == "memory_reactivation" {
+        "reactivation"
+    } else if topic_case.mastery_score >= 8000 && route_type == "exam_route" {
+        "readiness_gate"
     } else if route_type == "exam_route"
         || topic_case.primary_hypothesis_code == "pressure_collapse"
         || topic_case.pressure_collapse_index >= 5500
@@ -750,15 +782,17 @@ fn station_title_for_case(topic_case: &TopicCase, station_type: &str) -> String 
         "repair" => format!("Repair {}", topic_case.topic_name),
         "checkpoint" => format!("Checkpoint {}", topic_case.topic_name),
         "performance" => format!("Perform Under Load: {}", topic_case.topic_name),
+        "reactivation" => format!("Reactivate Memory: {}", topic_case.topic_name),
+        "readiness_gate" => format!("Readiness Gate: {}", topic_case.topic_name),
         _ => format!("{} Station", topic_case.topic_name),
     }
 }
 
 fn min_questions_for_station(station_type: &str) -> i64 {
     match station_type {
-        "review" => 4,
+        "review" | "reactivation" => 4,
         "foundation" | "repair" => 6,
-        "performance" => 8,
+        "performance" | "readiness_gate" => 8,
         _ => 5,
     }
 }
@@ -769,8 +803,9 @@ fn target_accuracy_for_station(
     sequence_index: i64,
 ) -> BasisPoints {
     let base = match station_type {
-        "review" => 7600,
+        "review" | "reactivation" => 7600,
         "performance" => 7200,
+        "readiness_gate" => 7800,
         "repair" | "foundation" => 6500,
         _ => 6800,
     };
@@ -939,6 +974,13 @@ fn merge_station_evidence(
     );
     merged.insert("retry_count".to_string(), Value::from(retry_count));
 
+    let prior_times_entered = existing
+        .get("times_entered")
+        .and_then(Value::as_i64)
+        .unwrap_or(0);
+    let times_entered = if prior_times_entered == 0 { 1 } else { prior_times_entered };
+    merged.insert("times_entered".to_string(), Value::from(times_entered));
+
     for key in [
         "status",
         "answered_questions",
@@ -1000,6 +1042,11 @@ fn map_station(row: &rusqlite::Row<'_>) -> rusqlite::Result<JourneyStation> {
         entry_rule: parse_json_value(11, &entry_rule_json)?,
         completion_rule: parse_json_value(12, &completion_rule_json)?,
         evidence: parse_json_value(13, &evidence_json)?,
+        progress_score: row.get(14)?,
+        blocking_skill_ids_json: row.get(15)?,
+        completion_confidence: row.get(16)?,
+        times_entered: row.get(17)?,
+        times_reactivated: row.get(18)?,
     })
 }
 

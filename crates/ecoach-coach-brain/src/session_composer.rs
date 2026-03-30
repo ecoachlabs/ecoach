@@ -103,6 +103,10 @@ impl<'a> SessionComposer<'a> {
             (RouteMode::Balanced, "foundation") => self.balanced_foundation_segments(budget),
             (RouteMode::Balanced, "repair") => self.repair_segments(budget),
             (RouteMode::Balanced, "checkpoint") => self.checkpoint_segments(budget),
+            (RouteMode::Balanced, "challenge") => self.challenge_segments(budget),
+            (RouteMode::Balanced, "mini_mock") => self.mini_mock_segments(budget),
+            (RouteMode::Balanced, "reactivation") => self.reactivation_segments(budget),
+            (RouteMode::Balanced, "readiness_gate") => self.readiness_gate_segments(budget),
             (RouteMode::Balanced, "review") => self.review_segments(budget),
             (RouteMode::Balanced, _) => self.balanced_performance_segments(budget),
 
@@ -512,6 +516,114 @@ impl<'a> SessionComposer<'a> {
                 question_count: 3,
                 duration_minutes: (budget * 30 / 100).max(5),
                 question_intents: vec![QuestionIntent::Confirmation, QuestionIntent::Transfer],
+            },
+        ]
+    }
+
+    fn challenge_segments(&self, budget: i64) -> Vec<SessionSegment> {
+        vec![
+            SessionSegment {
+                segment_order: 1,
+                segment_mode: "pressure_warm_up".into(),
+                segment_label: "Pressure Warm-Up".into(),
+                question_count: 3,
+                duration_minutes: (budget * 15 / 100).max(3),
+                question_intents: vec![QuestionIntent::Pressure, QuestionIntent::Confirmation],
+            },
+            SessionSegment {
+                segment_order: 2,
+                segment_mode: "challenge_core".into(),
+                segment_label: "Challenge Core".into(),
+                question_count: 6,
+                duration_minutes: (budget * 40 / 100).max(8),
+                question_intents: vec![QuestionIntent::Challenge, QuestionIntent::Transfer],
+            },
+            SessionSegment {
+                segment_order: 3,
+                segment_mode: "high_pressure".into(),
+                segment_label: "High Pressure Round".into(),
+                question_count: 4,
+                duration_minutes: (budget * 30 / 100).max(5),
+                question_intents: vec![QuestionIntent::Pressure, QuestionIntent::Challenge],
+            },
+            SessionSegment {
+                segment_order: 4,
+                segment_mode: "recovery_review".into(),
+                segment_label: "Recovery Review".into(),
+                question_count: 2,
+                duration_minutes: (budget * 15 / 100).max(3),
+                question_intents: vec![QuestionIntent::Recovery, QuestionIntent::Reinforcement],
+            },
+        ]
+    }
+
+    fn mini_mock_segments(&self, budget: i64) -> Vec<SessionSegment> {
+        vec![
+            SessionSegment {
+                segment_order: 1,
+                segment_mode: "timed_mixed".into(),
+                segment_label: "Timed Mixed Assessment".into(),
+                question_count: 8,
+                duration_minutes: (budget * 55 / 100).max(10),
+                question_intents: vec![
+                    QuestionIntent::MiniMock,
+                    QuestionIntent::Coverage,
+                    QuestionIntent::Pressure,
+                    QuestionIntent::Transfer,
+                ],
+            },
+            SessionSegment {
+                segment_order: 2,
+                segment_mode: "gap_spotlight".into(),
+                segment_label: "Gap Spotlight".into(),
+                question_count: 4,
+                duration_minutes: (budget * 25 / 100).max(5),
+                question_intents: vec![QuestionIntent::MisconceptionProbe, QuestionIntent::Repair],
+            },
+            SessionSegment {
+                segment_order: 3,
+                segment_mode: "score_review".into(),
+                segment_label: "Score Review".into(),
+                question_count: 0,
+                duration_minutes: (budget * 20 / 100).max(3),
+                question_intents: vec![],
+            },
+        ]
+    }
+
+    fn readiness_gate_segments(&self, budget: i64) -> Vec<SessionSegment> {
+        vec![
+            SessionSegment {
+                segment_order: 1,
+                segment_mode: "recall_check".into(),
+                segment_label: "Recall Check".into(),
+                question_count: 4,
+                duration_minutes: (budget * 20 / 100).max(4),
+                question_intents: vec![QuestionIntent::Retention, QuestionIntent::Confirmation],
+            },
+            SessionSegment {
+                segment_order: 2,
+                segment_mode: "application".into(),
+                segment_label: "Application Round".into(),
+                question_count: 5,
+                duration_minutes: (budget * 30 / 100).max(6),
+                question_intents: vec![QuestionIntent::Transfer, QuestionIntent::Coverage],
+            },
+            SessionSegment {
+                segment_order: 3,
+                segment_mode: "pressure_gate".into(),
+                segment_label: "Pressure Gate".into(),
+                question_count: 4,
+                duration_minutes: (budget * 25 / 100).max(5),
+                question_intents: vec![QuestionIntent::Pressure, QuestionIntent::Challenge],
+            },
+            SessionSegment {
+                segment_order: 4,
+                segment_mode: "transfer_proof".into(),
+                segment_label: "Transfer Proof".into(),
+                question_count: 3,
+                duration_minutes: (budget * 25 / 100).max(5),
+                question_intents: vec![QuestionIntent::Transfer, QuestionIntent::MisconceptionProbe],
             },
         ]
     }

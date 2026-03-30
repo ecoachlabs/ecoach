@@ -1,9 +1,12 @@
 use ecoach_coach_brain::{
     AdaptationResult, CoachNextAction, CoachStateResolution, ComposedSession,
-    ConsistencySnapshot, ContentReadinessResolution, DeadlinePressure, JourneyAdaptationEngine,
-    JourneyRouteSnapshot, JourneyService, KnowledgeMapNode, PlanEngine, RouteMode,
-    SessionComposer, TopicCase, assess_content_readiness, list_priority_topic_cases,
-    resolve_coach_state, resolve_next_coach_action,
+    ConsistencySnapshot, ContentReadinessResolution, DeadlinePressure,
+    CompressionAction, EvidenceEvent, EvidenceInterpretationEngine, GoalFeasibility,
+    JourneyAdaptationEngine, JourneyRouteSnapshot, JourneyService, KnowledgeMapNode,
+    LearnerMisconceptionSnapshot, PlanEngine, PrerequisiteGraph, ReentryProbeResult,
+    RouteMode, SessionComposer, TopicCase, VelocityEngine, VelocitySnapshot,
+    assess_content_readiness, list_priority_topic_cases, resolve_coach_state,
+    resolve_next_coach_action,
 };
 use ecoach_goals_calendar::GoalsCalendarService;
 use ecoach_reporting::{DashboardService, StudentDashboard};
@@ -374,6 +377,95 @@ pub fn set_exam_date(
         )
         .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
         Ok(())
+    })
+}
+
+// ── Evidence interpretation commands ──
+
+pub fn interpret_attempt(
+    state: &AppState,
+    attempt_id: i64,
+) -> Result<EvidenceEvent, CommandError> {
+    state.with_connection(|conn| {
+        Ok(EvidenceInterpretationEngine::new(conn).interpret_attempt(attempt_id)?)
+    })
+}
+
+pub fn list_active_misconceptions(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<LearnerMisconceptionSnapshot>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(EvidenceInterpretationEngine::new(conn)
+            .list_active_misconceptions(student_id, subject_id)?)
+    })
+}
+
+// ── Prerequisite graph commands ──
+
+pub fn get_reentry_probe(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    current_topic_id: i64,
+) -> Result<ReentryProbeResult, CommandError> {
+    state.with_connection(|conn| {
+        Ok(PrerequisiteGraph::new(conn).compute_reentry_probe(
+            student_id, subject_id, current_topic_id,
+        )?)
+    })
+}
+
+pub fn find_reactivation_candidates(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<i64>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(PrerequisiteGraph::new(conn).find_reactivation_candidates(student_id, subject_id)?)
+    })
+}
+
+// ── Velocity + feasibility commands ──
+
+pub fn get_velocity_snapshot(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<VelocitySnapshot, CommandError> {
+    state.with_connection(|conn| {
+        Ok(VelocityEngine::new(conn).compute_velocity(student_id, subject_id)?)
+    })
+}
+
+pub fn check_goal_feasibility(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<GoalFeasibility, CommandError> {
+    state.with_connection(|conn| {
+        Ok(VelocityEngine::new(conn).check_goal_feasibility(student_id, subject_id)?)
+    })
+}
+
+pub fn compress_route(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<CompressionAction>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(VelocityEngine::new(conn).compress_route(student_id, subject_id)?)
+    })
+}
+
+pub fn deepen_route(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<CompressionAction>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(VelocityEngine::new(conn).deepen_route(student_id, subject_id)?)
     })
 }
 
