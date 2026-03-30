@@ -6,7 +6,8 @@ use std::{
 use chrono::{DateTime, Utc};
 use ecoach_coach_brain::ReadinessEngine;
 use ecoach_questions::{
-    Question, QuestionSelectionRequest, QuestionSelector, QuestionService, SelectedQuestion,
+    Question, QuestionGenerationRequestInput, QuestionReactor, QuestionSelectionRequest,
+    QuestionSelector, QuestionService, QuestionSlotSpec, QuestionVariantMode, SelectedQuestion,
 };
 use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension, params};
@@ -31,7 +32,7 @@ impl<'a> SessionService<'a> {
         input: &PracticeSessionStartInput,
     ) -> EcoachResult<(Session, Vec<SelectedQuestion>)> {
         let selector = QuestionSelector::new(self.conn);
-        let questions = selector.select_questions(&QuestionSelectionRequest {
+        let mut questions = selector.select_questions(&QuestionSelectionRequest {
             subject_id: input.subject_id,
             topic_ids: input.topic_ids.clone(),
             target_question_count: input.question_count,
@@ -40,6 +41,17 @@ impl<'a> SessionService<'a> {
             recently_seen_question_ids: Vec::new(),
             timed: input.is_timed,
         })?;
+        let target_topic_counts = distribute_topic_targets(&input.topic_ids, input.question_count);
+        let reactor_generated_count = self.top_up_with_reactor(
+            input.subject_id,
+            &target_topic_counts,
+            &mut questions,
+            None,
+            input.is_timed,
+            choose_reactor_variant_mode(input.is_timed, None),
+            "slot_fill",
+            "Fill missing practice items with traced family variants",
+        )?;
         if questions.is_empty() {
             return Err(EcoachError::NotFound(
                 "no questions available for requested practice session".to_string(),
@@ -94,6 +106,20 @@ impl<'a> SessionService<'a> {
                 }),
             ),
         )?;
+        if reactor_generated_count > 0 {
+            self.append_runtime_event(
+                "session",
+                DomainEvent::new(
+                    "session.reactor_top_up",
+                    session_id.to_string(),
+                    serde_json::json!({
+                        "session_type": "practice",
+                        "generated_question_count": reactor_generated_count,
+                        "target_question_count": input.question_count,
+                    }),
+                ),
+            )?;
+        }
 
         let session = self
             .get_session(session_id)?
@@ -118,7 +144,7 @@ impl<'a> SessionService<'a> {
         };
 
         let selector = QuestionSelector::new(self.conn);
-        let questions = selector.select_questions(&QuestionSelectionRequest {
+        let mut questions = selector.select_questions(&QuestionSelectionRequest {
             subject_id: input.subject_id,
             topic_ids: topic_scope.clone(),
             target_question_count: input.question_count,
@@ -127,6 +153,17 @@ impl<'a> SessionService<'a> {
             recently_seen_question_ids: Vec::new(),
             timed: input.is_timed,
         })?;
+        let target_topic_counts = distribute_topic_targets(&topic_scope, input.question_count);
+        let reactor_generated_count = self.top_up_with_reactor(
+            input.subject_id,
+            &target_topic_counts,
+            &mut questions,
+            input.target_difficulty,
+            input.is_timed,
+            choose_reactor_variant_mode(input.is_timed, input.target_difficulty),
+            "slot_fill",
+            "Fill missing custom-test items with traced family variants",
+        )?;
         if questions.is_empty() {
             return Err(EcoachError::NotFound(
                 "no questions available for requested custom test".to_string(),
@@ -176,6 +213,20 @@ impl<'a> SessionService<'a> {
                 }),
             ),
         )?;
+        if reactor_generated_count > 0 {
+            self.append_runtime_event(
+                "session",
+                DomainEvent::new(
+                    "session.reactor_top_up",
+                    session_id.to_string(),
+                    serde_json::json!({
+                        "session_type": "custom_test",
+                        "generated_question_count": reactor_generated_count,
+                        "target_question_count": input.question_count,
+                    }),
+                ),
+            )?;
+        }
 
         let session = self
             .get_session(session_id)?
@@ -219,6 +270,31 @@ impl<'a> SessionService<'a> {
             input.target_difficulty,
             input.is_timed,
         );
+        let quota_targets = quotas
+            .iter()
+            .map(|quota| (quota.topic_id, quota.target_count.max(0) as usize))
+            .collect::<BTreeMap<_, _>>();
+        let mut compiled_selected = compiled_questions
+            .into_iter()
+            .map(|question| SelectedQuestion {
+                fit_score: 1.0,
+                question,
+            })
+            .collect::<Vec<_>>();
+        let reactor_generated_count = self.top_up_with_reactor(
+            input.subject_id,
+            &quota_targets,
+            &mut compiled_selected,
+            input.target_difficulty,
+            input.is_timed,
+            choose_reactor_variant_mode(input.is_timed, input.target_difficulty),
+            "slot_fill",
+            "Fill missing mock blueprint slots with traced family variants",
+        )?;
+        let compiled_questions = compiled_selected
+            .into_iter()
+            .map(|selected| selected.question)
+            .collect::<Vec<_>>();
         if compiled_questions.is_empty() {
             return Err(EcoachError::Validation(
                 "mock blueprint compilation produced no questions".to_string(),
@@ -293,6 +369,21 @@ impl<'a> SessionService<'a> {
                 }),
             ),
         )?;
+        if reactor_generated_count > 0 {
+            self.append_runtime_event(
+                "session",
+                DomainEvent::new(
+                    "mock.blueprint_reactor_top_up",
+                    blueprint_id.to_string(),
+                    json!({
+                        "student_id": input.student_id,
+                        "subject_id": input.subject_id,
+                        "generated_question_count": reactor_generated_count,
+                        "target_question_count": input.question_count,
+                    }),
+                ),
+            )?;
+        }
 
         self.get_mock_blueprint(blueprint_id)?
             .ok_or_else(|| EcoachError::NotFound("mock blueprint was not created".to_string()))
@@ -1050,6 +1141,120 @@ impl<'a> SessionService<'a> {
         selected
     }
 
+    fn top_up_with_reactor(
+        &self,
+        subject_id: i64,
+        target_topic_counts: &BTreeMap<i64, usize>,
+        selected_questions: &mut Vec<SelectedQuestion>,
+        target_difficulty: Option<BasisPoints>,
+        is_timed: bool,
+        variant_mode: QuestionVariantMode,
+        request_kind: &str,
+        rationale: &str,
+    ) -> EcoachResult<usize> {
+        let target_total = target_topic_counts.values().copied().sum::<usize>();
+        if selected_questions.len() >= target_total || target_total == 0 {
+            return Ok(0);
+        }
+
+        let reactor = QuestionReactor::new(self.conn);
+        let mut current_topic_counts = BTreeMap::<i64, usize>::new();
+        for selected in selected_questions.iter() {
+            *current_topic_counts
+                .entry(selected.question.topic_id)
+                .or_default() += 1;
+        }
+
+        let mut generated_count = 0usize;
+        for (topic_id, target_count) in target_topic_counts {
+            let current_count = current_topic_counts.get(topic_id).copied().unwrap_or(0);
+            if current_count >= *target_count {
+                continue;
+            }
+            let deficit = *target_count - current_count;
+            let seed = self.load_reactor_seed(subject_id, *topic_id)?;
+            let slot_spec = QuestionSlotSpec {
+                subject_id,
+                topic_id: Some(*topic_id),
+                target_cognitive_demand: seed
+                    .as_ref()
+                    .and_then(|item| item.primary_cognitive_demand.clone())
+                    .or_else(|| infer_reactor_cognitive_demand(target_difficulty)),
+                target_question_format: Some(
+                    seed.as_ref()
+                        .map(|item| item.question_format.clone())
+                        .unwrap_or_else(|| "mcq".to_string()),
+                ),
+                max_generated_share: 8_000,
+            };
+            let family_id = match seed.as_ref().and_then(|item| item.family_id) {
+                Some(family_id) => Some(family_id),
+                None => reactor
+                    .get_best_family_for_slot(&slot_spec)?
+                    .map(|choice| choice.family_id),
+            };
+            let Some(family_id) = family_id else {
+                continue;
+            };
+
+            let request = reactor.create_generation_request(&QuestionGenerationRequestInput {
+                slot_spec,
+                family_id: Some(family_id),
+                source_question_id: seed.as_ref().and_then(|item| item.question_id),
+                request_kind: request_kind.to_string(),
+                variant_mode,
+                requested_count: deficit,
+                rationale: Some(rationale.to_string()),
+            })?;
+            let generated = reactor.process_generation_request(request.id)?;
+            for draft in generated {
+                selected_questions.push(SelectedQuestion {
+                    fit_score: mock_candidate_fit(
+                        &draft.question,
+                        target_difficulty,
+                        is_timed,
+                        0.75,
+                    ),
+                    question: draft.question,
+                });
+                *current_topic_counts.entry(*topic_id).or_default() += 1;
+                generated_count += 1;
+            }
+        }
+
+        if selected_questions.len() > target_total {
+            selected_questions.truncate(target_total);
+        }
+
+        Ok(generated_count)
+    }
+
+    fn load_reactor_seed(
+        &self,
+        subject_id: i64,
+        topic_id: i64,
+    ) -> EcoachResult<Option<ReactorSeed>> {
+        self.conn
+            .query_row(
+                "SELECT id, family_id, question_format, primary_cognitive_demand
+                 FROM questions
+                 WHERE subject_id = ?1 AND topic_id = ?2 AND is_active = 1
+                 ORDER BY CASE WHEN source_type = 'generated' THEN 1 ELSE 0 END ASC, id ASC
+                 LIMIT 1",
+                params![subject_id, topic_id],
+                |row| {
+                    Ok(ReactorSeed {
+                        question_id: Some(row.get(0)?),
+                        family_id: row.get(1)?,
+                        question_format: row.get(2)?,
+                        primary_cognitive_demand: row.get(3)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
     fn build_mock_coverage(
         &self,
         quotas: &[MockTopicQuota],
@@ -1264,6 +1469,14 @@ struct RankedQuestion {
     score: f64,
 }
 
+#[derive(Debug, Clone)]
+struct ReactorSeed {
+    question_id: Option<i64>,
+    family_id: Option<i64>,
+    question_format: String,
+    primary_cognitive_demand: Option<String>,
+}
+
 fn map_mock_blueprint(row: &rusqlite::Row<'_>) -> rusqlite::Result<MockBlueprint> {
     let coverage_json: String = row.get(9)?;
     let quota_json: String = row.get(10)?;
@@ -1329,6 +1542,43 @@ fn mock_candidate_fit(
         0.55
     };
     0.35 * difficulty_fit + 0.25 * topic_priority + 0.20 * timed_fit + 0.20 * family_bonus
+}
+
+fn distribute_topic_targets(
+    topic_ids: &[i64],
+    target_question_count: usize,
+) -> BTreeMap<i64, usize> {
+    let mut targets = BTreeMap::new();
+    if topic_ids.is_empty() || target_question_count == 0 {
+        return targets;
+    }
+
+    for index in 0..target_question_count {
+        let topic_id = topic_ids[index % topic_ids.len()];
+        *targets.entry(topic_id).or_default() += 1;
+    }
+
+    targets
+}
+
+fn choose_reactor_variant_mode(
+    is_timed: bool,
+    target_difficulty: Option<BasisPoints>,
+) -> QuestionVariantMode {
+    match target_difficulty {
+        Some(difficulty) if difficulty >= 7_500 => QuestionVariantMode::Stretch,
+        Some(difficulty) if difficulty <= 3_500 => QuestionVariantMode::Rescue,
+        _ if is_timed => QuestionVariantMode::RepresentationShift,
+        _ => QuestionVariantMode::Isomorphic,
+    }
+}
+
+fn infer_reactor_cognitive_demand(target_difficulty: Option<BasisPoints>) -> Option<String> {
+    match target_difficulty {
+        Some(difficulty) if difficulty >= 7_500 => Some("application".to_string()),
+        Some(difficulty) if difficulty <= 3_500 => Some("recognition".to_string()),
+        _ => None,
+    }
 }
 
 fn take_ranked_question(
@@ -1400,17 +1650,23 @@ mod tests {
                 student_id: student.id,
                 subject_id,
                 topic_ids: vec![topic_id],
-                question_count: 2,
+                question_count: 3,
                 is_timed: false,
             })
             .expect("practice session should start");
 
-        assert_eq!(selected_questions.len(), 2);
+        assert_eq!(selected_questions.len(), 3);
+        assert!(
+            selected_questions
+                .iter()
+                .any(|selected| selected.question.id > 2),
+            "reactor should top up beyond the authored sample pool"
+        );
         let snapshot = session_service
             .get_session_snapshot(session.id)
             .expect("session snapshot should load")
             .expect("session should exist");
-        assert_eq!(snapshot.items.len(), 2);
+        assert_eq!(snapshot.items.len(), 3);
 
         let paused = session_service
             .pause_session(session.id)
@@ -1533,6 +1789,13 @@ mod tests {
                 |row| row.get(0),
             )
             .expect("runtime event count should be queryable");
+        let reactor_event_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events WHERE event_type = 'session.reactor_top_up' AND aggregate_id = ?1",
+                [session.id.to_string()],
+                |row| row.get(0),
+            )
+            .expect("reactor event count should be queryable");
 
         assert_eq!(mission_count, 1);
         assert_eq!(plan_count, 1);
@@ -1540,6 +1803,7 @@ mod tests {
         assert_eq!(memory_state_count, 1);
         assert_eq!(recheck_count, 1);
         assert!(runtime_event_count >= 6);
+        assert_eq!(reactor_event_count, 1);
     }
 
     #[test]
@@ -1564,7 +1828,7 @@ mod tests {
                 student_id: student.id,
                 subject_id,
                 topic_ids: vec![topic_id],
-                question_count: 2,
+                question_count: 3,
                 duration_minutes: Some(15),
                 is_timed: true,
                 target_difficulty: Some(6500),
@@ -1590,12 +1854,20 @@ mod tests {
                 |row| row.get(0),
             )
             .expect("custom test event count should be queryable");
+        let reactor_event_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events WHERE event_type = 'session.reactor_top_up' AND aggregate_id = ?1",
+                [session.id.to_string()],
+                |row| row.get(0),
+            )
+            .expect("custom reactor event count should be queryable");
 
         assert_eq!(session.session_type, "custom_test");
-        assert_eq!(selected_questions.len(), 2);
-        assert_eq!(snapshot.items.len(), 2);
+        assert_eq!(selected_questions.len(), 3);
+        assert_eq!(snapshot.items.len(), 3);
         assert_eq!(archetype, "timed_targeted");
         assert_eq!(custom_event_count, 1);
+        assert_eq!(reactor_event_count, 1);
     }
 
     #[test]
@@ -1634,7 +1906,7 @@ mod tests {
                 student_id: student.id,
                 subject_id,
                 topic_ids: vec![topic_id],
-                question_count: 2,
+                question_count: 4,
                 duration_minutes: Some(20),
                 is_timed: true,
                 target_difficulty: Some(6500),
@@ -1652,11 +1924,19 @@ mod tests {
                 |row| row.get(0),
             )
             .expect("mock events should query");
+        let blueprint_reactor_event_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events WHERE event_type = 'mock.blueprint_reactor_top_up' AND aggregate_id = ?1",
+                [blueprint.id.to_string()],
+                |row| row.get(0),
+            )
+            .expect("mock blueprint reactor event count should query");
 
         assert_eq!(session.session_type, "mock");
-        assert_eq!(selected_questions.len(), 2);
+        assert_eq!(selected_questions.len(), 4);
         assert_eq!(blueprint.status, "compiled");
         assert!(event_count >= 2);
+        assert_eq!(blueprint_reactor_event_count, 1);
     }
 
     fn open_test_database() -> Connection {

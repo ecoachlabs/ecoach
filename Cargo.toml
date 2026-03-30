@@ -23,6 +23,7 @@ members = [
     "crates/ecoach-memory",
     "crates/ecoach-mock-centre",
     "crates/ecoach-knowledge-gap",
+    "src-tauri",
 ]
 resolver = "3"
 

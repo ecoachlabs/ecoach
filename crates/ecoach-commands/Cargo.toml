@@ -6,11 +6,27 @@ license.workspace = true
 
 [dependencies]
 chrono.workspace = true
+ecoach-coach-brain = { path = "../ecoach-coach-brain" }
 ecoach-content = { path = "../ecoach-content" }
+ecoach-curriculum = { path = "../ecoach-curriculum" }
+ecoach-diagnostics = { path = "../ecoach-diagnostics" }
+ecoach-elite = { path = "../ecoach-elite" }
 ecoach-games = { path = "../ecoach-games" }
+ecoach-glossary = { path = "../ecoach-glossary" }
+ecoach-goals-calendar = { path = "../ecoach-goals-calendar" }
 ecoach-identity = { path = "../ecoach-identity" }
+ecoach-intake = { path = "../ecoach-intake" }
+ecoach-knowledge-gap = { path = "../ecoach-knowledge-gap" }
+ecoach-library = { path = "../ecoach-library" }
+ecoach-memory = { path = "../ecoach-memory" }
+ecoach-mock-centre = { path = "../ecoach-mock-centre" }
+ecoach-past-papers = { path = "../ecoach-past-papers" }
+ecoach-premium = { path = "../ecoach-premium" }
+ecoach-questions = { path = "../ecoach-questions" }
+ecoach-reporting = { path = "../ecoach-reporting" }
 ecoach-sessions = { path = "../ecoach-sessions" }
 ecoach-storage = { path = "../ecoach-storage" }
+ecoach-student-model = { path = "../ecoach-student-model" }
 ecoach-substrate = { path = "../ecoach-substrate" }
 rusqlite.workspace = true
 serde.workspace = true

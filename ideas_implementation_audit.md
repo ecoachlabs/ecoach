@@ -12,7 +12,7 @@ Legend:
 
 | Document | Audit Status | Implementation Status | Notes |
 | --- | --- | --- | --- |
-| idea1.txt | read_complete | implemented_gap, partial | Added durable session runtime, append-only runtime events, mock blueprint compilation, quota/coverage logic, and mock session startup; larger Question Reactor scope still outstanding |
+| idea1.txt | read_complete | implemented_gap, partial | Added durable session runtime, append-only runtime events, mock blueprint compilation, quota/coverage logic, mock session startup, a persisted local Question Reactor backbone with lineage/transform logs/family health, runtime reactor top-up for thin session pools, and anti-repeat/question-graph edges with duplicate checks; deeper calibration and orchestration work still remains |
 | idea2.txt | read_complete | implemented_gap, partial | Added first skill-level learner truth slice plus Journey route/station persistence and advancement; fuller Journey orchestration is still missing |
 | idea3.txt | read_complete | implemented_gap, partial | Added parent insight generation/persistence; deeper household/intervention flows still missing |
 | idea4.txt | read_complete | implemented_gap, partial | Added Beat Yesterday daily target generation, summary scoring, recovery-aware mode selection, and climb trend projection; full teacher/risk layer still missing |
@@ -20,16 +20,16 @@ Legend:
 | idea6.txt | read_complete | implemented_gap, partial | Added first skill-level knowledge gap substrate; full gap engine still missing |
 | idea7.txt | read_complete | implemented_gap, partial | Memory mode audit complete; live memory updates, due recheck listing, and overdue decay scanning now exist, but the full memory service is still missing |
 | idea8.txt | read_complete | implemented_gap, partial | Same backend implications as idea7; live memory updates, due recheck listing, and overdue decay scanning now exist, but the full memory service is still missing |
-| idea9.txt | read_complete | implemented_gap, partial | Linked sample questions to skill nodes and added skill truth updates; full Question Factory still missing |
+| idea9.txt | read_complete | implemented_gap, partial | Linked sample questions to skill nodes, added skill truth updates, implemented a persisted Question Factory/Reactor flow for family selection, variant generation, lineage tracking, family health, runtime session/mock top-up, anti-repeat candidate scoring, and durable question-graph edges/related-question reads; richer family-by-family generation specs and scoring layers still remain |
 | idea10.txt | read_complete | partial | Games audit complete; MindStack runtime still missing |
 | idea11.txt | read_complete | implemented_gap, partial | Added persisted wrong-answer diagnosis records and retrieval; deeper diagnosis stack still missing |
 | idea12.txt | read_complete | implemented_gap, partial | Added parent dashboard and memo generation pipeline; premium strategy/readiness layers still missing |
 | idea13.txt | read_complete | implemented_gap, partial | Added past-paper question linking, family recurrence/coappearance analytics recompute, and high-frequency family read models; richer inverse appearance intelligence still missing |
-| idea14.txt | read_complete | implemented_gap, partial | Added custom-test composer plus mock blueprint compilation and mock session startup on top of local session runtime; richer adaptive interpretation still missing |
+| idea14.txt | read_complete | implemented_gap, partial | Added custom-test composer plus mock blueprint compilation and mock session startup on top of local session runtime, then wired reactor-backed top-up so custom tests and mock blueprints can exceed the authored pool; richer adaptive interpretation still missing |
 | idea15.txt | read_complete | implemented_gap, partial | Added live memory updates, due recheck listing, and overdue decay scanning; fuller return-loop orchestration still missing |
 | idea16.txt | read_complete | implemented_gap, partial | Added generated library shelves, saved-question intelligence, and weak-topic revision packs; richer relationship graph and teach actions still missing |
 | idea17.txt | read_complete | implemented_gap, partial | Added persisted question-glossary linkage and retrieval; audio program still missing |
-| idea18.txt | read_complete | implemented_gap, partial | Added persisted multi-phase diagnostic battery assembly plus phase submission, topic analytics, and root-cause hypotheses; deeper longitudinal interpretation still missing |
+| idea18.txt | read_complete | implemented_gap, partial | Added persisted multi-phase diagnostic battery assembly plus phase submission, topic analytics, root-cause hypotheses, adaptive phase retargeting, and confidence-distortion detection; deeper longitudinal interpretation still missing |
 | idea19.txt | read_complete | implemented_gap, partial | Added persisted mission/debrief memory and review handoff; richer experience composition still missing |
 | idea20.txt | read_complete | implemented_gap, partial | Added content-readiness gating, canonical next-action resolution, subject readiness engine, and plan rewrite support; deeper coach memory and mission adaptation still missing |
 | idea21.txt | read_complete | implemented_gap, partial | Added resource-readiness scoring for topics and subjects across atoms, questions, misconceptions, and knowledge assets |
@@ -37,19 +37,19 @@ Legend:
 | idea23.txt | read_complete | implemented_gap, partial | Added coach topic-case reasoning service with case synthesis, hypotheses, and intervention recommendations |
 | idea24.txt | read_complete | implemented_gap, partial | Added offline hypothesis-based coach diagnosis through topic-case certainty, proof gaps, and open questions |
 | idea25.txt | read_complete | implemented_gap, partial | Added shared engine contract and registry layer in substrate for runtime engine coordination |
-| idea26.txt | read_complete | implemented_gap, partial | Added staged curriculum source uploads, parse candidates, review tasks, and source reports; full publish pipeline still missing |
-| idea27.txt | read_complete | implemented_gap, partial | Added content acquisition jobs, evidence candidates, and acquisition job reports; richer acquisition automation still missing |
+| idea26.txt | read_complete | implemented_gap, partial | Added staged curriculum source uploads, parse candidates, review tasks, source-finalization workflow, review resolution, and app-facing foundry commands; richer admin ingestion tooling is still missing |
+| idea27.txt | read_complete | implemented_gap, partial | Added content acquisition jobs, evidence candidates, acquisition job reports, acquisition evidence consumption inside topic package health scoring, and queueable source/topic follow-up foundry jobs; richer acquisition automation still missing |
 | idea28.txt | read_complete | implemented_gap, partial | Added shared learner/evidence fabric contracts and cross-engine learner evidence read model; broader fabric consumers still missing |
 | idea29.txt | read_complete | implemented_gap, partial | Added content-type strategy registry for node-level pedagogy, drill, failure-mode, and mastery rules |
 | idea30.txt | read_complete | implemented_gap, partial | Added availability/capacity substrate plus free-now recommendation and daily replanning orchestration |
-| idea31.txt | read_complete | implemented_gap, partial | Added publish jobs, quality reports, and quality-gated publish transitions; full end-to-end pack publish automation still missing |
+| idea31.txt | read_complete | implemented_gap, partial | Added publish jobs, quality reports, quality-gated publish transitions, source-to-publish orchestration, topic package gating, publish staging from the foundry coordinator, and durable foundry jobs for publish/build follow-up; full end-to-end pack publishing/foundry automation still missing |
 | idea32.txt | read_complete | implemented_gap, partial | Added live memory/recheck updates plus due recheck listing and overdue decay scanning; deeper memory recompute/orchestration is still missing |
 | idea33.txt | read_complete | implemented_gap, partial | Added contrast-profile ingestion, trap round/session persistence, Difference Drill, Similarity Trap, Know the Difference, Which Is Which, Unmask runtime flows, replay review, and learner confusion state; deeper remediation routing is still missing |
-| idea34.txt | read_complete | implemented_gap, partial | Added diagnostic phase submission, phase-aware topic analytics, and durable root-cause hypotheses; fuller adaptive orchestration is still missing |
+| idea34.txt | read_complete | implemented_gap, partial | Added diagnostic phase submission, phase-aware topic analytics, durable root-cause hypotheses, adaptive next-phase retargeting, and confidence-weighted distortion diagnosis; fuller adaptive orchestration is still missing |
 | idea35.txt | read_complete | implemented_gap, partial | Added a DTO-only runtime command boundary crate with shared AppState, unified CommandError, and app-facing identity, pack, session, and traps commands; full Tauri registration and broader module coverage are still missing |
 | idea36.txt | read_complete | implemented_gap, partial | Added bundle reconstruction/classification and extracted insight reporting; deeper OCR/layout recovery still missing |
 | idea37.txt | read_complete | implemented_gap, partial | Added learner-truth snapshot read model with topic, skill, memory, and diagnosis projections; broader cross-engine fabric still missing |
-| idea38.txt | read_complete | implemented_gap, partial | Added source staging, acquisition jobs, learner evidence fabrics, and publish/trust job substrate; full content OS orchestration still missing |
+| idea38.txt | read_complete | implemented_gap, partial | Added source staging, acquisition jobs, learner evidence fabrics, publish/trust job substrate, topic package snapshots, subject foundry dashboards, a coordinator that links source review, topic health, and publish readiness, plus durable foundry job orchestration with queue/list/start/complete/fail flows; the broader Foundry/Content OS is still not fully complete |
 
 ## idea1.txt
 

@@ -274,18 +274,45 @@ impl<'a> DiagnosticEngine<'a> {
         let next_phase = self
             .conn
             .query_row(
-                "SELECT id, phase_number
+                "SELECT id, phase_number, COALESCE(phase_code, lower(replace(phase_type, ' ', '_'))),
+                        question_count, time_limit_seconds,
+                        COALESCE(json_extract(condition_profile_json, '$.timed'), 0)
                  FROM diagnostic_session_phases
                  WHERE diagnostic_id = ?1 AND phase_number > ?2 AND status = 'pending'
                  ORDER BY phase_number ASC
                  LIMIT 1",
                 params![diagnostic_id, completed_phase_number],
-                |row| Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?)),
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, i64>(3)?,
+                        row.get::<_, Option<i64>>(4)?,
+                        row.get::<_, i64>(5)? == 1,
+                    ))
+                },
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        if let Some((phase_id, phase_number)) = next_phase {
+        if let Some((
+            phase_id,
+            phase_number,
+            phase_code,
+            question_count,
+            time_limit_seconds,
+            timed,
+        )) = next_phase
+        {
+            self.retarget_pending_phase(
+                diagnostic_id,
+                phase_id,
+                &phase_code,
+                question_count,
+                time_limit_seconds,
+                timed,
+            )?;
             self.conn
                 .execute(
                     "UPDATE diagnostic_session_phases
@@ -509,7 +536,11 @@ impl<'a> DiagnosticEngine<'a> {
         let pressure = self.topic_phase_accuracy(diagnostic_id, topic_id, "pressure")?;
         let flex = self.topic_phase_accuracy(diagnostic_id, topic_id, "flex")?;
         let root_cause = self.topic_phase_accuracy(diagnostic_id, topic_id, "root_cause")?;
-        let error_profile = self.load_error_profile(student_id, topic_id)?;
+        let mut error_profile = self.load_error_profile(student_id, topic_id)?;
+        let confidence_signals = self.load_confidence_signals(diagnostic_id, topic_id)?;
+        error_profile.high_confidence_wrong_count = confidence_signals.high_confidence_wrong_count;
+        error_profile.low_confidence_correct_count =
+            confidence_signals.low_confidence_correct_count;
 
         let fluency_score = if speed_accuracy > 0 {
             let latency_bonus = latency_to_fluency(speed_latency);
@@ -696,6 +727,27 @@ impl<'a> DiagnosticEngine<'a> {
             ));
         }
 
+        let confidence_signals = self.load_confidence_signals(diagnostic_id, topic_id)?;
+        if confidence_signals.high_confidence_wrong_count > 0
+            || confidence_signals.low_confidence_correct_count >= 2
+        {
+            hypotheses.push(build_hypothesis(
+                diagnostic_id,
+                topic_id,
+                topic_name,
+                "confidence_distortion",
+                (6_900
+                    + (confidence_signals.high_confidence_wrong_count * 800)
+                    + (confidence_signals.low_confidence_correct_count * 350))
+                    .min(9_300) as BasisPoints,
+                "confidence_reflection_check",
+                json!({
+                    "high_confidence_wrong_count": confidence_signals.high_confidence_wrong_count,
+                    "low_confidence_correct_count": confidence_signals.low_confidence_correct_count,
+                }),
+            ));
+        }
+
         if hypotheses.is_empty() {
             hypotheses.push(build_hypothesis(
                 diagnostic_id,
@@ -868,6 +920,8 @@ impl<'a> DiagnosticEngine<'a> {
                         pressure_breakdown_score: row.get(3)?,
                         speed_error_score: row.get(4)?,
                         misconception_signal_count: 0,
+                        high_confidence_wrong_count: 0,
+                        low_confidence_correct_count: 0,
                     })
                 },
             )
@@ -890,6 +944,32 @@ impl<'a> DiagnosticEngine<'a> {
             misconception_signal_count,
             ..profile
         })
+    }
+
+    fn load_confidence_signals(
+        &self,
+        diagnostic_id: i64,
+        topic_id: i64,
+    ) -> EcoachResult<ConfidenceSignalSnapshot> {
+        self.conn
+            .query_row(
+                "SELECT
+                    COALESCE(SUM(CASE WHEN dia.is_correct = 0 AND dia.confidence_level = 'sure' THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN dia.is_correct = 1 AND (dia.confidence_level = 'guessed' OR dia.confidence_level = 'not_sure') THEN 1 ELSE 0 END), 0)
+                 FROM diagnostic_item_attempts dia
+                 INNER JOIN questions q ON q.id = dia.question_id
+                 WHERE dia.diagnostic_id = ?1 AND q.topic_id = ?2",
+                params![diagnostic_id, topic_id],
+                |row| {
+                    Ok(ConfidenceSignalSnapshot {
+                        high_confidence_wrong_count: row.get(0)?,
+                        low_confidence_correct_count: row.get(1)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+            .map(|value| value.unwrap_or_default())
     }
 
     fn load_subject_topic_ids(&self, subject_id: i64) -> EcoachResult<Vec<i64>> {
@@ -974,6 +1054,165 @@ impl<'a> DiagnosticEngine<'a> {
             recently_seen_question_ids: Vec::new(),
             timed: template.timed,
         })
+    }
+
+    fn retarget_pending_phase(
+        &self,
+        diagnostic_id: i64,
+        phase_id: i64,
+        phase_code: &str,
+        question_count: i64,
+        time_limit_seconds: Option<i64>,
+        timed: bool,
+    ) -> EcoachResult<()> {
+        let (student_id, subject_id): (i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT student_id, subject_id FROM diagnostic_instances WHERE id = ?1",
+                [diagnostic_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let Some(mut template) = template_for_phase_code(phase_code) else {
+            return Ok(());
+        };
+        template.question_count = question_count.max(1) as usize;
+        template.time_limit_seconds = time_limit_seconds;
+        template.timed = timed;
+
+        let branch_topics =
+            self.load_branch_topic_ids(diagnostic_id, student_id, subject_id, template.code)?;
+        let seen_question_ids = self.load_diagnostic_seen_question_ids(diagnostic_id)?;
+        let selected_questions =
+            self.select_phase_questions(subject_id, &branch_topics, &template, &seen_question_ids)?;
+
+        self.conn
+            .execute(
+                "DELETE FROM diagnostic_item_attempts WHERE diagnostic_id = ?1 AND phase_id = ?2",
+                params![diagnostic_id, phase_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.insert_phase_items(diagnostic_id, phase_id, &template, &selected_questions)?;
+
+        let condition_profile_json = serde_json::to_string(&json!({
+            "phase_code": template.code.as_str(),
+            "timed": template.timed,
+            "time_limit_seconds": template.time_limit_seconds,
+            "condition_type": template.code.condition_type(),
+            "confidence_prompt": matches!(template.code, DiagnosticPhaseCode::RootCause),
+            "concept_guess_prompt": matches!(template.code, DiagnosticPhaseCode::Flex | DiagnosticPhaseCode::RootCause),
+            "branch_topic_ids": branch_topics,
+            "branch_reason": branch_reason_for_phase(template.code),
+            "adaptive_retargeted": true,
+        }))
+        .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+
+        self.conn
+            .execute(
+                "UPDATE diagnostic_session_phases
+                 SET question_count = ?1,
+                     condition_profile_json = ?2
+                 WHERE id = ?3",
+                params![
+                    selected_questions.len() as i64,
+                    condition_profile_json,
+                    phase_id
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn load_branch_topic_ids(
+        &self,
+        diagnostic_id: i64,
+        student_id: i64,
+        subject_id: i64,
+        phase_code: DiagnosticPhaseCode,
+    ) -> EcoachResult<Vec<i64>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT q.topic_id,
+                        COUNT(*) AS total_items,
+                        COALESCE(SUM(CASE WHEN dia.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_items,
+                        COALESCE(SUM(CASE WHEN dia.is_correct = 0 AND dia.confidence_level = 'sure' THEN 1 ELSE 0 END), 0) AS high_conf_wrong,
+                        COALESCE(SUM(CASE WHEN dia.is_correct = 1 AND (dia.confidence_level = 'guessed' OR dia.confidence_level = 'not_sure') THEN 1 ELSE 0 END), 0) AS low_conf_correct,
+                        CAST(COALESCE(AVG(COALESCE(dia.response_time_ms, 0)), 0) AS INTEGER) AS avg_response_time_ms
+                 FROM diagnostic_item_attempts dia
+                 INNER JOIN questions q ON q.id = dia.question_id
+                 INNER JOIN diagnostic_session_phases dsp ON dsp.id = dia.phase_id
+                 WHERE dia.diagnostic_id = ?1
+                   AND dsp.status = 'completed'
+                 GROUP BY q.topic_id
+                 ORDER BY q.topic_id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([diagnostic_id], |row| {
+                Ok(TopicBranchSignal {
+                    topic_id: row.get(0)?,
+                    total_items: row.get(1)?,
+                    correct_items: row.get(2)?,
+                    high_conf_wrong: row.get(3)?,
+                    low_conf_correct: row.get(4)?,
+                    avg_response_time_ms: row.get(5)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut scored = Vec::new();
+        for row in rows {
+            let signal = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let score = branch_priority_for_phase(&signal, phase_code);
+            scored.push((signal.topic_id, score));
+        }
+        scored.sort_by(|left, right| right.1.cmp(&left.1).then_with(|| left.0.cmp(&right.0)));
+
+        let mut topic_ids = scored
+            .into_iter()
+            .take(match phase_code {
+                DiagnosticPhaseCode::RootCause => 2,
+                _ => 3,
+            })
+            .map(|(topic_id, _)| topic_id)
+            .collect::<Vec<_>>();
+        if !topic_ids.is_empty() {
+            return Ok(topic_ids);
+        }
+
+        let fallback = match phase_code {
+            DiagnosticPhaseCode::RootCause => self.load_root_cause_topic_ids(
+                student_id,
+                subject_id,
+                &self.load_subject_topic_ids(subject_id)?,
+            )?,
+            _ => self.load_subject_topic_ids(subject_id)?,
+        };
+        topic_ids.extend(fallback.into_iter().take(3));
+        Ok(topic_ids)
+    }
+
+    fn load_diagnostic_seen_question_ids(&self, diagnostic_id: i64) -> EcoachResult<Vec<i64>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT question_id
+                 FROM diagnostic_item_attempts
+                 WHERE diagnostic_id = ?1
+                 ORDER BY question_id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([diagnostic_id], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut question_ids = Vec::new();
+        for row in rows {
+            question_ids.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(question_ids)
     }
 
     fn insert_phase_row(
@@ -1100,6 +1339,24 @@ struct ErrorProfileSnapshot {
     pressure_breakdown_score: BasisPoints,
     speed_error_score: BasisPoints,
     misconception_signal_count: i64,
+    high_confidence_wrong_count: i64,
+    low_confidence_correct_count: i64,
+}
+
+#[derive(Debug, Default)]
+struct ConfidenceSignalSnapshot {
+    high_confidence_wrong_count: i64,
+    low_confidence_correct_count: i64,
+}
+
+#[derive(Debug)]
+struct TopicBranchSignal {
+    topic_id: i64,
+    total_items: i64,
+    correct_items: i64,
+    high_conf_wrong: i64,
+    low_conf_correct: i64,
+    avg_response_time_ms: i64,
 }
 
 fn latency_to_fluency(latency_ms: Option<i64>) -> BasisPoints {
@@ -1115,7 +1372,11 @@ fn classify_topic_analytics(
     flexibility_score: BasisPoints,
     error_profile: &ErrorProfileSnapshot,
 ) -> &'static str {
-    if pressure_score + 1_500 < mastery_score || error_profile.pressure_breakdown_score >= 5_000 {
+    if error_profile.high_confidence_wrong_count > 0 {
+        "confidence_distorted"
+    } else if pressure_score + 1_500 < mastery_score
+        || error_profile.pressure_breakdown_score >= 5_000
+    {
         "fragile_under_pressure"
     } else if flexibility_score + 1_500 < mastery_score
         || error_profile.recognition_failure_score >= 5_000
@@ -1144,7 +1405,9 @@ fn analytics_confidence_score(
         + pressure_score as i64
         + flexibility_score as i64
         + error_profile.conceptual_confusion_score as i64
-        + error_profile.knowledge_gap_score as i64;
+        + error_profile.knowledge_gap_score as i64
+        + (error_profile.high_confidence_wrong_count.min(3) * 600)
+        + (error_profile.low_confidence_correct_count.min(3) * 400);
     ((evidence / 5).clamp(4_500, 9_200)) as BasisPoints
 }
 
@@ -1154,7 +1417,10 @@ fn analytics_recommended_action(
     flexibility_score: BasisPoints,
     error_profile: &ErrorProfileSnapshot,
 ) -> &'static str {
-    if classification == "fragile_under_pressure" || error_profile.pressure_breakdown_score >= 5_000
+    if classification == "confidence_distorted" {
+        "confidence_reflection_check"
+    } else if classification == "fragile_under_pressure"
+        || error_profile.pressure_breakdown_score >= 5_000
     {
         "timed_repair_checkpoint"
     } else if classification == "transfer_fragile" || flexibility_score < 5_000 {
@@ -1189,6 +1455,54 @@ fn build_hypothesis(
         recommended_action: recommended_action.to_string(),
         evidence,
         created_at: String::new(),
+    }
+}
+
+fn template_for_phase_code(phase_code: &str) -> Option<DiagnosticPhaseTemplate> {
+    diagnostic_phase_templates(DiagnosticMode::Deep)
+        .into_iter()
+        .find(|template| template.code.as_str() == phase_code)
+}
+
+fn branch_reason_for_phase(phase_code: DiagnosticPhaseCode) -> &'static str {
+    match phase_code {
+        DiagnosticPhaseCode::Speed => "adaptive_zoom_on_weak_or_slow_topics",
+        DiagnosticPhaseCode::Precision => "precision_probe_on_error_prone_topics",
+        DiagnosticPhaseCode::Pressure => "condition_testing_on_pressure_risk_topics",
+        DiagnosticPhaseCode::Flex => "stability_recheck_on_fragile_topics",
+        DiagnosticPhaseCode::RootCause => "root_cause_probe_on_confidence_or_accuracy_mismatch",
+        DiagnosticPhaseCode::Baseline => "broad_scan",
+    }
+}
+
+fn branch_priority_for_phase(signal: &TopicBranchSignal, phase_code: DiagnosticPhaseCode) -> i64 {
+    let accuracy_bp = if signal.total_items > 0 {
+        (signal.correct_items * 10_000) / signal.total_items
+    } else {
+        0
+    };
+    let inaccuracy = 10_000 - accuracy_bp;
+    match phase_code {
+        DiagnosticPhaseCode::Speed => {
+            inaccuracy
+                + signal.avg_response_time_ms.min(90_000) / 15
+                + signal.low_conf_correct * 350
+        }
+        DiagnosticPhaseCode::Precision => {
+            inaccuracy + signal.high_conf_wrong * 1_200 + signal.low_conf_correct * 500
+        }
+        DiagnosticPhaseCode::Pressure => {
+            inaccuracy
+                + signal.high_conf_wrong * 1_300
+                + signal.avg_response_time_ms.min(90_000) / 18
+        }
+        DiagnosticPhaseCode::Flex => {
+            inaccuracy + signal.low_conf_correct * 700 + signal.high_conf_wrong * 800
+        }
+        DiagnosticPhaseCode::RootCause => {
+            inaccuracy + signal.high_conf_wrong * 1_500 + signal.low_conf_correct * 900
+        }
+        DiagnosticPhaseCode::Baseline => inaccuracy,
     }
 }
 
@@ -1382,9 +1696,11 @@ mod tests {
             )
             .expect("math subject should exist");
         let topic_id: i64 = conn
-            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
-                row.get(0)
-            })
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
             .expect("topic should exist");
 
         let engine = DiagnosticEngine::new(&conn);
@@ -1429,9 +1745,11 @@ mod tests {
             )
             .expect("math subject should exist");
         let topic_id: i64 = conn
-            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
-                row.get(0)
-            })
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
             .expect("topic should exist");
         conn.execute(
             "INSERT INTO student_error_profiles (student_id, topic_id, conceptual_confusion_score, pressure_breakdown_score, speed_error_score)
@@ -1518,6 +1836,201 @@ mod tests {
         assert!(!result.topic_results.is_empty());
         assert!(!analytics.is_empty());
         assert!(!hypotheses.is_empty());
+    }
+
+    #[test]
+    fn advancing_phase_retargets_next_phase_with_branch_metadata() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, status) VALUES ('student', 'Yaw', 'hash', 'salt', 'active')",
+            [],
+        )
+        .expect("student should be insertable");
+        let student_id = conn.last_insert_rowid();
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("math subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+
+        let engine = DiagnosticEngine::new(&conn);
+        let battery = engine
+            .start_diagnostic_battery(
+                student_id,
+                subject_id,
+                vec![topic_id],
+                DiagnosticMode::Standard,
+            )
+            .expect("diagnostic battery should build");
+        let first_phase_items = engine
+            .list_phase_items(battery.diagnostic_id, 1)
+            .expect("phase items should load");
+        let question_service = QuestionService::new(&conn);
+        let wrong_option_id = question_service
+            .list_options(first_phase_items[0].question_id)
+            .expect("options should load")
+            .into_iter()
+            .find(|option| !option.is_correct)
+            .map(|option| option.id)
+            .expect("wrong option should exist");
+        let attempt_id: i64 = conn
+            .query_row(
+                "SELECT id FROM diagnostic_item_attempts WHERE diagnostic_id = ?1 AND phase_id = ?2 LIMIT 1",
+                params![battery.diagnostic_id, battery.phases[0].phase_id],
+                |row| row.get(0),
+            )
+            .expect("attempt should exist");
+        engine
+            .submit_phase_attempt(
+                battery.diagnostic_id,
+                attempt_id,
+                wrong_option_id,
+                Some(30_000),
+                Some("sure"),
+                0,
+                false,
+                false,
+            )
+            .expect("baseline attempt should submit");
+
+        let next_phase = engine
+            .advance_phase(battery.diagnostic_id, 1)
+            .expect("phase should advance")
+            .expect("next phase should exist");
+        let condition_profile: String = conn
+            .query_row(
+                "SELECT condition_profile_json FROM diagnostic_session_phases WHERE id = ?1",
+                [next_phase.phase_id],
+                |row| row.get(0),
+            )
+            .expect("condition profile should exist");
+
+        assert_eq!(next_phase.status, "active");
+        assert!(condition_profile.contains("\"adaptive_retargeted\":true"));
+        assert!(condition_profile.contains("\"branch_topic_ids\""));
+    }
+
+    #[test]
+    fn complete_diagnostic_detects_confidence_distortion_root_cause() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, status) VALUES ('student', 'Efua', 'hash', 'salt', 'active')",
+            [],
+        )
+        .expect("student should be insertable");
+        let student_id = conn.last_insert_rowid();
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("math subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+
+        let engine = DiagnosticEngine::new(&conn);
+        let battery = engine
+            .start_diagnostic_battery(
+                student_id,
+                subject_id,
+                vec![topic_id],
+                DiagnosticMode::Standard,
+            )
+            .expect("diagnostic battery should build");
+        let question_service = QuestionService::new(&conn);
+
+        for phase in &battery.phases {
+            let items = engine
+                .list_phase_items(battery.diagnostic_id, phase.phase_number)
+                .expect("phase items should load");
+            let Some(first_item) = items.first() else {
+                continue;
+            };
+            let wrong_option_id = question_service
+                .list_options(first_item.question_id)
+                .expect("options should load")
+                .into_iter()
+                .find(|option| !option.is_correct)
+                .map(|option| option.id)
+                .expect("wrong option should exist");
+            let attempt_id: i64 = conn
+                .query_row(
+                    "SELECT id FROM diagnostic_item_attempts
+                     WHERE diagnostic_id = ?1 AND phase_id = ?2 AND question_id = ?3
+                     LIMIT 1",
+                    params![
+                        battery.diagnostic_id,
+                        phase.phase_id,
+                        first_item.question_id
+                    ],
+                    |row| row.get(0),
+                )
+                .expect("attempt should exist");
+            engine
+                .submit_phase_attempt(
+                    battery.diagnostic_id,
+                    attempt_id,
+                    wrong_option_id,
+                    Some(18_000),
+                    Some("sure"),
+                    0,
+                    false,
+                    false,
+                )
+                .expect("phase attempt should submit");
+        }
+
+        let result = engine
+            .complete_diagnostic(battery.diagnostic_id)
+            .expect("diagnostic should complete");
+        let analytics = engine
+            .list_topic_analytics(battery.diagnostic_id)
+            .expect("analytics should load");
+        let hypotheses = engine
+            .list_root_cause_hypotheses(battery.diagnostic_id, Some(topic_id))
+            .expect("hypotheses should load");
+
+        assert!(
+            result
+                .recommended_next_actions
+                .iter()
+                .any(|action| action == "confidence_reflection_check")
+        );
+        assert!(
+            analytics
+                .iter()
+                .any(|item| item.classification == "confidence_distorted")
+        );
+        assert!(
+            hypotheses
+                .iter()
+                .any(|item| item.hypothesis_code == "confidence_distortion")
+        );
     }
 
     fn open_test_database() -> Connection {

@@ -1,0 +1,1 @@
+async function e(e,t={},n){return window.__TAURI_INTERNALS__.invoke(e,t,n)}async function t(t,n){try{return await e(t,n)}catch(e){throw console.error(`[IPC] ${t} failed:`,e),e}}export{t};

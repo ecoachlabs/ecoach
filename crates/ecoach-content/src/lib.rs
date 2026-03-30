@@ -1,10 +1,17 @@
 pub mod content_strategy_registry;
+pub mod foundry_coordinator;
 pub mod manifest;
 pub mod pack_service;
 pub mod publish_pipeline;
 pub mod resource_readiness;
 
 pub use content_strategy_registry::{ContentStrategyRegistry, ContentTypeStrategy};
+pub use foundry_coordinator::{
+    ContentFoundrySourceReport, CurriculumParseCandidate, CurriculumReviewTask,
+    CurriculumSourceUpload, FoundryCoordinatorService, FoundryJob, FoundryJobBoard,
+    ParseCandidateCount, ParseCandidateInput, SourceUploadInput, SubjectFoundryDashboard,
+    TopicPackageSnapshot,
+};
 pub use manifest::PackManifest;
 pub use pack_service::{PackInstallResult, PackService, PackSummary};
 pub use publish_pipeline::{

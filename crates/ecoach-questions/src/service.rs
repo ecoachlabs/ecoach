@@ -2,8 +2,8 @@ use ecoach_substrate::{EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension, params};
 
 use crate::models::{
-    Question, QuestionIntelligenceLink, QuestionIntelligenceProfile, QuestionIntelligenceQuery,
-    QuestionOption,
+    DuplicateCheckResult, Question, QuestionIntelligenceLink, QuestionIntelligenceProfile,
+    QuestionIntelligenceQuery, QuestionOption, RelatedQuestion,
 };
 
 pub struct QuestionService<'a> {
@@ -232,6 +232,130 @@ impl<'a> QuestionService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
+    pub fn list_related_questions(
+        &self,
+        question_id: i64,
+        relation_type: Option<&str>,
+        limit: usize,
+    ) -> EcoachResult<Vec<RelatedQuestion>> {
+        let limit = limit.max(1) as i64;
+        let relation_filter_enabled = relation_type.is_some();
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT q.id, q.subject_id, q.topic_id, q.subtopic_id, q.family_id, q.stem,
+                        q.question_format, q.explanation_text, q.difficulty_level,
+                        q.estimated_time_seconds, q.marks, q.primary_skill_id,
+                        qge.from_question_id, qge.to_question_id, qge.relation_type,
+                        qge.similarity_score, qge.rationale
+                 FROM question_graph_edges qge
+                 INNER JOIN questions q
+                    ON q.id = CASE
+                        WHEN qge.from_question_id = ?1 THEN qge.to_question_id
+                        ELSE qge.from_question_id
+                    END
+                 WHERE (qge.from_question_id = ?1 OR qge.to_question_id = ?1)
+                   AND (?2 = 0 OR qge.relation_type = ?3)
+                   AND q.is_active = 1
+                 ORDER BY qge.similarity_score DESC, q.id ASC
+                 LIMIT ?4",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let rows = statement
+            .query_map(
+                params![
+                    question_id,
+                    if relation_filter_enabled { 1 } else { 0 },
+                    relation_type.unwrap_or_default(),
+                    limit,
+                ],
+                |row| {
+                    Ok(RelatedQuestion {
+                        question: Question {
+                            id: row.get(0)?,
+                            subject_id: row.get(1)?,
+                            topic_id: row.get(2)?,
+                            subtopic_id: row.get(3)?,
+                            family_id: row.get(4)?,
+                            stem: row.get(5)?,
+                            question_format: row.get(6)?,
+                            explanation_text: row.get(7)?,
+                            difficulty_level: row.get(8)?,
+                            estimated_time_seconds: row.get(9)?,
+                            marks: row.get(10)?,
+                            primary_skill_id: row.get(11)?,
+                        },
+                        edge: crate::models::QuestionGraphEdge {
+                            from_question_id: row.get(12)?,
+                            to_question_id: row.get(13)?,
+                            relation_type: row.get(14)?,
+                            similarity_score: row.get::<_, i64>(15)?.clamp(0, 10_000) as u16,
+                            rationale: row.get(16)?,
+                        },
+                    })
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut related = Vec::new();
+        for row in rows {
+            related.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(related)
+    }
+
+    pub fn detect_near_duplicate(
+        &self,
+        stem: &str,
+        family_id: Option<i64>,
+        topic_id: Option<i64>,
+    ) -> EcoachResult<DuplicateCheckResult> {
+        let normalized_candidate = normalize_text(stem);
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT q.id, q.stem
+                 FROM questions q
+                 WHERE q.is_active = 1
+                   AND (?1 = 0 OR q.family_id = ?2)
+                   AND (?3 = 0 OR q.topic_id = ?4)
+                 ORDER BY q.id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(
+                params![
+                    if family_id.is_some() { 1 } else { 0 },
+                    family_id.unwrap_or_default(),
+                    if topic_id.is_some() { 1 } else { 0 },
+                    topic_id.unwrap_or_default(),
+                ],
+                |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?)),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut best_match = None;
+        let mut best_score = 0u16;
+        for row in rows {
+            let (question_id, existing_stem) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let normalized_existing = normalize_text(&existing_stem);
+            let similarity_score = similarity_bp(&normalized_candidate, &normalized_existing);
+            if similarity_score > best_score {
+                best_score = similarity_score;
+                best_match = Some(question_id);
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            matched_question_id: best_match,
+            similarity_score: best_score,
+            is_exact_duplicate: best_score >= 10_000,
+            is_near_duplicate: best_score >= 9_200,
+        })
+    }
+
     pub fn insert_question(
         &self,
         subject_id: i64,
@@ -269,10 +393,56 @@ fn map_question(row: &rusqlite::Row<'_>) -> rusqlite::Result<Question> {
     })
 }
 
+fn normalize_text(value: &str) -> String {
+    value
+        .chars()
+        .filter_map(|ch| {
+            if ch.is_ascii_alphanumeric() {
+                Some(ch.to_ascii_lowercase())
+            } else if ch.is_ascii_whitespace() {
+                Some(' ')
+            } else {
+                None
+            }
+        })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn similarity_bp(left: &str, right: &str) -> u16 {
+    if left.is_empty() || right.is_empty() {
+        return 0;
+    }
+    if left == right {
+        return 10_000;
+    }
+
+    let left_tokens = left
+        .split_whitespace()
+        .collect::<std::collections::BTreeSet<_>>();
+    let right_tokens = right
+        .split_whitespace()
+        .collect::<std::collections::BTreeSet<_>>();
+    let intersection = left_tokens.intersection(&right_tokens).count() as f64;
+    let union = left_tokens.union(&right_tokens).count() as f64;
+    if union == 0.0 {
+        0
+    } else {
+        ((intersection / union) * 10_000.0)
+            .round()
+            .clamp(0.0, 10_000.0) as u16
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
 
+    use crate::{
+        QuestionGenerationRequestInput, QuestionReactor, QuestionSlotSpec, QuestionVariantMode,
+    };
     use ecoach_content::PackService;
     use ecoach_storage::run_runtime_migrations;
     use rusqlite::Connection;
@@ -350,6 +520,102 @@ mod tests {
 
         assert_eq!(questions.len(), 1);
         assert!(questions[0].stem.contains("simplest form"));
+    }
+
+    #[test]
+    fn detects_near_duplicate_stems_within_family_scope() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let service = QuestionService::new(&conn);
+        let family_id: i64 = conn
+            .query_row(
+                "SELECT id FROM question_families WHERE family_code = 'FRA_EQUIV_01'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("family should exist");
+        let topic_id: i64 = conn
+            .query_row("SELECT id FROM topics WHERE code = 'FRA'", [], |row| {
+                row.get(0)
+            })
+            .expect("topic should exist");
+
+        let duplicate = service
+            .detect_near_duplicate(
+                "Which fraction is equivalent to 1/2?",
+                Some(family_id),
+                Some(topic_id),
+            )
+            .expect("duplicate check should work");
+
+        assert!(duplicate.matched_question_id.is_some());
+        assert!(duplicate.is_exact_duplicate);
+        assert!(duplicate.is_near_duplicate);
+    }
+
+    #[test]
+    fn related_questions_surface_reactor_graph_edges() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+
+        let reactor = QuestionReactor::new(&conn);
+        let request = reactor
+            .create_generation_request(&QuestionGenerationRequestInput {
+                slot_spec: QuestionSlotSpec {
+                    subject_id,
+                    topic_id: Some(topic_id),
+                    target_cognitive_demand: Some("recognition".to_string()),
+                    target_question_format: Some("mcq".to_string()),
+                    max_generated_share: 8_000,
+                },
+                family_id: None,
+                source_question_id: None,
+                request_kind: "variant".to_string(),
+                variant_mode: QuestionVariantMode::RepresentationShift,
+                requested_count: 1,
+                rationale: Some("Need a fresh related variant".to_string()),
+            })
+            .expect("request should create");
+        let generated = reactor
+            .process_generation_request(request.id)
+            .expect("request should process");
+
+        let service = QuestionService::new(&conn);
+        let related = service
+            .list_related_questions(generated[0].source_question_id, None, 10)
+            .expect("related questions should load");
+
+        assert!(related.iter().any(|item| {
+            item.question.id == generated[0].question.id
+                && item.edge.relation_type == "representation_shift"
+        }));
+        assert!(
+            related
+                .iter()
+                .any(|item| item.edge.relation_type == "same_family")
+        );
     }
 
     fn open_test_database() -> Connection {

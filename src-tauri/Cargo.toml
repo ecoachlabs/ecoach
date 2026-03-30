@@ -1,0 +1,19 @@
+[package]
+name = "ecoach-tauri"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+ecoach-commands = { path = "../crates/ecoach-commands" }
+ecoach-content = { path = "../crates/ecoach-content" }
+ecoach-identity = { path = "../crates/ecoach-identity" }
+ecoach-sessions = { path = "../crates/ecoach-sessions" }
+ecoach-substrate = { path = "../crates/ecoach-substrate" }
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"

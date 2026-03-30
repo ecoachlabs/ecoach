@@ -147,6 +147,22 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "035_traps_runtime",
         sql: include_str!("../../../migrations/runtime/035_traps_runtime.sql"),
     },
+    Migration {
+        id: "036_question_reactor",
+        sql: include_str!("../../../migrations/runtime/036_question_reactor.sql"),
+    },
+    Migration {
+        id: "037_question_graph",
+        sql: include_str!("../../../migrations/runtime/037_question_graph.sql"),
+    },
+    Migration {
+        id: "038_content_foundry",
+        sql: include_str!("../../../migrations/runtime/038_content_foundry.sql"),
+    },
+    Migration {
+        id: "039_foundry_jobs",
+        sql: include_str!("../../../migrations/runtime/039_foundry_jobs.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {

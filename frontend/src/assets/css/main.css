@@ -1,0 +1,371 @@
+@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400&display=swap');
+
+/* ============================================
+   eCoach Design System — "Warm Intelligence"
+
+   Ghanaian-inspired academic excellence.
+   Knowledge glows like embers.
+   ============================================ */
+
+:root {
+  /* ── Fonts ── */
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+
+  /* ── Core Palette ── */
+  --ink: #1a1612;
+  --ink-secondary: #5c5650;
+  --ink-muted: #9e958d;
+  --paper: #faf8f5;
+  --paper-warm: #f5f0e8;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --border-soft: #e8e2d9;
+  --border-strong: #d4ccc0;
+
+  /* ── Brand Colors ── */
+  --accent: #0d9488;          /* teal — intelligence, clarity */
+  --accent-hover: #0f766e;
+  --accent-light: #ccfbf1;
+  --accent-glow: rgba(13, 148, 136, 0.15);
+
+  --warm: #c2410c;            /* terracotta — warmth, Ghana earth */
+  --warm-light: #fff7ed;
+  --warm-glow: rgba(194, 65, 12, 0.1);
+
+  --gold: #b45309;            /* amber — achievement, mastery */
+  --gold-light: #fef3c7;
+  --gold-glow: rgba(180, 83, 9, 0.12);
+
+  --success: #15803d;
+  --success-light: #dcfce7;
+  --danger: #b91c1c;
+  --danger-light: #fee2e2;
+  --warning: #a16207;
+  --warning-light: #fef9c3;
+
+  /* ── Mastery Ember System — knowledge glows ── */
+  --ember-cold: #d6d3d1;      /* unseen — stone gray */
+  --ember-spark: #a8a29e;     /* exposed — warm gray, first spark */
+  --ember-kindling: #fbbf24;  /* emerging — golden kindle */
+  --ember-warming: #f59e0b;   /* partial — warming amber */
+  --ember-burning: #ea580c;   /* fragile — orange heat */
+  --ember-steady: #16a34a;    /* stable — green steady flame */
+  --ember-bright: #059669;    /* robust — bright emerald */
+  --ember-blazing: #0d9488;   /* exam-ready — teal blaze */
+
+  /* ── Error Type Colors ── */
+  --err-knowledge: #dc2626;
+  --err-conceptual: #ea580c;
+  --err-recognition: #d97706;
+  --err-execution: #ca8a04;
+  --err-careless: #65a30d;
+  --err-pressure: #7c3aed;
+  --err-expression: #db2777;
+  --err-speed: #0891b2;
+  --err-guessing: #71717a;
+  --err-misconception: #be123c;
+
+  /* ── Decay Severity ── */
+  --decay-stable: #16a34a;
+  --decay-watch: #eab308;
+  --decay-fragile: #ea580c;
+  --decay-decaying: #dc2626;
+  --decay-collapsed: #292524;
+
+  /* ── Elevation ── */
+  --shadow-xs: 0 1px 2px rgba(26, 22, 18, 0.04);
+  --shadow-sm: 0 1px 3px rgba(26, 22, 18, 0.06), 0 1px 2px rgba(26, 22, 18, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(26, 22, 18, 0.07), 0 2px 4px -2px rgba(26, 22, 18, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(26, 22, 18, 0.08), 0 4px 6px -4px rgba(26, 22, 18, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(26, 22, 18, 0.1), 0 8px 10px -6px rgba(26, 22, 18, 0.05);
+  --shadow-glow-accent: 0 0 20px rgba(13, 148, 136, 0.2);
+  --shadow-glow-warm: 0 0 20px rgba(194, 65, 12, 0.15);
+  --shadow-glow-gold: 0 0 20px rgba(180, 83, 9, 0.15);
+
+  /* ── Motion ── */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --dur-fast: 120ms;
+  --dur-normal: 220ms;
+  --dur-slow: 400ms;
+  --dur-reveal: 600ms;
+  --dur-ceremony: 1000ms;
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+
+  /* ── Z-Index ── */
+  --z-base: 0;
+  --z-raised: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+}
+
+/* ── Student Theme ── */
+[data-theme='student'] {
+  --bg: var(--paper);
+  --text: var(--ink);
+  --text-2: var(--ink-secondary);
+  --text-3: var(--ink-muted);
+  --card-bg: var(--surface);
+  --card-border: var(--border-soft);
+  --primary: var(--accent);
+  --primary-hover: var(--accent-hover);
+  --primary-glow: var(--accent-glow);
+  --primary-light: var(--accent-light);
+  --font-size-base: 0.9375rem;
+  --sidebar-width: 240px;
+}
+
+/* ── Parent Theme ── */
+[data-theme='parent'] {
+  --bg: #f7f8fa;
+  --text: #111827;
+  --text-2: #4b5563;
+  --text-3: #9ca3af;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --primary: #1e293b;
+  --primary-hover: #0f172a;
+  --primary-glow: rgba(30, 41, 59, 0.08);
+  --primary-light: #f1f5f9;
+  --font-size-base: 1.0625rem;
+  --sidebar-width: 260px;
+}
+
+/* ── Admin Theme ── */
+[data-theme='admin'] {
+  --bg: #f0f1f3;
+  --text: #18181b;
+  --text-2: #52525b;
+  --text-3: #a1a1aa;
+  --card-bg: #ffffff;
+  --card-border: #d4d4d8;
+  --primary: #18181b;
+  --primary-hover: #09090b;
+  --primary-glow: rgba(24, 24, 27, 0.06);
+  --primary-light: #f4f4f5;
+  --font-size-base: 0.8125rem;
+  --sidebar-width: 220px;
+}
+
+/* ── Emotional Modes ── */
+[data-mode='recovery'] {
+  --bg: #fefce8;
+  --primary: var(--gold);
+  --primary-light: var(--gold-light);
+  --primary-glow: var(--gold-glow);
+}
+[data-mode='pressure'] {
+  --bg: #0c0a09;
+  --card-bg: #1c1917;
+  --card-border: #292524;
+  --text: #fafaf9;
+  --text-2: #d6d3d1;
+  --text-3: #78716c;
+  --primary: #ef4444;
+  --primary-light: #450a0a;
+  --primary-glow: rgba(239, 68, 68, 0.2);
+}
+[data-mode='elite'] {
+  --bg: #0f0b1e;
+  --card-bg: #1a1333;
+  --card-border: #2e2650;
+  --text: #e8e4f0;
+  --text-2: #a89ec4;
+  --text-3: #6d6488;
+  --primary: #a78bfa;
+  --primary-light: #1e1640;
+  --primary-glow: rgba(167, 139, 250, 0.2);
+}
+[data-mode='game'] {
+  --bg: #ecfdf5;
+  --primary: #059669;
+  --primary-light: #d1fae5;
+  --primary-glow: rgba(5, 150, 105, 0.12);
+}
+[data-mode='celebration'] {
+  --bg: #fffbeb;
+  --primary: var(--warm);
+  --primary-light: var(--warm-light);
+  --primary-glow: var(--warm-glow);
+}
+[data-mode='focus'] {
+  --bg: #fafaf9;
+  --card-bg: #ffffff;
+  --primary: #57534e;
+  --primary-light: #f5f5f4;
+}
+
+/* ── Dark Mode ── */
+[data-dark='true'] {
+  --bg: #0c0a09;
+  --paper: #0c0a09;
+  --surface: #1c1917;
+  --card-bg: #1c1917;
+  --card-border: #292524;
+  --border-soft: #292524;
+  --border-strong: #44403c;
+  --ink: #fafaf9;
+  --ink-secondary: #d6d3d1;
+  --ink-muted: #78716c;
+  --text: #fafaf9;
+  --text-2: #d6d3d1;
+  --text-3: #78716c;
+}
+
+/* ════════════════════════════════════════════
+   Base Styles
+   ════════════════════════════════════════════ */
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--text);
+  font-size: var(--font-size-base, 0.9375rem);
+  line-height: 1.6;
+  margin: 0;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body { user-select: none; }
+input, textarea, [contenteditable] { user-select: text; }
+
+/* ── Typography Helpers ── */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+
+.text-balance { text-wrap: balance; }
+
+/* ── Kente-inspired geometric accent ── */
+.kente-accent {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 8px,
+      rgba(13, 148, 136, 0.04) 8px,
+      rgba(13, 148, 136, 0.04) 9px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      rgba(180, 83, 9, 0.03) 8px,
+      rgba(180, 83, 9, 0.03) 9px
+    );
+}
+
+/* ── Grain Texture Overlay ── */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 100px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ── Focus Ring ── */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Transitions ── */
+.transition-theme {
+  transition:
+    background-color var(--dur-normal) var(--ease-smooth),
+    color var(--dur-normal) var(--ease-smooth),
+    border-color var(--dur-normal) var(--ease-smooth);
+}
+
+/* ── Ember Glow Animation ── */
+@keyframes ember-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.ember-glow {
+  animation: ember-pulse 3s var(--ease-smooth) infinite;
+}
+
+/* ── Stagger Reveal ── */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: reveal-up var(--dur-reveal) var(--ease-out) both;
+}
+
+.reveal-stagger > * {
+  animation: reveal-up var(--dur-reveal) var(--ease-out) both;
+}
+.reveal-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.reveal-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.reveal-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.reveal-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.reveal-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.reveal-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.reveal-stagger > *:nth-child(7) { animation-delay: 360ms; }
+.reveal-stagger > *:nth-child(8) { animation-delay: 420ms; }
+
+/* ── Card Hover Lift ── */
+.card-lift {
+  transition: transform var(--dur-normal) var(--ease-spring),
+              box-shadow var(--dur-normal) var(--ease-smooth);
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── Print ── */
+@media print {
+  body { background: white; color: black; overflow: visible; }
+  .no-print { display: none !important; }
+}
