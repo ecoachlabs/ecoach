@@ -47,7 +47,7 @@ Legend:
 | idea33.txt | read_complete | implemented_gap, partial | Added contrast-profile ingestion, trap round/session persistence, Difference Drill, Similarity Trap, Know the Difference, Which Is Which, Unmask runtime flows, replay review, and learner confusion state; deeper remediation routing is still missing |
 | idea34.txt | read_complete | implemented_gap, partial | Added diagnostic phase submission, phase-aware topic analytics, durable root-cause hypotheses, adaptive next-phase retargeting, and confidence-weighted distortion diagnosis; fuller adaptive orchestration is still missing |
 | idea35.txt | read_complete | implemented_gap, partial | Added a DTO-only runtime command boundary crate with shared AppState, unified CommandError, and a broad Tauri-registered app surface covering identity, coach, Journey, curriculum, sessions, attempts, foundry, diagnostics with battery/phase/submit/advance/complete-sync flow, questions, past-paper pressure, elite blueprints, games, traps, library teach-action and relationship hints, glossary audio, memory return-loop reads, detailed repair plans, readiness, premium, reporting, and mock-centre; this pass also fixed command-layer error coercion across the newer routes so the workspace now compiles cleanly again, though feature-depth work still remains |
-| idea36.txt | read_complete | implemented_gap, partial | Added bundle reconstruction/classification, extracted insight reporting, reconstruction confidence scoring, paired assessment grouping, and review-priority quality signals; deeper OCR/layout recovery still missing |
+| idea36.txt | read_complete | implemented_gap, partial | Extended upload intelligence with sidecar OCR/text recovery for scans and PDFs, page-aware recovery summaries, richer document-role classification (`report_card`, `corrected_script`, `teacher_handout`), mined dates/topics/question blocks/score signals/remarks/glossary terms, coach-action and student-model update signals, confirmation/alignment states, and stronger aggregate bundle reporting; true native OCR execution and deeper coach-goal consumption still remain outside the intake crate |
 | idea37.txt | read_complete | implemented_gap, partial | Added learner-truth snapshot read model with topic, skill, memory, and diagnosis projections; broader cross-engine fabric still missing |
 | idea38.txt | read_complete | implemented_gap, partial | Added source staging, acquisition jobs, learner evidence fabrics, publish/trust job substrate, topic package snapshots, subject foundry dashboards, a coordinator that links source review, topic health, and publish readiness, durable foundry job orchestration, executable foundry queue automation with run/run-next behavior, and source-aware Foundry builders that now carry reviewed curriculum/support signals through curriculum, knowledge, question, and contrast artifact creation; the broader Foundry/Content OS is still not fully complete |
 
@@ -124,6 +124,9 @@ Implemented from this range in this pass:
   - bundle reconstruction and aggregate reporting
   - extracted bundle/file insights
   - detected subject/year hints and question-like file detection
+  - sidecar OCR/text recovery for scan-style uploads
+  - page-aware recovery summaries and confirmation states
+  - mined report-card/corrected-script findings such as topics, scores, remarks, question blocks, and coach actions
 - Added `migrations/runtime/032_content_publish_pipeline.sql` and extended `crates/ecoach-storage/src/migrations.rs` with:
   - content publish jobs
   - quality report storage

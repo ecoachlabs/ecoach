@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { Howl } from 'howler'
 
 export type SoundCategory = 'feedback' | 'transition' | 'ambient' | 'game' | 'celebration'
 
@@ -14,7 +15,7 @@ const config = ref<SoundConfig>({
   mutedCategories: new Set(),
 })
 
-// Sound effect registry - maps names to paths
+// Sound effect registry
 const sounds: Record<string, { path: string; category: SoundCategory }> = {
   // Feedback
   correct: { path: '/sounds/feedback/correct.mp3', category: 'feedback' },
@@ -37,12 +38,28 @@ const sounds: Record<string, { path: string; category: SoundCategory }> = {
   blockDrop: { path: '/sounds/game/block-drop.mp3', category: 'game' },
   morphActivate: { path: '/sounds/game/morph.mp3', category: 'game' },
   cardSort: { path: '/sounds/game/card-sort.mp3', category: 'game' },
+  ropePull: { path: '/sounds/game/rope-pull.mp3', category: 'game' },
+  heartbeat: { path: '/sounds/game/heartbeat.mp3', category: 'game' },
 }
 
-// Audio cache
-const audioCache = new Map<string, HTMLAudioElement>()
+// Howl cache
+const howlCache = new Map<string, Howl>()
 
 export function useSound() {
+  function getHowl(name: string): Howl | null {
+    const sound = sounds[name]
+    if (!sound) return null
+
+    if (!howlCache.has(name)) {
+      howlCache.set(name, new Howl({
+        src: [sound.path],
+        volume: config.value.volume,
+        preload: false,
+      }))
+    }
+    return howlCache.get(name) || null
+  }
+
   function play(name: string, volumeOverride?: number) {
     if (!config.value.enabled) return
 
@@ -50,26 +67,30 @@ export function useSound() {
     if (!sound) return
     if (config.value.mutedCategories.has(sound.category)) return
 
-    try {
-      let audio = audioCache.get(name)
-      if (!audio) {
-        audio = new Audio(sound.path)
-        audioCache.set(name, audio)
-      }
-      audio.volume = volumeOverride ?? config.value.volume
-      audio.currentTime = 0
-      audio.play().catch(() => {}) // Silently fail if audio not available
-    } catch {
-      // Audio not critical, fail silently
-    }
+    const howl = getHowl(name)
+    if (!howl) return
+
+    howl.volume(volumeOverride ?? config.value.volume)
+    howl.play()
+  }
+
+  function stop(name: string) {
+    const howl = howlCache.get(name)
+    if (howl) howl.stop()
+  }
+
+  function stopAll() {
+    howlCache.forEach(howl => howl.stop())
   }
 
   function setEnabled(enabled: boolean) {
     config.value.enabled = enabled
+    if (!enabled) stopAll()
   }
 
   function setVolume(volume: number) {
     config.value.volume = Math.max(0, Math.min(1, volume))
+    howlCache.forEach(howl => howl.volume(config.value.volume))
   }
 
   function muteCategory(category: SoundCategory) {
@@ -80,12 +101,23 @@ export function useSound() {
     config.value.mutedCategories.delete(category)
   }
 
+  // Preload a set of sounds for a mode
+  function preload(names: string[]) {
+    names.forEach(name => {
+      const howl = getHowl(name)
+      if (howl) howl.load()
+    })
+  }
+
   return {
     play,
+    stop,
+    stopAll,
     config,
     setEnabled,
     setVolume,
     muteCategory,
     unmuteCategory,
+    preload,
   }
 }
