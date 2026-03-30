@@ -1,6 +1,8 @@
 use ecoach_coach_brain::{
-    CoachNextAction, CoachStateResolution, ContentReadinessResolution, JourneyRouteSnapshot,
-    JourneyService, PlanEngine, TopicCase, assess_content_readiness, list_priority_topic_cases,
+    AdaptationResult, CoachNextAction, CoachStateResolution, ComposedSession,
+    ConsistencySnapshot, ContentReadinessResolution, DeadlinePressure, JourneyAdaptationEngine,
+    JourneyRouteSnapshot, JourneyService, KnowledgeMapNode, PlanEngine, RouteMode,
+    SessionComposer, TopicCase, assess_content_readiness, list_priority_topic_cases,
     resolve_coach_state, resolve_next_coach_action,
 };
 use ecoach_goals_calendar::GoalsCalendarService;
@@ -281,6 +283,97 @@ pub fn replan_remaining_day(
             minute_of_day,
         )?;
         Ok(DailyReplanDto::from(replan))
+    })
+}
+
+// ── Journey adaptation commands ──
+
+pub fn get_deadline_pressure(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<DeadlinePressure, CommandError> {
+    state.with_connection(|conn| {
+        Ok(JourneyAdaptationEngine::new(conn).compute_deadline_pressure(student_id, subject_id)?)
+    })
+}
+
+pub fn adapt_journey_route(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<AdaptationResult, CommandError> {
+    state.with_connection(|conn| {
+        Ok(JourneyAdaptationEngine::new(conn).adapt_route(student_id, subject_id)?)
+    })
+}
+
+pub fn get_consistency_snapshot(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<ConsistencySnapshot, CommandError> {
+    state.with_connection(|conn| {
+        Ok(JourneyAdaptationEngine::new(conn).get_consistency_snapshot(student_id, subject_id)?)
+    })
+}
+
+pub fn record_study_day(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    minutes: i64,
+    questions: i64,
+    accuracy_bp: u16,
+) -> Result<(), CommandError> {
+    state.with_connection(|conn| {
+        Ok(JourneyAdaptationEngine::new(conn).record_study_day(
+            student_id, subject_id, minutes, questions, accuracy_bp,
+        )?)
+    })
+}
+
+pub fn get_knowledge_map(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<KnowledgeMapNode>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(JourneyAdaptationEngine::new(conn).refresh_knowledge_map(student_id, subject_id)?)
+    })
+}
+
+pub fn compose_session(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    station_type: &str,
+    route_mode: &str,
+    daily_budget_minutes: i64,
+) -> Result<ComposedSession, CommandError> {
+    state.with_connection(|conn| {
+        let mode = RouteMode::from_str(route_mode);
+        Ok(SessionComposer::new(conn).compose_session(
+            student_id, subject_id, station_type, mode, daily_budget_minutes,
+        )?)
+    })
+}
+
+pub fn set_exam_date(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    exam_date: &str,
+    daily_budget_minutes: i64,
+) -> Result<(), CommandError> {
+    state.with_connection(|conn| {
+        conn.execute(
+            "UPDATE journey_routes SET exam_date = ?1, daily_budget_minutes = ?2, updated_at = datetime('now')
+             WHERE student_id = ?3 AND subject_id = ?4 AND status = 'active'",
+            rusqlite::params![exam_date, daily_budget_minutes, student_id, subject_id],
+        )
+        .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+        Ok(())
     })
 }
 

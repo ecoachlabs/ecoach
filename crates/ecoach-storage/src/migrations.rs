@@ -191,6 +191,10 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "045_remaining_gaps",
         sql: include_str!("../../../migrations/runtime/045_remaining_gaps.sql"),
     },
+    Migration {
+        id: "046_journey_adaptation",
+        sql: include_str!("../../../migrations/runtime/046_journey_adaptation.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {

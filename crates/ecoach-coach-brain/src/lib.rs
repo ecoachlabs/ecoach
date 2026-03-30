@@ -1,12 +1,19 @@
 pub mod journey;
+pub mod journey_adaptation;
 pub mod plan_engine;
 pub mod readiness_engine;
+pub mod session_composer;
 pub mod state_machine;
 pub mod topic_case;
 
 pub use journey::{JourneyRoute, JourneyRouteSnapshot, JourneyService, JourneyStation};
+pub use journey_adaptation::{
+    AdaptationResult, ConsistencySnapshot, DeadlinePressure, JourneyAdaptationEngine,
+    KnowledgeMapNode, MoraleSignal, RouteMode,
+};
 pub use plan_engine::{CoachMissionMemory, PlanEngine, PlanRewriteResult};
 pub use readiness_engine::{ReadinessEngine, StudentReadinessSnapshot, TopicReadinessSlice};
+pub use session_composer::{ComposedSession, QuestionIntent, SessionComposer, SessionSegment};
 pub use state_machine::{
     CoachActionType, CoachNextAction, CoachStateResolution, ContentReadinessResolution,
     ContentReadinessStatus, LearnerJourneyState, assess_content_readiness, resolve_coach_state,
