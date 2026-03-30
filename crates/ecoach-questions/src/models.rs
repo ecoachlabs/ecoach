@@ -203,6 +203,20 @@ pub struct QuestionFamilyHealth {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionFamilyGenerationPriority {
+    pub family_choice: QuestionFamilyChoice,
+    pub health_status: String,
+    pub freshness_score: BasisPoints,
+    pub calibration_score: BasisPoints,
+    pub quality_score: BasisPoints,
+    pub recurrence_score: BasisPoints,
+    pub replacement_score: BasisPoints,
+    pub recommended_variant_mode: String,
+    pub priority_score: BasisPoints,
+    pub rationale: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuestionRemediationPlan {
     pub family_choice: QuestionFamilyChoice,
     pub variant_mode: String,

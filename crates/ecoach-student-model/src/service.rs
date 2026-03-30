@@ -87,6 +87,7 @@ impl<'a> StudentModelService<'a> {
         } else {
             None
         };
+        topic_state = self.recompute_topic_truth(student_id, question.topic_id)?;
 
         let event = DomainEvent::new(
             "answer.processed",
@@ -377,6 +378,7 @@ impl<'a> StudentModelService<'a> {
         }
 
         let mut updates = Vec::new();
+        let mut affected_topics = BTreeSet::new();
         for candidate in candidates {
             let Some(review_due_at) = candidate.review_due_at else {
                 continue;
@@ -449,6 +451,14 @@ impl<'a> StudentModelService<'a> {
                 review_due_at: Some(review_due_at),
                 overdue_days,
             });
+
+            if let Some(topic_id) = candidate.topic_id {
+                affected_topics.insert((candidate.student_id, topic_id));
+            }
+        }
+
+        for (student_id, topic_id) in affected_topics {
+            let _ = self.recompute_topic_truth(student_id, topic_id)?;
         }
 
         Ok(updates)
@@ -922,6 +932,164 @@ impl<'a> StudentModelService<'a> {
                 }),
             ),
         )?;
+        Ok(())
+    }
+
+    fn recompute_topic_truth(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+    ) -> EcoachResult<StudentTopicState> {
+        let mut state = self.get_or_create_topic_state(student_id, topic_id)?;
+        let now = Utc::now().to_rfc3339();
+        let (
+            memory_item_count,
+            fragile_item_count,
+            collapsed_item_count,
+            due_item_count,
+            average_memory_strength,
+            average_decay_risk,
+            next_review_at,
+        ): (i64, i64, i64, i64, i64, i64, Option<String>) = self
+            .conn
+            .query_row(
+                "SELECT
+                    COUNT(*),
+                    COALESCE(SUM(CASE WHEN memory_state IN ('fragile', 'at_risk', 'fading', 'rebuilding') THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN memory_state = 'collapsed' THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN review_due_at IS NOT NULL AND review_due_at <= ?3 THEN 1 ELSE 0 END), 0),
+                    CAST(COALESCE(AVG(memory_strength), 0) AS INTEGER),
+                    CAST(COALESCE(AVG(decay_risk), 0) AS INTEGER),
+                    MIN(review_due_at)
+                 FROM memory_states
+                 WHERE student_id = ?1 AND topic_id = ?2",
+                params![student_id, topic_id, now],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                        row.get(6)?,
+                    ))
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let (knowledge_gap_score, conceptual_confusion_score, recognition_failure_score, execution_error_score): (i64, i64, i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT knowledge_gap_score, conceptual_confusion_score, recognition_failure_score, execution_error_score
+                 FROM student_error_profiles
+                 WHERE student_id = ?1 AND topic_id = ?2",
+                params![student_id, topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .unwrap_or((0, 0, 0, 0));
+
+        state.memory_strength = clamp_bp(average_memory_strength);
+        state.next_review_at = parse_datetime(next_review_at.clone());
+
+        let structural_fragility = if memory_item_count > 0 {
+            ((fragile_item_count * 5000)
+                + (collapsed_item_count * 9000)
+                + (due_item_count * 2500))
+                / memory_item_count.max(1)
+        } else {
+            0
+        };
+        state.fragility_score = clamp_bp(
+            ((structural_fragility as f64 * 0.65) + (average_decay_risk as f64 * 0.35)).round()
+                as i64,
+        );
+        state.priority_score = compute_priority_from_state(&state);
+        state.trend_state = compute_trend_label(&state);
+
+        let repair_priority = clamp_bp(
+            ((state.gap_score as f64 * 0.50)
+                + (knowledge_gap_score as f64 * 0.20)
+                + (conceptual_confusion_score as f64 * 0.15)
+                + (recognition_failure_score as f64 * 0.075)
+                + (execution_error_score as f64 * 0.075)
+                + (collapsed_item_count.min(3) as f64 * 250.0)
+                + (due_item_count.min(4) as f64 * 150.0))
+                .round() as i64,
+        );
+        let is_urgent = collapsed_item_count > 0 || due_item_count > 0 || repair_priority >= 7000;
+
+        self.conn
+            .execute(
+                "UPDATE student_topic_states
+                 SET memory_strength = ?1,
+                     next_review_at = ?2,
+                     fragility_score = ?3,
+                     decay_risk = ?4,
+                     priority_score = ?5,
+                     repair_priority = ?6,
+                     is_urgent = ?7,
+                     last_decline_at = CASE
+                         WHEN ?7 = 1 AND (?4 >= 7000 OR ?3 >= 6500) THEN datetime('now')
+                         ELSE last_decline_at
+                     END,
+                     updated_at = datetime('now')
+                 WHERE id = ?8",
+                params![
+                    state.memory_strength,
+                    next_review_at,
+                    state.fragility_score,
+                    clamp_bp(average_decay_risk),
+                    state.priority_score,
+                    repair_priority,
+                    bool_to_i64(is_urgent),
+                    state.id,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.sync_active_gap_repair_plans(student_id, topic_id, repair_priority)?;
+        self.append_runtime_event(
+            "learner_truth",
+            DomainEvent::new(
+                "learner_truth.topic_recomputed",
+                student_id.to_string(),
+                json!({
+                    "topic_id": topic_id,
+                    "memory_strength": state.memory_strength,
+                    "fragility_score": state.fragility_score,
+                    "priority_score": state.priority_score,
+                    "repair_priority": repair_priority,
+                    "due_item_count": due_item_count,
+                    "collapsed_item_count": collapsed_item_count,
+                    "next_review_at": next_review_at,
+                }),
+            ),
+        )?;
+
+        self.find_topic_state(student_id, topic_id)?
+            .ok_or_else(|| EcoachError::Storage("topic state disappeared after recompute".to_string()))
+    }
+
+    fn sync_active_gap_repair_plans(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        repair_priority: BasisPoints,
+    ) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "UPDATE gap_repair_plans
+                 SET priority_score = ?1,
+                     updated_at = datetime('now')
+                 WHERE student_id = ?2
+                   AND topic_id = ?3
+                   AND status = 'active'",
+                params![repair_priority, student_id, topic_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
         Ok(())
     }
 
@@ -2827,9 +2995,115 @@ mod tests {
                 "SELECT COUNT(*) FROM recheck_schedules WHERE student_id = 1 AND status = 'missed'",
                 [],
                 |row| row.get(0),
-            )
-            .expect("missed count should query");
+        )
+        .expect("missed count should query");
         assert!(missed_count >= 1);
+    }
+
+    #[test]
+    fn process_answer_recomputes_topic_truth_and_syncs_active_gap_plan_priority() {
+        let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let question_id: i64 = conn
+            .query_row(
+                "SELECT id FROM questions ORDER BY id ASC LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("question should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT topic_id FROM questions WHERE id = ?1",
+                [question_id],
+                |row| row.get(0),
+            )
+            .expect("topic should resolve");
+        let correct_option_id: i64 = conn
+            .query_row(
+                "SELECT id FROM question_options
+                 WHERE question_id = ?1 AND is_correct = 1
+                 ORDER BY id ASC
+                 LIMIT 1",
+                [question_id],
+                |row| row.get(0),
+            )
+            .expect("correct option should exist");
+
+        conn.execute(
+            "INSERT INTO gap_repair_plans (id, student_id, topic_id, status, priority_score)
+             VALUES (77, 1, ?1, 'active', 0)",
+            [topic_id],
+        )
+        .expect("active gap plan should seed");
+
+        let service = StudentModelService::new(&conn);
+        service
+            .process_answer(
+                1,
+                &AnswerSubmission {
+                    question_id,
+                    selected_option_id: correct_option_id,
+                    session_id: None,
+                    session_type: Some("practice".to_string()),
+                    started_at: Utc::now() - Duration::seconds(15),
+                    submitted_at: Utc::now(),
+                    response_time_ms: Some(9_000),
+                    confidence_level: Some("sure".to_string()),
+                    hint_count: 0,
+                    changed_answer_count: 0,
+                    skipped: false,
+                    timed_out: false,
+                    support_level: Some("independent".to_string()),
+                    was_timed: false,
+                    was_transfer_variant: false,
+                    was_retention_check: true,
+                    was_mixed_context: false,
+                },
+            )
+            .expect("answer should be processed");
+
+        let (memory_strength, next_review_at, fragility_score, repair_priority): (
+            i64,
+            Option<String>,
+            i64,
+            i64,
+        ) = conn
+            .query_row(
+                "SELECT memory_strength, next_review_at, fragility_score, repair_priority
+                 FROM student_topic_states
+                 WHERE student_id = 1 AND topic_id = ?1",
+                [topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .expect("topic truth should query");
+        assert!(memory_strength > 0);
+        assert!(next_review_at.is_some());
+        assert!(fragility_score >= 0);
+        assert!(repair_priority > 0);
+
+        let plan_priority: i64 = conn
+            .query_row(
+                "SELECT priority_score FROM gap_repair_plans WHERE id = 77",
+                [],
+                |row| row.get(0),
+            )
+            .expect("gap plan priority should query");
+        assert_eq!(plan_priority, repair_priority);
+
+        let recompute_events: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events
+                 WHERE event_type = 'learner_truth.topic_recomputed'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("recompute event count should query");
+        assert!(recompute_events >= 1);
     }
 
     fn seed_student(conn: &Connection) {

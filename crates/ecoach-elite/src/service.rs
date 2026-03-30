@@ -1,5 +1,5 @@
-use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, ema_update, to_bp};
-use rusqlite::{Connection, OptionalExtension, params};
+use ecoach_substrate::{clamp_bp, ema_update, to_bp, BasisPoints, EcoachError, EcoachResult};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::json;
 
 use crate::models::{EliteProfile, EliteSessionBlueprint, EliteSessionScore, EliteTopicProfile};
@@ -242,7 +242,7 @@ impl<'a> EliteService<'a> {
         subject_id: i64,
     ) -> EcoachResult<EliteSessionBlueprint> {
         let profile = self.get_profile(student_id, subject_id)?;
-        let session_class = profile
+        let mut session_class = profile
             .as_ref()
             .map(|profile| {
                 elite_recommendation(
@@ -257,8 +257,19 @@ impl<'a> EliteService<'a> {
             .unwrap_or("precision_lab")
             .to_string();
 
-        let target_topic_ids = self.load_blueprint_topics(student_id, subject_id)?;
-        let target_family_ids = self.load_blueprint_families(subject_id, &target_topic_ids)?;
+        let mut target_topic_ids = self.load_blueprint_topics(student_id, subject_id)?;
+        let trap_signal =
+            self.load_trap_blueprint_signal(student_id, subject_id, &target_topic_ids)?;
+        if trap_signal.force_trapsense {
+            session_class = "trapsense".to_string();
+        }
+        if let Some(topic_id) = trap_signal.topic_id {
+            target_topic_ids.retain(|candidate| *candidate != topic_id);
+            target_topic_ids.insert(0, topic_id);
+            target_topic_ids.truncate(2);
+        }
+        let target_family_ids =
+            self.load_blueprint_families(subject_id, &target_topic_ids, &session_class)?;
         let authoring_modes = authoring_modes_for_session_class(&session_class, &target_family_ids);
         let target_question_count = match session_class.as_str() {
             "endurance_track" => 16,
@@ -270,6 +281,11 @@ impl<'a> EliteService<'a> {
             format!(
                 "{} is the next elite lane because no weak-topic history exists yet; start from the strongest exam-facing families.",
                 session_class
+            )
+        } else if let Some(reason) = trap_signal.rationale {
+            format!(
+                "{} now targets topics {:?} with families {:?} because {}.",
+                session_class, target_topic_ids, target_family_ids, reason
             )
         } else {
             format!(
@@ -546,27 +562,43 @@ impl<'a> EliteService<'a> {
         &self,
         subject_id: i64,
         topic_ids: &[i64],
+        session_class: &str,
     ) -> EcoachResult<Vec<i64>> {
+        let order_clause = if session_class == "trapsense" {
+            "CASE COALESCE(qfh.health_status, 'warming')
+                WHEN 'fragile' THEN 0
+                WHEN 'warming' THEN 1
+                WHEN 'active' THEN 2
+                ELSE 3
+             END ASC,
+             COALESCE(qfa.replacement_score, 0) DESC,
+             COALESCE(qfa.recurrence_score, 0) DESC,
+             qf.id ASC"
+        } else {
+            "COALESCE(qfa.replacement_score, 0) DESC,
+             COALESCE(qfa.recurrence_score, 0) DESC,
+             CASE COALESCE(qfh.health_status, 'warming')
+                 WHEN 'fragile' THEN 0
+                 WHEN 'warming' THEN 1
+                 WHEN 'active' THEN 2
+                 ELSE 3
+             END ASC,
+             qf.id ASC"
+        };
         if topic_ids.is_empty() {
-            let mut statement = self
-                .conn
-                .prepare(
-                    "SELECT qf.id
+            let sql = format!(
+                "SELECT qf.id
                      FROM question_families qf
                      LEFT JOIN question_family_analytics qfa ON qfa.family_id = qf.id
                      LEFT JOIN question_family_health qfh ON qfh.family_id = qf.id
                      WHERE qf.subject_id = ?1
-                     ORDER BY COALESCE(qfa.replacement_score, 0) DESC,
-                              COALESCE(qfa.recurrence_score, 0) DESC,
-                              CASE COALESCE(qfh.health_status, 'warming')
-                                  WHEN 'fragile' THEN 0
-                                  WHEN 'warming' THEN 1
-                                  WHEN 'active' THEN 2
-                                  ELSE 3
-                              END ASC,
-                              qf.id ASC
+                     ORDER BY {}
                      LIMIT 3",
-                )
+                order_clause
+            );
+            let mut statement = self
+                .conn
+                .prepare(&sql)
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             return collect_single_column(&mut statement, params![subject_id]);
         }
@@ -578,17 +610,9 @@ impl<'a> EliteService<'a> {
              LEFT JOIN question_family_analytics qfa ON qfa.family_id = qf.id
              LEFT JOIN question_family_health qfh ON qfh.family_id = qf.id
              WHERE qf.subject_id = ?1 AND qf.topic_id IN ({})
-             ORDER BY COALESCE(qfa.replacement_score, 0) DESC,
-                      COALESCE(qfa.recurrence_score, 0) DESC,
-                      CASE COALESCE(qfh.health_status, 'warming')
-                          WHEN 'fragile' THEN 0
-                          WHEN 'warming' THEN 1
-                          WHEN 'active' THEN 2
-                          ELSE 3
-                      END ASC,
-                      qf.id ASC
+             ORDER BY {}
              LIMIT 3",
-            placeholders
+            placeholders, order_clause
         );
         let mut params_vec: Vec<rusqlite::types::Value> = Vec::with_capacity(topic_ids.len() + 1);
         params_vec.push(subject_id.into());
@@ -610,11 +634,84 @@ impl<'a> EliteService<'a> {
         }
         Ok(families)
     }
+
+    fn load_trap_blueprint_signal(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        topic_ids: &[i64],
+    ) -> EcoachResult<TrapBlueprintSignal> {
+        if !self.table_exists("student_contrast_states")? || !self.table_exists("contrast_pairs")? {
+            return Ok(TrapBlueprintSignal::default());
+        }
+
+        let mut sql = "SELECT cp.topic_id, scs.confusion_score, scs.similarity_trap_bp,
+                              scs.which_is_which_bp, scs.timed_out_count
+                       FROM student_contrast_states scs
+                       INNER JOIN contrast_pairs cp ON cp.id = scs.pair_id
+                       WHERE scs.student_id = ?1 AND cp.subject_id = ?2"
+            .to_string();
+        let mut params_vec: Vec<rusqlite::types::Value> =
+            vec![student_id.into(), subject_id.into()];
+        if !topic_ids.is_empty() {
+            let placeholders = topic_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+            sql.push_str(&format!(" AND cp.topic_id IN ({placeholders})"));
+            for topic_id in topic_ids {
+                params_vec.push((*topic_id).into());
+            }
+        }
+        sql.push_str(
+            " ORDER BY scs.confusion_score DESC, scs.timed_out_count DESC, cp.topic_id ASC LIMIT 1",
+        );
+
+        let signal = self
+            .conn
+            .query_row(&sql, rusqlite::params_from_iter(params_vec.iter()), |row| {
+                Ok(TrapBlueprintSignal {
+                    topic_id: row.get(0)?,
+                    force_trapsense: row.get::<_, i64>(1)? >= 6800
+                        || row.get::<_, i64>(2)? < 5500
+                        || row.get::<_, i64>(3)? < 5500
+                        || row.get::<_, i64>(4)? >= 2,
+                    rationale: Some(format!(
+                        "recent trap evidence is still fragile for topic {} with confusion {} bp",
+                        row.get::<_, Option<i64>>(0)?.unwrap_or_default(),
+                        row.get::<_, i64>(1)?
+                    )),
+                })
+            })
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(signal.unwrap_or_default())
+    }
+
+    fn table_exists(&self, table_name: &str) -> EcoachResult<bool> {
+        let exists = self
+            .conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1 FROM sqlite_master
+                    WHERE type = 'table' AND name = ?1
+                 )",
+                [table_name],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(exists == 1)
+    }
 }
 
 struct EliteSessionHeader {
     student_id: i64,
     subject_id: Option<i64>,
+}
+
+#[derive(Default)]
+struct TrapBlueprintSignal {
+    topic_id: Option<i64>,
+    force_trapsense: bool,
+    rationale: Option<String>,
 }
 
 struct EliteScoredItem {
@@ -850,7 +947,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use rusqlite::{Connection, params};
+    use rusqlite::{params, Connection};
 
     use super::*;
 
@@ -865,15 +962,13 @@ mod tests {
             .build_session_blueprint(7, 1)
             .expect("blueprint should build");
 
-        assert_eq!(blueprint.session_class, "precision_lab");
+        assert_eq!(blueprint.session_class, "trapsense");
         assert_eq!(blueprint.target_topic_ids.first().copied(), Some(100));
         assert_eq!(blueprint.target_family_ids.first().copied(), Some(900));
-        assert!(
-            blueprint
-                .authoring_modes
-                .iter()
-                .any(|mode| mode == "misconception_probe")
-        );
+        assert!(blueprint
+            .authoring_modes
+            .iter()
+            .any(|mode| mode == "misconception_probe"));
     }
 
     fn seed_schema(conn: &Connection) {
@@ -932,6 +1027,19 @@ mod tests {
             "CREATE TABLE question_family_health (
                 family_id INTEGER NOT NULL,
                 health_status TEXT NOT NULL
+            )",
+            "CREATE TABLE contrast_pairs (
+                id INTEGER PRIMARY KEY,
+                subject_id INTEGER NOT NULL,
+                topic_id INTEGER
+            )",
+            "CREATE TABLE student_contrast_states (
+                student_id INTEGER NOT NULL,
+                pair_id INTEGER NOT NULL,
+                confusion_score INTEGER NOT NULL,
+                similarity_trap_bp INTEGER NOT NULL,
+                which_is_which_bp INTEGER NOT NULL,
+                timed_out_count INTEGER NOT NULL
             )",
         ] {
             conn.execute(sql, []).expect("schema statement should run");
@@ -997,5 +1105,17 @@ mod tests {
             [],
         )
         .expect("second health should insert");
+        conn.execute(
+            "INSERT INTO contrast_pairs (id, subject_id, topic_id) VALUES (300, 1, 100)",
+            [],
+        )
+        .expect("contrast pair should insert");
+        conn.execute(
+            "INSERT INTO student_contrast_states (
+                student_id, pair_id, confusion_score, similarity_trap_bp, which_is_which_bp, timed_out_count
+             ) VALUES (7, 300, 7900, 4200, 5100, 2)",
+            [],
+        )
+        .expect("contrast state should insert");
     }
 }

@@ -6,6 +6,7 @@ use ecoach_content::{
 };
 use ecoach_games::{ContrastPairSummary, TrapRoundResult, TrapSessionReview, TrapSessionSnapshot};
 use ecoach_identity::{Account, AccountSummary};
+use ecoach_intake::{BundleFile, BundleProcessReport, ExtractedInsight, SubmissionBundle};
 use ecoach_questions::{
     DuplicateCheckResult, GeneratedQuestionDraft, QuestionFamilyChoice, QuestionFamilyHealth,
     QuestionGenerationRequest, QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode,
@@ -99,6 +100,148 @@ impl From<PackSummary> for PackSummaryDto {
             pack_version: value.pack_version,
             subject_code: value.subject_code,
             status: value.status,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubmissionBundleDto {
+    pub id: i64,
+    pub student_id: i64,
+    pub title: String,
+    pub status: String,
+}
+
+impl From<SubmissionBundle> for SubmissionBundleDto {
+    fn from(value: SubmissionBundle) -> Self {
+        Self {
+            id: value.id,
+            student_id: value.student_id,
+            title: value.title,
+            status: value.status,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleFileDto {
+    pub id: i64,
+    pub bundle_id: i64,
+    pub file_name: String,
+    pub file_path: String,
+    pub mime_type: Option<String>,
+    pub file_kind: String,
+}
+
+impl From<BundleFile> for BundleFileDto {
+    fn from(value: BundleFile) -> Self {
+        Self {
+            id: value.id,
+            bundle_id: value.bundle_id,
+            file_name: value.file_name,
+            file_path: value.file_path,
+            mime_type: value.mime_type,
+            file_kind: value.file_kind,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExtractedInsightDto {
+    pub id: i64,
+    pub bundle_id: i64,
+    pub insight_type: String,
+    pub payload: Value,
+    pub created_at: String,
+}
+
+impl From<ExtractedInsight> for ExtractedInsightDto {
+    fn from(value: ExtractedInsight) -> Self {
+        Self {
+            id: value.id,
+            bundle_id: value.bundle_id,
+            insight_type: value.insight_type,
+            payload: value.payload,
+            created_at: value.created_at,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleProcessReportDto {
+    pub bundle: SubmissionBundleDto,
+    pub files: Vec<BundleFileDto>,
+    pub insights: Vec<ExtractedInsightDto>,
+    pub detected_subjects: Vec<String>,
+    pub detected_exam_years: Vec<i64>,
+    pub detected_topics: Vec<String>,
+    pub detected_dates: Vec<String>,
+    pub question_like_file_count: i64,
+    pub answer_like_file_count: i64,
+    pub ocr_candidate_file_count: i64,
+    pub ocr_recovered_file_count: i64,
+    pub layout_recovered_file_count: i64,
+    pub estimated_question_count: i64,
+    pub estimated_answer_count: i64,
+    pub reconstructed_document_count: i64,
+    pub paired_assessment_document_count: i64,
+    pub reconstruction_confidence_score: i64,
+    pub extracted_question_block_count: i64,
+    pub aligned_question_pair_count: i64,
+    pub high_confidence_alignment_count: i64,
+    pub medium_confidence_alignment_count: i64,
+    pub low_confidence_alignment_count: i64,
+    pub score_signal_count: i64,
+    pub remark_signal_count: i64,
+    pub needs_confirmation: bool,
+    pub unresolved_alignment_count: i64,
+    pub review_priority: String,
+    pub bundle_kind: String,
+    pub detected_document_roles: Vec<String>,
+    pub weakness_signals: Vec<String>,
+    pub recommended_actions: Vec<String>,
+    pub review_reasons: Vec<String>,
+}
+
+impl From<BundleProcessReport> for BundleProcessReportDto {
+    fn from(value: BundleProcessReport) -> Self {
+        Self {
+            bundle: SubmissionBundleDto::from(value.bundle),
+            files: value.files.into_iter().map(BundleFileDto::from).collect(),
+            insights: value
+                .insights
+                .into_iter()
+                .map(ExtractedInsightDto::from)
+                .collect(),
+            detected_subjects: value.detected_subjects,
+            detected_exam_years: value.detected_exam_years,
+            detected_topics: value.detected_topics,
+            detected_dates: value.detected_dates,
+            question_like_file_count: value.question_like_file_count,
+            answer_like_file_count: value.answer_like_file_count,
+            ocr_candidate_file_count: value.ocr_candidate_file_count,
+            ocr_recovered_file_count: value.ocr_recovered_file_count,
+            layout_recovered_file_count: value.layout_recovered_file_count,
+            estimated_question_count: value.estimated_question_count,
+            estimated_answer_count: value.estimated_answer_count,
+            reconstructed_document_count: value.reconstructed_document_count,
+            paired_assessment_document_count: value.paired_assessment_document_count,
+            reconstruction_confidence_score: value.reconstruction_confidence_score,
+            extracted_question_block_count: value.extracted_question_block_count,
+            aligned_question_pair_count: value.aligned_question_pair_count,
+            high_confidence_alignment_count: value.high_confidence_alignment_count,
+            medium_confidence_alignment_count: value.medium_confidence_alignment_count,
+            low_confidence_alignment_count: value.low_confidence_alignment_count,
+            score_signal_count: value.score_signal_count,
+            remark_signal_count: value.remark_signal_count,
+            needs_confirmation: value.needs_confirmation,
+            unresolved_alignment_count: value.unresolved_alignment_count,
+            review_priority: value.review_priority,
+            bundle_kind: value.bundle_kind,
+            detected_document_roles: value.detected_document_roles,
+            weakness_signals: value.weakness_signals,
+            recommended_actions: value.recommended_actions,
+            review_reasons: value.review_reasons,
         }
     }
 }

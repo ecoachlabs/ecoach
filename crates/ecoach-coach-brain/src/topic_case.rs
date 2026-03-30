@@ -79,6 +79,7 @@ pub fn build_topic_case(
     let error_profile = load_error_profile(conn, student_id, topic_id)?;
     let recent_diagnoses = load_recent_diagnoses(conn, student_id, topic_id, 4)?;
     let coach_evidence = load_recent_coach_evidence(conn, student_id, topic_id)?;
+    let diagnostic_signal = load_recent_diagnostic_signal(conn, student_id, topic_id)?;
 
     let mut hypotheses = build_hypotheses(
         &base,
@@ -87,6 +88,7 @@ pub fn build_topic_case(
         error_profile.as_ref(),
         &recent_diagnoses,
         &coach_evidence,
+        diagnostic_signal.as_ref(),
     );
     hypotheses.sort_by(|left, right| {
         right
@@ -121,6 +123,7 @@ pub fn build_topic_case(
         &recent_diagnoses,
         &coach_evidence,
         &hypotheses,
+        diagnostic_signal.as_ref(),
     );
     let open_questions = build_open_questions(
         &base,
@@ -128,6 +131,7 @@ pub fn build_topic_case(
         error_profile.as_ref(),
         &coach_evidence,
         &hypotheses,
+        diagnostic_signal.as_ref(),
     );
     let requires_probe = diagnosis_certainty < 6500 || !open_questions.is_empty();
     let intervention = build_recommended_intervention(
@@ -266,6 +270,36 @@ struct CoachEvidenceSummary {
     recent_accuracy: Option<i64>,
     recent_timed_accuracy: Option<i64>,
     recent_avg_latency_ms: Option<i64>,
+}
+
+#[derive(Debug)]
+struct RecentDiagnosticSignal {
+    diagnostic_id: i64,
+    completed_at: String,
+    classification: String,
+    recommended_action: String,
+    mastery_score: i64,
+    pressure_score: i64,
+    flexibility_score: i64,
+    top_hypothesis_code: Option<String>,
+    top_hypothesis_confidence: i64,
+    recurrence_count: i64,
+    mastery_delta: Option<i64>,
+    pressure_delta: Option<i64>,
+    flexibility_delta: Option<i64>,
+}
+
+#[derive(Debug)]
+struct DiagnosticSnapshot {
+    diagnostic_id: i64,
+    completed_at: String,
+    classification: String,
+    recommended_action: String,
+    mastery_score: i64,
+    pressure_score: i64,
+    flexibility_score: i64,
+    top_hypothesis_code: Option<String>,
+    top_hypothesis_confidence: i64,
 }
 
 fn load_base_topic_state(
@@ -462,6 +496,126 @@ fn load_recent_coach_evidence(
     .map_err(|err| EcoachError::Storage(err.to_string()))
 }
 
+fn load_recent_diagnostic_signal(
+    conn: &Connection,
+    student_id: i64,
+    topic_id: i64,
+) -> EcoachResult<Option<RecentDiagnosticSignal>> {
+    let mut statement = conn
+        .prepare(
+            "SELECT dta.diagnostic_id,
+                    COALESCE(di.completed_at, di.started_at, dta.updated_at, dta.created_at),
+                    dta.classification,
+                    dta.recommended_action,
+                    dta.mastery_score,
+                    dta.pressure_score,
+                    dta.flexibility_score
+             FROM diagnostic_topic_analytics dta
+             INNER JOIN diagnostic_instances di ON di.id = dta.diagnostic_id
+             WHERE di.student_id = ?1
+               AND dta.topic_id = ?2
+               AND di.status = 'completed'
+             ORDER BY COALESCE(di.completed_at, di.started_at, dta.updated_at, dta.created_at) DESC,
+                      dta.diagnostic_id DESC
+             LIMIT 2",
+        )
+        .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    let rows = statement
+        .query_map(params![student_id, topic_id], |row| {
+            Ok((
+                row.get::<_, i64>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, i64>(4)?,
+                row.get::<_, i64>(5)?,
+                row.get::<_, i64>(6)?,
+            ))
+        })
+        .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+    let mut snapshots = Vec::new();
+    for row in rows {
+        let (
+            diagnostic_id,
+            completed_at,
+            classification,
+            recommended_action,
+            mastery_score,
+            pressure_score,
+            flexibility_score,
+        ) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let (top_hypothesis_code, top_hypothesis_confidence) =
+            load_top_diagnostic_hypothesis(conn, diagnostic_id, topic_id)?;
+        snapshots.push(DiagnosticSnapshot {
+            diagnostic_id,
+            completed_at,
+            classification,
+            recommended_action,
+            mastery_score,
+            pressure_score,
+            flexibility_score,
+            top_hypothesis_code,
+            top_hypothesis_confidence,
+        });
+    }
+
+    let Some(latest) = snapshots.first() else {
+        return Ok(None);
+    };
+    let previous = snapshots.get(1);
+    let recurrence_count = match (
+        latest.top_hypothesis_code.as_deref(),
+        previous.and_then(|item| item.top_hypothesis_code.as_deref()),
+    ) {
+        (Some(current), Some(previous_code))
+            if current == previous_code
+                && previous
+                    .map(|item| item.top_hypothesis_confidence >= 6500)
+                    .unwrap_or(false) =>
+        {
+            2
+        }
+        (Some(_), _) => 1,
+        _ => 0,
+    };
+
+    Ok(Some(RecentDiagnosticSignal {
+        diagnostic_id: latest.diagnostic_id,
+        completed_at: latest.completed_at.clone(),
+        classification: latest.classification.clone(),
+        recommended_action: latest.recommended_action.clone(),
+        mastery_score: latest.mastery_score,
+        pressure_score: latest.pressure_score,
+        flexibility_score: latest.flexibility_score,
+        top_hypothesis_code: latest.top_hypothesis_code.clone(),
+        top_hypothesis_confidence: latest.top_hypothesis_confidence,
+        recurrence_count,
+        mastery_delta: previous.map(|item| latest.mastery_score - item.mastery_score),
+        pressure_delta: previous.map(|item| latest.pressure_score - item.pressure_score),
+        flexibility_delta: previous.map(|item| latest.flexibility_score - item.flexibility_score),
+    }))
+}
+
+fn load_top_diagnostic_hypothesis(
+    conn: &Connection,
+    diagnostic_id: i64,
+    topic_id: i64,
+) -> EcoachResult<(Option<String>, i64)> {
+    conn.query_row(
+        "SELECT hypothesis_code, confidence_score
+         FROM diagnostic_root_cause_hypotheses
+         WHERE diagnostic_id = ?1 AND topic_id = ?2
+         ORDER BY confidence_score DESC, id ASC
+         LIMIT 1",
+        params![diagnostic_id, topic_id],
+        |row| Ok((Some(row.get(0)?), row.get(1)?)),
+    )
+    .optional()
+    .map_err(|err| EcoachError::Storage(err.to_string()))
+    .map(|value| value.unwrap_or((None, 0)))
+}
+
 fn build_hypotheses(
     base: &BaseTopicState,
     blocker: Option<&TopicCaseBlocker>,
@@ -469,6 +623,7 @@ fn build_hypotheses(
     error_profile: Option<&ErrorProfile>,
     recent_diagnoses: &[TopicCaseDiagnosis],
     coach_evidence: &CoachEvidenceSummary,
+    diagnostic_signal: Option<&RecentDiagnosticSignal>,
 ) -> Vec<TopicCaseHypothesis> {
     let mut hypotheses = Vec::new();
 
@@ -581,6 +736,12 @@ fn build_hypotheses(
         });
     }
 
+    if let Some(diagnostic_hypothesis) = diagnostic_signal
+        .and_then(|signal| build_diagnostic_hypothesis(base, signal))
+    {
+        merge_topic_case_hypothesis(&mut hypotheses, diagnostic_hypothesis);
+    }
+
     hypotheses
 }
 
@@ -662,6 +823,7 @@ fn build_proof_gaps(
     recent_diagnoses: &[TopicCaseDiagnosis],
     coach_evidence: &CoachEvidenceSummary,
     hypotheses: &[TopicCaseHypothesis],
+    diagnostic_signal: Option<&RecentDiagnosticSignal>,
 ) -> Vec<String> {
     let mut proof_gaps = Vec::new();
 
@@ -693,6 +855,25 @@ fn build_proof_gaps(
                 .to_string(),
         );
     }
+    if diagnostic_signal
+        .map(|signal| signal.recurrence_count >= 2)
+        .unwrap_or(false)
+    {
+        proof_gaps.push(
+            "Recent diagnostics show the same root cause across multiple runs; repair proof is still required."
+                .to_string(),
+        );
+    }
+    if diagnostic_signal
+        .and_then(|signal| signal.mastery_delta)
+        .map(|delta| delta <= -600)
+        .unwrap_or(false)
+    {
+        proof_gaps.push(
+            "The latest diagnostic shows regression since the previous diagnostic and needs explanation."
+                .to_string(),
+        );
+    }
 
     proof_gaps
 }
@@ -703,6 +884,7 @@ fn build_open_questions(
     error_profile: Option<&ErrorProfile>,
     coach_evidence: &CoachEvidenceSummary,
     hypotheses: &[TopicCaseHypothesis],
+    diagnostic_signal: Option<&RecentDiagnosticSignal>,
 ) -> Vec<String> {
     let mut open_questions = Vec::new();
 
@@ -724,8 +906,225 @@ fn build_open_questions(
     if error_profile.is_none() && base.gap_score >= 7000 {
         open_questions.push("Which error family is dominant for this topic right now?".to_string());
     }
+    if diagnostic_signal
+        .map(|signal| signal.recurrence_count >= 2 && coach_evidence.recent_attempt_count < 6)
+        .unwrap_or(false)
+    {
+        open_questions
+            .push("Why is the same diagnostic cause persisting across multiple runs?".to_string());
+    }
+    if diagnostic_signal
+        .and_then(|signal| signal.mastery_delta)
+        .map(|delta| delta <= -600)
+        .unwrap_or(false)
+    {
+        open_questions.push(
+            "What changed since the previous diagnostic caused this topic to regress?"
+                .to_string(),
+        );
+    }
 
     open_questions
+}
+
+fn build_diagnostic_hypothesis(
+    base: &BaseTopicState,
+    signal: &RecentDiagnosticSignal,
+) -> Option<TopicCaseHypothesis> {
+    let (code, label, recommended_probe, recommended_response) =
+        diagnostic_topic_case_mapping(signal)?;
+    let confidence = diagnostic_hypothesis_confidence(signal);
+    let mut evidence_parts = vec![format!(
+        "Recent diagnostic {} ({}) classified {} as {}.",
+        signal.diagnostic_id,
+        signal.completed_at,
+        base.topic_name,
+        signal.classification.replace('_', " ")
+    )];
+
+    if let Some(hypothesis_code) = signal.top_hypothesis_code.as_deref() {
+        evidence_parts.push(format!(
+            "Top diagnostic cause was {} at {} bp confidence.",
+            hypothesis_code.replace('_', " "),
+            signal.top_hypothesis_confidence
+        ));
+    }
+    if signal.recurrence_count >= 2 {
+        evidence_parts.push(
+            "The same cause persisted across the last two diagnostics.".to_string(),
+        );
+    }
+    if let Some(delta) = signal.mastery_delta {
+        if delta <= -600 {
+            evidence_parts.push(format!(
+                "Mastery dropped by {} bp since the previous diagnostic.",
+                delta.abs()
+            ));
+        } else if delta >= 600 && signal.recurrence_count >= 2 {
+            evidence_parts.push(format!(
+                "Mastery improved by {} bp but the same cause is still active.",
+                delta
+            ));
+        }
+    }
+    if signal
+        .pressure_delta
+        .map(|delta| delta <= -600)
+        .unwrap_or(false)
+    {
+        evidence_parts.push(
+            "Pressure performance is weakening faster than the surrounding topic signal."
+                .to_string(),
+        );
+    }
+    if signal
+        .flexibility_delta
+        .map(|delta| delta <= -600)
+        .unwrap_or(false)
+    {
+        evidence_parts.push(
+            "Transfer performance is falling, so the weakness is not yet stable across contexts."
+                .to_string(),
+        );
+    }
+    evidence_parts.push(format!(
+        "Diagnostic action recommendation is {}.",
+        signal.recommended_action.replace('_', " ")
+    ));
+
+    Some(TopicCaseHypothesis {
+        code: code.to_string(),
+        label: label.to_string(),
+        confidence_score: confidence,
+        evidence_summary: evidence_parts.join(" "),
+        recommended_probe: Some(recommended_probe.to_string()),
+        recommended_response: recommended_response.to_string(),
+    })
+}
+
+fn diagnostic_topic_case_mapping(
+    signal: &RecentDiagnosticSignal,
+) -> Option<(&'static str, &'static str, &'static str, &'static str)> {
+    match signal.top_hypothesis_code.as_deref() {
+        Some("foundation_gap") => Some((
+            "knowledge_gap",
+            "Foundational gap",
+            "Run one prerequisite check that mirrors the last diagnostic weak spot.",
+            "Rebuild the topic from its core prerequisite steps.",
+        )),
+        Some("timed_pressure_breakdown") => Some((
+            "pressure_collapse",
+            "Pressure collapse",
+            "Repeat one calm success, then one timed burst to confirm pressure is the driver.",
+            "Shift into pressure conditioning instead of reteaching the whole topic.",
+        )),
+        Some("transfer_fragility") | Some("misconception_root_cause") => Some((
+            "conceptual_confusion",
+            "Conceptual confusion",
+            "Run a contrast checkpoint that targets the diagnostic confusion pattern.",
+            "Use contrast repair until the learner can explain why this case differs.",
+        )),
+        Some("retrieval_latency_gap") | Some("confidence_distortion") => Some((
+            "execution_drift",
+            "Execution drift",
+            "Run a short precision drill that slows the learner down enough to expose the leak.",
+            "Use precision repair before adding more content volume.",
+        )),
+        Some("confidence_gap") => classification_topic_case_mapping(&signal.classification),
+        _ => classification_topic_case_mapping(&signal.classification),
+    }
+}
+
+fn classification_topic_case_mapping(
+    classification: &str,
+) -> Option<(&'static str, &'static str, &'static str, &'static str)> {
+    match classification {
+        "fragile_under_pressure" => Some((
+            "pressure_collapse",
+            "Pressure collapse",
+            "Run a short timed burst after one calm success to isolate pressure effects.",
+            "Shift into pressure conditioning instead of reteaching the whole topic.",
+        )),
+        "transfer_fragile" | "misconception_prone" => Some((
+            "conceptual_confusion",
+            "Conceptual confusion",
+            "Use a contrast checkpoint against the nearest confusing neighbor concept.",
+            "Run contrast repair with explicit why-this-not-that reasoning.",
+        )),
+        "slow_but_right" => Some((
+            "execution_drift",
+            "Execution drift",
+            "Run one precision drill with visible step checks and error review.",
+            "Use precision repair before adding more content volume.",
+        )),
+        "not_ready" | "at_risk" => Some((
+            "knowledge_gap",
+            "Foundational gap",
+            "Use one prerequisite check before assigning heavier mixed practice.",
+            "Rebuild the topic from its core prerequisite steps.",
+        )),
+        _ => None,
+    }
+}
+
+fn diagnostic_hypothesis_confidence(signal: &RecentDiagnosticSignal) -> BasisPoints {
+    let mut confidence = signal
+        .top_hypothesis_confidence
+        .max(signal.mastery_score.max(10_000 - signal.pressure_score))
+        .max(10_000 - signal.flexibility_score);
+    if signal.recurrence_count >= 2 {
+        confidence += 700;
+    }
+    if signal
+        .mastery_delta
+        .map(|delta| delta <= -600)
+        .unwrap_or(false)
+    {
+        confidence += 500;
+    }
+    if signal
+        .pressure_delta
+        .map(|delta| delta <= -600)
+        .unwrap_or(false)
+    {
+        confidence += 350;
+    }
+    if signal
+        .flexibility_delta
+        .map(|delta| delta <= -600)
+        .unwrap_or(false)
+    {
+        confidence += 250;
+    }
+    clamp_bp(confidence)
+}
+
+fn merge_topic_case_hypothesis(
+    hypotheses: &mut Vec<TopicCaseHypothesis>,
+    incoming: TopicCaseHypothesis,
+) {
+    if let Some(existing) = hypotheses.iter_mut().find(|item| item.code == incoming.code) {
+        let incoming_is_stronger = incoming.confidence_score >= existing.confidence_score;
+        existing.confidence_score = existing.confidence_score.max(incoming.confidence_score);
+        if !existing.evidence_summary.contains("Recent diagnostic") {
+            existing.evidence_summary = format!(
+                "{} {}",
+                incoming.evidence_summary, existing.evidence_summary
+            );
+        }
+        if existing.recommended_probe.is_none() {
+            existing.recommended_probe = incoming.recommended_probe.clone();
+        }
+        if incoming_is_stronger {
+            existing.label = incoming.label;
+            existing.recommended_response = incoming.recommended_response;
+            if incoming.recommended_probe.is_some() {
+                existing.recommended_probe = incoming.recommended_probe;
+            }
+        }
+    } else {
+        hypotheses.push(incoming);
+    }
 }
 
 fn compute_case_priority(
@@ -1122,6 +1521,91 @@ mod tests {
         assert!(cases[0].priority_score > cases[1].priority_score);
     }
 
+    #[test]
+    fn topic_case_uses_persistent_diagnostic_signal_for_pressure_repair() {
+        let conn = open_test_database();
+        let student_id = insert_student(&conn);
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let topic_id: i64 = conn
+            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
+                row.get(0)
+            })
+            .expect("topic should exist");
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT subject_id FROM topics WHERE id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .expect("subject id should resolve");
+
+        insert_topic_state(
+            &conn, student_id, topic_id, 6800, "stable", 3200, 2800, 1800, 1200, 1800, 7200, 6,
+            2500,
+        );
+        conn.execute(
+            "INSERT INTO coach_session_evidence (
+                student_id, subject_id, topic_id, activity_type, attempt_count, correct_count,
+                accuracy, timed_accuracy, avg_latency_ms, misconception_tags
+             ) VALUES (?1, ?2, ?3, 'checkpoint', 6, 5, 8300, 7900, 14000, '[]')",
+            params![student_id, subject_id, topic_id],
+        )
+        .expect("coach evidence should insert");
+
+        let older_diagnostic_id = insert_completed_diagnostic_signal(
+            &conn,
+            student_id,
+            subject_id,
+            topic_id,
+            "2026-03-20T08:00:00Z",
+            6200,
+            3600,
+            5800,
+            "fragile_under_pressure",
+            "timed_repair_checkpoint",
+            "timed_pressure_breakdown",
+            7600,
+        );
+        let latest_diagnostic_id = insert_completed_diagnostic_signal(
+            &conn,
+            student_id,
+            subject_id,
+            topic_id,
+            "2026-03-28T08:00:00Z",
+            5600,
+            2800,
+            5400,
+            "fragile_under_pressure",
+            "timed_repair_checkpoint",
+            "timed_pressure_breakdown",
+            8200,
+        );
+
+        let case = build_topic_case(&conn, student_id, topic_id).expect("topic case should build");
+
+        assert_eq!(older_diagnostic_id + 1, latest_diagnostic_id);
+        assert_eq!(case.primary_hypothesis_code, "pressure_collapse");
+        assert_eq!(case.recommended_intervention.mode, "pressure_conditioning");
+        assert!(
+            case.active_hypotheses.iter().any(|item| {
+                item.code == "pressure_collapse"
+                    && item
+                        .evidence_summary
+                        .contains("persisted across the last two diagnostics")
+            })
+        );
+        assert!(case.proof_gaps.iter().any(|item| {
+            item.contains("same root cause across multiple runs")
+        }));
+        assert!(case.open_questions.iter().any(|item| {
+            item.contains("What changed since the previous diagnostic")
+        }));
+    }
+
     fn open_test_database() -> Connection {
         let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
         run_runtime_migrations(&mut conn).expect("migrations should apply");
@@ -1176,6 +1660,63 @@ mod tests {
             ],
         )
         .expect("topic state should insert");
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn insert_completed_diagnostic_signal(
+        conn: &Connection,
+        student_id: i64,
+        subject_id: i64,
+        topic_id: i64,
+        completed_at: &str,
+        mastery_score: i64,
+        pressure_score: i64,
+        flexibility_score: i64,
+        classification: &str,
+        recommended_action: &str,
+        hypothesis_code: &str,
+        confidence_score: i64,
+    ) -> i64 {
+        conn.execute(
+            "INSERT INTO diagnostic_instances (
+                student_id, subject_id, session_mode, status, started_at, completed_at
+             ) VALUES (?1, ?2, 'standard', 'completed', ?3, ?3)",
+            params![student_id, subject_id, completed_at],
+        )
+        .expect("diagnostic instance should insert");
+        let diagnostic_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO diagnostic_topic_analytics (
+                diagnostic_id, topic_id, mastery_score, fluency_score, precision_score,
+                pressure_score, flexibility_score, stability_score, classification,
+                confidence_score, recommended_action
+             ) VALUES (?1, ?2, ?3, 6400, 6800, ?4, ?5, 6100, ?6, ?7, ?8)",
+            params![
+                diagnostic_id,
+                topic_id,
+                mastery_score,
+                pressure_score,
+                flexibility_score,
+                classification,
+                confidence_score,
+                recommended_action,
+            ],
+        )
+        .expect("diagnostic analytics should insert");
+        conn.execute(
+            "INSERT INTO diagnostic_root_cause_hypotheses (
+                diagnostic_id, topic_id, hypothesis_code, confidence_score, recommended_action
+             ) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![
+                diagnostic_id,
+                topic_id,
+                hypothesis_code,
+                confidence_score,
+                recommended_action,
+            ],
+        )
+        .expect("diagnostic hypothesis should insert");
+        diagnostic_id
     }
 
     fn sample_pack_path() -> PathBuf {

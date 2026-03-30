@@ -2,17 +2,33 @@ use std::collections::HashSet;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult};
-use rusqlite::{Connection, OptionalExtension, params};
-use serde_json::{Value, json};
+use rusqlite::{params, Connection, OptionalExtension};
+use serde_json::{json, Value};
 
 use crate::models::{
-    ContinueLearningCard, GeneratedLibraryShelf, LibraryHomeSnapshot, LibraryItem,
-    LibraryShelfItem, RevisionPackItem, RevisionPackSummary, SaveLibraryItemInput,
-    SavedQuestionCard, TeachActionPlan, TopicRelationshipHint,
+    ContinueLearningCard, GeneratedLibraryShelf, LearningPathStep, LibraryHomeSnapshot,
+    LibraryItem, LibraryShelfItem, PersonalizedLearningPath, RevisionPackItem,
+    RevisionPackSummary, SaveLibraryItemInput, SavedQuestionCard, TeachActionPlan,
+    TeachActionStep, TopicRelationshipHint,
 };
 
 pub struct LibraryService<'a> {
     conn: &'a Connection,
+}
+
+#[derive(Debug, Clone)]
+struct BundleSequenceCandidate {
+    bundle_id: i64,
+    title: String,
+    reason: String,
+}
+
+#[derive(Debug, Clone)]
+struct RelationshipTopicCandidate {
+    related_topic_id: i64,
+    related_topic_name: String,
+    relation_type: String,
+    strength_score: BasisPoints,
 }
 
 impl<'a> LibraryService<'a> {
@@ -242,6 +258,7 @@ impl<'a> LibraryService<'a> {
                AND state IN ('saved', 'new', 'revisit')",
             params![student_id],
         )?;
+        let learning_paths = self.build_personalized_learning_paths(student_id, limit.min(3))?;
         let generated_shelves = self.build_generated_shelves(student_id, limit)?;
 
         Ok(LibraryHomeSnapshot {
@@ -250,9 +267,126 @@ impl<'a> LibraryService<'a> {
             fading_concept_count,
             untouched_saved_count,
             continue_card: self.get_continue_learning_card(student_id)?,
+            learning_paths,
             generated_shelves,
             saved_questions: self.list_saved_questions(student_id, limit)?,
         })
+    }
+
+    pub fn build_personalized_learning_paths(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<PersonalizedLearningPath>> {
+        if limit == 0 {
+            return Ok(Vec::new());
+        }
+
+        let now = Utc::now().to_rfc3339();
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    sts.topic_id,
+                    t.name,
+                    sts.mastery_score,
+                    sts.gap_score,
+                    sts.priority_score,
+                    sts.trend_state,
+                    sts.decay_risk,
+                    sts.is_blocked,
+                    sts.next_review_at
+                 FROM student_topic_states sts
+                 INNER JOIN topics t ON t.id = sts.topic_id
+                 WHERE sts.student_id = ?1
+                 ORDER BY
+                    sts.is_blocked DESC,
+                    CASE
+                        WHEN sts.next_review_at IS NOT NULL AND sts.next_review_at <= ?2 THEN 0
+                        ELSE 1
+                    END,
+                    sts.priority_score DESC,
+                    sts.gap_score DESC,
+                    sts.mastery_score ASC,
+                    sts.topic_id ASC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, now, limit as i64], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, String>(5)?,
+                    row.get::<_, i64>(6)?,
+                    row.get::<_, i64>(7)? == 1,
+                    row.get::<_, Option<String>>(8)?,
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut paths = Vec::new();
+        for row in rows {
+            let (
+                topic_id,
+                topic_name,
+                mastery_score,
+                gap_score,
+                priority_score,
+                trend_state,
+                decay_risk,
+                is_blocked,
+                next_review_at,
+            ) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let relationship_hints = self.list_topic_relationship_hints(topic_id, 4)?;
+            let related_topic_names = collect_related_topic_names(&relationship_hints);
+            let bundle_sequence = self.list_bundle_sequence_for_topic(student_id, topic_id, 2)?;
+            let linked_question_ids = self.list_saved_question_ids_for_topic(student_id, topic_id, 2)?;
+            let practice_question_id = linked_question_ids
+                .first()
+                .copied()
+                .or_else(|| self.list_active_question_ids_for_topic(topic_id, 1).ok().and_then(|ids| ids.first().copied()));
+
+            let activity_type =
+                self.learning_path_activity_type(mastery_score, gap_score, decay_risk, is_blocked, &trend_state);
+            let reason = self.learning_path_reason(
+                gap_score,
+                decay_risk,
+                is_blocked,
+                next_review_at.is_some(),
+                &trend_state,
+                &bundle_sequence,
+                relationship_hints.first(),
+            );
+            let steps = self.build_learning_path_steps(
+                topic_id,
+                &topic_name,
+                &activity_type,
+                &relationship_hints,
+                &bundle_sequence,
+                practice_question_id,
+            );
+
+            paths.push(PersonalizedLearningPath {
+                topic_id,
+                topic_name,
+                activity_type,
+                priority_score: priority_score.clamp(0, 10_000) as BasisPoints,
+                reason,
+                mastery_score,
+                gap_score,
+                recommended_bundle_ids: bundle_sequence.iter().map(|bundle| bundle.bundle_id).collect(),
+                recommended_bundle_titles: bundle_sequence.iter().map(|bundle| bundle.title.clone()).collect(),
+                related_topic_names,
+                relationship_hints,
+                steps,
+            });
+        }
+
+        Ok(paths)
     }
 
     pub fn refresh_generated_shelves(
@@ -491,18 +625,40 @@ impl<'a> LibraryService<'a> {
             })
             .map_err(|err| EcoachError::NotFound(format!("topic not found: {}", err)))?;
 
-        let (mastery_score, gap_score): (i64, i64) = self
+        let (mastery_score, gap_score, trend_state, decay_risk, is_blocked, next_review_at): (
+            i64,
+            i64,
+            String,
+            i64,
+            bool,
+            Option<String>,
+        ) = self
             .conn
             .query_row(
-                "SELECT mastery_score, gap_score
+                "SELECT
+                    mastery_score,
+                    gap_score,
+                    trend_state,
+                    decay_risk,
+                    is_blocked,
+                    next_review_at
                  FROM student_topic_states
                  WHERE student_id = ?1 AND topic_id = ?2",
                 params![student_id, topic_id],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get::<_, i64>(4)? == 1,
+                        row.get(5)?,
+                    ))
+                },
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?
-            .unwrap_or((0, 10_000));
+            .unwrap_or((0, 10_000, "critical".to_string(), 0, false, None));
 
         let fragile_memory_count = self.count_scalar(
             "SELECT COUNT(*)
@@ -513,16 +669,30 @@ impl<'a> LibraryService<'a> {
             params![student_id, topic_id],
         )?;
 
-        let action_type = if gap_score >= 6500 {
+        let review_due = next_review_at.is_some();
+        let action_type = if is_blocked || gap_score >= 6500 {
             "reteach_foundation"
-        } else if fragile_memory_count > 0 {
+        } else if fragile_memory_count > 0 || decay_risk >= 6000 || review_due {
             "memory_reactivation"
-        } else if mastery_score < 5500 {
+        } else if mastery_score < 5500
+            || matches!(trend_state.as_str(), "fragile" | "declining" | "critical")
+        {
             "guided_practice"
         } else {
             "exam_linking"
         }
         .to_string();
+        let readiness_band = readiness_band_for_action(&action_type).to_string();
+        let support_intensity = self
+            .support_intensity_for_topic(
+                mastery_score,
+                gap_score,
+                fragile_memory_count,
+                decay_risk,
+                is_blocked,
+                &trend_state,
+            )
+            .to_string();
 
         let mut linked_question_ids =
             self.list_saved_question_ids_for_topic(student_id, topic_id, limit)?;
@@ -545,6 +715,8 @@ impl<'a> LibraryService<'a> {
             .collect::<Vec<_>>();
         let target_node_titles = self.list_target_node_titles(topic_id, limit)?;
         let relationship_hints = self.list_topic_relationship_hints(topic_id, limit)?;
+        let diagnostic_focuses = self.list_diagnostic_focuses(student_id, topic_id, 4)?;
+        let recent_diagnoses = self.list_recent_diagnoses(student_id, topic_id, 3)?;
         let primary_prompt = self.build_teach_prompt(
             &topic_name,
             &action_type,
@@ -554,18 +726,38 @@ impl<'a> LibraryService<'a> {
             &linked_entry_titles,
             &target_node_titles,
         );
+        let recommended_sequence = self.build_teach_sequence(
+            &topic_name,
+            &action_type,
+            &support_intensity,
+            fragile_memory_count,
+            &linked_question_ids,
+            &linked_entry_ids,
+            &linked_entry_titles,
+            &target_node_titles,
+            &relationship_hints,
+            &diagnostic_focuses,
+        );
 
         Ok(TeachActionPlan {
             student_id,
             topic_id,
             topic_name,
             action_type,
+            readiness_band,
+            support_intensity,
+            mastery_score,
+            gap_score,
+            fragile_memory_count,
             primary_prompt,
+            diagnostic_focuses,
+            recent_diagnoses,
             linked_question_ids,
             linked_entry_ids,
             linked_entry_titles,
             target_node_titles,
             relationship_hints,
+            recommended_sequence,
         })
     }
 
@@ -574,112 +766,34 @@ impl<'a> LibraryService<'a> {
         topic_id: i64,
         limit: usize,
     ) -> EcoachResult<Vec<TopicRelationshipHint>> {
-        let mut hints = Vec::new();
-
-        let mut node_stmt = self
-            .conn
-            .prepare(
-                "SELECT
-                    ne.edge_type,
-                    COALESCE(an_from.canonical_title, t_from.name),
-                    COALESCE(an_to.canonical_title, t_to.name)
-                 FROM node_edges ne
-                 LEFT JOIN academic_nodes an_from
-                    ON ne.from_node_type = 'academic_node'
-                   AND an_from.id = ne.from_node_id
-                 LEFT JOIN academic_nodes an_to
-                    ON ne.to_node_type = 'academic_node'
-                   AND an_to.id = ne.to_node_id
-                 LEFT JOIN topics t_from
-                    ON ne.from_node_type = 'topic'
-                   AND t_from.id = ne.from_node_id
-                 LEFT JOIN topics t_to
-                    ON ne.to_node_type = 'topic'
-                   AND t_to.id = ne.to_node_id
-                 WHERE (
-                        an_from.topic_id = ?1
-                        OR an_to.topic_id = ?1
-                        OR (ne.from_node_type = 'topic' AND ne.from_node_id = ?1)
-                        OR (ne.to_node_type = 'topic' AND ne.to_node_id = ?1)
-                 )
-                   AND ne.edge_type IN ('prerequisite', 'related', 'confused_with', 'contrasts_with', 'dependent')
-                 ORDER BY ne.strength_score DESC, ne.id ASC
-                 LIMIT ?2",
-            )
-            .map_err(|err| EcoachError::Storage(err.to_string()))?;
-        let rows = node_stmt
-            .query_map(params![topic_id, limit as i64], |row| {
-                Ok(TopicRelationshipHint {
-                    relation_type: row.get(0)?,
-                    from_title: row.get(1)?,
-                    to_title: row.get(2)?,
-                    explanation: String::new(),
-                })
-            })
-            .map_err(|err| EcoachError::Storage(err.to_string()))?;
-        for row in rows {
-            let mut hint = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
-            hint.explanation = self.relationship_explanation(
-                &hint.relation_type,
-                &hint.from_title,
-                &hint.to_title,
-            );
-            if !hints.iter().any(|existing: &TopicRelationshipHint| {
-                existing.relation_type == hint.relation_type
-                    && existing.from_title == hint.from_title
-                    && existing.to_title == hint.to_title
-            }) {
-                hints.push(hint);
-            }
+        if limit == 0 {
+            return Ok(Vec::new());
         }
 
+        let mut hints = self.collect_direct_relationship_hints(topic_id, limit * 2)?;
         if hints.len() < limit {
-            let remaining = limit.saturating_sub(hints.len());
-            let mut knowledge_stmt = self
-                .conn
-                .prepare(
-                    "SELECT
-                        kr.relation_type,
-                        from_ke.title,
-                        to_ke.title
-                     FROM knowledge_relations kr
-                     INNER JOIN knowledge_entries from_ke ON from_ke.id = kr.from_entry_id
-                     INNER JOIN knowledge_entries to_ke ON to_ke.id = kr.to_entry_id
-                     WHERE from_ke.topic_id = ?1 OR to_ke.topic_id = ?1
-                     ORDER BY kr.strength_score DESC, kr.id ASC
-                     LIMIT ?2",
-                )
-                .map_err(|err| EcoachError::Storage(err.to_string()))?;
-            let rows = knowledge_stmt
-                .query_map(params![topic_id, remaining as i64], |row| {
-                    Ok(TopicRelationshipHint {
-                        relation_type: row.get(0)?,
-                        from_title: row.get(1)?,
-                        to_title: row.get(2)?,
-                        explanation: String::new(),
-                    })
-                })
-                .map_err(|err| EcoachError::Storage(err.to_string()))?;
-            for row in rows {
-                let mut hint = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
-                hint.explanation = self.relationship_explanation(
-                    &hint.relation_type,
-                    &hint.from_title,
-                    &hint.to_title,
-                );
-                if !hints.iter().any(|existing: &TopicRelationshipHint| {
-                    existing.relation_type == hint.relation_type
-                        && existing.from_title == hint.from_title
-                        && existing.to_title == hint.to_title
-                }) {
-                    hints.push(hint);
-                }
+            let root_topic_name = self.topic_name(topic_id)?;
+            let bridge_topics = self.list_related_topics_for_topic(topic_id, limit)?;
+            for bridge_topic in bridge_topics {
                 if hints.len() >= limit {
                     break;
                 }
+                if let Some(path_hint) =
+                    self.build_bridge_relationship_hint(topic_id, &root_topic_name, &bridge_topic)?
+                {
+                    push_unique_relationship_hint(&mut hints, path_hint);
+                }
             }
         }
 
+        hints.sort_by(|left, right| {
+            right
+                .strength_score
+                .cmp(&left.strength_score)
+                .then(left.hop_count.cmp(&right.hop_count))
+                .then(left.relation_type.cmp(&right.relation_type))
+        });
+        hints.truncate(limit);
         Ok(hints)
     }
 
@@ -1059,6 +1173,10 @@ impl<'a> LibraryService<'a> {
                         mission_id: Some(row.get(0)?),
                         session_id: None,
                         route: format!("/coach/missions/{}", row.get::<_, i64>(0)?),
+                        reason: None,
+                        priority_score: None,
+                        recommended_bundle_ids: Vec::new(),
+                        related_topic_names: Vec::new(),
                     })
                 },
             )
@@ -1120,11 +1238,34 @@ impl<'a> LibraryService<'a> {
                         mission_id: None,
                         session_id: Some(session_id),
                         route: format!("/sessions/{}", session_id),
+                        reason: None,
+                        priority_score: None,
+                        recommended_bundle_ids: Vec::new(),
+                        related_topic_names: Vec::new(),
                     })
                 },
             )
             .optional()
-            .map_err(|err| EcoachError::Storage(err.to_string()))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .map_or_else(
+                || {
+                    let paths = self.build_personalized_learning_paths(student_id, 1)?;
+                    Ok(paths.into_iter().next().map(|path| ContinueLearningCard {
+                        title: format!("Resume {}", path.topic_name),
+                        activity_type: path.activity_type,
+                        topic_id: Some(path.topic_id),
+                        topic_name: Some(path.topic_name),
+                        mission_id: None,
+                        session_id: None,
+                        route: format!("/library/topics/{}", path.topic_id),
+                        reason: Some(path.reason),
+                        priority_score: Some(path.priority_score),
+                        recommended_bundle_ids: path.recommended_bundle_ids,
+                        related_topic_names: path.related_topic_names,
+                    }))
+                },
+                |card| Ok(Some(card)),
+            )
     }
 
     fn list_topic_entries(&self, topic_id: i64, limit: usize) -> EcoachResult<Vec<(i64, String)>> {
@@ -1209,6 +1350,330 @@ impl<'a> LibraryService<'a> {
                 topic_name, anchor_entry, anchor_node
             ),
         }
+    }
+
+    fn support_intensity_for_topic(
+        &self,
+        mastery_score: i64,
+        gap_score: i64,
+        fragile_memory_count: i64,
+        decay_risk: i64,
+        is_blocked: bool,
+        trend_state: &str,
+    ) -> &'static str {
+        if is_blocked
+            || gap_score >= 7500
+            || matches!(trend_state, "critical")
+            || mastery_score <= 2500
+        {
+            "high"
+        } else if fragile_memory_count >= 2
+            || gap_score >= 5000
+            || decay_risk >= 5000
+            || matches!(trend_state, "fragile" | "declining")
+        {
+            "medium"
+        } else {
+            "low"
+        }
+    }
+
+    fn list_diagnostic_focuses(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<String>> {
+        let mut focuses = Vec::new();
+        let profile = self
+            .conn
+            .query_row(
+                "SELECT
+                    knowledge_gap_score,
+                    conceptual_confusion_score,
+                    recognition_failure_score,
+                    execution_error_score,
+                    carelessness_score,
+                    pressure_breakdown_score,
+                    expression_weakness_score,
+                    speed_error_score
+                 FROM student_error_profiles
+                 WHERE student_id = ?1 AND topic_id = ?2",
+                params![student_id, topic_id],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, i64>(2)?,
+                        row.get::<_, i64>(3)?,
+                        row.get::<_, i64>(4)?,
+                        row.get::<_, i64>(5)?,
+                        row.get::<_, i64>(6)?,
+                        row.get::<_, i64>(7)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        if let Some((
+            knowledge_gap_score,
+            conceptual_confusion_score,
+            recognition_failure_score,
+            execution_error_score,
+            carelessness_score,
+            pressure_breakdown_score,
+            expression_weakness_score,
+            speed_error_score,
+        )) = profile
+        {
+            if knowledge_gap_score >= 4500 {
+                push_unique(
+                    &mut focuses,
+                    "Rebuild missing prerequisite knowledge before pushing for speed.".to_string(),
+                );
+            }
+            if conceptual_confusion_score >= 4500 {
+                push_unique(
+                    &mut focuses,
+                    "Contrast the nearby concepts explicitly so the learner can name the boundary."
+                        .to_string(),
+                );
+            }
+            if recognition_failure_score >= 4500 {
+                push_unique(
+                    &mut focuses,
+                    "Train recognition cues first so the learner can spot when this idea is in play."
+                        .to_string(),
+                );
+            }
+            if execution_error_score >= 4500 {
+                push_unique(
+                    &mut focuses,
+                    "Model the procedure step by step, then fade the scaffold once the path is stable."
+                        .to_string(),
+                );
+            }
+            if carelessness_score >= 4500 {
+                push_unique(
+                    &mut focuses,
+                    "Require a deliberate final verification pass to catch avoidable slips."
+                        .to_string(),
+                );
+            }
+            if pressure_breakdown_score >= 4500 || speed_error_score >= 4500 {
+                push_unique(
+                    &mut focuses,
+                    "Keep the pace calm and accurate first; only add speed after the method is stable."
+                        .to_string(),
+                );
+            }
+            if expression_weakness_score >= 4500 {
+                push_unique(
+                    &mut focuses,
+                    "Ask the learner to explain each move out loud or in writing before moving on."
+                        .to_string(),
+                );
+            }
+        }
+
+        if focuses.len() < limit {
+            let mut statement = self
+                .conn
+                .prepare(
+                    "SELECT primary_diagnosis, recommended_action
+                     FROM wrong_answer_diagnoses
+                     WHERE student_id = ?1
+                       AND topic_id = ?2
+                     ORDER BY created_at DESC, id DESC
+                     LIMIT ?3",
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let rows = statement
+                .query_map(params![student_id, topic_id, limit as i64], |row| {
+                    let diagnosis: String = row.get(0)?;
+                    let action: String = row.get(1)?;
+                    Ok(format!(
+                        "Recent diagnosis {} suggests: {}.",
+                        diagnosis, action
+                    ))
+                })
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            for row in rows {
+                push_unique(
+                    &mut focuses,
+                    row.map_err(|err| EcoachError::Storage(err.to_string()))?,
+                );
+                if focuses.len() >= limit {
+                    break;
+                }
+            }
+        }
+
+        focuses.truncate(limit);
+        Ok(focuses)
+    }
+
+    fn list_recent_diagnoses(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<String>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT primary_diagnosis, severity, recommended_action
+                 FROM wrong_answer_diagnoses
+                 WHERE student_id = ?1
+                   AND topic_id = ?2
+                 ORDER BY created_at DESC, id DESC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, topic_id, limit as i64], |row| {
+                let diagnosis: String = row.get(0)?;
+                let severity: String = row.get(1)?;
+                let action: String = row.get(2)?;
+                Ok(format!("{} ({}) -> {}", diagnosis, severity, action))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut diagnoses = Vec::new();
+        for row in rows {
+            diagnoses.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(diagnoses)
+    }
+
+    fn build_teach_sequence(
+        &self,
+        topic_name: &str,
+        action_type: &str,
+        support_intensity: &str,
+        fragile_memory_count: i64,
+        linked_question_ids: &[i64],
+        linked_entry_ids: &[i64],
+        linked_entry_titles: &[String],
+        target_node_titles: &[String],
+        relationship_hints: &[TopicRelationshipHint],
+        diagnostic_focuses: &[String],
+    ) -> Vec<TeachActionStep> {
+        let anchor_entry = linked_entry_titles
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "the key explanation".to_string());
+        let anchor_node = target_node_titles
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "the central concept".to_string());
+        let mut steps = Vec::new();
+
+        let (title, prompt) = match action_type {
+            "reteach_foundation" => (
+                "Reset the foundation".to_string(),
+                format!(
+                    "Use {} support to rebuild {} from first principles. Anchor on {} before introducing {}.",
+                    support_intensity, topic_name, anchor_entry, anchor_node
+                ),
+            ),
+            "memory_reactivation" => (
+                "Reactivate recall".to_string(),
+                format!(
+                    "Start with rapid retrieval on {} and {}. There are {} fragile memory traces to stabilize.",
+                    anchor_entry, anchor_node, fragile_memory_count
+                ),
+            ),
+            "guided_practice" => (
+                "Model then fade support".to_string(),
+                format!(
+                    "Walk through {} with {} as the explanation anchor, then fade to supported practice around {}.",
+                    topic_name, anchor_entry, anchor_node
+                ),
+            ),
+            _ => (
+                "Bridge to exam use".to_string(),
+                format!(
+                    "Keep {} concise, then link it directly to question work through {} and {}.",
+                    topic_name, anchor_entry, anchor_node
+                ),
+            ),
+        };
+        steps.push(TeachActionStep {
+            sequence_no: (steps.len() + 1) as i64,
+            step_type: "anchor".to_string(),
+            title,
+            prompt,
+            linked_question_ids: Vec::new(),
+            linked_entry_ids: linked_entry_ids.iter().copied().take(2).collect(),
+            focus_labels: vec![anchor_entry.clone(), anchor_node.clone()],
+        });
+
+        if let Some(hint) = relationship_hints.first() {
+            steps.push(TeachActionStep {
+                sequence_no: (steps.len() + 1) as i64,
+                step_type: "relationship".to_string(),
+                title: format!(
+                    "Connect {} to {}",
+                    truncate_text(&hint.from_title, 36),
+                    truncate_text(&hint.to_title, 36)
+                ),
+                prompt: hint.explanation.clone(),
+                linked_question_ids: Vec::new(),
+                linked_entry_ids: linked_entry_ids.iter().copied().take(2).collect(),
+                focus_labels: vec![
+                    hint.relation_type.clone(),
+                    hint.from_title.clone(),
+                    hint.to_title.clone(),
+                ],
+            });
+        }
+
+        if let Some(focus) = diagnostic_focuses.first() {
+            steps.push(TeachActionStep {
+                sequence_no: (steps.len() + 1) as i64,
+                step_type: "repair".to_string(),
+                title: "Repair the dominant failure mode".to_string(),
+                prompt: focus.clone(),
+                linked_question_ids: Vec::new(),
+                linked_entry_ids: linked_entry_ids.iter().copied().take(2).collect(),
+                focus_labels: diagnostic_focuses.iter().take(2).cloned().collect(),
+            });
+        }
+
+        if !linked_question_ids.is_empty() {
+            steps.push(TeachActionStep {
+                sequence_no: (steps.len() + 1) as i64,
+                step_type: "practice".to_string(),
+                title: "Re-apply in questions".to_string(),
+                prompt: format!(
+                    "Work through {} linked questions in order, keeping the explanation visible on the first pass and removing support on the second.",
+                    linked_question_ids.len()
+                ),
+                linked_question_ids: linked_question_ids.iter().copied().take(4).collect(),
+                linked_entry_ids: linked_entry_ids.iter().copied().take(2).collect(),
+                focus_labels: vec![support_intensity.to_string()],
+            });
+        }
+
+        steps.push(TeachActionStep {
+            sequence_no: (steps.len() + 1) as i64,
+            step_type: "check".to_string(),
+            title: "Check recall and transfer".to_string(),
+            prompt: if fragile_memory_count > 0 {
+                "End by asking for an explanation from memory, then a fresh example without prompts."
+                    .to_string()
+            } else {
+                "End by asking for a clean explanation and one transfer example without prompts."
+                    .to_string()
+            },
+            linked_question_ids: linked_question_ids.iter().copied().rev().take(1).collect(),
+            linked_entry_ids: linked_entry_ids.iter().copied().take(1).collect(),
+            focus_labels: target_node_titles.iter().take(2).cloned().collect(),
+        });
+
+        steps
     }
 
     fn relationship_explanation(
@@ -1333,4 +1798,244 @@ fn truncate_text(value: &str, max_len: usize) -> String {
 
     let truncated: String = value.chars().take(max_len.saturating_sub(3)).collect();
     format!("{}...", truncated.trim_end())
+}
+
+fn readiness_band_for_action(action_type: &str) -> &'static str {
+    match action_type {
+        "reteach_foundation" => "repair_now",
+        "memory_reactivation" => "memory_rebuild",
+        "guided_practice" => "guided_growth",
+        _ => "exam_bridge",
+    }
+}
+
+fn push_unique(values: &mut Vec<String>, value: String) {
+    if !values.iter().any(|existing| existing == &value) {
+        values.push(value);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rusqlite::Connection;
+
+    use super::LibraryService;
+
+    #[test]
+    fn build_teach_action_plan_surfaces_diagnostic_and_relationship_depth() {
+        let conn = Connection::open_in_memory().expect("in-memory db");
+        conn.execute_batch(
+            "
+            CREATE TABLE topics (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            CREATE TABLE student_topic_states (
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                mastery_score INTEGER NOT NULL,
+                gap_score INTEGER NOT NULL,
+                trend_state TEXT NOT NULL,
+                decay_risk INTEGER NOT NULL DEFAULT 0,
+                is_blocked INTEGER NOT NULL DEFAULT 0,
+                next_review_at TEXT
+            );
+            CREATE TABLE memory_states (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER,
+                memory_state TEXT NOT NULL
+            );
+            CREATE TABLE questions (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER NOT NULL,
+                stem TEXT NOT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                difficulty_level INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE library_items (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                item_type TEXT NOT NULL,
+                item_ref_id INTEGER NOT NULL,
+                urgency_score INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE knowledge_entries (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER,
+                title TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'active',
+                importance_score INTEGER NOT NULL DEFAULT 0,
+                difficulty_level INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE academic_nodes (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER,
+                canonical_title TEXT NOT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                foundation_weight INTEGER NOT NULL DEFAULT 0,
+                exam_relevance_score INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE node_edges (
+                id INTEGER PRIMARY KEY,
+                edge_type TEXT NOT NULL,
+                from_node_type TEXT NOT NULL,
+                from_node_id INTEGER NOT NULL,
+                to_node_type TEXT NOT NULL,
+                to_node_id INTEGER NOT NULL,
+                strength_score INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE knowledge_relations (
+                id INTEGER PRIMARY KEY,
+                from_entry_id INTEGER NOT NULL,
+                to_entry_id INTEGER NOT NULL,
+                relation_type TEXT NOT NULL,
+                strength_score INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE student_error_profiles (
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                knowledge_gap_score INTEGER NOT NULL DEFAULT 0,
+                conceptual_confusion_score INTEGER NOT NULL DEFAULT 0,
+                recognition_failure_score INTEGER NOT NULL DEFAULT 0,
+                execution_error_score INTEGER NOT NULL DEFAULT 0,
+                carelessness_score INTEGER NOT NULL DEFAULT 0,
+                pressure_breakdown_score INTEGER NOT NULL DEFAULT 0,
+                expression_weakness_score INTEGER NOT NULL DEFAULT 0,
+                speed_error_score INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE wrong_answer_diagnoses (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                primary_diagnosis TEXT NOT NULL,
+                recommended_action TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            ",
+        )
+        .expect("schema");
+
+        conn.execute(
+            "INSERT INTO topics (id, name) VALUES (1, 'Quadratic Equations')",
+            [],
+        )
+        .expect("topic");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, trend_state, decay_risk, is_blocked, next_review_at
+             ) VALUES (42, 1, 3200, 7200, 'declining', 6800, 1, '2026-03-29T12:00:00Z')",
+            [],
+        )
+        .expect("topic state");
+        conn.execute(
+            "INSERT INTO memory_states (id, student_id, topic_id, memory_state)
+             VALUES (1, 42, 1, 'fragile')",
+            [],
+        )
+        .expect("memory state");
+        conn.execute(
+            "INSERT INTO questions (id, topic_id, stem, is_active, difficulty_level)
+             VALUES (10, 1, 'Solve x^2 - 5x + 6 = 0', 1, 1200)",
+            [],
+        )
+        .expect("saved question");
+        conn.execute(
+            "INSERT INTO questions (id, topic_id, stem, is_active, difficulty_level)
+             VALUES (11, 1, 'Rewrite the quadratic in vertex form', 1, 1800)",
+            [],
+        )
+        .expect("active question");
+        conn.execute(
+            "INSERT INTO library_items (id, student_id, item_type, item_ref_id, urgency_score)
+             VALUES (1, 42, 'question', 10, 9000)",
+            [],
+        )
+        .expect("library item");
+        conn.execute(
+            "INSERT INTO knowledge_entries (id, topic_id, title, status, importance_score, difficulty_level)
+             VALUES (101, 1, 'Completing the square', 'active', 9000, 2000)",
+            [],
+        )
+        .expect("entry one");
+        conn.execute(
+            "INSERT INTO knowledge_entries (id, topic_id, title, status, importance_score, difficulty_level)
+             VALUES (102, 1, 'Vertex form meaning', 'active', 8500, 1500)",
+            [],
+        )
+        .expect("entry two");
+        conn.execute(
+            "INSERT INTO academic_nodes (id, topic_id, canonical_title, is_active, foundation_weight, exam_relevance_score)
+             VALUES (201, 1, 'Recognise when a quadratic can be factored', 1, 9500, 8000)",
+            [],
+        )
+        .expect("node one");
+        conn.execute(
+            "INSERT INTO academic_nodes (id, topic_id, canonical_title, is_active, foundation_weight, exam_relevance_score)
+             VALUES (202, 1, 'Connect factorisation to roots', 1, 9000, 7600)",
+            [],
+        )
+        .expect("node two");
+        conn.execute(
+            "INSERT INTO node_edges (
+                id, edge_type, from_node_type, from_node_id, to_node_type, to_node_id, strength_score
+             ) VALUES (1, 'prerequisite', 'academic_node', 201, 'academic_node', 202, 9100)",
+            [],
+        )
+        .expect("node edge");
+        conn.execute(
+            "INSERT INTO knowledge_relations (
+                id, from_entry_id, to_entry_id, relation_type, strength_score
+             ) VALUES (1, 101, 102, 'contrasts_with', 8800)",
+            [],
+        )
+        .expect("knowledge relation");
+        conn.execute(
+            "INSERT INTO student_error_profiles (
+                student_id, topic_id, knowledge_gap_score, conceptual_confusion_score,
+                recognition_failure_score, execution_error_score, carelessness_score,
+                pressure_breakdown_score, expression_weakness_score, speed_error_score
+             ) VALUES (42, 1, 7200, 6100, 0, 5600, 0, 5200, 4800, 0)",
+            [],
+        )
+        .expect("error profile");
+        conn.execute(
+            "INSERT INTO wrong_answer_diagnoses (
+                id, student_id, topic_id, primary_diagnosis, recommended_action, severity, created_at
+             ) VALUES (
+                1, 42, 1, 'sign confusion', 'Rebuild the sign pattern before solving', 'high', '2026-03-29T10:00:00Z'
+             )",
+            [],
+        )
+        .expect("diagnosis");
+
+        let plan = LibraryService::new(&conn)
+            .build_teach_action_plan(42, 1, 4)
+            .expect("teach plan");
+
+        assert_eq!(plan.action_type, "reteach_foundation");
+        assert_eq!(plan.readiness_band, "repair_now");
+        assert_eq!(plan.support_intensity, "high");
+        assert!(!plan.diagnostic_focuses.is_empty());
+        assert!(plan
+            .diagnostic_focuses
+            .iter()
+            .any(|focus| focus.contains("Contrast") || focus.contains("contrast")));
+        assert!(plan
+            .recent_diagnoses
+            .iter()
+            .any(|diagnosis| diagnosis.contains("sign confusion")));
+        assert!(!plan.relationship_hints.is_empty());
+        assert!(plan.recommended_sequence.len() >= 4);
+        assert!(plan
+            .recommended_sequence
+            .iter()
+            .any(|step| step.step_type == "relationship"));
+        assert!(plan
+            .recommended_sequence
+            .iter()
+            .any(|step| step.step_type == "repair"));
+    }
 }

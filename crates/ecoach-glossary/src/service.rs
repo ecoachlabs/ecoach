@@ -1,5 +1,5 @@
 use ecoach_substrate::{EcoachError, EcoachResult};
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 
 use crate::models::{
     GlossaryAudioProgram, GlossaryAudioSegment, KnowledgeBundle, KnowledgeEntry,
@@ -17,6 +17,14 @@ struct AudioEntrySource {
     entry_type: String,
     topic_id: Option<i64>,
     narrative_text: String,
+    focus_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Default)]
+struct AudioProgramContext {
+    teaching_mode: String,
+    listener_signals: Vec<String>,
+    contrast_titles: Vec<String>,
 }
 
 impl<'a> GlossaryService<'a> {
@@ -212,6 +220,43 @@ impl<'a> GlossaryService<'a> {
             None,
             &bundles,
             &entry_sources,
+            &AudioProgramContext::default(),
+        ))
+    }
+
+    pub fn build_personalized_audio_program_for_topic(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<GlossaryAudioProgram> {
+        let topic_name: String = self
+            .conn
+            .query_row(
+                "SELECT name FROM topics WHERE id = ?1 LIMIT 1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let bundles = self.list_bundles_for_topic(topic_id)?;
+        let entry_sources =
+            self.load_personalized_audio_sources_for_topic(student_id, topic_id, limit)?;
+        if entry_sources.is_empty() {
+            return Err(EcoachError::Validation(format!(
+                "no glossary entries are available to build a personalized audio program for topic {}",
+                topic_id
+            )));
+        }
+        let context = self.build_audio_program_context(student_id, Some(topic_id))?;
+
+        Ok(self.compose_audio_program(
+            format!("{} guided audio coach", topic_name),
+            "topic_personalized",
+            Some(topic_id),
+            None,
+            &bundles,
+            &entry_sources,
+            &context,
         ))
     }
 
@@ -257,6 +302,54 @@ impl<'a> GlossaryService<'a> {
             Some(question_id),
             &bundles,
             &entry_sources,
+            &AudioProgramContext::default(),
+        ))
+    }
+
+    pub fn build_personalized_audio_program_for_question(
+        &self,
+        student_id: i64,
+        question_id: i64,
+        limit: usize,
+    ) -> EcoachResult<GlossaryAudioProgram> {
+        let (question_stem, question_topic_id): (String, Option<i64>) = self
+            .conn
+            .query_row(
+                "SELECT stem, topic_id FROM questions WHERE id = ?1 LIMIT 1",
+                [question_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let entry_sources =
+            self.load_personalized_audio_sources_for_question(student_id, question_id, limit)?;
+        if entry_sources.is_empty() {
+            return Err(EcoachError::Validation(format!(
+                "question {} has no linked glossary entries",
+                question_id
+            )));
+        }
+        let topic_id = entry_sources
+            .iter()
+            .find_map(|entry| entry.topic_id)
+            .or(question_topic_id);
+        let bundles = if let Some(topic_id) = topic_id {
+            self.list_bundles_for_topic(topic_id)?
+        } else {
+            Vec::new()
+        };
+        let context = self.build_audio_program_context(student_id, topic_id)?;
+
+        Ok(self.compose_audio_program(
+            format!(
+                "Question repair audio: {}",
+                truncate_title(&question_stem, 56)
+            ),
+            "question_repair_personalized",
+            topic_id,
+            Some(question_id),
+            &bundles,
+            &entry_sources,
+            &context,
         ))
     }
 
@@ -268,38 +361,91 @@ impl<'a> GlossaryService<'a> {
         question_id: Option<i64>,
         bundles: &[KnowledgeBundle],
         entry_sources: &[AudioEntrySource],
+        context: &AudioProgramContext,
     ) -> GlossaryAudioProgram {
         let mut segments = Vec::new();
-        let intro_prompt = entry_sources
+        let intro_prompt = context
+            .listener_signals
             .first()
-            .map(|entry| {
-                format!(
-                    "Listen for the exact meaning of {}, then compare it against how it appears in the problem.",
-                    entry.title
-                )
+            .cloned()
+            .or_else(|| {
+                entry_sources.first().map(|entry| {
+                    format!(
+                        "Listen for the exact meaning of {}, then compare it against how it appears in the problem.",
+                        entry.title
+                    )
+                })
             })
             .unwrap_or_else(|| "Listen for the core idea and recall where it applies.".to_string());
         segments.push(GlossaryAudioSegment {
             sequence_no: 1,
             segment_type: "intro".to_string(),
             title: "Orientation".to_string(),
-            script_text: format!(
-                "{}. This audio program focuses on the key ideas you should be able to recognize, explain, and recall under exam pressure.",
-                program_title
-            ),
+            script_text: if context.teaching_mode.is_empty() {
+                format!(
+                    "{}. This audio program focuses on the key ideas you should be able to recognize, explain, and recall under exam pressure.",
+                    program_title
+                )
+            } else {
+                format!(
+                    "{}. This is a {} audio program focused on the ideas you need to recognize, explain, and recall under exam pressure.",
+                    program_title,
+                    context.teaching_mode.replace('_', " ")
+                )
+            },
             entry_id: None,
             prompt_text: Some(intro_prompt),
+            focus_reason: None,
             duration_seconds: 20,
         });
 
-        for (index, entry) in entry_sources.iter().enumerate() {
+        if !context.listener_signals.is_empty() {
+            let script_text = context.listener_signals.join(" ");
+            segments.push(GlossaryAudioSegment {
+                sequence_no: (segments.len() + 1) as i64,
+                segment_type: "learner_focus".to_string(),
+                title: "Why This Matters Right Now".to_string(),
+                script_text: script_text.clone(),
+                entry_id: None,
+                prompt_text: Some(
+                    "Pause and name the risk, gap, or recall problem you are trying to repair."
+                        .to_string(),
+                ),
+                focus_reason: Some("Derived from current learner signals.".to_string()),
+                duration_seconds: estimate_duration_seconds(&script_text),
+            });
+        }
+
+        if !context.contrast_titles.is_empty() {
+            let script_text = format!(
+                "Keep these contrasts clean while you listen: {}. Say the boundary between them before you continue.",
+                context.contrast_titles.join("; ")
+            );
+            segments.push(GlossaryAudioSegment {
+                sequence_no: (segments.len() + 1) as i64,
+                segment_type: "contrast_trap".to_string(),
+                title: "Contrast and Trap Check".to_string(),
+                script_text: script_text.clone(),
+                entry_id: None,
+                prompt_text: Some(
+                    "Pause and explain how these ideas differ before returning to the problem."
+                        .to_string(),
+                ),
+                focus_reason: Some(
+                    "Derived from contrast and confusion relationships.".to_string(),
+                ),
+                duration_seconds: estimate_duration_seconds(&script_text),
+            });
+        }
+
+        for entry in entry_sources {
             let segment_type = match entry.entry_type.as_str() {
                 "definition" => "definition",
                 "formula" => "formula",
                 "worked_example" => "worked_example",
                 _ => "explanation",
             };
-            let prompt_text = match entry.entry_type.as_str() {
+            let base_prompt = match entry.entry_type.as_str() {
                 "definition" => Some(format!(
                     "Pause and restate the meaning of {} in your own words.",
                     entry.title
@@ -317,13 +463,20 @@ impl<'a> GlossaryService<'a> {
                     entry.title
                 )),
             };
+            let prompt_text = match (&base_prompt, &entry.focus_reason) {
+                (Some(prompt), Some(reason)) => Some(format!("{} {}", prompt, reason)),
+                (Some(prompt), None) => Some(prompt.clone()),
+                (None, Some(reason)) => Some(reason.clone()),
+                (None, None) => None,
+            };
             segments.push(GlossaryAudioSegment {
-                sequence_no: (index + 2) as i64,
+                sequence_no: (segments.len() + 1) as i64,
                 segment_type: segment_type.to_string(),
                 title: entry.title.clone(),
                 script_text: condense_script(&entry.narrative_text),
                 entry_id: Some(entry.id),
                 prompt_text,
+                focus_reason: entry.focus_reason.clone(),
                 duration_seconds: estimate_duration_seconds(&entry.narrative_text),
             });
         }
@@ -332,19 +485,33 @@ impl<'a> GlossaryService<'a> {
             sequence_no: (segments.len() + 1) as i64,
             segment_type: "recall_check".to_string(),
             title: "Recall Check".to_string(),
-            script_text: "Now stop the audio and say the main idea, the usual trap, and the safest response pattern before you continue.".to_string(),
+            script_text: if context.teaching_mode == "repair" {
+                "Now stop the audio and say the main idea, the trap you are repairing, and the safest response pattern before you continue.".to_string()
+            } else if context.teaching_mode == "reactivation" {
+                "Now stop the audio and retrieve the main idea from memory, then name the safest response pattern before you continue.".to_string()
+            } else {
+                "Now stop the audio and say the main idea, the usual trap, and the safest response pattern before you continue.".to_string()
+            },
             entry_id: None,
             prompt_text: Some("Name the key idea, the trap, and the correct response path.".to_string()),
+            focus_reason: None,
             duration_seconds: 18,
         });
 
         GlossaryAudioProgram {
             program_title,
             source_type: source_type.to_string(),
+            teaching_mode: if context.teaching_mode.is_empty() {
+                "standard".to_string()
+            } else {
+                context.teaching_mode.clone()
+            },
             topic_id,
             question_id,
             bundle_ids: bundles.iter().map(|bundle| bundle.id).collect(),
             entry_ids: entry_sources.iter().map(|entry| entry.id).collect(),
+            listener_signals: context.listener_signals.clone(),
+            contrast_titles: context.contrast_titles.clone(),
             segments,
         }
     }
@@ -378,6 +545,7 @@ impl<'a> GlossaryService<'a> {
                     entry_type: row.get(2)?,
                     topic_id: row.get(3)?,
                     narrative_text: row.get(4)?,
+                    focus_reason: None,
                 })
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -408,10 +576,329 @@ impl<'a> GlossaryService<'a> {
                         entry_type: row.get(2)?,
                         topic_id: row.get(3)?,
                         narrative_text: row.get(4)?,
+                        focus_reason: None,
                     })
                 },
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_personalized_audio_sources_for_topic(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<AudioEntrySource>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT
+                    ke.id,
+                    ke.title,
+                    ke.entry_type,
+                    ke.topic_id,
+                    COALESCE(ke.exam_text, ke.technical_text, ke.full_text, ke.short_text, ke.simple_text, ke.title),
+                    COALESCE(ses.confusion_score, 0),
+                    COALESCE(ses.linked_wrong_answer_count, 0),
+                    COALESCE(ses.recall_strength, 0),
+                    CASE WHEN ses.review_due_at IS NOT NULL THEN 1 ELSE 0 END
+                 FROM knowledge_entries ke
+                 LEFT JOIN student_entry_state ses
+                    ON ses.entry_id = ke.id
+                   AND ses.user_id = ?1
+                 WHERE ke.topic_id = ?2
+                   AND ke.status = 'active'
+                 ORDER BY
+                    CASE WHEN ses.review_due_at IS NOT NULL THEN 0 ELSE 1 END,
+                    COALESCE(ses.confusion_score, 0) DESC,
+                    COALESCE(ses.linked_wrong_answer_count, 0) DESC,
+                    COALESCE(ses.recall_strength, 0) ASC,
+                    ke.importance_score DESC,
+                    ke.difficulty_level ASC,
+                    ke.title ASC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = stmt
+            .query_map(params![student_id, topic_id, limit.max(1) as i64], |row| {
+                let confusion_score: i64 = row.get(5)?;
+                let linked_wrong_answer_count: i64 = row.get(6)?;
+                let recall_strength: i64 = row.get(7)?;
+                let review_due = row.get::<_, i64>(8)? == 1;
+                Ok(AudioEntrySource {
+                    id: row.get(0)?,
+                    title: row.get(1)?,
+                    entry_type: row.get(2)?,
+                    topic_id: row.get(3)?,
+                    narrative_text: row.get(4)?,
+                    focus_reason: audio_focus_reason(
+                        confusion_score,
+                        linked_wrong_answer_count,
+                        recall_strength,
+                        review_due,
+                        None,
+                    ),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut entries = Vec::new();
+        for row in rows {
+            entries.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(entries)
+    }
+
+    fn load_personalized_audio_sources_for_question(
+        &self,
+        student_id: i64,
+        question_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<AudioEntrySource>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT
+                    ke.id,
+                    ke.title,
+                    ke.entry_type,
+                    ke.topic_id,
+                    COALESCE(ke.exam_text, ke.technical_text, ke.full_text, ke.short_text, ke.simple_text, ke.title),
+                    COALESCE(ses.confusion_score, 0),
+                    COALESCE(ses.linked_wrong_answer_count, 0),
+                    COALESCE(ses.recall_strength, 0),
+                    CASE WHEN ses.review_due_at IS NOT NULL THEN 1 ELSE 0 END,
+                    qgl.link_reason
+                 FROM question_glossary_links qgl
+                 INNER JOIN knowledge_entries ke ON ke.id = qgl.entry_id
+                 LEFT JOIN student_entry_state ses
+                    ON ses.entry_id = ke.id
+                   AND ses.user_id = ?1
+                 WHERE qgl.question_id = ?2
+                 ORDER BY
+                    qgl.is_primary DESC,
+                    CASE WHEN ses.review_due_at IS NOT NULL THEN 0 ELSE 1 END,
+                    COALESCE(ses.confusion_score, 0) DESC,
+                    qgl.confidence_score DESC,
+                    ke.importance_score DESC,
+                    ke.title ASC
+                 LIMIT ?3",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = stmt
+            .query_map(
+                params![student_id, question_id, limit.max(1) as i64],
+                |row| {
+                    let confusion_score: i64 = row.get(5)?;
+                    let linked_wrong_answer_count: i64 = row.get(6)?;
+                    let recall_strength: i64 = row.get(7)?;
+                    let review_due = row.get::<_, i64>(8)? == 1;
+                    let link_reason: Option<String> = row.get(9)?;
+                    Ok(AudioEntrySource {
+                        id: row.get(0)?,
+                        title: row.get(1)?,
+                        entry_type: row.get(2)?,
+                        topic_id: row.get(3)?,
+                        narrative_text: row.get(4)?,
+                        focus_reason: audio_focus_reason(
+                            confusion_score,
+                            linked_wrong_answer_count,
+                            recall_strength,
+                            review_due,
+                            link_reason.as_deref(),
+                        ),
+                    })
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut entries = Vec::new();
+        for row in rows {
+            entries.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(entries)
+    }
+
+    fn build_audio_program_context(
+        &self,
+        student_id: i64,
+        topic_id: Option<i64>,
+    ) -> EcoachResult<AudioProgramContext> {
+        let Some(topic_id) = topic_id else {
+            return Ok(AudioProgramContext::default());
+        };
+
+        let state = self
+            .conn
+            .query_row(
+                "SELECT mastery_score, gap_score, decay_risk, trend_state, is_blocked, next_review_at
+                 FROM student_topic_states
+                 WHERE student_id = ?1 AND topic_id = ?2",
+                params![student_id, topic_id],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, i64>(2)?,
+                        row.get::<_, String>(3)?,
+                        row.get::<_, i64>(4)? == 1,
+                        row.get::<_, Option<String>>(5)?,
+                    ))
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+            .ok();
+
+        let teaching_mode = if let Some((
+            mastery_score,
+            gap_score,
+            decay_risk,
+            trend_state,
+            is_blocked,
+            next_review_at,
+        )) = &state
+        {
+            if *is_blocked || *gap_score >= 6500 {
+                "repair".to_string()
+            } else if *decay_risk >= 6000 || next_review_at.is_some() {
+                "reactivation".to_string()
+            } else if *mastery_score < 6500
+                || matches!(trend_state.as_str(), "fragile" | "declining" | "critical")
+            {
+                "guided_practice".to_string()
+            } else {
+                "exam_bridge".to_string()
+            }
+        } else {
+            "standard".to_string()
+        };
+
+        let mut listener_signals = Vec::new();
+        if let Some((
+            mastery_score,
+            gap_score,
+            decay_risk,
+            trend_state,
+            is_blocked,
+            next_review_at,
+        )) = state
+        {
+            if is_blocked || gap_score >= 6500 {
+                listener_signals.push(
+                    "Gap pressure is high here, so start from the exact meaning and rebuild the safest path before chasing speed."
+                        .to_string(),
+                );
+            }
+            if decay_risk >= 6000 || next_review_at.is_some() {
+                listener_signals.push(
+                    "This topic needs recall reactivation, so retrieve the idea from memory before you try fresh questions."
+                        .to_string(),
+                );
+            }
+            if matches!(trend_state.as_str(), "fragile" | "declining" | "critical")
+                || mastery_score < 5000
+            {
+                listener_signals.push(
+                    "Stay on clear, supported explanations first, then remove support only after the method feels stable."
+                        .to_string(),
+                );
+            }
+        }
+
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT primary_diagnosis, recommended_action
+                 FROM wrong_answer_diagnoses
+                 WHERE student_id = ?1
+                   AND topic_id = ?2
+                 ORDER BY created_at DESC, id DESC
+                 LIMIT 2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = stmt
+            .query_map(params![student_id, topic_id], |row| {
+                let diagnosis: String = row.get(0)?;
+                let action: String = row.get(1)?;
+                Ok(format!(
+                    "Recent errors point to {}. Keep this response pattern in mind: {}.",
+                    diagnosis, action
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for row in rows {
+            push_unique_signal(
+                &mut listener_signals,
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?,
+            );
+        }
+
+        let contrast_titles = self.list_audio_contrast_titles(topic_id, 2)?;
+
+        Ok(AudioProgramContext {
+            teaching_mode,
+            listener_signals,
+            contrast_titles,
+        })
+    }
+
+    fn list_audio_contrast_titles(&self, topic_id: i64, limit: usize) -> EcoachResult<Vec<String>> {
+        let mut titles = Vec::new();
+
+        let mut contrast_stmt = self
+            .conn
+            .prepare(
+                "SELECT cp.title
+                 FROM contrast_pairs cp
+                 INNER JOIN knowledge_entries left_ke ON left_ke.id = cp.left_entry_id
+                 INNER JOIN knowledge_entries right_ke ON right_ke.id = cp.right_entry_id
+                 WHERE left_ke.topic_id = ?1 OR right_ke.topic_id = ?1
+                 ORDER BY cp.trap_strength DESC, cp.id ASC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = contrast_stmt
+            .query_map(params![topic_id, limit as i64], |row| row.get(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for row in rows {
+            push_unique_signal(
+                &mut titles,
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?,
+            );
+        }
+
+        if titles.len() < limit {
+            let remaining = limit.saturating_sub(titles.len());
+            let mut relation_stmt = self
+                .conn
+                .prepare(
+                    "SELECT from_ke.title, to_ke.title
+                     FROM knowledge_relations kr
+                     INNER JOIN knowledge_entries from_ke ON from_ke.id = kr.from_entry_id
+                     INNER JOIN knowledge_entries to_ke ON to_ke.id = kr.to_entry_id
+                     WHERE (from_ke.topic_id = ?1 OR to_ke.topic_id = ?1)
+                       AND kr.relation_type IN ('confused_with', 'contrasts_with')
+                     ORDER BY kr.strength_score DESC, kr.id ASC
+                     LIMIT ?2",
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let rows = relation_stmt
+                .query_map(params![topic_id, remaining as i64], |row| {
+                    let from_title: String = row.get(0)?;
+                    let to_title: String = row.get(1)?;
+                    Ok(format!("{} vs {}", from_title, to_title))
+                })
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            for row in rows {
+                push_unique_signal(
+                    &mut titles,
+                    row.map_err(|err| EcoachError::Storage(err.to_string()))?,
+                );
+                if titles.len() >= limit {
+                    break;
+                }
+            }
+        }
+
+        Ok(titles)
     }
 }
 
@@ -434,5 +921,230 @@ fn truncate_title(text: &str, max_len: usize) -> String {
             .take(max_len.saturating_sub(3))
             .collect::<String>();
         format!("{}...", clipped)
+    }
+}
+
+fn audio_focus_reason(
+    confusion_score: i64,
+    linked_wrong_answer_count: i64,
+    recall_strength: i64,
+    review_due: bool,
+    link_reason: Option<&str>,
+) -> Option<String> {
+    if review_due {
+        Some("Review is due here, so retrieve the idea before moving on.".to_string())
+    } else if confusion_score >= 4500 {
+        Some(
+            "This idea shows elevated confusion risk, so listen for the exact boundary."
+                .to_string(),
+        )
+    } else if linked_wrong_answer_count > 0 {
+        Some(
+            "This idea has been tied to recent wrong answers, so keep the repair cue active."
+                .to_string(),
+        )
+    } else if recall_strength > 0 && recall_strength <= 3500 {
+        Some(
+            "Recall strength is still low here, so restate the idea before applying it."
+                .to_string(),
+        )
+    } else {
+        link_reason.map(|reason| format!("Focus here because {}.", reason.trim_end_matches('.')))
+    }
+}
+
+fn push_unique_signal(values: &mut Vec<String>, value: String) {
+    if !values.iter().any(|existing| existing == &value) {
+        values.push(value);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rusqlite::Connection;
+
+    use super::GlossaryService;
+
+    #[test]
+    fn personalized_topic_audio_uses_learner_signals_and_contrasts() {
+        let conn = Connection::open_in_memory().expect("in-memory db");
+        conn.execute_batch(
+            "
+            CREATE TABLE topics (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            CREATE TABLE knowledge_entries (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER,
+                entry_type TEXT NOT NULL,
+                title TEXT NOT NULL,
+                short_text TEXT,
+                full_text TEXT,
+                technical_text TEXT,
+                exam_text TEXT,
+                simple_text TEXT,
+                importance_score INTEGER NOT NULL DEFAULT 0,
+                difficulty_level INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'active'
+            );
+            CREATE TABLE knowledge_bundles (
+                id INTEGER PRIMARY KEY,
+                title TEXT NOT NULL,
+                bundle_type TEXT NOT NULL,
+                topic_id INTEGER
+            );
+            CREATE TABLE student_entry_state (
+                user_id INTEGER NOT NULL,
+                entry_id INTEGER NOT NULL,
+                confusion_score INTEGER NOT NULL DEFAULT 0,
+                recall_strength INTEGER NOT NULL DEFAULT 0,
+                linked_wrong_answer_count INTEGER NOT NULL DEFAULT 0,
+                review_due_at TEXT
+            );
+            CREATE TABLE student_topic_states (
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                mastery_score INTEGER NOT NULL DEFAULT 0,
+                gap_score INTEGER NOT NULL DEFAULT 0,
+                decay_risk INTEGER NOT NULL DEFAULT 0,
+                trend_state TEXT NOT NULL DEFAULT 'stable',
+                is_blocked INTEGER NOT NULL DEFAULT 0,
+                next_review_at TEXT
+            );
+            CREATE TABLE wrong_answer_diagnoses (
+                id INTEGER PRIMARY KEY,
+                student_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                primary_diagnosis TEXT NOT NULL,
+                recommended_action TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE contrast_pairs (
+                id INTEGER PRIMARY KEY,
+                left_entry_id INTEGER NOT NULL,
+                right_entry_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                trap_strength INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE knowledge_relations (
+                id INTEGER PRIMARY KEY,
+                from_entry_id INTEGER NOT NULL,
+                to_entry_id INTEGER NOT NULL,
+                relation_type TEXT NOT NULL,
+                strength_score INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE questions (
+                id INTEGER PRIMARY KEY,
+                topic_id INTEGER,
+                stem TEXT NOT NULL
+            );
+            CREATE TABLE question_glossary_links (
+                question_id INTEGER NOT NULL,
+                entry_id INTEGER NOT NULL,
+                relation_type TEXT NOT NULL,
+                link_source TEXT NOT NULL,
+                link_reason TEXT,
+                confidence_score INTEGER NOT NULL DEFAULT 0,
+                is_primary INTEGER NOT NULL DEFAULT 0
+            );
+            ",
+        )
+        .expect("schema");
+
+        conn.execute(
+            "INSERT INTO topics (id, name) VALUES (1, 'Quadratic Equations')",
+            [],
+        )
+        .expect("topic");
+        conn.execute(
+            "INSERT INTO knowledge_entries (
+                id, topic_id, entry_type, title, short_text, exam_text, importance_score, difficulty_level, status
+             ) VALUES (
+                101, 1, 'definition', 'Completing the square', 'Convert to a perfect square',
+                'Completing the square lets you rewrite a quadratic into a safer solved form.',
+                9000, 1500, 'active'
+             )",
+            [],
+        )
+        .expect("entry one");
+        conn.execute(
+            "INSERT INTO knowledge_entries (
+                id, topic_id, entry_type, title, short_text, exam_text, importance_score, difficulty_level, status
+             ) VALUES (
+                102, 1, 'formula', 'Quadratic formula', 'Use the discriminant carefully',
+                'Use the quadratic formula when factorisation is unreliable, and check the discriminant before you substitute.',
+                8600, 1800, 'active'
+             )",
+            [],
+        )
+        .expect("entry two");
+        conn.execute(
+            "INSERT INTO knowledge_bundles (id, title, bundle_type, topic_id)
+             VALUES (1, 'Quadratic repair pack', 'repair', 1)",
+            [],
+        )
+        .expect("bundle");
+        conn.execute(
+            "INSERT INTO student_entry_state (
+                user_id, entry_id, confusion_score, recall_strength, linked_wrong_answer_count, review_due_at
+             ) VALUES (42, 101, 7200, 1800, 2, '2026-03-29T09:00:00Z')",
+            [],
+        )
+        .expect("entry state one");
+        conn.execute(
+            "INSERT INTO student_entry_state (
+                user_id, entry_id, confusion_score, recall_strength, linked_wrong_answer_count, review_due_at
+             ) VALUES (42, 102, 3000, 2200, 1, NULL)",
+            [],
+        )
+        .expect("entry state two");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, decay_risk, trend_state, is_blocked, next_review_at
+             ) VALUES (42, 1, 3400, 7100, 6400, 'declining', 0, '2026-03-30T08:00:00Z')",
+            [],
+        )
+        .expect("topic state");
+        conn.execute(
+            "INSERT INTO wrong_answer_diagnoses (
+                id, student_id, topic_id, primary_diagnosis, recommended_action, created_at
+             ) VALUES (
+                1, 42, 1, 'sign confusion', 'Rebuild the sign pattern before you substitute', '2026-03-29T11:00:00Z'
+             )",
+            [],
+        )
+        .expect("diagnosis");
+        conn.execute(
+            "INSERT INTO contrast_pairs (id, left_entry_id, right_entry_id, title, trap_strength)
+             VALUES (1, 101, 102, 'Completing the square vs quadratic formula', 9100)",
+            [],
+        )
+        .expect("contrast pair");
+
+        let program = GlossaryService::new(&conn)
+            .build_personalized_audio_program_for_topic(42, 1, 3)
+            .expect("personalized audio");
+
+        assert_eq!(program.source_type, "topic_personalized");
+        assert_eq!(program.teaching_mode, "repair");
+        assert!(!program.listener_signals.is_empty());
+        assert!(program
+            .contrast_titles
+            .iter()
+            .any(|title| title.contains("Completing the square")));
+        assert!(program
+            .segments
+            .iter()
+            .any(|segment| segment.segment_type == "learner_focus"));
+        assert!(program
+            .segments
+            .iter()
+            .any(|segment| segment.segment_type == "contrast_trap"));
+        assert!(program
+            .segments
+            .iter()
+            .filter_map(|segment| segment.focus_reason.as_ref())
+            .any(|reason| reason.contains("Review is due") || reason.contains("confusion")));
     }
 }

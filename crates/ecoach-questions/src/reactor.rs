@@ -5,10 +5,10 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{
-    GeneratedQuestionDraft, Question, QuestionFamilyChoice, QuestionFamilyHealth,
-    QuestionGenerationRequest, QuestionGenerationRequestInput, QuestionLineageEdge,
-    QuestionLineageGraph, QuestionLineageNode, QuestionOption, QuestionRemediationPlan,
-    QuestionSlotSpec, QuestionVariantMode,
+    GeneratedQuestionDraft, Question, QuestionFamilyChoice, QuestionFamilyGenerationPriority,
+    QuestionFamilyHealth, QuestionGenerationRequest, QuestionGenerationRequestInput,
+    QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode, QuestionOption,
+    QuestionRemediationPlan, QuestionSlotSpec, QuestionVariantMode,
 };
 use crate::service::QuestionService;
 
@@ -85,6 +85,18 @@ impl<'a> QuestionReactor<'a> {
         &self,
         slot_spec: &QuestionSlotSpec,
     ) -> EcoachResult<Option<QuestionFamilyChoice>> {
+        Ok(self
+            .list_family_generation_priorities(slot_spec, 1)?
+            .into_iter()
+            .next()
+            .map(|priority| priority.family_choice))
+    }
+
+    pub fn list_family_generation_priorities(
+        &self,
+        slot_spec: &QuestionSlotSpec,
+        limit: usize,
+    ) -> EcoachResult<Vec<QuestionFamilyGenerationPriority>> {
         let mut statement = self
             .conn
             .prepare(
@@ -100,18 +112,30 @@ impl<'a> QuestionReactor<'a> {
                             WHEN ?4 = '' THEN 0
                             WHEN q.question_format = ?4 THEN 1
                             ELSE 0
-                        END), 0) AS format_match
+                        END), 0) AS format_match,
+                        COALESCE(qfh.freshness_score, 0) AS freshness_score,
+                        COALESCE(qfh.calibration_score, 0) AS calibration_score,
+                        COALESCE(qfh.quality_score, 0) AS quality_score,
+                        COALESCE(qfh.health_status, 'warming') AS health_status,
+                        COALESCE(qfh.recent_attempts, 0) AS recent_attempts,
+                        COALESCE(qfh.misconception_hit_count, 0) AS misconception_hit_count,
+                        COALESCE(qfa.recurrence_score, 0) AS recurrence_score,
+                        COALESCE(qfa.replacement_score, 0) AS replacement_score
                  FROM question_families qf
                  LEFT JOIN questions q ON q.family_id = qf.id AND q.is_active = 1
+                 LEFT JOIN question_family_health qfh ON qfh.family_id = qf.id
+                 LEFT JOIN question_family_analytics qfa ON qfa.family_id = qf.id
                  WHERE qf.subject_id = ?1
                    AND (?2 = 0 OR qf.topic_id = ?5 OR qf.topic_id IS NULL)
-                 GROUP BY qf.id, qf.family_code, qf.family_name, qf.subject_id, qf.topic_id
-                 ORDER BY total_instances DESC, generated_instances ASC, qf.id ASC",
+                 GROUP BY qf.id, qf.family_code, qf.family_name, qf.subject_id, qf.topic_id,
+                          qfh.freshness_score, qfh.calibration_score, qfh.quality_score,
+                          qfh.health_status, qfh.recent_attempts, qfh.misconception_hit_count,
+                          qfa.recurrence_score, qfa.replacement_score",
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        statement
-            .query_row(
+        let rows = statement
+            .query_map(
                 params![
                     slot_spec.subject_id,
                     if slot_spec.topic_id.is_some() { 1 } else { 0 },
@@ -127,27 +151,18 @@ impl<'a> QuestionReactor<'a> {
                     let generated_instances = row.get::<_, i64>(6)?;
                     let cognitive_match = row.get::<_, i64>(7)?;
                     let format_match = row.get::<_, i64>(8)?;
-                    let generated_share = if total_instances > 0 {
-                        (generated_instances * 10_000) / total_instances
-                    } else {
-                        0
-                    };
-                    let generated_penalty =
-                        if generated_share > i64::from(slot_spec.max_generated_share) {
-                            ((generated_share - i64::from(slot_spec.max_generated_share)) / 3)
-                                .min(3_000)
-                        } else {
-                            0
-                        };
-                    let fit_score = clamp_bp(
-                        3_500
-                            + total_instances.min(4) * 700
-                            + cognitive_match * 2_200
-                            + format_match * 1_200
-                            - generated_penalty,
-                    );
-
-                    Ok(QuestionFamilyChoice {
+                    let freshness_score = row.get::<_, i64>(9)?.clamp(0, 10_000) as BasisPoints;
+                    let calibration_score =
+                        row.get::<_, i64>(10)?.clamp(0, 10_000) as BasisPoints;
+                    let quality_score = row.get::<_, i64>(11)?.clamp(0, 10_000) as BasisPoints;
+                    let health_status = row.get::<_, String>(12)?;
+                    let recent_attempts = row.get::<_, i64>(13)?;
+                    let misconception_hit_count = row.get::<_, i64>(14)?;
+                    let recurrence_score =
+                        row.get::<_, i64>(15)?.clamp(0, 10_000) as BasisPoints;
+                    let replacement_score =
+                        row.get::<_, i64>(16)?.clamp(0, 10_000) as BasisPoints;
+                    let family_choice = QuestionFamilyChoice {
                         family_id: row.get(0)?,
                         family_code: row.get(1)?,
                         family_name: row.get(2)?,
@@ -155,12 +170,68 @@ impl<'a> QuestionReactor<'a> {
                         topic_id: row.get(4)?,
                         total_instances,
                         generated_instances,
-                        fit_score,
+                        fit_score: compute_family_fit_score(
+                            total_instances,
+                            generated_instances,
+                            cognitive_match,
+                            format_match,
+                            slot_spec.max_generated_share,
+                        ),
+                    };
+
+                    Ok(QuestionFamilyGenerationPriority {
+                        rationale: generation_priority_rationale(
+                            &health_status,
+                            calibration_score,
+                            replacement_score,
+                            recurrence_score,
+                            recent_attempts,
+                            misconception_hit_count,
+                        ),
+                        recommended_variant_mode: recommended_generation_variant(
+                            &health_status,
+                            calibration_score,
+                            quality_score,
+                            replacement_score,
+                            misconception_hit_count,
+                        )
+                        .to_string(),
+                        priority_score: compute_generation_priority_score(
+                            &family_choice,
+                            freshness_score,
+                            calibration_score,
+                            quality_score,
+                            recurrence_score,
+                            replacement_score,
+                            recent_attempts,
+                            slot_spec.max_generated_share,
+                        ),
+                        family_choice,
+                        health_status,
+                        freshness_score,
+                        calibration_score,
+                        quality_score,
+                        recurrence_score,
+                        replacement_score,
                     })
                 },
             )
-            .optional()
-            .map_err(|err| EcoachError::Storage(err.to_string()))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut priorities = Vec::new();
+        for row in rows {
+            priorities.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        priorities.sort_by(|left, right| {
+            right
+                .priority_score
+                .cmp(&left.priority_score)
+                .then(right.family_choice.fit_score.cmp(&left.family_choice.fit_score))
+                .then(right.replacement_score.cmp(&left.replacement_score))
+                .then(left.family_choice.family_name.cmp(&right.family_choice.family_name))
+        });
+        priorities.truncate(limit.max(1));
+        Ok(priorities)
     }
 
     pub fn recommend_remediation_plan(
@@ -594,25 +665,13 @@ impl<'a> QuestionReactor<'a> {
                     let generated_instances = row.get::<_, i64>(6)?;
                     let cognitive_match = row.get::<_, i64>(7)?;
                     let format_match = row.get::<_, i64>(8)?;
-                    let generated_share = if total_instances > 0 {
-                        (generated_instances * 10_000) / total_instances
-                    } else {
-                        0
-                    };
-                    let generated_penalty =
-                        if generated_share > i64::from(slot_spec.max_generated_share) {
-                            ((generated_share - i64::from(slot_spec.max_generated_share)) / 3)
-                                .min(3_000)
-                        } else {
-                            0
-                        };
-                    let fit_score = clamp_bp(
-                        3_500
-                            + total_instances.min(4) * 700
-                            + cognitive_match * 2_200
-                            + format_match * 1_200
-                            - generated_penalty,
-                    ) as BasisPoints;
+                    let fit_score = compute_family_fit_score(
+                        total_instances,
+                        generated_instances,
+                        cognitive_match,
+                        format_match,
+                        slot_spec.max_generated_share,
+                    );
 
                     Ok(QuestionFamilyChoice {
                         family_id: row.get(0)?,
@@ -667,6 +726,123 @@ fn parse_variant_mode(value: &str) -> EcoachResult<QuestionVariantMode> {
             "unknown reactor variant mode: {}",
             other
         ))),
+    }
+}
+
+fn compute_family_fit_score(
+    total_instances: i64,
+    generated_instances: i64,
+    cognitive_match: i64,
+    format_match: i64,
+    max_generated_share: BasisPoints,
+) -> BasisPoints {
+    let generated_share = if total_instances > 0 {
+        (generated_instances * 10_000) / total_instances
+    } else {
+        0
+    };
+    let generated_penalty = if generated_share > i64::from(max_generated_share) {
+        ((generated_share - i64::from(max_generated_share)) / 3).min(3_000)
+    } else {
+        0
+    };
+    clamp_bp(
+        3_500
+            + total_instances.min(4) * 700
+            + cognitive_match * 2_200
+            + format_match * 1_200
+            - generated_penalty,
+    ) as BasisPoints
+}
+
+fn compute_generation_priority_score(
+    family_choice: &QuestionFamilyChoice,
+    freshness_score: BasisPoints,
+    calibration_score: BasisPoints,
+    quality_score: BasisPoints,
+    recurrence_score: BasisPoints,
+    replacement_score: BasisPoints,
+    recent_attempts: i64,
+    max_generated_share: BasisPoints,
+) -> BasisPoints {
+    let generated_share = if family_choice.total_instances > 0 {
+        ((family_choice.generated_instances * 10_000) / family_choice.total_instances).clamp(0, 10_000)
+    } else {
+        0
+    };
+    let generation_headroom = i64::from(max_generated_share)
+        .saturating_sub(generated_share)
+        .clamp(0, 10_000);
+    let calibration_gap = (10_000 - i64::from(calibration_score)).clamp(0, 10_000);
+    let quality_gap = (10_000 - i64::from(quality_score)).clamp(0, 10_000);
+    let freshness_gap = (10_000 - i64::from(freshness_score)).clamp(0, 10_000);
+    let inventory_pressure = match family_choice.total_instances {
+        count if count <= 0 => 9_200,
+        1 => 8_200,
+        2 => 7_000,
+        3 => 5_600,
+        _ => 3_200,
+    };
+    let evidence_pressure = if recent_attempts <= 0 {
+        5_200
+    } else if recent_attempts == 1 {
+        3_600
+    } else {
+        1_200
+    };
+
+    clamp_bp(
+        ((0.30 * family_choice.fit_score as f64)
+            + (0.22 * replacement_score as f64)
+            + (0.14 * recurrence_score as f64)
+            + (0.14 * calibration_gap as f64)
+            + (0.10 * inventory_pressure as f64)
+            + (0.05 * freshness_gap as f64)
+            + (0.03 * quality_gap as f64)
+            + (0.02 * generation_headroom as f64))
+            .round() as i64
+            + evidence_pressure,
+    ) as BasisPoints
+}
+
+fn recommended_generation_variant(
+    health_status: &str,
+    calibration_score: BasisPoints,
+    quality_score: BasisPoints,
+    replacement_score: BasisPoints,
+    misconception_hit_count: i64,
+) -> &'static str {
+    if misconception_hit_count > 0 || health_status == "fragile" {
+        QuestionVariantMode::MisconceptionProbe.as_str()
+    } else if calibration_score < 5_800 {
+        QuestionVariantMode::RepresentationShift.as_str()
+    } else if quality_score < 6_200 {
+        QuestionVariantMode::Rescue.as_str()
+    } else if replacement_score >= 7_200 {
+        QuestionVariantMode::Stretch.as_str()
+    } else {
+        QuestionVariantMode::Isomorphic.as_str()
+    }
+}
+
+fn generation_priority_rationale(
+    health_status: &str,
+    calibration_score: BasisPoints,
+    replacement_score: BasisPoints,
+    recurrence_score: BasisPoints,
+    recent_attempts: i64,
+    misconception_hit_count: i64,
+) -> String {
+    if misconception_hit_count > 0 {
+        "Student evidence shows misconception hits in this family, so probe variants should be kept ready.".to_string()
+    } else if health_status == "fragile" {
+        "Family health is fragile, so new variants should prioritize repair and calibration.".to_string()
+    } else if recent_attempts < 2 || calibration_score < 5_800 {
+        "Family has thin calibration evidence, so it should be expanded with fresh traced variants.".to_string()
+    } else if replacement_score >= 7_200 && recurrence_score >= 5_000 {
+        "Past-paper pressure suggests this family is a comeback risk and should stay warm.".to_string()
+    } else {
+        "Family is still useful for coverage, but it does not carry the strongest urgency signal.".to_string()
     }
 }
 
@@ -1104,6 +1280,84 @@ mod tests {
         assert_eq!(plan.request_kind, "remediation");
         assert_eq!(plan.source_question_id, Some(question_id));
         assert!(plan.rationale.contains("misconception"));
+    }
+
+    #[test]
+    fn generation_priorities_surface_fragile_comeback_families_first() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE code = 'FRA' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+
+        conn.execute(
+            "INSERT INTO question_families (id, subject_id, topic_id, family_code, family_name)
+             VALUES (9001, ?1, ?2, 'FRA_REMEDY', 'Fraction Repair Family')",
+            params![subject_id, topic_id],
+        )
+        .expect("repair family should insert");
+        conn.execute(
+            "INSERT INTO questions (
+                id, subject_id, topic_id, family_id, stem, question_format, explanation_text,
+                difficulty_level, estimated_time_seconds, marks, is_active, source_type,
+                primary_cognitive_demand
+             ) VALUES (
+                900100, ?1, ?2, 9001, 'Which fraction equals one half?', 'mcq',
+                'Repair explanation', 4200, 75, 1, 1, 'authored', 'recognition'
+             )",
+            params![subject_id, topic_id],
+        )
+        .expect("repair question should insert");
+        conn.execute(
+            "INSERT INTO question_family_health (
+                family_id, total_instances, generated_instances, active_instances, recent_attempts,
+                recent_correct_attempts, avg_response_time_ms, misconception_hit_count,
+                freshness_score, calibration_score, quality_score, health_status
+             ) VALUES (9001, 1, 0, 1, 1, 0, 62000, 1, 3000, 2800, 4200, 'fragile')",
+            [],
+        )
+        .expect("repair health should insert");
+        conn.execute(
+            "INSERT INTO question_family_analytics (
+                family_id, recurrence_score, coappearance_score, replacement_score
+             ) VALUES (9001, 7600, 5400, 8800)",
+            [],
+        )
+        .expect("repair analytics should insert");
+
+        let reactor = QuestionReactor::new(&conn);
+        let priorities = reactor
+            .list_family_generation_priorities(
+                &QuestionSlotSpec {
+                    subject_id,
+                    topic_id: Some(topic_id),
+                    target_cognitive_demand: Some("recognition".to_string()),
+                    target_question_format: Some("mcq".to_string()),
+                    max_generated_share: 7_500,
+                },
+                3,
+            )
+            .expect("generation priorities should compute");
+
+        assert!(!priorities.is_empty());
+        assert_eq!(priorities[0].family_choice.family_id, 9001);
+        assert_eq!(
+            priorities[0].recommended_variant_mode,
+            QuestionVariantMode::MisconceptionProbe.as_str()
+        );
+        assert!(priorities[0].priority_score >= priorities[0].family_choice.fit_score);
     }
 
     fn open_test_database() -> Connection {

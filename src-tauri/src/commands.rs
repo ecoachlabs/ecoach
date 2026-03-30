@@ -40,11 +40,11 @@ use ecoach_commands::reporting_commands::{
 };
 use ecoach_commands::student_commands::LearnerTruthDto;
 use ecoach_commands::{
-    AppState, CommandError, assessment_commands, attempt_commands, coach_commands,
-    content_commands, curriculum_commands, diagnostic_commands, dtos::*, game_commands,
-    identity_commands, library_commands, memory_commands, mock_commands, premium_commands,
-    question_commands, readiness_commands, repair_commands, reporting_commands, session_commands,
-    student_commands, traps_commands,
+    assessment_commands, attempt_commands, coach_commands, content_commands, curriculum_commands,
+    diagnostic_commands, dtos::*, game_commands, identity_commands, intake_commands,
+    library_commands, memory_commands, mock_commands, premium_commands, question_commands,
+    readiness_commands, repair_commands, reporting_commands, session_commands, student_commands,
+    traps_commands, AppState, CommandError,
 };
 use ecoach_content::{ParseCandidateInput, SourceUploadInput};
 use ecoach_games::{
@@ -367,6 +367,51 @@ pub fn run_next_foundry_job(
     subject_id: Option<i64>,
 ) -> Result<Option<FoundryJobDto>, CommandError> {
     content_commands::run_next_foundry_job(&state, subject_id)
+}
+
+// Intake
+
+#[tauri::command]
+pub fn create_submission_bundle(
+    state: State<'_, AppState>,
+    student_id: i64,
+    title: String,
+) -> Result<SubmissionBundleDto, CommandError> {
+    intake_commands::create_submission_bundle(&state, student_id, title)
+}
+
+#[tauri::command]
+pub fn add_submission_bundle_file(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+    file_name: String,
+    file_path: String,
+) -> Result<i64, CommandError> {
+    intake_commands::add_submission_bundle_file(&state, bundle_id, file_name, file_path)
+}
+
+#[tauri::command]
+pub fn reconstruct_submission_bundle(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+) -> Result<BundleProcessReportDto, CommandError> {
+    intake_commands::reconstruct_submission_bundle(&state, bundle_id)
+}
+
+#[tauri::command]
+pub fn get_submission_bundle_report(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+) -> Result<BundleProcessReportDto, CommandError> {
+    intake_commands::get_submission_bundle_report(&state, bundle_id)
+}
+
+#[tauri::command]
+pub fn list_submission_bundle_insights(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+) -> Result<Vec<ExtractedInsightDto>, CommandError> {
+    intake_commands::list_submission_bundle_insights(&state, bundle_id)
 }
 
 // Sessions and attempt pipeline
@@ -788,12 +833,39 @@ pub fn build_glossary_audio_program_for_topic(
 }
 
 #[tauri::command]
+pub fn build_personalized_glossary_audio_program_for_topic(
+    state: State<'_, AppState>,
+    student_id: i64,
+    topic_id: i64,
+    limit: usize,
+) -> Result<GlossaryAudioProgramDto, CommandError> {
+    library_commands::build_personalized_glossary_audio_program_for_topic(
+        &state, student_id, topic_id, limit,
+    )
+}
+
+#[tauri::command]
 pub fn build_glossary_audio_program_for_question(
     state: State<'_, AppState>,
     question_id: i64,
     limit: usize,
 ) -> Result<GlossaryAudioProgramDto, CommandError> {
     library_commands::build_glossary_audio_program_for_question(&state, question_id, limit)
+}
+
+#[tauri::command]
+pub fn build_personalized_glossary_audio_program_for_question(
+    state: State<'_, AppState>,
+    student_id: i64,
+    question_id: i64,
+    limit: usize,
+) -> Result<GlossaryAudioProgramDto, CommandError> {
+    library_commands::build_personalized_glossary_audio_program_for_question(
+        &state,
+        student_id,
+        question_id,
+        limit,
+    )
 }
 
 #[tauri::command]

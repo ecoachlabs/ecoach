@@ -6,8 +6,8 @@ use ecoach_diagnostics::{
     DiagnosticBattery, DiagnosticEngine, DiagnosticMode, DiagnosticPhaseItem, DiagnosticPhasePlan,
     DiagnosticResult, DiagnosticRootCauseHypothesis, DiagnosticTopicAnalytics,
 };
-use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, clamp_bp};
-use rusqlite::{Connection, OptionalExtension, params};
+use ecoach_substrate::{clamp_bp, BasisPoints, DomainEvent, EcoachError};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 

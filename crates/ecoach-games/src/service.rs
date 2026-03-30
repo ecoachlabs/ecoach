@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use chrono::Utc;
-use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, clamp_bp, to_bp};
-use rusqlite::{Connection, OptionalExtension, params};
-use serde_json::{Value, json};
+use ecoach_substrate::{clamp_bp, to_bp, BasisPoints, DomainEvent, EcoachError, EcoachResult};
+use rusqlite::{params, Connection, OptionalExtension};
+use serde_json::{json, Value};
 
 use crate::models::{
     ContrastPairSummary, GameAnswerResult, GameLeaderboardEntry, GameSession, GameSummary,
@@ -688,6 +688,131 @@ fn clues_len_from_payload(payload: &Value) -> i64 {
         .unwrap_or(1)
 }
 
+fn dominant_confusion_reason(profile: &BTreeMap<String, i64>) -> Option<String> {
+    profile
+        .iter()
+        .max_by(|left, right| left.1.cmp(right.1).then_with(|| left.0.cmp(right.0)))
+        .map(|(reason, _)| reason.clone())
+}
+
+fn build_traps_remediation_actions(
+    accuracy_bp: BasisPoints,
+    confusion_score: BasisPoints,
+    weakest_lane: Option<&str>,
+    timed_out_count: i64,
+    dominant_confusion_reason: Option<&str>,
+    recommended_next_mode: &str,
+) -> Vec<String> {
+    let mut actions = Vec::new();
+
+    if confusion_score >= 7000 || accuracy_bp < 6000 {
+        actions.push(format!(
+            "Run {} next so the pair is rebuilt before speed is emphasized.",
+            recommended_next_mode
+        ));
+    }
+    if let Some(lane) = weakest_lane {
+        actions.push(format!(
+            "Re-teach the {} lane explicitly before the next mixed contrast round.",
+            lane
+        ));
+    }
+    if timed_out_count > 0 {
+        actions.push(
+            "Slow the next contrast set down and require calm discrimination before timed work."
+                .to_string(),
+        );
+    }
+    if let Some(reason_code) = dominant_confusion_reason {
+        actions.push(format!(
+            "Target the dominant confusion pattern: {}.",
+            reason_code.replace('_', " ")
+        ));
+    }
+    if actions.is_empty() {
+        actions.push(
+            "Advance to the next contrast mode and keep the pair in mixed review.".to_string(),
+        );
+    }
+
+    actions.truncate(4);
+    actions
+}
+
+fn build_game_focus_signals(
+    game_type: &str,
+    accuracy_bp: BasisPoints,
+    average_response_time_ms: i64,
+    misconception_hits: bool,
+    abandoned: bool,
+) -> Vec<String> {
+    let mut signals = Vec::new();
+
+    if abandoned {
+        signals.push("abandoned_session".to_string());
+    }
+    if accuracy_bp < 5500 {
+        signals.push("accuracy_fragile".to_string());
+    } else if accuracy_bp >= 8000 {
+        signals.push("high_accuracy".to_string());
+    }
+    if average_response_time_ms >= 5_500 {
+        signals.push("slow_decision_cycle".to_string());
+    } else if average_response_time_ms > 0 && average_response_time_ms <= 2_000 {
+        signals.push("fast_confident_execution".to_string());
+    }
+    if misconception_hits {
+        signals.push("misconception_pressure".to_string());
+    }
+    if game_type == GameType::Mindstack.as_str() {
+        signals.push("stack_discipline".to_string());
+    } else if game_type == GameType::TugOfWar.as_str() {
+        signals.push("competitive_pressure".to_string());
+    } else if game_type == GameType::Traps.as_str() {
+        signals.push("contrast_discrimination".to_string());
+    }
+
+    signals.truncate(4);
+    signals
+}
+
+fn recommend_game_next_step(
+    game_type: &str,
+    focus_signals: &[String],
+    misconception_hits: bool,
+) -> String {
+    if focus_signals
+        .iter()
+        .any(|signal| signal == "accuracy_fragile")
+    {
+        return if game_type == GameType::Traps.as_str() {
+            "Return to a calmer contrast-remediation pass before another speed round.".to_string()
+        } else {
+            "Shift back to repair-focused practice before replaying the game at full pressure."
+                .to_string()
+        };
+    }
+    if misconception_hits {
+        return "Revisit the linked misconception explanation before the next attempt.".to_string();
+    }
+    if focus_signals
+        .iter()
+        .any(|signal| signal == "slow_decision_cycle")
+    {
+        return "Repeat the mode with a smaller timer and keep the same difficulty surface."
+            .to_string();
+    }
+    "Advance to the next pressure layer or mixed set while the signal is clean.".to_string()
+}
+
+fn count_correct_ratio(correct_count: i64, total_count: i64) -> BasisPoints {
+    if total_count > 0 {
+        to_bp(correct_count as f64 / total_count as f64)
+    } else {
+        0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
@@ -783,13 +908,23 @@ mod tests {
 
         assert_eq!(state.total_discriminations, 4);
         assert_eq!(review.rounds.len(), 4);
-        assert!(
-            review.rounds.iter().any(|round| {
-                round.confusion_reason_code.as_deref() == Some("feature_confusion")
-            })
-        );
+        assert!(review
+            .rounds
+            .iter()
+            .any(|round| { round.confusion_reason_code.as_deref() == Some("feature_confusion") }));
         assert!(review.weakest_lane.is_some());
+        assert!(!review.remediation_actions.is_empty());
+        assert!(!review.recommended_next_mode.is_empty());
+        assert_eq!(
+            review.dominant_confusion_reason.as_deref(),
+            Some("feature_confusion")
+        );
         assert_eq!(summary.rounds_played, 4);
+        assert!(summary
+            .focus_signals
+            .iter()
+            .any(|signal| signal == "contrast_discrimination"));
+        assert!(summary.recommended_next_step.is_some());
     }
 
     #[test]
@@ -899,6 +1034,10 @@ mod tests {
         assert!(final_state.board_height >= 15);
         assert_eq!(summary.rounds_played, 8);
         assert!(summary.misconception_hits >= 1);
+        assert!(summary
+            .focus_signals
+            .iter()
+            .any(|signal| signal == "misconception_pressure"));
         assert!(last_result.session_complete);
         assert_eq!(last_result.effect_type, "stack_overflow_game_over");
     }
@@ -962,6 +1101,10 @@ mod tests {
         assert_eq!(final_state.position, 10);
         assert!(final_state.opponent_difficulty > 5000);
         assert_eq!(summary.rounds_played, 5);
+        assert!(summary
+            .focus_signals
+            .iter()
+            .any(|signal| signal == "competitive_pressure"));
         assert_eq!(last_result.effect_type, "tug_win");
         assert!(last_result.session_complete);
     }
@@ -1298,6 +1441,40 @@ impl<'a> GamesService<'a> {
                 }),
             ),
         )?;
+
+        if session_complete {
+            let correct_answers = self.count_correct_game_answers(input.game_session_id)?;
+            let accuracy_bp = count_correct_ratio(correct_answers, round_number);
+            let focus_signals = build_game_focus_signals(
+                &session.game_type,
+                accuracy_bp,
+                input.response_time_ms,
+                misconception_triggered,
+                false,
+            );
+            let recommended_next_step = recommend_game_next_step(
+                &session.game_type,
+                &focus_signals,
+                misconception_triggered,
+            );
+            self.append_event(
+                "game",
+                DomainEvent::new(
+                    "game.session_completed",
+                    input.game_session_id.to_string(),
+                    json!({
+                        "student_id": session.student_id,
+                        "subject_id": session.subject_id,
+                        "game_type": session.game_type,
+                        "score": new_score,
+                        "rounds_played": round_number,
+                        "accuracy_bp": accuracy_bp,
+                        "focus_signals": focus_signals,
+                        "recommended_next_step": recommended_next_step,
+                    }),
+                ),
+            )?;
+        }
 
         Ok(GameAnswerResult {
             is_correct,
@@ -1708,6 +1885,59 @@ impl<'a> GamesService<'a> {
             ),
         )?;
 
+        if session_complete {
+            let completed_correct =
+                metadata.correct_discriminations + if is_correct { 1 } else { 0 };
+            let completed_total = metadata.total_discriminations + 1;
+            let accuracy_bp = if completed_total > 0 {
+                to_bp(completed_correct as f64 / completed_total as f64)
+            } else {
+                0
+            };
+            let metrics =
+                self.load_student_contrast_metrics(session.student_id, metadata.pair_id)?;
+            let recommended_next_mode = resolve_recommended_traps_mode(
+                metrics.difference_drill_bp,
+                metrics.similarity_trap_bp,
+                metrics.know_difference_bp,
+                metrics.which_is_which_bp,
+                metrics.unmask_bp,
+                metrics.confusion_score,
+            )
+            .to_string();
+            let dominant_confusion_reason =
+                dominant_confusion_reason(&metrics.confusion_reason_profile);
+            let remediation_actions = build_traps_remediation_actions(
+                accuracy_bp,
+                metrics.confusion_score,
+                metrics.weakest_lane.as_deref(),
+                metrics.timed_out_count,
+                dominant_confusion_reason.as_deref(),
+                &recommended_next_mode,
+            );
+            self.append_event(
+                "game",
+                DomainEvent::new(
+                    "traps.session_completed",
+                    input.game_session_id.to_string(),
+                    json!({
+                        "student_id": session.student_id,
+                        "subject_id": session.subject_id,
+                        "pair_id": metadata.pair_id,
+                        "pair_title": metadata.pair_title,
+                        "mode": metadata.mode,
+                        "accuracy_bp": accuracy_bp,
+                        "confusion_score": metrics.confusion_score,
+                        "weakest_lane": metrics.weakest_lane,
+                        "timed_out_count": metrics.timed_out_count,
+                        "recommended_next_mode": recommended_next_mode,
+                        "dominant_confusion_reason": dominant_confusion_reason,
+                        "remediation_actions": remediation_actions,
+                    }),
+                ),
+            )?;
+        }
+
         Ok(TrapRoundResult {
             round_id: input.round_id,
             round_number: round.round_number,
@@ -1949,6 +2179,25 @@ impl<'a> GamesService<'a> {
         };
         let contrast_metrics =
             self.load_student_contrast_metrics(session.student_id, metadata.pair_id)?;
+        let recommended_next_mode = resolve_recommended_traps_mode(
+            contrast_metrics.difference_drill_bp,
+            contrast_metrics.similarity_trap_bp,
+            contrast_metrics.know_difference_bp,
+            contrast_metrics.which_is_which_bp,
+            contrast_metrics.unmask_bp,
+            contrast_metrics.confusion_score,
+        )
+        .to_string();
+        let dominant_confusion_reason =
+            dominant_confusion_reason(&contrast_metrics.confusion_reason_profile);
+        let remediation_actions = build_traps_remediation_actions(
+            accuracy_bp,
+            contrast_metrics.confusion_score,
+            contrast_metrics.weakest_lane.as_deref(),
+            timed_out_count,
+            dominant_confusion_reason.as_deref(),
+            &recommended_next_mode,
+        );
 
         Ok(TrapSessionReview {
             session_id: game_session_id,
@@ -1960,6 +2209,9 @@ impl<'a> GamesService<'a> {
             confusion_score: contrast_metrics.confusion_score,
             weakest_lane: contrast_metrics.weakest_lane,
             timed_out_count,
+            recommended_next_mode,
+            dominant_confusion_reason,
+            remediation_actions,
             rounds,
         })
     }
@@ -2036,6 +2288,18 @@ impl<'a> GamesService<'a> {
             })
     }
 
+    fn count_correct_game_answers(&self, game_session_id: i64) -> EcoachResult<i64> {
+        self.conn
+            .query_row(
+                "SELECT COALESCE(SUM(was_correct), 0)
+                 FROM game_answer_events
+                 WHERE game_session_id = ?1",
+                [game_session_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))
+    }
+
     pub fn get_summary(&self, game_session_id: i64) -> EcoachResult<GameSummary> {
         let session = self.get_session(game_session_id)?;
         if session.session_state != "completed" && session.session_state != "abandoned" {
@@ -2070,6 +2334,15 @@ impl<'a> GamesService<'a> {
             _ => "perfect_run",
         }
         .to_string();
+        let focus_signals = build_game_focus_signals(
+            &session.game_type,
+            accuracy_bp,
+            avg_time_ms,
+            misconception_hits > 0,
+            session.session_state == "abandoned",
+        );
+        let recommended_next_step =
+            recommend_game_next_step(&session.game_type, &focus_signals, misconception_hits > 0);
 
         Ok(GameSummary {
             session_id: game_session_id,
@@ -2081,6 +2354,8 @@ impl<'a> GamesService<'a> {
             average_response_time_ms: avg_time_ms,
             misconception_hits,
             performance_label,
+            focus_signals,
+            recommended_next_step: Some(recommended_next_step),
         })
     }
 

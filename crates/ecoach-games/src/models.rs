@@ -168,6 +168,9 @@ pub struct GameSummary {
     pub average_response_time_ms: i64,
     pub misconception_hits: i64,
     pub performance_label: String,
+    #[serde(default)]
+    pub focus_signals: Vec<String>,
+    pub recommended_next_step: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -282,6 +285,10 @@ pub struct TrapSessionReview {
     pub confusion_score: BasisPoints,
     pub weakest_lane: Option<String>,
     pub timed_out_count: i64,
+    pub recommended_next_mode: String,
+    pub dominant_confusion_reason: Option<String>,
+    #[serde(default)]
+    pub remediation_actions: Vec<String>,
     pub rounds: Vec<TrapReviewRound>,
 }
 

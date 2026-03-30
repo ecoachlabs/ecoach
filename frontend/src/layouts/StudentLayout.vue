@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
+import ErrorBoundary from '@/components/layout/ErrorBoundary.vue'
 
 const ui = useUiStore()
 const auth = useAuthStore()
@@ -140,7 +141,9 @@ function logout() {
 
     <!-- Main -->
     <main class="flex-1 overflow-y-auto" :style="{ backgroundColor: 'var(--bg)' }">
-      <RouterView />
+      <ErrorBoundary>
+        <RouterView />
+      </ErrorBoundary>
     </main>
   </div>
 </template>

@@ -150,16 +150,42 @@ const router = createRouter({
   routes,
 })
 
-// Route guard: redirect to correct portal based on role
+// Route guard: protect portals by role
 router.beforeEach((to, _from, next) => {
   // Auth routes are always accessible
   if (to.path === '/' || to.path.startsWith('/pin')) {
     return next()
   }
 
-  // For now, allow all navigation -- role checking will be added
-  // when auth store is wired to the backend
+  // Check auth
+  const authStore = useAuthStoreForGuard()
+  if (!authStore.isAuthenticated) {
+    return next('/')
+  }
+
+  // Check role matches portal
+  const role = authStore.role
+  if (to.path.startsWith('/student') && role !== 'student') {
+    return next(role === 'parent' ? '/parent' : role === 'admin' ? '/admin' : '/')
+  }
+  if (to.path.startsWith('/parent') && role !== 'parent') {
+    return next(role === 'student' ? '/student' : role === 'admin' ? '/admin' : '/')
+  }
+  if (to.path.startsWith('/admin') && role !== 'admin') {
+    return next(role === 'student' ? '/student' : role === 'parent' ? '/parent' : '/')
+  }
+
   next()
 })
+
+// Auth store access for guards
+import { useAuthStore as _useAuthStore } from '@/stores/auth'
+function useAuthStoreForGuard() {
+  try {
+    return _useAuthStore()
+  } catch {
+    return { isAuthenticated: false, role: null }
+  }
+}
 
 export default router

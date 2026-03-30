@@ -1,10 +1,10 @@
 use chrono::{Datelike, Duration, Utc};
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult};
-use rusqlite::{Connection, OptionalExtension, params};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 
 use crate::dashboard::{DashboardService, StudentDashboard, SubjectSummary};
-use crate::strategy::{ReportingStrategySummary, load_strategy_summary};
+use crate::strategy::{load_strategy_summary, ReportingStrategySummary};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParentDashboardSnapshot {
@@ -536,9 +536,15 @@ impl<'a> ParentInsightService<'a> {
         } else {
             self.conn
                 .execute(
-                    "INSERT INTO risk_flags (student_id, severity, title, description, status)
-                     VALUES (?1, ?2, ?3, ?4, 'active')",
-                    params![student_id, risk.severity, risk.title, risk.description],
+                    "INSERT INTO risk_flags (student_id, severity, title, description, status, created_at)
+                     VALUES (?1, ?2, ?3, ?4, 'active', ?5)",
+                    params![
+                        student_id,
+                        risk.severity,
+                        risk.title,
+                        risk.description,
+                        Utc::now().to_rfc3339(),
+                    ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
         }
@@ -738,6 +744,26 @@ impl<'a> ParentInsightService<'a> {
                     urgency: "medium".to_string(),
                     title: "Follow the premium household guidance".to_string(),
                     detail: action.clone(),
+                });
+            }
+            if let Some(signal) = strategy_summary.recent_focus_signals.first() {
+                actions.push(HouseholdActionItem {
+                    urgency: "medium".to_string(),
+                    title: "Respond to the latest learner signal".to_string(),
+                    detail: format!(
+                        "Recent evidence is showing {}, so keep the next study block narrow and supportive.",
+                        signal.replace('_', " ")
+                    ),
+                });
+            }
+            if let Some(mode) = strategy_summary.recommended_game_modes.first() {
+                actions.push(HouseholdActionItem {
+                    urgency: "low".to_string(),
+                    title: "Use the next remediation mode intentionally".to_string(),
+                    detail: format!(
+                        "If the learner opens games, {} is the recommended next mode for the current weakness.",
+                        mode
+                    ),
                 });
             }
         }

@@ -1,5 +1,5 @@
 use ecoach_premium::{PremiumService, PremiumStrategySnapshot};
-use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult};
+use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, FabricOrchestrationSummary};
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 
@@ -11,8 +11,14 @@ pub struct ReportingStrategySummary {
     pub overall_readiness_band: String,
     pub current_phase: Option<String>,
     pub priority_topics: Vec<String>,
+    #[serde(default)]
+    pub recent_focus_signals: Vec<String>,
+    #[serde(default)]
+    pub recommended_game_modes: Vec<String>,
     pub coach_actions: Vec<String>,
     pub household_actions: Vec<String>,
+    #[serde(default)]
+    pub orchestration: FabricOrchestrationSummary,
 }
 
 pub fn load_strategy_summary(
@@ -39,7 +45,10 @@ fn from_snapshot(snapshot: PremiumStrategySnapshot) -> ReportingStrategySummary 
             .into_iter()
             .map(|topic| topic.topic_name)
             .collect(),
+        recent_focus_signals: snapshot.recent_focus_signals,
+        recommended_game_modes: snapshot.recommended_game_modes,
         coach_actions: snapshot.coach_actions,
         household_actions: snapshot.household_actions,
+        orchestration: snapshot.orchestration,
     }
 }

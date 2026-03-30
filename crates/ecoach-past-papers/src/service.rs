@@ -4,7 +4,8 @@ use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
 
 use crate::models::{
-    PastPaperFamilyAnalytics, PastPaperInverseSignal, PastPaperSet, PastPaperSetSummary,
+    PastPaperComebackSignal, PastPaperFamilyAnalytics, PastPaperInverseSignal, PastPaperSet,
+    PastPaperSetSummary,
 };
 
 pub struct PastPapersService<'a> {
@@ -335,6 +336,85 @@ impl<'a> PastPapersService<'a> {
         Ok(signals)
     }
 
+    pub fn list_comeback_candidate_families(
+        &self,
+        subject_id: i64,
+        topic_id: Option<i64>,
+        limit: usize,
+    ) -> EcoachResult<Vec<PastPaperComebackSignal>> {
+        let analytics = self.list_high_frequency_families(subject_id, topic_id, limit.max(8))?;
+        let latest_subject_year = self
+            .conn
+            .query_row(
+                "SELECT MAX(exam_year) FROM past_paper_sets WHERE subject_id = ?1",
+                [subject_id],
+                |row| row.get::<_, Option<i64>>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .unwrap_or(0);
+        let earliest_subject_year = self
+            .conn
+            .query_row(
+                "SELECT MIN(exam_year) FROM past_paper_sets WHERE subject_id = ?1",
+                [subject_id],
+                |row| row.get::<_, Option<i64>>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .unwrap_or(latest_subject_year);
+        let year_span = (latest_subject_year - earliest_subject_year).max(1);
+
+        let scored = analytics
+            .into_iter()
+            .map(|item| {
+                let dormant_years =
+                    latest_subject_year.saturating_sub(item.last_seen_year.unwrap_or(latest_subject_year));
+                let dormant_score = scale_score(dormant_years, year_span);
+                let paper_breadth_score = scale_score(item.paper_count, 6);
+                let historical_strength_score = clamp_bp(
+                    ((0.60 * item.recurrence_score as f64)
+                        + (0.25 * item.coappearance_score as f64)
+                        + (0.15 * paper_breadth_score as f64))
+                        .round() as i64,
+                );
+                let comeback_score = clamp_bp(
+                    ((f64::from(historical_strength_score) * f64::from(dormant_score)) / 10_000.0)
+                        .round() as i64
+                        + (i64::from(item.replacement_score) / 4),
+                ) as BasisPoints;
+                PastPaperComebackSignal {
+                    family_id: item.family_id,
+                    family_code: item.family_code,
+                    family_name: item.family_name,
+                    topic_id: item.topic_id,
+                    comeback_score,
+                    historical_strength_score,
+                    dormant_years,
+                    recurrence_score: item.recurrence_score,
+                    replacement_score: item.replacement_score,
+                    paper_count: item.paper_count,
+                    last_seen_year: item.last_seen_year,
+                    rationale: comeback_rationale(
+                        dormant_years,
+                        historical_strength_score,
+                        item.last_seen_year,
+                    ),
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let mut signals = scored;
+        signals.sort_by(|left, right| {
+            right
+                .comeback_score
+                .cmp(&left.comeback_score)
+                .then(right.historical_strength_score.cmp(&left.historical_strength_score))
+                .then(right.dormant_years.cmp(&left.dormant_years))
+                .then(left.family_name.cmp(&right.family_name))
+        });
+        signals.truncate(limit.max(1));
+        Ok(signals)
+    }
+
     fn load_family_counts(&self, subject_id: i64) -> EcoachResult<BTreeMap<i64, FamilyAggregate>> {
         let mut family_map = BTreeMap::new();
         let mut statement = self
@@ -471,6 +551,23 @@ fn inverse_rationale(
     }
 }
 
+fn comeback_rationale(
+    dormant_years: i64,
+    historical_strength_score: BasisPoints,
+    last_seen_year: Option<i64>,
+) -> String {
+    if dormant_years >= 2 && historical_strength_score >= 7_000 {
+        format!(
+            "Historically strong family that has been absent for {} years since {:?}, so it is primed for a comeback.",
+            dormant_years, last_seen_year
+        )
+    } else if dormant_years >= 1 {
+        "This family has gone quiet recently despite meaningful historical strength, so it deserves comeback monitoring.".to_string()
+    } else {
+        "Recent paper history keeps this family visible, but its comeback urgency is lower than truly dormant patterns.".to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use rusqlite::{Connection, params};
@@ -492,6 +589,23 @@ mod tests {
         assert_eq!(inverse[0].family_id, 10);
         assert!(inverse[0].inverse_pressure_score >= inverse[1].inverse_pressure_score);
         assert!(inverse[0].rationale.contains("Historically recurring"));
+    }
+
+    #[test]
+    fn comeback_candidates_reward_historical_strength_plus_dormancy() {
+        let conn = Connection::open_in_memory().expect("in-memory db should open");
+        seed_schema(&conn);
+        seed_family_history(&conn);
+
+        let service = PastPapersService::new(&conn);
+        let comeback = service
+            .list_comeback_candidate_families(1, None, 2)
+            .expect("comeback candidates should compute");
+
+        assert_eq!(comeback.len(), 2);
+        assert_eq!(comeback[0].family_id, 10);
+        assert!(comeback[0].dormant_years >= comeback[1].dormant_years);
+        assert!(comeback[0].rationale.contains("comeback"));
     }
 
     fn seed_schema(conn: &Connection) {

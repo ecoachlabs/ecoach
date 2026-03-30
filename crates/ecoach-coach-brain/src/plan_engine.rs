@@ -498,6 +498,13 @@ impl<'a> PlanEngine<'a> {
                 "student_id": mission.student_id,
             }),
         ))?;
+        self.apply_mission_feedback_to_plan(
+            mission_id,
+            &mission,
+            &outcome,
+            &mission_status,
+            prior_evidence_count,
+        )?;
 
         self.get_pending_mission_review(mission.student_id)?
             .ok_or_else(|| EcoachError::NotFound("mission memory was not persisted".to_string()))
@@ -700,6 +707,117 @@ impl<'a> PlanEngine<'a> {
             steps,
             success_criteria,
         })
+    }
+
+    fn apply_mission_feedback_to_plan(
+        &self,
+        mission_id: i64,
+        mission: &MissionContext,
+        outcome: &SessionOutcome,
+        mission_status: &str,
+        prior_evidence_count: i64,
+    ) -> EcoachResult<()> {
+        let has_open_plan: bool = self
+            .conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1
+                    FROM coach_plans
+                    WHERE student_id = ?1 AND status = 'active'
+                 )",
+                [mission.student_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            == 1;
+        if !has_open_plan {
+            return Ok(());
+        }
+
+        let timed_collapse = outcome.timed_accuracy.unwrap_or(10_000) < 5_500;
+        let rewrite_reason = if mission_status == "repair_required" {
+            Some("mission_repair_required")
+        } else if mission_status == "review_due" && (timed_collapse || prior_evidence_count >= 2) {
+            Some("mission_regression_requires_replan")
+        } else {
+            None
+        };
+        if let Some(rewrite_reason) = rewrite_reason {
+            let rewrite = self.rewrite_active_plan(mission.student_id, rewrite_reason)?;
+            self.append_runtime_event(DomainEvent::new(
+                "plan.adjusted_from_mission",
+                rewrite.new_plan_id.to_string(),
+                json!({
+                    "mission_id": mission_id,
+                    "student_id": mission.student_id,
+                    "topic_id": mission.topic_id,
+                    "mission_status": mission_status,
+                    "mode": "rewrite",
+                    "reason": rewrite_reason,
+                    "previous_plan_id": rewrite.previous_plan_id,
+                    "new_plan_id": rewrite.new_plan_id,
+                }),
+            ))?;
+            return Ok(());
+        }
+
+        let carryover_minutes = match mission_status {
+            "review_due" => {
+                if mission.activity_type == "memory_reactivation" {
+                    20
+                } else {
+                    15
+                }
+            }
+            "partial" => 10,
+            _ => 0,
+        };
+        if carryover_minutes == 0 {
+            return Ok(());
+        }
+
+        let phase_override = if mission.activity_type == "memory_reactivation" {
+            Some("review_day")
+        } else {
+            None
+        };
+        let updated_rows = self
+            .conn
+            .execute(
+                "UPDATE coach_plan_days
+                 SET carryover_minutes = carryover_minutes + ?1,
+                     target_minutes = target_minutes + ?1,
+                     phase = COALESCE(?2, phase)
+                 WHERE id = (
+                    SELECT cpd.id
+                    FROM coach_plan_days cpd
+                    INNER JOIN coach_plans cp ON cp.id = cpd.plan_id
+                    WHERE cp.student_id = ?3
+                      AND cp.status = 'active'
+                      AND cpd.date > date('now')
+                    ORDER BY cpd.date ASC, cpd.id ASC
+                    LIMIT 1
+                 )",
+                params![carryover_minutes, phase_override, mission.student_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if updated_rows > 0 {
+            self.append_runtime_event(DomainEvent::new(
+                "plan.adjusted_from_mission",
+                mission_id.to_string(),
+                json!({
+                    "mission_id": mission_id,
+                    "student_id": mission.student_id,
+                    "topic_id": mission.topic_id,
+                    "mission_status": mission_status,
+                    "mode": "carryover",
+                    "carryover_minutes": carryover_minutes,
+                    "phase_override": phase_override,
+                }),
+            ))?;
+        }
+
+        Ok(())
     }
 
     fn load_plan_carryover_topic_ids(
@@ -1741,6 +1859,112 @@ mod tests {
         assert!(mission_plan_day_id > 0);
         assert_eq!(mission_memory.review_status, "pending");
         assert_eq!(pending_review_count, 1);
+    }
+
+    #[test]
+    fn complete_mission_rewrites_plan_after_repeated_failure() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, status, first_run)
+             VALUES ('student', 'Yaw', 'hash', 'salt', 'active', 0)",
+            [],
+        )
+        .expect("student should insert");
+        let student_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO student_profiles (account_id, preferred_subjects, daily_study_budget_minutes)
+             VALUES (?1, '[\"MATH\"]', 60)",
+            [student_id],
+        )
+        .expect("student profile should insert");
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_id: i64 = conn
+            .query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
+                row.get(0)
+            })
+            .expect("topic should exist");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, priority_score, fragility_score, speed_score
+             ) VALUES (?1, ?2, 2800, 9100, 9600, 7200, 3800)",
+            params![student_id, topic_id],
+        )
+        .expect("topic state should insert");
+
+        let engine = PlanEngine::new(&conn);
+        let exam_date = Utc::now()
+            .date_naive()
+            .checked_add_days(Days::new(18))
+            .expect("future date should exist")
+            .to_string();
+        let original_plan_id = engine
+            .generate_plan(student_id, "BECE", &exam_date, 60)
+            .expect("plan should generate");
+        let mission_id = engine
+            .generate_today_mission(student_id)
+            .expect("mission should generate");
+
+        conn.execute(
+            "INSERT INTO coach_session_evidence (
+                mission_id, student_id, subject_id, topic_id, activity_type, attempt_count,
+                correct_count, accuracy, avg_latency_ms, misconception_tags, timed_accuracy
+             ) VALUES (NULL, ?1, ?2, ?3, 'repair', 6, 2, 3300, 18000, '[]', 3300)",
+            params![student_id, subject_id, topic_id],
+        )
+        .expect("prior coach evidence should insert");
+        conn.execute(
+            "INSERT INTO sessions (
+                student_id, session_type, subject_id, topic_ids, question_count, total_questions,
+                is_timed, status, started_at, completed_at, answered_questions, correct_questions,
+                accuracy_score, avg_response_time_ms
+             ) VALUES (?1, 'coach_mission', ?2, ?3, 4, 4, 0, 'completed', datetime('now'), datetime('now'), 4, 1, 2500, 19000)",
+            params![student_id, subject_id, format!("[{}]", topic_id)],
+        )
+        .expect("session should insert");
+        let session_id = conn.last_insert_rowid();
+
+        engine
+            .complete_mission_from_session(mission_id, Some(session_id))
+            .expect("mission should complete and trigger replanning");
+
+        let stale_plan_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM coach_plans WHERE student_id = ?1 AND status = 'stale'",
+                [student_id],
+                |row| row.get(0),
+            )
+            .expect("stale plan count should query");
+        let new_active_plan_id: i64 = conn
+            .query_row(
+                "SELECT id FROM coach_plans WHERE student_id = ?1 AND status = 'active' ORDER BY id DESC LIMIT 1",
+                [student_id],
+                |row| row.get(0),
+            )
+            .expect("new active plan should exist");
+        let adjustment_event_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events
+                 WHERE event_type = 'plan.adjusted_from_mission'
+                   AND json_extract(payload_json, '$.mission_id') = ?1",
+                [mission_id],
+                |row| row.get(0),
+            )
+            .expect("adjustment event should query");
+
+        assert_eq!(stale_plan_count, 1);
+        assert_ne!(new_active_plan_id, original_plan_id);
+        assert_eq!(adjustment_event_count, 1);
     }
 
     #[test]

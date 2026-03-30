@@ -1,13 +1,14 @@
 use ecoach_questions::{
     QuestionSelectionRequest, QuestionSelector, QuestionService, SelectedQuestion,
 };
-use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult};
+use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension, params};
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 
 use crate::models::{
-    DiagnosticBattery, DiagnosticMode, DiagnosticPhaseCode, DiagnosticPhaseItem,
-    DiagnosticPhasePlan, DiagnosticResult, DiagnosticRootCauseHypothesis, DiagnosticTopicAnalytics,
+    DiagnosticBattery, DiagnosticCauseEvolution, DiagnosticLongitudinalSummary, DiagnosticMode,
+    DiagnosticPhaseCode, DiagnosticPhaseItem, DiagnosticPhasePlan, DiagnosticResult,
+    DiagnosticRootCauseHypothesis, DiagnosticTopicAnalytics, TopicDiagnosticLongitudinalSignal,
     TopicDiagnosticResult, WrongAnswerDiagnosis,
 };
 
@@ -22,6 +23,26 @@ struct DiagnosticPhaseTemplate {
     time_limit_seconds: Option<i64>,
     timed: bool,
     evidence_weight: i64,
+}
+
+#[derive(Debug, Clone)]
+struct PreviousDiagnosticContext {
+    diagnostic_id: i64,
+    completed_at: Option<String>,
+    overall_readiness: Option<BasisPoints>,
+}
+
+#[derive(Debug, Clone)]
+struct HistoricalTopicSnapshot {
+    diagnostic_id: i64,
+    topic_id: i64,
+    topic_name: String,
+    mastery_score: BasisPoints,
+    pressure_score: BasisPoints,
+    flexibility_score: BasisPoints,
+    classification: String,
+    top_hypothesis_code: Option<String>,
+    top_hypothesis_confidence: Option<BasisPoints>,
 }
 
 impl<'a> DiagnosticEngine<'a> {
@@ -372,6 +393,8 @@ impl<'a> DiagnosticEngine<'a> {
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
+        let previous_context =
+            self.load_previous_completed_diagnostic_context(student_id, subject_id, diagnostic_id)?;
         let mut topic_results = Vec::new();
         let mut recommended_next_actions = Vec::<String>::new();
         for row in rows {
@@ -380,6 +403,11 @@ impl<'a> DiagnosticEngine<'a> {
             let analytics =
                 self.compute_topic_analytics(diagnostic_id, student_id, topic_id, &topic_name)?;
             self.persist_topic_analytics(&analytics)?;
+            let previous_topic = if let Some(context) = previous_context.as_ref() {
+                self.load_historical_topic_snapshot(context.diagnostic_id, topic_id)?
+            } else {
+                None
+            };
             let hypotheses = self.build_root_cause_hypotheses(
                 diagnostic_id,
                 student_id,
@@ -387,6 +415,14 @@ impl<'a> DiagnosticEngine<'a> {
                 &topic_name,
                 &analytics,
             )?;
+            let longitudinal_signal = build_topic_longitudinal_signal(
+                previous_context.as_ref(),
+                previous_topic.as_ref(),
+                &analytics,
+                &hypotheses,
+            );
+            let hypotheses =
+                enrich_hypotheses_with_longitudinal_context(hypotheses, &analytics, longitudinal_signal.as_ref());
             self.persist_root_cause_hypotheses(diagnostic_id, topic_id, &hypotheses)?;
             recommended_next_actions.push(analytics.recommended_action.clone());
             for hypothesis in &hypotheses {
@@ -402,6 +438,7 @@ impl<'a> DiagnosticEngine<'a> {
                 flexibility_score: analytics.flexibility_score,
                 stability_score: analytics.stability_score,
                 classification: analytics.classification,
+                longitudinal_signal,
             });
         }
 
@@ -424,11 +461,14 @@ impl<'a> DiagnosticEngine<'a> {
         }
         .to_string();
 
+        let longitudinal_summary =
+            build_longitudinal_summary(previous_context.as_ref(), overall_readiness, &topic_results);
         let result = DiagnosticResult {
             overall_readiness,
             readiness_band,
             topic_results,
             recommended_next_actions: unique_actions(recommended_next_actions),
+            longitudinal_summary,
         };
 
         let serialized = serde_json::to_string(&result)
@@ -440,7 +480,70 @@ impl<'a> DiagnosticEngine<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
+        if let Some(summary) = result.longitudinal_summary.as_ref() {
+            self.append_runtime_event(DomainEvent::new(
+                "diagnostic.longitudinal_compared",
+                diagnostic_id.to_string(),
+                json!({
+                    "diagnostic_id": diagnostic_id,
+                    "student_id": student_id,
+                    "subject_id": subject_id,
+                    "previous_diagnostic_id": summary.previous_diagnostic_id,
+                    "overall_readiness_delta": summary.overall_readiness_delta,
+                    "trend": summary.trend,
+                    "improved_topic_count": summary.improved_topic_count,
+                    "declined_topic_count": summary.declined_topic_count,
+                    "persistent_cause_count": summary.persistent_cause_count,
+                    "shifted_cause_count": summary.shifted_cause_count,
+                    "new_cause_count": summary.new_cause_count,
+                }),
+            ))?;
+        }
+
         Ok(result)
+    }
+
+    pub fn get_diagnostic_result(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Option<DiagnosticResult>> {
+        let result_json = self
+            .conn
+            .query_row(
+                "SELECT result_json
+                 FROM diagnostic_instances
+                 WHERE id = ?1",
+                [diagnostic_id],
+                |row| row.get::<_, Option<String>>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .flatten();
+        let Some(result_json) = result_json else {
+            return Ok(None);
+        };
+        let result = serde_json::from_str::<DiagnosticResult>(&result_json)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        Ok(Some(result))
+    }
+
+    pub fn get_longitudinal_summary(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Option<DiagnosticLongitudinalSummary>> {
+        Ok(self
+            .get_diagnostic_result(diagnostic_id)?
+            .and_then(|result| result.longitudinal_summary))
+    }
+
+    pub fn list_cause_evolution(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Vec<DiagnosticCauseEvolution>> {
+        Ok(self
+            .get_longitudinal_summary(diagnostic_id)?
+            .map(|summary| summary.cause_evolution)
+            .unwrap_or_default())
     }
 
     pub fn list_topic_analytics(
@@ -846,6 +949,161 @@ impl<'a> DiagnosticEngine<'a> {
             diagnoses.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
         }
         Ok(diagnoses)
+    }
+
+    fn load_previous_completed_diagnostic_context(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        current_diagnostic_id: i64,
+    ) -> EcoachResult<Option<PreviousDiagnosticContext>> {
+        let row = self
+            .conn
+            .query_row(
+                "SELECT id, completed_at, result_json
+                 FROM diagnostic_instances
+                 WHERE student_id = ?1
+                   AND subject_id = ?2
+                   AND status = 'completed'
+                   AND id <> ?3
+                 ORDER BY COALESCE(completed_at, started_at) DESC, id DESC
+                 LIMIT 1",
+                params![student_id, subject_id, current_diagnostic_id],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, Option<String>>(1)?,
+                        row.get::<_, Option<String>>(2)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let Some((diagnostic_id, completed_at, result_json)) = row else {
+            return Ok(None);
+        };
+        let overall_readiness = if let Some(result_json) = result_json.as_deref() {
+            serde_json::from_str::<DiagnosticResult>(result_json)
+                .ok()
+                .map(|result| result.overall_readiness)
+                .or_else(|| self.load_diagnostic_overall_readiness(diagnostic_id).ok().flatten())
+        } else {
+            self.load_diagnostic_overall_readiness(diagnostic_id)?
+        };
+
+        Ok(Some(PreviousDiagnosticContext {
+            diagnostic_id,
+            completed_at,
+            overall_readiness,
+        }))
+    }
+
+    fn load_diagnostic_overall_readiness(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Option<BasisPoints>> {
+        self.conn
+            .query_row(
+                "SELECT CAST(ROUND(AVG(mastery_score)) AS INTEGER)
+                 FROM diagnostic_topic_analytics
+                 WHERE diagnostic_id = ?1",
+                [diagnostic_id],
+                |row| row.get::<_, Option<i64>>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+            .map(|value| value.flatten().map(|score| score as BasisPoints))
+    }
+
+    fn load_historical_topic_snapshot(
+        &self,
+        diagnostic_id: i64,
+        topic_id: i64,
+    ) -> EcoachResult<Option<HistoricalTopicSnapshot>> {
+        let row = self
+            .conn
+            .query_row(
+                "SELECT dta.diagnostic_id, dta.topic_id, t.name, dta.mastery_score,
+                        dta.pressure_score, dta.flexibility_score, dta.classification
+                 FROM diagnostic_topic_analytics dta
+                 INNER JOIN topics t ON t.id = dta.topic_id
+                 WHERE dta.diagnostic_id = ?1 AND dta.topic_id = ?2",
+                params![diagnostic_id, topic_id],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, BasisPoints>(3)?,
+                        row.get::<_, BasisPoints>(4)?,
+                        row.get::<_, BasisPoints>(5)?,
+                        row.get::<_, String>(6)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let Some((
+            diagnostic_id,
+            topic_id,
+            topic_name,
+            mastery_score,
+            pressure_score,
+            flexibility_score,
+            classification,
+        )) = row else {
+            return Ok(None);
+        };
+
+        let top_hypothesis = self
+            .conn
+            .query_row(
+                "SELECT hypothesis_code, confidence_score
+                 FROM diagnostic_root_cause_hypotheses
+                 WHERE diagnostic_id = ?1 AND topic_id = ?2
+                 ORDER BY confidence_score DESC, id ASC
+                 LIMIT 1",
+                params![diagnostic_id, topic_id],
+                |row| Ok((Some(row.get::<_, String>(0)?), Some(row.get::<_, BasisPoints>(1)?))),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .unwrap_or((None, None));
+
+        Ok(Some(HistoricalTopicSnapshot {
+            diagnostic_id,
+            topic_id,
+            topic_name,
+            mastery_score,
+            pressure_score,
+            flexibility_score,
+            classification,
+            top_hypothesis_code: top_hypothesis.0,
+            top_hypothesis_confidence: top_hypothesis.1,
+        }))
+    }
+
+    fn append_runtime_event(&self, event: DomainEvent) -> EcoachResult<()> {
+        let payload_json = serde_json::to_string(&event.payload)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO runtime_events (
+                    event_id, event_type, aggregate_kind, aggregate_id, trace_id, payload_json, occurred_at
+                 ) VALUES (?1, ?2, 'diagnostic', ?3, ?4, ?5, ?6)",
+                params![
+                    event.event_id,
+                    event.event_type,
+                    event.aggregate_id,
+                    event.trace_id,
+                    payload_json,
+                    event.occurred_at.to_rfc3339(),
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
     }
 
     fn topic_phase_accuracy(

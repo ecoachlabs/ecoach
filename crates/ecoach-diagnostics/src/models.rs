@@ -88,6 +88,8 @@ pub struct TopicDiagnosticResult {
     pub flexibility_score: BasisPoints,
     pub stability_score: BasisPoints,
     pub classification: String,
+    #[serde(default)]
+    pub longitudinal_signal: Option<TopicDiagnosticLongitudinalSignal>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +114,50 @@ pub struct DiagnosticResult {
     pub readiness_band: String,
     pub topic_results: Vec<TopicDiagnosticResult>,
     pub recommended_next_actions: Vec<String>,
+    #[serde(default)]
+    pub longitudinal_summary: Option<DiagnosticLongitudinalSummary>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TopicDiagnosticLongitudinalSignal {
+    pub previous_diagnostic_id: Option<i64>,
+    pub previous_completed_at: Option<String>,
+    pub previous_classification: Option<String>,
+    pub previous_mastery_score: Option<BasisPoints>,
+    pub mastery_delta: Option<i64>,
+    pub pressure_delta: Option<i64>,
+    pub flexibility_delta: Option<i64>,
+    pub trend: String,
+    #[serde(default)]
+    pub cause_evolution: Option<DiagnosticCauseEvolution>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticCauseEvolution {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub current_hypothesis_code: Option<String>,
+    pub previous_hypothesis_code: Option<String>,
+    pub evolution_status: String,
+    pub recurrence_count: i64,
+    pub confidence_delta: Option<i64>,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticLongitudinalSummary {
+    pub previous_diagnostic_id: Option<i64>,
+    pub previous_completed_at: Option<String>,
+    pub overall_readiness_delta: Option<i64>,
+    pub trend: String,
+    pub improved_topic_count: usize,
+    pub declined_topic_count: usize,
+    pub stable_topic_count: usize,
+    pub persistent_cause_count: usize,
+    pub shifted_cause_count: usize,
+    pub new_cause_count: usize,
+    pub top_regressions: Vec<String>,
+    pub cause_evolution: Vec<DiagnosticCauseEvolution>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -61,6 +61,12 @@ fn main() {
             commands::fail_foundry_job,
             commands::run_foundry_job,
             commands::run_next_foundry_job,
+            // Intake
+            commands::create_submission_bundle,
+            commands::add_submission_bundle_file,
+            commands::reconstruct_submission_bundle,
+            commands::get_submission_bundle_report,
+            commands::list_submission_bundle_insights,
             // Sessions
             commands::start_practice_session,
             commands::compose_custom_test,
@@ -116,7 +122,9 @@ fn main() {
             commands::list_glossary_bundles_for_topic,
             commands::list_glossary_entries_for_question,
             commands::build_glossary_audio_program_for_topic,
+            commands::build_personalized_glossary_audio_program_for_topic,
             commands::build_glossary_audio_program_for_question,
+            commands::build_personalized_glossary_audio_program_for_question,
             commands::build_teach_action_plan,
             commands::list_topic_relationship_hints,
             // Memory

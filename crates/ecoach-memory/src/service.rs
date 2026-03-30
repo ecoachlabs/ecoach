@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use chrono::{Duration, Utc};
 use ecoach_substrate::{DomainEvent, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
@@ -1056,12 +1058,21 @@ impl<'a> MemoryService<'a> {
         let queue = self.build_review_queue(student_id, queue_limit)?;
         let summaries = self.list_topic_summaries(student_id, limit.max(6))?;
         let dashboard = self.get_memory_dashboard(student_id)?;
+        let now = Utc::now().to_rfc3339();
+        let repair_outcomes = self.list_recent_repair_outcomes(student_id, limit.max(8) * 2)?;
 
         let mut sessions = Vec::new();
         for summary in summaries {
             let topic_items: Vec<&MemoryReviewQueueItem> = queue
                 .iter()
-                .filter(|item| item.topic_id == Some(summary.topic_id))
+                .filter(|item| {
+                    item.topic_id == Some(summary.topic_id)
+                        && (self.is_due_now(item.due_at.as_deref(), &now)
+                            || matches!(
+                                item.memory_state.as_str(),
+                                "collapsed" | "fading" | "at_risk" | "fragile" | "rebuilding"
+                            ))
+                })
                 .collect();
             if topic_items.is_empty()
                 && summary.overdue_reviews == 0
@@ -1087,7 +1098,7 @@ impl<'a> MemoryService<'a> {
                 .collect::<Vec<_>>();
             let due_count = topic_items
                 .iter()
-                .filter(|item| item.due_at.is_some())
+                .filter(|item| self.is_due_now(item.due_at.as_deref(), &now))
                 .count() as i64;
             let fragile_count = topic_items
                 .iter()
@@ -1098,15 +1109,20 @@ impl<'a> MemoryService<'a> {
                     )
                 })
                 .count() as i64;
+            let repair_outcome = repair_outcomes.get(&summary.topic_id);
             let urgency_band =
-                self.return_loop_urgency(&summary, &topic_items, due_count, fragile_count);
+                self.return_loop_urgency(&summary, &topic_items, due_count, fragile_count, repair_outcome);
+            let action_type =
+                self.repair_adjusted_action(&summary, &topic_items, &action_type, repair_outcome);
             let estimated_minutes = self.return_loop_minutes(
                 &action_type,
                 due_count,
                 fragile_count,
                 summary.collapsed_items,
+                repair_outcome,
             );
-            let reason = self.return_loop_reason(&summary, &topic_items, &action_type);
+            let reason =
+                self.return_loop_reason(&summary, &topic_items, &action_type, repair_outcome);
 
             sessions.push(MemoryReturnSession {
                 topic_id: Some(summary.topic_id),
@@ -1206,6 +1222,10 @@ impl<'a> MemoryService<'a> {
         .to_string()
     }
 
+    fn is_due_now(&self, due_at: Option<&str>, now: &str) -> bool {
+        due_at.is_some_and(|due| due <= now)
+    }
+
     fn topic_action_for_summary(&self, summary: &TopicMemorySummary) -> &'static str {
         if summary.collapsed_items > 0 {
             "rebuild_foundation"
@@ -1226,7 +1246,27 @@ impl<'a> MemoryService<'a> {
         topic_items: &[&MemoryReviewQueueItem],
         due_count: i64,
         fragile_count: i64,
+        repair_outcome: Option<&RepairOutcomeSignal>,
     ) -> String {
+        if let Some(repair_outcome) = repair_outcome {
+            if repair_outcome.outcome == "failed" {
+                if summary.collapsed_items > 0
+                    || due_count >= 2
+                    || repair_outcome.accuracy_score.unwrap_or(0) < 3000
+                {
+                    return "critical".to_string();
+                }
+                return "high".to_string();
+            }
+            if repair_outcome.outcome == "success"
+                && summary.collapsed_items == 0
+                && due_count == 0
+                && fragile_count <= 1
+                && repair_outcome.accuracy_score.unwrap_or(0) >= 7500
+            {
+                return "maintenance".to_string();
+            }
+        }
         if summary.collapsed_items > 0 || due_count >= 3 {
             return "critical".to_string();
         }
@@ -1249,6 +1289,7 @@ impl<'a> MemoryService<'a> {
         due_count: i64,
         fragile_count: i64,
         collapsed_count: i64,
+        repair_outcome: Option<&RepairOutcomeSignal>,
     ) -> i64 {
         let base = match action_type {
             "rebuild_foundation" => 20,
@@ -1258,8 +1299,18 @@ impl<'a> MemoryService<'a> {
             "retention_check" => 10,
             _ => 8,
         };
-        (base + due_count.min(4) * 3 + fragile_count.min(3) * 2 + collapsed_count.min(2) * 4)
-            .min(30)
+        let outcome_adjustment = match repair_outcome.map(|item| item.outcome.as_str()) {
+            Some("failed") => 6,
+            Some("mixed") => 3,
+            Some("success") if action_type == "retention_check" => -4,
+            _ => 0,
+        };
+        (base
+            + due_count.min(4) * 3
+            + fragile_count.min(3) * 2
+            + collapsed_count.min(2) * 4
+            + outcome_adjustment)
+            .clamp(6, 30)
     }
 
     fn return_loop_reason(
@@ -1267,7 +1318,26 @@ impl<'a> MemoryService<'a> {
         summary: &TopicMemorySummary,
         topic_items: &[&MemoryReviewQueueItem],
         action_type: &str,
+        repair_outcome: Option<&RepairOutcomeSignal>,
     ) -> String {
+        if let Some(repair_outcome) = repair_outcome {
+            if repair_outcome.outcome == "failed" {
+                return format!(
+                    "{} had a recent repair session that did not hold ({}), so the return loop should retry the repair before moving on.",
+                    summary.topic_name,
+                    repair_outcome.next_action_hint.replace('_', " ")
+                );
+            }
+            if repair_outcome.outcome == "success"
+                && action_type == "retention_check"
+                && summary.collapsed_items == 0
+            {
+                return format!(
+                    "{} recently stabilized in repair work, so the next return should be a lighter retention check instead of another heavy repair block.",
+                    summary.topic_name
+                );
+            }
+        }
         if summary.collapsed_items > 0 {
             return format!(
                 "{} has collapsed memory traces, so the next return should rebuild the foundation before more drilling.",
@@ -1294,6 +1364,109 @@ impl<'a> MemoryService<'a> {
             summary.topic_name,
             action_type.replace('_', " ")
         )
+    }
+
+    fn repair_adjusted_action(
+        &self,
+        summary: &TopicMemorySummary,
+        _topic_items: &[&MemoryReviewQueueItem],
+        base_action: &str,
+        repair_outcome: Option<&RepairOutcomeSignal>,
+    ) -> String {
+        let Some(repair_outcome) = repair_outcome else {
+            return base_action.to_string();
+        };
+        match repair_outcome.outcome.as_str() {
+            "failed" => {
+                if summary.collapsed_items > 0 {
+                    "rebuild_foundation".to_string()
+                } else {
+                    "urgent_recall_repair".to_string()
+                }
+            }
+            "mixed" if matches!(base_action, "retention_check" | "maintenance_review") => {
+                "guided_reinforcement".to_string()
+            }
+            "success"
+                if summary.collapsed_items == 0
+                    && summary.overdue_reviews <= 1
+                    && base_action != "interference_repair" =>
+            {
+                "retention_check".to_string()
+            }
+            _ => base_action.to_string(),
+        }
+    }
+
+    fn list_recent_repair_outcomes(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<BTreeMap<i64, RepairOutcomeSignal>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT re.payload_json
+                 FROM runtime_events re
+                 INNER JOIN sessions s
+                    ON re.aggregate_kind = 'session'
+                   AND re.aggregate_id = CAST(s.id AS TEXT)
+                 WHERE s.student_id = ?1
+                   AND s.session_type = 'gap_repair'
+                   AND re.event_type = 'session.interpreted'
+                 ORDER BY re.occurred_at DESC, re.id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, limit as i64], |row| row.get::<_, String>(0))
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut outcomes = BTreeMap::new();
+        for row in rows {
+            let payload_json = row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let payload: serde_json::Value = serde_json::from_str(&payload_json)
+                .map_err(|e| EcoachError::Serialization(e.to_string()))?;
+            let Some(topic_id) = payload
+                .get("topic_summaries")
+                .and_then(|value| value.as_array())
+                .and_then(|items| items.first())
+                .and_then(|item| item.get("topic_id"))
+                .and_then(|value| value.as_i64())
+            else {
+                continue;
+            };
+            if outcomes.contains_key(&topic_id) {
+                continue;
+            }
+            let outcome = payload
+                .get("repair_outcome")
+                .and_then(|value| value.as_str())
+                .unwrap_or("mixed")
+                .to_string();
+            let next_action_hint = payload
+                .get("next_action_hint")
+                .and_then(|value| value.as_str())
+                .unwrap_or("repair_retry")
+                .to_string();
+            let accuracy_score = payload
+                .get("topic_summaries")
+                .and_then(|value| value.as_array())
+                .and_then(|items| items.first())
+                .and_then(|item| item.get("accuracy_score"))
+                .and_then(|value| value.as_u64())
+                .map(|value| value as u16);
+            outcomes.insert(
+                topic_id,
+                RepairOutcomeSignal {
+                    outcome,
+                    next_action_hint,
+                    accuracy_score,
+                },
+            );
+        }
+        Ok(outcomes)
     }
 
     fn urgency_rank(&self, urgency_band: &str) -> i64 {
@@ -1325,4 +1498,10 @@ impl<'a> MemoryService<'a> {
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
         Ok(())
     }
+}
+
+struct RepairOutcomeSignal {
+    outcome: String,
+    next_action_hint: String,
+    accuracy_score: Option<u16>,
 }

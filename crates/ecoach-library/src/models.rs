@@ -70,6 +70,10 @@ pub struct ContinueLearningCard {
     pub mission_id: Option<i64>,
     pub session_id: Option<i64>,
     pub route: String,
+    pub reason: Option<String>,
+    pub priority_score: Option<BasisPoints>,
+    pub recommended_bundle_ids: Vec<i64>,
+    pub related_topic_names: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,6 +103,7 @@ pub struct LibraryHomeSnapshot {
     pub fading_concept_count: i64,
     pub untouched_saved_count: i64,
     pub continue_card: Option<ContinueLearningCard>,
+    pub learning_paths: Vec<PersonalizedLearningPath>,
     pub generated_shelves: Vec<GeneratedLibraryShelf>,
     pub saved_questions: Vec<SavedQuestionCard>,
 }
@@ -109,6 +114,47 @@ pub struct TopicRelationshipHint {
     pub from_title: String,
     pub to_title: String,
     pub explanation: String,
+    pub hop_count: i64,
+    pub strength_score: BasisPoints,
+    pub focus_topic_id: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LearningPathStep {
+    pub sequence_no: i64,
+    pub step_type: String,
+    pub title: String,
+    pub detail: String,
+    pub topic_id: Option<i64>,
+    pub bundle_id: Option<i64>,
+    pub question_id: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersonalizedLearningPath {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub activity_type: String,
+    pub priority_score: BasisPoints,
+    pub reason: String,
+    pub mastery_score: i64,
+    pub gap_score: i64,
+    pub recommended_bundle_ids: Vec<i64>,
+    pub recommended_bundle_titles: Vec<String>,
+    pub related_topic_names: Vec<String>,
+    pub relationship_hints: Vec<TopicRelationshipHint>,
+    pub steps: Vec<LearningPathStep>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TeachActionStep {
+    pub sequence_no: i64,
+    pub step_type: String,
+    pub title: String,
+    pub prompt: String,
+    pub linked_question_ids: Vec<i64>,
+    pub linked_entry_ids: Vec<i64>,
+    pub focus_labels: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -117,10 +163,18 @@ pub struct TeachActionPlan {
     pub topic_id: i64,
     pub topic_name: String,
     pub action_type: String,
+    pub readiness_band: String,
+    pub support_intensity: String,
+    pub mastery_score: i64,
+    pub gap_score: i64,
+    pub fragile_memory_count: i64,
     pub primary_prompt: String,
+    pub diagnostic_focuses: Vec<String>,
+    pub recent_diagnoses: Vec<String>,
     pub linked_question_ids: Vec<i64>,
     pub linked_entry_ids: Vec<i64>,
     pub linked_entry_titles: Vec<String>,
     pub target_node_titles: Vec<String>,
     pub relationship_hints: Vec<TopicRelationshipHint>,
+    pub recommended_sequence: Vec<TeachActionStep>,
 }

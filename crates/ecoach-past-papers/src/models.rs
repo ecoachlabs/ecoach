@@ -45,3 +45,19 @@ pub struct PastPaperInverseSignal {
     pub last_seen_year: Option<i64>,
     pub rationale: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PastPaperComebackSignal {
+    pub family_id: i64,
+    pub family_code: String,
+    pub family_name: String,
+    pub topic_id: Option<i64>,
+    pub comeback_score: BasisPoints,
+    pub historical_strength_score: BasisPoints,
+    pub dormant_years: i64,
+    pub recurrence_score: BasisPoints,
+    pub replacement_score: BasisPoints,
+    pub paper_count: i64,
+    pub last_seen_year: Option<i64>,
+    pub rationale: String,
+}

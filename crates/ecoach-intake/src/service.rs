@@ -2,11 +2,12 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
     path::{Path, PathBuf},
+    process::Command,
 };
 
 use ecoach_substrate::{EcoachError, EcoachResult};
-use rusqlite::{Connection, OptionalExtension, params};
-use serde_json::{Value, json};
+use rusqlite::{params, Connection, OptionalExtension};
+use serde_json::{json, Value};
 
 use crate::models::{
     AcquisitionEvidenceCandidate, AcquisitionJobReport, BundleFile, BundleProcessReport,
@@ -122,10 +123,14 @@ impl<'a> IntakeService<'a> {
         }
 
         let document_groups = reconstruct_document_groups(&analyses);
+        let bundle_alignment_payload = build_bundle_alignment_payload(&document_groups);
         let reconstructed_document_count = document_groups.len() as i64;
         let unresolved_alignment_count = count_unresolved_alignment_documents(&document_groups);
-        let bundle_overview = summarize_bundle(&analyses, document_groups.len());
-        let final_status = if !bundle_overview.review_reasons.is_empty() {
+        let bundle_overview = summarize_bundle(&analyses, &document_groups, document_groups.len());
+        let final_status = if !bundle_overview.review_reasons.is_empty()
+            || bundle_overview.needs_confirmation
+            || unresolved_alignment_count > 0
+        {
             "review_required"
         } else {
             "completed"
@@ -142,6 +147,10 @@ impl<'a> IntakeService<'a> {
                 "review_priority": &bundle_overview.review_priority,
                 "paired_assessment_document_count": bundle_overview.paired_assessment_document_count,
                 "ocr_recovered_file_count": bundle_overview.ocr_recovered_file_count,
+                "aligned_question_pair_count": bundle_overview.aligned_question_pair_count,
+                "high_confidence_alignment_count": bundle_overview.high_confidence_alignment_count,
+                "medium_confidence_alignment_count": bundle_overview.medium_confidence_alignment_count,
+                "low_confidence_alignment_count": bundle_overview.low_confidence_alignment_count,
                 "needs_confirmation": bundle_overview.needs_confirmation,
                 "unresolved_alignment_count": unresolved_alignment_count,
             },
@@ -164,6 +173,11 @@ impl<'a> IntakeService<'a> {
             "bundle_reconstruction",
             &bundle_reconstruction_payload,
         )?;
+        self.insert_insight(
+            bundle_id,
+            "question_answer_alignment",
+            &bundle_alignment_payload,
+        )?;
         let overview_payload = json!({
             "file_count": files.len(),
             "detected_topics": &bundle_overview.detected_topics,
@@ -179,6 +193,10 @@ impl<'a> IntakeService<'a> {
             "paired_assessment_document_count": bundle_overview.paired_assessment_document_count,
             "reconstruction_confidence_score": bundle_overview.reconstruction_confidence_score,
             "extracted_question_block_count": bundle_overview.extracted_question_block_count,
+            "aligned_question_pair_count": bundle_overview.aligned_question_pair_count,
+            "high_confidence_alignment_count": bundle_overview.high_confidence_alignment_count,
+            "medium_confidence_alignment_count": bundle_overview.medium_confidence_alignment_count,
+            "low_confidence_alignment_count": bundle_overview.low_confidence_alignment_count,
             "score_signal_count": bundle_overview.score_signal_count,
             "remark_signal_count": bundle_overview.remark_signal_count,
             "needs_confirmation": bundle_overview.needs_confirmation,
@@ -258,6 +276,10 @@ impl<'a> IntakeService<'a> {
         let mut paired_assessment_document_count = 0i64;
         let mut reconstruction_confidence_score = 0i64;
         let mut extracted_question_block_count = 0i64;
+        let mut aligned_question_pair_count = 0i64;
+        let mut high_confidence_alignment_count = 0i64;
+        let mut medium_confidence_alignment_count = 0i64;
+        let mut low_confidence_alignment_count = 0i64;
         let mut score_signal_count = 0i64;
         let mut remark_signal_count = 0i64;
         let mut needs_confirmation = false;
@@ -361,6 +383,34 @@ impl<'a> IntakeService<'a> {
                 }
                 if let Some(count) = insight
                     .payload
+                    .get("aligned_question_pair_count")
+                    .and_then(Value::as_i64)
+                {
+                    aligned_question_pair_count = count;
+                }
+                if let Some(count) = insight
+                    .payload
+                    .get("high_confidence_alignment_count")
+                    .and_then(Value::as_i64)
+                {
+                    high_confidence_alignment_count = count;
+                }
+                if let Some(count) = insight
+                    .payload
+                    .get("medium_confidence_alignment_count")
+                    .and_then(Value::as_i64)
+                {
+                    medium_confidence_alignment_count = count;
+                }
+                if let Some(count) = insight
+                    .payload
+                    .get("low_confidence_alignment_count")
+                    .and_then(Value::as_i64)
+                {
+                    low_confidence_alignment_count = count;
+                }
+                if let Some(count) = insight
+                    .payload
                     .get("score_signal_count")
                     .and_then(Value::as_i64)
                 {
@@ -431,6 +481,10 @@ impl<'a> IntakeService<'a> {
             paired_assessment_document_count,
             reconstruction_confidence_score,
             extracted_question_block_count,
+            aligned_question_pair_count,
+            high_confidence_alignment_count,
+            medium_confidence_alignment_count,
+            low_confidence_alignment_count,
             score_signal_count,
             remark_signal_count,
             needs_confirmation,
@@ -675,6 +729,8 @@ struct FileReconstruction {
     detected_exam_years: Vec<i64>,
     detected_topics: Vec<String>,
     detected_dates: Vec<String>,
+    question_units: Vec<QuestionUnit>,
+    answer_units: Vec<AnswerUnit>,
     question_like: bool,
     answer_like: bool,
     ocr_candidate: bool,
@@ -718,8 +774,18 @@ struct TextRecovery {
     block_count: i64,
     confidence_score: i64,
     page_previews: Vec<String>,
+    pages: Vec<RecoveredPage>,
     page_summaries: Vec<Value>,
     recovered_from_ocr: bool,
+}
+
+#[derive(Default, Clone)]
+struct RecoveredPage {
+    page_number: i64,
+    label: String,
+    confidence_score: i64,
+    preview: Option<String>,
+    text: String,
 }
 
 #[derive(Default)]
@@ -745,8 +811,11 @@ struct LayoutSignals {
 struct DocumentIntelligence {
     document_origin: String,
     detected_dates: Vec<String>,
+    stitched_segments: Vec<Value>,
     detected_topics: Vec<String>,
     question_blocks: Vec<Value>,
+    question_units: Vec<QuestionUnit>,
+    answer_units: Vec<AnswerUnit>,
     score_signals: Vec<Value>,
     remark_signals: Vec<String>,
     glossary_terms: Vec<String>,
@@ -771,6 +840,10 @@ struct BundleOverviewSummary {
     paired_assessment_document_count: i64,
     reconstruction_confidence_score: i64,
     extracted_question_block_count: i64,
+    aligned_question_pair_count: i64,
+    high_confidence_alignment_count: i64,
+    medium_confidence_alignment_count: i64,
+    low_confidence_alignment_count: i64,
     score_signal_count: i64,
     remark_signal_count: i64,
     needs_confirmation: bool,
@@ -780,6 +853,65 @@ struct BundleOverviewSummary {
     weakness_signals: Vec<String>,
     recommended_actions: Vec<String>,
     review_reasons: Vec<String>,
+}
+
+#[derive(Clone)]
+struct StitchedSegment {
+    segment_index: i64,
+    page_start: i64,
+    page_end: i64,
+    label: String,
+    confidence_score: i64,
+    preview: Option<String>,
+    page_labels: Vec<String>,
+    stitch_reason_codes: Vec<String>,
+    text: String,
+}
+
+#[derive(Clone)]
+struct QuestionUnit {
+    source_file_id: i64,
+    source_file_name: String,
+    source_segment_index: i64,
+    question_number: String,
+    normalized_question_number: String,
+    prompt: String,
+    page_number: i64,
+    section_label: Option<String>,
+    marks_hint: Option<String>,
+    options: Vec<String>,
+    source_role: String,
+    order_index: i64,
+}
+
+#[derive(Clone)]
+struct AnswerUnit {
+    source_file_id: i64,
+    source_file_name: String,
+    source_segment_index: i64,
+    question_number: Option<String>,
+    normalized_question_number: Option<String>,
+    answer_text: String,
+    page_number: i64,
+    section_label: Option<String>,
+    mark_hint: Option<String>,
+    source_role: String,
+    order_index: i64,
+}
+
+#[derive(Default)]
+struct AlignmentSummary {
+    alignments: Vec<Value>,
+    unresolved_items: Vec<Value>,
+    mismatch_reason_counts: Vec<Value>,
+    aligned_question_pair_count: i64,
+    high_confidence_alignment_count: i64,
+    medium_confidence_alignment_count: i64,
+    low_confidence_alignment_count: i64,
+    unresolved_question_count: i64,
+    unresolved_answer_count: i64,
+    needs_confirmation: bool,
+    confidence_score: i64,
 }
 
 fn recover_text_sample(path: &Path, file_kind: &str, exists: bool) -> TextRecovery {
@@ -792,17 +924,34 @@ fn recover_text_sample(path: &Path, file_kind: &str, exists: bool) -> TextRecove
 
     if is_text_like(file_kind) {
         if let Ok(text) = fs::read_to_string(path) {
+            let pages = build_recovered_pages_from_text(&text, "native_text", 95);
             return TextRecovery {
                 source: "native_text".to_string(),
                 text: Some(text),
-                page_count: 1,
+                page_count: pages.len() as i64,
+                block_count: pages
+                    .iter()
+                    .map(|page| {
+                        page.text
+                            .lines()
+                            .filter(|line| !line.trim().is_empty())
+                            .count() as i64
+                    })
+                    .sum(),
                 confidence_score: 95,
+                page_previews: pages
+                    .iter()
+                    .filter_map(|page| page.preview.clone())
+                    .take(3)
+                    .collect(),
+                page_summaries: recovered_page_summaries(&pages),
+                pages,
                 ..TextRecovery::default()
             };
         }
     }
 
-    if let Some(recovery) = recover_sidecar_text(path, file_kind) {
+    if let Some(recovery) = try_text_recovery_adapters(path, file_kind) {
         return recovery;
     }
 
@@ -845,8 +994,14 @@ fn analyze_bundle_file(
     let layout = build_layout_signals(sample_text);
     let document_role =
         detect_document_role(&file.file_name, sample_text, &file.file_kind, &layout);
-    let document_intelligence =
-        mine_document_intelligence(&file.file_name, sample_text, &document_role, &layout);
+    let document_intelligence = mine_document_intelligence(
+        file.id,
+        &file.file_name,
+        sample_text,
+        &document_role,
+        &layout,
+        text_recovery,
+    );
     let question_like = matches!(
         document_role.as_str(),
         "question_paper" | "worksheet" | "mixed_assessment"
@@ -990,6 +1145,7 @@ fn analyze_bundle_file(
         "page_recovery": {
             "page_count": text_recovery.page_count,
             "pages": &text_recovery.page_summaries,
+            "stitched_segments": &document_intelligence.stitched_segments,
         },
         "layout_recovery": {
             "status": if layout_recovered { "recovered" } else if ocr_candidate { "pending_ocr" } else { "limited" },
@@ -1018,6 +1174,16 @@ fn analyze_bundle_file(
             "detected_dates": &document_intelligence.detected_dates,
             "detected_topics": &document_intelligence.detected_topics,
             "question_blocks": &document_intelligence.question_blocks,
+            "question_units": document_intelligence
+                .question_units
+                .iter()
+                .map(question_unit_payload)
+                .collect::<Vec<_>>(),
+            "answer_units": document_intelligence
+                .answer_units
+                .iter()
+                .map(answer_unit_payload)
+                .collect::<Vec<_>>(),
             "score_signals": &document_intelligence.score_signals,
             "remark_signals": &document_intelligence.remark_signals,
             "glossary_terms": &document_intelligence.glossary_terms,
@@ -1048,6 +1214,8 @@ fn analyze_bundle_file(
         detected_exam_years,
         detected_topics: document_intelligence.detected_topics,
         detected_dates: document_intelligence.detected_dates,
+        question_units: document_intelligence.question_units,
+        answer_units: document_intelligence.answer_units,
         question_like,
         answer_like,
         ocr_candidate,
@@ -1072,6 +1240,7 @@ fn analyze_bundle_file(
 
 fn summarize_bundle(
     analyses: &[FileReconstruction],
+    document_groups: &[Value],
     reconstructed_document_count: usize,
 ) -> BundleOverviewSummary {
     let mut detected_subjects = BTreeSet::new();
@@ -1090,6 +1259,19 @@ fn summarize_bundle(
     let mut estimated_question_count = 0i64;
     let mut estimated_answer_count = 0i64;
     let mut extracted_question_block_count = 0i64;
+    let (
+        aligned_question_pair_count,
+        high_confidence_alignment_count,
+        medium_confidence_alignment_count,
+        low_confidence_alignment_count,
+    ) = collect_alignment_metrics(document_groups);
+    let alignment_needs_confirmation = document_groups.iter().any(|group| {
+        group
+            .get("alignment_summary")
+            .and_then(|summary| summary.get("needs_confirmation"))
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+    });
     let mut score_signal_count = 0i64;
     let mut remark_signal_count = 0i64;
     let mut reconstruction_confidence_total = 0i64;
@@ -1169,9 +1351,13 @@ fn summarize_bundle(
         paired_assessment_document_count,
         reconstruction_confidence_score,
         extracted_question_block_count,
+        aligned_question_pair_count,
+        high_confidence_alignment_count,
+        medium_confidence_alignment_count,
+        low_confidence_alignment_count,
         score_signal_count,
         remark_signal_count,
-        needs_confirmation: !review_reasons.is_empty(),
+        needs_confirmation: !review_reasons.is_empty() || alignment_needs_confirmation,
         review_priority,
         bundle_kind: classify_bundle_kind(analyses, reconstructed_document_count),
         document_roles: document_roles.into_iter().collect(),
@@ -1192,7 +1378,13 @@ fn count_paired_assessment_documents(analyses: &[FileReconstruction]) -> i64 {
 
     grouped_roles
         .values()
-        .filter(|roles| roles.contains("question_paper") && roles.contains("mark_scheme"))
+        .filter(|roles| {
+            roles.contains("question_paper")
+                && (roles.contains("mark_scheme")
+                    || roles.contains("answer_sheet")
+                    || roles.contains("corrected_script")
+                    || roles.contains("student_work"))
+        })
         .count() as i64
 }
 
@@ -1350,11 +1542,15 @@ fn reconstruct_document_groups(analyses: &[FileReconstruction]) -> Vec<Value> {
                         "needs_confirmation": member.needs_confirmation,
                         "ocr_candidate": member.ocr_candidate,
                         "ocr_recovered": member.ocr_recovered,
+                        "question_unit_count": member.question_units.len(),
+                        "answer_unit_count": member.answer_units.len(),
                     })
                 })
                 .collect::<Vec<_>>();
             let role_list = roles.into_iter().collect::<Vec<_>>();
             let reason_list = review_reasons.into_iter().collect::<Vec<_>>();
+            let alignment_summary =
+                build_alignment_summary(document_key.as_str(), &role_list, &members);
             let confidence_score = if members.is_empty() {
                 0
             } else {
@@ -1369,13 +1565,27 @@ fn reconstruct_document_groups(analyses: &[FileReconstruction]) -> Vec<Value> {
                 (avg + pairing_bonus).clamp(0, 100)
             };
             let review_priority = review_priority_from_reasons(&reason_list);
-            let needs_confirmation =
-                !reason_list.is_empty() || members.iter().any(|member| member.needs_confirmation);
+            let needs_confirmation = !reason_list.is_empty()
+                || members.iter().any(|member| member.needs_confirmation)
+                || alignment_summary.needs_confirmation;
             json!({
                 "document_key": document_key,
                 "canonical_label": document_key.replace("__", " "),
                 "document_kind": derive_document_group_kind(&role_list),
                 "alignment_status": derive_group_alignment_status(&role_list, &reason_list),
+                "alignment_summary": {
+                    "aligned_question_pair_count": alignment_summary.aligned_question_pair_count,
+                    "high_confidence_alignment_count": alignment_summary.high_confidence_alignment_count,
+                    "medium_confidence_alignment_count": alignment_summary.medium_confidence_alignment_count,
+                    "low_confidence_alignment_count": alignment_summary.low_confidence_alignment_count,
+                    "unresolved_question_count": alignment_summary.unresolved_question_count,
+                    "unresolved_answer_count": alignment_summary.unresolved_answer_count,
+                    "needs_confirmation": alignment_summary.needs_confirmation,
+                    "confidence_score": alignment_summary.confidence_score,
+                    "unresolved_items": alignment_summary.unresolved_items,
+                    "mismatch_reason_counts": alignment_summary.mismatch_reason_counts,
+                    "alignments": alignment_summary.alignments,
+                },
                 "confidence_score": confidence_score,
                 "review_priority": review_priority,
                 "needs_confirmation": needs_confirmation,
@@ -1402,16 +1612,645 @@ fn reconstruct_document_groups(analyses: &[FileReconstruction]) -> Vec<Value> {
         .collect()
 }
 
+fn collect_alignment_metrics(document_groups: &[Value]) -> (i64, i64, i64, i64) {
+    let mut aligned_question_pair_count = 0i64;
+    let mut high_confidence_alignment_count = 0i64;
+    let mut medium_confidence_alignment_count = 0i64;
+    let mut low_confidence_alignment_count = 0i64;
+
+    for group in document_groups {
+        let Some(summary) = group.get("alignment_summary") else {
+            continue;
+        };
+        aligned_question_pair_count += summary
+            .get("aligned_question_pair_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        high_confidence_alignment_count += summary
+            .get("high_confidence_alignment_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        medium_confidence_alignment_count += summary
+            .get("medium_confidence_alignment_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        low_confidence_alignment_count += summary
+            .get("low_confidence_alignment_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+    }
+
+    (
+        aligned_question_pair_count,
+        high_confidence_alignment_count,
+        medium_confidence_alignment_count,
+        low_confidence_alignment_count,
+    )
+}
+
+fn build_bundle_alignment_payload(document_groups: &[Value]) -> Value {
+    let mut aligned_question_pair_count = 0i64;
+    let mut high_confidence_alignment_count = 0i64;
+    let mut medium_confidence_alignment_count = 0i64;
+    let mut low_confidence_alignment_count = 0i64;
+    let mut unresolved_question_count = 0i64;
+    let mut unresolved_answer_count = 0i64;
+    let mut needs_confirmation = false;
+    let mut confidence_total = 0i64;
+    let mut contributing_group_count = 0i64;
+    let mut mismatch_reason_counter: BTreeMap<String, i64> = BTreeMap::new();
+    let mut group_summaries = Vec::new();
+    let mut direct_alignments = Vec::new();
+    let mut unresolved_items = Vec::new();
+
+    for group in document_groups {
+        let Some(summary) = group.get("alignment_summary") else {
+            continue;
+        };
+        contributing_group_count += 1;
+        aligned_question_pair_count += summary
+            .get("aligned_question_pair_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        high_confidence_alignment_count += summary
+            .get("high_confidence_alignment_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        medium_confidence_alignment_count += summary
+            .get("medium_confidence_alignment_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        low_confidence_alignment_count += summary
+            .get("low_confidence_alignment_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        unresolved_question_count += summary
+            .get("unresolved_question_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        unresolved_answer_count += summary
+            .get("unresolved_answer_count")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        confidence_total += summary
+            .get("confidence_score")
+            .and_then(Value::as_i64)
+            .unwrap_or_default();
+        needs_confirmation |= summary
+            .get("needs_confirmation")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+
+        if let Some(items) = summary.get("mismatch_reason_counts").and_then(Value::as_array) {
+            for item in items {
+                let Some(code) = item.get("reason_code").and_then(Value::as_str) else {
+                    continue;
+                };
+                let count = item.get("count").and_then(Value::as_i64).unwrap_or(0);
+                *mismatch_reason_counter.entry(code.to_string()).or_default() += count;
+            }
+        }
+        if let Some(items) = summary.get("alignments").and_then(Value::as_array) {
+            direct_alignments.extend(items.iter().cloned());
+        }
+        if let Some(items) = summary.get("unresolved_items").and_then(Value::as_array) {
+            unresolved_items.extend(items.iter().cloned());
+        }
+
+        group_summaries.push(json!({
+            "document_key": group.get("document_key").and_then(Value::as_str),
+            "alignment_status": group.get("alignment_status").and_then(Value::as_str),
+            "needs_confirmation": group.get("needs_confirmation").and_then(Value::as_bool).unwrap_or(false),
+            "aligned_question_pair_count": summary.get("aligned_question_pair_count").and_then(Value::as_i64).unwrap_or_default(),
+            "unresolved_question_count": summary.get("unresolved_question_count").and_then(Value::as_i64).unwrap_or_default(),
+            "unresolved_answer_count": summary.get("unresolved_answer_count").and_then(Value::as_i64).unwrap_or_default(),
+            "confidence_score": summary.get("confidence_score").and_then(Value::as_i64).unwrap_or_default(),
+            "mismatch_reason_counts": summary.get("mismatch_reason_counts").cloned().unwrap_or_else(|| json!([])),
+        }));
+    }
+
+    let confidence_score = if contributing_group_count == 0 {
+        0
+    } else {
+        (confidence_total / contributing_group_count).clamp(0, 100)
+    };
+
+    json!({
+        "aligned_question_pair_count": aligned_question_pair_count,
+        "high_confidence_alignment_count": high_confidence_alignment_count,
+        "medium_confidence_alignment_count": medium_confidence_alignment_count,
+        "low_confidence_alignment_count": low_confidence_alignment_count,
+        "unresolved_question_count": unresolved_question_count,
+        "unresolved_answer_count": unresolved_answer_count,
+        "needs_confirmation": needs_confirmation,
+        "confidence_score": confidence_score,
+        "group_summaries": group_summaries,
+        "direct_alignments": direct_alignments,
+        "unresolved_items": unresolved_items,
+        "mismatch_reason_counts": mismatch_reason_counter
+            .into_iter()
+            .map(|(reason_code, count)| json!({ "reason_code": reason_code, "count": count }))
+            .collect::<Vec<_>>(),
+    })
+}
+
+fn build_alignment_summary(
+    document_key: &str,
+    roles: &[String],
+    members: &[&FileReconstruction],
+) -> AlignmentSummary {
+    let mut question_units = Vec::new();
+    let mut answer_units = Vec::new();
+    for member in members {
+        question_units.extend(member.question_units.clone());
+        answer_units.extend(member.answer_units.clone());
+    }
+
+    let has_question_documents = roles.iter().any(|role| {
+        matches!(
+            role.as_str(),
+            "question_paper" | "mixed_assessment" | "worksheet" | "corrected_script"
+        )
+    });
+    let has_answer_documents = roles.iter().any(|role| {
+        matches!(
+            role.as_str(),
+            "mark_scheme"
+                | "answer_sheet"
+                | "corrected_script"
+                | "mixed_assessment"
+                | "student_work"
+        )
+    });
+    let answer_number_counts = count_normalized_answer_numbers(&answer_units);
+    let question_number_counts = count_normalized_question_numbers(&question_units);
+    let mut mismatch_reason_counter: BTreeMap<String, i64> = BTreeMap::new();
+
+    if question_units.is_empty() || answer_units.is_empty() {
+        let unresolved_items =
+            build_missing_alignment_items(document_key, roles, &question_units, &answer_units);
+        for item in &unresolved_items {
+            if let Some(reason_codes) = item.get("reason_codes").and_then(Value::as_array) {
+                for reason_code in reason_codes.iter().filter_map(Value::as_str) {
+                    *mismatch_reason_counter
+                        .entry(reason_code.to_string())
+                        .or_default() += 1;
+                }
+            }
+        }
+        return AlignmentSummary {
+            unresolved_question_count: question_units.len() as i64,
+            unresolved_answer_count: answer_units.len() as i64,
+            needs_confirmation: !question_units.is_empty() || !answer_units.is_empty(),
+            confidence_score: if question_units.is_empty() && answer_units.is_empty() {
+                0
+            } else {
+                35
+            },
+            unresolved_items,
+            mismatch_reason_counts: mismatch_reason_counter
+                .into_iter()
+                .map(|(reason_code, count)| json!({ "reason_code": reason_code, "count": count }))
+                .collect(),
+            ..AlignmentSummary::default()
+        };
+    }
+
+    let mut used_answers = BTreeSet::new();
+    let mut alignments = Vec::new();
+    let mut unresolved_items = Vec::new();
+    let mut high_confidence_alignment_count = 0i64;
+    let mut medium_confidence_alignment_count = 0i64;
+    let mut low_confidence_alignment_count = 0i64;
+    let mut aligned_question_pair_count = 0i64;
+    let mut total_confidence = 0i64;
+
+    for (question_index, question) in question_units.iter().enumerate() {
+        let mut best_match: Option<(usize, i64, Vec<String>)> = None;
+        let mut viable_candidate_count = 0usize;
+        for (answer_index, answer) in answer_units.iter().enumerate() {
+            if used_answers.contains(&answer_index) {
+                continue;
+            }
+            let (score, reasons) =
+                score_question_answer_alignment(question, answer, question_index, answer_index);
+            if score == 0 {
+                continue;
+            }
+            viable_candidate_count += 1;
+            let should_replace = best_match
+                .as_ref()
+                .map(|(_, best_score, _)| score > *best_score)
+                .unwrap_or(true);
+            if should_replace {
+                best_match = Some((answer_index, score, reasons));
+            }
+        }
+
+        match best_match {
+            Some((answer_index, score, reasons)) if score >= 40 => {
+                let answer = &answer_units[answer_index];
+                used_answers.insert(answer_index);
+                aligned_question_pair_count += 1;
+                total_confidence += score;
+                let confidence_level = if score >= 80 {
+                    high_confidence_alignment_count += 1;
+                    "high"
+                } else if score >= 60 {
+                    medium_confidence_alignment_count += 1;
+                    "medium"
+                } else {
+                    low_confidence_alignment_count += 1;
+                    "low"
+                };
+                alignments.push(json!({
+                    "document_key": document_key,
+                    "question_number": &question.question_number,
+                    "question_file_id": question.source_file_id,
+                    "question_file_name": &question.source_file_name,
+                    "question_prompt": &question.prompt,
+                    "question_page_number": question.page_number,
+                    "question_segment_index": question.source_segment_index,
+                    "answer_question_number": &answer.question_number,
+                    "answer_file_id": answer.source_file_id,
+                    "answer_file_name": &answer.source_file_name,
+                    "answer_text_preview": trim_display_line(&answer.answer_text, 140),
+                    "answer_page_number": answer.page_number,
+                    "answer_segment_index": answer.source_segment_index,
+                    "confidence_score": score,
+                    "confidence_level": confidence_level,
+                    "reason_codes": reasons,
+                    "status": if score >= 60 { "aligned" } else { "needs_confirmation" },
+                }));
+                if score < 60 {
+                    *mismatch_reason_counter
+                        .entry("low_alignment_confidence".to_string())
+                        .or_default() += 1;
+                }
+            }
+            _ => {
+                let reason_codes = derive_unresolved_question_reasons(
+                    question,
+                    &answer_units,
+                    has_answer_documents,
+                    &answer_number_counts,
+                    viable_candidate_count,
+                    best_match.as_ref().map(|(_, score, _)| *score),
+                );
+                for reason_code in &reason_codes {
+                    *mismatch_reason_counter
+                        .entry(reason_code.clone())
+                        .or_default() += 1;
+                }
+                unresolved_items.push(json!({
+                    "document_key": document_key,
+                    "item_type": "question",
+                    "question_number": &question.question_number,
+                    "question_file_id": question.source_file_id,
+                    "question_file_name": &question.source_file_name,
+                    "question_prompt": &question.prompt,
+                    "question_page_number": question.page_number,
+                    "question_segment_index": question.source_segment_index,
+                    "confidence_score": 0,
+                    "confidence_level": "unresolved",
+                    "reason_codes": &reason_codes,
+                    "status": "unresolved",
+                }));
+            }
+        }
+    }
+
+    for (answer_index, answer) in answer_units.iter().enumerate() {
+        if used_answers.contains(&answer_index) {
+            continue;
+        }
+        let reason_codes = derive_unresolved_answer_reasons(
+            answer,
+            &question_units,
+            has_question_documents,
+            &question_number_counts,
+            answer_number_counts
+                .get(answer.normalized_question_number.as_deref().unwrap_or_default())
+                .copied()
+                .unwrap_or(0),
+        );
+        for reason_code in &reason_codes {
+            *mismatch_reason_counter
+                .entry(reason_code.clone())
+                .or_default() += 1;
+        }
+        unresolved_items.push(json!({
+            "document_key": document_key,
+            "item_type": "answer",
+            "answer_question_number": &answer.question_number,
+            "answer_file_id": answer.source_file_id,
+            "answer_file_name": &answer.source_file_name,
+            "answer_text_preview": trim_display_line(&answer.answer_text, 140),
+            "answer_page_number": answer.page_number,
+            "answer_segment_index": answer.source_segment_index,
+            "confidence_score": 0,
+            "confidence_level": "unresolved",
+            "reason_codes": &reason_codes,
+            "status": "unresolved",
+        }));
+    }
+
+    let unresolved_question_count = question_units.len() as i64 - aligned_question_pair_count;
+    let unresolved_answer_count = answer_units.len() as i64 - used_answers.len() as i64;
+    let confidence_score = if aligned_question_pair_count == 0 {
+        0
+    } else {
+        (total_confidence / aligned_question_pair_count).clamp(0, 100)
+    };
+
+    AlignmentSummary {
+        alignments,
+        unresolved_items,
+        mismatch_reason_counts: mismatch_reason_counter
+            .into_iter()
+            .map(|(reason_code, count)| json!({ "reason_code": reason_code, "count": count }))
+            .collect(),
+        aligned_question_pair_count,
+        high_confidence_alignment_count,
+        medium_confidence_alignment_count,
+        low_confidence_alignment_count,
+        unresolved_question_count,
+        unresolved_answer_count,
+        needs_confirmation: unresolved_question_count > 0
+            || unresolved_answer_count > 0
+            || low_confidence_alignment_count > 0
+            || roles.iter().any(|role| role == "corrected_script"),
+        confidence_score,
+    }
+}
+
+fn score_question_answer_alignment(
+    question: &QuestionUnit,
+    answer: &AnswerUnit,
+    question_index: usize,
+    answer_index: usize,
+) -> (i64, Vec<String>) {
+    let mut score = 0i64;
+    let mut reasons = Vec::new();
+
+    if answer
+        .normalized_question_number
+        .as_ref()
+        .map(|value| value == &question.normalized_question_number)
+        .unwrap_or(false)
+    {
+        score += 70;
+        reasons.push("explicit_number_match".to_string());
+    } else if answer.normalized_question_number.is_none() && question_index == answer_index {
+        score += 35;
+        reasons.push("sequence_match".to_string());
+    }
+
+    if question.section_label.is_some()
+        && answer.section_label.is_some()
+        && question.section_label == answer.section_label
+    {
+        score += 10;
+        reasons.push("section_match".to_string());
+    }
+    if answer.page_number >= question.page_number {
+        score += 5;
+        reasons.push("sequence_continuity".to_string());
+    }
+    if answer
+        .mark_hint
+        .as_ref()
+        .map(|value| value.to_ascii_lowercase().contains("mark"))
+        .unwrap_or(false)
+    {
+        score += 5;
+        reasons.push("teacher_mark_anchor".to_string());
+    }
+    if question.source_role != answer.source_role {
+        score += 5;
+        reasons.push("cross_document_pair".to_string());
+    }
+    if !question.options.is_empty()
+        && answer.answer_text.len() <= 32
+        && answer
+            .answer_text
+            .chars()
+            .any(|ch| matches!(ch.to_ascii_lowercase(), 'a' | 'b' | 'c' | 'd'))
+    {
+        score += 5;
+        reasons.push("choice_response_match".to_string());
+    }
+
+    (score.clamp(0, 100), reasons)
+}
+
+fn count_normalized_answer_numbers(answer_units: &[AnswerUnit]) -> BTreeMap<String, i64> {
+    let mut counts = BTreeMap::new();
+    for answer in answer_units {
+        if let Some(number) = answer.normalized_question_number.as_deref() {
+            *counts.entry(number.to_string()).or_default() += 1;
+        }
+    }
+    counts
+}
+
+fn count_normalized_question_numbers(question_units: &[QuestionUnit]) -> BTreeMap<String, i64> {
+    let mut counts = BTreeMap::new();
+    for question in question_units {
+        *counts
+            .entry(question.normalized_question_number.clone())
+            .or_default() += 1;
+    }
+    counts
+}
+
+fn build_missing_alignment_items(
+    document_key: &str,
+    roles: &[String],
+    question_units: &[QuestionUnit],
+    answer_units: &[AnswerUnit],
+) -> Vec<Value> {
+    let has_question_documents = roles.iter().any(|role| {
+        matches!(
+            role.as_str(),
+            "question_paper" | "mixed_assessment" | "worksheet" | "corrected_script"
+        )
+    });
+    let has_answer_documents = roles.iter().any(|role| {
+        matches!(
+            role.as_str(),
+            "mark_scheme"
+                | "answer_sheet"
+                | "corrected_script"
+                | "mixed_assessment"
+                | "student_work"
+        )
+    });
+    let mut unresolved_items = Vec::new();
+
+    for question in question_units {
+        let mut reason_codes = Vec::new();
+        if !has_answer_documents {
+            reason_codes.push("no_answer_document_in_group".to_string());
+        } else {
+            reason_codes.push("no_answer_units_extracted".to_string());
+        }
+        unresolved_items.push(json!({
+            "document_key": document_key,
+            "item_type": "question",
+            "question_number": &question.question_number,
+            "question_file_id": question.source_file_id,
+            "question_file_name": &question.source_file_name,
+            "question_prompt": &question.prompt,
+            "question_page_number": question.page_number,
+            "question_segment_index": question.source_segment_index,
+            "confidence_score": 0,
+            "confidence_level": "unresolved",
+            "reason_codes": reason_codes,
+            "status": "unresolved",
+        }));
+    }
+
+    for answer in answer_units {
+        let mut reason_codes = Vec::new();
+        if !has_question_documents {
+            reason_codes.push("no_question_document_in_group".to_string());
+        } else {
+            reason_codes.push("no_question_units_extracted".to_string());
+        }
+        unresolved_items.push(json!({
+            "document_key": document_key,
+            "item_type": "answer",
+            "answer_question_number": &answer.question_number,
+            "answer_file_id": answer.source_file_id,
+            "answer_file_name": &answer.source_file_name,
+            "answer_text_preview": trim_display_line(&answer.answer_text, 140),
+            "answer_page_number": answer.page_number,
+            "answer_segment_index": answer.source_segment_index,
+            "confidence_score": 0,
+            "confidence_level": "unresolved",
+            "reason_codes": reason_codes,
+            "status": "unresolved",
+        }));
+    }
+
+    unresolved_items
+}
+
+fn derive_unresolved_question_reasons(
+    question: &QuestionUnit,
+    answer_units: &[AnswerUnit],
+    has_answer_documents: bool,
+    answer_number_counts: &BTreeMap<String, i64>,
+    viable_candidate_count: usize,
+    best_score: Option<i64>,
+) -> Vec<String> {
+    let mut reasons = BTreeSet::new();
+    if !has_answer_documents {
+        reasons.insert("no_answer_document_in_group".to_string());
+    }
+    if answer_units.is_empty() {
+        reasons.insert("no_answer_units_extracted".to_string());
+    } else {
+        if answer_units
+            .iter()
+            .all(|answer| answer.normalized_question_number.is_none())
+        {
+            reasons.insert("answers_missing_question_numbers".to_string());
+        }
+        if !answer_number_counts.contains_key(&question.normalized_question_number) {
+            reasons.insert("question_number_not_found_in_answers".to_string());
+        } else if answer_number_counts
+            .get(&question.normalized_question_number)
+            .copied()
+            .unwrap_or(0)
+            > 1
+        {
+            reasons.insert("duplicate_answer_number_candidates".to_string());
+        }
+        if question.section_label.is_some()
+            && !answer_units
+                .iter()
+                .any(|answer| answer.section_label == question.section_label)
+        {
+            reasons.insert("section_mismatch".to_string());
+        }
+        if viable_candidate_count > 1 {
+            reasons.insert("multiple_candidate_answers".to_string());
+        }
+        if best_score.unwrap_or(0) > 0 && best_score.unwrap_or(0) < 40 {
+            reasons.insert("low_alignment_confidence".to_string());
+        }
+        if viable_candidate_count == 0 {
+            reasons.insert("no_viable_answer_match".to_string());
+        }
+    }
+    reasons.into_iter().collect()
+}
+
+fn derive_unresolved_answer_reasons(
+    answer: &AnswerUnit,
+    question_units: &[QuestionUnit],
+    has_question_documents: bool,
+    question_number_counts: &BTreeMap<String, i64>,
+    duplicate_answer_number_count: i64,
+) -> Vec<String> {
+    let mut reasons = BTreeSet::new();
+    if !has_question_documents {
+        reasons.insert("no_question_document_in_group".to_string());
+    }
+    if question_units.is_empty() {
+        reasons.insert("no_question_units_extracted".to_string());
+    } else {
+        match answer.normalized_question_number.as_deref() {
+            Some(number) => {
+                if !question_number_counts.contains_key(number) {
+                    reasons.insert("answer_number_not_found_in_questions".to_string());
+                }
+            }
+            None => {
+                reasons.insert("answer_missing_question_number".to_string());
+            }
+        }
+        if duplicate_answer_number_count > 1 {
+            reasons.insert("duplicate_answer_number_candidates".to_string());
+        }
+        if answer.section_label.is_some()
+            && !question_units
+                .iter()
+                .any(|question| question.section_label == answer.section_label)
+        {
+            reasons.insert("answer_section_without_matching_question".to_string());
+        }
+    }
+    reasons.into_iter().collect()
+}
+
 fn count_unresolved_alignment_documents(document_groups: &[Value]) -> i64 {
     document_groups
         .iter()
         .filter(|group| {
+            let alignment_summary = group.get("alignment_summary");
+            let has_alignment_uncertainty = alignment_summary
+                .and_then(|summary| summary.get("needs_confirmation"))
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+                || alignment_summary
+                    .and_then(|summary| summary.get("unresolved_question_count"))
+                    .and_then(Value::as_i64)
+                    .unwrap_or_default()
+                    > 0
+                || alignment_summary
+                    .and_then(|summary| summary.get("unresolved_answer_count"))
+                    .and_then(Value::as_i64)
+                    .unwrap_or_default()
+                    > 0;
             matches!(
                 group.get("alignment_status").and_then(Value::as_str),
                 Some("question_without_answers")
                     | Some("answers_without_questions")
                     | Some("review_required")
-            )
+            ) || has_alignment_uncertainty
         })
         .count() as i64
 }
@@ -1480,9 +2319,19 @@ fn derive_group_alignment_status(roles: &[String], review_reasons: &[String]) ->
     let role_set = roles.iter().map(String::as_str).collect::<BTreeSet<_>>();
     if role_set.contains("question_paper") && role_set.contains("mark_scheme") {
         "paired_question_and_mark_scheme"
+    } else if role_set.contains("question_paper")
+        && (role_set.contains("answer_sheet")
+            || role_set.contains("corrected_script")
+            || role_set.contains("student_work")
+            || role_set.contains("mixed_assessment"))
+    {
+        "paired_question_and_answers"
     } else if role_set.contains("question_paper") {
         "question_without_answers"
-    } else if role_set.contains("mark_scheme") {
+    } else if role_set.contains("mark_scheme")
+        || role_set.contains("answer_sheet")
+        || role_set.contains("student_work")
+    {
         "answers_without_questions"
     } else if role_set.contains("report_card") || role_set.contains("corrected_script") {
         "performance_signal"
@@ -1563,6 +2412,87 @@ fn build_text_profile(text_recovery: &TextRecovery, file_kind: &str) -> TextProf
     }
 }
 
+trait TextRecoveryAdapter {
+    fn recover(&self, path: &Path, file_kind: &str) -> Option<TextRecovery>;
+}
+
+struct SidecarTextRecoveryAdapter;
+
+impl TextRecoveryAdapter for SidecarTextRecoveryAdapter {
+    fn recover(&self, path: &Path, file_kind: &str) -> Option<TextRecovery> {
+        recover_sidecar_text(path, file_kind)
+    }
+}
+
+struct NativeBinaryTextRecoveryAdapter;
+
+impl TextRecoveryAdapter for NativeBinaryTextRecoveryAdapter {
+    fn recover(&self, path: &Path, file_kind: &str) -> Option<TextRecovery> {
+        recover_native_binary_text(path, file_kind)
+    }
+}
+
+fn try_text_recovery_adapters(path: &Path, file_kind: &str) -> Option<TextRecovery> {
+    let adapters: [&dyn TextRecoveryAdapter; 2] = [
+        &SidecarTextRecoveryAdapter,
+        &NativeBinaryTextRecoveryAdapter,
+    ];
+    for adapter in adapters {
+        if let Some(recovery) = adapter.recover(path, file_kind) {
+            return Some(recovery);
+        }
+    }
+    None
+}
+
+fn build_recovered_pages_from_text(
+    text: &str,
+    fallback_label: &str,
+    confidence_score: i64,
+) -> Vec<RecoveredPage> {
+    let mut pages = Vec::new();
+    for (index, page_text) in text.split('\u{c}').enumerate() {
+        let page_number = (index + 1) as i64;
+        let cleaned_text = page_text.trim();
+        if cleaned_text.is_empty() {
+            continue;
+        }
+        pages.push(RecoveredPage {
+            page_number,
+            label: infer_page_label(cleaned_text, fallback_label),
+            confidence_score,
+            preview: trim_display_line(cleaned_text, 120),
+            text: cleaned_text.to_string(),
+        });
+    }
+
+    if pages.is_empty() && !text.trim().is_empty() {
+        pages.push(RecoveredPage {
+            page_number: 1,
+            label: infer_page_label(text, fallback_label),
+            confidence_score,
+            preview: trim_display_line(text, 120),
+            text: text.to_string(),
+        });
+    }
+
+    pages
+}
+
+fn recovered_page_summaries(pages: &[RecoveredPage]) -> Vec<Value> {
+    pages
+        .iter()
+        .map(|page| {
+            json!({
+                "page_number": page.page_number,
+                "label": &page.label,
+                "confidence_score": page.confidence_score,
+                "preview": &page.preview,
+            })
+        })
+        .collect()
+}
+
 fn recover_sidecar_text(path: &Path, file_kind: &str) -> Option<TextRecovery> {
     if !matches!(file_kind, "image" | "pdf" | "document" | "spreadsheet") {
         return None;
@@ -1585,22 +2515,19 @@ fn recover_sidecar_text(path: &Path, file_kind: &str) -> Option<TextRecovery> {
                 continue;
             }
             let block_count = text.lines().filter(|line| !line.trim().is_empty()).count() as i64;
+            let pages = build_recovered_pages_from_text(&text, "text_sidecar", 72);
             return Some(TextRecovery {
                 source: classify_sidecar_source(&candidate),
-                page_count: estimate_page_count(&text),
+                page_count: pages.len() as i64,
                 block_count,
                 confidence_score: 72,
-                page_previews: text
-                    .split("\u{c}")
-                    .filter_map(|page| trim_display_line(page, 120))
+                page_previews: pages
+                    .iter()
+                    .filter_map(|page| page.preview.clone())
                     .take(3)
                     .collect(),
-                page_summaries: vec![json!({
-                    "page_number": 1,
-                    "label": infer_page_label(&text, "text_sidecar"),
-                    "confidence_score": 72,
-                    "preview": trim_display_line(&text, 120),
-                })],
+                page_summaries: recovered_page_summaries(&pages),
+                pages,
                 text: Some(text),
                 recovered_from_ocr: true,
             });
@@ -1608,6 +2535,70 @@ fn recover_sidecar_text(path: &Path, file_kind: &str) -> Option<TextRecovery> {
     }
 
     None
+}
+
+fn recover_native_binary_text(path: &Path, file_kind: &str) -> Option<TextRecovery> {
+    let (program, args, source_label, confidence_score) = match file_kind {
+        "image" => (
+            "tesseract",
+            vec![
+                path.to_string_lossy().to_string(),
+                "stdout".to_string(),
+                "--psm".to_string(),
+                "6".to_string(),
+            ],
+            "native_binary_tesseract",
+            68,
+        ),
+        "pdf" => (
+            "pdftotext",
+            vec![
+                "-layout".to_string(),
+                "-enc".to_string(),
+                "UTF-8".to_string(),
+                path.to_string_lossy().to_string(),
+                "-".to_string(),
+            ],
+            "native_binary_pdftotext",
+            70,
+        ),
+        _ => return None,
+    };
+
+    let output = Command::new(program).args(&args).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+
+    let text = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if text.is_empty() {
+        return None;
+    }
+
+    let pages = build_recovered_pages_from_text(&text, "native_binary", confidence_score);
+    Some(TextRecovery {
+        source: source_label.to_string(),
+        text: Some(text),
+        page_count: pages.len() as i64,
+        block_count: pages
+            .iter()
+            .map(|page| {
+                page.text
+                    .lines()
+                    .filter(|line| !line.trim().is_empty())
+                    .count() as i64
+            })
+            .sum(),
+        confidence_score,
+        page_previews: pages
+            .iter()
+            .filter_map(|page| page.preview.clone())
+            .take(3)
+            .collect(),
+        page_summaries: recovered_page_summaries(&pages),
+        pages,
+        recovered_from_ocr: true,
+    })
 }
 
 fn candidate_recovery_paths(path: &Path) -> Vec<PathBuf> {
@@ -1646,7 +2637,7 @@ fn read_json_sidecar_recovery(path: &Path) -> Option<TextRecovery> {
     let payload = serde_json::from_str::<Value>(&raw).ok()?;
 
     let mut page_previews = Vec::new();
-    let mut page_summaries = Vec::new();
+    let mut pages = Vec::new();
     let mut page_texts = Vec::new();
     let mut block_count = 0i64;
     let mut confidence_values = Vec::new();
@@ -1655,8 +2646,8 @@ fn read_json_sidecar_recovery(path: &Path) -> Option<TextRecovery> {
         confidence_values.push(value);
     }
 
-    if let Some(pages) = payload.get("pages").and_then(Value::as_array) {
-        for (index, page) in pages.iter().enumerate() {
+    if let Some(sidecar_pages) = payload.get("pages").and_then(Value::as_array) {
+        for (index, page) in sidecar_pages.iter().enumerate() {
             let page_confidence = extract_confidence_from_value(page).unwrap_or(78);
             confidence_values.push(page_confidence);
             if let Some(blocks) = page.get("blocks").and_then(Value::as_array) {
@@ -1666,14 +2657,28 @@ fn read_json_sidecar_recovery(path: &Path) -> Option<TextRecovery> {
                 if let Some(preview) = trim_display_line(&text, 120) {
                     page_previews.push(format!("Page {}: {}", index + 1, preview));
                 }
-                page_summaries.push(json!({
-                    "page_number": page.get("page_number").and_then(Value::as_i64).unwrap_or((index + 1) as i64),
-                    "label": infer_page_label(&text, "ocr_page"),
-                    "confidence_score": page_confidence,
-                    "preview": trim_display_line(&text, 120),
-                }));
+                pages.push(RecoveredPage {
+                    page_number: page
+                        .get("page_number")
+                        .and_then(Value::as_i64)
+                        .unwrap_or((index + 1) as i64),
+                    label: infer_page_label(&text, "ocr_page"),
+                    confidence_score: page_confidence,
+                    preview: trim_display_line(&text, 120),
+                    text: text.clone(),
+                });
                 page_texts.push(text);
             }
+        }
+    } else if let Some(structured_pages) = extract_structured_sidecar_pages(&payload) {
+        for page in structured_pages {
+            confidence_values.push(page.confidence_score);
+            if let Some(preview) = &page.preview {
+                page_previews.push(format!("Page {}: {}", page.page_number, preview));
+            }
+            block_count += page.text.lines().filter(|line| !line.trim().is_empty()).count() as i64;
+            page_texts.push(page.text.clone());
+            pages.push(page);
         }
     } else if let Some(blocks) = payload.get("blocks").and_then(Value::as_array) {
         block_count = blocks.len() as i64;
@@ -1686,12 +2691,13 @@ fn read_json_sidecar_recovery(path: &Path) -> Option<TextRecovery> {
             if let Some(preview) = trim_display_line(&text, 120) {
                 page_previews.push(preview);
             }
-            page_summaries.push(json!({
-                "page_number": 1,
-                "label": infer_page_label(&text, "ocr_blocks"),
-                "confidence_score": extract_confidence_from_value(&payload).unwrap_or(78),
-                "preview": trim_display_line(&text, 120),
-            }));
+            pages.push(RecoveredPage {
+                page_number: 1,
+                label: infer_page_label(&text, "ocr_blocks"),
+                confidence_score: extract_confidence_from_value(&payload).unwrap_or(78),
+                preview: trim_display_line(&text, 120),
+                text: text.clone(),
+            });
             page_texts.push(text);
         }
     }
@@ -1708,6 +2714,13 @@ fn read_json_sidecar_recovery(path: &Path) -> Option<TextRecovery> {
                 Some(page_texts.join("\n\n"))
             }
         })?;
+    if pages.is_empty() {
+        pages = build_recovered_pages_from_text(
+            &text,
+            "ocr_text",
+            confidence_values.first().copied().unwrap_or(78),
+        );
+    }
 
     if block_count == 0 {
         block_count = text.lines().filter(|line| !line.trim().is_empty()).count() as i64;
@@ -1735,9 +2748,88 @@ fn read_json_sidecar_recovery(path: &Path) -> Option<TextRecovery> {
         block_count,
         confidence_score,
         page_previews,
-        page_summaries,
+        page_summaries: recovered_page_summaries(&pages),
+        pages,
         recovered_from_ocr: true,
     })
+}
+
+fn extract_structured_sidecar_pages(payload: &Value) -> Option<Vec<RecoveredPage>> {
+    for key in ["sheets", "worksheets", "tabs"] {
+        if let Some(items) = payload.get(key).and_then(Value::as_array) {
+            let pages = items
+                .iter()
+                .enumerate()
+                .filter_map(|(index, sheet)| {
+                    let sheet_name = sheet
+                        .get("name")
+                        .or_else(|| sheet.get("sheet_name"))
+                        .or_else(|| sheet.get("title"))
+                        .and_then(Value::as_str)
+                        .unwrap_or("sheet");
+                    let text = payload_text(sheet)?;
+                    if text.trim().is_empty() {
+                        return None;
+                    }
+                    Some(RecoveredPage {
+                        page_number: (index + 1) as i64,
+                        label: infer_contextual_page_label(&text, "sheet_page", Some(sheet_name)),
+                        confidence_score: extract_confidence_from_value(sheet).unwrap_or(80),
+                        preview: trim_display_line(&format!("{sheet_name}: {text}"), 120),
+                        text: format!("{sheet_name}\n{text}"),
+                    })
+                })
+                .collect::<Vec<_>>();
+            if !pages.is_empty() {
+                return Some(pages);
+            }
+        }
+    }
+
+    if let Some(items) = payload.get("sections").and_then(Value::as_array) {
+        let pages = items
+            .iter()
+            .enumerate()
+            .filter_map(|(index, section)| {
+                let title = section
+                    .get("title")
+                    .or_else(|| section.get("heading"))
+                    .and_then(Value::as_str)
+                    .unwrap_or("section");
+                let text = payload_text(section)?;
+                if text.trim().is_empty() {
+                    return None;
+                }
+                Some(RecoveredPage {
+                    page_number: (index + 1) as i64,
+                    label: infer_contextual_page_label(&text, "document_section", Some(title)),
+                    confidence_score: extract_confidence_from_value(section).unwrap_or(80),
+                    preview: trim_display_line(&format!("{title}: {text}"), 120),
+                    text: format!("{title}\n{text}"),
+                })
+            })
+            .collect::<Vec<_>>();
+        if !pages.is_empty() {
+            return Some(pages);
+        }
+    }
+
+    if payload.get("paragraphs").and_then(Value::as_array).is_some()
+        || payload.get("rows").and_then(Value::as_array).is_some()
+        || payload.get("tables").and_then(Value::as_array).is_some()
+    {
+        let text = payload_text(payload)?;
+        if text.trim().is_empty() {
+            return None;
+        }
+        return Some(build_recovered_pages_from_text(
+            &text,
+            "structured_sidecar",
+            extract_confidence_from_value(payload).unwrap_or(80),
+        ));
+    }
+
+    None
 }
 
 fn payload_text(payload: &Value) -> Option<String> {
@@ -1750,11 +2842,63 @@ fn payload_text(payload: &Value) -> Option<String> {
     if let Some(lines) = payload.get("lines").and_then(Value::as_array) {
         let text = lines
             .iter()
-            .filter_map(Value::as_str)
+            .filter_map(value_as_text)
             .collect::<Vec<_>>()
             .join("\n");
         if !text.trim().is_empty() {
             return Some(text);
+        }
+    }
+    if let Some(paragraphs) = payload.get("paragraphs").and_then(Value::as_array) {
+        let text = paragraphs
+            .iter()
+            .filter_map(value_as_text)
+            .collect::<Vec<_>>()
+            .join("\n");
+        if !text.trim().is_empty() {
+            return Some(text);
+        }
+    }
+    if let Some(rows) = payload.get("rows").and_then(Value::as_array) {
+        let text = rows
+            .iter()
+            .filter_map(row_as_text)
+            .collect::<Vec<_>>()
+            .join("\n");
+        if !text.trim().is_empty() {
+            return Some(text);
+        }
+    }
+    if let Some(cells) = payload.get("cells").and_then(Value::as_array) {
+        let text = cells
+            .iter()
+            .filter_map(value_as_text)
+            .collect::<Vec<_>>()
+            .join("\t");
+        if !text.trim().is_empty() {
+            return Some(text);
+        }
+    }
+    if let Some(tables) = payload.get("tables").and_then(Value::as_array) {
+        let text = tables
+            .iter()
+            .filter_map(payload_text)
+            .collect::<Vec<_>>()
+            .join("\n\n");
+        if !text.trim().is_empty() {
+            return Some(text);
+        }
+    }
+    for key in ["sheets", "worksheets", "tabs", "sections"] {
+        if let Some(items) = payload.get(key).and_then(Value::as_array) {
+            let text = items
+                .iter()
+                .filter_map(payload_text)
+                .collect::<Vec<_>>()
+                .join("\n\n");
+            if !text.trim().is_empty() {
+                return Some(text);
+            }
         }
     }
     if let Some(blocks) = payload.get("blocks").and_then(Value::as_array) {
@@ -1768,6 +2912,49 @@ fn payload_text(payload: &Value) -> Option<String> {
         }
     }
     None
+}
+
+fn value_as_text(value: &Value) -> Option<String> {
+    if let Some(text) = value.as_str() {
+        return Some(text.to_string());
+    }
+    if let Some(text) = value.get("text").and_then(Value::as_str) {
+        return Some(text.to_string());
+    }
+    if let Some(text) = value.get("value").and_then(Value::as_str) {
+        return Some(text.to_string());
+    }
+    if let Some(text) = value.get("content").and_then(Value::as_str) {
+        return Some(text.to_string());
+    }
+    if let Some(text) = value.get("display").and_then(Value::as_str) {
+        return Some(text.to_string());
+    }
+    None
+}
+
+fn row_as_text(row: &Value) -> Option<String> {
+    if let Some(items) = row.as_array() {
+        let text = items
+            .iter()
+            .filter_map(value_as_text)
+            .collect::<Vec<_>>()
+            .join("\t");
+        if !text.trim().is_empty() {
+            return Some(text);
+        }
+    }
+    if let Some(cells) = row.get("cells").and_then(Value::as_array) {
+        let text = cells
+            .iter()
+            .filter_map(value_as_text)
+            .collect::<Vec<_>>()
+            .join("\t");
+        if !text.trim().is_empty() {
+            return Some(text);
+        }
+    }
+    payload_text(row)
 }
 
 fn extract_confidence_from_value(payload: &Value) -> Option<i64> {
@@ -1840,6 +3027,26 @@ fn infer_page_label(text: &str, fallback: &str) -> String {
     } else {
         fallback.to_string()
     }
+}
+
+fn infer_contextual_page_label(text: &str, fallback: &str, context_hint: Option<&str>) -> String {
+    let lowered_context = context_hint.unwrap_or_default().to_ascii_lowercase();
+    if contains_any(
+        &lowered_context,
+        &["result", "score", "report", "grades", "summary"],
+    ) {
+        return "score_summary_page".to_string();
+    }
+    if contains_any(&lowered_context, &["question", "paper", "worksheet"]) {
+        return "question_page".to_string();
+    }
+    if contains_any(&lowered_context, &["answer", "scheme", "mark"]) {
+        return "answer_page".to_string();
+    }
+    if contains_any(&lowered_context, &["note", "guide", "lesson", "topic"]) {
+        return "notes_page".to_string();
+    }
+    infer_page_label(text, fallback)
 }
 
 fn build_layout_signals(sample_text: Option<&str>) -> LayoutSignals {
@@ -2141,15 +3348,554 @@ fn build_content_signals(
     signals.into_iter().collect()
 }
 
+fn build_stitched_segments(
+    text_recovery: &TextRecovery,
+    sample_text: Option<&str>,
+) -> Vec<StitchedSegment> {
+    let mut segments = Vec::new();
+    if !text_recovery.pages.is_empty() {
+        let mut current: Option<StitchedSegment> = None;
+        for page in &text_recovery.pages {
+            match current.as_mut() {
+                Some(segment)
+                    if segment.page_end + 1 == page.page_number
+                        && should_stitch_page(segment, page).is_some() =>
+                {
+                    let stitch_reason = should_stitch_page(segment, page)
+                        .unwrap_or_else(|| "same_page_label".to_string());
+                    segment.page_end = page.page_number;
+                    segment.label = merged_segment_label(segment, page);
+                    segment.confidence_score =
+                        ((segment.confidence_score + page.confidence_score) / 2).clamp(0, 100);
+                    segment.text.push_str("\n\n");
+                    segment.text.push_str(&page.text);
+                    segment.page_labels.push(page.label.clone());
+                    segment
+                        .stitch_reason_codes
+                        .retain(|code| code != "single_page_segment");
+                    push_unique_limited(&mut segment.stitch_reason_codes, stitch_reason, 6);
+                    segment.preview = stitched_segment_preview(segment.preview.clone(), page.preview.clone());
+                }
+                Some(segment) => {
+                    segments.push(segment.clone());
+                    current = Some(StitchedSegment {
+                        segment_index: segments.len() as i64 + 1,
+                        page_start: page.page_number,
+                        page_end: page.page_number,
+                        label: page.label.clone(),
+                        confidence_score: page.confidence_score,
+                        preview: page.preview.clone(),
+                        page_labels: vec![page.label.clone()],
+                        stitch_reason_codes: vec!["single_page_segment".to_string()],
+                        text: page.text.clone(),
+                    });
+                }
+                None => {
+                    current = Some(StitchedSegment {
+                        segment_index: 1,
+                        page_start: page.page_number,
+                        page_end: page.page_number,
+                        label: page.label.clone(),
+                        confidence_score: page.confidence_score,
+                        preview: page.preview.clone(),
+                        page_labels: vec![page.label.clone()],
+                        stitch_reason_codes: vec!["single_page_segment".to_string()],
+                        text: page.text.clone(),
+                    });
+                }
+            }
+        }
+        if let Some(segment) = current {
+            segments.push(segment);
+        }
+    }
+
+    if segments.is_empty() {
+        if let Some(text) = sample_text {
+            segments.push(StitchedSegment {
+                segment_index: 1,
+                page_start: 1,
+                page_end: 1,
+                label: infer_page_label(text, "single_segment"),
+                confidence_score: 70,
+                preview: trim_display_line(text, 120),
+                page_labels: vec![infer_page_label(text, "single_segment")],
+                stitch_reason_codes: vec!["single_page_segment".to_string()],
+                text: text.to_string(),
+            });
+        }
+    }
+
+    for (index, segment) in segments.iter_mut().enumerate() {
+        segment.segment_index = (index + 1) as i64;
+    }
+
+    segments
+}
+
+fn stitched_segment_payload(segment: &StitchedSegment) -> Value {
+    json!({
+        "segment_index": segment.segment_index,
+        "page_start": segment.page_start,
+        "page_end": segment.page_end,
+        "label": &segment.label,
+        "confidence_score": segment.confidence_score,
+        "page_count": (segment.page_end - segment.page_start) + 1,
+        "preview": &segment.preview,
+        "page_labels": &segment.page_labels,
+        "stitch_reason_codes": &segment.stitch_reason_codes,
+    })
+}
+
+fn stitched_segment_preview(
+    current_preview: Option<String>,
+    next_preview: Option<String>,
+) -> Option<String> {
+    match (current_preview, next_preview) {
+        (Some(current), Some(next)) if current != next => Some(format!("{current} / {next}")),
+        (Some(current), _) => Some(current),
+        (None, Some(next)) => Some(next),
+        (None, None) => None,
+    }
+}
+
+fn should_stitch_page(segment: &StitchedSegment, page: &RecoveredPage) -> Option<String> {
+    let current_family = label_family(&segment.label);
+    let next_family = label_family(&page.label);
+    if current_family != next_family {
+        return None;
+    }
+
+    if segment.label == page.label {
+        return Some("same_page_label".to_string());
+    }
+    if contains_continuation_marker(&segment.text) || contains_continuation_marker(&page.text) {
+        return Some("continued_marker".to_string());
+    }
+    if current_family == "question"
+        && numbering_is_continuous(
+            extract_last_number_token(&segment.text),
+            extract_first_number_token(&page.text),
+        )
+    {
+        return Some("sequential_question_numbering".to_string());
+    }
+    if current_family == "answer"
+        && numbering_is_continuous(
+            extract_last_number_token(&segment.text),
+            extract_first_number_token(&page.text),
+        )
+    {
+        return Some("sequential_answer_numbering".to_string());
+    }
+    if matches!(current_family, "question" | "answer" | "notes") {
+        return Some("same_label_family".to_string());
+    }
+    None
+}
+
+fn label_family(label: &str) -> &'static str {
+    match label {
+        "question_page" | "ocr_page" | "text_sidecar" | "native_binary" | "single_segment" => {
+            "question"
+        }
+        "answer_page" | "marked_answer_page" => "answer",
+        "score_summary_page" => "summary",
+        "notes_page" => "notes",
+        _ => "other",
+    }
+}
+
+fn merged_segment_label(segment: &StitchedSegment, page: &RecoveredPage) -> String {
+    let family = label_family(&segment.label);
+    if family == label_family(&page.label) {
+        return match family {
+            "question" => "question_page".to_string(),
+            "answer" => "answer_page".to_string(),
+            "summary" => "score_summary_page".to_string(),
+            "notes" => "notes_page".to_string(),
+            _ => segment.label.clone(),
+        };
+    }
+    segment.label.clone()
+}
+
+fn contains_continuation_marker(text: &str) -> bool {
+    let lowered = text.to_ascii_lowercase();
+    contains_any(
+        &lowered,
+        &["continued", "continue", "contd", "cont.", "next page"],
+    )
+}
+
+fn numbering_is_continuous(previous: Option<i64>, next: Option<i64>) -> bool {
+    match (previous, next) {
+        (Some(previous), Some(next)) => next >= previous && next <= previous + 2,
+        _ => false,
+    }
+}
+
+fn extract_first_number_token(text: &str) -> Option<i64> {
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if let Some((number, _)) = extract_question_number_prefix(trimmed) {
+            if let Ok(value) = number
+                .chars()
+                .take_while(|ch| ch.is_ascii_digit())
+                .collect::<String>()
+                .parse::<i64>()
+            {
+                return Some(value);
+            }
+        }
+    }
+    None
+}
+
+fn extract_last_number_token(text: &str) -> Option<i64> {
+    let mut last = None;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if let Some((number, _)) = extract_question_number_prefix(trimmed) {
+            if let Ok(value) = number
+                .chars()
+                .take_while(|ch| ch.is_ascii_digit())
+                .collect::<String>()
+                .parse::<i64>()
+            {
+                last = Some(value);
+            }
+        }
+    }
+    last
+}
+
+fn question_unit_payload(unit: &QuestionUnit) -> Value {
+    json!({
+        "source_file_id": unit.source_file_id,
+        "source_file_name": &unit.source_file_name,
+        "source_segment_index": unit.source_segment_index,
+        "question_number": &unit.question_number,
+        "normalized_question_number": &unit.normalized_question_number,
+        "prompt": &unit.prompt,
+        "page_number": unit.page_number,
+        "section_label": &unit.section_label,
+        "marks_hint": &unit.marks_hint,
+        "options": &unit.options,
+        "source_role": &unit.source_role,
+        "order_index": unit.order_index,
+    })
+}
+
+fn answer_unit_payload(unit: &AnswerUnit) -> Value {
+    json!({
+        "source_file_id": unit.source_file_id,
+        "source_file_name": &unit.source_file_name,
+        "source_segment_index": unit.source_segment_index,
+        "question_number": &unit.question_number,
+        "normalized_question_number": &unit.normalized_question_number,
+        "answer_text": &unit.answer_text,
+        "page_number": unit.page_number,
+        "section_label": &unit.section_label,
+        "mark_hint": &unit.mark_hint,
+        "source_role": &unit.source_role,
+        "order_index": unit.order_index,
+    })
+}
+
+fn extract_question_units(
+    file_id: i64,
+    file_name: &str,
+    segments: &[StitchedSegment],
+    document_role: &str,
+) -> Vec<QuestionUnit> {
+    let mut units = Vec::new();
+    let mut order_index = 0i64;
+
+    for segment in segments {
+        if !matches!(
+            segment.label.as_str(),
+            "question_page" | "text_sidecar" | "native_binary" | "single_segment" | "ocr_page"
+        ) && !matches!(
+            document_role,
+            "question_paper" | "mixed_assessment" | "worksheet" | "corrected_script"
+        ) {
+            continue;
+        }
+
+        let mut current_section: Option<String> = None;
+        let mut current_unit: Option<QuestionUnit> = None;
+        for line in segment.text.lines() {
+            let Some(trimmed) = trim_display_line(line, 220) else {
+                continue;
+            };
+
+            if let Some(section_label) = parse_section_label(&trimmed) {
+                current_section = Some(section_label);
+                continue;
+            }
+
+            if let Some((question_number, remainder)) = extract_question_number_prefix(&trimmed) {
+                if let Some(unit) = current_unit.take() {
+                    units.push(unit);
+                }
+                order_index += 1;
+                let prompt = if remainder.is_empty() {
+                    trimmed.clone()
+                } else {
+                    remainder
+                };
+                current_unit = Some(QuestionUnit {
+                    source_file_id: file_id,
+                    source_file_name: file_name.to_string(),
+                    source_segment_index: segment.segment_index,
+                    normalized_question_number: normalize_question_number(&question_number),
+                    question_number,
+                    prompt: prompt.clone(),
+                    page_number: segment.page_start,
+                    section_label: current_section.clone(),
+                    marks_hint: extract_marks_hint(&trimmed),
+                    options: Vec::new(),
+                    source_role: document_role.to_string(),
+                    order_index,
+                });
+                continue;
+            }
+
+            if let Some(unit) = current_unit.as_mut() {
+                if is_choice_line(&trimmed) {
+                    push_unique_limited(&mut unit.options, trimmed, 8);
+                } else if unit.marks_hint.is_none() {
+                    unit.marks_hint = extract_marks_hint(&trimmed);
+                } else if !is_instruction_line(&trimmed) && unit.prompt.len() < 320 {
+                    unit.prompt.push(' ');
+                    unit.prompt.push_str(&trimmed);
+                }
+            }
+        }
+
+        if let Some(unit) = current_unit.take() {
+            units.push(unit);
+        }
+    }
+
+    units
+}
+
+fn extract_answer_units(
+    file_id: i64,
+    file_name: &str,
+    segments: &[StitchedSegment],
+    document_role: &str,
+) -> Vec<AnswerUnit> {
+    let mut units = Vec::new();
+    let mut order_index = 0i64;
+
+    for segment in segments {
+        if !matches!(
+            segment.label.as_str(),
+            "answer_page"
+                | "marked_answer_page"
+                | "score_summary_page"
+                | "native_binary"
+                | "single_segment"
+                | "ocr_page"
+        ) && !matches!(
+            document_role,
+            "mark_scheme"
+                | "answer_sheet"
+                | "corrected_script"
+                | "mixed_assessment"
+                | "student_work"
+        ) {
+            continue;
+        }
+
+        let mut current_section: Option<String> = None;
+        let mut current_unit: Option<AnswerUnit> = None;
+        for line in segment.text.lines() {
+            let Some(trimmed) = trim_display_line(line, 220) else {
+                continue;
+            };
+
+            if let Some(section_label) = parse_section_label(&trimmed) {
+                current_section = Some(section_label);
+                continue;
+            }
+
+            if let Some((question_number, remainder)) = extract_question_number_prefix(&trimmed) {
+                if let Some(unit) = current_unit.take() {
+                    units.push(unit);
+                }
+                order_index += 1;
+                current_unit = Some(AnswerUnit {
+                    source_file_id: file_id,
+                    source_file_name: file_name.to_string(),
+                    source_segment_index: segment.segment_index,
+                    normalized_question_number: Some(normalize_question_number(&question_number)),
+                    question_number: Some(question_number),
+                    answer_text: if remainder.is_empty() {
+                        trimmed.clone()
+                    } else {
+                        remainder
+                    },
+                    page_number: segment.page_start,
+                    section_label: current_section.clone(),
+                    mark_hint: extract_marks_hint(&trimmed),
+                    source_role: document_role.to_string(),
+                    order_index,
+                });
+                continue;
+            }
+
+            if is_answer_key_line(&trimmed) && current_unit.is_none() {
+                order_index += 1;
+                current_unit = Some(AnswerUnit {
+                    source_file_id: file_id,
+                    source_file_name: file_name.to_string(),
+                    source_segment_index: segment.segment_index,
+                    normalized_question_number: None,
+                    question_number: None,
+                    answer_text: trimmed.clone(),
+                    page_number: segment.page_start,
+                    section_label: current_section.clone(),
+                    mark_hint: extract_marks_hint(&trimmed),
+                    source_role: document_role.to_string(),
+                    order_index,
+                });
+                continue;
+            }
+
+            if let Some(unit) = current_unit.as_mut() {
+                if unit.mark_hint.is_none() {
+                    unit.mark_hint = extract_marks_hint(&trimmed);
+                }
+                if !is_instruction_line(&trimmed) && unit.answer_text.len() < 320 {
+                    unit.answer_text.push(' ');
+                    unit.answer_text.push_str(&trimmed);
+                }
+            }
+        }
+
+        if let Some(unit) = current_unit.take() {
+            units.push(unit);
+        }
+    }
+
+    units
+}
+
+fn parse_section_label(line: &str) -> Option<String> {
+    let lowered = line.to_ascii_lowercase();
+    if lowered.starts_with("section ") {
+        return Some(line.trim().to_string());
+    }
+    if matches!(lowered.as_str(), "objective" | "essay" | "short answer") {
+        return Some(line.trim().to_string());
+    }
+    None
+}
+
+fn extract_question_number_prefix(line: &str) -> Option<(String, String)> {
+    let trimmed = line.trim_start();
+    let lowered = trimmed.to_ascii_lowercase();
+
+    for prefix in ["question ", "q ", "q.", "no. "] {
+        if let Some(stripped) = lowered.strip_prefix(prefix) {
+            let original = &trimmed[prefix.len()..];
+            return parse_numbered_prefix(original).or_else(|| {
+                let remainder = stripped.trim().to_string();
+                if remainder.is_empty() {
+                    None
+                } else {
+                    Some((remainder.clone(), remainder))
+                }
+            });
+        }
+    }
+
+    parse_numbered_prefix(trimmed)
+}
+
+fn parse_numbered_prefix(line: &str) -> Option<(String, String)> {
+    let trimmed = line.trim_start();
+    let mut chars = trimmed.chars().peekable();
+    let mut number = String::new();
+
+    while let Some(ch) = chars.peek() {
+        if ch.is_ascii_digit() {
+            number.push(*ch);
+            chars.next();
+        } else {
+            break;
+        }
+    }
+
+    if number.is_empty() {
+        return None;
+    }
+
+    if matches!(chars.peek(), Some('(')) {
+        number.push(chars.next()?);
+        while let Some(ch) = chars.peek() {
+            number.push(*ch);
+            let is_end = *ch == ')';
+            chars.next();
+            if is_end {
+                break;
+            }
+        }
+    }
+
+    while matches!(
+        chars.peek(),
+        Some('.') | Some(')') | Some(':') | Some('-') | Some(' ')
+    ) {
+        chars.next();
+    }
+
+    let remainder = chars.collect::<String>().trim().to_string();
+    Some((number, remainder))
+}
+
+fn normalize_question_number(value: &str) -> String {
+    value
+        .chars()
+        .filter(|ch| ch.is_ascii_alphanumeric())
+        .collect::<String>()
+        .to_ascii_lowercase()
+}
+
+fn extract_marks_hint(line: &str) -> Option<String> {
+    let lowered = line.to_ascii_lowercase();
+    if let Some(index) = lowered.find("mark") {
+        return trim_display_line(&line[index.saturating_sub(8)..], 40);
+    }
+    if let Some(start) = line.find('(') {
+        if let Some(end) = line[start..].find(')') {
+            let snippet = &line[start..start + end + 1];
+            if snippet.to_ascii_lowercase().contains("mark") {
+                return Some(snippet.to_string());
+            }
+        }
+    }
+    None
+}
+
 fn mine_document_intelligence(
+    file_id: i64,
     file_name: &str,
     sample_text: Option<&str>,
     document_role: &str,
     layout: &LayoutSignals,
+    text_recovery: &TextRecovery,
 ) -> DocumentIntelligence {
+    let stitched_segments = build_stitched_segments(text_recovery, sample_text);
     let detected_dates = extract_date_hints(sample_text);
     let detected_topics = extract_topic_hints(sample_text);
     let question_blocks = extract_question_blocks(sample_text);
+    let question_units = extract_question_units(file_id, file_name, &stitched_segments, document_role);
+    let answer_units = extract_answer_units(file_id, file_name, &stitched_segments, document_role);
     let score_signals = extract_score_signals(sample_text);
     let remark_signals = extract_remark_lines(sample_text);
     let glossary_terms = extract_glossary_terms(sample_text, layout);
@@ -2177,8 +3923,14 @@ fn mine_document_intelligence(
     DocumentIntelligence {
         document_origin,
         detected_dates,
+        stitched_segments: stitched_segments
+            .iter()
+            .map(stitched_segment_payload)
+            .collect(),
         detected_topics,
         question_blocks,
+        question_units,
+        answer_units,
         score_signals,
         remark_signals,
         glossary_terms,
@@ -3260,11 +5012,9 @@ mod tests {
         assert_eq!(report.paired_assessment_document_count, 1);
         assert!(report.reconstruction_confidence_score >= 75);
         assert_eq!(report.review_priority, "low");
-        assert!(
-            report
-                .detected_subjects
-                .contains(&"mathematics".to_string())
-        );
+        assert!(report
+            .detected_subjects
+            .contains(&"mathematics".to_string()));
         assert!(report.estimated_question_count >= 2);
         assert!(report.answer_like_file_count >= 1);
 
@@ -3407,22 +5157,16 @@ mod tests {
         assert!(report.extracted_question_block_count >= 1);
         assert!(report.score_signal_count >= 1);
         assert!(report.remark_signal_count >= 1);
-        assert!(
-            report
-                .detected_topics
-                .iter()
-                .any(|topic| topic == "osmosis" || topic == "diffusion")
-        );
-        assert!(
-            report
-                .recommended_actions
-                .contains(&"schedule_intervention".to_string())
-        );
-        assert!(
-            report
-                .recommended_actions
-                .contains(&"build_personalized_test".to_string())
-        );
+        assert!(report
+            .detected_topics
+            .iter()
+            .any(|topic| topic == "osmosis" || topic == "diffusion"));
+        assert!(report
+            .recommended_actions
+            .contains(&"schedule_intervention".to_string()));
+        assert!(report
+            .recommended_actions
+            .contains(&"build_personalized_test".to_string()));
 
         let file_reconstruction = report
             .insights
@@ -3457,13 +5201,148 @@ mod tests {
                 .and_then(Value::as_str),
             Some("answer_page")
         );
-        assert!(
-            file_reconstruction
+        assert!(file_reconstruction
+            .payload
+            .pointer("/document_intelligence/question_blocks")
+            .and_then(Value::as_array)
+            .map(|items| !items.is_empty())
+            .unwrap_or(false));
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn reconstruct_bundle_aligns_multi_page_question_and_answer_sidecars() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_alignment");
+        let question_path = temp_dir.join("Mathematics 2024 Paper 1 Questions.png");
+        let answer_path = temp_dir.join("Mathematics 2024 Paper 1 Mark Scheme.png");
+        fs::write(&question_path, [137, 80, 78, 71]).expect("question scan should write");
+        fs::write(&answer_path, [137, 80, 78, 71]).expect("answer scan should write");
+        fs::write(
+            temp_dir.join("Mathematics 2024 Paper 1 Questions.ocr.json"),
+            serde_json::to_string_pretty(&json!({
+                "source": "ocr_sidecar_json",
+                "pages": [
+                    {
+                        "page_number": 1,
+                        "confidence_score": 88,
+                        "text": "MATHEMATICS PAPER 1\nSECTION A\n1. What is 2 + 2?\na) 3\nb) 4"
+                    },
+                    {
+                        "page_number": 2,
+                        "confidence_score": 86,
+                        "text": "2. Solve x + 2 = 5.\n3. State the square root of 81."
+                    }
+                ]
+            }))
+            .expect("question sidecar should serialize"),
+        )
+        .expect("question sidecar should write");
+        fs::write(
+            temp_dir.join("Mathematics 2024 Paper 1 Mark Scheme.ocr.json"),
+            serde_json::to_string_pretty(&json!({
+                "source": "ocr_sidecar_json",
+                "pages": [
+                    {
+                        "page_number": 1,
+                        "confidence_score": 84,
+                        "text": "MARK SCHEME\nSECTION A\n1. b\n2. x = 3"
+                    },
+                    {
+                        "page_number": 2,
+                        "confidence_score": 82,
+                        "text": "MARK SCHEME CONTINUED\n3. 9\nAward 1 mark for each correct answer."
+                    }
+                ]
+            }))
+            .expect("answer sidecar should serialize"),
+        )
+        .expect("answer sidecar should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Aligned OCR upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&question_path),
+                question_path.to_string_lossy().as_ref(),
+            )
+            .expect("question file should insert");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&answer_path),
+                answer_path.to_string_lossy().as_ref(),
+            )
+            .expect("answer file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+
+        assert_eq!(report.bundle_kind, "assessment_bundle");
+        assert_eq!(report.ocr_recovered_file_count, 2);
+        assert_eq!(report.aligned_question_pair_count, 3);
+        assert_eq!(report.high_confidence_alignment_count, 3);
+        assert_eq!(report.unresolved_alignment_count, 0);
+
+        let bundle_reconstruction = report
+            .insights
+            .iter()
+            .find(|insight| insight.insight_type == "bundle_reconstruction")
+            .expect("bundle reconstruction insight should exist");
+        let groups = bundle_reconstruction
+            .payload
+            .get("document_groups")
+            .and_then(Value::as_array)
+            .expect("document groups should exist");
+        assert_eq!(groups.len(), 1);
+        assert_eq!(
+            groups[0]
+                .pointer("/alignment_summary/aligned_question_pair_count")
+                .and_then(Value::as_i64),
+            Some(3)
+        );
+        assert_eq!(
+            groups[0]
+                .pointer("/alignment_summary/high_confidence_alignment_count")
+                .and_then(Value::as_i64),
+            Some(3)
+        );
+        assert!(groups[0]
+            .pointer("/alignment_summary/alignments")
+            .and_then(Value::as_array)
+            .and_then(|items| items.first())
+            .and_then(|item| item.get("reason_codes"))
+            .and_then(Value::as_array)
+            .map(|codes| {
+                codes
+                    .iter()
+                    .any(|code| code.as_str() == Some("explicit_number_match"))
+            })
+            .unwrap_or(false));
+
+        let question_reconstruction = report
+            .insights
+            .iter()
+            .find(|insight| {
+                insight.insight_type == "file_reconstruction"
+                    && insight.payload.get("file_name").and_then(Value::as_str)
+                        == Some(file_name(&question_path))
+            })
+            .expect("question reconstruction should exist");
+        assert_eq!(
+            question_reconstruction
                 .payload
-                .pointer("/document_intelligence/question_blocks")
-                .and_then(Value::as_array)
-                .map(|items| !items.is_empty())
-                .unwrap_or(false)
+                .pointer("/page_recovery/stitched_segments/0/page_end")
+                .and_then(Value::as_i64),
+            Some(2)
         );
 
         let _ = fs::remove_dir_all(temp_dir);
@@ -3504,29 +5383,21 @@ mod tests {
         assert!(report.score_signal_count >= 2);
         assert!(report.remark_signal_count >= 1);
         assert!(!report.needs_confirmation);
-        assert!(
-            report
-                .detected_dates
-                .iter()
-                .any(|date| date.contains("March 2026"))
-        );
+        assert!(report
+            .detected_dates
+            .iter()
+            .any(|date| date.contains("March 2026")));
         assert!(report.detected_topics.contains(&"algebra".to_string()));
-        assert!(
-            report
-                .detected_topics
-                .contains(&"comprehension".to_string())
-        );
+        assert!(report
+            .detected_topics
+            .contains(&"comprehension".to_string()));
         assert!(report.weakness_signals.contains(&"low_score".to_string()));
-        assert!(
-            report
-                .recommended_actions
-                .contains(&"create_goal".to_string())
-        );
-        assert!(
-            report
-                .recommended_actions
-                .contains(&"notify_parent".to_string())
-        );
+        assert!(report
+            .recommended_actions
+            .contains(&"create_goal".to_string()));
+        assert!(report
+            .recommended_actions
+            .contains(&"notify_parent".to_string()));
 
         let file_reconstruction = report
             .insights

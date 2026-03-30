@@ -1,12 +1,15 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, clamp_bp};
-use rusqlite::{Connection, OptionalExtension, params};
+use ecoach_substrate::{
+    clamp_bp, now_utc, BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry,
+    FabricOrchestrationSummary, FabricSignal,
+};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 use crate::{
-    ContentPublishJobReport, ContentPublishService, ResourceReadinessService, pack_service::slugify,
+    pack_service::slugify, ContentPublishJobReport, ContentPublishService, ResourceReadinessService,
 };
 
 const LOW_CONFIDENCE_THRESHOLD: BasisPoints = 6_500;
@@ -104,6 +107,10 @@ pub struct TopicPackageSnapshot {
     pub published_artifact_count: i64,
     pub missing_components: Vec<String>,
     pub recommended_jobs: Vec<String>,
+    #[serde(default)]
+    pub fabric_signals: Vec<FabricSignal>,
+    #[serde(default)]
+    pub orchestration: FabricOrchestrationSummary,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -119,6 +126,10 @@ pub struct SubjectFoundryDashboard {
     pub weak_topic_count: i64,
     pub strong_topic_count: i64,
     pub topics: Vec<TopicPackageSnapshot>,
+    #[serde(default)]
+    pub fabric_signals: Vec<FabricSignal>,
+    #[serde(default)]
+    pub orchestration: FabricOrchestrationSummary,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -135,6 +146,10 @@ pub struct ContentFoundrySourceReport {
     pub publish_readiness_score: BasisPoints,
     pub can_mark_reviewed: bool,
     pub recommended_actions: Vec<String>,
+    #[serde(default)]
+    pub fabric_signals: Vec<FabricSignal>,
+    #[serde(default)]
+    pub orchestration: FabricOrchestrationSummary,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -518,6 +533,25 @@ impl<'a> FoundryCoordinatorService<'a> {
             publish_jobs.iter().any(|job| job.job.status == "published"),
         );
         let can_mark_reviewed = unresolved_review_count == 0 && approved_candidate_count > 0;
+        let recommended_actions = build_source_actions(
+            &parse_candidates,
+            unresolved_review_count,
+            duplicate_label_count,
+            &publish_jobs,
+            can_mark_reviewed,
+        );
+        let fabric_signals = build_source_fabric_signals(
+            &source_upload,
+            approved_candidate_count,
+            unresolved_review_count,
+            publish_readiness_score,
+            &publish_jobs,
+            &recommended_actions,
+        );
+        let orchestration = FabricOrchestrationSummary::from_available_inputs(
+            &EngineRegistry::core_runtime(),
+            foundry_available_inputs(&fabric_signals),
+        );
 
         Ok(Some(ContentFoundrySourceReport {
             source_upload,
@@ -531,13 +565,9 @@ impl<'a> FoundryCoordinatorService<'a> {
             duplicate_label_count,
             publish_readiness_score,
             can_mark_reviewed,
-            recommended_actions: build_source_actions(
-                &parse_candidates,
-                unresolved_review_count,
-                duplicate_label_count,
-                &publish_jobs,
-                can_mark_reviewed,
-            ),
+            recommended_actions,
+            fabric_signals,
+            orchestration,
         }))
     }
 
@@ -730,6 +760,21 @@ impl<'a> FoundryCoordinatorService<'a> {
         );
         let live_health_state =
             derive_live_health_state(&package_state, completeness_score, published_artifact_count);
+        let fabric_signals = build_topic_fabric_signals(
+            topic_id,
+            topic_name.as_str(),
+            &package_state,
+            completeness_score,
+            quality_score,
+            &missing_components,
+            &recommended_jobs,
+            publishable_artifact_count,
+            published_artifact_count,
+        );
+        let orchestration = FabricOrchestrationSummary::from_available_inputs(
+            &EngineRegistry::core_runtime(),
+            foundry_available_inputs(&fabric_signals),
+        );
 
         self.upsert_topic_package_snapshot(
             readiness.subject_id,
@@ -764,6 +809,8 @@ impl<'a> FoundryCoordinatorService<'a> {
             published_artifact_count,
             missing_components,
             recommended_jobs,
+            fabric_signals,
+            orchestration,
         }))
     }
 
@@ -821,6 +868,11 @@ impl<'a> FoundryCoordinatorService<'a> {
                     / topics.len() as i64,
             )
         };
+        let fabric_signals = build_dashboard_fabric_signals(subject_id, &subject_code, &topics);
+        let orchestration = FabricOrchestrationSummary::from_available_inputs(
+            &EngineRegistry::core_runtime(),
+            foundry_available_inputs(&fabric_signals),
+        );
 
         Ok(Some(SubjectFoundryDashboard {
             subject_id,
@@ -842,6 +894,8 @@ impl<'a> FoundryCoordinatorService<'a> {
                 .filter(|topic| topic.live_health_state == "live_strong")
                 .count() as i64,
             topics,
+            fabric_signals,
+            orchestration,
         }))
     }
 
@@ -4251,6 +4305,187 @@ fn dependencies_for_source_job(action: &str, report: &ContentFoundrySourceReport
     dependencies
 }
 
+fn build_source_fabric_signals(
+    source_upload: &CurriculumSourceUpload,
+    approved_candidate_count: i64,
+    unresolved_review_count: i64,
+    publish_readiness_score: BasisPoints,
+    publish_jobs: &[ContentPublishJobReport],
+    recommended_actions: &[String],
+) -> Vec<FabricSignal> {
+    let observed_at = now_utc().to_rfc3339();
+    let mut signals = vec![FabricSignal {
+        engine_key: "content_packs".to_string(),
+        signal_type: "foundry_source_status".to_string(),
+        status: Some(source_upload.source_status.clone()),
+        score: Some(source_upload.confidence_score),
+        topic_id: None,
+        node_id: None,
+        question_id: None,
+        observed_at: observed_at.clone(),
+        payload: json!({
+            "source_kind": source_upload.source_kind,
+            "subject_code": source_upload.subject_code,
+            "approved_candidate_count": approved_candidate_count,
+            "unresolved_review_count": unresolved_review_count,
+        }),
+    }];
+
+    if publish_readiness_score > 0 {
+        signals.push(FabricSignal {
+            engine_key: "content_packs".to_string(),
+            signal_type: "foundry_publish_readiness".to_string(),
+            status: Some(
+                if publish_jobs.iter().any(|job| job.job.status == "published") {
+                    "published".to_string()
+                } else if publish_jobs
+                    .iter()
+                    .any(|job| job.job.status == "ready_to_publish")
+                {
+                    "ready".to_string()
+                } else {
+                    "building".to_string()
+                },
+            ),
+            score: Some(publish_readiness_score),
+            topic_id: None,
+            node_id: None,
+            question_id: None,
+            observed_at,
+            payload: json!({
+                "recommended_actions": recommended_actions,
+            }),
+        });
+    }
+
+    signals
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_topic_fabric_signals(
+    topic_id: i64,
+    topic_name: &str,
+    package_state: &str,
+    completeness_score: BasisPoints,
+    quality_score: BasisPoints,
+    missing_components: &[String],
+    recommended_jobs: &[String],
+    publishable_artifact_count: i64,
+    published_artifact_count: i64,
+) -> Vec<FabricSignal> {
+    let observed_at = now_utc().to_rfc3339();
+    let mut signals = vec![FabricSignal {
+        engine_key: "content_packs".to_string(),
+        signal_type: "topic_package_health".to_string(),
+        status: Some(package_state.to_string()),
+        score: Some(completeness_score),
+        topic_id: Some(topic_id),
+        node_id: None,
+        question_id: None,
+        observed_at: observed_at.clone(),
+        payload: json!({
+            "topic_name": topic_name,
+            "quality_score": quality_score,
+            "missing_components": missing_components,
+        }),
+    }];
+
+    if publishable_artifact_count > 0 || published_artifact_count > 0 {
+        signals.push(FabricSignal {
+            engine_key: "content_packs".to_string(),
+            signal_type: "topic_package_publishability".to_string(),
+            status: Some(if published_artifact_count > 0 {
+                "live".to_string()
+            } else {
+                "ready".to_string()
+            }),
+            score: Some(quality_score),
+            topic_id: Some(topic_id),
+            node_id: None,
+            question_id: None,
+            observed_at,
+            payload: json!({
+                "recommended_jobs": recommended_jobs,
+                "publishable_artifact_count": publishable_artifact_count,
+                "published_artifact_count": published_artifact_count,
+            }),
+        });
+    }
+
+    signals
+}
+
+fn build_dashboard_fabric_signals(
+    _subject_id: i64,
+    subject_code: &str,
+    topics: &[TopicPackageSnapshot],
+) -> Vec<FabricSignal> {
+    let observed_at = now_utc().to_rfc3339();
+    let live_topics = topics
+        .iter()
+        .filter(|topic| topic.published_artifact_count > 0)
+        .count() as i64;
+    let weak_topics = topics
+        .iter()
+        .filter(|topic| topic.completeness_score < 5_500)
+        .count() as i64;
+
+    let mut signals = vec![FabricSignal {
+        engine_key: "content_packs".to_string(),
+        signal_type: "subject_foundry_health".to_string(),
+        status: Some(if weak_topics > 0 {
+            "repair_needed".to_string()
+        } else {
+            "healthy".to_string()
+        }),
+        score: Some(if topics.is_empty() {
+            0
+        } else {
+            clamp_bp(
+                topics
+                    .iter()
+                    .map(|topic| topic.completeness_score as i64)
+                    .sum::<i64>()
+                    / topics.len() as i64,
+            )
+        }),
+        topic_id: None,
+        node_id: None,
+        question_id: None,
+        observed_at,
+        payload: json!({
+            "subject_code": subject_code,
+            "live_topics": live_topics,
+            "weak_topics": weak_topics,
+        }),
+    }];
+    for topic in topics {
+        signals.extend(topic.fabric_signals.clone());
+    }
+    signals
+}
+
+fn foundry_available_inputs(signals: &[FabricSignal]) -> Vec<String> {
+    let mut inputs = BTreeSet::new();
+    for signal in signals {
+        match signal.signal_type.as_str() {
+            "foundry_source_status" | "topic_package_health" | "subject_foundry_health" => {
+                inputs.insert("curriculum_nodes".to_string());
+            }
+            "topic_package_publishability" => {
+                inputs.insert("question_content".to_string());
+                inputs.insert("knowledge_entries".to_string());
+                inputs.insert("knowledge_links".to_string());
+            }
+            "foundry_publish_readiness" => {
+                inputs.insert("pack_manifests".to_string());
+            }
+            _ => {}
+        }
+    }
+    inputs.into_iter().collect()
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
@@ -4310,18 +4545,20 @@ mod tests {
 
         assert_eq!(report.source_upload.source_status, "review_required");
         assert!(report.unresolved_review_count >= 2);
-        assert!(
-            report
-                .review_tasks
-                .iter()
-                .any(|task| task.task_type == "normalization")
-        );
-        assert!(
-            report
-                .review_tasks
-                .iter()
-                .any(|task| task.task_type == "duplicate_check")
-        );
+        assert!(report
+            .review_tasks
+            .iter()
+            .any(|task| task.task_type == "normalization"));
+        assert!(report
+            .review_tasks
+            .iter()
+            .any(|task| task.task_type == "duplicate_check"));
+        assert!(!report.fabric_signals.is_empty());
+        assert!(report
+            .orchestration
+            .consumer_targets
+            .iter()
+            .any(|target| target.engine_key == "content_packs"));
     }
 
     #[test]
@@ -4448,12 +4685,19 @@ mod tests {
         assert_eq!(failed_job.status, "failed");
         assert!(board.failed_count >= 1);
         assert!(board.completed_count >= 1);
-        assert!(
-            dashboard
-                .topics
-                .iter()
-                .any(|topic| topic.topic_id == topic_id && topic.published_artifact_count >= 1)
-        );
+        assert!(dashboard
+            .topics
+            .iter()
+            .any(|topic| topic.topic_id == topic_id && topic.published_artifact_count >= 1));
+        assert!(dashboard
+            .topics
+            .iter()
+            .any(|topic| !topic.fabric_signals.is_empty()));
+        assert!(dashboard
+            .orchestration
+            .consumer_targets
+            .iter()
+            .any(|target| target.engine_key == "library"));
     }
 
     #[test]
@@ -4657,6 +4901,7 @@ mod tests {
         );
         assert!(snapshot.publishable_artifact_count >= 1);
         assert!(snapshot.resource_readiness_score >= 6_000);
+        assert!(!snapshot.fabric_signals.is_empty());
     }
 
     #[test]

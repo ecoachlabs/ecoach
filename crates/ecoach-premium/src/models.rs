@@ -1,4 +1,4 @@
-use ecoach_substrate::BasisPoints;
+use ecoach_substrate::{BasisPoints, FabricOrchestrationSummary};
 use serde::{Deserialize, Serialize};
 
 // ── Risk severity levels ──
@@ -186,6 +186,12 @@ pub struct PremiumStrategySnapshot {
     pub active_intervention_count: i64,
     pub priority_topics: Vec<PremiumPriorityTopic>,
     pub top_risk_titles: Vec<String>,
+    #[serde(default)]
+    pub recent_focus_signals: Vec<String>,
+    #[serde(default)]
+    pub recommended_game_modes: Vec<String>,
     pub coach_actions: Vec<String>,
     pub household_actions: Vec<String>,
+    #[serde(default)]
+    pub orchestration: FabricOrchestrationSummary,
 }

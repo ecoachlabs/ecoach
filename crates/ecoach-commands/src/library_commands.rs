@@ -157,6 +157,18 @@ pub fn build_glossary_audio_program_for_topic(
     })
 }
 
+pub fn build_personalized_glossary_audio_program_for_topic(
+    state: &AppState,
+    student_id: i64,
+    topic_id: i64,
+    limit: usize,
+) -> Result<GlossaryAudioProgramDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GlossaryService::new(conn)
+            .build_personalized_audio_program_for_topic(student_id, topic_id, limit)?)
+    })
+}
+
 pub fn build_glossary_audio_program_for_question(
     state: &AppState,
     question_id: i64,
@@ -164,6 +176,23 @@ pub fn build_glossary_audio_program_for_question(
 ) -> Result<GlossaryAudioProgramDto, CommandError> {
     state.with_connection(|conn| {
         Ok(GlossaryService::new(conn).build_audio_program_for_question(question_id, limit)?)
+    })
+}
+
+pub fn build_personalized_glossary_audio_program_for_question(
+    state: &AppState,
+    student_id: i64,
+    question_id: i64,
+    limit: usize,
+) -> Result<GlossaryAudioProgramDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(
+            GlossaryService::new(conn).build_personalized_audio_program_for_question(
+                student_id,
+                question_id,
+                limit,
+            )?,
+        )
     })
 }
 

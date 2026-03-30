@@ -148,6 +148,25 @@ impl<'a> KnowledgeGapService<'a> {
         &self,
         input: &CreateGapRepairPlanInput,
     ) -> EcoachResult<GapRepairPlan> {
+        if let Some(existing_plan_id) = self
+            .conn
+            .query_row(
+                "SELECT id
+                 FROM gap_repair_plans
+                 WHERE student_id = ?1
+                   AND topic_id = ?2
+                   AND status = 'active'
+                 ORDER BY updated_at DESC, id DESC
+                 LIMIT 1",
+                params![input.student_id, input.topic_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))?
+        {
+            return self.get_repair_plan(existing_plan_id);
+        }
+
         let gap_card = self.compute_gap_score_card(input.student_id, input.topic_id)?;
         let now = Utc::now().to_rfc3339();
 
@@ -215,14 +234,12 @@ impl<'a> KnowledgeGapService<'a> {
             .collect();
 
         // Determine repair action type based on dominant error pattern
-        let dominant_action = if gap_card.knowledge_gap_score >= gap_card.conceptual_confusion_score
-            && gap_card.knowledge_gap_score >= gap_card.recognition_failure_score
-        {
-            "teach_concept"
-        } else if gap_card.conceptual_confusion_score >= gap_card.recognition_failure_score {
-            "clarify_confusion"
-        } else {
-            "drill_recognition"
+        let dominant_focus = self.dominant_focus_key(gap_card);
+        let dominant_action = match dominant_focus.as_str() {
+            "conceptual_confusion" => "clarify_confusion",
+            "recognition_failure" => "drill_recognition",
+            "execution_error" => "practice_with_scaffolding",
+            _ => "teach_concept",
         };
 
         for (seq, node_id) in node_ids.iter().enumerate() {
@@ -437,8 +454,30 @@ impl<'a> KnowledgeGapService<'a> {
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        // If item completed, activate the next pending item
-        if matches!(new_status, RepairItemStatus::Completed) {
+        if matches!(new_status, RepairItemStatus::Active) {
+            self.conn
+                .execute(
+                    "UPDATE gap_repair_plan_items
+                     SET status = 'pending'
+                     WHERE plan_id = ?1
+                       AND id != ?2
+                       AND status = 'active'",
+                    params![plan_id, item_id],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        }
+
+        self.append_event(DomainEvent::new(
+            "gap.repair_item_updated",
+            item_id.to_string(),
+            json!({
+                "plan_id": plan_id,
+                "status": new_status.as_str(),
+            }),
+        ))?;
+
+        // If an item is finished, advance the plan to the next pending repair step.
+        if matches!(new_status, RepairItemStatus::Completed | RepairItemStatus::Skipped) {
             self.conn
                 .execute(
                     "UPDATE gap_repair_plan_items SET status = 'active'
@@ -475,6 +514,29 @@ impl<'a> KnowledgeGapService<'a> {
                     plan_id.to_string(),
                     json!({}),
                 ))?;
+            } else {
+                let active_item_id: Option<i64> = self
+                    .conn
+                    .query_row(
+                        "SELECT id
+                         FROM gap_repair_plan_items
+                         WHERE plan_id = ?1 AND status = 'active'
+                         ORDER BY sequence_order ASC
+                         LIMIT 1",
+                        [plan_id],
+                        |row| row.get(0),
+                    )
+                    .optional()
+                    .map_err(|e| EcoachError::Storage(e.to_string()))?;
+                if let Some(active_item_id) = active_item_id {
+                    self.append_event(DomainEvent::new(
+                        "gap.repair_item_activated",
+                        active_item_id.to_string(),
+                        json!({
+                            "plan_id": plan_id,
+                        }),
+                    ))?;
+                }
             }
         }
 
@@ -520,16 +582,26 @@ impl<'a> KnowledgeGapService<'a> {
         repair_plan_id: Option<i64>,
     ) -> EcoachResult<SolidificationSession> {
         let now = Utc::now().to_rfc3339();
+        let subject_id: Option<i64> = self
+            .conn
+            .query_row(
+                "SELECT subject_id FROM topics WHERE id = ?1",
+                [topic_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))?
+            .flatten();
 
         // Create underlying session
         let topic_ids_json = format!("[{}]", topic_id);
         self.conn
             .execute(
                 "INSERT INTO sessions (
-                    student_id, session_type, topic_ids, difficulty_preference, status,
-                    created_at, updated_at
-                 ) VALUES (?1, 'gap_repair', ?2, 'adaptive', 'active', ?3, ?3)",
-                params![student_id, topic_ids_json, now],
+                    student_id, session_type, subject_id, topic_ids, difficulty_preference, status,
+                    started_at, created_at, updated_at
+                 ) VALUES (?1, 'gap_repair', ?2, ?3, 'adaptive', 'active', ?4, ?4, ?4)",
+                params![student_id, subject_id, topic_ids_json, now],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
@@ -545,6 +617,8 @@ impl<'a> KnowledgeGapService<'a> {
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let solid_id = self.conn.last_insert_rowid();
+        let (repair_item_id, seeded_questions, estimated_minutes) =
+            self.seed_solidification_session(session_id, topic_id, repair_plan_id)?;
 
         self.append_event(DomainEvent::new(
             "gap.solidification_started",
@@ -553,6 +627,9 @@ impl<'a> KnowledgeGapService<'a> {
                 "student_id": student_id,
                 "topic_id": topic_id,
                 "repair_plan_id": repair_plan_id,
+                "repair_item_id": repair_item_id,
+                "seeded_question_count": seeded_questions,
+                "estimated_minutes": estimated_minutes,
             }),
         ))?;
 
@@ -564,6 +641,18 @@ impl<'a> KnowledgeGapService<'a> {
         solidification_id: i64,
     ) -> EcoachResult<SolidificationSession> {
         let now = Utc::now().to_rfc3339();
+        let (student_id, topic_id, repair_plan_id, session_id): (i64, i64, Option<i64>, Option<i64>) =
+            self.conn
+                .query_row(
+                    "SELECT student_id, topic_id, repair_plan_id, session_id
+                     FROM solidification_sessions
+                     WHERE id = ?1",
+                    [solidification_id],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+                )
+                .map_err(|e| {
+                    EcoachError::NotFound(format!("solidification session not found: {}", e))
+                })?;
         let affected = self
             .conn
             .execute(
@@ -579,26 +668,87 @@ impl<'a> KnowledgeGapService<'a> {
             ));
         }
 
-        // Also complete the underlying session
-        let session_id: Option<i64> = self
-            .conn
-            .query_row(
-                "SELECT session_id FROM solidification_sessions WHERE id = ?1",
-                [solidification_id],
-                |row| row.get(0),
-            )
-            .optional()
-            .map_err(|e| EcoachError::Storage(e.to_string()))?
-            .flatten();
+        let repair_item_id = self.load_solidification_repair_item_id(solidification_id)?;
+        let outcome = if let Some(sid) = session_id {
+            Some(self.evaluate_solidification_session(sid)?)
+        } else {
+            None
+        };
 
         if let Some(sid) = session_id {
             self.conn
                 .execute(
-                    "UPDATE sessions SET status = 'completed', completed_at = ?1, updated_at = ?1 WHERE id = ?2",
-                    params![now, sid],
+                    "UPDATE sessions
+                     SET status = 'completed',
+                         completed_at = ?1,
+                         answered_questions = ?2,
+                         correct_questions = ?3,
+                         accuracy_score = ?4,
+                         avg_response_time_ms = ?5,
+                         updated_at = ?1
+                     WHERE id = ?6",
+                    params![
+                        now,
+                        outcome.as_ref().map(|item| item.engaged_count).unwrap_or(0),
+                        outcome.as_ref().map(|item| item.correct_count).unwrap_or(0),
+                        outcome.as_ref().map(|item| item.accuracy_score).unwrap_or(0),
+                        outcome.as_ref().and_then(|item| item.avg_response_time_ms),
+                        sid,
+                    ],
                 )
                 .map_err(|e| EcoachError::Storage(e.to_string()))?;
         }
+
+        if let Some(outcome) = outcome.as_ref() {
+            self.apply_solidification_outcome(
+                student_id,
+                topic_id,
+                repair_plan_id,
+                repair_item_id,
+                outcome,
+            )?;
+            if let Some(session_id) = session_id {
+                self.append_session_event(DomainEvent::new(
+                    "session.interpreted",
+                    session_id.to_string(),
+                    json!({
+                        "session_id": session_id,
+                        "student_id": student_id,
+                        "session_type": "gap_repair",
+                        "status": "completed",
+                        "next_action_hint": outcome.next_action_hint,
+                        "interpretation_tags": outcome.interpretation_tags,
+                        "repair_outcome": outcome.outcome_label,
+                        "repair_item_id": repair_item_id,
+                        "repair_plan_id": repair_plan_id,
+                        "topic_summaries": [{
+                            "topic_id": topic_id,
+                            "accuracy_score": outcome.accuracy_score,
+                            "answered_items": outcome.answered_count,
+                            "skipped_items": outcome.skipped_count,
+                            "correct_items": outcome.correct_count,
+                            "total_items": outcome.total_count,
+                            "dominant_error_type": outcome.dominant_signal,
+                            "repair_outcome": outcome.outcome_label,
+                        }],
+                    }),
+                ))?;
+            }
+        }
+
+        self.append_event(DomainEvent::new(
+            "gap.solidification_completed",
+            solidification_id.to_string(),
+            json!({
+                "student_id": student_id,
+                "topic_id": topic_id,
+                "repair_plan_id": repair_plan_id,
+                "session_id": session_id,
+                "repair_item_id": repair_item_id,
+                "outcome": outcome.as_ref().map(|item| item.outcome_label.clone()),
+                "accuracy_score": outcome.as_ref().map(|item| item.accuracy_score),
+            }),
+        ))?;
 
         self.get_solidification_session(solidification_id)
     }
@@ -667,6 +817,342 @@ impl<'a> KnowledgeGapService<'a> {
     }
 
     // ── Internal ──
+
+    fn seed_solidification_session(
+        &self,
+        session_id: i64,
+        topic_id: i64,
+        repair_plan_id: Option<i64>,
+    ) -> EcoachResult<(Option<i64>, i64, i64)> {
+        let repair_item: Option<(i64, Option<i64>, String)> = if let Some(plan_id) = repair_plan_id {
+            self.conn
+                .query_row(
+                    "SELECT id, node_id, repair_action
+                     FROM gap_repair_plan_items
+                     WHERE plan_id = ?1
+                     ORDER BY
+                        CASE status
+                            WHEN 'active' THEN 0
+                            WHEN 'pending' THEN 1
+                            WHEN 'skipped' THEN 2
+                            ELSE 3
+                        END,
+                        sequence_order ASC
+                     LIMIT 1",
+                    [plan_id],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                )
+                .optional()
+                .map_err(|e| EcoachError::Storage(e.to_string()))?
+        } else {
+            None
+        };
+
+        let (repair_item_id, node_id, repair_action) = if let Some(item) = repair_item {
+            (Some(item.0), item.1, item.2)
+        } else {
+            (None, None, "practice_with_scaffolding".to_string())
+        };
+        let question_ids = self.list_candidate_question_ids(topic_id, node_id, 6)?;
+
+        for (index, question_id) in question_ids.iter().enumerate() {
+            let source_family_id: Option<i64> = self
+                .conn
+                .query_row(
+                    "SELECT family_id FROM questions WHERE id = ?1",
+                    [*question_id],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(|e| EcoachError::Storage(e.to_string()))?
+                .flatten();
+
+            self.conn
+                .execute(
+                    "INSERT INTO session_items (
+                        session_id, question_id, display_order, source_family_id, source_topic_id, status
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, 'queued')",
+                    params![
+                        session_id,
+                        question_id,
+                        index as i64,
+                        source_family_id,
+                        topic_id,
+                    ],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        }
+
+        let question_count = question_ids.len() as i64;
+        let estimated_minutes = self.suggested_duration_minutes(&repair_action)
+            + question_count.saturating_sub(1) * 2;
+        self.conn
+            .execute(
+                "UPDATE sessions
+                 SET question_count = ?1,
+                     total_questions = ?1,
+                     duration_minutes = ?2,
+                     updated_at = datetime('now')
+                 WHERE id = ?3",
+                params![question_count, estimated_minutes, session_id],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        Ok((repair_item_id, question_count, estimated_minutes))
+    }
+
+    fn load_solidification_repair_item_id(
+        &self,
+        solidification_id: i64,
+    ) -> EcoachResult<Option<i64>> {
+        let payload_json: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT payload_json
+                 FROM runtime_events
+                 WHERE aggregate_kind = 'gap'
+                   AND aggregate_id = ?1
+                   AND event_type = 'gap.solidification_started'
+                 ORDER BY occurred_at DESC, id DESC
+                 LIMIT 1",
+                [solidification_id.to_string()],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))?
+            .flatten();
+
+        let Some(payload_json) = payload_json else {
+            return Ok(None);
+        };
+        let payload: serde_json::Value = serde_json::from_str(&payload_json)
+            .map_err(|e| EcoachError::Serialization(e.to_string()))?;
+        Ok(payload.get("repair_item_id").and_then(|value| value.as_i64()))
+    }
+
+    fn evaluate_solidification_session(
+        &self,
+        session_id: i64,
+    ) -> EcoachResult<SolidificationOutcome> {
+        let (
+            total_count,
+            answered_count,
+            skipped_count,
+            correct_count,
+            avg_response_time_ms,
+        ): (i64, i64, i64, i64, Option<i64>) = self
+            .conn
+            .query_row(
+                "SELECT
+                    COUNT(*),
+                    COALESCE(SUM(CASE WHEN status = 'answered' THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0),
+                    CAST(AVG(response_time_ms) AS INTEGER)
+                 FROM session_items
+                 WHERE session_id = ?1",
+                [session_id],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                    ))
+                },
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let engaged_count = answered_count + skipped_count;
+        let accuracy_score = if total_count > 0 {
+            to_bp(correct_count as f64 / total_count as f64)
+        } else {
+            0
+        };
+        let coverage_score = if total_count > 0 {
+            to_bp(engaged_count as f64 / total_count as f64)
+        } else {
+            0
+        };
+        let blended_score =
+            ((accuracy_score as f64 * 0.75) + (coverage_score as f64 * 0.25)).round() as i64;
+
+        let (outcome_label, next_action_hint, dominant_signal, interpretation_tags) =
+            if total_count == 0 {
+                (
+                    "failed".to_string(),
+                    "repair_retry".to_string(),
+                    "repair_seed_missing".to_string(),
+                    vec!["gap_repair_failed".to_string(), "gap_session_empty".to_string()],
+                )
+            } else if blended_score >= 7600 && accuracy_score >= 7000 {
+                (
+                    "success".to_string(),
+                    "stabilize_memory".to_string(),
+                    "repair_success".to_string(),
+                    vec!["gap_repair_success".to_string(), "ready_for_progression".to_string()],
+                )
+            } else if blended_score >= 4500 {
+                (
+                    "mixed".to_string(),
+                    "repair_retry".to_string(),
+                    "repair_partial".to_string(),
+                    vec!["gap_repair_mixed".to_string(), "needs_retry".to_string()],
+                )
+            } else {
+                (
+                    "failed".to_string(),
+                    "reteach_before_retry".to_string(),
+                    "repair_failed".to_string(),
+                    vec!["gap_repair_failed".to_string(), "reteach_required".to_string()],
+                )
+            };
+
+        Ok(SolidificationOutcome {
+            total_count,
+            answered_count,
+            skipped_count,
+            engaged_count,
+            correct_count,
+            accuracy_score,
+            coverage_score,
+            avg_response_time_ms,
+            outcome_label,
+            next_action_hint,
+            dominant_signal,
+            interpretation_tags,
+        })
+    }
+
+    fn apply_solidification_outcome(
+        &self,
+        student_id: i64,
+        topic_id: i64,
+        repair_plan_id: Option<i64>,
+        repair_item_id: Option<i64>,
+        outcome: &SolidificationOutcome,
+    ) -> EcoachResult<()> {
+        let repair_item_id = if repair_item_id.is_some() {
+            repair_item_id
+        } else if let Some(plan_id) = repair_plan_id {
+            self.conn
+                .query_row(
+                    "SELECT id
+                     FROM gap_repair_plan_items
+                     WHERE plan_id = ?1
+                       AND status IN ('active', 'pending')
+                     ORDER BY
+                        CASE status WHEN 'active' THEN 0 ELSE 1 END,
+                        sequence_order ASC
+                     LIMIT 1",
+                    [plan_id],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(|e| EcoachError::Storage(e.to_string()))?
+        } else {
+            None
+        };
+
+        if let Some(item_id) = repair_item_id {
+            match outcome.outcome_label.as_str() {
+                "success" => {
+                    let _ = self.advance_repair_item(item_id, RepairItemStatus::Completed)?;
+                }
+                "mixed" | "failed" => {
+                    let _ = self.advance_repair_item(item_id, RepairItemStatus::Active)?;
+                }
+                _ => {}
+            }
+        }
+
+        if let Some(plan_id) = repair_plan_id {
+            let priority_delta = match outcome.outcome_label.as_str() {
+                "success" => -1200,
+                "mixed" => 500,
+                "failed" => 1400,
+                _ => 0,
+            };
+            if priority_delta != 0 {
+                self.conn
+                    .execute(
+                        "UPDATE gap_repair_plans
+                         SET priority_score = MIN(MAX(priority_score + ?1, 0), 10000),
+                             updated_at = datetime('now')
+                         WHERE id = ?2",
+                        params![priority_delta, plan_id],
+                    )
+                    .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            }
+        }
+
+        let repair_priority_delta = match outcome.outcome_label.as_str() {
+            "success" => -1500,
+            "mixed" => 400,
+            "failed" => 1600,
+            _ => 0,
+        };
+        let urgent_flag = matches!(outcome.outcome_label.as_str(), "mixed" | "failed");
+        self.conn
+            .execute(
+                "UPDATE student_topic_states
+                 SET repair_priority = MIN(MAX(repair_priority + ?1, 0), 10000),
+                     is_urgent = ?2,
+                     last_decline_at = CASE
+                         WHEN ?2 = 1 THEN datetime('now')
+                         ELSE last_decline_at
+                     END,
+                     updated_at = datetime('now')
+                 WHERE student_id = ?3
+                   AND topic_id = ?4",
+                params![
+                    repair_priority_delta,
+                    if urgent_flag { 1 } else { 0 },
+                    student_id,
+                    topic_id,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        self.append_event(DomainEvent::new(
+            "gap.solidification_evaluated",
+            format!("{}:{}", student_id, topic_id),
+            json!({
+                "student_id": student_id,
+                "topic_id": topic_id,
+                "repair_plan_id": repair_plan_id,
+                "repair_item_id": repair_item_id,
+                "outcome": outcome.outcome_label,
+                "accuracy_score": outcome.accuracy_score,
+                "coverage_score": outcome.coverage_score,
+                "next_action_hint": outcome.next_action_hint,
+            }),
+        ))?;
+
+        Ok(())
+    }
+
+    fn append_session_event(&self, event: DomainEvent) -> EcoachResult<()> {
+        let payload_json = serde_json::to_string(&event.payload)
+            .map_err(|e| EcoachError::Serialization(e.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO runtime_events (
+                    event_id, event_type, aggregate_kind, aggregate_id, trace_id, payload_json, occurred_at
+                 ) VALUES (?1, ?2, 'session', ?3, ?4, ?5, ?6)",
+                params![
+                    event.event_id,
+                    event.event_type,
+                    event.aggregate_id,
+                    event.trace_id,
+                    payload_json,
+                    event.occurred_at.to_rfc3339(),
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(())
+    }
 
     fn append_event(&self, event: DomainEvent) -> EcoachResult<()> {
         let payload_json = serde_json::to_string(&event.payload)
@@ -983,4 +1469,19 @@ impl<'a> KnowledgeGapService<'a> {
 
         Ok(titles)
     }
+}
+
+struct SolidificationOutcome {
+    total_count: i64,
+    answered_count: i64,
+    skipped_count: i64,
+    engaged_count: i64,
+    correct_count: i64,
+    accuracy_score: u16,
+    coverage_score: u16,
+    avg_response_time_ms: Option<i64>,
+    outcome_label: String,
+    next_action_hint: String,
+    dominant_signal: String,
+    interpretation_tags: Vec<String>,
 }

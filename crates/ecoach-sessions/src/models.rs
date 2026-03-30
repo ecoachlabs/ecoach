@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use ecoach_questions::QuestionRemediationPlan;
 use ecoach_substrate::{
     BasisPoints, FabricEvidenceRecord, FabricOrchestrationSummary, FabricSignal,
 };
@@ -125,6 +126,7 @@ pub struct SessionEvidenceFabric {
     pub session_type: String,
     pub status: String,
     pub interpretation: SessionInterpretation,
+    pub remediation_plans: Vec<QuestionRemediationPlan>,
     pub signals: Vec<FabricSignal>,
     pub evidence_records: Vec<FabricEvidenceRecord>,
     pub orchestration: FabricOrchestrationSummary,

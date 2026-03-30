@@ -7,7 +7,8 @@ use chrono::{DateTime, Utc};
 use ecoach_coach_brain::ReadinessEngine;
 use ecoach_questions::{
     Question, QuestionGenerationRequestInput, QuestionReactor, QuestionSelectionRequest,
-    QuestionSelector, QuestionService, QuestionSlotSpec, QuestionVariantMode, SelectedQuestion,
+    QuestionRemediationPlan, QuestionSelector, QuestionService, QuestionSlotSpec,
+    QuestionVariantMode, SelectedQuestion,
 };
 use ecoach_substrate::{
     BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry, FabricEvidenceRecord,
@@ -557,6 +558,10 @@ impl<'a> SessionService<'a> {
         input: &SessionAnswerInput,
     ) -> EcoachResult<SessionItem> {
         self.ensure_session_status(session_id, &["active"])?;
+        let session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        let session_meta = self.load_session_runtime_meta(session_id)?;
 
         let item = self.get_session_item(input.item_id)?.ok_or_else(|| {
             EcoachError::NotFound(format!("session item {} not found", input.item_id))
@@ -585,6 +590,7 @@ impl<'a> SessionService<'a> {
             .ok_or_else(|| {
                 EcoachError::NotFound(format!("question {} not found", item.question_id))
             })?;
+        let variant_flags = self.load_question_variant_flags(item.question_id)?;
 
         let answered_at = Utc::now().to_rfc3339();
         let answer_state_json = serde_json::json!({
@@ -615,8 +621,16 @@ impl<'a> SessionService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
+        self.insert_session_attempt(
+            &session,
+            &session_meta,
+            &item,
+            &question,
+            &option,
+            input,
+        )?;
         self.refresh_session_progress(session_id, item.display_order)?;
-        let session_meta = self.load_session_runtime_meta(session_id)?;
+        QuestionReactor::new(self.conn).record_instance_outcome(item.question_id)?;
         self.append_runtime_event(
             "session",
             DomainEvent::new(
@@ -651,6 +665,8 @@ impl<'a> SessionService<'a> {
                     "is_correct": option.is_correct,
                     "misconception_triggered": option.misconception_id.is_some(),
                     "timed_pressure_signal": session_meta.is_timed && !option.is_correct,
+                    "was_transfer_variant": variant_flags.was_transfer_variant,
+                    "was_mixed_context": variant_flags.was_mixed_context,
                 }),
             ),
         )?;
@@ -768,6 +784,21 @@ impl<'a> SessionService<'a> {
                 ),
             )?;
         }
+        let remediation_plans = self.list_session_remediation_plans(session_id, 3)?;
+        if !remediation_plans.is_empty() {
+            self.append_runtime_event(
+                "session",
+                DomainEvent::new(
+                    "session.remediation_planned",
+                    session_id.to_string(),
+                    json!({
+                        "session_id": session_id,
+                        "plan_count": remediation_plans.len(),
+                        "plans": remediation_plans,
+                    }),
+                ),
+            )?;
+        }
         self.build_summary(session_id)
     }
 
@@ -837,6 +868,106 @@ impl<'a> SessionService<'a> {
         }))
     }
 
+    pub fn list_session_remediation_plans(
+        &self,
+        session_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<QuestionRemediationPlan>> {
+        let session = match self.get_session(session_id)? {
+            Some(session) => session,
+            None => return Ok(Vec::new()),
+        };
+        let subject_id = match session.subject_id {
+            Some(subject_id) => subject_id,
+            None => return Ok(Vec::new()),
+        };
+
+        let reactor = QuestionReactor::new(self.conn);
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT q.topic_id, q.question_format, q.primary_cognitive_demand,
+                        q.family_id, si.question_id,
+                        COALESCE(si.response_time_ms, 0) AS response_time_ms
+                 FROM session_items si
+                 INNER JOIN questions q ON q.id = si.question_id
+                 WHERE si.session_id = ?1
+                   AND COALESCE(si.is_correct, 1) = 0
+                 ORDER BY CASE WHEN si.flagged = 1 THEN 0 ELSE 1 END ASC,
+                          CASE WHEN si.response_time_ms IS NULL THEN 1 ELSE 0 END ASC,
+                          si.response_time_ms DESC,
+                          si.display_order ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([session_id], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, Option<String>>(2)?,
+                    row.get::<_, Option<i64>>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, i64>(5)?,
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut remediation_plans = Vec::new();
+        let mut planned_families = BTreeSet::new();
+        for row in rows {
+            let (
+                topic_id,
+                question_format,
+                primary_cognitive_demand,
+                family_id,
+                question_id,
+                response_time_ms,
+            ) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if let Some(family_id) = family_id {
+                if planned_families.contains(&family_id) {
+                    continue;
+                }
+            }
+            let slot_spec = QuestionSlotSpec {
+                subject_id,
+                topic_id: Some(topic_id),
+                target_cognitive_demand: primary_cognitive_demand,
+                target_question_format: Some(question_format),
+                max_generated_share: if response_time_ms > 45_000 { 6_000 } else { 7_500 },
+            };
+            if let Some(plan) = reactor.recommend_remediation_plan(session.student_id, &slot_spec)? {
+                planned_families.insert(plan.family_choice.family_id);
+                remediation_plans.push(plan);
+            } else if let Some(family_id) = family_id {
+                let fallback_choice = reactor.get_best_family_for_slot(&slot_spec)?;
+                if let Some(family_choice) = fallback_choice {
+                    let _ = family_id;
+                    planned_families.insert(family_choice.family_id);
+                    remediation_plans.push(QuestionRemediationPlan {
+                        family_choice,
+                        variant_mode: QuestionVariantMode::Rescue.as_str().to_string(),
+                        priority_score: 6_200,
+                        source_question_id: Some(question_id),
+                        request_kind: "remediation".to_string(),
+                        rationale: "Session error had no direct student-history match, so a rescue family was selected from the current slot.".to_string(),
+                    });
+                }
+            }
+            if remediation_plans.len() >= limit.max(1) {
+                break;
+            }
+        }
+
+        remediation_plans.sort_by(|left, right| {
+            right
+                .priority_score
+                .cmp(&left.priority_score)
+                .then(left.family_choice.family_name.cmp(&right.family_choice.family_name))
+        });
+        remediation_plans.truncate(limit.max(1));
+        Ok(remediation_plans)
+    }
+
     pub fn get_session_evidence_fabric(
         &self,
         session_id: i64,
@@ -850,6 +981,7 @@ impl<'a> SessionService<'a> {
             Some(interpretation) => interpretation,
             None => return Ok(None),
         };
+        let remediation_plans = self.list_session_remediation_plans(session_id, 3)?;
         let observed_at = interpretation.observed_at.to_rfc3339();
         let mut signals = vec![FabricSignal {
             engine_key: "session_runtime".to_string(),
@@ -918,6 +1050,7 @@ impl<'a> SessionService<'a> {
             session_type: session.session_type,
             status: session.status,
             interpretation,
+            remediation_plans,
             signals,
             evidence_records,
             orchestration,
@@ -1627,38 +1760,68 @@ impl<'a> SessionService<'a> {
                 ),
                 max_generated_share: 8_000,
             };
-            let family_id = match seed.as_ref().and_then(|item| item.family_id) {
-                Some(family_id) => Some(family_id),
-                None => reactor
-                    .get_best_family_for_slot(&slot_spec)?
-                    .map(|choice| choice.family_id),
-            };
-            let Some(family_id) = family_id else {
+            let mut family_priorities = reactor.list_family_generation_priorities(
+                &slot_spec,
+                deficit.clamp(1, 4),
+            )?;
+            if family_priorities.is_empty() {
+                if seed.as_ref().and_then(|item| item.family_id).is_some() {
+                    if let Some(family_choice) = reactor.get_best_family_for_slot(&slot_spec)? {
+                        family_priorities.push(ecoach_questions::QuestionFamilyGenerationPriority {
+                            rationale: "Fallback to the strongest available seed family for this topic slot.".to_string(),
+                            recommended_variant_mode: variant_mode.as_str().to_string(),
+                            priority_score: family_choice.fit_score,
+                            health_status: "warming".to_string(),
+                            freshness_score: 0,
+                            calibration_score: 0,
+                            quality_score: 0,
+                            recurrence_score: 0,
+                            replacement_score: 0,
+                            family_choice,
+                        });
+                    }
+                }
+            }
+            if family_priorities.is_empty() {
                 continue;
-            };
+            }
 
-            let request = reactor.create_generation_request(&QuestionGenerationRequestInput {
-                slot_spec,
-                family_id: Some(family_id),
-                source_question_id: seed.as_ref().and_then(|item| item.question_id),
-                request_kind: request_kind.to_string(),
-                variant_mode,
-                requested_count: deficit,
-                rationale: Some(rationale.to_string()),
-            })?;
-            let generated = reactor.process_generation_request(request.id)?;
-            for draft in generated {
-                selected_questions.push(SelectedQuestion {
-                    fit_score: mock_candidate_fit(
-                        &draft.question,
-                        target_difficulty,
-                        is_timed,
-                        0.75,
-                    ),
-                    question: draft.question,
-                });
-                *current_topic_counts.entry(*topic_id).or_default() += 1;
-                generated_count += 1;
+            for offset in 0..deficit {
+                let priority = &family_priorities[offset % family_priorities.len()];
+                let chosen_variant_mode =
+                    resolve_generation_variant_mode(variant_mode, &priority.recommended_variant_mode);
+                let request = reactor.create_generation_request(&QuestionGenerationRequestInput {
+                    slot_spec: slot_spec.clone(),
+                    family_id: Some(priority.family_choice.family_id),
+                    source_question_id: seed.as_ref().and_then(|item| {
+                        if item.family_id == Some(priority.family_choice.family_id) {
+                            item.question_id
+                        } else {
+                            None
+                        }
+                    }),
+                    request_kind: request_kind.to_string(),
+                    variant_mode: chosen_variant_mode,
+                    requested_count: 1,
+                    rationale: Some(format!(
+                        "{} [{}]",
+                        rationale, priority.rationale
+                    )),
+                })?;
+                let generated = reactor.process_generation_request(request.id)?;
+                for draft in generated {
+                    selected_questions.push(SelectedQuestion {
+                        fit_score: mock_candidate_fit(
+                            &draft.question,
+                            target_difficulty,
+                            is_timed,
+                            0.75,
+                        ),
+                        question: draft.question,
+                    });
+                    *current_topic_counts.entry(*topic_id).or_default() += 1;
+                    generated_count += 1;
+                }
             }
         }
 
@@ -1782,6 +1945,114 @@ impl<'a> SessionService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
+    fn insert_session_attempt(
+        &self,
+        session: &Session,
+        session_meta: &SessionRuntimeMeta,
+        item: &SessionItem,
+        question: &Question,
+        option: &ecoach_questions::QuestionOption,
+        input: &SessionAnswerInput,
+    ) -> EcoachResult<()> {
+        let attempt_number = self.next_attempt_number(session.student_id, item.question_id)?;
+        let submitted_at = Utc::now();
+        let started_at = input
+            .response_time_ms
+            .map(|value| submitted_at - chrono::Duration::milliseconds(value.max(0)))
+            .or(session.started_at)
+            .unwrap_or(submitted_at);
+        let changed_answer_count = item
+            .selected_option_id
+            .filter(|selected_option_id| *selected_option_id != input.selected_option_id)
+            .map(|_| 1_i64)
+            .unwrap_or(0);
+        let error_type = classify_session_error_type(
+            option.is_correct,
+            option.misconception_id,
+            input.response_time_ms,
+            question.estimated_time_seconds,
+            session_meta.is_timed,
+        );
+        let variant_flags = self.load_question_variant_flags(item.question_id)?;
+
+        self.conn
+            .execute(
+                "INSERT INTO student_question_attempts (
+                    student_id, question_id, session_id, session_type, attempt_number,
+                    started_at, submitted_at, response_time_ms, selected_option_id, is_correct,
+                    confidence_level, hint_count, changed_answer_count, skipped, timed_out,
+                    error_type, misconception_triggered_id, support_level, was_timed,
+                    was_transfer_variant, was_retention_check, was_mixed_context, evidence_weight
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, NULL, 0, ?11, 0, 0, ?12, ?13, 'independent', ?14, ?15, 0, ?16, ?17)",
+                params![
+                    session.student_id,
+                    item.question_id,
+                    session.id,
+                    session_meta.session_type.as_str(),
+                    attempt_number,
+                    started_at.to_rfc3339(),
+                    submitted_at.to_rfc3339(),
+                    input.response_time_ms,
+                    input.selected_option_id,
+                    if option.is_correct { 1 } else { 0 },
+                    changed_answer_count,
+                    error_type,
+                    if option.is_correct { None::<i64> } else { option.misconception_id },
+                    if session_meta.is_timed { 1 } else { 0 },
+                    if variant_flags.was_transfer_variant { 1 } else { 0 },
+                    if variant_flags.was_mixed_context { 1 } else { 0 },
+                    session_attempt_evidence_weight(
+                        option.is_correct,
+                        input.response_time_ms,
+                        question.estimated_time_seconds,
+                        session_meta.is_timed,
+                    ),
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn next_attempt_number(&self, student_id: i64, question_id: i64) -> EcoachResult<i64> {
+        self.conn
+            .query_row(
+                "SELECT COUNT(*) FROM student_question_attempts WHERE student_id = ?1 AND question_id = ?2",
+                params![student_id, question_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .map(|count| count + 1)
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_question_variant_flags(&self, question_id: i64) -> EcoachResult<QuestionVariantFlags> {
+        let (was_transfer_variant, was_mixed_context) = self
+            .conn
+            .query_row(
+                "SELECT
+                    EXISTS(
+                        SELECT 1
+                        FROM question_graph_edges
+                        WHERE to_question_id = ?1
+                          AND relation_type IN ('representation_shift', 'difficulty_ladder')
+                    ),
+                    EXISTS(
+                        SELECT 1
+                        FROM question_graph_edges
+                        WHERE to_question_id = ?1
+                          AND relation_type = 'misconception_pair'
+                    )",
+                [question_id],
+                |row| Ok((row.get::<_, i64>(0)? == 1, row.get::<_, i64>(1)? == 1)),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(QuestionVariantFlags {
+            was_transfer_variant,
+            was_mixed_context,
+        })
+    }
+
     fn refresh_session_progress(
         &self,
         session_id: i64,
@@ -1877,6 +2148,12 @@ struct SessionRuntimeMeta {
     session_type: String,
     is_timed: bool,
     total_questions: i64,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct QuestionVariantFlags {
+    was_transfer_variant: bool,
+    was_mixed_context: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -1983,6 +2260,45 @@ fn derive_next_action_hint(
         return "stabilize_and_review".to_string();
     }
     "rebuild_support".to_string()
+}
+
+fn classify_session_error_type(
+    is_correct: bool,
+    misconception_id: Option<i64>,
+    response_time_ms: Option<i64>,
+    estimated_time_seconds: i64,
+    is_timed: bool,
+) -> Option<&'static str> {
+    if is_correct {
+        return None;
+    }
+    if misconception_id.is_some() {
+        return Some("misconception_triggered");
+    }
+    let response_time_ms = response_time_ms.unwrap_or_default();
+    if is_timed && response_time_ms >= estimated_time_seconds.max(1) * 1_350 {
+        Some("pressure_breakdown")
+    } else if response_time_ms > 0 && response_time_ms <= estimated_time_seconds.max(1) * 600 {
+        Some("carelessness")
+    } else {
+        Some("knowledge_gap")
+    }
+}
+
+fn session_attempt_evidence_weight(
+    is_correct: bool,
+    response_time_ms: Option<i64>,
+    estimated_time_seconds: i64,
+    is_timed: bool,
+) -> BasisPoints {
+    let speed_component = match response_time_ms.unwrap_or_default() {
+        value if value <= estimated_time_seconds.max(1) * 700 => 1_000,
+        value if value <= estimated_time_seconds.max(1) * 1_100 => 700,
+        _ => 300,
+    };
+    let timed_component = if is_timed { 600 } else { 0 };
+    let correctness_component = if is_correct { 5_400 } else { 4_600 };
+    clamp_bp(correctness_component + speed_component + timed_component)
 }
 
 fn session_fabric_inputs(
@@ -2146,6 +2462,26 @@ fn choose_reactor_variant_mode(
         Some(difficulty) if difficulty <= 3_500 => QuestionVariantMode::Rescue,
         _ if is_timed => QuestionVariantMode::RepresentationShift,
         _ => QuestionVariantMode::Isomorphic,
+    }
+}
+
+fn resolve_generation_variant_mode(
+    default_mode: QuestionVariantMode,
+    recommended_mode: &str,
+) -> QuestionVariantMode {
+    match default_mode {
+        QuestionVariantMode::Stretch
+        | QuestionVariantMode::Rescue
+        | QuestionVariantMode::MisconceptionProbe => default_mode,
+        QuestionVariantMode::RepresentationShift | QuestionVariantMode::Isomorphic => {
+            match recommended_mode {
+                "representation_shift" => QuestionVariantMode::RepresentationShift,
+                "misconception_probe" => QuestionVariantMode::MisconceptionProbe,
+                "rescue" => QuestionVariantMode::Rescue,
+                "stretch" => QuestionVariantMode::Stretch,
+                _ => default_mode,
+            }
+        }
     }
 }
 
@@ -2486,6 +2822,101 @@ mod tests {
         assert_eq!(archetype, "timed_targeted");
         assert_eq!(custom_event_count, 1);
         assert_eq!(reactor_event_count, 1);
+    }
+
+    #[test]
+    fn session_runtime_records_attempts_and_emits_remediation_plans() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let identity = IdentityService::new(&conn);
+        let student = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Naa".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student account should be created");
+
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        let service = SessionService::new(&conn);
+        let (session, _) = service
+            .start_practice_session(&PracticeSessionStartInput {
+                student_id: student.id,
+                subject_id,
+                topic_ids: vec![topic_id],
+                question_count: 2,
+                is_timed: true,
+            })
+            .expect("practice session should start");
+        let snapshot = service
+            .get_session_snapshot(session.id)
+            .expect("snapshot should load")
+            .expect("session should exist");
+
+        let question_service = QuestionService::new(&conn);
+        let options = question_service
+            .list_options(snapshot.items[0].question_id)
+            .expect("options should load");
+        let misconception_option = options
+            .iter()
+            .find(|option| option.misconception_id.is_some())
+            .expect("misconception option should exist");
+
+        service
+            .record_answer(
+                session.id,
+                &SessionAnswerInput {
+                    item_id: snapshot.items[0].id,
+                    selected_option_id: misconception_option.id,
+                    response_time_ms: Some(52_000),
+                },
+            )
+            .expect("answer should record");
+        service
+            .complete_session(session.id)
+            .expect("session should complete");
+
+        let attempt_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM student_question_attempts
+                 WHERE student_id = ?1 AND session_id = ?2",
+                params![student.id, session.id],
+                |row| row.get(0),
+            )
+            .expect("attempt count should query");
+        let family_health_attempts: i64 = conn
+            .query_row(
+                "SELECT COALESCE(qfh.recent_attempts, 0)
+                 FROM question_family_health qfh
+                 INNER JOIN session_items si ON si.source_family_id = qfh.family_id
+                 WHERE si.id = ?1",
+                [snapshot.items[0].id],
+                |row| row.get(0),
+            )
+            .expect("family health should query");
+        let remediation_event_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events
+                 WHERE event_type = 'session.remediation_planned' AND aggregate_id = ?1",
+                [session.id.to_string()],
+                |row| row.get(0),
+            )
+            .expect("remediation event count should query");
+        let fabric = service
+            .get_session_evidence_fabric(session.id, 10)
+            .expect("fabric should build")
+            .expect("fabric should exist");
+
+        assert_eq!(attempt_count, 1);
+        assert!(family_health_attempts >= 1);
+        assert_eq!(remediation_event_count, 1);
+        assert!(!fabric.remediation_plans.is_empty());
+        assert_eq!(
+            fabric.remediation_plans[0].request_kind,
+            "remediation".to_string()
+        );
     }
 
     #[test]

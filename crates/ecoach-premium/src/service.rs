@@ -1,8 +1,12 @@
+use std::collections::BTreeSet;
 use std::str::FromStr;
 
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, EntitlementTier};
-use rusqlite::{Connection, OptionalExtension, params};
+use ecoach_substrate::{
+    clamp_bp, BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry, EntitlementTier,
+    FabricOrchestrationSummary,
+};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::json;
 
 use crate::models::{
@@ -724,6 +728,8 @@ impl<'a> PremiumService<'a> {
         let top_risk_titles = self.list_top_risk_titles(student_id, 3)?;
         let inactive_days = self.inactive_days(student_id)?;
         let daily_budget_minutes = plan_budget.or(profile_budget);
+        let recent_focus_signals = self.recent_focus_signals(student_id, 6)?;
+        let recommended_game_modes = self.recommended_game_modes(student_id, 3)?;
         let strategy_mode = resolve_strategy_mode(
             overall_readiness_score,
             critical_risk_count,
@@ -739,6 +745,8 @@ impl<'a> PremiumService<'a> {
             active_intervention_count,
             inactive_days,
             current_phase.as_deref(),
+            &recent_focus_signals,
+            &recommended_game_modes,
         );
         let household_actions = build_household_actions(
             &strategy_mode,
@@ -747,6 +755,17 @@ impl<'a> PremiumService<'a> {
             active_intervention_count,
             inactive_days,
             daily_budget_minutes,
+            &recent_focus_signals,
+            &recommended_game_modes,
+        );
+        let orchestration = FabricOrchestrationSummary::from_available_inputs(
+            &EngineRegistry::core_runtime(),
+            strategy_available_inputs(
+                active_risk_count,
+                overdue_review_count,
+                !priority_topics.is_empty(),
+                !recent_focus_signals.is_empty(),
+            ),
         );
 
         Ok(PremiumStrategySnapshot {
@@ -767,8 +786,11 @@ impl<'a> PremiumService<'a> {
             active_intervention_count,
             priority_topics,
             top_risk_titles,
+            recent_focus_signals,
+            recommended_game_modes,
             coach_actions,
             household_actions,
+            orchestration,
         })
     }
 
@@ -966,6 +988,94 @@ impl<'a> PremiumService<'a> {
             .map(|timestamp| (Utc::now() - timestamp).num_days()))
     }
 
+    fn recent_focus_signals(&self, student_id: i64, limit: usize) -> EcoachResult<Vec<String>> {
+        if !self.table_exists("runtime_events")? {
+            return Ok(Vec::new());
+        }
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT event_type, payload_json
+                 FROM runtime_events
+                 WHERE aggregate_kind IN ('session', 'game')
+                 ORDER BY occurred_at DESC, event_id DESC
+                 LIMIT ?1",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let rows = statement
+            .query_map(params![(limit as i64).max(12)], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut signals = BTreeSet::new();
+        for row in rows {
+            let (event_type, payload_json) =
+                row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let payload = serde_json::from_str::<serde_json::Value>(&payload_json)
+                .unwrap_or_else(|_| json!({}));
+            if payload["student_id"].as_i64() != Some(student_id) {
+                continue;
+            }
+            for signal in extract_focus_signals(&event_type, &payload) {
+                signals.insert(signal);
+            }
+        }
+
+        Ok(signals.into_iter().collect())
+    }
+
+    fn recommended_game_modes(&self, student_id: i64, limit: usize) -> EcoachResult<Vec<String>> {
+        if !self.table_exists("student_contrast_states")? {
+            return Ok(Vec::new());
+        }
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT confusion_score, difference_drill_bp, similarity_trap_bp,
+                        know_difference_bp, which_is_which_bp, unmask_bp
+                 FROM student_contrast_states
+                 WHERE student_id = ?1
+                 ORDER BY confusion_score DESC, updated_at DESC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, limit as i64], |row| {
+                Ok(resolve_recommended_mode(
+                    clamp_bp(row.get::<_, i64>(0)?),
+                    clamp_bp(row.get::<_, i64>(1)?),
+                    clamp_bp(row.get::<_, i64>(2)?),
+                    clamp_bp(row.get::<_, i64>(3)?),
+                    clamp_bp(row.get::<_, i64>(4)?),
+                    clamp_bp(row.get::<_, i64>(5)?),
+                ))
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut modes = BTreeSet::new();
+        for row in rows {
+            modes.insert(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+
+        Ok(modes.into_iter().collect())
+    }
+
+    fn table_exists(&self, table_name: &str) -> EcoachResult<bool> {
+        let exists = self
+            .conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1 FROM sqlite_master
+                    WHERE type = 'table' AND name = ?1
+                 )",
+                [table_name],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(exists == 1)
+    }
+
     fn append_event(&self, aggregate_kind: &str, event: DomainEvent) -> EcoachResult<()> {
         let payload_json = serde_json::to_string(&event.payload)
             .map_err(|e| EcoachError::Serialization(e.to_string()))?;
@@ -1025,6 +1135,8 @@ fn build_coach_actions(
     active_intervention_count: i64,
     inactive_days: Option<i64>,
     current_phase: Option<&str>,
+    recent_focus_signals: &[String],
+    recommended_game_modes: &[String],
 ) -> Vec<String> {
     let mut actions = Vec::new();
 
@@ -1054,6 +1166,18 @@ fn build_coach_actions(
             phase
         ));
     }
+    if let Some(signal) = recent_focus_signals.first() {
+        actions.push(format!(
+            "Recent learner evidence is signaling {}, so route the next block through that weakness.",
+            signal.replace('_', " ")
+        ));
+    }
+    if let Some(mode) = recommended_game_modes.first() {
+        actions.push(format!(
+            "Use {} as the next game-mode remediation surface if contrast work is available.",
+            mode
+        ));
+    }
     if actions.is_empty() {
         actions.push(
             "Maintain the current plan and continue reinforcing priority topics.".to_string(),
@@ -1071,6 +1195,8 @@ fn build_household_actions(
     active_intervention_count: i64,
     inactive_days: Option<i64>,
     daily_budget_minutes: Option<i64>,
+    recent_focus_signals: &[String],
+    recommended_game_modes: &[String],
 ) -> Vec<String> {
     let mut actions = Vec::new();
 
@@ -1096,6 +1222,18 @@ fn build_household_actions(
             minutes
         ));
     }
+    if let Some(signal) = recent_focus_signals.first() {
+        actions.push(format!(
+            "The latest learner evidence shows {}, so avoid broadening scope until that settles.",
+            signal.replace('_', " ")
+        ));
+    }
+    if let Some(mode) = recommended_game_modes.first() {
+        actions.push(format!(
+            "If the learner uses games, prefer the {} mode next because it matches the current weakness.",
+            mode
+        ));
+    }
     if actions.is_empty() {
         actions
             .push("Keep the current routine steady and encourage daily consistency.".to_string());
@@ -1103,6 +1241,93 @@ fn build_household_actions(
 
     actions.truncate(4);
     actions
+}
+
+fn extract_focus_signals(event_type: &str, payload: &serde_json::Value) -> Vec<String> {
+    let mut signals = Vec::new();
+
+    if let Some(payload_signals) = payload["focus_signals"].as_array() {
+        for signal in payload_signals {
+            if let Some(signal) = signal.as_str() {
+                signals.push(signal.to_string());
+            }
+        }
+    }
+
+    match event_type {
+        "session.interpreted" => {
+            if let Some(tags) = payload["interpretation_tags"].as_array() {
+                for tag in tags {
+                    if let Some(tag) = tag.as_str() {
+                        signals.push(tag.to_string());
+                    }
+                }
+            }
+        }
+        "traps.session_completed" => {
+            if let Some(mode) = payload["recommended_next_mode"].as_str() {
+                signals.push(format!("trap_mode_{mode}"));
+            }
+            if let Some(reason) = payload["dominant_confusion_reason"].as_str() {
+                signals.push(format!("confusion_{}", reason));
+            }
+        }
+        "game.session_completed" => {
+            if let Some(step) = payload["recommended_next_step"].as_str() {
+                signals.push(step.replace(' ', "_").to_lowercase());
+            }
+        }
+        _ => {}
+    }
+
+    signals.sort();
+    signals.dedup();
+    signals
+}
+
+fn resolve_recommended_mode(
+    confusion_score: BasisPoints,
+    difference_drill_bp: BasisPoints,
+    similarity_trap_bp: BasisPoints,
+    know_difference_bp: BasisPoints,
+    which_is_which_bp: BasisPoints,
+    unmask_bp: BasisPoints,
+) -> String {
+    if difference_drill_bp == 0 || confusion_score >= 7000 {
+        "difference_drill".to_string()
+    } else if similarity_trap_bp < 6500 {
+        "similarity_trap".to_string()
+    } else if know_difference_bp < 6500 {
+        "know_the_difference".to_string()
+    } else if which_is_which_bp < 7000 {
+        "which_is_which".to_string()
+    } else if unmask_bp < 7000 {
+        "unmask".to_string()
+    } else {
+        "which_is_which".to_string()
+    }
+}
+
+fn strategy_available_inputs(
+    active_risk_count: i64,
+    overdue_review_count: i64,
+    has_priority_topics: bool,
+    has_recent_focus_signals: bool,
+) -> Vec<String> {
+    let mut inputs = vec![
+        "student_truth".to_string(),
+        "learner_evidence_fabric".to_string(),
+    ];
+    if active_risk_count > 0 {
+        inputs.push("coach_state".to_string());
+    }
+    if overdue_review_count > 0 || has_priority_topics {
+        inputs.push("readiness_signals".to_string());
+    }
+    if has_recent_focus_signals {
+        inputs.push("session_outcomes".to_string());
+    }
+    inputs
 }
 
 fn was_recent(raw: Option<&str>, days: i64) -> bool {
@@ -1199,6 +1424,36 @@ mod tests {
             [],
         )
         .expect("coach plan");
+        conn.execute(
+            "INSERT INTO student_contrast_states (
+                student_id, pair_id, confusion_score, difference_drill_bp, similarity_trap_bp,
+                know_difference_bp, which_is_which_bp, unmask_bp, updated_at
+             ) VALUES (1, 21, 7800, 4200, 5100, 6200, 5800, 6400, '2026-03-29T09:30:00Z')",
+            [],
+        )
+        .expect("contrast state");
+        conn.execute(
+            "INSERT INTO runtime_events (
+                event_id, event_type, aggregate_kind, aggregate_id, trace_id, payload_json, occurred_at
+             ) VALUES
+                ('evt-1', 'traps.session_completed', 'game', '77', 'trace-1', ?1, '2026-03-29T10:00:00Z'),
+                ('evt-2', 'session.interpreted', 'session', '88', 'trace-2', ?2, '2026-03-29T11:00:00Z')",
+            params![
+                json!({
+                    "student_id": 1,
+                    "recommended_next_mode": "difference_drill",
+                    "dominant_confusion_reason": "feature_confusion",
+                    "remediation_actions": ["Slow down contrast work"],
+                })
+                .to_string(),
+                json!({
+                    "student_id": 1,
+                    "interpretation_tags": ["pressure_breakdown", "review_requested"],
+                })
+                .to_string(),
+            ],
+        )
+        .expect("runtime events");
 
         let service = PremiumService::new(&conn);
         let snapshot = service.get_strategy_snapshot(1).expect("strategy snapshot");
@@ -1206,8 +1461,21 @@ mod tests {
         assert_eq!(snapshot.strategy_mode, "rescue");
         assert_eq!(snapshot.critical_risk_count, 1);
         assert_eq!(snapshot.priority_topics[0].topic_name, "Algebra");
+        assert!(snapshot
+            .recent_focus_signals
+            .iter()
+            .any(|signal| signal == "pressure_breakdown"));
+        assert!(snapshot
+            .recommended_game_modes
+            .iter()
+            .any(|mode| mode == "difference_drill"));
         assert!(!snapshot.coach_actions.is_empty());
         assert!(!snapshot.household_actions.is_empty());
+        assert!(snapshot
+            .orchestration
+            .consumer_targets
+            .iter()
+            .any(|target| target.engine_key == "reporting"));
     }
 
     #[test]
@@ -1342,6 +1610,17 @@ mod tests {
                 trace_id TEXT,
                 payload_json TEXT,
                 occurred_at TEXT
+            );
+            CREATE TABLE student_contrast_states (
+                student_id INTEGER NOT NULL,
+                pair_id INTEGER NOT NULL,
+                confusion_score INTEGER NOT NULL DEFAULT 0,
+                difference_drill_bp INTEGER NOT NULL DEFAULT 0,
+                similarity_trap_bp INTEGER NOT NULL DEFAULT 0,
+                know_difference_bp INTEGER NOT NULL DEFAULT 0,
+                which_is_which_bp INTEGER NOT NULL DEFAULT 0,
+                unmask_bp INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT
             );
             ",
         )

@@ -254,16 +254,52 @@ impl<'a> JourneyService<'a> {
         station_id: i64,
         evidence: &Value,
     ) -> EcoachResult<JourneyRouteSnapshot> {
-        let (route_id, sequence_no, station_code): (i64, i64, String) = self
+        let (route_id, sequence_no, station_code, station_type, completion_rule_json): (
+            i64,
+            i64,
+            String,
+            String,
+            String,
+        ) = self
             .conn
             .query_row(
-                "SELECT route_id, sequence_no, station_code FROM journey_stations WHERE id = ?1",
+                "SELECT route_id, sequence_no, station_code, station_type, completion_rule_json
+                 FROM journey_stations
+                 WHERE id = ?1",
                 [station_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let evidence_json = serde_json::to_string(evidence)
             .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let completion_rule = parse_json_value(4, &completion_rule_json)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let decision = evaluate_station_progression(&station_type, &completion_rule, evidence);
+        if !decision.passed {
+            self.conn
+                .execute(
+                    "UPDATE journey_stations
+                     SET status = 'active',
+                         evidence_json = ?1,
+                         updated_at = datetime('now')
+                     WHERE id = ?2",
+                    params![evidence_json, station_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.append_runtime_event(DomainEvent::new(
+                "journey.station_retry_required",
+                route_id.to_string(),
+                json!({
+                    "station_id": station_id,
+                    "station_code": station_code,
+                    "station_type": station_type,
+                    "missing_criteria": decision.missing_criteria,
+                }),
+            ))?;
+            return self
+                .get_route_snapshot(route_id)?
+                .ok_or_else(|| EcoachError::NotFound("journey route not found".to_string()));
+        }
         self.conn
             .execute(
                 "UPDATE journey_stations
@@ -322,6 +358,7 @@ impl<'a> JourneyService<'a> {
             json!({
                 "station_id": station_id,
                 "station_code": station_code,
+                "station_type": station_type,
             }),
         ))?;
 
@@ -585,6 +622,132 @@ fn target_accuracy_for_station(
     clamp_bp(base + sequence_index * 150 + (topic_case.diagnosis_certainty as i64 / 20))
 }
 
+#[derive(Debug)]
+struct StationProgressDecision {
+    passed: bool,
+    missing_criteria: Vec<String>,
+}
+
+fn evaluate_station_progression(
+    station_type: &str,
+    completion_rule: &Value,
+    evidence: &Value,
+) -> StationProgressDecision {
+    if evidence
+        .get("status")
+        .and_then(Value::as_str)
+        .is_some_and(|status| status.eq_ignore_ascii_case("passed"))
+    {
+        return StationProgressDecision {
+            passed: true,
+            missing_criteria: Vec::new(),
+        };
+    }
+
+    let mut missing_criteria = Vec::new();
+    let answered_questions = evidence
+        .get("answered_questions")
+        .or_else(|| evidence.get("attempt_count"))
+        .and_then(Value::as_i64)
+        .unwrap_or(0);
+    if let Some(min_questions) = completion_rule
+        .get("min_questions")
+        .and_then(Value::as_i64)
+        .filter(|min_questions| answered_questions < *min_questions)
+    {
+        missing_criteria.push(format!(
+            "requires at least {} questions but only {} were recorded",
+            min_questions, answered_questions
+        ));
+    }
+
+    let accuracy_score = evidence
+        .get("accuracy_score")
+        .or_else(|| evidence.get("timed_accuracy"))
+        .and_then(Value::as_i64);
+    if let (Some(target_accuracy_score), Some(actual_accuracy_score)) = (
+        completion_rule
+            .get("target_accuracy_score")
+            .and_then(Value::as_i64),
+        accuracy_score,
+    ) {
+        if actual_accuracy_score < target_accuracy_score {
+            missing_criteria.push(format!(
+                "accuracy {} is below target {}",
+                actual_accuracy_score, target_accuracy_score
+            ));
+        }
+    }
+
+    if let (Some(target_mastery_score), Some(actual_mastery_score)) = (
+        completion_rule
+            .get("target_mastery_score")
+            .and_then(Value::as_i64),
+        evidence.get("mastery_score").and_then(Value::as_i64),
+    ) {
+        if actual_mastery_score < target_mastery_score {
+            missing_criteria.push(format!(
+                "mastery {} is below target {}",
+                actual_mastery_score, target_mastery_score
+            ));
+        }
+    }
+
+    if let (Some(target_readiness_score), Some(actual_readiness_score)) = (
+        completion_rule
+            .get("target_readiness_score")
+            .and_then(Value::as_i64),
+        evidence.get("readiness_score").and_then(Value::as_i64),
+    ) {
+        if actual_readiness_score < target_readiness_score {
+            missing_criteria.push(format!(
+                "readiness {} is below target {}",
+                actual_readiness_score, target_readiness_score
+            ));
+        }
+    }
+
+    if completion_rule
+        .get("requires_delayed_recall")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+        && !evidence
+            .get("delayed_recall_passed")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+    {
+        missing_criteria.push("delayed recall proof is still missing".to_string());
+    }
+
+    if completion_rule
+        .get("requires_timed_success")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        let timed_success = evidence
+            .get("timed_success")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        let timed_accuracy = evidence.get("timed_accuracy").and_then(Value::as_i64);
+        let timed_target = completion_rule
+            .get("target_accuracy_score")
+            .and_then(Value::as_i64)
+            .unwrap_or(7000);
+        if !timed_success && timed_accuracy.unwrap_or(0) < timed_target {
+            missing_criteria.push("timed success evidence is still missing".to_string());
+        }
+    }
+
+    if missing_criteria.is_empty() && station_type == "review" && answered_questions == 0 {
+        missing_criteria.push("review station needs at least one retrieval attempt".to_string());
+    }
+
+    StationProgressDecision {
+        passed: missing_criteria.is_empty(),
+        missing_criteria,
+    }
+}
+
 fn map_route(row: &rusqlite::Row<'_>) -> rusqlite::Result<JourneyRoute> {
     let route_summary_json: String = row.get(7)?;
     let route_summary = serde_json::from_str::<Value>(&route_summary_json).map_err(|err| {
@@ -767,6 +930,71 @@ mod tests {
         assert_eq!(snapshot.stations[0].topic_id, Some(fading_topic_id));
         assert_eq!(snapshot.stations[0].station_type, "review");
         assert_eq!(snapshot.stations[0].status, "active");
+    }
+
+    #[test]
+    fn journey_station_does_not_advance_when_completion_rule_is_missed() {
+        let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_ids = {
+            let mut statement = conn
+                .prepare("SELECT id FROM topics WHERE subject_id = ?1 ORDER BY id ASC LIMIT 2")
+                .expect("statement should prepare");
+            let rows = statement
+                .query_map([subject_id], |row| row.get::<_, i64>(0))
+                .expect("topic rows should query");
+            let mut ids = Vec::new();
+            for row in rows {
+                ids.push(row.expect("topic id should map"));
+            }
+            ids
+        };
+        for (index, topic_id) in topic_ids.iter().enumerate() {
+            conn.execute(
+                "INSERT INTO student_topic_states (
+                    student_id, topic_id, mastery_score, gap_score, fragility_score, priority_score
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    1,
+                    topic_id,
+                    3000 + (index as i64 * 1500),
+                    8000 - (index as i64 * 1000),
+                    6000 - (index as i64 * 500),
+                    9000 - (index as i64 * 1000),
+                ],
+            )
+            .expect("topic state should insert");
+        }
+
+        let service = JourneyService::new(&conn);
+        let snapshot = service
+            .build_or_refresh_route(1, subject_id, Some("BECE"))
+            .expect("route should build");
+        let updated = service
+            .complete_station(
+                snapshot.stations[0].id,
+                &json!({
+                    "accuracy_score": 4200,
+                    "answered_questions": 2,
+                    "status": "needs_retry"
+                }),
+            )
+            .expect("station should remain active");
+
+        assert_eq!(updated.route.current_station_code.as_deref(), Some("station_01"));
+        assert_eq!(updated.stations[0].status, "active");
+        assert_eq!(updated.stations[1].status, "locked");
     }
 
     fn seed_student(conn: &Connection) {

@@ -1,11 +1,11 @@
 use chrono::Utc;
 use ecoach_substrate::EcoachResult;
 use ecoach_substrate::{BasisPoints, EcoachError};
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 
 use crate::dashboard::DashboardService;
-use crate::strategy::{ReportingStrategySummary, load_strategy_summary};
+use crate::strategy::{load_strategy_summary, ReportingStrategySummary};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdminOversightSnapshot {
@@ -337,6 +337,18 @@ fn build_follow_up_actions(
             "Current premium strategy mode is {}, so keep follow-up aligned to that plan.",
             strategy_summary.strategy_mode
         ));
+        if let Some(signal) = strategy_summary.recent_focus_signals.first() {
+            actions.push(format!(
+                "Recent learner evidence is flagging {}, so review that surface before expansion.",
+                signal.replace('_', " ")
+            ));
+        }
+        if let Some(mode) = strategy_summary.recommended_game_modes.first() {
+            actions.push(format!(
+                "If remediation games are available, route the learner into {} next.",
+                mode
+            ));
+        }
     }
     if parent_count == 0 {
         actions.push("No linked household is present, so admin follow-up is required.".to_string());
