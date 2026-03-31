@@ -1,12 +1,14 @@
 use ecoach_coach_brain::{
     AdaptationResult, CoachNextAction, CoachStateResolution, ComposedSession,
     ConsistencySnapshot, ContentReadinessResolution, DeadlinePressure,
-    CompressionAction, EvidenceEvent, EvidenceInterpretationEngine, GoalFeasibility,
-    JourneyAdaptationEngine, JourneyRouteSnapshot, JourneyService, KnowledgeMapNode,
-    LearnerMisconceptionSnapshot, PlanEngine, PrerequisiteGraph, ReentryProbeResult,
-    RouteMode, SessionComposer, TopicCase, VelocityEngine, VelocitySnapshot,
-    assess_content_readiness, list_priority_topic_cases, resolve_coach_state,
-    resolve_next_coach_action,
+    CompressionAction, EvidenceEvent, EvidenceInterpretationEngine, GoalEngine,
+    GoalFeasibility, GoalRecommendation, JourneyAdaptationEngine, JourneyRouteSnapshot,
+    JourneyService, KnowledgeMapNode, LearnerMisconceptionSnapshot, PlanEngine,
+    PrerequisiteGraph, ReentryProbeResult, RouteMode, SessionComposer,
+    SteppedAttemptResult, SteppedQuestionEngine, TopicActionEngine, TopicActionMode,
+    TopicActionSession, TopicActionSummary, TopicCase, TopicProofCertification,
+    TopicProofEngine, VelocityEngine, VelocitySnapshot, assess_content_readiness,
+    list_priority_topic_cases, resolve_coach_state, resolve_next_coach_action,
 };
 use ecoach_goals_calendar::GoalsCalendarService;
 use ecoach_reporting::{DashboardService, StudentDashboard};
@@ -466,6 +468,128 @@ pub fn deepen_route(
 ) -> Result<Vec<CompressionAction>, CommandError> {
     state.with_connection(|conn| {
         Ok(VelocityEngine::new(conn).deepen_route(student_id, subject_id)?)
+    })
+}
+
+// ── Topic Action Engine commands ──
+
+pub fn start_topic_action(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    topic_id: i64,
+    action_mode: &str,
+    symptom_input: Option<&str>,
+) -> Result<TopicActionSession, CommandError> {
+    state.with_connection(|conn| {
+        let mode = TopicActionMode::from_str(action_mode);
+        Ok(TopicActionEngine::new(conn).start_topic_action(
+            student_id, subject_id, topic_id, mode, symptom_input,
+        )?)
+    })
+}
+
+pub fn complete_topic_action(
+    state: &AppState,
+    session_id: i64,
+) -> Result<TopicActionSummary, CommandError> {
+    state.with_connection(|conn| {
+        Ok(TopicActionEngine::new(conn).complete_topic_action(session_id)?)
+    })
+}
+
+pub fn get_active_topic_action(
+    state: &AppState,
+    student_id: i64,
+    topic_id: i64,
+) -> Result<Option<TopicActionSession>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(TopicActionEngine::new(conn).get_active_session(student_id, topic_id)?)
+    })
+}
+
+pub fn record_topic_subtopic_completed(
+    state: &AppState,
+    session_id: i64,
+    step_number: i64,
+) -> Result<(), CommandError> {
+    state.with_connection(|conn| {
+        Ok(TopicActionEngine::new(conn).record_subtopic_completed(session_id, step_number)?)
+    })
+}
+
+// ── Goal Engine commands ──
+
+pub fn save_learner_goal(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    goal_type: &str,
+    target_exam: Option<&str>,
+    exam_date: Option<&str>,
+    confidence_level: Option<&str>,
+) -> Result<i64, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalEngine::new(conn).save_goal(
+            student_id, subject_id, goal_type, target_exam, exam_date, confidence_level,
+        )?)
+    })
+}
+
+pub fn get_goal_recommendation(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<GoalRecommendation, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalEngine::new(conn).get_recommendation(student_id, subject_id)?)
+    })
+}
+
+// ── Stepped Question Engine commands ──
+
+pub fn start_stepped_attempt(
+    state: &AppState,
+    student_id: i64,
+    question_id: i64,
+    session_id: Option<i64>,
+) -> Result<i64, CommandError> {
+    state.with_connection(|conn| {
+        Ok(SteppedQuestionEngine::new(conn).start_stepped_attempt(
+            student_id, question_id, session_id,
+        )?)
+    })
+}
+
+pub fn complete_stepped_attempt(
+    state: &AppState,
+    attempt_id: i64,
+) -> Result<SteppedAttemptResult, CommandError> {
+    state.with_connection(|conn| {
+        Ok(SteppedQuestionEngine::new(conn).complete_stepped_attempt(attempt_id)?)
+    })
+}
+
+// ── Topic Proof Engine commands ──
+
+pub fn assess_topic_proof(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    topic_id: i64,
+) -> Result<TopicProofCertification, CommandError> {
+    state.with_connection(|conn| {
+        Ok(TopicProofEngine::new(conn).assess_topic_proof(student_id, subject_id, topic_id)?)
+    })
+}
+
+pub fn list_topic_proofs(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<TopicProofCertification>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(TopicProofEngine::new(conn).list_proofs(student_id, subject_id)?)
     })
 }
 
