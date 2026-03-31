@@ -117,6 +117,51 @@ pub fn get_session_evidence_fabric(
     })
 }
 
+// ── Elite Mode deep commands ──
+
+pub fn score_elite_session(
+    state: &AppState,
+    student_id: i64,
+    session_id: i64,
+    session_class: &str,
+) -> Result<ecoach_elite::EliteSessionScore, CommandError> {
+    state.with_connection(|conn| {
+        let service = EliteService::new(conn);
+        let score = service.score_session(student_id, session_id, session_class)?;
+        Ok(score)
+    })
+}
+
+pub fn list_elite_personal_bests(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<(String, i64, String)>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(EliteService::new(conn).list_personal_bests(student_id, subject_id)?)
+    })
+}
+
+pub fn check_elite_badges(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<String>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(EliteService::new(conn).check_and_award_badges(student_id, subject_id)?)
+    })
+}
+
+pub fn list_elite_earned_badges(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<(String, String, String)>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(EliteService::new(conn).list_earned_elite_badges(student_id, subject_id)?)
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;

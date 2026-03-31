@@ -881,6 +881,184 @@ impl<'a> EliteService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         Ok(exists == 1)
     }
+
+    // -----------------------------------------------------------------------
+    // Personal bests
+    // -----------------------------------------------------------------------
+
+    pub fn update_personal_best(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        record_type: &str,
+        record_value: i64,
+    ) -> EcoachResult<bool> {
+        let existing: Option<i64> = self
+            .conn
+            .query_row(
+                "SELECT record_value FROM elite_personal_bests
+                 WHERE student_id = ?1 AND subject_id = ?2 AND record_type = ?3",
+                params![student_id, subject_id, record_type],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let is_new_best = match existing {
+            Some(old) => record_value > old,
+            None => true,
+        };
+
+        if is_new_best {
+            self.conn
+                .execute(
+                    "INSERT INTO elite_personal_bests (student_id, subject_id, record_type, record_value)
+                     VALUES (?1, ?2, ?3, ?4)
+                     ON CONFLICT(student_id, subject_id, record_type) DO UPDATE SET
+                        record_value = ?4, achieved_at = datetime('now')",
+                    params![student_id, subject_id, record_type, record_value],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        }
+
+        Ok(is_new_best)
+    }
+
+    pub fn list_personal_bests(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<Vec<(String, i64, String)>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT record_type, record_value, achieved_at
+                 FROM elite_personal_bests
+                 WHERE student_id = ?1 AND subject_id = ?2
+                 ORDER BY record_type",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, subject_id], |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut bests = Vec::new();
+        for row in rows {
+            bests.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(bests)
+    }
+
+    // -----------------------------------------------------------------------
+    // Elite badges
+    // -----------------------------------------------------------------------
+
+    pub fn check_and_award_badges(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<Vec<String>> {
+        let mut awarded = Vec::new();
+
+        // Get profile
+        let profile = self.get_profile(student_id, subject_id)?;
+        let Some(profile) = profile else { return Ok(awarded); };
+
+        // Perfect Run badge
+        let perfect_sessions: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM elite_session_records
+                 WHERE student_id = ?1 AND subject_id = ?2
+                   AND session_type = 'perfect_run'",
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+        if perfect_sessions >= 1 {
+            if self.award_elite_badge(student_id, subject_id, "perfect_run")? {
+                awarded.push("perfect_run".into());
+            }
+        }
+
+        // Distinction Machine (Apex tier)
+        if profile.tier == "apex" || profile.tier == "legend" {
+            if self.award_elite_badge(student_id, subject_id, "distinction_machine")? {
+                awarded.push("distinction_machine".into());
+            }
+        }
+
+        // Legend Status
+        if profile.tier == "legend" {
+            if self.award_elite_badge(student_id, subject_id, "legend_status")? {
+                awarded.push("legend_status".into());
+            }
+        }
+
+        // Speed Authority (check personal best)
+        let has_speed_record: bool = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM elite_personal_bests
+                 WHERE student_id = ?1 AND subject_id = ?2 AND record_type = 'fastest_clean_sprint'",
+                params![student_id, subject_id],
+                |row| Ok(row.get::<_, i64>(0)? > 0),
+            )
+            .unwrap_or(false);
+        if has_speed_record {
+            if self.award_elite_badge(student_id, subject_id, "speed_authority")? {
+                awarded.push("speed_authority".into());
+            }
+        }
+
+        Ok(awarded)
+    }
+
+    fn award_elite_badge(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        badge_code: &str,
+    ) -> EcoachResult<bool> {
+        let result = self.conn.execute(
+            "INSERT OR IGNORE INTO elite_earned_badges (student_id, subject_id, badge_code)
+             VALUES (?1, ?2, ?3)",
+            params![student_id, subject_id, badge_code],
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(result > 0)
+    }
+
+    pub fn list_earned_elite_badges(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<Vec<(String, String, String)>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT eb.badge_code, bd.badge_name, eb.earned_at
+                 FROM elite_earned_badges eb
+                 INNER JOIN elite_badges bd ON bd.badge_code = eb.badge_code
+                 WHERE eb.student_id = ?1 AND eb.subject_id = ?2
+                 ORDER BY eb.earned_at DESC",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, subject_id], |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut badges = Vec::new();
+        for row in rows {
+            badges.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(badges)
+    }
 }
 
 struct EliteSessionHeader {
