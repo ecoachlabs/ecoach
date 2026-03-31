@@ -1,3 +1,4 @@
+pub mod beat_yesterday_deep;
 pub mod evidence_engine;
 pub mod goal_engine;
 pub mod journey;
@@ -14,6 +15,10 @@ pub mod topic_case;
 pub mod topic_proof_engine;
 pub mod velocity_engine;
 
+pub use beat_yesterday_deep::{
+    BeatYesterdayDeepEngine, BeatYesterdayExtendedProfile, ClimbState, TeacherClimbOverview,
+    WeeklyReview as BeatYesterdayWeeklyReview,
+};
 pub use evidence_engine::{
     EvidenceEvent, EvidenceInterpretationEngine, LearnerMisconceptionSnapshot, MisconceptionStatus,
 };

@@ -1,7 +1,9 @@
 use ecoach_coach_brain::{
     AdaptationResult, CoachNextAction, CoachStateResolution, ComposedSession,
     ConsistencySnapshot, ContentReadinessResolution, DeadlinePressure,
+    BeatYesterdayDeepEngine, BeatYesterdayExtendedProfile, BeatYesterdayWeeklyReview,
     CompressionAction, EvidenceEvent, EvidenceInterpretationEngine, GoalEngine,
+    TeacherClimbOverview,
     GoalFeasibility, GoalRecommendation, JourneyAdaptationEngine, JourneyRouteSnapshot,
     JourneyService, KnowledgeMapNode, LearnerMisconceptionSnapshot, PlanEngine,
     PrerequisiteGraph, ReentryProbeResult, RiseModeEngine, RiseModeProfile, RouteMode,
@@ -667,6 +669,47 @@ pub fn list_climb_trend(
 ) -> Result<Vec<ecoach_goals_calendar::ClimbTrendPoint>, CommandError> {
     state.with_connection(|conn| {
         Ok(GoalsCalendarService::new(conn).list_climb_trend(student_id, subject_id, days as usize)?)
+    })
+}
+
+// ── Beat Yesterday Deep commands ──
+
+pub fn get_beat_yesterday_extended_profile(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<BeatYesterdayExtendedProfile, CommandError> {
+    state.with_connection(|conn| {
+        Ok(BeatYesterdayDeepEngine::new(conn).get_extended_profile(student_id, subject_id)?)
+    })
+}
+
+pub fn update_beat_yesterday_scores(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<(), CommandError> {
+    state.with_connection(|conn| {
+        Ok(BeatYesterdayDeepEngine::new(conn).update_extended_scores(student_id, subject_id)?)
+    })
+}
+
+pub fn get_beat_yesterday_weekly_review(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<BeatYesterdayWeeklyReview, CommandError> {
+    state.with_connection(|conn| {
+        Ok(BeatYesterdayDeepEngine::new(conn).generate_weekly_review(student_id, subject_id)?)
+    })
+}
+
+pub fn get_teacher_climb_overview(
+    state: &AppState,
+    subject_id: i64,
+) -> Result<Vec<TeacherClimbOverview>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(BeatYesterdayDeepEngine::new(conn).get_teacher_class_overview(subject_id)?)
     })
 }
 

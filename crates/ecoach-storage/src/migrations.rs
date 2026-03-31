@@ -207,6 +207,10 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "049_rise_mode",
         sql: include_str!("../../../migrations/runtime/049_rise_mode.sql"),
     },
+    Migration {
+        id: "050_beat_yesterday_deep",
+        sql: include_str!("../../../migrations/runtime/050_beat_yesterday_deep.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {
