@@ -86,5 +86,205 @@ pub fn get_learner_truth(
     })
 }
 
-// Topic states are available via the learner truth snapshot's topic_summaries.
-// Use get_learner_truth for comprehensive student state data.
+// ── idea3 instant-gratification features ──
+
+/// Academic MRI / instant scan: run diagnostic and return instant insight summary.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AcademicScanResult {
+    pub student_id: i64,
+    pub overall_readiness_band: String,
+    pub strongest_topic: Option<String>,
+    pub weakest_topic: Option<String>,
+    pub top_score_blockers: Vec<String>,
+    pub readiness_score: i64,
+    pub study_days_last_14: i64,
+    pub recommended_next_action: String,
+}
+
+pub fn get_academic_scan(
+    state: &AppState,
+    student_id: i64,
+) -> Result<AcademicScanResult, CommandError> {
+    state.with_connection(|conn| {
+        let truth = StudentModelService::new(conn).get_learner_truth_snapshot(student_id)?;
+
+        let strongest = truth.topic_summaries.iter()
+            .max_by_key(|t| t.mastery_score)
+            .map(|t| t.topic_name.clone());
+        let weakest = truth.topic_summaries.iter()
+            .min_by_key(|t| t.mastery_score)
+            .map(|t| t.topic_name.clone());
+
+        // Top score blockers from recent diagnoses
+        let blockers: Vec<String> = truth.recent_diagnoses.iter()
+            .take(3)
+            .map(|d| d.primary_diagnosis.clone())
+            .collect();
+
+        let recommended = if truth.pending_review_count > 0 {
+            "Complete pending reviews before new content".into()
+        } else if truth.overall_mastery_score < 5000 {
+            "Start with a focused repair session on your weakest topic".into()
+        } else {
+            "Continue your study path and take a mini mock this week".into()
+        };
+
+        // Study consistency
+        let study_days: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM study_consistency
+                 WHERE student_id = ?1 AND study_date >= date('now', '-14 days')",
+                [student_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+
+        Ok(AcademicScanResult {
+            student_id,
+            overall_readiness_band: truth.overall_readiness_band,
+            strongest_topic: strongest,
+            weakest_topic: weakest,
+            top_score_blockers: blockers,
+            readiness_score: truth.overall_mastery_score as i64,
+            study_days_last_14: study_days,
+            recommended_next_action: recommended,
+        })
+    })
+}
+
+/// "What changed this week" summary for parents.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WeeklyChangeDto {
+    pub student_id: i64,
+    pub student_name: String,
+    pub improvements: Vec<String>,
+    pub concerns: Vec<String>,
+    pub recommended_actions: Vec<String>,
+}
+
+pub fn get_weekly_change_summary(
+    state: &AppState,
+    student_id: i64,
+) -> Result<WeeklyChangeDto, CommandError> {
+    state.with_connection(|conn| {
+        let truth = StudentModelService::new(conn).get_learner_truth_snapshot(student_id)?;
+
+        let mut improvements = Vec::new();
+        let mut concerns = Vec::new();
+
+        for topic in &truth.topic_summaries {
+            if topic.mastery_state == "robust" || topic.mastery_state == "exam_ready" {
+                improvements.push(format!("{} is improving", topic.topic_name));
+            } else if topic.mastery_state == "fragile" || topic.mastery_state == "exposed" {
+                concerns.push(format!("{} needs attention", topic.topic_name));
+            }
+        }
+
+        // Check consistency
+        let study_days: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM study_consistency
+                 WHERE student_id = ?1 AND study_date >= date('now', '-7 days')",
+                [student_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+
+        if study_days >= 5 {
+            improvements.push("Strong study consistency this week".into());
+        } else if study_days <= 2 {
+            concerns.push("Study activity has been low this week".into());
+        }
+
+        let mut actions = Vec::new();
+        if !concerns.is_empty() {
+            actions.push("Focus on the areas flagged as needing attention".into());
+        }
+        if study_days <= 2 {
+            actions.push("Encourage at least one short session today".into());
+        }
+        if improvements.is_empty() && concerns.is_empty() {
+            actions.push("Maintain current study pace".into());
+        }
+
+        Ok(WeeklyChangeDto {
+            student_id,
+            student_name: truth.student_name,
+            improvements,
+            concerns,
+            recommended_actions: actions,
+        })
+    })
+}
+
+/// Attention-needed queue for parents: which children need help most.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AttentionNeededItem {
+    pub student_id: i64,
+    pub student_name: String,
+    pub urgency: String,
+    pub reason: String,
+    pub recommended_action: String,
+}
+
+pub fn get_attention_needed_queue(
+    state: &AppState,
+    parent_id: i64,
+) -> Result<Vec<AttentionNeededItem>, CommandError> {
+    state.with_connection(|conn| {
+        let identity = ecoach_identity::IdentityService::new(conn);
+        let students = identity.get_linked_students(parent_id)?;
+
+        let mut items = Vec::new();
+        for student in &students {
+            // Check for risk flags
+            let risk_count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM risk_flags
+                     WHERE student_id = ?1 AND status = 'active'",
+                    [student.id],
+                    |row| row.get(0),
+                )
+                .unwrap_or(0);
+
+            // Check inactivity
+            let days_since_activity: i64 = conn
+                .query_row(
+                    "SELECT COALESCE(CAST(julianday('now') - julianday(MAX(study_date)) AS INTEGER), 99)
+                     FROM study_consistency WHERE student_id = ?1",
+                    [student.id],
+                    |row| row.get(0),
+                )
+                .unwrap_or(99);
+
+            if risk_count > 0 {
+                items.push(AttentionNeededItem {
+                    student_id: student.id,
+                    student_name: student.display_name.clone(),
+                    urgency: "high".into(),
+                    reason: format!("{} active risk flag(s) detected", risk_count),
+                    recommended_action: "Review risk details and focus on weak topics".into(),
+                });
+            } else if days_since_activity >= 5 {
+                items.push(AttentionNeededItem {
+                    student_id: student.id,
+                    student_name: student.display_name.clone(),
+                    urgency: "medium".into(),
+                    reason: format!("No study activity for {} days", days_since_activity),
+                    recommended_action: "Encourage a short return session to rebuild momentum".into(),
+                });
+            }
+        }
+
+        items.sort_by(|a, b| {
+            let urgency_order = |u: &str| match u {
+                "high" => 0,
+                "medium" => 1,
+                _ => 2,
+            };
+            urgency_order(&a.urgency).cmp(&urgency_order(&b.urgency))
+        });
+
+        Ok(items)
+    })
+}

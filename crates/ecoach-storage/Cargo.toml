@@ -8,4 +8,5 @@ license.workspace = true
 chrono.workspace = true
 ecoach-substrate = { path = "../ecoach-substrate" }
 rusqlite.workspace = true
+serde.workspace = true
 thiserror.workspace = true

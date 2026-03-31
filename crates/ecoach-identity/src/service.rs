@@ -159,6 +159,34 @@ impl<'a> IdentityService<'a> {
         Ok(students)
     }
 
+    /// Reset a learner's PIN. Only callable by parent/admin.
+    pub fn reset_pin(&self, account_id: i64, new_pin: &str) -> EcoachResult<()> {
+        let account_type: String = self
+            .conn
+            .query_row(
+                "SELECT account_type FROM accounts WHERE id = ?1",
+                [account_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::NotFound(format!("account {account_id} not found: {e}")))?;
+
+        let at = parse_account_type(account_type)
+            .map_err(|e| EcoachError::Validation(format!("invalid account type: {e}")))?;
+        validate_pin(&at, new_pin)?;
+        let (pin_hash, pin_salt) = hash_pin(new_pin)?;
+
+        self.conn
+            .execute(
+                "UPDATE accounts SET pin_hash = ?1, pin_salt = ?2, failed_pin_attempts = 0,
+                     locked_until = NULL, updated_at = datetime('now')
+                 WHERE id = ?3",
+                params![pin_hash, pin_salt, account_id],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        Ok(())
+    }
+
     fn get_account(&self, account_id: i64) -> EcoachResult<Option<Account>> {
         self.get_account_row(account_id).map(|row| {
             row.map(|raw| Account {

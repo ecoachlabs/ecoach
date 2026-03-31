@@ -1078,6 +1078,7 @@ dependencies = [
  "chrono",
  "ecoach-substrate",
  "rusqlite",
+ "serde",
  "thiserror 2.0.18",
 ]
 
