@@ -170,3 +170,27 @@ pub fn build_memory_return_loop(
 ) -> Result<MemoryReturnLoopDto, CommandError> {
     state.with_connection(|conn| Ok(MemoryService::new(conn).build_return_loop(student_id, limit)?))
 }
+
+// ── Memory Intelligence commands ──
+
+pub fn recompute_skill_memory(
+    state: &AppState,
+    student_id: i64,
+    node_id: i64,
+) -> Result<ecoach_coach_brain::MemoryScoreUpdate, CommandError> {
+    state.with_connection(|conn| {
+        Ok(ecoach_coach_brain::MemoryIntelligenceEngine::new(conn)
+            .recompute_skill_memory(student_id, node_id)?)
+    })
+}
+
+pub fn get_skill_proof_status(
+    state: &AppState,
+    student_id: i64,
+    node_id: i64,
+) -> Result<Vec<ecoach_coach_brain::ProofStatus>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(ecoach_coach_brain::MemoryIntelligenceEngine::new(conn)
+            .get_proof_status(student_id, node_id)?)
+    })
+}

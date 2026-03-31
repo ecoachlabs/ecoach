@@ -1,6 +1,7 @@
 pub mod beat_yesterday_deep;
 pub mod evidence_engine;
 pub mod goal_engine;
+pub mod memory_intelligence;
 pub mod journey;
 pub mod journey_adaptation;
 pub mod plan_engine;
@@ -34,6 +35,9 @@ pub use journey::{JourneyRoute, JourneyRouteSnapshot, JourneyService, JourneySta
 pub use journey_adaptation::{
     AdaptationResult, ConsistencySnapshot, DeadlinePressure, JourneyAdaptationEngine,
     KnowledgeMapNode, MoraleSignal, RouteMode,
+};
+pub use memory_intelligence::{
+    EvidenceTier, MemoryIntelligenceEngine, MemoryScoreUpdate, ProofStatus, RecoveryPathType,
 };
 pub use plan_engine::{CoachMissionMemory, PlanEngine, PlanRewriteResult};
 pub use prerequisite_graph::{PrerequisiteGraph, PrerequisiteLink, ReentryProbeResult};
