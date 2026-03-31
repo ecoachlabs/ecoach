@@ -1,6 +1,8 @@
 use ecoach_premium::{
-    CreateInterventionInput, InterventionStatus, PremiumPriorityTopic, PremiumService,
-    PremiumStrategySnapshot, RiskFlagStatus,
+    CreateConciergeResponseInput, CreateInterventionInput, CreateMilestoneReviewInput,
+    CreateParentCommunicationInput, CreatePremiumIntakeInput, CreateReadinessProfileInput,
+    InterventionStatus, PremiumPriorityTopic, PremiumService, PremiumStrategySnapshot,
+    RiskFlagStatus,
 };
 
 use crate::{dtos::FabricOrchestrationSummaryDto, error::CommandError, state::AppState};
@@ -281,6 +283,270 @@ pub fn get_strategy_snapshot(
         Ok(PremiumStrategySnapshotDto::from(
             PremiumService::new(conn).get_strategy_snapshot(student_id)?,
         ))
+    })
+}
+
+// ── Premium concierge commands (idea12) ──
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReadinessProfileDto {
+    pub id: i64,
+    pub overall_readiness_bp: i64,
+    pub overall_band: String,
+    pub knowledge_solidity_bp: i64,
+    pub speed_under_pressure_bp: i64,
+    pub memory_stability_bp: i64,
+    pub trajectory: Option<String>,
+    pub interpretation: Option<String>,
+    pub snapshot_date: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MilestoneReviewDto {
+    pub id: i64,
+    pub review_type: String,
+    pub readiness_band: String,
+    pub overall_trend: String,
+    pub executive_position: String,
+    pub forecast_summary: Option<String>,
+    pub parent_guidance: Option<String>,
+    pub review_date: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConciergeResponseDto {
+    pub id: i64,
+    pub question_family: Option<String>,
+    pub parent_question: String,
+    pub direct_answer: String,
+    pub expected_outcome: Option<String>,
+    pub parent_action_needed: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StrategyStateDto {
+    pub primary_focus: Option<String>,
+    pub secondary_focus: Option<String>,
+    pub focus_reason: Option<String>,
+    pub expected_outcome: Option<String>,
+    pub mode_selection: Option<String>,
+    pub next_review_date: Option<String>,
+    pub last_shift_date: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParentCommunicationDto {
+    pub id: i64,
+    pub comm_type: String,
+    pub priority: i64,
+    pub title: String,
+    pub body: String,
+    pub read_at: Option<String>,
+    pub created_at: String,
+}
+
+pub fn snapshot_readiness(
+    state: &AppState,
+    input: CreateReadinessProfileInput,
+) -> Result<ReadinessProfileDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let profile = service.snapshot_readiness_profile(&input)?;
+        Ok(ReadinessProfileDto {
+            id: profile.id,
+            overall_readiness_bp: profile.overall_readiness_bp as i64,
+            overall_band: profile.overall_band,
+            knowledge_solidity_bp: profile.knowledge_solidity_bp as i64,
+            speed_under_pressure_bp: profile.speed_under_pressure_bp as i64,
+            memory_stability_bp: profile.memory_stability_bp as i64,
+            trajectory: profile.trajectory,
+            interpretation: profile.interpretation,
+            snapshot_date: profile.snapshot_date,
+        })
+    })
+}
+
+pub fn list_readiness_trend(
+    state: &AppState,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<ReadinessProfileDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let profiles = service.list_readiness_trend(student_id, limit)?;
+        Ok(profiles
+            .into_iter()
+            .map(|p| ReadinessProfileDto {
+                id: p.id,
+                overall_readiness_bp: p.overall_readiness_bp as i64,
+                overall_band: p.overall_band,
+                knowledge_solidity_bp: p.knowledge_solidity_bp as i64,
+                speed_under_pressure_bp: p.speed_under_pressure_bp as i64,
+                memory_stability_bp: p.memory_stability_bp as i64,
+                trajectory: p.trajectory,
+                interpretation: p.interpretation,
+                snapshot_date: p.snapshot_date,
+            })
+            .collect())
+    })
+}
+
+pub fn create_milestone_review(
+    state: &AppState,
+    input: CreateMilestoneReviewInput,
+) -> Result<MilestoneReviewDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let review = service.create_milestone_review(&input)?;
+        Ok(MilestoneReviewDto {
+            id: review.id,
+            review_type: review.review_type,
+            readiness_band: review.readiness_band,
+            overall_trend: review.overall_trend,
+            executive_position: review.executive_position,
+            forecast_summary: review.forecast_summary,
+            parent_guidance: review.parent_guidance,
+            review_date: review.review_date,
+        })
+    })
+}
+
+pub fn list_milestone_reviews(
+    state: &AppState,
+    student_id: i64,
+) -> Result<Vec<MilestoneReviewDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let reviews = service.list_milestone_reviews(student_id)?;
+        Ok(reviews
+            .into_iter()
+            .map(|r| MilestoneReviewDto {
+                id: r.id,
+                review_type: r.review_type,
+                readiness_band: r.readiness_band,
+                overall_trend: r.overall_trend,
+                executive_position: r.executive_position,
+                forecast_summary: r.forecast_summary,
+                parent_guidance: r.parent_guidance,
+                review_date: r.review_date,
+            })
+            .collect())
+    })
+}
+
+pub fn create_concierge_response(
+    state: &AppState,
+    input: CreateConciergeResponseInput,
+) -> Result<ConciergeResponseDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let response = service.create_concierge_response(&input)?;
+        Ok(ConciergeResponseDto {
+            id: response.id,
+            question_family: response.question_family,
+            parent_question: response.parent_question,
+            direct_answer: response.direct_answer,
+            expected_outcome: response.expected_outcome,
+            parent_action_needed: response.parent_action_needed,
+            created_at: response.created_at,
+        })
+    })
+}
+
+pub fn list_concierge_history(
+    state: &AppState,
+    parent_id: i64,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<ConciergeResponseDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let responses = service.list_concierge_history(parent_id, student_id, limit)?;
+        Ok(responses
+            .into_iter()
+            .map(|r| ConciergeResponseDto {
+                id: r.id,
+                question_family: r.question_family,
+                parent_question: r.parent_question,
+                direct_answer: r.direct_answer,
+                expected_outcome: r.expected_outcome,
+                parent_action_needed: r.parent_action_needed,
+                created_at: r.created_at,
+            })
+            .collect())
+    })
+}
+
+pub fn get_strategy_state(
+    state: &AppState,
+    student_id: i64,
+) -> Result<StrategyStateDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let strategy = service.get_strategy_state(student_id)?;
+        Ok(StrategyStateDto {
+            primary_focus: strategy.primary_focus,
+            secondary_focus: strategy.secondary_focus,
+            focus_reason: strategy.focus_reason,
+            expected_outcome: strategy.expected_outcome,
+            mode_selection: strategy.mode_selection,
+            next_review_date: strategy.next_review_date,
+            last_shift_date: strategy.last_shift_date,
+        })
+    })
+}
+
+pub fn send_parent_communication(
+    state: &AppState,
+    input: CreateParentCommunicationInput,
+) -> Result<ParentCommunicationDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let comm = service.send_parent_communication(&input)?;
+        Ok(ParentCommunicationDto {
+            id: comm.id,
+            comm_type: comm.comm_type,
+            priority: comm.priority,
+            title: comm.title,
+            body: comm.body,
+            read_at: comm.read_at,
+            created_at: comm.created_at,
+        })
+    })
+}
+
+pub fn list_parent_communications(
+    state: &AppState,
+    parent_id: i64,
+    limit: usize,
+) -> Result<Vec<ParentCommunicationDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let comms = service.list_parent_communications(parent_id, limit)?;
+        Ok(comms
+            .into_iter()
+            .map(|c| ParentCommunicationDto {
+                id: c.id,
+                comm_type: c.comm_type,
+                priority: c.priority,
+                title: c.title,
+                body: c.body,
+                read_at: c.read_at,
+                created_at: c.created_at,
+            })
+            .collect())
+    })
+}
+
+pub fn create_premium_intake(
+    state: &AppState,
+    input: CreatePremiumIntakeInput,
+) -> Result<i64, CommandError> {
+    state.with_connection(|conn| {
+        let service = PremiumService::new(conn);
+        let intake = service.create_premium_intake(&input)?;
+        Ok(intake.id)
     })
 }
 

@@ -259,6 +259,18 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "062_wrong_answer_deep2",
         sql: include_str!("../../../migrations/runtime/062_wrong_answer_deep2.sql"),
     },
+    Migration {
+        id: "063_premium_concierge",
+        sql: include_str!("../../../migrations/runtime/063_premium_concierge.sql"),
+    },
+    Migration {
+        id: "064_exam_intelligence",
+        sql: include_str!("../../../migrations/runtime/064_exam_intelligence.sql"),
+    },
+    Migration {
+        id: "065_custom_test_deep",
+        sql: include_str!("../../../migrations/runtime/065_custom_test_deep.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {

@@ -10,9 +10,13 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{
-    CreateInterventionInput, CreateRiskFlagInput, InterventionRecord, InterventionStatus,
-    InterventionStep, PremiumFeature, PremiumPriorityTopic, PremiumStrategySnapshot, RiskDashboard,
-    RiskFlag, RiskFlagStatus, RiskSeverity, StudentEntitlementSnapshot,
+    ConciergeResponse, CreateConciergeResponseInput, CreateInterventionInput,
+    CreateMilestoneReviewInput, CreateParentCommunicationInput, CreatePremiumIntakeInput,
+    CreateReadinessProfileInput, CreateRiskFlagInput, InterventionRecord, InterventionStatus,
+    InterventionStep, MilestoneReview, ParentCommunication, PremiumFeature, PremiumIntake,
+    PremiumPriorityTopic, PremiumStrategySnapshot, ReadinessBand, ReadinessProfile, RiskDashboard,
+    RiskFlag, RiskFlagStatus, RiskSeverity, StrategyState, StrategyTimelineEntry,
+    StudentEntitlementSnapshot, UpdateStrategyStateInput,
 };
 
 // ── Mastery thresholds for auto-detection ──
@@ -1074,6 +1078,731 @@ impl<'a> PremiumService<'a> {
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
         Ok(exists == 1)
+    }
+
+    // ── Readiness profiles (idea12) ──
+
+    pub fn snapshot_readiness_profile(
+        &self,
+        input: &CreateReadinessProfileInput,
+    ) -> EcoachResult<ReadinessProfile> {
+        self.require_premium_or_elite(input.student_id)?;
+        let band = ReadinessBand::from_bp(input.overall_readiness_bp);
+        let subject_json = input.subject_readiness_json.as_deref().unwrap_or("[]");
+
+        self.conn
+            .execute(
+                "INSERT INTO readiness_profiles (
+                    student_id, overall_readiness_bp, overall_band,
+                    knowledge_solidity_bp, application_strength_bp, reasoning_quality_bp,
+                    speed_under_pressure_bp, memory_stability_bp, confidence_resilience_bp,
+                    consistency_bp, exam_technique_bp, target_band, trajectory,
+                    interpretation, subject_readiness_json
+                 ) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)",
+                params![
+                    input.student_id,
+                    input.overall_readiness_bp,
+                    band.as_str(),
+                    input.knowledge_solidity_bp,
+                    input.application_strength_bp,
+                    input.reasoning_quality_bp,
+                    input.speed_under_pressure_bp,
+                    input.memory_stability_bp,
+                    input.confidence_resilience_bp,
+                    input.consistency_bp,
+                    input.exam_technique_bp,
+                    input.target_band,
+                    input.trajectory,
+                    input.interpretation,
+                    subject_json,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let id = self.conn.last_insert_rowid();
+        self.get_readiness_profile(id)
+    }
+
+    pub fn get_readiness_profile(&self, profile_id: i64) -> EcoachResult<ReadinessProfile> {
+        self.conn
+            .query_row(
+                "SELECT id, student_id, snapshot_date, overall_readiness_bp, overall_band,
+                        knowledge_solidity_bp, application_strength_bp, reasoning_quality_bp,
+                        speed_under_pressure_bp, memory_stability_bp, confidence_resilience_bp,
+                        consistency_bp, exam_technique_bp, target_band, trajectory, interpretation
+                 FROM readiness_profiles WHERE id = ?1",
+                [profile_id],
+                |row| {
+                    Ok(ReadinessProfile {
+                        id: row.get(0)?,
+                        student_id: row.get(1)?,
+                        snapshot_date: row.get(2)?,
+                        overall_readiness_bp: row.get(3)?,
+                        overall_band: row.get(4)?,
+                        knowledge_solidity_bp: row.get(5)?,
+                        application_strength_bp: row.get(6)?,
+                        reasoning_quality_bp: row.get(7)?,
+                        speed_under_pressure_bp: row.get(8)?,
+                        memory_stability_bp: row.get(9)?,
+                        confidence_resilience_bp: row.get(10)?,
+                        consistency_bp: row.get(11)?,
+                        exam_technique_bp: row.get(12)?,
+                        target_band: row.get(13)?,
+                        trajectory: row.get(14)?,
+                        interpretation: row.get(15)?,
+                    })
+                },
+            )
+            .map_err(|e| EcoachError::NotFound(format!("readiness profile {}: {}", profile_id, e)))
+    }
+
+    pub fn list_readiness_trend(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<ReadinessProfile>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id, student_id, snapshot_date, overall_readiness_bp, overall_band,
+                        knowledge_solidity_bp, application_strength_bp, reasoning_quality_bp,
+                        speed_under_pressure_bp, memory_stability_bp, confidence_resilience_bp,
+                        consistency_bp, exam_technique_bp, target_band, trajectory, interpretation
+                 FROM readiness_profiles
+                 WHERE student_id = ?1
+                 ORDER BY snapshot_date DESC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, limit as i64], |row| {
+                Ok(ReadinessProfile {
+                    id: row.get(0)?,
+                    student_id: row.get(1)?,
+                    snapshot_date: row.get(2)?,
+                    overall_readiness_bp: row.get(3)?,
+                    overall_band: row.get(4)?,
+                    knowledge_solidity_bp: row.get(5)?,
+                    application_strength_bp: row.get(6)?,
+                    reasoning_quality_bp: row.get(7)?,
+                    speed_under_pressure_bp: row.get(8)?,
+                    memory_stability_bp: row.get(9)?,
+                    confidence_resilience_bp: row.get(10)?,
+                    consistency_bp: row.get(11)?,
+                    exam_technique_bp: row.get(12)?,
+                    target_band: row.get(13)?,
+                    trajectory: row.get(14)?,
+                    interpretation: row.get(15)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut profiles = Vec::new();
+        for row in rows {
+            profiles.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(profiles)
+    }
+
+    // ── Milestone reviews (idea12) ──
+
+    pub fn create_milestone_review(
+        &self,
+        input: &CreateMilestoneReviewInput,
+    ) -> EcoachResult<MilestoneReview> {
+        self.require_premium_or_elite(input.student_id)?;
+
+        self.conn
+            .execute(
+                "INSERT INTO milestone_reviews (
+                    student_id, parent_id, review_type, readiness_band, overall_trend,
+                    executive_position, subject_progression_json, intervention_effectiveness_json,
+                    confirmed_strengths_json, unresolved_risks_json, strategic_adjustments,
+                    forecast_summary, parent_guidance
+                 ) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)",
+                params![
+                    input.student_id,
+                    input.parent_id,
+                    input.review_type.as_str(),
+                    input.readiness_band,
+                    input.overall_trend,
+                    input.executive_position,
+                    input.subject_progression_json,
+                    input.intervention_effectiveness_json,
+                    input.confirmed_strengths_json,
+                    input.unresolved_risks_json,
+                    input.strategic_adjustments,
+                    input.forecast_summary,
+                    input.parent_guidance,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let id = self.conn.last_insert_rowid();
+        self.get_milestone_review(id)
+    }
+
+    pub fn get_milestone_review(&self, review_id: i64) -> EcoachResult<MilestoneReview> {
+        self.conn
+            .query_row(
+                "SELECT id, student_id, parent_id, review_type, review_date, readiness_band,
+                        overall_trend, executive_position, subject_progression_json,
+                        intervention_effectiveness_json, confirmed_strengths_json,
+                        unresolved_risks_json, strategic_adjustments, forecast_summary,
+                        parent_guidance, reviewer_type, reviewer_name, created_at
+                 FROM milestone_reviews WHERE id = ?1",
+                [review_id],
+                |row| {
+                    Ok(MilestoneReview {
+                        id: row.get(0)?,
+                        student_id: row.get(1)?,
+                        parent_id: row.get(2)?,
+                        review_type: row.get(3)?,
+                        review_date: row.get(4)?,
+                        readiness_band: row.get(5)?,
+                        overall_trend: row.get(6)?,
+                        executive_position: row.get(7)?,
+                        subject_progression_json: row.get(8)?,
+                        intervention_effectiveness_json: row.get(9)?,
+                        confirmed_strengths_json: row.get(10)?,
+                        unresolved_risks_json: row.get(11)?,
+                        strategic_adjustments: row.get(12)?,
+                        forecast_summary: row.get(13)?,
+                        parent_guidance: row.get(14)?,
+                        reviewer_type: row.get(15)?,
+                        reviewer_name: row.get(16)?,
+                        created_at: row.get(17)?,
+                    })
+                },
+            )
+            .map_err(|e| EcoachError::NotFound(format!("milestone review {}: {}", review_id, e)))
+    }
+
+    pub fn list_milestone_reviews(&self, student_id: i64) -> EcoachResult<Vec<MilestoneReview>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id, student_id, parent_id, review_type, review_date, readiness_band,
+                        overall_trend, executive_position, subject_progression_json,
+                        intervention_effectiveness_json, confirmed_strengths_json,
+                        unresolved_risks_json, strategic_adjustments, forecast_summary,
+                        parent_guidance, reviewer_type, reviewer_name, created_at
+                 FROM milestone_reviews
+                 WHERE student_id = ?1
+                 ORDER BY review_date DESC",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map([student_id], |row| {
+                Ok(MilestoneReview {
+                    id: row.get(0)?,
+                    student_id: row.get(1)?,
+                    parent_id: row.get(2)?,
+                    review_type: row.get(3)?,
+                    review_date: row.get(4)?,
+                    readiness_band: row.get(5)?,
+                    overall_trend: row.get(6)?,
+                    executive_position: row.get(7)?,
+                    subject_progression_json: row.get(8)?,
+                    intervention_effectiveness_json: row.get(9)?,
+                    confirmed_strengths_json: row.get(10)?,
+                    unresolved_risks_json: row.get(11)?,
+                    strategic_adjustments: row.get(12)?,
+                    forecast_summary: row.get(13)?,
+                    parent_guidance: row.get(14)?,
+                    reviewer_type: row.get(15)?,
+                    reviewer_name: row.get(16)?,
+                    created_at: row.get(17)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut reviews = Vec::new();
+        for row in rows {
+            reviews.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(reviews)
+    }
+
+    // ── Concierge responses (idea12) ──
+
+    pub fn create_concierge_response(
+        &self,
+        input: &CreateConciergeResponseInput,
+    ) -> EcoachResult<ConciergeResponse> {
+        self.require_premium_or_elite(input.student_id)?;
+
+        self.conn
+            .execute(
+                "INSERT INTO concierge_responses (
+                    student_id, parent_id, question_family, parent_question,
+                    direct_answer, evidence_summary, academic_interpretation,
+                    current_action, expected_outcome, parent_action_needed,
+                    evidence_refs_json, strategy_state_snapshot_json
+                 ) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
+                params![
+                    input.student_id,
+                    input.parent_id,
+                    input.question_family.as_str(),
+                    input.parent_question,
+                    input.direct_answer,
+                    input.evidence_summary,
+                    input.academic_interpretation,
+                    input.current_action,
+                    input.expected_outcome,
+                    input.parent_action_needed,
+                    input.evidence_refs_json,
+                    input.strategy_state_snapshot_json,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let id = self.conn.last_insert_rowid();
+        self.get_concierge_response(id)
+    }
+
+    pub fn get_concierge_response(&self, response_id: i64) -> EcoachResult<ConciergeResponse> {
+        self.conn
+            .query_row(
+                "SELECT id, student_id, parent_id, question_family, parent_question,
+                        direct_answer, evidence_summary, academic_interpretation,
+                        current_action, expected_outcome, parent_action_needed, created_at
+                 FROM concierge_responses WHERE id = ?1",
+                [response_id],
+                |row| {
+                    Ok(ConciergeResponse {
+                        id: row.get(0)?,
+                        student_id: row.get(1)?,
+                        parent_id: row.get(2)?,
+                        question_family: row.get(3)?,
+                        parent_question: row.get(4)?,
+                        direct_answer: row.get(5)?,
+                        evidence_summary: row.get(6)?,
+                        academic_interpretation: row.get(7)?,
+                        current_action: row.get(8)?,
+                        expected_outcome: row.get(9)?,
+                        parent_action_needed: row.get(10)?,
+                        created_at: row.get(11)?,
+                    })
+                },
+            )
+            .map_err(|e| {
+                EcoachError::NotFound(format!("concierge response {}: {}", response_id, e))
+            })
+    }
+
+    pub fn list_concierge_history(
+        &self,
+        parent_id: i64,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<ConciergeResponse>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id, student_id, parent_id, question_family, parent_question,
+                        direct_answer, evidence_summary, academic_interpretation,
+                        current_action, expected_outcome, parent_action_needed, created_at
+                 FROM concierge_responses
+                 WHERE parent_id = ?1 AND student_id = ?2
+                 ORDER BY created_at DESC
+                 LIMIT ?3",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![parent_id, student_id, limit as i64], |row| {
+                Ok(ConciergeResponse {
+                    id: row.get(0)?,
+                    student_id: row.get(1)?,
+                    parent_id: row.get(2)?,
+                    question_family: row.get(3)?,
+                    parent_question: row.get(4)?,
+                    direct_answer: row.get(5)?,
+                    evidence_summary: row.get(6)?,
+                    academic_interpretation: row.get(7)?,
+                    current_action: row.get(8)?,
+                    expected_outcome: row.get(9)?,
+                    parent_action_needed: row.get(10)?,
+                    created_at: row.get(11)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut responses = Vec::new();
+        for row in rows {
+            responses.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(responses)
+    }
+
+    // ── Strategy state (idea12) ──
+
+    pub fn upsert_strategy_state(
+        &self,
+        input: &UpdateStrategyStateInput,
+    ) -> EcoachResult<StrategyState> {
+        self.require_premium_or_elite(input.student_id)?;
+        let subj_json = input.subject_priority_json.as_deref().unwrap_or("[]");
+        let topic_json = input.topic_priority_json.as_deref().unwrap_or("[]");
+
+        self.conn
+            .execute(
+                "INSERT INTO strategy_states (
+                    student_id, primary_focus, secondary_focus, focus_reason,
+                    expected_outcome, outcome_window_days, mode_selection,
+                    subject_priority_json, topic_priority_json,
+                    escalation_recommendation, next_review_date,
+                    last_shift_date, last_shift_reason
+                 ) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,datetime('now'),?4)
+                 ON CONFLICT(student_id) DO UPDATE SET
+                    primary_focus = excluded.primary_focus,
+                    secondary_focus = excluded.secondary_focus,
+                    focus_reason = excluded.focus_reason,
+                    expected_outcome = excluded.expected_outcome,
+                    outcome_window_days = excluded.outcome_window_days,
+                    mode_selection = excluded.mode_selection,
+                    subject_priority_json = excluded.subject_priority_json,
+                    topic_priority_json = excluded.topic_priority_json,
+                    escalation_recommendation = excluded.escalation_recommendation,
+                    next_review_date = excluded.next_review_date,
+                    last_shift_date = datetime('now'),
+                    last_shift_reason = excluded.focus_reason,
+                    updated_at = datetime('now')",
+                params![
+                    input.student_id,
+                    input.primary_focus,
+                    input.secondary_focus,
+                    input.focus_reason,
+                    input.expected_outcome,
+                    input.outcome_window_days,
+                    input.mode_selection,
+                    subj_json,
+                    topic_json,
+                    input.escalation_recommendation,
+                    input.next_review_date,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        self.get_strategy_state(input.student_id)
+    }
+
+    pub fn get_strategy_state(&self, student_id: i64) -> EcoachResult<StrategyState> {
+        self.conn
+            .query_row(
+                "SELECT id, student_id, primary_focus, secondary_focus, focus_reason,
+                        expected_outcome, outcome_window_days, mode_selection,
+                        escalation_recommendation, next_review_date,
+                        last_shift_date, last_shift_reason, updated_at
+                 FROM strategy_states WHERE student_id = ?1",
+                [student_id],
+                |row| {
+                    Ok(StrategyState {
+                        id: row.get(0)?,
+                        student_id: row.get(1)?,
+                        primary_focus: row.get(2)?,
+                        secondary_focus: row.get(3)?,
+                        focus_reason: row.get(4)?,
+                        expected_outcome: row.get(5)?,
+                        outcome_window_days: row.get(6)?,
+                        mode_selection: row.get(7)?,
+                        escalation_recommendation: row.get(8)?,
+                        next_review_date: row.get(9)?,
+                        last_shift_date: row.get(10)?,
+                        last_shift_reason: row.get(11)?,
+                        updated_at: row.get(12)?,
+                    })
+                },
+            )
+            .map_err(|e| {
+                EcoachError::NotFound(format!("strategy state for student {}: {}", student_id, e))
+            })
+    }
+
+    pub fn record_strategy_shift(
+        &self,
+        student_id: i64,
+        shift_title: &str,
+        reason: &str,
+        evidence_snapshot: Option<&str>,
+        expected_result: Option<&str>,
+    ) -> EcoachResult<StrategyTimelineEntry> {
+        self.conn
+            .execute(
+                "INSERT INTO strategy_timeline (
+                    student_id, shift_title, reason, evidence_snapshot, expected_result
+                 ) VALUES (?1,?2,?3,?4,?5)",
+                params![student_id, shift_title, reason, evidence_snapshot, expected_result],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let id = self.conn.last_insert_rowid();
+        self.conn
+            .query_row(
+                "SELECT id, student_id, shift_date, shift_title, reason,
+                        evidence_snapshot, expected_result, actual_outcome
+                 FROM strategy_timeline WHERE id = ?1",
+                [id],
+                |row| {
+                    Ok(StrategyTimelineEntry {
+                        id: row.get(0)?,
+                        student_id: row.get(1)?,
+                        shift_date: row.get(2)?,
+                        shift_title: row.get(3)?,
+                        reason: row.get(4)?,
+                        evidence_snapshot: row.get(5)?,
+                        expected_result: row.get(6)?,
+                        actual_outcome: row.get(7)?,
+                    })
+                },
+            )
+            .map_err(|e| EcoachError::NotFound(format!("strategy timeline {}: {}", id, e)))
+    }
+
+    pub fn list_strategy_timeline(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<StrategyTimelineEntry>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id, student_id, shift_date, shift_title, reason,
+                        evidence_snapshot, expected_result, actual_outcome
+                 FROM strategy_timeline
+                 WHERE student_id = ?1
+                 ORDER BY shift_date DESC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, limit as i64], |row| {
+                Ok(StrategyTimelineEntry {
+                    id: row.get(0)?,
+                    student_id: row.get(1)?,
+                    shift_date: row.get(2)?,
+                    shift_title: row.get(3)?,
+                    reason: row.get(4)?,
+                    evidence_snapshot: row.get(5)?,
+                    expected_result: row.get(6)?,
+                    actual_outcome: row.get(7)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut entries = Vec::new();
+        for row in rows {
+            entries.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(entries)
+    }
+
+    // ── Parent communications (idea12) ──
+
+    pub fn send_parent_communication(
+        &self,
+        input: &CreateParentCommunicationInput,
+    ) -> EcoachResult<ParentCommunication> {
+        self.conn
+            .execute(
+                "INSERT INTO parent_communications (
+                    parent_id, student_id, comm_type, priority, title, body,
+                    evidence_summary, linked_entity_type, linked_entity_id
+                 ) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9)",
+                params![
+                    input.parent_id,
+                    input.student_id,
+                    input.comm_type.as_str(),
+                    input.priority,
+                    input.title,
+                    input.body,
+                    input.evidence_summary,
+                    input.linked_entity_type,
+                    input.linked_entity_id,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let id = self.conn.last_insert_rowid();
+        self.get_parent_communication(id)
+    }
+
+    pub fn get_parent_communication(&self, comm_id: i64) -> EcoachResult<ParentCommunication> {
+        self.conn
+            .query_row(
+                "SELECT id, parent_id, student_id, comm_type, priority, title, body,
+                        evidence_summary, read_at, created_at
+                 FROM parent_communications WHERE id = ?1",
+                [comm_id],
+                |row| {
+                    Ok(ParentCommunication {
+                        id: row.get(0)?,
+                        parent_id: row.get(1)?,
+                        student_id: row.get(2)?,
+                        comm_type: row.get(3)?,
+                        priority: row.get(4)?,
+                        title: row.get(5)?,
+                        body: row.get(6)?,
+                        evidence_summary: row.get(7)?,
+                        read_at: row.get(8)?,
+                        created_at: row.get(9)?,
+                    })
+                },
+            )
+            .map_err(|e| EcoachError::NotFound(format!("communication {}: {}", comm_id, e)))
+    }
+
+    pub fn list_parent_communications(
+        &self,
+        parent_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<ParentCommunication>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id, parent_id, student_id, comm_type, priority, title, body,
+                        evidence_summary, read_at, created_at
+                 FROM parent_communications
+                 WHERE parent_id = ?1
+                 ORDER BY created_at DESC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![parent_id, limit as i64], |row| {
+                Ok(ParentCommunication {
+                    id: row.get(0)?,
+                    parent_id: row.get(1)?,
+                    student_id: row.get(2)?,
+                    comm_type: row.get(3)?,
+                    priority: row.get(4)?,
+                    title: row.get(5)?,
+                    body: row.get(6)?,
+                    evidence_summary: row.get(7)?,
+                    read_at: row.get(8)?,
+                    created_at: row.get(9)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut comms = Vec::new();
+        for row in rows {
+            comms.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(comms)
+    }
+
+    pub fn mark_communication_read(&self, comm_id: i64) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "UPDATE parent_communications SET read_at = datetime('now') WHERE id = ?1",
+                [comm_id],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(())
+    }
+
+    // ── Premium intake (idea12) ──
+
+    pub fn create_premium_intake(
+        &self,
+        input: &CreatePremiumIntakeInput,
+    ) -> EcoachResult<PremiumIntake> {
+        self.require_premium_or_elite(input.student_id)?;
+        let subjects_json = input.subjects_json.as_deref().unwrap_or("[]");
+
+        self.conn
+            .execute(
+                "INSERT INTO premium_intakes (
+                    student_id, parent_id, school_name, school_type, curriculum,
+                    exam_board, subjects_json, target_performance, target_school,
+                    priority_subjects_json, urgency_level, biggest_worry,
+                    success_definition, recent_results_json, known_strengths,
+                    known_weaknesses, avoided_subjects, previous_tutoring,
+                    available_hours_per_week, confidence_level, anxiety_level,
+                    attention_consistency, resilience_when_corrected,
+                    tendency_to_rush, tendency_to_hesitate
+                 ) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22,?23,?24,?25)",
+                params![
+                    input.student_id,
+                    input.parent_id,
+                    input.school_name,
+                    input.school_type,
+                    input.curriculum,
+                    input.exam_board,
+                    subjects_json,
+                    input.target_performance,
+                    input.target_school,
+                    input.priority_subjects_json,
+                    input.urgency_level,
+                    input.biggest_worry,
+                    input.success_definition,
+                    input.recent_results_json,
+                    input.known_strengths,
+                    input.known_weaknesses,
+                    input.avoided_subjects,
+                    input.previous_tutoring,
+                    input.available_hours_per_week,
+                    input.confidence_level,
+                    input.anxiety_level,
+                    input.attention_consistency,
+                    input.resilience_when_corrected,
+                    input.tendency_to_rush as i64,
+                    input.tendency_to_hesitate as i64,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let id = self.conn.last_insert_rowid();
+        self.get_premium_intake(id)
+    }
+
+    pub fn get_premium_intake(&self, intake_id: i64) -> EcoachResult<PremiumIntake> {
+        self.conn
+            .query_row(
+                "SELECT id, student_id, parent_id, school_name, school_type, curriculum,
+                        exam_board, target_performance, urgency_level, biggest_worry,
+                        success_definition, confidence_level, anxiety_level,
+                        intake_status, created_at
+                 FROM premium_intakes WHERE id = ?1",
+                [intake_id],
+                |row| {
+                    Ok(PremiumIntake {
+                        id: row.get(0)?,
+                        student_id: row.get(1)?,
+                        parent_id: row.get(2)?,
+                        school_name: row.get(3)?,
+                        school_type: row.get(4)?,
+                        curriculum: row.get(5)?,
+                        exam_board: row.get(6)?,
+                        target_performance: row.get(7)?,
+                        urgency_level: row.get(8)?,
+                        biggest_worry: row.get(9)?,
+                        success_definition: row.get(10)?,
+                        confidence_level: row.get(11)?,
+                        anxiety_level: row.get(12)?,
+                        intake_status: row.get(13)?,
+                        created_at: row.get(14)?,
+                    })
+                },
+            )
+            .map_err(|e| EcoachError::NotFound(format!("premium intake {}: {}", intake_id, e)))
+    }
+
+    pub fn activate_premium_intake(&self, student_id: i64) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "UPDATE premium_intakes SET intake_status = 'activated', completed_at = datetime('now')
+                 WHERE student_id = ?1 AND intake_status IN ('draft', 'submitted', 'reviewed')",
+                [student_id],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(())
     }
 
     fn append_event(&self, aggregate_kind: &str, event: DomainEvent) -> EcoachResult<()> {

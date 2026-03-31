@@ -41,6 +41,145 @@ pub struct CustomTestStartInput {
     pub weakness_bias: bool,
 }
 
+// ── Custom test deep models (idea14) ──
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CustomTestType {
+    ClassTest,
+    Midterm,
+    MockExam,
+    TerminalExam,
+    RevisionQuiz,
+    TeacherSurprise,
+    BeceWassce,
+    QuickQuiz,
+    EndOfTerm,
+    Custom,
+}
+
+impl CustomTestType {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::ClassTest => "class_test",
+            Self::Midterm => "midterm",
+            Self::MockExam => "mock_exam",
+            Self::TerminalExam => "terminal_exam",
+            Self::RevisionQuiz => "revision_quiz",
+            Self::TeacherSurprise => "teacher_surprise",
+            Self::BeceWassce => "bece_wassce",
+            Self::QuickQuiz => "quick_quiz",
+            Self::EndOfTerm => "end_of_term",
+            Self::Custom => "custom",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CustomTestMode {
+    LikelyQuestions,
+    RealisticSimulation,
+    PressureMode,
+    FixWeakAreas,
+    ConfidenceBuild,
+    TeachThroughTest,
+    LastMinuteRescue,
+    TeacherStylePrep,
+}
+
+impl CustomTestMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::LikelyQuestions => "likely_questions",
+            Self::RealisticSimulation => "realistic_simulation",
+            Self::PressureMode => "pressure_mode",
+            Self::FixWeakAreas => "fix_weak_areas",
+            Self::ConfidenceBuild => "confidence_build",
+            Self::TeachThroughTest => "teach_through_test",
+            Self::LastMinuteRescue => "last_minute_rescue",
+            Self::TeacherStylePrep => "teacher_style_prep",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CustomTestBlueprintInput {
+    pub student_id: i64,
+    pub subject_id: i64,
+    pub test_type: CustomTestType,
+    pub mode: CustomTestMode,
+    pub topic_ids: Vec<i64>,
+    pub days_until_test: Option<i64>,
+    pub target_score_bp: Option<BasisPoints>,
+    pub question_count: Option<usize>,
+    pub duration_minutes: Option<i64>,
+    pub difficulty_preference: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CustomTestBlueprint {
+    pub id: i64,
+    pub student_id: i64,
+    pub subject_id: i64,
+    pub test_type: String,
+    pub mode: String,
+    pub session_archetype: String,
+    pub question_count: i64,
+    pub duration_minutes: Option<i64>,
+    pub feedback_policy: String,
+    pub hint_policy: String,
+    pub pressure_profile: String,
+    pub ordering_pattern: String,
+    pub adaptation_policy: String,
+    pub urgency_band: Option<String>,
+    pub status: String,
+    pub session_id: Option<i64>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CustomTestResult {
+    pub id: i64,
+    pub blueprint_id: i64,
+    pub session_id: i64,
+    pub raw_score_bp: BasisPoints,
+    pub adjusted_readiness_bp: BasisPoints,
+    pub readiness_band: Option<String>,
+    pub careless_error_count: i64,
+    pub endurance_drop_bp: BasisPoints,
+    pub speed_band: Option<String>,
+    pub next_recommended_action: Option<String>,
+    pub next_mode_recommendation: Option<String>,
+    pub interpretation_summary: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionAdaptationState {
+    pub session_id: i64,
+    pub current_streak: i64,
+    pub best_streak: i64,
+    pub error_streak: i64,
+    pub same_misconception_streak: i64,
+    pub avg_response_time_ms: i64,
+    pub confidence_drop_count: i64,
+    pub stabilizer_questions_inserted: i64,
+    pub difficulty_adjustments: i64,
+    pub fatigue_indicator_bp: BasisPoints,
+    pub pressure_response_bp: BasisPoints,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StudentTestReadiness {
+    pub student_id: i64,
+    pub subject_id: i64,
+    pub test_type: String,
+    pub readiness_bp: BasisPoints,
+    pub readiness_band: String,
+    pub attempt_count: i64,
+    pub trend: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MockBlueprintInput {
     pub student_id: i64,

@@ -4,8 +4,10 @@ use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
 
 use crate::models::{
+    CreateFamilyEdgeInput, FamilyRecurrenceMetric, FamilyRelationshipEdge,
+    FamilyReplacementTrail, FamilyStory, InverseAppearancePair, PaperDna,
     PastPaperComebackSignal, PastPaperFamilyAnalytics, PastPaperInverseSignal, PastPaperSet,
-    PastPaperSetSummary,
+    PastPaperSetSummary, StudentFamilyPerformance,
 };
 
 pub struct PastPapersService<'a> {
@@ -499,6 +501,409 @@ impl<'a> PastPapersService<'a> {
         }
 
         Ok(family_map)
+    }
+
+    // ── Exam Intelligence methods (idea13) ──
+
+    pub fn get_paper_dna(&self, paper_set_id: i64) -> EcoachResult<Option<PaperDna>> {
+        self.conn
+            .query_row(
+                "SELECT id, paper_set_id, recall_vs_reasoning_ratio, novelty_score,
+                        story_summary, dominant_families_json, computed_at
+                 FROM paper_dna WHERE paper_set_id = ?1",
+                [paper_set_id],
+                |row| {
+                    Ok(PaperDna {
+                        id: row.get(0)?,
+                        paper_set_id: row.get(1)?,
+                        recall_vs_reasoning_ratio: row.get(2)?,
+                        novelty_score: row.get(3)?,
+                        story_summary: row.get(4)?,
+                        dominant_families_json: row.get(5)?,
+                        computed_at: row.get(6)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))
+    }
+
+    pub fn upsert_paper_dna(
+        &self,
+        paper_set_id: i64,
+        recall_vs_reasoning: BasisPoints,
+        novelty: BasisPoints,
+        story_summary: Option<&str>,
+        dominant_families_json: &str,
+        topic_distribution_json: &str,
+        cognitive_balance_json: &str,
+    ) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "INSERT INTO paper_dna (
+                    paper_set_id, recall_vs_reasoning_ratio, novelty_score,
+                    story_summary, dominant_families_json, topic_distribution_json,
+                    cognitive_balance_json
+                 ) VALUES (?1,?2,?3,?4,?5,?6,?7)
+                 ON CONFLICT(paper_set_id) DO UPDATE SET
+                    recall_vs_reasoning_ratio = excluded.recall_vs_reasoning_ratio,
+                    novelty_score = excluded.novelty_score,
+                    story_summary = excluded.story_summary,
+                    dominant_families_json = excluded.dominant_families_json,
+                    topic_distribution_json = excluded.topic_distribution_json,
+                    cognitive_balance_json = excluded.cognitive_balance_json,
+                    computed_at = datetime('now')",
+                params![
+                    paper_set_id,
+                    recall_vs_reasoning,
+                    novelty,
+                    story_summary,
+                    dominant_families_json,
+                    topic_distribution_json,
+                    cognitive_balance_json,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(())
+    }
+
+    pub fn create_family_edge(&self, input: &CreateFamilyEdgeInput) -> EcoachResult<i64> {
+        self.conn
+            .execute(
+                "INSERT INTO family_relationship_edges (
+                    source_family_id, target_family_id, edge_type,
+                    strength_score, confidence_score, support_count, evidence_json
+                 ) VALUES (?1,?2,?3,?4,?5,?6,?7)
+                 ON CONFLICT(source_family_id, target_family_id, edge_type) DO UPDATE SET
+                    strength_score = excluded.strength_score,
+                    confidence_score = excluded.confidence_score,
+                    support_count = excluded.support_count,
+                    evidence_json = excluded.evidence_json,
+                    updated_at = datetime('now')",
+                params![
+                    input.source_family_id,
+                    input.target_family_id,
+                    input.edge_type,
+                    input.strength_score,
+                    input.confidence_score,
+                    input.support_count,
+                    input.evidence_json,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(self.conn.last_insert_rowid())
+    }
+
+    pub fn list_family_edges(
+        &self,
+        family_id: i64,
+        edge_type: Option<&str>,
+    ) -> EcoachResult<Vec<FamilyRelationshipEdge>> {
+        let sql = if let Some(et) = edge_type {
+            format!(
+                "SELECT id, source_family_id, target_family_id, edge_type,
+                        strength_score, confidence_score, support_count
+                 FROM family_relationship_edges
+                 WHERE (source_family_id = ?1 OR target_family_id = ?1)
+                   AND edge_type = '{}'
+                 ORDER BY strength_score DESC",
+                et
+            )
+        } else {
+            "SELECT id, source_family_id, target_family_id, edge_type,
+                    strength_score, confidence_score, support_count
+             FROM family_relationship_edges
+             WHERE source_family_id = ?1 OR target_family_id = ?1
+             ORDER BY strength_score DESC"
+                .to_string()
+        };
+
+        let mut stmt = self
+            .conn
+            .prepare(&sql)
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let rows = stmt
+            .query_map([family_id], |row| {
+                Ok(FamilyRelationshipEdge {
+                    id: row.get(0)?,
+                    source_family_id: row.get(1)?,
+                    target_family_id: row.get(2)?,
+                    edge_type: row.get(3)?,
+                    strength_score: row.get(4)?,
+                    confidence_score: row.get(5)?,
+                    support_count: row.get(6)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut edges = Vec::new();
+        for row in rows {
+            edges.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(edges)
+    }
+
+    pub fn list_inverse_pairs(
+        &self,
+        family_id: i64,
+    ) -> EcoachResult<Vec<InverseAppearancePair>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT family_a_id, family_b_id, iai_score_bp,
+                        directional_a_suppresses_b_bp, directional_b_suppresses_a_bp,
+                        support_papers, is_mutual, likely_explanation
+                 FROM inverse_appearance_pairs
+                 WHERE family_a_id = ?1 OR family_b_id = ?1
+                 ORDER BY iai_score_bp DESC",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map([family_id], |row| {
+                Ok(InverseAppearancePair {
+                    family_a_id: row.get(0)?,
+                    family_b_id: row.get(1)?,
+                    iai_score_bp: row.get(2)?,
+                    directional_a_suppresses_b_bp: row.get(3)?,
+                    directional_b_suppresses_a_bp: row.get(4)?,
+                    support_papers: row.get(5)?,
+                    is_mutual: row.get::<_, i64>(6)? == 1,
+                    likely_explanation: row.get(7)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut pairs = Vec::new();
+        for row in rows {
+            pairs.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(pairs)
+    }
+
+    pub fn list_replacement_trails(
+        &self,
+        family_id: i64,
+    ) -> EcoachResult<Vec<FamilyReplacementTrail>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT old_family_id, new_family_id, replacement_index_bp,
+                        iai_component_bp, chrono_shift_bp, topic_overlap_bp, cognitive_overlap_bp
+                 FROM family_replacement_trails
+                 WHERE old_family_id = ?1 OR new_family_id = ?1
+                 ORDER BY replacement_index_bp DESC",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map([family_id], |row| {
+                Ok(FamilyReplacementTrail {
+                    old_family_id: row.get(0)?,
+                    new_family_id: row.get(1)?,
+                    replacement_index_bp: row.get(2)?,
+                    iai_component_bp: row.get(3)?,
+                    chrono_shift_bp: row.get(4)?,
+                    topic_overlap_bp: row.get(5)?,
+                    cognitive_overlap_bp: row.get(6)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut trails = Vec::new();
+        for row in rows {
+            trails.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(trails)
+    }
+
+    pub fn get_student_family_performance(
+        &self,
+        student_id: i64,
+        family_id: i64,
+    ) -> EcoachResult<Option<StudentFamilyPerformance>> {
+        self.conn
+            .query_row(
+                "SELECT student_id, family_id, attempt_count, accuracy_rate_bp,
+                        confidence_calibration_bp, classical_form_accuracy_bp,
+                        mutated_form_accuracy_bp, trap_fall_rate_bp, recovery_progress_bp
+                 FROM student_family_performance
+                 WHERE student_id = ?1 AND family_id = ?2",
+                params![student_id, family_id],
+                |row| {
+                    Ok(StudentFamilyPerformance {
+                        student_id: row.get(0)?,
+                        family_id: row.get(1)?,
+                        attempt_count: row.get(2)?,
+                        accuracy_rate_bp: row.get(3)?,
+                        confidence_calibration_bp: row.get(4)?,
+                        classical_form_accuracy_bp: row.get(5)?,
+                        mutated_form_accuracy_bp: row.get(6)?,
+                        trap_fall_rate_bp: row.get(7)?,
+                        recovery_progress_bp: row.get(8)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))
+    }
+
+    pub fn upsert_student_family_performance(
+        &self,
+        student_id: i64,
+        family_id: i64,
+        accuracy_bp: BasisPoints,
+        trap_fall_bp: BasisPoints,
+    ) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "INSERT INTO student_family_performance (
+                    student_id, family_id, attempt_count, accuracy_rate_bp, trap_fall_rate_bp
+                 ) VALUES (?1,?2,1,?3,?4)
+                 ON CONFLICT(student_id, family_id) DO UPDATE SET
+                    attempt_count = attempt_count + 1,
+                    accuracy_rate_bp = excluded.accuracy_rate_bp,
+                    trap_fall_rate_bp = excluded.trap_fall_rate_bp,
+                    updated_at = datetime('now'),
+                    last_attempted_at = datetime('now')",
+                params![student_id, family_id, accuracy_bp, trap_fall_bp],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(())
+    }
+
+    pub fn get_family_story(
+        &self,
+        family_id: i64,
+        story_type: &str,
+    ) -> EcoachResult<Option<FamilyStory>> {
+        self.conn
+            .query_row(
+                "SELECT id, family_id, story_type, headline, narrative, recommendation
+                 FROM family_stories
+                 WHERE family_id = ?1 AND story_type = ?2",
+                params![family_id, story_type],
+                |row| {
+                    Ok(FamilyStory {
+                        id: row.get(0)?,
+                        family_id: row.get(1)?,
+                        story_type: row.get(2)?,
+                        headline: row.get(3)?,
+                        narrative: row.get(4)?,
+                        recommendation: row.get(5)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))
+    }
+
+    pub fn upsert_family_story(
+        &self,
+        family_id: i64,
+        story_type: &str,
+        headline: &str,
+        narrative: &str,
+        recommendation: Option<&str>,
+    ) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "INSERT INTO family_stories (family_id, story_type, headline, narrative, recommendation)
+                 VALUES (?1,?2,?3,?4,?5)
+                 ON CONFLICT(family_id, story_type) DO UPDATE SET
+                    headline = excluded.headline,
+                    narrative = excluded.narrative,
+                    recommendation = excluded.recommendation,
+                    generated_at = datetime('now')",
+                params![family_id, story_type, headline, narrative, recommendation],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(())
+    }
+
+    pub fn list_family_recurrence_metrics(
+        &self,
+        subject_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<FamilyRecurrenceMetric>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT family_id, subject_id, total_papers_in_window, papers_appeared,
+                        recurrence_rate_bp, persistence_score_bp, dormancy_max_years,
+                        last_appearance_year, first_appearance_year, mutation_trend,
+                        current_relevance_bp
+                 FROM family_recurrence_metrics
+                 WHERE subject_id = ?1
+                 ORDER BY recurrence_rate_bp DESC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![subject_id, limit as i64], |row| {
+                Ok(FamilyRecurrenceMetric {
+                    family_id: row.get(0)?,
+                    subject_id: row.get(1)?,
+                    total_papers: row.get(2)?,
+                    papers_appeared: row.get(3)?,
+                    recurrence_rate_bp: row.get(4)?,
+                    persistence_score_bp: row.get(5)?,
+                    dormancy_max_years: row.get(6)?,
+                    last_appearance_year: row.get(7)?,
+                    first_appearance_year: row.get(8)?,
+                    mutation_trend: row.get(9)?,
+                    current_relevance_bp: row.get(10)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut metrics = Vec::new();
+        for row in rows {
+            metrics.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(metrics)
+    }
+
+    pub fn list_student_weak_families(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<StudentFamilyPerformance>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT student_id, family_id, attempt_count, accuracy_rate_bp,
+                        confidence_calibration_bp, classical_form_accuracy_bp,
+                        mutated_form_accuracy_bp, trap_fall_rate_bp, recovery_progress_bp
+                 FROM student_family_performance
+                 WHERE student_id = ?1 AND attempt_count >= 2
+                 ORDER BY accuracy_rate_bp ASC
+                 LIMIT ?2",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt
+            .query_map(params![student_id, limit as i64], |row| {
+                Ok(StudentFamilyPerformance {
+                    student_id: row.get(0)?,
+                    family_id: row.get(1)?,
+                    attempt_count: row.get(2)?,
+                    accuracy_rate_bp: row.get(3)?,
+                    confidence_calibration_bp: row.get(4)?,
+                    classical_form_accuracy_bp: row.get(5)?,
+                    mutated_form_accuracy_bp: row.get(6)?,
+                    trap_fall_rate_bp: row.get(7)?,
+                    recovery_progress_bp: row.get(8)?,
+                })
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut weak = Vec::new();
+        for row in rows {
+            weak.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
+        Ok(weak)
     }
 }
 
