@@ -1805,6 +1805,245 @@ impl<'a> PremiumService<'a> {
         Ok(())
     }
 
+    // ── Advanced risk detection (idea12 deep) ──
+
+    pub fn detect_memory_decay_risks(&self, student_id: i64) -> EcoachResult<Vec<RiskFlag>> {
+        self.require_premium_or_elite(student_id)?;
+        let mut created = Vec::new();
+
+        let mut stmt = self.conn.prepare(
+            "SELECT ms.topic_id, t.name, ms.memory_state, ms.decay_risk
+             FROM memory_states ms
+             JOIN topics t ON t.id = ms.topic_id
+             WHERE ms.student_id = ?1
+               AND ms.memory_state IN ('fading', 'at_risk', 'collapsed')
+               AND ms.decay_risk >= 6000
+               AND NOT EXISTS (
+                   SELECT 1 FROM risk_flags rf
+                   WHERE rf.student_id = ms.student_id AND rf.topic_id = ms.topic_id
+                   AND rf.status IN ('active', 'monitoring')
+                   AND rf.risk_category = 'knowledge'
+               )"
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let decaying: Vec<(i64, String, String, i64)> = stmt
+            .query_map([student_id], |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        for (topic_id, topic_name, state, decay_risk) in decaying {
+            let severity = if state == "collapsed" || decay_risk >= 8000 {
+                RiskSeverity::High
+            } else {
+                RiskSeverity::Medium
+            };
+            let flag = self.create_risk_flag(&CreateRiskFlagInput {
+                student_id,
+                topic_id: Some(topic_id),
+                severity,
+                title: format!("Memory decay in {}", topic_name),
+                description: Some(format!(
+                    "Memory state is {} with decay risk {} bp",
+                    state, decay_risk
+                )),
+            })?;
+            // Update category on the newly created flag
+            self.conn.execute(
+                "UPDATE risk_flags SET risk_category = 'knowledge', trigger_rule = 'memory_decay' WHERE id = ?1",
+                [flag.id],
+            ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            created.push(flag);
+        }
+        Ok(created)
+    }
+
+    pub fn detect_confidence_instability(&self, student_id: i64) -> EcoachResult<Vec<RiskFlag>> {
+        self.require_premium_or_elite(student_id)?;
+        let mut created = Vec::new();
+
+        // Check for subjects where overconfidence rate is high
+        if self.table_exists("student_confidence_profile")? {
+            let mut stmt = self.conn.prepare(
+                "SELECT scp.subject_id, s.name, scp.overconfidence_rate_bp
+                 FROM student_confidence_profile scp
+                 LEFT JOIN subjects s ON s.id = scp.subject_id
+                 WHERE scp.student_id = ?1
+                   AND scp.overconfidence_rate_bp >= 3000
+                   AND scp.total_responses >= 10
+                   AND NOT EXISTS (
+                       SELECT 1 FROM risk_flags rf
+                       WHERE rf.student_id = ?1 AND rf.risk_category = 'confidence'
+                       AND rf.status IN ('active', 'monitoring')
+                   )"
+            ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+            let overconfident: Vec<(Option<i64>, Option<String>, i64)> = stmt
+                .query_map([student_id], |row| {
+                    Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+                })
+                .map_err(|e| EcoachError::Storage(e.to_string()))?
+                .filter_map(|r| r.ok())
+                .collect();
+
+            for (_subject_id, subject_name, rate) in overconfident {
+                let name = subject_name.unwrap_or_else(|| "overall".to_string());
+                let flag = self.create_risk_flag(&CreateRiskFlagInput {
+                    student_id,
+                    topic_id: None,
+                    severity: if rate >= 5000 { RiskSeverity::High } else { RiskSeverity::Medium },
+                    title: format!("Overconfidence pattern in {}", name),
+                    description: Some(format!(
+                        "Overconfidence rate is {} bp — student is frequently confident but wrong",
+                        rate
+                    )),
+                })?;
+                self.conn.execute(
+                    "UPDATE risk_flags SET risk_category = 'confidence', trigger_rule = 'overconfidence' WHERE id = ?1",
+                    [flag.id],
+                ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                created.push(flag);
+            }
+        }
+        Ok(created)
+    }
+
+    pub fn run_all_risk_detections(&self, student_id: i64) -> EcoachResult<Vec<RiskFlag>> {
+        let mut all_flags = Vec::new();
+        all_flags.extend(self.auto_detect_risk_flags(student_id)?);
+        all_flags.extend(self.detect_memory_decay_risks(student_id)?);
+        all_flags.extend(self.detect_confidence_instability(student_id)?);
+        Ok(all_flags)
+    }
+
+    // ── Escalation checking (idea12 deep) ──
+
+    pub fn check_escalation_conditions(&self, student_id: i64) -> EcoachResult<Vec<String>> {
+        let mut escalation_reasons = Vec::new();
+
+        // Check: persistent high-severity risks
+        let persistent_high: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM risk_flags
+             WHERE student_id = ?1 AND severity IN ('high', 'critical')
+             AND status = 'active'
+             AND created_at <= datetime('now', '-14 days')",
+            [student_id],
+            |row| row.get(0),
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        if persistent_high > 0 {
+            escalation_reasons.push(format!(
+                "{} high/critical risk(s) active for over 14 days",
+                persistent_high
+            ));
+        }
+
+        // Check: stalled interventions
+        let stalled: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM intervention_records
+             WHERE student_id = ?1 AND status = 'active'
+             AND review_date IS NOT NULL AND review_date <= datetime('now')",
+            [student_id],
+            |row| row.get(0),
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        if stalled > 0 {
+            escalation_reasons.push(format!(
+                "{} intervention(s) past review date without resolution",
+                stalled
+            ));
+        }
+
+        // Check: exam proximity with low readiness
+        if self.table_exists("readiness_profiles")? {
+            let low_readiness_near_exam: Option<i64> = self.conn.query_row(
+                "SELECT rp.overall_readiness_bp
+                 FROM readiness_profiles rp
+                 JOIN student_profiles sp ON sp.account_id = rp.student_id
+                 WHERE rp.student_id = ?1
+                   AND sp.exam_target_date IS NOT NULL
+                   AND sp.exam_target_date <= datetime('now', '+30 days')
+                   AND rp.overall_readiness_bp < 5000
+                 ORDER BY rp.snapshot_date DESC LIMIT 1",
+                [student_id],
+                |row| row.get(0),
+            ).optional().map_err(|e| EcoachError::Storage(e.to_string()))?.flatten();
+
+            if let Some(readiness) = low_readiness_near_exam {
+                escalation_reasons.push(format!(
+                    "Exam within 30 days but readiness only {} bp",
+                    readiness
+                ));
+            }
+        }
+
+        Ok(escalation_reasons)
+    }
+
+    // ── Readiness calculation (idea12 deep) ──
+
+    pub fn calculate_overall_readiness(&self, student_id: i64) -> EcoachResult<(u16, String)> {
+        let avg_mastery: i64 = self.conn.query_row(
+            "SELECT COALESCE(CAST(AVG(mastery_score) AS INTEGER), 5000)
+             FROM student_topic_states WHERE student_id = ?1",
+            [student_id],
+            |row| row.get(0),
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let avg_accuracy: i64 = self.conn.query_row(
+            "SELECT COALESCE(CAST(AVG(accuracy_score) AS INTEGER), 5000)
+             FROM student_topic_states WHERE student_id = ?1",
+            [student_id],
+            |row| row.get(0),
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let avg_speed: i64 = self.conn.query_row(
+            "SELECT COALESCE(CAST(AVG(speed_score) AS INTEGER), 5000)
+             FROM student_topic_states WHERE student_id = ?1",
+            [student_id],
+            |row| row.get(0),
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let avg_confidence: i64 = self.conn.query_row(
+            "SELECT COALESCE(CAST(AVG(confidence_score) AS INTEGER), 5000)
+             FROM student_topic_states WHERE student_id = ?1",
+            [student_id],
+            |row| row.get(0),
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let avg_retention: i64 = self.conn.query_row(
+            "SELECT COALESCE(CAST(AVG(retention_score) AS INTEGER), 5000)
+             FROM student_topic_states WHERE student_id = ?1",
+            [student_id],
+            |row| row.get(0),
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let avg_consistency: i64 = self.conn.query_row(
+            "SELECT COALESCE(CAST(AVG(consistency_score) AS INTEGER), 5000)
+             FROM student_topic_states WHERE student_id = ?1",
+            [student_id],
+            |row| row.get(0),
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        // Weighted composite: knowledge=15%, application=15%, reasoning=15%, speed=10%, memory=15%, confidence=10%, consistency=10%, exam_technique=10%
+        let overall = clamp_bp(
+            (avg_mastery as f64 * 0.15
+                + avg_accuracy as f64 * 0.15
+                + avg_mastery as f64 * 0.15
+                + avg_speed as f64 * 0.10
+                + avg_retention as f64 * 0.15
+                + avg_confidence as f64 * 0.10
+                + avg_consistency as f64 * 0.10
+                + avg_accuracy as f64 * 0.10)
+                .round() as i64,
+        );
+
+        let band = ReadinessBand::from_bp(overall);
+        Ok((overall, band.as_str().to_string()))
+    }
+
     fn append_event(&self, aggregate_kind: &str, event: DomainEvent) -> EcoachResult<()> {
         let payload_json = serde_json::to_string(&event.payload)
             .map_err(|e| EcoachError::Serialization(e.to_string()))?;
