@@ -138,3 +138,35 @@ pub struct SolidificationProgress {
     pub active_sessions: i64,
     pub topics_solidified: i64,
 }
+
+
+// Knowledge Gap Deep types
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GapSnapshotResult {
+    pub total_gap_percent: i64,
+    pub unknown_percent: i64,
+    pub weak_percent: i64,
+    pub declining_percent: i64,
+    pub forgetting_percent: i64,
+    pub critical_percent: i64,
+    pub total_skills: i64,
+    pub mastered_skills: i64,
+    pub critical_blockers: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GapTrendPoint {
+    pub gap_percent: i64,
+    pub snapshot_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GapFeedItem {
+    pub id: i64,
+    pub topic_id: Option<i64>,
+    pub event_type: String,
+    pub message: String,
+    pub severity: String,
+    pub created_at: String,
+}

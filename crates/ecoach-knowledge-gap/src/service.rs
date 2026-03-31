@@ -4,8 +4,9 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::models::{
-    CreateGapRepairPlanInput, GapDashboard, GapRepairFocus, GapRepairPlan, GapRepairPlanItem,
-    GapScoreCard, RepairItemStatus, SolidificationProgress, SolidificationSession,
+    CreateGapRepairPlanInput, GapDashboard, GapFeedItem, GapRepairFocus, GapRepairPlan,
+    GapRepairPlanItem, GapScoreCard, GapSnapshotResult, GapTrendPoint, RepairItemStatus,
+    SolidificationProgress, SolidificationSession,
 };
 
 // ── Gap severity thresholds ──
@@ -1491,6 +1492,210 @@ impl<'a> KnowledgeGapService<'a> {
         }
 
         Ok(titles)
+    }
+
+    // -----------------------------------------------------------------------
+    // Knowledge Gap Deep: snapshots, feed, aggregate breakdown
+    // -----------------------------------------------------------------------
+
+    /// Compute and persist a gap snapshot for trend visualization.
+    pub fn capture_gap_snapshot(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<GapSnapshotResult> {
+        // Count total skills for this subject
+        let total_skills: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM student_skill_states sss
+             INNER JOIN academic_nodes an ON an.id = sss.node_id
+             INNER JOIN topics t ON t.id = an.topic_id
+             WHERE sss.student_id = ?1 AND t.subject_id = ?2",
+            params![student_id, subject_id], |row| row.get(0),
+        ).unwrap_or(0);
+
+        if total_skills == 0 {
+            // Fall back to topic-level
+            return self.capture_topic_level_snapshot(student_id, subject_id);
+        }
+
+        // Count by state category
+        let mastered: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM student_skill_states sss
+             INNER JOIN academic_nodes an ON an.id = sss.node_id
+             INNER JOIN topics t ON t.id = an.topic_id
+             WHERE sss.student_id = ?1 AND t.subject_id = ?2 AND sss.mastery_score >= 8000",
+            params![student_id, subject_id], |row| row.get(0),
+        ).unwrap_or(0);
+
+        let weak: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM student_skill_states sss
+             INNER JOIN academic_nodes an ON an.id = sss.node_id
+             INNER JOIN topics t ON t.id = an.topic_id
+             WHERE sss.student_id = ?1 AND t.subject_id = ?2
+               AND sss.mastery_score >= 3000 AND sss.mastery_score < 6000",
+            params![student_id, subject_id], |row| row.get(0),
+        ).unwrap_or(0);
+
+        let unknown: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM student_skill_states sss
+             INNER JOIN academic_nodes an ON an.id = sss.node_id
+             INNER JOIN topics t ON t.id = an.topic_id
+             WHERE sss.student_id = ?1 AND t.subject_id = ?2 AND sss.evidence_count < 3",
+            params![student_id, subject_id], |row| row.get(0),
+        ).unwrap_or(0);
+
+        let critical: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM student_skill_states sss
+             INNER JOIN academic_nodes an ON an.id = sss.node_id
+             INNER JOIN topics t ON t.id = an.topic_id
+             WHERE sss.student_id = ?1 AND t.subject_id = ?2 AND sss.mastery_score < 3000 AND sss.evidence_count >= 3",
+            params![student_id, subject_id], |row| row.get(0),
+        ).unwrap_or(0);
+
+        let safe_total = total_skills.max(1);
+        let total_gap = 100 - (mastered * 100 / safe_total);
+        let unknown_pct = unknown * 100 / safe_total;
+        let weak_pct = weak * 100 / safe_total;
+        let critical_pct = critical * 100 / safe_total;
+        let declining_pct = 0i64; // would need trend analysis
+        let forgetting_pct = 0i64; // would need retention analysis
+
+        self.conn.execute(
+            "INSERT INTO gap_snapshots
+                (student_id, subject_id, total_gap_percent, unknown_percent, weak_percent,
+                 declining_percent, forgetting_percent, critical_percent,
+                 total_skills, mastered_skills, critical_blockers)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![
+                student_id, subject_id, total_gap, unknown_pct, weak_pct,
+                declining_pct, forgetting_pct, critical_pct,
+                total_skills, mastered, critical,
+            ],
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        Ok(GapSnapshotResult {
+            total_gap_percent: total_gap,
+            unknown_percent: unknown_pct,
+            weak_percent: weak_pct,
+            declining_percent: declining_pct,
+            forgetting_percent: forgetting_pct,
+            critical_percent: critical_pct,
+            total_skills,
+            mastered_skills: mastered,
+            critical_blockers: critical,
+        })
+    }
+
+    fn capture_topic_level_snapshot(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<GapSnapshotResult> {
+        let total: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM student_topic_states sts
+             INNER JOIN topics t ON t.id = sts.topic_id
+             WHERE sts.student_id = ?1 AND t.subject_id = ?2",
+            params![student_id, subject_id], |row| row.get(0),
+        ).unwrap_or(0);
+
+        let mastered: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM student_topic_states sts
+             INNER JOIN topics t ON t.id = sts.topic_id
+             WHERE sts.student_id = ?1 AND t.subject_id = ?2 AND sts.mastery_score >= 8000",
+            params![student_id, subject_id], |row| row.get(0),
+        ).unwrap_or(0);
+
+        let safe = total.max(1);
+        let gap = 100 - (mastered * 100 / safe);
+
+        self.conn.execute(
+            "INSERT INTO gap_snapshots
+                (student_id, subject_id, total_gap_percent, total_skills, mastered_skills)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![student_id, subject_id, gap, total, mastered],
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        Ok(GapSnapshotResult {
+            total_gap_percent: gap,
+            unknown_percent: 0, weak_percent: 0, declining_percent: 0,
+            forgetting_percent: 0, critical_percent: 0,
+            total_skills: total, mastered_skills: mastered, critical_blockers: 0,
+        })
+    }
+
+    /// Get gap trend over time.
+    pub fn list_gap_trend(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<GapTrendPoint>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT total_gap_percent, snapshot_at
+             FROM gap_snapshots
+             WHERE student_id = ?1 AND subject_id = ?2
+             ORDER BY snapshot_at DESC LIMIT ?3",
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt.query_map(params![student_id, subject_id, limit as i64], |row| {
+            Ok(GapTrendPoint {
+                gap_percent: row.get(0)?,
+                snapshot_at: row.get(1)?,
+            })
+        }).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut points = Vec::new();
+        for row in rows { points.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?); }
+        Ok(points)
+    }
+
+    /// Post a knowledge update feed item.
+    pub fn post_gap_feed_item(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        topic_id: Option<i64>,
+        event_type: &str,
+        message: &str,
+        severity: &str,
+    ) -> EcoachResult<()> {
+        self.conn.execute(
+            "INSERT INTO knowledge_update_feed
+                (student_id, subject_id, topic_id, event_type, message, severity)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![student_id, subject_id, topic_id, event_type, message, severity],
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Get unread feed items.
+    pub fn list_gap_feed(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<GapFeedItem>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, topic_id, event_type, message, severity, created_at
+             FROM knowledge_update_feed
+             WHERE student_id = ?1 AND subject_id = ?2
+             ORDER BY created_at DESC LIMIT ?3",
+        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let rows = stmt.query_map(params![student_id, subject_id, limit as i64], |row| {
+            Ok(GapFeedItem {
+                id: row.get(0)?,
+                topic_id: row.get(1)?,
+                event_type: row.get(2)?,
+                message: row.get(3)?,
+                severity: row.get(4)?,
+                created_at: row.get(5)?,
+            })
+        }).map_err(|e| EcoachError::Storage(e.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows { items.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?); }
+        Ok(items)
     }
 }
 

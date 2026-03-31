@@ -168,3 +168,37 @@ pub fn get_gap_dashboard(
         })
     })
 }
+
+// ── Knowledge Gap Deep commands ──
+
+pub fn capture_gap_snapshot(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<ecoach_knowledge_gap::GapSnapshotResult, CommandError> {
+    state.with_connection(|conn| {
+        Ok(KnowledgeGapService::new(conn).capture_gap_snapshot(student_id, subject_id)?)
+    })
+}
+
+pub fn list_gap_trend(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    limit: usize,
+) -> Result<Vec<ecoach_knowledge_gap::GapTrendPoint>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(KnowledgeGapService::new(conn).list_gap_trend(student_id, subject_id, limit)?)
+    })
+}
+
+pub fn list_gap_feed(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    limit: usize,
+) -> Result<Vec<ecoach_knowledge_gap::GapFeedItem>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(KnowledgeGapService::new(conn).list_gap_feed(student_id, subject_id, limit)?)
+    })
+}
