@@ -4,11 +4,12 @@ use ecoach_coach_brain::{
     CompressionAction, EvidenceEvent, EvidenceInterpretationEngine, GoalEngine,
     GoalFeasibility, GoalRecommendation, JourneyAdaptationEngine, JourneyRouteSnapshot,
     JourneyService, KnowledgeMapNode, LearnerMisconceptionSnapshot, PlanEngine,
-    PrerequisiteGraph, ReentryProbeResult, RouteMode, SessionComposer,
-    SteppedAttemptResult, SteppedQuestionEngine, TopicActionEngine, TopicActionMode,
-    TopicActionSession, TopicActionSummary, TopicCase, TopicProofCertification,
-    TopicProofEngine, VelocityEngine, VelocitySnapshot, assess_content_readiness,
-    list_priority_topic_cases, resolve_coach_state, resolve_next_coach_action,
+    PrerequisiteGraph, ReentryProbeResult, RiseModeEngine, RiseModeProfile, RouteMode,
+    SessionComposer, StageTransitionResult, SteppedAttemptResult, SteppedQuestionEngine,
+    TopicActionEngine, TopicActionMode, TopicActionSession, TopicActionSummary, TopicCase,
+    TopicProofCertification, TopicProofEngine, VelocityEngine, VelocitySnapshot,
+    assess_content_readiness, list_priority_topic_cases, resolve_coach_state,
+    resolve_next_coach_action,
 };
 use ecoach_goals_calendar::GoalsCalendarService;
 use ecoach_reporting::{DashboardService, StudentDashboard};
@@ -590,6 +591,82 @@ pub fn list_topic_proofs(
 ) -> Result<Vec<TopicProofCertification>, CommandError> {
     state.with_connection(|conn| {
         Ok(TopicProofEngine::new(conn).list_proofs(student_id, subject_id)?)
+    })
+}
+
+// ── Rise Mode commands ──
+
+pub fn enter_rise_mode(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<RiseModeProfile, CommandError> {
+    state.with_connection(|conn| {
+        Ok(RiseModeEngine::new(conn).enter_rise_mode(student_id, subject_id)?)
+    })
+}
+
+pub fn get_rise_mode_profile(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Option<RiseModeProfile>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(RiseModeEngine::new(conn).get_profile(student_id, subject_id)?)
+    })
+}
+
+pub fn check_rise_mode_transition(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Option<StageTransitionResult>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(RiseModeEngine::new(conn).check_stage_transition(student_id, subject_id)?)
+    })
+}
+
+// ── Beat Yesterday commands (expose existing engine) ──
+
+pub fn get_beat_yesterday_dashboard(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    target_date: &str,
+) -> Result<ecoach_goals_calendar::BeatYesterdayDashboard, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).get_beat_yesterday_dashboard(student_id, subject_id, target_date)?)
+    })
+}
+
+pub fn generate_daily_climb_target(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    date: &str,
+) -> Result<ecoach_goals_calendar::BeatYesterdayDailyTarget, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).generate_daily_climb_target(student_id, subject_id, date)?)
+    })
+}
+
+pub fn complete_daily_climb(
+    state: &AppState,
+    target_id: i64,
+) -> Result<ecoach_goals_calendar::BeatYesterdayDailySummary, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).complete_daily_climb(target_id)?)
+    })
+}
+
+pub fn list_climb_trend(
+    state: &AppState,
+    student_id: i64,
+    subject_id: i64,
+    days: i64,
+) -> Result<Vec<ecoach_goals_calendar::ClimbTrendPoint>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).list_climb_trend(student_id, subject_id, days as usize)?)
     })
 }
 

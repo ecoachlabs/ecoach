@@ -5,6 +5,7 @@ pub mod journey_adaptation;
 pub mod plan_engine;
 pub mod prerequisite_graph;
 pub mod readiness_engine;
+pub mod rise_mode_engine;
 pub mod session_composer;
 pub mod state_machine;
 pub mod stepped_question_engine;
@@ -33,6 +34,9 @@ pub use plan_engine::{CoachMissionMemory, PlanEngine, PlanRewriteResult};
 pub use prerequisite_graph::{PrerequisiteGraph, PrerequisiteLink, ReentryProbeResult};
 pub use velocity_engine::{CompressionAction, GoalFeasibility, VelocityEngine, VelocitySnapshot};
 pub use readiness_engine::{ReadinessEngine, StudentReadinessSnapshot, TopicReadinessSlice};
+pub use rise_mode_engine::{
+    RiseModeEngine, RiseModeProfile, StageTransitionResult, TransformationStage,
+};
 pub use session_composer::{ComposedSession, QuestionIntent, SessionComposer, SessionSegment};
 pub use state_machine::{
     CoachActionType, CoachNextAction, CoachStateResolution, ContentReadinessResolution,

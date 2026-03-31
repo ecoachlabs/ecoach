@@ -203,6 +203,10 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "048_topic_action_engine",
         sql: include_str!("../../../migrations/runtime/048_topic_action_engine.sql"),
     },
+    Migration {
+        id: "049_rise_mode",
+        sql: include_str!("../../../migrations/runtime/049_rise_mode.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {
