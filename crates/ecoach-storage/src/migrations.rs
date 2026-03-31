@@ -315,6 +315,14 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "076_curriculum_and_documents",
         sql: include_str!("../../../migrations/runtime/076_curriculum_and_documents.sql"),
     },
+    Migration {
+        id: "077_exam_strategy_and_mastery_map",
+        sql: include_str!("../../../migrations/runtime/077_exam_strategy_and_mastery_map.sql"),
+    },
+    Migration {
+        id: "078_glossary_meta_deep",
+        sql: include_str!("../../../migrations/runtime/078_glossary_meta_deep.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {
