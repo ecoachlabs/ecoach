@@ -6,5 +6,5 @@ export function getStudentDashboard(studentId: number): Promise<StudentDashboard
 }
 
 export function buildParentDashboard(parentId: number): Promise<ParentDashboardSnapshot> {
-  return ipc<ParentDashboardSnapshot>('build_parent_dashboard', { parentId })
+  return ipc<ParentDashboardSnapshot>('get_parent_dashboard', { parentId })
 }

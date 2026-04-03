@@ -63,6 +63,7 @@ fn main() {
             commands::get_student_dashboard,
             commands::build_or_refresh_journey_route,
             commands::get_active_journey_route,
+            commands::get_journey_station,
             commands::complete_journey_station,
             commands::generate_today_mission,
             commands::upsert_academic_event,
@@ -303,6 +304,10 @@ fn main() {
             commands::get_diagnostic_audience_report,
             commands::get_diagnostic_longitudinal_summary,
             commands::list_diagnostic_cause_evolution,
+            // Question hydration
+            commands::get_question_options,
+            commands::list_session_questions,
+            commands::list_mock_questions,
             // Questions
             commands::choose_reactor_family,
             commands::create_question_generation_request,

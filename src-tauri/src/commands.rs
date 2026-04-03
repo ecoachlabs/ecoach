@@ -174,6 +174,275 @@ pub struct ReentryProbeResultDto {
     pub probe_question_count: usize,
 }
 
+// ── Question + Session item hydration DTOs ──────────────────────────────────
+
+/// A single answer option for a question.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionOptionDto {
+    pub id: i64,
+    pub label: String,
+    pub text: String,
+    pub misconception_id: Option<i64>,
+    pub distractor_intent: Option<String>,
+}
+
+/// A session item hydrated with its question stem and answer options.
+/// Returned by `list_session_questions` so the frontend can render a full
+/// question without making one request per option.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionQuestionDto {
+    pub item_id: i64,
+    pub question_id: i64,
+    pub display_order: i64,
+    pub stem: String,
+    pub question_format: String,
+    pub difficulty: i64,
+    pub estimated_time_seconds: Option<i64>,
+    pub is_answered: bool,
+    pub flagged: bool,
+    pub options: Vec<QuestionOptionDto>,
+}
+
+// ── Question hydration commands ──────────────────────────────────────────────
+
+/// Returns all answer options for a given question_id.
+/// Used by both the diagnostic session (where the phase item already has the
+/// stem) and any other surface that needs to render a question's choices.
+#[tauri::command]
+pub fn get_question_options(
+    state: State<'_, AppState>,
+    question_id: i64,
+) -> Result<Vec<QuestionOptionDto>, CommandError> {
+    state.with_connection(|conn| {
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, option_label, option_text, misconception_id, distractor_intent
+                 FROM question_options
+                 WHERE question_id = ?1
+                 ORDER BY position ASC, id ASC",
+            )
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+        let options: Vec<QuestionOptionDto> = stmt
+            .query_map([question_id], |row| {
+                Ok(QuestionOptionDto {
+                    id: row.get(0)?,
+                    label: row.get(1)?,
+                    text: row.get(2)?,
+                    misconception_id: row.get(3)?,
+                    distractor_intent: row.get(4)?,
+                })
+            })
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .collect();
+        Ok(options)
+    })
+}
+
+/// Returns every session item with its question stem and answer options in one
+/// call.  The frontend uses this to pre-load all questions at session start so
+/// it can render them instantly without per-question round-trips.
+#[tauri::command]
+pub fn list_session_questions(
+    state: State<'_, AppState>,
+    session_id: i64,
+) -> Result<Vec<SessionQuestionDto>, CommandError> {
+    state.with_connection(|conn| {
+        // 1. Fetch all session items joined with their questions
+        let mut item_stmt = conn
+            .prepare(
+                "SELECT si.id, si.question_id, si.display_order,
+                        q.stem, q.question_format, q.difficulty, q.estimated_time_seconds,
+                        CASE WHEN si.selected_option_id IS NOT NULL THEN 1 ELSE 0 END,
+                        si.flagged
+                 FROM session_items si
+                 INNER JOIN questions q ON q.id = si.question_id
+                 WHERE si.session_id = ?1
+                 ORDER BY si.display_order ASC, si.id ASC",
+            )
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+
+        let mut items: Vec<SessionQuestionDto> = item_stmt
+            .query_map([session_id], |row| {
+                Ok(SessionQuestionDto {
+                    item_id: row.get(0)?,
+                    question_id: row.get(1)?,
+                    display_order: row.get(2)?,
+                    stem: row.get(3)?,
+                    question_format: row.get(4)?,
+                    difficulty: row.get::<_, Option<i64>>(5)?.unwrap_or(5000),
+                    estimated_time_seconds: row.get(6)?,
+                    is_answered: row.get::<_, i64>(7)? == 1,
+                    flagged: row.get::<_, i64>(8)? == 1,
+                    options: vec![],
+                })
+            })
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        if items.is_empty() {
+            return Ok(items);
+        }
+
+        // 2. Fetch options for all questions in a single query using an
+        //    integer IN clause (safe since all values are i64 from the DB).
+        let id_list = items
+            .iter()
+            .map(|i| i.question_id.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let opt_sql = format!(
+            "SELECT id, question_id, option_label, option_text, misconception_id, distractor_intent
+             FROM question_options
+             WHERE question_id IN ({})
+             ORDER BY question_id ASC, position ASC, id ASC",
+            id_list
+        );
+
+        let mut opt_stmt = conn
+            .prepare(&opt_sql)
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+
+        let options: Vec<(i64, QuestionOptionDto)> = opt_stmt
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, i64>(1)?,
+                    QuestionOptionDto {
+                        id: row.get(0)?,
+                        label: row.get(2)?,
+                        text: row.get(3)?,
+                        misconception_id: row.get(4)?,
+                        distractor_intent: row.get(5)?,
+                    },
+                ))
+            })
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        // 3. Attach options to their respective items
+        use std::collections::HashMap;
+        let mut opt_map: HashMap<i64, Vec<QuestionOptionDto>> = HashMap::new();
+        for (qid, opt) in options {
+            opt_map.entry(qid).or_default().push(opt);
+        }
+        for item in &mut items {
+            if let Some(opts) = opt_map.remove(&item.question_id) {
+                item.options = opts;
+            }
+        }
+
+        Ok(items)
+    })
+}
+
+/// Returns all questions for a mock session, hydrated with options.
+/// Resolves the underlying practice session from `mock_sessions.session_id`
+/// then calls the same logic as `list_session_questions`.
+#[tauri::command]
+pub fn list_mock_questions(
+    state: State<'_, AppState>,
+    mock_session_id: i64,
+) -> Result<Vec<SessionQuestionDto>, CommandError> {
+    state.with_connection(|conn| {
+        // 1. Resolve the underlying session_id
+        let session_id: i64 = conn
+            .query_row(
+                "SELECT session_id FROM mock_sessions WHERE id = ?1",
+                [mock_session_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+
+        // 2. Fetch session items joined with questions
+        let mut item_stmt = conn
+            .prepare(
+                "SELECT si.id, si.question_id, si.display_order,
+                        q.stem, q.question_format, q.difficulty, q.estimated_time_seconds,
+                        CASE WHEN si.selected_option_id IS NOT NULL THEN 1 ELSE 0 END,
+                        si.flagged
+                 FROM session_items si
+                 INNER JOIN questions q ON q.id = si.question_id
+                 WHERE si.session_id = ?1
+                 ORDER BY si.display_order ASC, si.id ASC",
+            )
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+
+        let mut items: Vec<SessionQuestionDto> = item_stmt
+            .query_map([session_id], |row| {
+                Ok(SessionQuestionDto {
+                    item_id: row.get(0)?,
+                    question_id: row.get(1)?,
+                    display_order: row.get(2)?,
+                    stem: row.get(3)?,
+                    question_format: row.get(4)?,
+                    difficulty: row.get::<_, Option<i64>>(5)?.unwrap_or(5000),
+                    estimated_time_seconds: row.get(6)?,
+                    is_answered: row.get::<_, i64>(7)? == 1,
+                    flagged: row.get::<_, i64>(8)? == 1,
+                    options: vec![],
+                })
+            })
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        if items.is_empty() {
+            return Ok(items);
+        }
+
+        // 3. Fetch all options in one query
+        let id_list = items
+            .iter()
+            .map(|i| i.question_id.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let opt_sql = format!(
+            "SELECT id, question_id, option_label, option_text, misconception_id, distractor_intent
+             FROM question_options
+             WHERE question_id IN ({})
+             ORDER BY question_id ASC, position ASC, id ASC",
+            id_list
+        );
+
+        let mut opt_stmt = conn
+            .prepare(&opt_sql)
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
+
+        let options: Vec<(i64, QuestionOptionDto)> = opt_stmt
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, i64>(1)?,
+                    QuestionOptionDto {
+                        id: row.get(0)?,
+                        label: row.get(2)?,
+                        text: row.get(3)?,
+                        misconception_id: row.get(4)?,
+                        distractor_intent: row.get(5)?,
+                    },
+                ))
+            })
+            .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        // 4. Attach options to items
+        use std::collections::HashMap;
+        let mut opt_map: HashMap<i64, Vec<QuestionOptionDto>> = HashMap::new();
+        for (qid, opt) in options {
+            opt_map.entry(qid).or_default().push(opt);
+        }
+        for item in &mut items {
+            if let Some(opts) = opt_map.remove(&item.question_id) {
+                item.options = opts;
+            }
+        }
+
+        Ok(items)
+    })
+}
+
 // Identity
 
 #[tauri::command]
@@ -510,6 +779,42 @@ pub fn get_active_journey_route(
     subject_id: i64,
 ) -> Result<Option<JourneyRouteSnapshotDto>, CommandError> {
     coach_commands::get_active_journey_route(&state, student_id, subject_id)
+}
+
+/// Returns lightweight station detail by station_id, including its subject_id
+/// so the frontend can load the full route without tracking subject in client state.
+#[tauri::command]
+pub fn get_journey_station(
+    state: State<'_, AppState>,
+    station_id: i64,
+) -> Result<serde_json::Value, CommandError> {
+    state.with_connection(|conn| {
+        conn.query_row(
+            "SELECT js.id, js.route_id, js.station_code, js.title, js.station_type,
+                    js.sequence_no, js.status, js.progress_score, js.completion_confidence,
+                    jr.student_id, jr.subject_id
+             FROM journey_stations js
+             INNER JOIN journey_routes jr ON jr.id = js.route_id
+             WHERE js.id = ?1",
+            [station_id],
+            |row| {
+                Ok(serde_json::json!({
+                    "id": row.get::<_, i64>(0)?,
+                    "route_id": row.get::<_, i64>(1)?,
+                    "station_code": row.get::<_, String>(2)?,
+                    "title": row.get::<_, String>(3)?,
+                    "station_type": row.get::<_, String>(4)?,
+                    "sequence_no": row.get::<_, i64>(5)?,
+                    "status": row.get::<_, String>(6)?,
+                    "progress_score": row.get::<_, i64>(7)?,
+                    "completion_confidence": row.get::<_, i64>(8)?,
+                    "student_id": row.get::<_, i64>(9)?,
+                    "subject_id": row.get::<_, i64>(10)?,
+                }))
+            },
+        )
+        .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()).into())
+    })
 }
 
 #[tauri::command]

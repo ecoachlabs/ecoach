@@ -123,3 +123,22 @@ export function listSubjects(curriculumVersionId: number = 1): Promise<SubjectDt
 export function listTopics(subjectId: number): Promise<TopicDto[]> {
   return ipc<TopicDto[]>('list_topics', { subjectId })
 }
+
+export interface RevengeQueueItemDto {
+  id: number
+  student_id: number
+  question_id: number
+  original_session_id: number | null
+  original_error_type: string | null
+  original_wrong_answer: string | null
+  attempts_to_beat: number
+  is_beaten: boolean
+  beaten_at: string | null
+  added_at: string
+  question_text: string | null
+  topic_id: number | null
+}
+
+export function getRevengeQueue(studentId: number): Promise<RevengeQueueItemDto[]> {
+  return ipc<RevengeQueueItemDto[]>('get_revenge_queue', { studentId })
+}
