@@ -13,6 +13,7 @@ frontend/dist/
 .idea/
 *.swp
 *.swo
+*.swap*
 
 # OS
 .DS_Store
@@ -21,3 +22,6 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+# Local verification artifacts
+target-codex-*/

@@ -26,6 +26,11 @@ fn main() {
             commands::list_accounts,
             commands::create_account,
             commands::login_with_pin,
+            commands::inspect_rebuild_workspace,
+            commands::export_database_backup,
+            commands::check_database_backup_status,
+            commands::restore_database_backup,
+            commands::export_recovery_snapshot,
             // Coach
             commands::get_coach_state,
             commands::get_coach_next_action,

@@ -1,4 +1,4 @@
-﻿pub mod assessment_commands;
+pub mod assessment_commands;
 pub mod attempt_commands;
 pub mod coach_commands;
 pub mod content_commands;
@@ -15,6 +15,7 @@ pub mod mock_commands;
 pub mod premium_commands;
 pub mod question_commands;
 pub mod readiness_commands;
+pub mod recovery_commands;
 pub mod repair_commands;
 pub mod reporting_commands;
 pub mod session_commands;
@@ -35,6 +36,7 @@ mod tests {
         ContentSourcePolicyInput, ContentSourceProfileInput, ContentSourceSegmentInput,
         PackService, ParseCandidateInput, SourceUploadInput,
     };
+    use ecoach_content::{RecordResourceLearningInput, ResourceOrchestrationRequest};
     use ecoach_curriculum::{
         CurriculumAliasInput, CurriculumCohortPinInput, CurriculumConceptAtomInput,
         CurriculumFamilyInput, CurriculumLevelInput, CurriculumNodeBundleInput,
@@ -43,7 +45,6 @@ mod tests {
         CurriculumRelationshipInput, CurriculumResourceLinkInput, CurriculumSubjectTrackInput,
         CurriculumTermPeriodInput, CurriculumVersionInput, StudentCurriculumAssignmentInput,
     };
-    use ecoach_content::{RecordResourceLearningInput, ResourceOrchestrationRequest};
     use ecoach_games::{GameType, StartGameInput, SubmitGameAnswerInput, TrapsMode};
     use ecoach_identity::CreateAccountInput;
     use ecoach_questions::{
@@ -56,8 +57,8 @@ mod tests {
     use rusqlite::{OptionalExtension, params};
 
     use crate::{
-        CommandError, coach_commands, content_commands, curriculum_commands, game_commands, identity_commands,
-        question_commands, session_commands, state::AppState, traps_commands,
+        CommandError, coach_commands, content_commands, curriculum_commands, game_commands,
+        identity_commands, question_commands, session_commands, state::AppState, traps_commands,
     };
 
     #[test]
@@ -214,17 +215,23 @@ mod tests {
         assert!(!profile.comparison_rows.is_empty());
         assert!(!profile.diagram_assets.is_empty());
         assert!(!profile.mode_items.is_empty());
-        assert!(profile
-            .mode_items
-            .iter()
-            .any(|item| item.mode == TrapsMode::DifferenceDrill.as_str()));
+        assert!(
+            profile
+                .mode_items
+                .iter()
+                .any(|item| item.mode == TrapsMode::DifferenceDrill.as_str())
+        );
 
         let reasons = traps_commands::list_trap_misconception_reasons(
             &state,
             Some(TrapsMode::DifferenceDrill.as_str().to_string()),
         )
         .expect("misconception reasons should load");
-        assert!(reasons.iter().any(|reason| reason.code == "feature_confusion"));
+        assert!(
+            reasons
+                .iter()
+                .any(|reason| reason.code == "feature_confusion")
+        );
         assert!(reasons.iter().all(|reason| {
             reason
                 .modes
@@ -923,7 +930,9 @@ mod tests {
                     id: None,
                     legacy_learning_objective_id: None,
                     objective_text: "Solve one-step linear equations.".to_string(),
-                    simplified_text: Some("Find the missing value in simple equations.".to_string()),
+                    simplified_text: Some(
+                        "Find the missing value in simple equations.".to_string(),
+                    ),
                     cognitive_level: Some("application".to_string()),
                     objective_type: "application".to_string(),
                     sequence_no: 1,
@@ -972,8 +981,8 @@ mod tests {
                 .expect("version should publish");
         assert_eq!(published.version.status, "published");
 
-        let families = curriculum_commands::list_curriculum_families(&state)
-            .expect("families should load");
+        let families =
+            curriculum_commands::list_curriculum_families(&state).expect("families should load");
         assert!(families.iter().any(|item| item.slug == "ghana-bece"));
         let overview = curriculum_commands::get_public_curriculum_subject_overview(
             &state,
@@ -991,20 +1000,18 @@ mod tests {
         )
         .expect("tree should load");
         assert_eq!(tree.len(), 2);
-        let search = curriculum_commands::search_curriculum(
-            &state,
-            "Solve x".to_string(),
-            true,
-            10,
-        )
-        .expect("search should load");
+        let search =
+            curriculum_commands::search_curriculum(&state, "Solve x".to_string(), true, 10)
+                .expect("search should load");
         assert!(search.iter().any(|item| item.slug == "linear-equations"));
         let context = curriculum_commands::get_curriculum_topic_context(&state, target.node.id)
             .expect("context should load");
-        assert!(context
-            .prerequisite_chain
-            .iter()
-            .any(|node| node.slug == "fractions-foundations"));
+        assert!(
+            context
+                .prerequisite_chain
+                .iter()
+                .any(|node| node.slug == "fractions-foundations")
+        );
         let next = curriculum_commands::get_curriculum_next_best_topics(&state, 1, 999, 10)
             .expect("next best topics should load");
         assert!(next.iter().any(|item| item.slug == "linear-equations"));
@@ -1596,11 +1603,9 @@ mod tests {
         let student = create_student(&state, "Nana");
         let topic_id = state
             .with_connection(|conn| {
-                conn.query_row(
-                    "SELECT id FROM topics ORDER BY id ASC LIMIT 1",
-                    [],
-                    |row| row.get::<_, i64>(0),
-                )
+                conn.query_row("SELECT id FROM topics ORDER BY id ASC LIMIT 1", [], |row| {
+                    row.get::<_, i64>(0)
+                })
                 .map_err(|err| CommandError {
                     code: "storage_error".to_string(),
                     message: err.to_string(),
@@ -1751,7 +1756,6 @@ mod tests {
             })
             .expect("idea32 seed should persist");
 
-
         state
             .with_connection(|conn| {
                 conn.execute(
@@ -1794,12 +1798,9 @@ mod tests {
             })
             .expect("idea32 state should update");
 
-        let knowledge_state = crate::memory_commands::get_memory_knowledge_state(
-            &state,
-            student.id,
-            primary_node_id,
-        )
-        .expect("knowledge state should load");
+        let knowledge_state =
+            crate::memory_commands::get_memory_knowledge_state(&state, student.id, primary_node_id)
+                .expect("knowledge state should load");
         assert_eq!(knowledge_state.knowledge_unit.id, knowledge_unit_id);
         assert_eq!(knowledge_state.state.student_id, student.id);
         assert!(!knowledge_state.review_items.is_empty());
@@ -1841,7 +1842,8 @@ mod tests {
         assert_eq!(recomputed.knowledge_unit.id, knowledge_unit_id);
         assert_eq!(recomputed.state.student_id, student.id);
 
-        let _cohort_result = crate::memory_commands::get_memory_cohort_analytics(&state, topic_id, 5);
+        let _cohort_result =
+            crate::memory_commands::get_memory_cohort_analytics(&state, topic_id, 5);
 
         let interference_edges = crate::memory_commands::list_student_interference_edges(
             &state,
@@ -1856,8 +1858,18 @@ mod tests {
 
         let topic_map = crate::memory_commands::get_topic_knowledge_map(&state, topic_id)
             .expect("topic knowledge map should load");
-        assert!(topic_map.units.iter().any(|unit| unit.id == knowledge_unit_id));
-        assert!(topic_map.units.iter().any(|unit| unit.id == neighbor_unit_id));
+        assert!(
+            topic_map
+                .units
+                .iter()
+                .any(|unit| unit.id == knowledge_unit_id)
+        );
+        assert!(
+            topic_map
+                .units
+                .iter()
+                .any(|unit| unit.id == neighbor_unit_id)
+        );
         assert!(topic_map.edges.iter().any(|edge| {
             edge.source_unit_id == knowledge_unit_id && edge.target_unit_id == neighbor_unit_id
         }));
@@ -2606,7 +2618,9 @@ mod tests {
                     canonical_title: "Algebra Foundations".to_string(),
                     public_title: Some("Algebra Foundations".to_string()),
                     slug: Some("algebra-foundations".to_string()),
-                    official_text: Some("Keep the foundation stable before the new strand.".to_string()),
+                    official_text: Some(
+                        "Keep the foundation stable before the new strand.".to_string(),
+                    ),
                     public_summary: Some("Foundation algebra before equation solving.".to_string()),
                     sequence_no: 1,
                     depth: 0,
@@ -2639,7 +2653,9 @@ mod tests {
                     public_title: Some("Linear Equations".to_string()),
                     slug: Some("linear-equations".to_string()),
                     official_text: Some("Solve one-step and two-step equations.".to_string()),
-                    public_summary: Some("A newly added exam-weighted equation strand.".to_string()),
+                    public_summary: Some(
+                        "A newly added exam-weighted equation strand.".to_string(),
+                    ),
                     sequence_no: 2,
                     depth: 0,
                     estimated_weight: 7800,
@@ -2788,7 +2804,8 @@ mod tests {
         )
         .expect("student assignment should save");
 
-        let registry = curriculum_commands::get_curriculum_registry(&state).expect("registry should load");
+        let registry =
+            curriculum_commands::get_curriculum_registry(&state).expect("registry should load");
         assert!(registry.iter().any(|item| {
             item.version.id == compare_version.id
                 && item.current_cohorts.contains(&"2028 Cohort".to_string())
@@ -2799,13 +2816,17 @@ mod tests {
             .expect("workspace should exist");
         assert_eq!(ingestion.low_confidence_count, 1);
         assert_eq!(ingestion.duplicate_warning_count, 1);
-        let admin_detail = curriculum_commands::get_curriculum_admin_node_detail(&state, compare_linear.node.id)
-            .expect("admin detail should load");
+        let admin_detail =
+            curriculum_commands::get_curriculum_admin_node_detail(&state, compare_linear.node.id)
+                .expect("admin detail should load");
         assert_eq!(admin_detail.citations.len(), 1);
         assert_eq!(admin_detail.exemplars.len(), 1);
         assert_eq!(admin_detail.comments.len(), 1);
         assert_eq!(
-            admin_detail.linked_resource_counts.get("question").and_then(|value| value.as_i64()),
+            admin_detail
+                .linked_resource_counts
+                .get("question")
+                .and_then(|value| value.as_i64()),
             Some(1)
         );
         assert_eq!(
@@ -2816,9 +2837,17 @@ mod tests {
             Some("Solve for x")
         );
 
-        let impact = curriculum_commands::analyze_curriculum_version_impact(&state, base_version.id, compare_version.id)
-            .expect("impact should analyze");
-        assert!(impact.items.iter().any(|item| item.diff_type == "added_topic" && item.entity_key == "linear-equations"));
+        let impact = curriculum_commands::analyze_curriculum_version_impact(
+            &state,
+            base_version.id,
+            compare_version.id,
+        )
+        .expect("impact should analyze");
+        assert!(
+            impact.items.iter().any(
+                |item| item.diff_type == "added_topic" && item.entity_key == "linear-equations"
+            )
+        );
         assert!(impact.requires_regeneration_count >= 1);
         let staged_jobs = curriculum_commands::stage_curriculum_regeneration_jobs(
             &state,
@@ -2829,27 +2858,52 @@ mod tests {
         )
         .expect("regeneration jobs should stage");
         assert!(!staged_jobs.is_empty());
-        assert!(!curriculum_commands::list_curriculum_regeneration_jobs(&state, compare_version.id, None, 10)
+        assert!(
+            !curriculum_commands::list_curriculum_regeneration_jobs(
+                &state,
+                compare_version.id,
+                None,
+                10
+            )
             .expect("regeneration jobs should list")
-            .is_empty());
+            .is_empty()
+        );
 
-        let active_assignment = curriculum_commands::get_active_student_curriculum_assignment(&state, student.id)
-            .expect("active assignment should load")
-            .expect("assignment should exist");
+        let active_assignment =
+            curriculum_commands::get_active_student_curriculum_assignment(&state, student.id)
+                .expect("active assignment should load")
+                .expect("assignment should exist");
         assert_eq!(active_assignment.id, assignment.id);
-        let student_home = curriculum_commands::get_student_curriculum_home(&state, student.id, None)
-            .expect("student home should load");
+        let student_home =
+            curriculum_commands::get_student_curriculum_home(&state, student.id, None)
+                .expect("student home should load");
         assert_eq!(student_home.curriculum_version.id, compare_version.id);
         assert!(student_home.review_due_count >= 1);
         assert!(!student_home.recommended_topics.is_empty());
-        let subject_map = curriculum_commands::get_student_subject_curriculum_map(&state, student.id, compare_subject.id)
-            .expect("subject map should load");
-        assert!(subject_map.nodes.iter().any(|item| item.node.id == compare_linear.node.id && item.review_due));
-        let parent_summary = curriculum_commands::get_parent_curriculum_summary(&state, parent.id, student.id, None)
-            .expect("parent summary should load");
-        assert!(parent_summary.weak_topics.iter().any(|item| item == "Linear Equations"));
-        let pins = curriculum_commands::list_curriculum_version_cohort_pins(&state, compare_version.id)
-            .expect("pins should list");
+        let subject_map = curriculum_commands::get_student_subject_curriculum_map(
+            &state,
+            student.id,
+            compare_subject.id,
+        )
+        .expect("subject map should load");
+        assert!(
+            subject_map
+                .nodes
+                .iter()
+                .any(|item| item.node.id == compare_linear.node.id && item.review_due)
+        );
+        let parent_summary =
+            curriculum_commands::get_parent_curriculum_summary(&state, parent.id, student.id, None)
+                .expect("parent summary should load");
+        assert!(
+            parent_summary
+                .weak_topics
+                .iter()
+                .any(|item| item == "Linear Equations")
+        );
+        let pins =
+            curriculum_commands::list_curriculum_version_cohort_pins(&state, compare_version.id)
+                .expect("pins should list");
         assert_eq!(pins.len(), 1);
         assert_eq!(intelligence.approval_status, "approved");
     }
@@ -2863,14 +2917,3 @@ mod tests {
             .join("math-bece-sample")
     }
 }
-
-
-
-
-
-
-
-
-
-
-

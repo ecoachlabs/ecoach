@@ -17,21 +17,21 @@ use ecoach_commands::coach_commands::{
     CoachNextActionDto, CoachOrchestrationSnapshotDto, CoachStateDto, CoachTitleHistoryEntryDto,
     ComebackFlowDto, ComposedSessionDto, CompressionActionDto, ConceptInterferenceCaseDto,
     ConsistencySnapshotDto, ConstructedAnswerEvaluationDto, ContentReadinessDto,
-    DeadlinePressureDto, EngagementEventDto, EngagementEventInputDto, EngagementRiskProfileDto,
-    EngineRegistryDto, EvidenceEventDto, EvidenceProbeRecommendationDto, ExamStrategyProfileDto,
-    GoalFeasibilityDto, GoalRecommendationDto, JourneyRouteSnapshotDto, KnowledgeMapNodeDto,
-    InterventionModeDefinitionDto, DiagnosticPrescriptionSyncDto,
-    LearnerMisconceptionSnapshotDto, MasteryMapNodeDto, ParentAccessSettingsDto,
-    ParentAccessSettingsInputDto, ParentAlertRecordDto, ParentFeedbackInputDto,
-    ParentFeedbackRecordDto, PreparationIntensityProfileDto, ReminderScheduleDto,
-    ReminderScheduleInputDto, RevengeQueueItemDto, RiseModeProfileDto, StageTransitionResultDto,
-    SteppedAttemptResultDto, StrategyAdjustmentLogDto, StudentDashboardDto, StudentMomentumDto,
-    SurpriseEventRecommendationDto, TeacherClimbOverviewDto, TitleDefenseBriefDto,
-    TitleDefenseCompletionInputDto, TitleDefenseResultDto, TitlesHallSnapshotDto,
-    TopicActionSessionDto, TopicActionSummaryDto, TopicCaseDto, TopicProofCertificationDto,
-    TopicTeachingProfileDto, TopicTeachingStrategyDto, TeachingRuntimeSnapshotDto,
-    UncertaintyProfileDto, VelocitySnapshotDto, InstructionalObjectEnvelopeDto,
-    PersonalizationSnapshotDto,
+    DeadlinePressureDto, DiagnosticPrescriptionSyncDto, EngagementEventDto,
+    EngagementEventInputDto, EngagementRiskProfileDto, EngineRegistryDto, EvidenceEventDto,
+    EvidenceProbeRecommendationDto, ExamStrategyProfileDto, GoalFeasibilityDto,
+    GoalRecommendationDto, InstructionalObjectEnvelopeDto, InterventionModeDefinitionDto,
+    JourneyRouteSnapshotDto, KnowledgeMapNodeDto, LearnerMisconceptionSnapshotDto,
+    MasteryMapNodeDto, ParentAccessSettingsDto, ParentAccessSettingsInputDto, ParentAlertRecordDto,
+    ParentFeedbackInputDto, ParentFeedbackRecordDto, PersonalizationSnapshotDto,
+    PreparationIntensityProfileDto, ReminderScheduleDto, ReminderScheduleInputDto,
+    RevengeQueueItemDto, RiseModeProfileDto, StageTransitionResultDto, SteppedAttemptResultDto,
+    StrategyAdjustmentLogDto, StudentDashboardDto, StudentMomentumDto,
+    SurpriseEventRecommendationDto, TeacherClimbOverviewDto, TeachingRuntimeSnapshotDto,
+    TitleDefenseBriefDto, TitleDefenseCompletionInputDto, TitleDefenseResultDto,
+    TitlesHallSnapshotDto, TopicActionSessionDto, TopicActionSummaryDto, TopicCaseDto,
+    TopicProofCertificationDto, TopicTeachingProfileDto, TopicTeachingStrategyDto,
+    UncertaintyProfileDto, VelocitySnapshotDto,
 };
 use ecoach_commands::content_commands::{
     ResourceApplicabilityResolutionDto, ResourceLearningRecordDto, ResourceOrchestrationResultDto,
@@ -45,18 +45,17 @@ use ecoach_commands::curriculum_commands::{
     CurriculumNodeBundleInputDto, CurriculumNodeCitationDto, CurriculumNodeCitationInputDto,
     CurriculumNodeCommentDto, CurriculumNodeCommentInputDto, CurriculumNodeExemplarDto,
     CurriculumNodeExemplarInputDto, CurriculumNodeIntelligenceDto,
-    CurriculumNodeIntelligenceInputDto, CurriculumParentSummaryDto,
-    CurriculumPrerequisiteStepDto, CurriculumPublicSubjectOverviewDto,
-    CurriculumPublicTopicDetailDto, CurriculumPublishResultDto, CurriculumRecommendationDto,
-    CurriculumRegenerationJobDto, CurriculumRegistryEntryDto, CurriculumRemediationMapDto,
-    CurriculumReviewQueueItemDto, CurriculumSearchResultDto,
+    CurriculumNodeIntelligenceInputDto, CurriculumParentSummaryDto, CurriculumPrerequisiteStepDto,
+    CurriculumPublicSubjectOverviewDto, CurriculumPublicTopicDetailDto, CurriculumPublishResultDto,
+    CurriculumRecommendationDto, CurriculumRegenerationJobDto, CurriculumRegistryEntryDto,
+    CurriculumRemediationMapDto, CurriculumReviewQueueItemDto, CurriculumSearchResultDto,
     CurriculumSourceReportDto as CurriculumPortalSourceReportDto,
     CurriculumSourceUploadDto as CurriculumPortalSourceUploadDto, CurriculumStudentHomeSnapshotDto,
     CurriculumStudentSubjectMapDto, CurriculumSubjectTrackDto, CurriculumSubjectTrackInputDto,
     CurriculumTermPeriodDto, CurriculumTermPeriodInputDto, CurriculumTopicContextDto,
     CurriculumTreeNodeDto, CurriculumVersionDiffReportDto, CurriculumVersionDto,
-    CurriculumVersionInputDto, StudentCurriculumAssignmentDto,
-    StudentCurriculumAssignmentInputDto, SubjectDto, TopicDto,
+    CurriculumVersionInputDto, StudentCurriculumAssignmentDto, StudentCurriculumAssignmentInputDto,
+    SubjectDto, TopicDto,
 };
 use ecoach_commands::diagnostic_commands::{
     DiagnosticBatteryDto, DiagnosticCompletionSyncDto, DiagnosticPhaseItemDto,
@@ -84,10 +83,10 @@ use ecoach_commands::library_commands::{
     UpdateGlossaryAudioQueueInputDto, UpdateLibraryItemInputDto,
 };
 use ecoach_commands::memory_commands::{
-    ActiveInterventionDto, DecayBatchResultDto, InterventionStepInputDto,
-    MemoryCohortAnalyticsDto, MemoryDashboardDto, MemoryKnowledgeStateDto, MemoryReturnLoopDto,
-    MemoryReviewQueueItemDto, MemoryStateDto, RecheckItemDto, ReviewScheduleItemDto,
-    StudentInterferenceEdgeDto, TopicKnowledgeMapDto, TopicMemorySummaryDto,
+    ActiveInterventionDto, DecayBatchResultDto, InterventionStepInputDto, MemoryCohortAnalyticsDto,
+    MemoryDashboardDto, MemoryKnowledgeStateDto, MemoryReturnLoopDto, MemoryReviewQueueItemDto,
+    MemoryStateDto, RecheckItemDto, ReviewScheduleItemDto, StudentInterferenceEdgeDto,
+    TopicKnowledgeMapDto, TopicMemorySummaryDto,
 };
 use ecoach_commands::mock_commands::{
     MockAnswerResultDto, MockCentreSnapshotDto, MockDeepDiagnosisDto, MockQuestionReviewDto,
@@ -98,6 +97,10 @@ use ecoach_commands::premium_commands::{
     RiskFlagDto,
 };
 use ecoach_commands::readiness_commands::{ParentDigestDto, ReadinessReportDto};
+use ecoach_commands::recovery_commands::{
+    DatabaseBackupResultDto, DatabaseBackupStatusDto, ExportRecoverySnapshotInputDto,
+    RebuildWorkspaceStatusDto, RecoverySnapshotResultDto,
+};
 use ecoach_commands::repair_commands::{
     GapDashboardDto, GapRepairPlanDetailDto, GapRepairPlanDto, GapScoreCardDto,
 };
@@ -111,8 +114,8 @@ use ecoach_commands::{
     AppState, CommandError, assessment_commands, attempt_commands, coach_commands,
     content_commands, curriculum_commands, diagnostic_commands, dtos::*, game_commands,
     identity_commands, intake_commands, library_commands, memory_commands, mock_commands,
-    premium_commands, question_commands, readiness_commands, repair_commands, reporting_commands,
-    session_commands, student_commands, traps_commands,
+    premium_commands, question_commands, readiness_commands, recovery_commands, repair_commands,
+    reporting_commands, session_commands, student_commands, traps_commands,
 };
 use ecoach_content::{
     ParseCandidateInput, RecordResourceLearningInput, ResourceOrchestrationRequest,
@@ -167,6 +170,44 @@ pub fn login_with_pin(
     pin: String,
 ) -> Result<AccountDto, CommandError> {
     identity_commands::login_with_pin(&state, account_id, pin)
+}
+
+#[tauri::command]
+pub fn inspect_rebuild_workspace(
+    workspace_root: String,
+) -> Result<RebuildWorkspaceStatusDto, CommandError> {
+    recovery_commands::inspect_rebuild_workspace(workspace_root)
+}
+
+#[tauri::command]
+pub fn export_database_backup(
+    state: State<'_, AppState>,
+    output_path: String,
+) -> Result<DatabaseBackupResultDto, CommandError> {
+    recovery_commands::export_database_backup(&state, output_path)
+}
+
+#[tauri::command]
+pub fn check_database_backup_status(
+    backup_path: String,
+) -> Result<DatabaseBackupStatusDto, CommandError> {
+    recovery_commands::check_database_backup_status(backup_path)
+}
+
+#[tauri::command]
+pub fn restore_database_backup(
+    state: State<'_, AppState>,
+    backup_path: String,
+) -> Result<DatabaseBackupResultDto, CommandError> {
+    recovery_commands::restore_database_backup(&state, backup_path)
+}
+
+#[tauri::command]
+pub fn export_recovery_snapshot(
+    state: State<'_, AppState>,
+    input: ExportRecoverySnapshotInputDto,
+) -> Result<RecoverySnapshotResultDto, CommandError> {
+    recovery_commands::export_recovery_snapshot(&state, input)
 }
 
 // Coach
