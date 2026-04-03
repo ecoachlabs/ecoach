@@ -149,10 +149,21 @@ impl<'a> TopicProofEngine<'a> {
                     last_assessed_at = ?14, certified_at = COALESCE(?15, certified_at),
                     updated_at = datetime('now')",
                 params![
-                    student_id, subject_id, topic_id, tier.as_str(),
-                    accuracy as i64, speed as i64, transfer as i64, variation as i64,
-                    pressure as i64, mistake_recurrence as i64, reasoning as i64,
-                    evidence_adjusted as i64, evidence_count, now, certified_at,
+                    student_id,
+                    subject_id,
+                    topic_id,
+                    tier.as_str(),
+                    accuracy as i64,
+                    speed as i64,
+                    transfer as i64,
+                    variation as i64,
+                    pressure as i64,
+                    mistake_recurrence as i64,
+                    reasoning as i64,
+                    evidence_adjusted as i64,
+                    evidence_count,
+                    now,
+                    certified_at,
                 ],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -362,11 +373,7 @@ impl<'a> TopicProofEngine<'a> {
         Ok(clamp_bp((recurring as f64 / 3.0).min(1.0) as i64 * 10_000))
     }
 
-    fn compute_reasoning_score(
-        &self,
-        student_id: i64,
-        topic_id: i64,
-    ) -> EcoachResult<BasisPoints> {
+    fn compute_reasoning_score(&self, student_id: i64, topic_id: i64) -> EcoachResult<BasisPoints> {
         // Based on stepped attempts if available
         let (total, correct): (i64, i64) = self
             .conn

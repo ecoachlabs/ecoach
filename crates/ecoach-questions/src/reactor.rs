@@ -7,9 +7,8 @@ use serde_json::json;
 use crate::models::{
     GeneratedQuestionDraft, QualityGateResult, Question, QuestionFamilyChoice,
     QuestionFamilyGenerationPriority, QuestionFamilyHealth, QuestionGenerationRequest,
-    QuestionGenerationRequestInput, QuestionLineageEdge, QuestionLineageGraph,
-    QuestionLineageNode, QuestionOption, QuestionRemediationPlan, QuestionSlotSpec,
-    QuestionVariantMode,
+    QuestionGenerationRequestInput, QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode,
+    QuestionOption, QuestionRemediationPlan, QuestionSlotSpec, QuestionVariantMode,
 };
 use crate::service::QuestionService;
 
@@ -122,9 +121,9 @@ impl<'a> QuestionReactor<'a> {
                             WHEN q.question_format = ?4 THEN 1
                             ELSE 0
                         END), 0) AS format_match,
-                        COALESCE(qfh.freshness_score, 0) AS freshness_score,
-                        COALESCE(qfh.calibration_score, 0) AS calibration_score,
-                        COALESCE(qfh.quality_score, 0) AS quality_score,
+                        COALESCE(qfh.freshness_score, 5000) AS freshness_score,
+                        COALESCE(qfh.calibration_score, 5000) AS calibration_score,
+                        COALESCE(qfh.quality_score, 5000) AS quality_score,
                         COALESCE(qfh.health_status, 'warming') AS health_status,
                         COALESCE(qfh.recent_attempts, 0) AS recent_attempts,
                         COALESCE(qfh.misconception_hit_count, 0) AS misconception_hit_count,
@@ -181,8 +180,7 @@ impl<'a> QuestionReactor<'a> {
                     let recent_attempts = row.get::<_, i64>(13)?;
                     let misconception_hit_count = row.get::<_, i64>(14)?;
                     let recurrence_score = row.get::<_, i64>(15)?.clamp(0, 10_000) as BasisPoints;
-                    let coappearance_score =
-                        row.get::<_, i64>(16)?.clamp(0, 10_000) as BasisPoints;
+                    let coappearance_score = row.get::<_, i64>(16)?.clamp(0, 10_000) as BasisPoints;
                     let replacement_score = row.get::<_, i64>(17)?.clamp(0, 10_000) as BasisPoints;
                     let pressure_signals = build_family_pressure_signals(
                         recurrence_score,
@@ -349,8 +347,7 @@ impl<'a> QuestionReactor<'a> {
                     .unwrap_or(5_200);
                 let pressure_is_high = pressure_signals
                     .map(|signals| {
-                        signals.inverse_pressure_score >= 7_200
-                            || signals.comeback_score >= 6_700
+                        signals.inverse_pressure_score >= 7_200 || signals.comeback_score >= 6_700
                     })
                     .unwrap_or(false);
                 let (variant_mode, mut rationale) = if misconception_hits > 0 {
@@ -360,6 +357,12 @@ impl<'a> QuestionReactor<'a> {
                             "Student has {} misconception-linked misses in this family; probe the distractor boundary directly.",
                             misconception_hits
                         ),
+                    )
+                } else if pressure_is_high {
+                    (
+                        QuestionVariantMode::RepresentationShift,
+                        "Student has seen this family before and paper-history pressure is high, so keep the logic stable but rehearse it under a fresh exam-like surface."
+                            .to_string(),
                     )
                 } else if wrong_attempts >= 2
                     || avg_response_time_ms >= 45_000
@@ -372,12 +375,6 @@ impl<'a> QuestionReactor<'a> {
                             "Student has {} misses across {} attempts in this family, and family health is {}, so reduce load and rebuild the core pattern.",
                             wrong_attempts, attempts, health_status
                         ),
-                    )
-                } else if pressure_is_high {
-                    (
-                        QuestionVariantMode::RepresentationShift,
-                        "Student has seen this family before and paper-history pressure is high, so keep the logic stable but rehearse it under a fresh exam-like surface."
-                            .to_string(),
                     )
                 } else {
                     (
@@ -470,7 +467,10 @@ impl<'a> QuestionReactor<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?
             .unwrap_or(latest_subject_year);
 
-        Ok((latest_subject_year, (latest_subject_year - earliest_subject_year).max(1)))
+        Ok((
+            latest_subject_year,
+            (latest_subject_year - earliest_subject_year).max(1),
+        ))
     }
 
     fn load_family_pressure_signals(
@@ -621,6 +621,7 @@ impl<'a> QuestionReactor<'a> {
                 variant_mode,
                 similarity_score,
             )?;
+            QuestionService::new(self.conn).classify_question(generated_question_id, false)?;
             self.insert_transform_log(
                 request.id,
                 request.family_id,
@@ -791,10 +792,7 @@ impl<'a> QuestionReactor<'a> {
     // Fission: create a generation request to split a question
     // -----------------------------------------------------------------------
 
-    pub fn fission_question(
-        &self,
-        question_id: i64,
-    ) -> EcoachResult<Vec<GeneratedQuestionDraft>> {
+    pub fn fission_question(&self, question_id: i64) -> EcoachResult<Vec<GeneratedQuestionDraft>> {
         let source = self.load_source_question(question_id)?.ok_or_else(|| {
             EcoachError::NotFound("requested source question was not found".to_string())
         })?;
@@ -905,11 +903,7 @@ impl<'a> QuestionReactor<'a> {
 
     /// Detect if a student has memorization risk on a family:
     /// high accuracy + fast response time on repeated encounters.
-    pub fn detect_memorization_risk(
-        &self,
-        student_id: i64,
-        family_id: i64,
-    ) -> EcoachResult<bool> {
+    pub fn detect_memorization_risk(&self, student_id: i64, family_id: i64) -> EcoachResult<bool> {
         let result: Option<(i64, i64, i64)> = self
             .conn
             .query_row(
@@ -1089,8 +1083,14 @@ impl<'a> QuestionReactor<'a> {
 
         // 7. Coverage contribution: variant mode must be recognized
         let valid_modes = [
-            "isomorphic", "representation_shift", "misconception_probe",
-            "rescue", "stretch", "fission", "fusion", "adversary",
+            "isomorphic",
+            "representation_shift",
+            "misconception_probe",
+            "rescue",
+            "stretch",
+            "fission",
+            "fusion",
+            "adversary",
         ];
         if !valid_modes.contains(&draft.variant_mode.as_str()) {
             failures.push("unknown_variant_mode".into());
@@ -1403,15 +1403,7 @@ fn generation_priority_rationale(
     recent_attempts: i64,
     misconception_hit_count: i64,
 ) -> String {
-    if misconception_hit_count > 0 {
-        "Student evidence shows misconception hits in this family, so probe variants should be kept ready.".to_string()
-    } else if health_status == "fragile" {
-        "Family health is fragile, so new variants should prioritize repair and calibration."
-            .to_string()
-    } else if recent_attempts < 2 || calibration_score < 5_800 {
-        "Family has thin calibration evidence, so it should be expanded with fresh traced variants."
-            .to_string()
-    } else if comeback_score >= 6_900 {
+    if comeback_score >= 6_900 {
         "Past-paper dormancy and historical strength both signal comeback pressure, so this family should stay warm."
             .to_string()
     } else if inverse_pressure_score >= 7_300 {
@@ -1419,6 +1411,14 @@ fn generation_priority_rationale(
             .to_string()
     } else if replacement_score >= 7_200 && recurrence_score >= 5_000 {
         "Past-paper pressure suggests this family is a comeback risk and should stay warm."
+            .to_string()
+    } else if misconception_hit_count > 0 {
+        "Student evidence shows misconception hits in this family, so probe variants should be kept ready.".to_string()
+    } else if health_status == "fragile" {
+        "Family health is fragile, so new variants should prioritize repair and calibration."
+            .to_string()
+    } else if recent_attempts < 2 || calibration_score < 5_800 {
+        "Family has thin calibration evidence, so it should be expanded with fresh traced variants."
             .to_string()
     } else {
         "Family is still useful for coverage, but it does not carry the strongest urgency signal."
@@ -2562,10 +2562,14 @@ impl<'a> QuestionReactor<'a> {
                 "Split a multi-step question into an isolated sub-question".to_string()
             }
             QuestionVariantMode::Fusion => {
-                format!("Fused related questions into a synthesis variant with multiplier {}", multiplier)
+                format!(
+                    "Fused related questions into a synthesis variant with multiplier {}",
+                    multiplier
+                )
             }
             QuestionVariantMode::Adversary => {
-                "Generated an anti-gaming adversary variant with shuffled surface features".to_string()
+                "Generated an anti-gaming adversary variant with shuffled surface features"
+                    .to_string()
             }
         };
 

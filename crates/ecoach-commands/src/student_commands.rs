@@ -108,15 +108,21 @@ pub fn get_academic_scan(
     state.with_connection(|conn| {
         let truth = StudentModelService::new(conn).get_learner_truth_snapshot(student_id)?;
 
-        let strongest = truth.topic_summaries.iter()
+        let strongest = truth
+            .topic_summaries
+            .iter()
             .max_by_key(|t| t.mastery_score)
             .map(|t| t.topic_name.clone());
-        let weakest = truth.topic_summaries.iter()
+        let weakest = truth
+            .topic_summaries
+            .iter()
             .min_by_key(|t| t.mastery_score)
             .map(|t| t.topic_name.clone());
 
         // Top score blockers from recent diagnoses
-        let blockers: Vec<String> = truth.recent_diagnoses.iter()
+        let blockers: Vec<String> = truth
+            .recent_diagnoses
+            .iter()
             .take(3)
             .map(|d| d.primary_diagnosis.clone())
             .collect();

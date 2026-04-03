@@ -1,7 +1,7 @@
 use std::{collections::BTreeSet, str::FromStr};
 
-use chrono::{DateTime, Duration, Utc};
-use ecoach_questions::{Question, QuestionService};
+use chrono::{DateTime, Duration, NaiveDate, Utc};
+use ecoach_questions::{Question, QuestionOption, QuestionService};
 use ecoach_substrate::{
     BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry, FabricEvidenceRecord,
     FabricOrchestrationSummary, FabricSignal, LearnerEvidenceFabric, clamp_bp, ema_update, from_bp,
@@ -37,21 +37,49 @@ impl<'a> StudentModelService<'a> {
             .ok_or_else(|| {
                 EcoachError::NotFound(format!("question {} not found", submission.question_id))
             })?;
-        let selected_option = question_service
-            .get_option(submission.selected_option_id)?
-            .ok_or_else(|| {
-                EcoachError::NotFound(format!(
-                    "option {} not found",
-                    submission.selected_option_id
-                ))
-            })?;
+        let selected_option = if let Some(selected_option_id) = submission.selected_option_id {
+            Some(
+                question_service
+                    .get_option(selected_option_id)?
+                    .ok_or_else(|| {
+                        EcoachError::NotFound(format!("option {} not found", selected_option_id))
+                    })?,
+            )
+        } else {
+            None
+        };
+        let correct_option_text = question_service.get_correct_option_text(question.id)?;
+        let submitted_answer_text =
+            resolve_submission_answer_text(submission, selected_option.as_ref());
+        if selected_option.is_none()
+            && submitted_answer_text.is_none()
+            && !submission.skipped
+            && !submission.timed_out
+        {
+            return Err(EcoachError::Validation(
+                "answer submission requires either an option selection or answer text".to_string(),
+            ));
+        }
 
         let mut topic_state = self.get_or_create_topic_state(student_id, question.topic_id)?;
-        let is_correct = selected_option.is_correct;
+        let is_correct = if let Some(selected_option) = selected_option.as_ref() {
+            selected_option.is_correct
+        } else if submission.skipped || submission.timed_out {
+            false
+        } else {
+            submitted_answer_text
+                .as_deref()
+                .map(|text| answer_text_matches_correct_text(text, correct_option_text.as_deref()))
+                .unwrap_or(false)
+        };
         let error_type = if is_correct {
             None
         } else {
-            Some(classify_error(submission, &selected_option, &topic_state))
+            Some(classify_error(
+                submission,
+                selected_option.as_ref(),
+                &topic_state,
+            ))
         };
         let evidence_weight = compute_evidence_weight(submission, is_correct);
         self.write_attempt(
@@ -60,34 +88,61 @@ impl<'a> StudentModelService<'a> {
             question.topic_id,
             is_correct,
             error_type,
-            selected_option.misconception_id,
+            selected_option.as_ref().and_then(|option| option.misconception_id),
             evidence_weight,
-        )?;
-        topic_state = self.update_topic_state(topic_state, submission, is_correct)?;
+        )
+        .map_err(|err| EcoachError::Storage(format!("write_attempt failed: {}", err)))?;
+        topic_state = self
+            .update_topic_state(topic_state, submission, is_correct)
+            .map_err(|err| EcoachError::Storage(format!("update_topic_state failed: {}", err)))?;
         if let Some(error_type) = error_type {
-            self.update_error_profile(student_id, question.topic_id, error_type)?;
+            self.update_error_profile(student_id, question.topic_id, error_type)
+                .map_err(|err| {
+                    EcoachError::Storage(format!("update_error_profile failed: {}", err))
+                })?;
         }
-        self.update_skill_states(student_id, &question, is_correct)?;
+        self.update_skill_states(student_id, &question, is_correct)
+            .map_err(|err| EcoachError::Storage(format!("update_skill_states failed: {}", err)))?;
         self.update_memory_state(
             student_id,
             &question,
             submission,
             is_correct,
             evidence_weight,
-        )?;
+        )
+        .map_err(|err| EcoachError::Storage(format!("update_memory_state failed: {}", err)))?;
         let wrong_answer_diagnosis = if let Some(error_type) = error_type {
-            Some(self.store_wrong_answer_diagnosis(
-                student_id,
-                &question,
-                submission,
-                selected_option.misconception_id,
-                error_type,
-                &topic_state,
-            )?)
+            Some(
+                self.store_wrong_answer_diagnosis(
+                    student_id,
+                    &question,
+                    submission,
+                    selected_option.as_ref().and_then(|option| option.misconception_id),
+                    error_type,
+                    &topic_state,
+                )
+                .map_err(|err| {
+                    EcoachError::Storage(format!("store_wrong_answer_diagnosis failed: {}", err))
+                })?,
+            )
         } else {
             None
         };
-        topic_state = self.recompute_topic_truth(student_id, question.topic_id)?;
+        topic_state = self
+            .recompute_topic_truth(student_id, question.topic_id)
+            .map_err(|err| {
+                EcoachError::Storage(format!("recompute_topic_truth failed: {}", err))
+            })?;
+        self.update_idea15_attempt_side_effects(
+            student_id,
+            &question,
+            submission,
+            submitted_answer_text.as_deref().unwrap_or(""),
+            is_correct,
+            error_type,
+            &topic_state,
+        )
+        .map_err(|err| EcoachError::Storage(format!("idea15 side effects failed: {}", err)))?;
 
         let event = DomainEvent::new(
             "answer.processed",
@@ -101,7 +156,8 @@ impl<'a> StudentModelService<'a> {
                 "gap_score": topic_state.gap_score,
             }),
         );
-        self.append_runtime_event("learner_truth", event)?;
+        self.append_runtime_event("learner_truth", event)
+            .map_err(|err| EcoachError::Storage(format!("append_runtime_event failed: {}", err)))?;
 
         Ok(AnswerProcessingResult {
             is_correct,
@@ -113,11 +169,11 @@ impl<'a> StudentModelService<'a> {
                 .as_ref()
                 .map(|item| item.recommended_action.clone()),
             explanation: question.explanation_text,
-            selected_option_text: selected_option.option_text,
-            correct_option_text: question_service.get_correct_option_text(question.id)?,
+            selected_option_text: submitted_answer_text.unwrap_or_default(),
+            correct_option_text,
             updated_mastery: topic_state.mastery_score,
             updated_gap: topic_state.gap_score,
-            misconception_info: selected_option.distractor_intent,
+            misconception_info: selected_option.and_then(|option| option.distractor_intent),
         })
     }
 
@@ -695,11 +751,11 @@ impl<'a> StudentModelService<'a> {
             .execute(
                 "INSERT INTO student_question_attempts (
                     student_id, question_id, session_id, session_type, attempt_number,
-                    started_at, submitted_at, response_time_ms, selected_option_id, is_correct,
+                    started_at, submitted_at, response_time_ms, selected_option_id, answer_text, is_correct,
                     confidence_level, hint_count, changed_answer_count, skipped, timed_out,
                     error_type, misconception_triggered_id, support_level, was_timed,
                     was_transfer_variant, was_retention_check, was_mixed_context, evidence_weight
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23)",
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24)",
                 params![
                     student_id,
                     submission.question_id,
@@ -710,6 +766,7 @@ impl<'a> StudentModelService<'a> {
                     submission.submitted_at.to_rfc3339(),
                     submission.response_time_ms,
                     submission.selected_option_id,
+                    submission.answer_text,
                     bool_to_i64(is_correct),
                     submission.confidence_level,
                     submission.hint_count,
@@ -1264,6 +1321,939 @@ impl<'a> StudentModelService<'a> {
             diagnosis_summary,
             recommended_action: recommended_action.to_string(),
         })
+    }
+
+    fn update_idea15_attempt_side_effects(
+        &self,
+        student_id: i64,
+        question: &Question,
+        submission: &AnswerSubmission,
+        selected_option_text: &str,
+        is_correct: bool,
+        error_type: Option<ErrorType>,
+        topic_state: &StudentTopicState,
+    ) -> EcoachResult<()> {
+        if submission.session_id.is_some() {
+            self.record_confidence_response(student_id, question, submission, is_correct)
+                .map_err(|err| {
+                    EcoachError::Storage(format!("confidence response update failed: {}", err))
+                })?;
+            self.rebuild_student_confidence_profile(student_id, question.subject_id)
+                .map_err(|err| {
+                    EcoachError::Storage(format!("confidence profile rebuild failed: {}", err))
+                })?;
+        }
+
+        if let Some(family_id) = question.family_id {
+            self.rebuild_student_speed_profile(student_id, family_id)
+                .map_err(|err| {
+                    EcoachError::Storage(format!("speed profile rebuild failed: {}", err))
+                })?;
+        }
+
+        self.update_weakness_lifecycle(
+            student_id,
+            question,
+            submission,
+            selected_option_text,
+            is_correct,
+            error_type,
+            topic_state,
+        )
+        .map_err(|err| {
+            EcoachError::Storage(format!("weakness lifecycle update failed: {}", err))
+        })?;
+        self.update_revenge_queue(
+            student_id,
+            question,
+            submission,
+            selected_option_text,
+            is_correct,
+            error_type,
+        )
+        .map_err(|err| EcoachError::Storage(format!("revenge queue update failed: {}", err)))?;
+        self.update_mission_urgency_score(
+            student_id,
+            question,
+            submission,
+            is_correct,
+            topic_state,
+        )
+        .map_err(|err| EcoachError::Storage(format!("mission urgency update failed: {}", err)))?;
+        self.update_student_momentum(student_id, submission)
+            .map_err(|err| EcoachError::Storage(format!("momentum update failed: {}", err)))?;
+        self.update_near_win_opportunity(student_id, question, submission, topic_state, is_correct)
+            .map_err(|err| EcoachError::Storage(format!("near-win update failed: {}", err)))?;
+
+        Ok(())
+    }
+
+    fn record_confidence_response(
+        &self,
+        student_id: i64,
+        question: &Question,
+        submission: &AnswerSubmission,
+        is_correct: bool,
+    ) -> EcoachResult<()> {
+        let Some(session_id) = submission.session_id else {
+            return Ok(());
+        };
+
+        let Some(confidence_level) = submission
+            .confidence_level
+            .as_deref()
+            .and_then(normalize_confidence_level)
+        else {
+            return Ok(());
+        };
+
+        let calibration_category = match (confidence_level, is_correct) {
+            ("guessed", true) => Some("guessed_correct"),
+            ("guessed", false) => Some("guessed_wrong"),
+            ("unsure", true) | ("somewhat_sure", true) => Some("shaky_correct"),
+            ("unsure", false) | ("somewhat_sure", false) => Some("uncertain_wrong"),
+            ("confident", true) | ("certain", true) => Some("solid_correct"),
+            ("confident", false) | ("certain", false) => Some("overconfident_wrong"),
+            _ => None,
+        };
+
+        self.conn
+            .execute(
+                "INSERT INTO confidence_responses (
+                    student_id, session_id, question_id, confidence_level, was_correct,
+                    calibration_category, response_time_ms
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    student_id,
+                    session_id,
+                    question.id,
+                    confidence_level,
+                    bool_to_i64(is_correct),
+                    calibration_category,
+                    submission.response_time_ms,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn rebuild_student_confidence_profile(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<()> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT cr.confidence_level, cr.was_correct
+                 FROM confidence_responses cr
+                 INNER JOIN questions q ON q.id = cr.question_id
+                 WHERE cr.student_id = ?1
+                   AND q.subject_id = ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, subject_id], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)? == 1))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut total = 0i64;
+        let mut overconfidence = 0i64;
+        let mut underconfidence = 0i64;
+        let mut guessed = 0i64;
+        let mut calibrated = 0i64;
+        let mut miscalibration_gap = 0i64;
+
+        for row in rows {
+            let (confidence_level, was_correct) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let Some(rank) = confidence_level_rank(&confidence_level) else {
+                continue;
+            };
+            total += 1;
+            if confidence_level == "guessed" {
+                guessed += 1;
+            }
+            if !was_correct && rank >= 3 {
+                overconfidence += 1;
+            }
+            if was_correct && rank <= 1 {
+                underconfidence += 1;
+            }
+            let outcome_rank = if was_correct { 4 } else { 0 };
+            let gap = (rank - outcome_rank).abs();
+            miscalibration_gap += gap;
+            if gap <= 1 {
+                calibrated += 1;
+            }
+        }
+
+        if total == 0 {
+            return Ok(());
+        }
+
+        let overconfidence_rate_bp = to_bp((overconfidence as f64 / total as f64).clamp(0.0, 1.0));
+        let underconfidence_rate_bp =
+            to_bp((underconfidence as f64 / total as f64).clamp(0.0, 1.0));
+        let guess_rate_bp = to_bp((guessed as f64 / total as f64).clamp(0.0, 1.0));
+        let confidence_reliability_bp = to_bp((calibrated as f64 / total as f64).clamp(0.0, 1.0));
+        let max_gap = total * 4;
+        let miscalibration_bp = if max_gap > 0 {
+            ((miscalibration_gap * 10_000) / max_gap).clamp(0, 10_000)
+        } else {
+            0
+        };
+        let calibration_accuracy_bp = clamp_bp(10_000 - miscalibration_bp);
+
+        self.conn
+            .execute(
+                "INSERT INTO student_confidence_profile (
+                    student_id, subject_id, overconfidence_rate_bp, underconfidence_rate_bp,
+                    guess_rate_bp, calibration_accuracy_bp, confidence_reliability_bp,
+                    total_responses
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                 ON CONFLICT(student_id, subject_id) DO UPDATE SET
+                    overconfidence_rate_bp = excluded.overconfidence_rate_bp,
+                    underconfidence_rate_bp = excluded.underconfidence_rate_bp,
+                    guess_rate_bp = excluded.guess_rate_bp,
+                    calibration_accuracy_bp = excluded.calibration_accuracy_bp,
+                    confidence_reliability_bp = excluded.confidence_reliability_bp,
+                    total_responses = excluded.total_responses,
+                    updated_at = datetime('now')",
+                params![
+                    student_id,
+                    subject_id,
+                    overconfidence_rate_bp,
+                    underconfidence_rate_bp,
+                    guess_rate_bp,
+                    calibration_accuracy_bp,
+                    confidence_reliability_bp,
+                    total,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn rebuild_student_speed_profile(&self, student_id: i64, family_id: i64) -> EcoachResult<()> {
+        let family_exists: Option<i64> = self
+            .conn
+            .query_row(
+                "SELECT id FROM question_families WHERE id = ?1",
+                [family_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if family_exists.is_none() {
+            return Ok(());
+        }
+
+        let attempt_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM student_question_attempts a
+                 INNER JOIN questions q ON q.id = a.question_id
+                 WHERE a.student_id = ?1
+                   AND q.family_id = ?2",
+                params![student_id, family_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT a.response_time_ms, a.is_correct
+                 FROM student_question_attempts a
+                 INNER JOIN questions q ON q.id = a.question_id
+                 WHERE a.student_id = ?1
+                   AND q.family_id = ?2
+                   AND a.response_time_ms IS NOT NULL
+                 ORDER BY a.response_time_ms ASC, a.id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, family_id], |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)? == 1))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut timed_attempts = Vec::new();
+        for row in rows {
+            timed_attempts.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+
+        if timed_attempts.is_empty() {
+            return Ok(());
+        }
+
+        let mut times: Vec<i64> = timed_attempts.iter().map(|(time, _)| *time).collect();
+        times.sort_unstable();
+        let sum_time: i64 = times.iter().sum();
+        let avg_time_ms = (sum_time / times.len() as i64).max(0);
+        let median_time_ms = if times.len() % 2 == 1 {
+            times[times.len() / 2]
+        } else {
+            (times[times.len() / 2 - 1] + times[times.len() / 2]) / 2
+        }
+        .max(0);
+        let fastest_time_ms = times.first().copied();
+        let slowest_time_ms = times.last().copied();
+        let optimal_pace_ms = Some(median_time_ms.max(1));
+        let rushing_threshold_ms = Some(((median_time_ms * 3) / 4).max(250));
+        let overthinking_threshold_ms = Some(((median_time_ms * 3) / 2).max(500));
+        let rushing_threshold_value = rushing_threshold_ms.unwrap_or(0);
+        let overthinking_threshold_value = overthinking_threshold_ms.unwrap_or(i64::MAX);
+        let careless_error_rate_bp = to_bp(
+            (timed_attempts
+                .iter()
+                .filter(|(time, was_correct)| !*was_correct && *time <= rushing_threshold_value)
+                .count() as f64
+                / timed_attempts.len() as f64)
+                .clamp(0.0, 1.0),
+        );
+        let hesitation_rate_bp = to_bp(
+            (timed_attempts
+                .iter()
+                .filter(|(time, was_correct)| *was_correct && *time >= overthinking_threshold_value)
+                .count() as f64
+                / timed_attempts.len() as f64)
+                .clamp(0.0, 1.0),
+        );
+
+        self.conn
+            .execute(
+                "INSERT INTO student_speed_profiles (
+                    student_id, family_id, avg_time_ms, median_time_ms, fastest_time_ms,
+                    slowest_time_ms, optimal_pace_ms, rushing_threshold_ms,
+                    overthinking_threshold_ms, careless_error_rate_bp, hesitation_rate_bp,
+                    attempt_count
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
+                 ON CONFLICT(student_id, family_id) DO UPDATE SET
+                    avg_time_ms = excluded.avg_time_ms,
+                    median_time_ms = excluded.median_time_ms,
+                    fastest_time_ms = excluded.fastest_time_ms,
+                    slowest_time_ms = excluded.slowest_time_ms,
+                    optimal_pace_ms = excluded.optimal_pace_ms,
+                    rushing_threshold_ms = excluded.rushing_threshold_ms,
+                    overthinking_threshold_ms = excluded.overthinking_threshold_ms,
+                    careless_error_rate_bp = excluded.careless_error_rate_bp,
+                    hesitation_rate_bp = excluded.hesitation_rate_bp,
+                    attempt_count = excluded.attempt_count,
+                    updated_at = datetime('now')",
+                params![
+                    student_id,
+                    family_id,
+                    avg_time_ms,
+                    median_time_ms,
+                    fastest_time_ms,
+                    slowest_time_ms,
+                    optimal_pace_ms,
+                    rushing_threshold_ms,
+                    overthinking_threshold_ms,
+                    careless_error_rate_bp,
+                    hesitation_rate_bp,
+                    attempt_count,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn update_near_win_opportunity(
+        &self,
+        student_id: i64,
+        question: &Question,
+        submission: &AnswerSubmission,
+        topic_state: &StudentTopicState,
+        is_correct: bool,
+    ) -> EcoachResult<()> {
+        let target_mastery_bp: BasisPoints = 7500;
+        let current_mastery_bp = topic_state.mastery_score;
+        let gap_bp = target_mastery_bp.saturating_sub(current_mastery_bp);
+        let gap_bp_i64 = gap_bp as i64;
+        let should_track = topic_state.evidence_count > 0
+            && (gap_bp <= 5500
+                || current_mastery_bp >= 6000
+                || topic_state
+                    .next_review_at
+                    .map(|due| due <= Utc::now())
+                    .unwrap_or(false)
+                || is_correct);
+
+        if !should_track {
+            self.conn
+                .execute(
+                    "DELETE FROM near_win_opportunities
+                     WHERE student_id = ?1 AND topic_id = ?2",
+                    params![student_id, question.topic_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            return Ok(());
+        }
+
+        let estimated_sessions_to_close = ((gap_bp_i64 + 1199) / 1200).max(1);
+        let estimated_minutes_to_close = Some(
+            ((estimated_sessions_to_close * question.estimated_time_seconds.max(30)) + 59) / 60,
+        );
+        let score_gain_if_closed_bp = clamp_bp(gap_bp_i64);
+        let opportunity_type = if gap_bp <= 1000 {
+            "quick_win"
+        } else if gap_bp <= 2500 {
+            "nearly_mastered"
+        } else if topic_state.fragility_score >= 4500 {
+            "almost_closed_weakness"
+        } else if submission.was_retention_check {
+            "one_more_session"
+        } else {
+            "high_value_close"
+        };
+        let priority_rank = clamp_bp(
+            ((10_000 - gap_bp_i64) * 45 / 100)
+                + (topic_state.priority_score as i64 * 30 / 100)
+                + (topic_state.memory_strength as i64 * 15 / 100)
+                + if is_correct { 750 } else { 0 }
+                + if submission.was_retention_check {
+                    500
+                } else {
+                    0
+                },
+        );
+
+        self.conn
+            .execute(
+                "INSERT INTO near_win_opportunities (
+                    student_id, topic_id, current_mastery_bp, target_mastery_bp, gap_bp,
+                    estimated_sessions_to_close, estimated_minutes_to_close,
+                    score_gain_if_closed_bp, priority_rank, opportunity_type
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
+                 ON CONFLICT(student_id, topic_id) DO UPDATE SET
+                    current_mastery_bp = excluded.current_mastery_bp,
+                    target_mastery_bp = excluded.target_mastery_bp,
+                    gap_bp = excluded.gap_bp,
+                    estimated_sessions_to_close = excluded.estimated_sessions_to_close,
+                    estimated_minutes_to_close = excluded.estimated_minutes_to_close,
+                    score_gain_if_closed_bp = excluded.score_gain_if_closed_bp,
+                    priority_rank = excluded.priority_rank,
+                    opportunity_type = excluded.opportunity_type,
+                    updated_at = datetime('now')",
+                params![
+                    student_id,
+                    question.topic_id,
+                    current_mastery_bp,
+                    target_mastery_bp,
+                    gap_bp,
+                    estimated_sessions_to_close,
+                    estimated_minutes_to_close,
+                    score_gain_if_closed_bp,
+                    priority_rank,
+                    opportunity_type,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn update_weakness_lifecycle(
+        &self,
+        student_id: i64,
+        question: &Question,
+        submission: &AnswerSubmission,
+        selected_option_text: &str,
+        is_correct: bool,
+        error_type: Option<ErrorType>,
+        topic_state: &StudentTopicState,
+    ) -> EcoachResult<()> {
+        let Some(weakness_type) =
+            infer_weakness_type(submission, is_correct, error_type, topic_state)
+        else {
+            return Ok(());
+        };
+        let now = Utc::now().to_rfc3339();
+        let severity_bp =
+            infer_weakness_severity_bp(submission, is_correct, error_type, topic_state);
+        let existing = self
+            .conn
+            .query_row(
+                "SELECT id, repair_attempts, lifecycle_state
+                 FROM weakness_lifecycle
+                 WHERE student_id = ?1 AND topic_id = ?2 AND weakness_type = ?3",
+                params![student_id, question.topic_id, weakness_type],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, String>(2)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let evidence_json = json!({
+            "question_id": question.id,
+            "session_id": submission.session_id,
+            "selected_option_text": selected_option_text,
+            "confidence_level": submission.confidence_level,
+            "response_time_ms": submission.response_time_ms,
+            "is_correct": is_correct,
+            "error_type": error_type.map(ErrorType::as_str),
+            "mastery_score": topic_state.mastery_score,
+            "gap_score": topic_state.gap_score,
+        })
+        .to_string();
+
+        let (lifecycle_state, repair_attempts, closed_at, last_repair_at) = if is_correct {
+            if let Some((_, existing_attempts, existing_state)) = existing {
+                let next_repair_attempts = existing_attempts + 1;
+                let next_state = if topic_state.mastery_score >= 8000
+                    && topic_state.fragility_score <= 2500
+                    && next_repair_attempts >= 3
+                {
+                    "closed"
+                } else if topic_state.mastery_score >= 7000
+                    && topic_state.fragility_score <= 3000
+                    && next_repair_attempts >= 2
+                {
+                    "stable_low_pressure"
+                } else if topic_state.fragility_score <= 4500 {
+                    "partially_improved"
+                } else if existing_state == "detected" {
+                    "analyzed"
+                } else {
+                    "being_repaired"
+                };
+                let closed_at = if next_state == "closed" {
+                    Some(now.clone())
+                } else {
+                    None
+                };
+                (
+                    next_state.to_string(),
+                    next_repair_attempts,
+                    closed_at,
+                    Some(now.clone()),
+                )
+            } else {
+                return Ok(());
+            }
+        } else {
+            ("detected".to_string(), 0, None, None)
+        };
+
+        self.conn
+            .execute(
+                "INSERT INTO weakness_lifecycle (
+                    student_id, topic_id, subtopic_id, weakness_type, lifecycle_state,
+                    severity_bp, detection_source, repair_attempts, last_repair_at,
+                    evidence_json, closed_at
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                 ON CONFLICT(student_id, topic_id, weakness_type) DO UPDATE SET
+                    subtopic_id = excluded.subtopic_id,
+                    lifecycle_state = excluded.lifecycle_state,
+                    severity_bp = excluded.severity_bp,
+                    detection_source = excluded.detection_source,
+                    repair_attempts = excluded.repair_attempts,
+                    last_repair_at = excluded.last_repair_at,
+                    evidence_json = excluded.evidence_json,
+                    closed_at = excluded.closed_at,
+                    updated_at = datetime('now')",
+                params![
+                    student_id,
+                    question.topic_id,
+                    question.subtopic_id,
+                    weakness_type,
+                    lifecycle_state,
+                    severity_bp,
+                    "answer_processing",
+                    repair_attempts,
+                    last_repair_at,
+                    evidence_json,
+                    closed_at,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn update_revenge_queue(
+        &self,
+        student_id: i64,
+        question: &Question,
+        submission: &AnswerSubmission,
+        selected_option_text: &str,
+        is_correct: bool,
+        error_type: Option<ErrorType>,
+    ) -> EcoachResult<()> {
+        let existing = self
+            .conn
+            .query_row(
+                "SELECT id, attempts_to_beat, is_beaten
+                 FROM revenge_queue
+                 WHERE student_id = ?1 AND question_id = ?2",
+                params![student_id, question.id],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, i64>(2)? == 1,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let Some((_, attempts_to_beat, is_beaten)) = existing else {
+            if is_correct {
+                return Ok(());
+            }
+
+            self.conn
+                .execute(
+                    "INSERT INTO revenge_queue (
+                        student_id, question_id, original_session_id, original_error_type,
+                        original_wrong_answer, attempts_to_beat, is_beaten, beaten_at
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, 0, 0, NULL)
+                     ON CONFLICT(student_id, question_id) DO UPDATE SET
+                        original_session_id = excluded.original_session_id,
+                        original_error_type = excluded.original_error_type,
+                        original_wrong_answer = excluded.original_wrong_answer,
+                        is_beaten = 0,
+                        beaten_at = NULL,
+                        added_at = datetime('now')",
+                    params![
+                        student_id,
+                        question.id,
+                        submission.session_id,
+                        error_type.map(ErrorType::as_str),
+                        selected_option_text,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            return Ok(());
+        };
+
+        let next_attempts = attempts_to_beat + 1;
+        let beaten_at = if is_correct && !is_beaten {
+            Some(Utc::now().to_rfc3339())
+        } else {
+            None
+        };
+        let next_beaten = is_beaten || is_correct;
+
+        self.conn
+            .execute(
+                "INSERT INTO revenge_queue (
+                    student_id, question_id, original_session_id, original_error_type,
+                    original_wrong_answer, attempts_to_beat, is_beaten, beaten_at
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                 ON CONFLICT(student_id, question_id) DO UPDATE SET
+                    original_session_id = COALESCE(revenge_queue.original_session_id, excluded.original_session_id),
+                    original_error_type = COALESCE(revenge_queue.original_error_type, excluded.original_error_type),
+                    original_wrong_answer = COALESCE(revenge_queue.original_wrong_answer, excluded.original_wrong_answer),
+                    attempts_to_beat = excluded.attempts_to_beat,
+                    is_beaten = excluded.is_beaten,
+                    beaten_at = COALESCE(excluded.beaten_at, revenge_queue.beaten_at),
+                    added_at = CASE
+                        WHEN revenge_queue.is_beaten = 1 THEN revenge_queue.added_at
+                        ELSE datetime('now')
+                    END",
+                params![
+                    student_id,
+                    question.id,
+                    submission.session_id,
+                    error_type.map(ErrorType::as_str),
+                    selected_option_text,
+                    next_attempts,
+                    bool_to_i64(next_beaten),
+                    beaten_at,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn update_mission_urgency_score(
+        &self,
+        student_id: i64,
+        question: &Question,
+        submission: &AnswerSubmission,
+        is_correct: bool,
+        topic_state: &StudentTopicState,
+    ) -> EcoachResult<()> {
+        let now = Utc::now();
+        let due_days = topic_state
+            .next_review_at
+            .map(|due| (due - now).num_days())
+            .unwrap_or(7);
+        let decay_urgency_bp = clamp_bp(
+            if due_days <= 0 {
+                9_000
+            } else {
+                10_000 - (due_days as i64 * 1_000)
+            } + (topic_state.fragility_score as i64 / 2)
+                + (topic_state.gap_score as i64 / 5),
+        );
+        let weakness_urgency_bp = clamp_bp(
+            (topic_state.gap_score as i64 / 2)
+                + if is_correct { 0 } else { 1_500 }
+                + if submission.was_transfer_variant {
+                    1_000
+                } else {
+                    0
+                }
+                + if submission.was_timed { 750 } else { 0 },
+        );
+        let exam_proximity_urgency_bp = clamp_bp(
+            (10_000 - topic_state.mastery_score as i64)
+                + if question.difficulty_level >= 7_500 {
+                    750
+                } else {
+                    0
+                },
+        );
+        let mistake_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM student_question_attempts
+                 WHERE student_id = ?1
+                   AND question_id = ?2
+                   AND is_correct = 0",
+                params![student_id, question.id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mistake_recurrence_urgency_bp = clamp_bp((mistake_count * 2_000).min(10_000));
+        let score_impact_urgency_bp = clamp_bp(
+            (question.marks.max(1) * 1_200) as i64
+                + (question.difficulty_level as i64 / 4)
+                + (topic_state.priority_score as i64 / 5),
+        );
+        let composite_urgency_bp = clamp_bp(
+            (decay_urgency_bp as i64 * 30 / 100)
+                + (weakness_urgency_bp as i64 * 30 / 100)
+                + (exam_proximity_urgency_bp as i64 * 15 / 100)
+                + (mistake_recurrence_urgency_bp as i64 * 15 / 100)
+                + (score_impact_urgency_bp as i64 * 10 / 100),
+        );
+        let estimated_minutes = Some(
+            (((question.estimated_time_seconds.max(30) as f64 / 60.0)
+                * (1.0 + topic_state.gap_score as f64 / 10_000.0))
+                .round() as i64)
+                .max(1),
+        );
+        let estimated_score_gain_bp = Some(clamp_bp(
+            ((10_000 - topic_state.mastery_score as i64) / 2)
+                + (question.marks.max(1) * 250) as i64,
+        ));
+        let recommended_mode = if decay_urgency_bp >= 7_000 {
+            "retention"
+        } else if weakness_urgency_bp >= 7_000 {
+            "repair"
+        } else if exam_proximity_urgency_bp >= 6_500 {
+            "exam"
+        } else if mistake_recurrence_urgency_bp >= 5_000 {
+            "revenge"
+        } else {
+            "practice"
+        };
+
+        self.conn
+            .execute(
+                "INSERT INTO mission_urgency_scores (
+                    student_id, topic_id, decay_urgency_bp, weakness_urgency_bp,
+                    exam_proximity_urgency_bp, mistake_recurrence_urgency_bp,
+                    score_impact_urgency_bp, composite_urgency_bp, estimated_minutes,
+                    estimated_score_gain_bp, recommended_mode
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                 ON CONFLICT(student_id, topic_id) DO UPDATE SET
+                    decay_urgency_bp = excluded.decay_urgency_bp,
+                    weakness_urgency_bp = excluded.weakness_urgency_bp,
+                    exam_proximity_urgency_bp = excluded.exam_proximity_urgency_bp,
+                    mistake_recurrence_urgency_bp = excluded.mistake_recurrence_urgency_bp,
+                    score_impact_urgency_bp = excluded.score_impact_urgency_bp,
+                    composite_urgency_bp = excluded.composite_urgency_bp,
+                    estimated_minutes = excluded.estimated_minutes,
+                    estimated_score_gain_bp = excluded.estimated_score_gain_bp,
+                    recommended_mode = excluded.recommended_mode,
+                    computed_at = datetime('now')",
+                params![
+                    student_id,
+                    question.topic_id,
+                    decay_urgency_bp,
+                    weakness_urgency_bp,
+                    exam_proximity_urgency_bp,
+                    mistake_recurrence_urgency_bp,
+                    score_impact_urgency_bp,
+                    composite_urgency_bp,
+                    estimated_minutes,
+                    estimated_score_gain_bp,
+                    recommended_mode,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn update_student_momentum(
+        &self,
+        student_id: i64,
+        submission: &AnswerSubmission,
+    ) -> EcoachResult<()> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT date(submitted_at)
+                 FROM student_question_attempts
+                 WHERE student_id = ?1
+                   AND submitted_at IS NOT NULL
+                 ORDER BY date(submitted_at) ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([student_id], |row| row.get::<_, String>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut active_dates = Vec::new();
+        for row in rows {
+            let date = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let date = NaiveDate::parse_from_str(&date, "%Y-%m-%d")
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            active_dates.push(date);
+        }
+
+        if active_dates.is_empty() {
+            return Ok(());
+        }
+
+        let reference_date = submission.submitted_at.date_naive();
+        let mut current_streak_days = 0i64;
+        let mut expected = reference_date;
+        for date in active_dates.iter().rev() {
+            if *date == expected {
+                current_streak_days += 1;
+                expected = expected - Duration::days(1);
+            } else {
+                break;
+            }
+        }
+
+        let mut best_streak_days = 1i64;
+        let mut running_streak = 1i64;
+        let mut comeback_session_count = 0i64;
+        for window in active_dates.windows(2) {
+            let previous = window[0];
+            let current = window[1];
+            let gap = (current - previous).num_days();
+            if gap == 1 {
+                running_streak += 1;
+            } else {
+                best_streak_days = best_streak_days.max(running_streak);
+                running_streak = 1;
+                if gap >= 7 {
+                    comeback_session_count += 1;
+                }
+            }
+        }
+        best_streak_days = best_streak_days.max(running_streak);
+
+        let seven_day_start = reference_date - Duration::days(6);
+        let fourteen_day_start = reference_date - Duration::days(13);
+        let thirty_day_start = reference_date - Duration::days(29);
+        let consistency_7d_bp = to_bp(
+            (active_dates
+                .iter()
+                .filter(|date| **date >= seven_day_start)
+                .count() as f64
+                / 7.0)
+                .clamp(0.0, 1.0),
+        );
+        let consistency_14d_bp = to_bp(
+            (active_dates
+                .iter()
+                .filter(|date| **date >= fourteen_day_start)
+                .count() as f64
+                / 14.0)
+                .clamp(0.0, 1.0),
+        );
+        let consistency_30d_bp = to_bp(
+            (active_dates
+                .iter()
+                .filter(|date| **date >= thirty_day_start)
+                .count() as f64
+                / 30.0)
+                .clamp(0.0, 1.0),
+        );
+        let days_since_last_session = (reference_date - *active_dates.last().unwrap()).num_days();
+        let dropout_risk_bp = clamp_bp(
+            (days_since_last_session * 1_100)
+                + (10_000 - consistency_30d_bp as i64) / 2
+                + if current_streak_days == 0 { 1_250 } else { 0 },
+        );
+        let momentum_state = if days_since_last_session >= 7 {
+            if comeback_session_count > 0 {
+                "comeback"
+            } else {
+                "broken"
+            }
+        } else if current_streak_days >= 5 || consistency_30d_bp >= 7_000 {
+            "strong"
+        } else if current_streak_days >= 2 || consistency_14d_bp >= 4_000 {
+            "building"
+        } else if days_since_last_session >= 2 {
+            "slipping"
+        } else {
+            "building"
+        };
+
+        self.conn
+            .execute(
+                "INSERT INTO student_momentum (
+                    student_id, momentum_state, current_streak_days, best_streak_days,
+                    consistency_7d_bp, consistency_14d_bp, consistency_30d_bp,
+                    dropout_risk_bp, last_session_date, days_since_last_session,
+                    comeback_session_count
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                 ON CONFLICT(student_id) DO UPDATE SET
+                    momentum_state = excluded.momentum_state,
+                    current_streak_days = excluded.current_streak_days,
+                    best_streak_days = excluded.best_streak_days,
+                    consistency_7d_bp = excluded.consistency_7d_bp,
+                    consistency_14d_bp = excluded.consistency_14d_bp,
+                    consistency_30d_bp = excluded.consistency_30d_bp,
+                    dropout_risk_bp = excluded.dropout_risk_bp,
+                    last_session_date = excluded.last_session_date,
+                    days_since_last_session = excluded.days_since_last_session,
+                    comeback_session_count = excluded.comeback_session_count,
+                    updated_at = datetime('now')",
+                params![
+                    student_id,
+                    momentum_state,
+                    current_streak_days,
+                    best_streak_days,
+                    consistency_7d_bp,
+                    consistency_14d_bp,
+                    consistency_30d_bp,
+                    dropout_risk_bp,
+                    reference_date.to_string(),
+                    days_since_last_session,
+                    comeback_session_count,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
     }
 
     fn load_question_skill_ids(&self, question: &Question) -> EcoachResult<Vec<i64>> {
@@ -2211,12 +3201,67 @@ pub fn resolve_mastery_state(state: &StudentTopicState) -> MasteryState {
     }
 }
 
+fn resolve_submission_answer_text(
+    submission: &AnswerSubmission,
+    selected_option: Option<&QuestionOption>,
+) -> Option<String> {
+    submission
+        .answer_text
+        .as_deref()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .map(str::to_string)
+        .or_else(|| selected_option.map(|option| option.option_text.clone()))
+}
+
+fn answer_text_matches_correct_text(submitted: &str, correct_text: Option<&str>) -> bool {
+    let Some(correct_text) = correct_text else {
+        return false;
+    };
+    let normalized_submitted = normalize_answer_text(submitted);
+    let normalized_correct = normalize_answer_text(correct_text);
+    if normalized_submitted.is_empty() || normalized_correct.is_empty() {
+        return false;
+    }
+
+    normalized_submitted == normalized_correct
+        || numeric_answer_value(&normalized_submitted)
+            .zip(numeric_answer_value(&normalized_correct))
+            .map(|(submitted, correct)| (submitted - correct).abs() < 0.000_001)
+            .unwrap_or(false)
+}
+
+fn normalize_answer_text(text: &str) -> String {
+    let lowered = text.trim().to_ascii_lowercase();
+    lowered
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || matches!(ch, '.' | '/' | '-') {
+                ch
+            } else {
+                ' '
+            }
+        })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn numeric_answer_value(text: &str) -> Option<f64> {
+    let compact = text.replace(',', "");
+    compact.parse::<f64>().ok()
+}
+
 pub fn classify_error(
     submission: &AnswerSubmission,
-    selected_option: &ecoach_questions::QuestionOption,
+    selected_option: Option<&QuestionOption>,
     student_state: &StudentTopicState,
 ) -> ErrorType {
-    if selected_option.misconception_id.is_some() {
+    if selected_option
+        .and_then(|option| option.misconception_id)
+        .is_some()
+    {
         return ErrorType::MisconceptionTriggered;
     }
 
@@ -2246,6 +3291,10 @@ pub fn classify_error(
 
     if student_state.mastery_score < 3000 {
         return ErrorType::KnowledgeGap;
+    }
+
+    if submission.answer_text.is_some() {
+        return ErrorType::ExecutionError;
     }
 
     ErrorType::ConceptualConfusion
@@ -2463,6 +3512,101 @@ fn diagnosis_confidence_score(error_type: ErrorType, misconception_id: Option<i6
         ErrorType::KnowledgeGap => 7200,
         _ => 6800,
     }
+}
+
+fn normalize_confidence_level(confidence_level: &str) -> Option<&'static str> {
+    match confidence_level {
+        "guessed" => Some("guessed"),
+        "not_sure" | "unsure" => Some("unsure"),
+        "somewhat_sure" => Some("somewhat_sure"),
+        "confident" => Some("confident"),
+        "sure" | "certain" => Some("certain"),
+        _ => None,
+    }
+}
+
+fn confidence_level_rank(confidence_level: &str) -> Option<i64> {
+    match confidence_level {
+        "guessed" => Some(0),
+        "unsure" => Some(1),
+        "somewhat_sure" => Some(2),
+        "confident" => Some(3),
+        "certain" => Some(4),
+        _ => None,
+    }
+}
+
+fn infer_weakness_type(
+    submission: &AnswerSubmission,
+    is_correct: bool,
+    error_type: Option<ErrorType>,
+    topic_state: &StudentTopicState,
+) -> Option<&'static str> {
+    if let Some(error_type) = error_type {
+        return Some(match error_type {
+            ErrorType::KnowledgeGap => "concept_gap",
+            ErrorType::ConceptualConfusion | ErrorType::MisconceptionTriggered => "misconception",
+            ErrorType::RecognitionFailure => "application_failure",
+            ErrorType::ExecutionError => "application_failure",
+            ErrorType::Carelessness => "careless_pattern",
+            ErrorType::PressureBreakdown => "pressure_weakness",
+            ErrorType::ExpressionWeakness => "exam_technique",
+            ErrorType::SpeedError => "speed_weakness",
+            ErrorType::GuessingDetected => "concept_gap",
+        });
+    }
+
+    if is_correct && submission.was_timed {
+        return Some("exam_technique");
+    }
+    if is_correct && submission.was_transfer_variant {
+        return Some("application_failure");
+    }
+    if is_correct && submission.response_time_ms.unwrap_or_default() >= 45_000 {
+        return Some("speed_weakness");
+    }
+    if topic_state.pressure_collapse_index >= 5_500 {
+        return Some("pressure_weakness");
+    }
+    if topic_state.fragility_score >= 5_000 {
+        return Some("recall_fragility");
+    }
+    if topic_state.gap_score >= 5_000 {
+        return Some("concept_gap");
+    }
+
+    None
+}
+
+fn infer_weakness_severity_bp(
+    submission: &AnswerSubmission,
+    is_correct: bool,
+    error_type: Option<ErrorType>,
+    topic_state: &StudentTopicState,
+) -> BasisPoints {
+    let base = if let Some(error_type) = error_type {
+        match error_type {
+            ErrorType::MisconceptionTriggered | ErrorType::PressureBreakdown => 9000,
+            ErrorType::KnowledgeGap | ErrorType::ConceptualConfusion => 7500,
+            ErrorType::RecognitionFailure | ErrorType::ExecutionError => 6500,
+            ErrorType::SpeedError => 5500,
+            ErrorType::Carelessness => 4500,
+            ErrorType::ExpressionWeakness => 6000,
+            ErrorType::GuessingDetected => 6500,
+        }
+    } else if is_correct {
+        3500
+    } else {
+        5500
+    };
+
+    let pressure_adjustment = if submission.was_timed { 500 } else { 0 };
+    let transfer_adjustment = if submission.was_transfer_variant {
+        300
+    } else {
+        0
+    };
+    clamp_bp(base + pressure_adjustment + transfer_adjustment + (topic_state.gap_score as i64 / 8))
 }
 
 fn diagnosis_summary_text(
@@ -2746,7 +3890,7 @@ mod tests {
         let wrong_option_id: i64 = conn
             .query_row(
                 "SELECT id FROM question_options
-                 WHERE question_id = ?1 AND is_correct = 0
+                 WHERE question_id = ?1 AND is_correct = 0 AND misconception_id IS NULL
                  ORDER BY id ASC
                  LIMIT 1",
                 [question_id],
@@ -2803,7 +3947,8 @@ mod tests {
                 1,
                 &AnswerSubmission {
                     question_id,
-                    selected_option_id: wrong_option_id,
+                    selected_option_id: Some(wrong_option_id),
+                    answer_text: None,
                     session_id: Some(11),
                     session_type: Some("practice".to_string()),
                     started_at: Utc::now() - Duration::seconds(30),
@@ -2943,7 +4088,8 @@ mod tests {
                 1,
                 &AnswerSubmission {
                     question_id,
-                    selected_option_id: correct_option_id,
+                    selected_option_id: Some(correct_option_id),
+                    answer_text: None,
                     session_id: None,
                     session_type: Some("practice".to_string()),
                     started_at: Utc::now() - Duration::seconds(20),
@@ -3046,7 +4192,8 @@ mod tests {
                 1,
                 &AnswerSubmission {
                     question_id,
-                    selected_option_id: correct_option_id,
+                    selected_option_id: Some(correct_option_id),
+                    answer_text: None,
                     session_id: None,
                     session_type: Some("practice".to_string()),
                     started_at: Utc::now() - Duration::seconds(15),
@@ -3103,6 +4250,308 @@ mod tests {
             )
             .expect("recompute event count should query");
         assert!(recompute_events >= 1);
+    }
+
+    #[test]
+    fn process_answer_updates_idea15_attempt_driven_tables() {
+        let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let (question_id, subject_id, topic_id, family_id): (i64, i64, i64, i64) = conn
+            .query_row(
+                "SELECT id, subject_id, topic_id, family_id
+                 FROM questions
+                 WHERE family_id IS NOT NULL
+                 ORDER BY id ASC
+                 LIMIT 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .expect("family-linked question should exist");
+        let correct_option_id: i64 = conn
+            .query_row(
+                "SELECT id FROM question_options
+                 WHERE question_id = ?1 AND is_correct = 1
+                 ORDER BY id ASC
+                 LIMIT 1",
+                [question_id],
+                |row| row.get(0),
+            )
+            .expect("correct option should exist");
+        let wrong_option_id: i64 = conn
+            .query_row(
+                "SELECT id FROM question_options
+                 WHERE question_id = ?1 AND is_correct = 0 AND misconception_id IS NULL
+                 ORDER BY id ASC
+                 LIMIT 1",
+                [question_id],
+                |row| row.get(0),
+            )
+            .expect("wrong option should exist");
+
+        for session_id in [9001i64, 9002i64] {
+            conn.execute(
+                "INSERT INTO sessions (
+                    id, student_id, session_type, subject_id, status, started_at,
+                    completed_at, total_questions, answered_questions, correct_questions
+                 ) VALUES (?1, 1, 'practice', ?2, 'completed', ?3, ?3, 1, 1, 0)",
+                params![session_id, subject_id, Utc::now().to_rfc3339()],
+            )
+            .expect("session should seed");
+        }
+
+        let service = StudentModelService::new(&conn);
+        service
+            .process_answer(
+                1,
+                &AnswerSubmission {
+                    question_id,
+                    selected_option_id: Some(wrong_option_id),
+                    answer_text: None,
+                    session_id: Some(9001),
+                    session_type: Some("practice".to_string()),
+                    started_at: Utc::now() - Duration::seconds(20),
+                    submitted_at: Utc::now(),
+                    response_time_ms: Some(4_800),
+                    confidence_level: Some("guessed".to_string()),
+                    hint_count: 1,
+                    changed_answer_count: 0,
+                    skipped: false,
+                    timed_out: false,
+                    support_level: Some("independent".to_string()),
+                    was_timed: false,
+                    was_transfer_variant: false,
+                    was_retention_check: false,
+                    was_mixed_context: false,
+                },
+            )
+            .expect("wrong answer should be processed");
+
+        service
+            .process_answer(
+                1,
+                &AnswerSubmission {
+                    question_id,
+                    selected_option_id: Some(correct_option_id),
+                    answer_text: None,
+                    session_id: Some(9002),
+                    session_type: Some("practice".to_string()),
+                    started_at: Utc::now() - Duration::seconds(16),
+                    submitted_at: Utc::now(),
+                    response_time_ms: Some(8_700),
+                    confidence_level: Some("sure".to_string()),
+                    hint_count: 0,
+                    changed_answer_count: 0,
+                    skipped: false,
+                    timed_out: false,
+                    support_level: Some("independent".to_string()),
+                    was_timed: false,
+                    was_transfer_variant: false,
+                    was_retention_check: true,
+                    was_mixed_context: false,
+                },
+            )
+            .expect("correct answer should be processed");
+
+        let confidence_response_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM confidence_responses WHERE student_id = 1 AND question_id = ?1",
+                [question_id],
+                |row| row.get(0),
+            )
+            .expect("confidence responses should query");
+        assert_eq!(confidence_response_count, 2);
+
+        let (total_responses, guess_rate_bp, calibration_accuracy_bp): (i64, i64, i64) = conn
+            .query_row(
+                "SELECT total_responses, guess_rate_bp, calibration_accuracy_bp
+                 FROM student_confidence_profile
+                 WHERE student_id = 1 AND subject_id = ?1",
+                [subject_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("confidence profile should query");
+        assert_eq!(total_responses, 2);
+        assert!(guess_rate_bp > 0);
+        assert!(calibration_accuracy_bp > 0);
+
+        let (attempt_count, avg_time_ms, median_time_ms): (i64, i64, i64) = conn
+            .query_row(
+                "SELECT attempt_count, avg_time_ms, median_time_ms
+                 FROM student_speed_profiles
+                 WHERE student_id = 1 AND family_id = ?1",
+                [family_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("speed profile should query");
+        assert!(attempt_count >= 2);
+        assert!(avg_time_ms > 0);
+        assert!(median_time_ms > 0);
+
+        let (current_mastery_bp, gap_bp, opportunity_type): (i64, i64, String) = conn
+            .query_row(
+                "SELECT current_mastery_bp, gap_bp, opportunity_type
+                 FROM near_win_opportunities
+                 WHERE student_id = 1 AND topic_id = ?1",
+                [topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("near win opportunity should query");
+        assert!(current_mastery_bp >= 0);
+        assert!(gap_bp >= 0);
+        assert!(!opportunity_type.is_empty());
+
+        let (lifecycle_state, repair_attempts, severity_bp): (String, i64, i64) = conn
+            .query_row(
+                "SELECT lifecycle_state, repair_attempts, severity_bp
+                 FROM weakness_lifecycle
+                 WHERE student_id = 1 AND topic_id = ?1
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("weakness lifecycle should query");
+        assert!(!lifecycle_state.is_empty());
+        assert!(repair_attempts >= 1);
+        assert!(severity_bp > 0);
+
+        let (attempts_to_beat, is_beaten): (i64, i64) = conn
+            .query_row(
+                "SELECT attempts_to_beat, is_beaten
+                 FROM revenge_queue
+                 WHERE student_id = 1 AND question_id = ?1",
+                [question_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("revenge queue should query");
+        assert!(attempts_to_beat >= 1);
+        assert_eq!(is_beaten, 1);
+
+        let (composite_urgency_bp, recommended_mode): (i64, String) = conn
+            .query_row(
+                "SELECT composite_urgency_bp, recommended_mode
+                 FROM mission_urgency_scores
+                 WHERE student_id = 1 AND topic_id = ?1",
+                [topic_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("mission urgency should query");
+        assert!(composite_urgency_bp > 0);
+        assert!(!recommended_mode.is_empty());
+
+        let (momentum_state, current_streak_days, best_streak_days, consistency_7d_bp): (
+            String,
+            i64,
+            i64,
+            i64,
+        ) = conn
+            .query_row(
+                "SELECT momentum_state, current_streak_days, best_streak_days, consistency_7d_bp
+                 FROM student_momentum
+                 WHERE student_id = 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .expect("student momentum should query");
+        assert!(!momentum_state.is_empty());
+        assert!(current_streak_days >= 1);
+        assert!(best_streak_days >= current_streak_days);
+        assert!(consistency_7d_bp > 0);
+    }
+
+    #[test]
+    fn constructed_response_answers_can_be_processed_without_option_ids() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        let (subject_id, topic_id): (i64, i64) = conn
+            .query_row(
+                "SELECT s.id, t.id
+                 FROM subjects s
+                 INNER JOIN topics t ON t.subject_id = s.id
+                 WHERE s.code = 'MATH'
+                 ORDER BY t.id ASC
+                 LIMIT 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("subject and topic should exist");
+        conn.execute(
+            "INSERT INTO questions (
+                subject_id, topic_id, stem, question_format, explanation_text,
+                difficulty_level, estimated_time_seconds, marks, is_active
+             ) VALUES (?1, ?2, 'Write 0.6 as a simplified fraction.', 'short_answer', 'Convert decimal to fraction.', 5000, 40, 1, 1)",
+            params![subject_id, topic_id],
+        )
+        .expect("constructed response question should insert");
+        let question_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO question_options (
+                question_id, option_label, option_text, is_correct, position
+             ) VALUES (?1, 'A', '3/5', 1, 1)",
+            [question_id],
+        )
+        .expect("correct answer anchor should insert");
+
+        let service = StudentModelService::new(&conn);
+        let result = service
+            .process_answer(
+                1,
+                &AnswerSubmission {
+                    question_id,
+                    selected_option_id: None,
+                    answer_text: Some("3/5".to_string()),
+                    session_id: None,
+                    session_type: Some("diagnostic".to_string()),
+                    started_at: Utc::now() - Duration::seconds(12),
+                    submitted_at: Utc::now(),
+                    response_time_ms: Some(12_000),
+                    confidence_level: Some("sure".to_string()),
+                    hint_count: 0,
+                    changed_answer_count: 0,
+                    skipped: false,
+                    timed_out: false,
+                    support_level: Some("independent".to_string()),
+                    was_timed: false,
+                    was_transfer_variant: false,
+                    was_retention_check: false,
+                    was_mixed_context: false,
+                },
+            )
+            .expect("constructed response should be processed");
+
+        let stored_attempt = conn
+            .query_row(
+                "SELECT selected_option_id, answer_text, is_correct
+                 FROM student_question_attempts
+                 WHERE student_id = 1 AND question_id = ?1
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [question_id],
+                |row| {
+                    Ok((
+                        row.get::<_, Option<i64>>(0)?,
+                        row.get::<_, Option<String>>(1)?,
+                        row.get::<_, i64>(2)?,
+                    ))
+                },
+            )
+            .expect("attempt should persist");
+
+        assert!(result.is_correct);
+        assert_eq!(result.selected_option_text, "3/5");
+        assert_eq!(stored_attempt.0, None);
+        assert_eq!(stored_attempt.1.as_deref(), Some("3/5"));
+        assert_eq!(stored_attempt.2, 1);
     }
 
     fn seed_student(conn: &Connection) {

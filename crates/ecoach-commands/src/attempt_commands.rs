@@ -1,5 +1,8 @@
 use chrono::Utc;
-use ecoach_coach_brain::resolve_next_coach_action;
+use ecoach_coach_brain::{
+    CoachBrainTrigger, PedagogicalAttemptSignal, PedagogicalRuntimeService,
+    evaluate_coach_brain,
+};
 use ecoach_sessions::{SessionAnswerInput, SessionService};
 use ecoach_student_model::{AnswerSubmission, StudentModelService};
 use serde::{Deserialize, Serialize};
@@ -72,6 +75,7 @@ pub fn submit_attempt(
 ) -> Result<AttemptResultDto, CommandError> {
     state.with_connection(|conn| {
         let now = Utc::now();
+        let confidence_level = input.confidence_level.clone();
 
         // Step 1-2: Record the answer in session_items
         let session_service = SessionService::new(conn);
@@ -90,13 +94,14 @@ pub fn submit_attempt(
             input.student_id,
             &AnswerSubmission {
                 question_id: input.question_id,
-                selected_option_id: input.selected_option_id,
+                selected_option_id: Some(input.selected_option_id),
+                answer_text: None,
                 session_id: Some(input.session_id),
                 session_type: None,
                 started_at: now,
                 submitted_at: now,
                 response_time_ms: input.response_time_ms,
-                confidence_level: input.confidence_level,
+                confidence_level,
                 hint_count: input.hint_count,
                 changed_answer_count: input.changed_answer_count,
                 skipped: false,
@@ -108,6 +113,23 @@ pub fn submit_attempt(
                 was_mixed_context: false,
             },
         )?;
+        let error_type = result.error_type.as_ref().map(|error| error.as_str().to_string());
+        let recommended_action = result.recommended_action.clone();
+        PedagogicalRuntimeService::new(conn).record_attempt_feedback(PedagogicalAttemptSignal {
+            student_id: input.student_id,
+            session_id: input.session_id,
+            question_id: input.question_id,
+            response_time_ms: input.response_time_ms,
+            confidence_level: input.confidence_level.clone(),
+            hint_count: input.hint_count,
+            was_timed: input.was_timed,
+            was_transfer_variant: false,
+            was_retention_check: false,
+            was_mixed_context: false,
+            is_correct: result.is_correct,
+            error_type: error_type.clone(),
+            recommended_action: recommended_action.clone(),
+        })?;
 
         // Session progress
         let snapshot = session_service.get_session_snapshot(input.session_id)?;
@@ -123,7 +145,13 @@ pub fn submit_attempt(
             || (session_total > 0 && session_answered >= session_total);
 
         // Step 8: Recompute coach next action
-        let next_action = resolve_next_coach_action(conn, input.student_id)?;
+        let brain = evaluate_coach_brain(
+            conn,
+            input.student_id,
+            CoachBrainTrigger::AttemptSubmitted,
+            14,
+        )?;
+        let next_action = brain.next_action;
 
         // Steps 9-10: Read models are computed on-demand; decay is batched separately
 
@@ -133,9 +161,9 @@ pub fn submit_attempt(
             correct_option_text: result.correct_option_text,
             selected_option_text: Some(result.selected_option_text),
             misconception_info: result.misconception_info,
-            error_type: result.error_type.map(|e| e.as_str().to_string()),
+            error_type,
             diagnosis_summary: result.diagnosis_summary,
-            recommended_action: result.recommended_action,
+            recommended_action,
             updated_mastery: result.updated_mastery as i64,
             updated_gap: result.updated_gap as i64,
             session_answered,
@@ -180,7 +208,9 @@ pub fn complete_session_with_pipeline(
         let summary = session_service.complete_session(session_id)?;
 
         // Steps 5-6: Recompute coach next action (which reads readiness internally)
-        let next_action = resolve_next_coach_action(conn, student_id)?;
+        let brain =
+            evaluate_coach_brain(conn, student_id, CoachBrainTrigger::SessionCompleted, 14)?;
+        let next_action = brain.next_action;
 
         // Step 7: Parent digest is computed on-demand when parent requests it
 

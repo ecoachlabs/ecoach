@@ -3,8 +3,12 @@ pub mod models;
 
 pub use engine::DiagnosticEngine;
 pub use models::{
-    DiagnosticBattery, DiagnosticCauseEvolution, DiagnosticLongitudinalSummary, DiagnosticMode,
-    DiagnosticPhaseCode, DiagnosticPhaseItem, DiagnosticPhasePlan, DiagnosticResult,
-    DiagnosticRootCauseHypothesis, DiagnosticTopicAnalytics, TopicDiagnosticLongitudinalSignal,
+    DiagnosticAudienceReport, DiagnosticBattery, DiagnosticCauseEvolution,
+    DiagnosticConditionMetrics, DiagnosticInterventionPrescription,
+    DiagnosticItemRoutingProfile, DiagnosticLearningProfile, DiagnosticLongitudinalSummary,
+    DiagnosticMode, DiagnosticOverallSummary, DiagnosticPhaseCode, DiagnosticPhaseItem,
+    DiagnosticPhasePlan, DiagnosticProblemCauseFixCard, DiagnosticRecommendation, DiagnosticResult,
+    DiagnosticRootCauseHypothesis, DiagnosticSessionScore, DiagnosticSkillResult,
+    DiagnosticSubjectBlueprint, DiagnosticTopicAnalytics, TopicDiagnosticLongitudinalSignal,
     TopicDiagnosticResult, WrongAnswerDiagnosis,
 };

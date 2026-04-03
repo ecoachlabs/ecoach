@@ -3,7 +3,7 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::readiness_engine::ReadinessEngine;
+use crate::{CanonicalIntelligenceStore, readiness_engine::ReadinessEngine};
 
 // ---------------------------------------------------------------------------
 // Route modes: how the journey behaves based on time, progress, and goals
@@ -161,8 +161,8 @@ impl<'a> JourneyAdaptationEngine<'a> {
             ReadinessEngine::new(self.conn).build_subject_readiness(student_id, subject_id)?;
 
         let remaining_work = 10_000 - readiness.readiness_score as i64;
-        let capacity = (study_days_remaining * consistency.avg_daily_minutes_last_14.max(20))
-            .max(1);
+        let capacity =
+            (study_days_remaining * consistency.avg_daily_minutes_last_14.max(20)).max(1);
 
         // Pressure score: higher = more urgent
         // 10000 = exam tomorrow with lots of work; 0 = plenty of time
@@ -199,12 +199,11 @@ impl<'a> JourneyAdaptationEngine<'a> {
         };
 
         // Override to reactivation if too many dormant topics
-        let recommended_mode =
-            if readiness.due_memory_count >= 5 && pressure < 8000 {
-                RouteMode::Reactivation
-            } else {
-                recommended_mode
-            };
+        let recommended_mode = if readiness.due_memory_count >= 5 && pressure < 8000 {
+            RouteMode::Reactivation
+        } else {
+            recommended_mode
+        };
 
         let weekly_sessions_needed = if days_remaining > 0 {
             let weeks = (days_remaining as f64 / 7.0).max(1.0);
@@ -218,12 +217,7 @@ impl<'a> JourneyAdaptationEngine<'a> {
             .execute(
                 "UPDATE journey_routes SET deadline_pressure_score = ?1, route_mode = ?2
                  WHERE student_id = ?3 AND subject_id = ?4 AND status = 'active'",
-                params![
-                    pressure,
-                    recommended_mode.as_str(),
-                    student_id,
-                    subject_id,
-                ],
+                params![pressure, recommended_mode.as_str(), student_id, subject_id,],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
@@ -242,11 +236,7 @@ impl<'a> JourneyAdaptationEngine<'a> {
     // Mid-journey adaptation: re-evaluate and potentially rebuild route
     // -----------------------------------------------------------------------
 
-    pub fn adapt_route(
-        &self,
-        student_id: i64,
-        subject_id: i64,
-    ) -> EcoachResult<AdaptationResult> {
+    pub fn adapt_route(&self, student_id: i64, subject_id: i64) -> EcoachResult<AdaptationResult> {
         let pressure = self.compute_deadline_pressure(student_id, subject_id)?;
         let consistency = self.get_consistency_snapshot(student_id, subject_id)?;
 
@@ -323,12 +313,13 @@ impl<'a> JourneyAdaptationEngine<'a> {
         }
 
         // Generate morale signals
-        let morale = self.generate_morale_signals(student_id, subject_id, &pressure, &consistency)?;
+        let morale =
+            self.generate_morale_signals(student_id, subject_id, &pressure, &consistency)?;
         for signal in &morale {
             actions.push(format!("morale: {}", signal.signal_type));
         }
 
-        Ok(AdaptationResult {
+        let result = AdaptationResult {
             previous_mode: current_mode,
             new_mode,
             needs_rebuild,
@@ -336,7 +327,17 @@ impl<'a> JourneyAdaptationEngine<'a> {
             consistency,
             actions,
             morale_signals: morale,
-        })
+        };
+        let canonical_store = CanonicalIntelligenceStore::new(self.conn);
+        canonical_store.sync_adaptation_snapshot(student_id, subject_id, &result)?;
+        canonical_store.refresh_subject_runtime(
+            student_id,
+            subject_id,
+            Some(result.new_mode),
+            Some(result.pressure.pressure_score as i64),
+        )?;
+
+        Ok(result)
     }
 
     // -----------------------------------------------------------------------
@@ -449,18 +450,26 @@ impl<'a> JourneyAdaptationEngine<'a> {
         let mut nodes = Vec::new();
 
         for (topic_id, topic_name) in &topics {
-            let (mastery, gap, fragility, evidence_count, decay_risk): (i64, i64, i64, i64, i64) = self
-                .conn
-                .query_row(
-                    "SELECT COALESCE(mastery_score, 0), COALESCE(gap_score, 0),
+            let (mastery, gap, fragility, evidence_count, decay_risk): (i64, i64, i64, i64, i64) =
+                self.conn
+                    .query_row(
+                        "SELECT COALESCE(mastery_score, 0), COALESCE(gap_score, 0),
                             COALESCE(fragility_score, 0), COALESCE(evidence_count, 0),
                             COALESCE(decay_risk, 0)
                      FROM student_topic_states
                      WHERE student_id = ?1 AND topic_id = ?2",
-                    params![student_id, topic_id],
-                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
-                )
-                .unwrap_or((0, 0, 0, 0, 0));
+                        params![student_id, topic_id],
+                        |row| {
+                            Ok((
+                                row.get(0)?,
+                                row.get(1)?,
+                                row.get(2)?,
+                                row.get(3)?,
+                                row.get(4)?,
+                            ))
+                        },
+                    )
+                    .unwrap_or((0, 0, 0, 0, 0));
 
             // Misconception count
             let misconception_count: i64 = self
@@ -488,17 +497,14 @@ impl<'a> JourneyAdaptationEngine<'a> {
 
             let mastery_heat = clamp_bp(mastery);
             let stability_heat = clamp_bp(10_000 - fragility);
-            let misconception_heat = clamp_bp(
-                (misconception_count as f64 / 5.0).min(1.0) as i64 * 10_000,
-            );
+            let misconception_heat =
+                clamp_bp((misconception_count as f64 / 5.0).min(1.0) as i64 * 10_000);
             let coverage_heat = if evidence_count >= 10 {
                 10_000
             } else {
                 clamp_bp((evidence_count as f64 / 10.0 * 10_000.0).round() as i64)
             };
-            let momentum_heat = clamp_bp(
-                (recent_attempts as f64 / 10.0).min(1.0) as i64 * 10_000,
-            );
+            let momentum_heat = clamp_bp((recent_attempts as f64 / 10.0).min(1.0) as i64 * 10_000);
 
             let heat_label = if evidence_count == 0 {
                 "unseen"
@@ -530,9 +536,13 @@ impl<'a> JourneyAdaptationEngine<'a> {
                         misconception_heat = ?6, coverage_heat = ?7, momentum_heat = ?8,
                         updated_at = datetime('now')",
                     params![
-                        student_id, topic_id, heat_label,
-                        mastery_heat as i64, stability_heat as i64,
-                        misconception_heat as i64, coverage_heat as i64,
+                        student_id,
+                        topic_id,
+                        heat_label,
+                        mastery_heat as i64,
+                        stability_heat as i64,
+                        misconception_heat as i64,
+                        coverage_heat as i64,
                         momentum_heat as i64,
                     ],
                 )
@@ -570,7 +580,10 @@ impl<'a> JourneyAdaptationEngine<'a> {
         if consistency.streak_days >= 7 {
             signals.push(MoraleSignal {
                 signal_type: "streak_milestone".into(),
-                message: format!("{} day streak! Consistency is your superpower.", consistency.streak_days),
+                message: format!(
+                    "{} day streak! Consistency is your superpower.",
+                    consistency.streak_days
+                ),
                 context: json!({"streak_days": consistency.streak_days}),
             });
         } else if consistency.streak_days >= 3 {
@@ -583,10 +596,14 @@ impl<'a> JourneyAdaptationEngine<'a> {
 
         // Behind schedule but recoverable
         if pressure.urgency_label == "tight" || pressure.urgency_label == "urgent" {
-            if pressure.feasibility_label == "feasible" || pressure.feasibility_label == "challenging" {
+            if pressure.feasibility_label == "feasible"
+                || pressure.feasibility_label == "challenging"
+            {
                 signals.push(MoraleSignal {
                     signal_type: "behind_but_recoverable".into(),
-                    message: "You are behind schedule, but still recoverable with consistent effort.".into(),
+                    message:
+                        "You are behind schedule, but still recoverable with consistent effort."
+                            .into(),
                     context: json!({
                         "days_remaining": pressure.days_remaining,
                         "weekly_sessions_needed": pressure.weekly_sessions_needed,
@@ -615,8 +632,8 @@ impl<'a> JourneyAdaptationEngine<'a> {
 
         // Persist signals
         for signal in &signals {
-            let context_json = serde_json::to_string(&signal.context)
-                .unwrap_or_else(|_| "{}".into());
+            let context_json =
+                serde_json::to_string(&signal.context).unwrap_or_else(|_| "{}".into());
             self.conn
                 .execute(
                     "INSERT INTO morale_signals (student_id, subject_id, signal_type, message, context_json)

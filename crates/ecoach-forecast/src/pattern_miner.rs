@@ -36,10 +36,7 @@ impl<'a> PatternMiner<'a> {
     }
 
     /// Load per-topic presence data across all past papers for this subject.
-    pub fn mine_topic_presence(
-        &self,
-        subject_id: i64,
-    ) -> EcoachResult<Vec<TopicPaperPresence>> {
+    pub fn mine_topic_presence(&self, subject_id: i64) -> EcoachResult<Vec<TopicPaperPresence>> {
         let mut stmt = self
             .conn
             .prepare(
@@ -110,10 +107,7 @@ impl<'a> PatternMiner<'a> {
     }
 
     /// Mine co-occurrence bundles: which topics appear together in the same paper.
-    pub fn mine_co_occurrences(
-        &self,
-        subject_id: i64,
-    ) -> EcoachResult<Vec<TopicCoOccurrence>> {
+    pub fn mine_co_occurrences(&self, subject_id: i64) -> EcoachResult<Vec<TopicCoOccurrence>> {
         let mut stmt = self
             .conn
             .prepare(
@@ -189,10 +183,7 @@ impl<'a> PatternMiner<'a> {
     // Internal helpers
     // -----------------------------------------------------------------------
 
-    fn load_paper_range(
-        &self,
-        subject_id: i64,
-    ) -> EcoachResult<(Option<i64>, Option<i64>, i64)> {
+    fn load_paper_range(&self, subject_id: i64) -> EcoachResult<(Option<i64>, Option<i64>, i64)> {
         self.conn
             .query_row(
                 "SELECT MIN(exam_year), MAX(exam_year), COUNT(*)
@@ -210,11 +201,7 @@ impl<'a> PatternMiner<'a> {
             .map_err(|e| EcoachError::Storage(e.to_string()))
     }
 
-    fn count_by_column(
-        &self,
-        subject_id: i64,
-        column: &str,
-    ) -> EcoachResult<Vec<(String, i64)>> {
+    fn count_by_column(&self, subject_id: i64, column: &str) -> EcoachResult<Vec<(String, i64)>> {
         // Column name is internal only (never from user input), safe to interpolate.
         let sql = format!(
             "SELECT q.{col}, COUNT(*) AS cnt
@@ -305,8 +292,7 @@ mod tests {
         let pair = co
             .iter()
             .find(|c| {
-                (c.topic_a == 100 && c.topic_b == 200)
-                    || (c.topic_a == 200 && c.topic_b == 100)
+                (c.topic_a == 100 && c.topic_b == 200) || (c.topic_a == 200 && c.topic_b == 100)
             })
             .expect("should find topics 100 and 200 co-occurring");
         assert!(pair.papers_together >= 2);
@@ -339,8 +325,11 @@ mod tests {
     }
 
     fn seed_data(conn: &Connection) {
-        conn.execute("INSERT INTO subjects (id, name) VALUES (1, 'Mathematics')", [])
-            .unwrap();
+        conn.execute(
+            "INSERT INTO subjects (id, name) VALUES (1, 'Mathematics')",
+            [],
+        )
+        .unwrap();
         conn.execute(
             "INSERT INTO topics (id, subject_id, name, node_type) VALUES (100, 1, 'Algebra', 'topic')",
             [],
@@ -380,9 +369,11 @@ mod tests {
 
         // Link questions to papers
         let links: Vec<(i64, i64)> = vec![
-            (1, 1), (1, 4), // paper 1: algebra + geometry
-            (2, 2), (2, 5), // paper 2: algebra + geometry
-            (3, 3),         // paper 3: algebra only
+            (1, 1),
+            (1, 4), // paper 1: algebra + geometry
+            (2, 2),
+            (2, 5), // paper 2: algebra + geometry
+            (3, 3), // paper 3: algebra only
         ];
         for (pid, qid) in &links {
             conn.execute(

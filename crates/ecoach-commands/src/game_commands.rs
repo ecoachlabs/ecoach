@@ -1,5 +1,6 @@
 use ecoach_games::{
-    GameType, GamesService, MindstackState, StartGameInput, SubmitGameAnswerInput, TugOfWarState,
+    DuelSession, GameType, GamesService, MindstackState, StartGameInput, SubmitGameAnswerInput,
+    TugOfWarState,
 };
 
 use crate::{
@@ -88,6 +89,8 @@ impl From<TugOfWarState> for TugOfWarStateDto {
         }
     }
 }
+
+pub type DuelSessionDto = DuelSession;
 
 pub fn start_game(state: &AppState, input: StartGameInput) -> Result<GameSessionDto, CommandError> {
     state.with_connection(|conn| {
@@ -213,6 +216,53 @@ pub fn list_game_sessions(
                 best_streak: session.best_streak,
             })
             .collect())
+    })
+}
+
+pub fn create_duel_session(
+    state: &AppState,
+    challenger_id: i64,
+    opponent_id: Option<i64>,
+    subject_id: i64,
+    topic_id: Option<i64>,
+    duel_type: &str,
+    question_count: usize,
+    time_limit_seconds: Option<i64>,
+) -> Result<DuelSessionDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GamesService::new(conn).create_duel_session(
+            challenger_id,
+            opponent_id,
+            subject_id,
+            topic_id,
+            duel_type,
+            question_count,
+            time_limit_seconds,
+        )?)
+    })
+}
+
+pub fn list_duel_sessions(
+    state: &AppState,
+    student_id: i64,
+) -> Result<Vec<DuelSessionDto>, CommandError> {
+    state.with_connection(|conn| Ok(GamesService::new(conn).list_duel_sessions(student_id)?))
+}
+
+pub fn record_duel_outcome(
+    state: &AppState,
+    duel_session_id: i64,
+    challenger_score_bp: u16,
+    opponent_score_bp: u16,
+    winner_id: Option<i64>,
+) -> Result<DuelSessionDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GamesService::new(conn).record_duel_outcome(
+            duel_session_id,
+            challenger_score_bp,
+            opponent_score_bp,
+            winner_id,
+        )?)
     })
 }
 

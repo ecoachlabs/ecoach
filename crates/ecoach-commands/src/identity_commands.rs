@@ -37,11 +37,7 @@ pub fn list_accounts(state: &AppState) -> Result<Vec<AccountSummaryDto>, Command
     })
 }
 
-pub fn reset_pin(
-    state: &AppState,
-    account_id: i64,
-    new_pin: String,
-) -> Result<(), CommandError> {
+pub fn reset_pin(state: &AppState, account_id: i64, new_pin: String) -> Result<(), CommandError> {
     state.with_connection(|conn| {
         let service = IdentityService::new(conn);
         service.reset_pin(account_id, &new_pin)?;

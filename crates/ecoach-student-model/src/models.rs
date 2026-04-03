@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnswerSubmission {
     pub question_id: i64,
-    pub selected_option_id: i64,
+    pub selected_option_id: Option<i64>,
+    pub answer_text: Option<String>,
     pub session_id: Option<i64>,
     pub session_type: Option<String>,
     pub started_at: DateTime<Utc>,

@@ -81,7 +81,11 @@ impl<'a> SteppedQuestionEngine<'a> {
                     (student_id, question_id, template_id, session_id, total_steps)
                  VALUES (?1, ?2, ?3, ?4, ?5)",
                 params![
-                    student_id, question_id, template.id, session_id, template.total_steps,
+                    student_id,
+                    question_id,
+                    template.id,
+                    session_id,
+                    template.total_steps,
                 ],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -90,11 +94,7 @@ impl<'a> SteppedQuestionEngine<'a> {
     }
 
     /// Record a single step in the attempt.
-    pub fn record_step(
-        &self,
-        attempt_id: i64,
-        step: StepAttemptData,
-    ) -> EcoachResult<()> {
+    pub fn record_step(&self, attempt_id: i64, step: StepAttemptData) -> EcoachResult<()> {
         // Load existing steps
         let existing_json: String = self
             .conn
@@ -109,8 +109,8 @@ impl<'a> SteppedQuestionEngine<'a> {
             serde_json::from_str(&existing_json).unwrap_or_default();
         steps.push(step);
 
-        let updated_json = serde_json::to_string(&steps)
-            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let updated_json =
+            serde_json::to_string(&steps).map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         self.conn
             .execute(
@@ -125,10 +125,7 @@ impl<'a> SteppedQuestionEngine<'a> {
     }
 
     /// Complete the stepped attempt and detect breakpoint.
-    pub fn complete_stepped_attempt(
-        &self,
-        attempt_id: i64,
-    ) -> EcoachResult<SteppedAttemptResult> {
+    pub fn complete_stepped_attempt(&self, attempt_id: i64) -> EcoachResult<SteppedAttemptResult> {
         let (question_id, template_id, total_steps, steps_json): (i64, i64, i64, String) = self
             .conn
             .query_row(
@@ -139,8 +136,7 @@ impl<'a> SteppedQuestionEngine<'a> {
             )
             .map_err(|e| EcoachError::NotFound(format!("attempt {attempt_id}: {e}")))?;
 
-        let steps: Vec<StepAttemptData> =
-            serde_json::from_str(&steps_json).unwrap_or_default();
+        let steps: Vec<StepAttemptData> = serde_json::from_str(&steps_json).unwrap_or_default();
 
         // Load template for step labels
         let template_steps_json: String = self
@@ -255,7 +251,12 @@ impl<'a> SteppedQuestionEngine<'a> {
             .query_row(
                 "SELECT id, total_steps FROM stepped_question_templates WHERE question_id = ?1",
                 [question_id],
-                |row| Ok(TemplateRow { id: row.get(0)?, total_steps: row.get(1)? }),
+                |row| {
+                    Ok(TemplateRow {
+                        id: row.get(0)?,
+                        total_steps: row.get(1)?,
+                    })
+                },
             )
             .map_err(|e| {
                 EcoachError::NotFound(format!(

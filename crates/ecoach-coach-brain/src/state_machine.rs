@@ -1,7 +1,12 @@
 use ecoach_substrate::{EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Value, json};
+
+use crate::constitution::CoachConstitutionService;
+use crate::plan_engine::{
+    CoachBlocker, CoachMissionBrief, CoachRoadmapSnapshot, PlanEngine, StudyBudgetSnapshot,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -95,6 +100,38 @@ struct ActiveJourneySignal {
     station_type: String,
     topic_id: Option<i64>,
     retry_count: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CoachBrainTrigger {
+    ManualRefresh,
+    AttemptSubmitted,
+    SessionCompleted,
+    DiagnosticCompleted,
+    MissionGenerated,
+    EngagementRecorded,
+    ContentChanged,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachRecoveryStateSummary {
+    pub state_type: String,
+    pub recovery_action: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachBrainOutput {
+    pub trigger: String,
+    pub state: CoachStateResolution,
+    pub next_action: CoachNextAction,
+    pub content_readiness: ContentReadinessResolution,
+    pub roadmap: Option<CoachRoadmapSnapshot>,
+    pub today_mission: Option<CoachMissionBrief>,
+    pub study_budget: Option<StudyBudgetSnapshot>,
+    pub blockers: Vec<CoachBlocker>,
+    pub recovery_states: Vec<CoachRecoveryStateSummary>,
 }
 
 pub fn assess_content_readiness(
@@ -388,6 +425,63 @@ pub fn resolve_next_coach_action(
     Ok(action)
 }
 
+pub fn evaluate_coach_brain(
+    conn: &Connection,
+    student_id: i64,
+    trigger: CoachBrainTrigger,
+    horizon_days: usize,
+) -> EcoachResult<CoachBrainOutput> {
+    let content_readiness = assess_content_readiness(conn, student_id)?;
+    let state = resolve_coach_state(conn, student_id)?;
+    let orchestration =
+        CoachConstitutionService::new(conn).build_orchestration_snapshot(student_id, None, None)?;
+    let next_action = orchestration.next_action.clone();
+    let plan_engine = PlanEngine::new(conn);
+    let roadmap = plan_engine.get_coach_roadmap(student_id, horizon_days.max(1))?;
+    let today_mission = plan_engine.get_today_mission_brief(student_id)?;
+    let study_budget = plan_engine.build_study_budget_snapshot(student_id, None)?;
+    let blockers = plan_engine.list_active_blockers(student_id, 5)?;
+    sync_content_readiness_projection(conn, student_id, &content_readiness)?;
+    sync_lifecycle_state_projection(conn, student_id, &state)?;
+    sync_next_action_projection(conn, student_id, &next_action)?;
+    sync_recovery_state_projection(
+        conn,
+        student_id,
+        &content_readiness,
+        &state,
+        &study_budget,
+        !blockers.is_empty(),
+    )?;
+    let recovery_states = list_recovery_state_projection(conn, student_id)?;
+    write_decision_trace(
+        conn,
+        student_id,
+        &trigger,
+        &content_readiness,
+        &state,
+        &next_action,
+        roadmap.as_ref(),
+        study_budget.as_ref(),
+        blockers.len() as i64,
+        Some((
+            &orchestration.guardrail_status,
+            orchestration.governance_checks.len() as i64,
+        )),
+    )?;
+
+    Ok(CoachBrainOutput {
+        trigger: format!("{:?}", trigger),
+        state,
+        next_action,
+        content_readiness,
+        roadmap,
+        today_mission,
+        study_budget,
+        blockers,
+        recovery_states,
+    })
+}
+
 pub fn resolve_coach_state(
     conn: &Connection,
     student_id: i64,
@@ -628,6 +722,324 @@ fn count_matching_subject_codes(
     statement
         .query_row(rusqlite::params_from_iter(params.iter()), |row| row.get(0))
         .map_err(|err| EcoachError::Storage(err.to_string()))
+}
+
+fn sync_content_readiness_projection(
+    conn: &Connection,
+    student_id: i64,
+    readiness: &ContentReadinessResolution,
+) -> EcoachResult<()> {
+    conn.execute(
+        "INSERT INTO coach_content_readiness (
+            student_id, readiness_status, selected_subjects_json, installed_packs_json,
+            topic_count, question_count, failure_reason, checked_at
+         ) VALUES (?1, ?2, ?3, '[]', ?4, ?5, ?6, datetime('now'))
+         ON CONFLICT(student_id) DO UPDATE SET
+            readiness_status = excluded.readiness_status,
+            selected_subjects_json = excluded.selected_subjects_json,
+            topic_count = excluded.topic_count,
+            question_count = excluded.question_count,
+            failure_reason = excluded.failure_reason,
+            checked_at = datetime('now')",
+        rusqlite::params![
+            student_id,
+            content_readiness_status_code(readiness.status),
+            json!(readiness.subject_codes).to_string(),
+            readiness.topic_count,
+            readiness.question_count,
+            readiness.reason,
+        ],
+    )
+    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    Ok(())
+}
+
+fn sync_lifecycle_state_projection(
+    conn: &Connection,
+    student_id: i64,
+    state: &CoachStateResolution,
+) -> EcoachResult<()> {
+    conn.execute(
+        "INSERT INTO coach_lifecycle_states (
+            student_id, current_state, blocking_reason, state_entered_at, updated_at
+         ) VALUES (?1, ?2, ?3, datetime('now'), datetime('now'))
+         ON CONFLICT(student_id) DO UPDATE SET
+            current_state = excluded.current_state,
+            blocking_reason = excluded.blocking_reason,
+            updated_at = datetime('now')",
+        rusqlite::params![
+            student_id,
+            learner_journey_state_code(state.state),
+            state.reason,
+        ],
+    )
+    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    Ok(())
+}
+
+fn sync_next_action_projection(
+    conn: &Connection,
+    student_id: i64,
+    action: &CoachNextAction,
+) -> EcoachResult<()> {
+    let context_json = serde_json::to_string(&action.context)
+        .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+    conn.execute(
+        "INSERT INTO coach_next_actions (
+            student_id, action_type, title, subtitle, estimated_minutes, route, context_json,
+            urgency_bp, computed_at
+         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, datetime('now'))
+         ON CONFLICT(student_id) DO UPDATE SET
+            action_type = excluded.action_type,
+            title = excluded.title,
+            subtitle = excluded.subtitle,
+            estimated_minutes = excluded.estimated_minutes,
+            route = excluded.route,
+            context_json = excluded.context_json,
+            urgency_bp = excluded.urgency_bp,
+            computed_at = datetime('now')",
+        rusqlite::params![
+            student_id,
+            coach_action_type_code(action.action_type),
+            action.title,
+            action.subtitle,
+            action.estimated_minutes,
+            action.route,
+            context_json,
+            action_urgency_bp(action),
+        ],
+    )
+    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    Ok(())
+}
+
+fn sync_recovery_state_projection(
+    conn: &Connection,
+    student_id: i64,
+    readiness: &ContentReadinessResolution,
+    state: &CoachStateResolution,
+    study_budget: &Option<StudyBudgetSnapshot>,
+    has_blockers: bool,
+) -> EcoachResult<()> {
+    let mut active_types = Vec::new();
+    match readiness.status {
+        ContentReadinessStatus::NoSubjectsSelected
+        | ContentReadinessStatus::NoPacksInstalled
+        | ContentReadinessStatus::NoTopicsAvailable => {
+            active_types.push((
+                "no_content_installed",
+                readiness
+                    .reason
+                    .clone()
+                    .unwrap_or_else(|| "resolve content readiness".to_string()),
+            ));
+        }
+        ContentReadinessStatus::TopicsExistButNoQuestions
+        | ContentReadinessStatus::InsufficientQuestionCoverage => {
+            active_types.push((
+                "no_questions_for_topic",
+                readiness
+                    .reason
+                    .clone()
+                    .unwrap_or_else(|| "load real questions".to_string()),
+            ));
+        }
+        ContentReadinessStatus::Ready => {}
+    }
+    if matches!(state.state, LearnerJourneyState::DiagnosticRequired) {
+        active_types.push((
+            "insufficient_evidence",
+            "complete the diagnostic to generate stable coaching evidence".to_string(),
+        ));
+    }
+    if matches!(
+        state.state,
+        LearnerJourneyState::BlockedOnTopic | LearnerJourneyState::RepairRequired
+    ) || has_blockers
+    {
+        active_types.push((
+            "topic_blocked_awaiting_repair",
+            state
+                .reason
+                .clone()
+                .unwrap_or_else(|| "repair the blocked topic".to_string()),
+        ));
+    }
+    if matches!(state.state, LearnerJourneyState::PlanAdjustmentRequired) {
+        active_types.push((
+            "plan_generation_failed",
+            state
+                .reason
+                .clone()
+                .unwrap_or_else(|| "refresh the study plan".to_string()),
+        ));
+    }
+    if study_budget
+        .as_ref()
+        .map(|budget| budget.remaining_minutes == 0 && budget.actual_minutes > 0)
+        .unwrap_or(false)
+    {
+        active_types.push((
+            "study_budget_exhausted",
+            "today's planned study budget has been exhausted".to_string(),
+        ));
+    }
+
+    conn.execute(
+        "UPDATE coach_recovery_states
+         SET resolved = 1, resolved_at = datetime('now')
+         WHERE student_id = ?1 AND resolved = 0",
+        [student_id],
+    )
+    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    for (state_type, recovery_action) in active_types {
+        conn.execute(
+            "INSERT INTO coach_recovery_states (student_id, state_type, recovery_action, resolved)
+             VALUES (?1, ?2, ?3, 0)",
+            rusqlite::params![student_id, state_type, recovery_action],
+        )
+        .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    }
+    Ok(())
+}
+
+fn list_recovery_state_projection(
+    conn: &Connection,
+    student_id: i64,
+) -> EcoachResult<Vec<CoachRecoveryStateSummary>> {
+    let mut statement = conn
+        .prepare(
+            "SELECT state_type, recovery_action, created_at
+             FROM coach_recovery_states
+             WHERE student_id = ?1 AND resolved = 0
+             ORDER BY created_at DESC, id DESC",
+        )
+        .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    let rows = statement
+        .query_map([student_id], |row| {
+            Ok(CoachRecoveryStateSummary {
+                state_type: row.get(0)?,
+                recovery_action: row.get(1)?,
+                created_at: row.get(2)?,
+            })
+        })
+        .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    let mut out = Vec::new();
+    for row in rows {
+        out.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+    }
+    Ok(out)
+}
+
+fn write_decision_trace(
+    conn: &Connection,
+    student_id: i64,
+    trigger: &CoachBrainTrigger,
+    readiness: &ContentReadinessResolution,
+    state: &CoachStateResolution,
+    action: &CoachNextAction,
+    roadmap: Option<&CoachRoadmapSnapshot>,
+    study_budget: Option<&StudyBudgetSnapshot>,
+    blocker_count: i64,
+    governance: Option<(&str, i64)>,
+) -> EcoachResult<()> {
+    let input_summary_json = json!({
+        "trigger": format!("{:?}", trigger),
+        "student_id": student_id,
+    })
+    .to_string();
+    let output_summary_json = json!({
+      "state": learner_journey_state_code(state.state),
+      "action_type": coach_action_type_code(action.action_type),
+      "readiness_status": content_readiness_status_code(readiness.status),
+    "has_roadmap": roadmap.is_some(),
+    "remaining_minutes": study_budget.map(|item| item.remaining_minutes),
+    "blocker_count": blocker_count,
+    "guardrail_status": governance.map(|item| item.0),
+    "governance_check_count": governance.map(|item| item.1),
+    })
+    .to_string();
+    let reasoning_json = json!({
+        "reason": state.reason,
+        "next_action_title": action.title,
+        "readiness_reason": readiness.reason,
+    })
+    .to_string();
+    conn.execute(
+        "INSERT INTO decision_traces (
+            student_id, engine_name, decision_type, input_summary_json, output_summary_json,
+            reasoning_json, confidence_bp
+         ) VALUES (?1, 'coach_brain', 'hub_snapshot', ?2, ?3, ?4, ?5)",
+        rusqlite::params![
+            student_id,
+            input_summary_json,
+            output_summary_json,
+            reasoning_json,
+            action_urgency_bp(action),
+        ],
+    )
+    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+    Ok(())
+}
+
+fn content_readiness_status_code(status: ContentReadinessStatus) -> &'static str {
+    match status {
+        ContentReadinessStatus::Ready => "ready",
+        ContentReadinessStatus::NoSubjectsSelected => "no_subjects_selected",
+        ContentReadinessStatus::NoPacksInstalled => "no_packs_installed",
+        ContentReadinessStatus::NoTopicsAvailable => "no_topics_available",
+        ContentReadinessStatus::TopicsExistButNoQuestions => "topics_no_questions",
+        ContentReadinessStatus::InsufficientQuestionCoverage => "insufficient_coverage",
+    }
+}
+
+fn learner_journey_state_code(state: LearnerJourneyState) -> &'static str {
+    match state {
+        LearnerJourneyState::OnboardingRequired => "onboarding_required",
+        LearnerJourneyState::SubjectSelectionRequired => "subject_selection_required",
+        LearnerJourneyState::ContentReadinessRequired => "content_readiness_required",
+        LearnerJourneyState::DiagnosticRequired => "diagnostic_required",
+        LearnerJourneyState::PlanGenerationRequired => "plan_generation_required",
+        LearnerJourneyState::ReadyForTodayMission => "ready_for_today_mission",
+        LearnerJourneyState::MissionInProgress => "mission_in_progress",
+        LearnerJourneyState::MissionReviewRequired => "mission_review_required",
+        LearnerJourneyState::RepairRequired => "repair_required",
+        LearnerJourneyState::BlockedOnTopic => "blocked_on_topic",
+        LearnerJourneyState::PlanAdjustmentRequired => "plan_adjustment_required",
+        LearnerJourneyState::ReviewDay => "review_day",
+        LearnerJourneyState::ExamMode => "exam_mode",
+        LearnerJourneyState::StalledNoContent => "stalled_no_content",
+    }
+}
+
+fn coach_action_type_code(action: CoachActionType) -> &'static str {
+    match action {
+        CoachActionType::ContinueOnboarding => "continue_onboarding",
+        CoachActionType::SelectSubjects => "select_subjects",
+        CoachActionType::ResolveContent => "install_content",
+        CoachActionType::StartDiagnostic => "start_diagnostic",
+        CoachActionType::GeneratePlan => "generate_plan",
+        CoachActionType::StartTodayMission => "start_today_mission",
+        CoachActionType::ResumeMission => "resume_mission",
+        CoachActionType::ReviewResults => "review_results",
+        CoachActionType::StartRepair => "start_repair",
+        CoachActionType::AdjustPlan => "view_today_plan",
+        CoachActionType::ViewOverview => "view_today_plan",
+    }
+}
+
+fn action_urgency_bp(action: &CoachNextAction) -> i64 {
+    match action.action_type {
+        CoachActionType::ResolveContent => 9_000,
+        CoachActionType::StartRepair => 8_700,
+        CoachActionType::ReviewResults => 8_200,
+        CoachActionType::StartDiagnostic | CoachActionType::GeneratePlan => 7_800,
+        CoachActionType::ResumeMission => 7_400,
+        CoachActionType::StartTodayMission => 7_000,
+        CoachActionType::AdjustPlan => 6_900,
+        CoachActionType::ContinueOnboarding | CoachActionType::SelectSubjects => 6_200,
+        CoachActionType::ViewOverview => 5_000,
+    }
 }
 
 #[cfg(test)]

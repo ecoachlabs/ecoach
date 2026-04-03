@@ -1,6 +1,9 @@
 use ecoach_sessions::{
-    CustomTestStartInput, MockBlueprintInput, PracticeSessionStartInput, SessionService,
+    CoachMissionSessionPlan, CustomTestStartInput, FocusModeConfig, MockBlueprintInput,
+    PracticeSessionStartInput, SessionPresenceEvent, SessionPresenceEventInput,
+    SessionPresenceSnapshot, SessionService,
 };
+use serde_json::Value;
 
 use crate::{
     dtos::{MockBlueprintDto, SessionSnapshotDto, SessionSummaryDto},
@@ -22,6 +25,17 @@ pub fn start_practice_session(
                 message: format!("session {} snapshot was not created", session.id),
             })?;
         Ok(SessionSnapshotDto::from(snapshot))
+    })
+}
+
+pub type CoachMissionSessionPlanDto = CoachMissionSessionPlan;
+
+pub fn start_coach_mission_session(
+    state: &AppState,
+    student_id: i64,
+) -> Result<CoachMissionSessionPlanDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(SessionService::new(conn).start_coach_mission_session(student_id)?)
     })
 }
 
@@ -78,5 +92,76 @@ pub fn complete_session(
         let service = SessionService::new(conn);
         let summary = service.complete_session(session_id)?;
         Ok(SessionSummaryDto::from(summary))
+    })
+}
+
+pub type FocusModeConfigDto = FocusModeConfig;
+pub type SessionPresenceEventDto = SessionPresenceEvent;
+pub type SessionPresenceEventInputDto = SessionPresenceEventInput;
+pub type SessionPresenceSnapshotDto = SessionPresenceSnapshot;
+
+pub fn enable_focus_mode(
+    state: &AppState,
+    session_id: i64,
+    focus_goal: Option<String>,
+    break_schedule_json: Option<Value>,
+    ambient_profile: Option<String>,
+) -> Result<FocusModeConfigDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = SessionService::new(conn);
+        service.enable_focus_mode(session_id, focus_goal, break_schedule_json, ambient_profile)?;
+        service
+            .get_focus_mode_config(session_id)?
+            .ok_or_else(|| CommandError {
+                code: "not_found".to_string(),
+                message: format!("focus mode config for session {} was not found", session_id),
+            })
+    })
+}
+
+pub fn get_focus_mode_config(
+    state: &AppState,
+    session_id: i64,
+) -> Result<Option<FocusModeConfigDto>, CommandError> {
+    state.with_connection(|conn| Ok(SessionService::new(conn).get_focus_mode_config(session_id)?))
+}
+
+pub fn manual_stop_session(
+    state: &AppState,
+    session_id: i64,
+    reason: Option<String>,
+) -> Result<SessionSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        let snapshot = SessionService::new(conn).manual_stop_session(session_id, reason)?;
+        Ok(SessionSnapshotDto::from(snapshot))
+    })
+}
+
+pub fn record_session_presence_event(
+    state: &AppState,
+    session_id: i64,
+    input: SessionPresenceEventInputDto,
+) -> Result<SessionPresenceSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(SessionService::new(conn).record_session_presence_event(session_id, &input)?)
+    })
+}
+
+pub fn get_session_presence_snapshot(
+    state: &AppState,
+    session_id: i64,
+) -> Result<Option<SessionPresenceSnapshotDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(SessionService::new(conn).get_session_presence_snapshot(session_id)?)
+    })
+}
+
+pub fn list_session_presence_events(
+    state: &AppState,
+    session_id: i64,
+    limit: usize,
+) -> Result<Vec<SessionPresenceEventDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(SessionService::new(conn).list_session_presence_events(session_id, limit)?)
     })
 }

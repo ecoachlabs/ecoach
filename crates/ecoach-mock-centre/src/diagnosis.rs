@@ -220,7 +220,7 @@ impl<'a> MockDiagnosisEngine<'a> {
                     weakness_score,
                     mastery_gap: clamp_bp((mastery_gap * 10_000.0).round() as i64),
                     misconception_pressure: clamp_bp(
-                        (misconception_pressure * 10_000.0).round() as i64,
+                        (misconception_pressure * 10_000.0).round() as i64
                     ),
                     timed_gap: clamp_bp((timed_gap * 10_000.0).round() as i64),
                     accuracy_bp: accuracy,
@@ -259,10 +259,7 @@ impl<'a> MockDiagnosisEngine<'a> {
     }
 
     /// Load a previously computed diagnosis.
-    pub fn get_diagnosis(
-        &self,
-        mock_session_id: i64,
-    ) -> EcoachResult<Option<MockDeepDiagnosis>> {
+    pub fn get_diagnosis(&self, mock_session_id: i64) -> EcoachResult<Option<MockDeepDiagnosis>> {
         let row = self
             .conn
             .query_row(
@@ -296,10 +293,20 @@ impl<'a> MockDiagnosisEngine<'a> {
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let Some((
-            student_id, subject_id, pred_score, pred_low, pred_high,
-            weaknesses_json, broken_json, misconceptions_json,
-            repr_json, timing_json, confidence_json, action_json,
-        )) = row else {
+            student_id,
+            subject_id,
+            pred_score,
+            pred_low,
+            pred_high,
+            weaknesses_json,
+            broken_json,
+            misconceptions_json,
+            repr_json,
+            timing_json,
+            confidence_json,
+            action_json,
+        )) = row
+        else {
             return Ok(None);
         };
 
@@ -413,10 +420,7 @@ impl<'a> MockDiagnosisEngine<'a> {
         Ok(hits)
     }
 
-    fn load_representation_gaps(
-        &self,
-        session_id: i64,
-    ) -> EcoachResult<Vec<RepresentationGap>> {
+    fn load_representation_gaps(&self, session_id: i64) -> EcoachResult<Vec<RepresentationGap>> {
         let mut stmt = self
             .conn
             .prepare(
@@ -552,10 +556,7 @@ impl<'a> MockDiagnosisEngine<'a> {
         Ok(early_accuracy - late_accuracy >= 0.20)
     }
 
-    fn compute_confidence_diagnosis(
-        &self,
-        session_id: i64,
-    ) -> EcoachResult<ConfidenceDiagnosis> {
+    fn compute_confidence_diagnosis(&self, session_id: i64) -> EcoachResult<ConfidenceDiagnosis> {
         let mut correct_confident: i64 = 0;
         let mut correct_unsure: i64 = 0;
         let mut wrong_confident: i64 = 0;
@@ -573,16 +574,12 @@ impl<'a> MockDiagnosisEngine<'a> {
 
         let rows = stmt
             .query_map([session_id], |row| {
-                Ok((
-                    row.get::<_, i64>(0)?,
-                    row.get::<_, Option<String>>(1)?,
-                ))
+                Ok((row.get::<_, i64>(0)?, row.get::<_, Option<String>>(1)?))
             })
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         for row in rows {
-            let (is_correct, confidence) =
-                row.map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let (is_correct, confidence) = row.map_err(|e| EcoachError::Storage(e.to_string()))?;
             total_answered += 1;
             let is_confident = matches!(
                 confidence.as_deref(),
@@ -617,8 +614,10 @@ impl<'a> MockDiagnosisEngine<'a> {
         subject_id: i64,
     ) -> EcoachResult<Vec<BrokenLinkDiagnosis>> {
         // Find node_edges where the student got questions wrong on both ends
-        let mut stmt = self.conn.prepare(
-            "SELECT DISTINCT ne.from_node_id, ne.to_node_id, ne.edge_type,
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT ne.from_node_id, ne.to_node_id, ne.edge_type,
                     COALESCE(an1.canonical_title, 'Node ' || ne.from_node_id),
                     COALESCE(an2.canonical_title, 'Node ' || ne.to_node_id)
              FROM node_edges ne
@@ -638,7 +637,8 @@ impl<'a> MockDiagnosisEngine<'a> {
                    AND qsl.node_id = ne.to_node_id
              )
              LIMIT 10",
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let rows = stmt
             .query_map(params![session_id, subject_id], |row| {
@@ -740,8 +740,7 @@ impl<'a> MockDiagnosisEngine<'a> {
 
         for ts in &blueprint.topic_scores {
             let blueprint_weight = ts.composite_score as f64 / safe_total;
-            let mastery = mastery_map.get(&ts.topic_id).copied().unwrap_or(5000) as f64
-                / 10_000.0;
+            let mastery = mastery_map.get(&ts.topic_id).copied().unwrap_or(5000) as f64 / 10_000.0;
 
             // Timing factor: penalize if the topic was slow in the mock
             let timing_factor = topic_stats
@@ -763,8 +762,7 @@ impl<'a> MockDiagnosisEngine<'a> {
             // Misconception immunity: based on whether misconceptions were triggered
             let immunity = 1.0; // simplified
 
-            weighted_sum +=
-                blueprint_weight * mastery * timing_factor * retention * immunity;
+            weighted_sum += blueprint_weight * mastery * timing_factor * retention * immunity;
         }
 
         let predicted = clamp_bp((weighted_sum * 10_000.0).round() as i64);

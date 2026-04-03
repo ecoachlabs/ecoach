@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use ecoach_questions::QuestionService;
 use ecoach_substrate::{
     BasisPoints, DomainEvent, EcoachError, EcoachResult, EngineRegistry,
     FabricOrchestrationSummary, FabricSignal, clamp_bp, now_utc,
@@ -2870,6 +2871,7 @@ impl<'a> FoundryCoordinatorService<'a> {
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             self.ensure_question_support_links(question_id, topic_id)?;
+            QuestionService::new(self.conn).classify_question(question_id, false)?;
             question_id
         };
 

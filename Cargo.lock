@@ -847,6 +847,7 @@ name = "ecoach-content"
 version = "0.1.0"
 dependencies = [
  "ecoach-glossary",
+ "ecoach-questions",
  "ecoach-storage",
  "ecoach-substrate",
  "rusqlite",
@@ -922,6 +923,7 @@ dependencies = [
  "ecoach-substrate",
  "rusqlite",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1111,10 +1113,12 @@ dependencies = [
 name = "ecoach-tauri"
 version = "0.1.0"
 dependencies = [
+ "ecoach-coach-brain",
  "ecoach-commands",
  "ecoach-content",
  "ecoach-games",
  "ecoach-identity",
+ "ecoach-library",
  "ecoach-memory",
  "ecoach-mock-centre",
  "ecoach-premium",

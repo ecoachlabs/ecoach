@@ -323,6 +323,108 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "078_glossary_meta_deep",
         sql: include_str!("../../../migrations/runtime/078_glossary_meta_deep.sql"),
     },
+    Migration {
+        id: "079_library_intelligence_completion",
+        sql: include_str!("../../../migrations/runtime/079_library_intelligence_completion.sql"),
+    },
+    Migration {
+        id: "080_glossary_runtime_completion",
+        sql: include_str!("../../../migrations/runtime/080_glossary_runtime_completion.sql"),
+    },
+    Migration {
+        id: "081_diagnostic_runtime_completion",
+        sql: include_str!("../../../migrations/runtime/081_diagnostic_runtime_completion.sql"),
+    },
+    Migration {
+        id: "082_idea19_preparation_ecosystem",
+        sql: include_str!("../../../migrations/runtime/082_idea19_preparation_ecosystem.sql"),
+    },
+    Migration {
+        id: "083_idea20_coach_execution_completion",
+        sql: include_str!("../../../migrations/runtime/083_idea20_coach_execution_completion.sql"),
+    },
+    Migration {
+        id: "084_idea21_resource_orchestration_runtime",
+        sql: include_str!(
+            "../../../migrations/runtime/084_idea21_resource_orchestration_runtime.sql"
+        ),
+    },
+    Migration {
+        id: "085_idea22_question_intelligence_engine",
+        sql: include_str!(
+            "../../../migrations/runtime/085_idea22_question_intelligence_engine.sql"
+        ),
+    },
+    Migration {
+        id: "086_idea22_question_family_analytics_integrity",
+        sql: include_str!(
+            "../../../migrations/runtime/086_idea22_question_family_analytics_integrity.sql"
+        ),
+    },
+    Migration {
+        id: "087_idea23_coach_intelligence_dome",
+        sql: include_str!("../../../migrations/runtime/087_idea23_coach_intelligence_dome.sql"),
+    },
+    Migration {
+        id: "088_idea24_coach_judgment_engine",
+        sql: include_str!("../../../migrations/runtime/088_idea24_coach_judgment_engine.sql"),
+    },
+    Migration {
+        id: "089_idea25_intelligence_constitution",
+        sql: include_str!("../../../migrations/runtime/089_idea25_intelligence_constitution.sql"),
+    },
+    Migration {
+        id: "090_idea26_curriculum_portal_completion",
+        sql: include_str!(
+            "../../../migrations/runtime/090_idea26_curriculum_portal_completion.sql"
+        ),
+    },
+    Migration {
+        id: "091_idea27_content_intelligence_engine",
+        sql: include_str!(
+            "../../../migrations/runtime/091_idea27_content_intelligence_engine.sql"
+        ),
+    },
+    Migration {
+        id: "092_idea28_engine_store_foundation",
+        sql: include_str!(
+            "../../../migrations/runtime/092_idea28_engine_store_foundation.sql"
+        ),
+    },
+    Migration {
+        id: "093_idea29_pedagogical_runtime_os",
+        sql: include_str!(
+            "../../../migrations/runtime/093_idea29_pedagogical_runtime_os.sql"
+        ),
+    },
+    Migration {
+        id: "094_idea30_time_orchestration_and_session_awareness",
+        sql: include_str!(
+            "../../../migrations/runtime/094_idea30_time_orchestration_and_session_awareness.sql"
+        ),
+    },
+    Migration {
+        id: "095_idea31_smart_central_curriculum",
+        sql: include_str!(
+            "../../../migrations/runtime/095_idea31_smart_central_curriculum.sql"
+        ),
+    },
+    Migration {
+        id: "096_idea32_memory_decay_spine_completion",
+        sql: include_str!(
+            "../../../migrations/runtime/096_idea32_memory_decay_spine_completion.sql"
+        ),
+    },
+    Migration {
+        id: "097_idea33_contrast_engine_completion",
+        sql: include_str!(
+            "../../../migrations/runtime/097_idea33_contrast_engine_completion.sql"
+        ),
+    },
+    Migration {
+        id: "098_idea34_dna_runtime",
+        sql: include_str!("../../../migrations/runtime/098_idea34_dna_runtime.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {

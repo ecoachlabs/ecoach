@@ -1,5 +1,7 @@
 use ecoach_memory::{
-    MemoryReturnLoop, MemoryReviewQueueItem, MemoryService, RecordMemoryEvidenceInput,
+    CompleteInterventionStepInput, InterventionPlanRecord, MemoryCohortAnalytics,
+    MemoryKnowledgeStateDetail, MemoryReturnLoop, MemoryReviewQueueItem, MemoryService,
+    RecordMemoryEvidenceInput, ReviewScheduleItemRecord, StudentInterferenceEdge, TopicKnowledgeMap,
     TopicMemorySummary,
 };
 
@@ -54,6 +56,13 @@ pub struct DecayBatchResultDto {
 pub type MemoryReviewQueueItemDto = MemoryReviewQueueItem;
 pub type TopicMemorySummaryDto = TopicMemorySummary;
 pub type MemoryReturnLoopDto = MemoryReturnLoop;
+pub type MemoryKnowledgeStateDto = MemoryKnowledgeStateDetail;
+pub type ReviewScheduleItemDto = ReviewScheduleItemRecord;
+pub type ActiveInterventionDto = InterventionPlanRecord;
+pub type InterventionStepInputDto = CompleteInterventionStepInput;
+pub type MemoryCohortAnalyticsDto = MemoryCohortAnalytics;
+pub type StudentInterferenceEdgeDto = StudentInterferenceEdge;
+pub type TopicKnowledgeMapDto = TopicKnowledgeMap;
 
 pub fn get_review_queue(
     state: &AppState,
@@ -169,6 +178,83 @@ pub fn build_memory_return_loop(
     limit: usize,
 ) -> Result<MemoryReturnLoopDto, CommandError> {
     state.with_connection(|conn| Ok(MemoryService::new(conn).build_return_loop(student_id, limit)?))
+}
+
+pub fn get_memory_knowledge_state(
+    state: &AppState,
+    student_id: i64,
+    node_id: i64,
+) -> Result<MemoryKnowledgeStateDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(MemoryService::new(conn).get_memory_knowledge_state(student_id, node_id)?)
+    })
+}
+
+pub fn list_memory_review_schedule(
+    state: &AppState,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<ReviewScheduleItemDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(MemoryService::new(conn).list_memory_review_schedule(student_id, limit)?)
+    })
+}
+
+pub fn list_active_interventions(
+    state: &AppState,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<ActiveInterventionDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(MemoryService::new(conn).list_active_interventions(student_id, limit)?)
+    })
+}
+
+pub fn complete_intervention_step(
+    state: &AppState,
+    input: InterventionStepInputDto,
+) -> Result<ActiveInterventionDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(MemoryService::new(conn).complete_intervention_step(&input)?)
+    })
+}
+
+pub fn force_recompute_knowledge_state(
+    state: &AppState,
+    student_id: i64,
+    knowledge_unit_id: i64,
+) -> Result<MemoryKnowledgeStateDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(MemoryService::new(conn).force_recompute_knowledge_state(student_id, knowledge_unit_id)?)
+    })
+}
+
+pub fn get_memory_cohort_analytics(
+    state: &AppState,
+    topic_id: i64,
+    hotspot_limit: usize,
+) -> Result<MemoryCohortAnalyticsDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(MemoryService::new(conn).get_memory_cohort_analytics(topic_id, hotspot_limit)?)
+    })
+}
+
+pub fn list_student_interference_edges(
+    state: &AppState,
+    student_id: i64,
+    node_id: i64,
+    limit: usize,
+) -> Result<Vec<StudentInterferenceEdgeDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(MemoryService::new(conn).list_student_interference_edges(student_id, node_id, limit)?)
+    })
+}
+
+pub fn get_topic_knowledge_map(
+    state: &AppState,
+    topic_id: i64,
+) -> Result<TopicKnowledgeMapDto, CommandError> {
+    state.with_connection(|conn| Ok(MemoryService::new(conn).get_topic_knowledge_map(topic_id)?))
 }
 
 // ── Memory Intelligence commands ──

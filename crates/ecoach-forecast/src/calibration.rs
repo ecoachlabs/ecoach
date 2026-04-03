@@ -62,14 +62,26 @@ impl<'a> CalibrationEngine<'a> {
                     .copied()
                     .collect();
                 let questions_without_holdout = tp.total_questions
-                    - tp.years_present.iter().filter(|&&y| y == holdout_year).count() as i64;
-                (tp.topic_id, years_without_holdout, questions_without_holdout.max(0))
+                    - tp.years_present
+                        .iter()
+                        .filter(|&&y| y == holdout_year)
+                        .count() as i64;
+                (
+                    tp.topic_id,
+                    years_without_holdout,
+                    questions_without_holdout.max(0),
+                )
             })
             .filter(|(_, years, _)| !years.is_empty())
             .collect();
 
         // Simple frequency-based prediction for each topic
-        let max_freq = filtered.iter().map(|(_, _, q)| *q).max().unwrap_or(1).max(1);
+        let max_freq = filtered
+            .iter()
+            .map(|(_, _, q)| *q)
+            .max()
+            .unwrap_or(1)
+            .max(1);
         let mut brier_sum: f64 = 0.0;
         let mut coverage_hits = 0i64;
         let mut topics_evaluated = 0i64;
@@ -118,7 +130,13 @@ impl<'a> CalibrationEngine<'a> {
                 "INSERT INTO forecast_calibration_runs
                     (subject_id, holdout_year, brier_score, coverage_accuracy_bp, topics_evaluated)
                  VALUES (?1, ?2, ?3, ?4, ?5)",
-                params![subject_id, holdout_year, brier_score as i64, coverage_accuracy as i64, topics_evaluated],
+                params![
+                    subject_id,
+                    holdout_year,
+                    brier_score as i64,
+                    coverage_accuracy as i64,
+                    topics_evaluated
+                ],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
@@ -330,7 +348,11 @@ mod tests {
     }
 
     fn seed_data(conn: &Connection) {
-        conn.execute("INSERT INTO subjects (id, name) VALUES (1, 'Mathematics')", []).unwrap();
+        conn.execute(
+            "INSERT INTO subjects (id, name) VALUES (1, 'Mathematics')",
+            [],
+        )
+        .unwrap();
         conn.execute("INSERT INTO topics (id, subject_id, name, node_type) VALUES (100, 1, 'Algebra', 'topic')", []).unwrap();
         conn.execute("INSERT INTO topics (id, subject_id, name, node_type) VALUES (200, 1, 'Geometry', 'topic')", []).unwrap();
 
@@ -354,7 +376,8 @@ mod tests {
             conn.execute(
                 "INSERT INTO past_paper_question_links (paper_id, question_id) VALUES (?1, ?2)",
                 params![pid, qid],
-            ).unwrap();
+            )
+            .unwrap();
         }
     }
 }

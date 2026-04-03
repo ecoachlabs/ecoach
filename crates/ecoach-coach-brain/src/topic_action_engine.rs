@@ -47,10 +47,18 @@ impl TopicActionMode {
 
     pub fn purpose_text(self) -> &'static str {
         match self {
-            Self::Learn => "We'll teach this topic step by step, starting with the basics and building toward harder questions.",
-            Self::Repair => "We'll find the exact part you are struggling with and help you repair it.",
-            Self::Revision => "We'll quickly check how fresh this topic still is and bring back the most important ideas.",
-            Self::Expert => "We'll challenge your reasoning, speed, and mastery to a much higher level.",
+            Self::Learn => {
+                "We'll teach this topic step by step, starting with the basics and building toward harder questions."
+            }
+            Self::Repair => {
+                "We'll find the exact part you are struggling with and help you repair it."
+            }
+            Self::Revision => {
+                "We'll quickly check how fresh this topic still is and bring back the most important ideas."
+            }
+            Self::Expert => {
+                "We'll challenge your reasoning, speed, and mastery to a much higher level."
+            }
         }
     }
 }
@@ -133,18 +141,10 @@ impl<'a> TopicActionEngine<'a> {
 
         // Build repair path
         let repair_path = match mode {
-            TopicActionMode::Repair => {
-                Some(self.build_repair_path(&subtopics, &diagnosis)?)
-            }
-            TopicActionMode::Learn => {
-                Some(self.build_learn_path(&subtopics)?)
-            }
-            TopicActionMode::Revision => {
-                Some(self.build_revision_path(student_id, &subtopics)?)
-            }
-            TopicActionMode::Expert => {
-                Some(self.build_expert_path(&subtopics)?)
-            }
+            TopicActionMode::Repair => Some(self.build_repair_path(&subtopics, &diagnosis)?),
+            TopicActionMode::Learn => Some(self.build_learn_path(&subtopics)?),
+            TopicActionMode::Revision => Some(self.build_revision_path(student_id, &subtopics)?),
+            TopicActionMode::Expert => Some(self.build_expert_path(&subtopics)?),
         };
 
         let diagnosis_json = diagnosis
@@ -163,9 +163,15 @@ impl<'a> TopicActionEngine<'a> {
                      mastery_at_start, symptom_input_json)
                  VALUES (?1, ?2, ?3, ?4, 'active', ?5, ?6, ?7, ?8, ?9)",
                 params![
-                    student_id, subject_id, topic_id, mode.as_str(),
-                    diagnosis_json, repair_path_json, subtopics_total,
-                    mastery_at_start as i64, symptom_json,
+                    student_id,
+                    subject_id,
+                    topic_id,
+                    mode.as_str(),
+                    diagnosis_json,
+                    repair_path_json,
+                    subtopics_total,
+                    mastery_at_start as i64,
+                    symptom_json,
                 ],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -190,11 +196,7 @@ impl<'a> TopicActionEngine<'a> {
     }
 
     /// Record progress in a topic action session.
-    pub fn record_subtopic_completed(
-        &self,
-        session_id: i64,
-        step_number: i64,
-    ) -> EcoachResult<()> {
+    pub fn record_subtopic_completed(&self, session_id: i64, step_number: i64) -> EcoachResult<()> {
         self.conn
             .execute(
                 "UPDATE topic_action_sessions
@@ -236,10 +238,7 @@ impl<'a> TopicActionEngine<'a> {
     }
 
     /// Complete a topic action session.
-    pub fn complete_topic_action(
-        &self,
-        session_id: i64,
-    ) -> EcoachResult<TopicActionSummary> {
+    pub fn complete_topic_action(&self, session_id: i64) -> EcoachResult<TopicActionSummary> {
         let (student_id, topic_id, mode_str, mastery_start): (i64, i64, String, i64) = self
             .conn
             .query_row(
@@ -267,7 +266,8 @@ impl<'a> TopicActionEngine<'a> {
         let summary_for_parent = match mode {
             TopicActionMode::Learn => format!(
                 "Your child built this topic from the beginning. Mastery moved from {} to {}.",
-                mastery_start / 100, mastery_now / 100
+                mastery_start / 100,
+                mastery_now / 100
             ),
             TopicActionMode::Repair => format!(
                 "The system identified specific weak spots and focused on repairing them. Mastery improved by {}.",
@@ -315,10 +315,8 @@ impl<'a> TopicActionEngine<'a> {
                     let diagnosis_json: Option<String> = row.get(8)?;
                     let repair_path_json: Option<String> = row.get(9)?;
 
-                    let diagnosis = diagnosis_json
-                        .and_then(|j| serde_json::from_str(&j).ok());
-                    let repair_path = repair_path_json
-                        .and_then(|j| serde_json::from_str(&j).ok());
+                    let diagnosis = diagnosis_json.and_then(|j| serde_json::from_str(&j).ok());
+                    let repair_path = repair_path_json.and_then(|j| serde_json::from_str(&j).ok());
 
                     Ok(TopicActionSession {
                         id: row.get(0)?,
@@ -527,7 +525,13 @@ impl<'a> TopicActionEngine<'a> {
 
     fn detect_root_cause(&self, student_id: i64, topic_id: i64) -> EcoachResult<String> {
         // Check error profiles
-        let (knowledge_gap, conceptual, execution, carelessness, pressure): (i64, i64, i64, i64, i64) = self
+        let (knowledge_gap, conceptual, execution, carelessness, pressure): (
+            i64,
+            i64,
+            i64,
+            i64,
+            i64,
+        ) = self
             .conn
             .query_row(
                 "SELECT COALESCE(knowledge_gap_score, 0), COALESCE(conceptual_confusion_score, 0),
@@ -536,7 +540,15 @@ impl<'a> TopicActionEngine<'a> {
                  FROM student_error_profiles
                  WHERE student_id = ?1 AND topic_id = ?2",
                 params![student_id, topic_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                    ))
+                },
             )
             .unwrap_or((0, 0, 0, 0, 0));
 
@@ -568,11 +580,9 @@ impl<'a> TopicActionEngine<'a> {
 
     fn load_topic_name(&self, topic_id: i64) -> EcoachResult<String> {
         self.conn
-            .query_row(
-                "SELECT name FROM topics WHERE id = ?1",
-                [topic_id],
-                |row| row.get(0),
-            )
+            .query_row("SELECT name FROM topics WHERE id = ?1", [topic_id], |row| {
+                row.get(0)
+            })
             .map_err(|e| EcoachError::NotFound(format!("topic {topic_id}: {e}")))
     }
 

@@ -7,9 +7,9 @@ use std::{
 };
 
 use ecoach_substrate::{EcoachError, EcoachResult};
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde::de::DeserializeOwned;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use zip::ZipArchive;
 
 use crate::models::{
@@ -6402,7 +6402,7 @@ mod tests {
         process,
         time::{SystemTime, UNIX_EPOCH},
     };
-    use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
+    use zip::{CompressionMethod, ZipWriter, write::SimpleFileOptions};
 
     fn xml_escape(value: &str) -> String {
         value
@@ -6638,9 +6638,11 @@ mod tests {
         assert_eq!(report.paired_assessment_document_count, 1);
         assert!(report.reconstruction_confidence_score >= 75);
         assert_eq!(report.review_priority, "low");
-        assert!(report
-            .detected_subjects
-            .contains(&"mathematics".to_string()));
+        assert!(
+            report
+                .detected_subjects
+                .contains(&"mathematics".to_string())
+        );
         assert!(report.estimated_question_count >= 2);
         assert!(report.answer_like_file_count >= 1);
 
@@ -6768,9 +6770,11 @@ mod tests {
         assert_eq!(report.ocr_recovered_file_count, 0);
         assert!(report.layout_recovered_file_count >= 1);
         assert!(report.extracted_question_block_count >= 1);
-        assert!(report
-            .detected_topics
-            .contains(&"algebraic expressions".to_string()));
+        assert!(
+            report
+                .detected_topics
+                .contains(&"algebraic expressions".to_string())
+        );
 
         let file_reconstruction = report
             .insights
@@ -6798,12 +6802,14 @@ mod tests {
                 .and_then(Value::as_str),
             Some("teacher_handout")
         );
-        assert!(file_reconstruction
-            .payload
-            .pointer("/document_intelligence/question_units")
-            .and_then(Value::as_array)
-            .map(|items| items.len() >= 2)
-            .unwrap_or(false));
+        assert!(
+            file_reconstruction
+                .payload
+                .pointer("/document_intelligence/question_units")
+                .and_then(Value::as_array)
+                .map(|items| items.len() >= 2)
+                .unwrap_or(false)
+        );
 
         let _ = fs::remove_dir_all(temp_dir);
     }
@@ -6851,9 +6857,11 @@ mod tests {
         assert!(report.layout_recovered_file_count >= 1);
         assert!(report.score_signal_count >= 2);
         assert!(report.remark_signal_count >= 1);
-        assert!(report
-            .detected_subjects
-            .contains(&"mathematics".to_string()));
+        assert!(
+            report
+                .detected_subjects
+                .contains(&"mathematics".to_string())
+        );
 
         let file_reconstruction = report
             .insights
@@ -6949,16 +6957,22 @@ mod tests {
         assert!(report.extracted_question_block_count >= 1);
         assert!(report.score_signal_count >= 1);
         assert!(report.remark_signal_count >= 1);
-        assert!(report
-            .detected_topics
-            .iter()
-            .any(|topic| topic == "osmosis" || topic == "diffusion"));
-        assert!(report
-            .recommended_actions
-            .contains(&"schedule_intervention".to_string()));
-        assert!(report
-            .recommended_actions
-            .contains(&"build_personalized_test".to_string()));
+        assert!(
+            report
+                .detected_topics
+                .iter()
+                .any(|topic| topic == "osmosis" || topic == "diffusion")
+        );
+        assert!(
+            report
+                .recommended_actions
+                .contains(&"schedule_intervention".to_string())
+        );
+        assert!(
+            report
+                .recommended_actions
+                .contains(&"build_personalized_test".to_string())
+        );
 
         let file_reconstruction = report
             .insights
@@ -6993,12 +7007,14 @@ mod tests {
                 .and_then(Value::as_str),
             Some("answer_page")
         );
-        assert!(file_reconstruction
-            .payload
-            .pointer("/document_intelligence/question_blocks")
-            .and_then(Value::as_array)
-            .map(|items| !items.is_empty())
-            .unwrap_or(false));
+        assert!(
+            file_reconstruction
+                .payload
+                .pointer("/document_intelligence/question_blocks")
+                .and_then(Value::as_array)
+                .map(|items| !items.is_empty())
+                .unwrap_or(false)
+        );
 
         let _ = fs::remove_dir_all(temp_dir);
     }
@@ -7114,18 +7130,20 @@ mod tests {
                 .map(|items| items.len()),
             Some(0)
         );
-        assert!(groups[0]
-            .pointer("/alignment_summary/alignments")
-            .and_then(Value::as_array)
-            .and_then(|items| items.first())
-            .and_then(|item| item.get("reason_codes"))
-            .and_then(Value::as_array)
-            .map(|codes| {
-                codes
-                    .iter()
-                    .any(|code| code.as_str() == Some("explicit_number_match"))
-            })
-            .unwrap_or(false));
+        assert!(
+            groups[0]
+                .pointer("/alignment_summary/alignments")
+                .and_then(Value::as_array)
+                .and_then(|items| items.first())
+                .and_then(|item| item.get("reason_codes"))
+                .and_then(Value::as_array)
+                .map(|codes| {
+                    codes
+                        .iter()
+                        .any(|code| code.as_str() == Some("explicit_number_match"))
+                })
+                .unwrap_or(false)
+        );
 
         let bundle_alignment = report
             .insights
@@ -7163,19 +7181,21 @@ mod tests {
                 .and_then(Value::as_i64),
             Some(2)
         );
-        assert!(question_reconstruction
-            .payload
-            .pointer("/page_recovery/stitched_segments/0/stitch_reason_codes")
-            .and_then(Value::as_array)
-            .map(|codes| {
-                codes.iter().any(|code| {
-                    matches!(
-                        code.as_str(),
-                        Some("same_page_label") | Some("sequential_question_numbering")
-                    )
+        assert!(
+            question_reconstruction
+                .payload
+                .pointer("/page_recovery/stitched_segments/0/stitch_reason_codes")
+                .and_then(Value::as_array)
+                .map(|codes| {
+                    codes.iter().any(|code| {
+                        matches!(
+                            code.as_str(),
+                            Some("same_page_label") | Some("sequential_question_numbering")
+                        )
+                    })
                 })
-            })
-            .unwrap_or(false));
+                .unwrap_or(false)
+        );
 
         let _ = fs::remove_dir_all(temp_dir);
     }
@@ -7265,41 +7285,47 @@ mod tests {
                 .and_then(Value::as_i64),
             Some(1)
         );
-        assert!(bundle_alignment
-            .payload
-            .get("mismatch_reason_counts")
-            .and_then(Value::as_array)
-            .map(|items| items.iter().any(|item| {
-                item.get("reason_code").and_then(Value::as_str)
-                    == Some("question_number_not_found_in_answers")
-            }))
-            .unwrap_or(false));
-        assert!(bundle_alignment
-            .payload
-            .get("mismatch_reason_counts")
-            .and_then(Value::as_array)
-            .map(|items| items.iter().any(|item| {
-                item.get("reason_code").and_then(Value::as_str)
-                    == Some("answer_number_not_found_in_questions")
-            }))
-            .unwrap_or(false));
-        assert!(bundle_alignment
-            .payload
-            .get("unresolved_items")
-            .and_then(Value::as_array)
-            .map(|items| items.iter().any(|item| {
-                item.get("item_type").and_then(Value::as_str) == Some("question")
-                    && item
-                        .get("reason_codes")
-                        .and_then(Value::as_array)
-                        .map(|codes| {
-                            codes.iter().any(|code| {
-                                code.as_str() == Some("question_number_not_found_in_answers")
+        assert!(
+            bundle_alignment
+                .payload
+                .get("mismatch_reason_counts")
+                .and_then(Value::as_array)
+                .map(|items| items.iter().any(|item| {
+                    item.get("reason_code").and_then(Value::as_str)
+                        == Some("question_number_not_found_in_answers")
+                }))
+                .unwrap_or(false)
+        );
+        assert!(
+            bundle_alignment
+                .payload
+                .get("mismatch_reason_counts")
+                .and_then(Value::as_array)
+                .map(|items| items.iter().any(|item| {
+                    item.get("reason_code").and_then(Value::as_str)
+                        == Some("answer_number_not_found_in_questions")
+                }))
+                .unwrap_or(false)
+        );
+        assert!(
+            bundle_alignment
+                .payload
+                .get("unresolved_items")
+                .and_then(Value::as_array)
+                .map(|items| items.iter().any(|item| {
+                    item.get("item_type").and_then(Value::as_str) == Some("question")
+                        && item
+                            .get("reason_codes")
+                            .and_then(Value::as_array)
+                            .map(|codes| {
+                                codes.iter().any(|code| {
+                                    code.as_str() == Some("question_number_not_found_in_answers")
+                                })
                             })
-                        })
-                        .unwrap_or(false)
-            }))
-            .unwrap_or(false));
+                            .unwrap_or(false)
+                }))
+                .unwrap_or(false)
+        );
 
         let _ = fs::remove_dir_all(temp_dir);
     }
@@ -7359,9 +7385,11 @@ mod tests {
 
         assert_eq!(report.ocr_recovered_file_count, 1);
         assert!(report.extracted_question_block_count >= 1);
-        assert!(report
-            .detected_topics
-            .contains(&"algebraic expressions".to_string()));
+        assert!(
+            report
+                .detected_topics
+                .contains(&"algebraic expressions".to_string())
+        );
 
         let file_reconstruction = report
             .insights
@@ -7382,12 +7410,14 @@ mod tests {
                 .and_then(Value::as_str),
             Some("question_page")
         );
-        assert!(file_reconstruction
-            .payload
-            .pointer("/document_intelligence/question_units")
-            .and_then(Value::as_array)
-            .map(|items| items.len() >= 2)
-            .unwrap_or(false));
+        assert!(
+            file_reconstruction
+                .payload
+                .pointer("/document_intelligence/question_units")
+                .and_then(Value::as_array)
+                .map(|items| items.len() >= 2)
+                .unwrap_or(false)
+        );
 
         let _ = fs::remove_dir_all(temp_dir);
     }
@@ -7471,12 +7501,14 @@ mod tests {
                 .and_then(Value::as_str),
             Some("score_summary_page")
         );
-        assert!(file_reconstruction
-            .payload
-            .pointer("/document_intelligence/score_signals")
-            .and_then(Value::as_array)
-            .map(|items| items.len() >= 2)
-            .unwrap_or(false));
+        assert!(
+            file_reconstruction
+                .payload
+                .pointer("/document_intelligence/score_signals")
+                .and_then(Value::as_array)
+                .map(|items| items.len() >= 2)
+                .unwrap_or(false)
+        );
 
         let _ = fs::remove_dir_all(temp_dir);
     }
@@ -7516,57 +7548,64 @@ mod tests {
         assert!(report.score_signal_count >= 2);
         assert!(report.remark_signal_count >= 1);
         assert!(!report.needs_confirmation);
-        assert!(report
-            .detected_dates
-            .iter()
-            .any(|date| date.contains("March 2026")));
+        assert!(
+            report
+                .detected_dates
+                .iter()
+                .any(|date| date.contains("March 2026"))
+        );
         assert!(report.detected_topics.contains(&"algebra".to_string()));
-        assert!(report
-            .detected_topics
-            .contains(&"comprehension".to_string()));
+        assert!(
+            report
+                .detected_topics
+                .contains(&"comprehension".to_string())
+        );
         assert!(report.weakness_signals.contains(&"low_score".to_string()));
-        assert!(report
-            .recommended_actions
-            .contains(&"create_goal".to_string()));
-        assert!(report
-            .recommended_actions
-            .contains(&"notify_parent".to_string()));
+        assert!(
+            report
+                .recommended_actions
+                .contains(&"create_goal".to_string())
+        );
+        assert!(
+            report
+                .recommended_actions
+                .contains(&"notify_parent".to_string())
+        );
         assert_eq!(report.reconstruction_confidence_band, "high");
-        assert!(report
-            .coach_goal_signals
-            .iter()
-            .any(
-                |signal| signal.signal_key == "stabilize_detected_weaknesses"
-                    && signal.priority == "high"
-                    && signal
-                        .supporting_topics
-                        .iter()
-                        .any(|topic| topic == "algebra")
-            ));
-        assert!(report
-            .topic_action_summaries
-            .iter()
-            .any(|summary| summary.topic_label == "algebra"
+        assert!(report.coach_goal_signals.iter().any(|signal| {
+            signal.signal_key == "stabilize_detected_weaknesses"
+                && signal.priority == "high"
+                && signal
+                    .supporting_topics
+                    .iter()
+                    .any(|topic| topic == "algebra")
+        }));
+        assert!(report.topic_action_summaries.iter().any(|summary| {
+            summary.topic_label == "algebra"
                 && summary.priority == "high"
                 && summary
                     .recommended_actions
                     .iter()
-                    .any(|action| action == "create_goal")));
-        assert!(report
-            .follow_up_recommendations
-            .iter()
-            .any(
-                |recommendation| recommendation.recommendation_key == "open_priority_topic_goal"
+                    .any(|action| action == "create_goal")
+        }));
+        assert!(
+            report
+                .follow_up_recommendations
+                .iter()
+                .any(|recommendation| recommendation.recommendation_key
+                    == "open_priority_topic_goal"
                     && recommendation.audience == "coach"
-                    && recommendation.topic_label.as_deref() == Some("algebra")
-            ));
-        assert!(report
-            .follow_up_recommendations
-            .iter()
-            .any(|recommendation| recommendation.recommendation_key
-                == "complete_targeted_practice"
-                && recommendation.audience == "learner"
-                && recommendation.topic_label.as_deref() == Some("algebra")));
+                    && recommendation.topic_label.as_deref() == Some("algebra"))
+        );
+        assert!(
+            report
+                .follow_up_recommendations
+                .iter()
+                .any(|recommendation| recommendation.recommendation_key
+                    == "complete_targeted_practice"
+                    && recommendation.audience == "learner"
+                    && recommendation.topic_label.as_deref() == Some("algebra"))
+        );
 
         let file_reconstruction = report
             .insights
@@ -7623,24 +7662,29 @@ mod tests {
         let summary = summarize_bundle(&analyses, &[], 1);
 
         assert_eq!(summary.reconstruction_confidence_band, "low");
-        assert!(summary
-            .coach_goal_signals
-            .iter()
-            .any(
-                |signal| signal.signal_key == "alignment_confirmation" && signal.priority == "high"
-            ));
-        assert!(summary
-            .topic_action_summaries
-            .iter()
-            .any(|topic| topic.topic_label == "fractions"
-                && topic.priority == "high"
-                && topic.confidence_band == "low"));
-        assert!(summary
-            .follow_up_recommendations
-            .iter()
-            .any(|recommendation| recommendation.recommendation_key
-                == "verify_bundle_before_planning"
-                && recommendation.audience == "coach"));
+        assert!(
+            summary
+                .coach_goal_signals
+                .iter()
+                .any(|signal| signal.signal_key == "alignment_confirmation"
+                    && signal.priority == "high")
+        );
+        assert!(
+            summary
+                .topic_action_summaries
+                .iter()
+                .any(|topic| topic.topic_label == "fractions"
+                    && topic.priority == "high"
+                    && topic.confidence_band == "low")
+        );
+        assert!(
+            summary
+                .follow_up_recommendations
+                .iter()
+                .any(|recommendation| recommendation.recommendation_key
+                    == "verify_bundle_before_planning"
+                    && recommendation.audience == "coach")
+        );
     }
 
     #[test]
@@ -7727,35 +7771,40 @@ mod tests {
         let summary = summarize_bundle(&analyses, &[], 2);
 
         assert_eq!(summary.reconstruction_confidence_band, "high");
-        assert!(summary
-            .coach_goal_signals
-            .iter()
-            .any(
-                |signal| signal.signal_key == "convert_evidence_into_targeted_practice"
-                    && signal.priority == "high"
-            ));
-        assert!(summary
-            .topic_action_summaries
-            .iter()
-            .any(|topic| topic.topic_label == "algebra"
+        assert!(
+            summary
+                .coach_goal_signals
+                .iter()
+                .any(
+                    |signal| signal.signal_key == "convert_evidence_into_targeted_practice"
+                        && signal.priority == "high"
+                )
+        );
+        assert!(summary.topic_action_summaries.iter().any(|topic| {
+            topic.topic_label == "algebra"
                 && topic.priority == "high"
                 && topic
                     .recommended_actions
                     .iter()
-                    .any(|action| action == "build_personalized_test")));
-        assert!(summary
-            .follow_up_recommendations
-            .iter()
-            .any(|recommendation| recommendation.recommendation_key
-                == "complete_targeted_practice"
-                && recommendation.audience == "learner"
-                && recommendation.topic_label.as_deref() == Some("algebra")));
-        assert!(summary
-            .follow_up_recommendations
-            .iter()
-            .any(|recommendation| recommendation.recommendation_key
-                == "review_key_terms_before_retry"
-                && recommendation.audience == "learner"));
+                    .any(|action| action == "build_personalized_test")
+        }));
+        assert!(
+            summary
+                .follow_up_recommendations
+                .iter()
+                .any(|recommendation| recommendation.recommendation_key
+                    == "complete_targeted_practice"
+                    && recommendation.audience == "learner"
+                    && recommendation.topic_label.as_deref() == Some("algebra"))
+        );
+        assert!(
+            summary
+                .follow_up_recommendations
+                .iter()
+                .any(|recommendation| recommendation.recommendation_key
+                    == "review_key_terms_before_retry"
+                    && recommendation.audience == "learner")
+        );
     }
 
     fn seed_student(conn: &Connection) {

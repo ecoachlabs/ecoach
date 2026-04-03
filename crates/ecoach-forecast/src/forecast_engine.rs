@@ -102,10 +102,8 @@ impl<'a> ForecastEngine<'a> {
 
             let syllabus_priority = self.load_syllabus_priority(topic.topic_id)?;
 
-            let style_regime = self.compute_style_regime_fit(
-                &topic.question_formats,
-                &latest_year_formats,
-            );
+            let style_regime =
+                self.compute_style_regime_fit(&topic.question_formats, &latest_year_formats);
 
             let examiner_goal = self.compute_examiner_goal_fit(
                 &topic.cognitive_demands,
@@ -124,10 +122,8 @@ impl<'a> ForecastEngine<'a> {
                     .round() as i64,
             );
 
-            let uncertainty = UncertaintyBand::from_composite(
-                composite,
-                topic.years_present.len() as i64,
-            );
+            let uncertainty =
+                UncertaintyBand::from_composite(composite, topic.years_present.len() as i64);
 
             topic_scores.push(ForecastTopicScore {
                 topic_id: topic.topic_id,
@@ -155,8 +151,7 @@ impl<'a> ForecastEngine<'a> {
             .map(|(code, count)| ForecastFormatScore {
                 format_code: code.clone(),
                 probability_score: clamp_bp(
-                    ((*count as f64 / total_format_count.max(1) as f64) * 10_000.0).round()
-                        as i64,
+                    ((*count as f64 / total_format_count.max(1) as f64) * 10_000.0).round() as i64,
                 ),
             })
             .collect();
@@ -185,9 +180,15 @@ impl<'a> ForecastEngine<'a> {
         );
 
         // Persist
-        let snapshot_id =
-            self.persist_snapshot(subject_id, &profile, confidence, &topic_scores,
-                &format_distribution, &difficulty_distribution, &bundles)?;
+        let snapshot_id = self.persist_snapshot(
+            subject_id,
+            &profile,
+            confidence,
+            &topic_scores,
+            &format_distribution,
+            &difficulty_distribution,
+            &bundles,
+        )?;
 
         Ok(ForecastBlueprint {
             snapshot_id,
@@ -205,10 +206,7 @@ impl<'a> ForecastEngine<'a> {
     }
 
     /// Load the most recent forecast blueprint for a subject.
-    pub fn get_latest_blueprint(
-        &self,
-        subject_id: i64,
-    ) -> EcoachResult<Option<ForecastBlueprint>> {
+    pub fn get_latest_blueprint(&self, subject_id: i64) -> EcoachResult<Option<ForecastBlueprint>> {
         let row = self
             .conn
             .query_row(
@@ -234,7 +232,16 @@ impl<'a> ForecastEngine<'a> {
             .optional()
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let Some((snapshot_id, total_papers, year_start, year_end, blueprint_json, confidence, computed_at)) = row else {
+        let Some((
+            snapshot_id,
+            total_papers,
+            year_start,
+            year_end,
+            blueprint_json,
+            confidence,
+            computed_at,
+        )) = row
+        else {
             return Ok(None);
         };
 
@@ -262,12 +269,7 @@ impl<'a> ForecastEngine<'a> {
 
     /// Trend: is this topic appearing more or less frequently over time?
     /// Rising trend → high score. Declining → low score. Stable → mid.
-    fn compute_trend(
-        &self,
-        years_present: &[i64],
-        year_min: i64,
-        year_max: i64,
-    ) -> i64 {
+    fn compute_trend(&self, years_present: &[i64], year_min: i64, year_max: i64) -> i64 {
         if years_present.len() < 2 {
             return 5000; // neutral
         }
@@ -299,9 +301,10 @@ impl<'a> ForecastEngine<'a> {
         match result {
             Some((exam_w, importance_w)) => {
                 // Blend: 60% exam weight, 40% importance weight
-                Ok(clamp_bp(
-                    (0.60 * exam_w as f64 + 0.40 * importance_w as f64).round() as i64,
-                ) as i64)
+                Ok(
+                    clamp_bp((0.60 * exam_w as f64 + 0.40 * importance_w as f64).round() as i64)
+                        as i64,
+                )
             }
             None => Ok(5000), // neutral default
         }
@@ -652,8 +655,11 @@ mod tests {
     }
 
     fn seed_past_paper_data(conn: &Connection) {
-        conn.execute("INSERT INTO subjects (id, name) VALUES (1, 'Mathematics')", [])
-            .unwrap();
+        conn.execute(
+            "INSERT INTO subjects (id, name) VALUES (1, 'Mathematics')",
+            [],
+        )
+        .unwrap();
         conn.execute(
             "INSERT INTO topics (id, subject_id, name, node_type, exam_weight, importance_weight)
              VALUES (100, 1, 'Algebra', 'topic', 7000, 8000)",

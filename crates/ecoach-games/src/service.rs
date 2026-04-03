@@ -6,10 +6,13 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
 
 use crate::models::{
-    ContrastPairSummary, GameAnswerResult, GameLeaderboardEntry, GameSession, GameSummary,
-    GameType, MindstackState, StartGameInput, StartTrapsSessionInput, SubmitGameAnswerInput,
-    SubmitTrapConfusionReasonInput, SubmitTrapRoundInput, TrapChoiceOption, TrapRoundCard,
-    TrapRoundResult, TrapSessionReview, TrapSessionSnapshot, TrapsMode, TrapsState, TugOfWarState,
+    ContrastComparisonRow, ContrastConceptAttribute, ContrastDiagramAsset, ContrastModeItem,
+    ContrastPairProfile, ContrastPairSummary, DuelSession, GameAnswerResult,
+    GameLeaderboardEntry, GameSession, GameSummary, GameType, MindstackState, StartGameInput,
+    StartTrapsSessionInput, SubmitGameAnswerInput, SubmitTrapConfusionReasonInput,
+    SubmitTrapRoundInput, TrapChoiceOption, TrapMisconceptionReason, TrapRoundCard,
+    TrapRoundResult, TrapSessionReview, TrapSessionSnapshot, TrapsMode, TrapsState,
+    TugOfWarState,
 };
 
 const STREAK_BONUS_MULTIPLIER: f64 = 0.10;
@@ -60,6 +63,25 @@ fn map_game_session(row: &rusqlite::Row<'_>) -> rusqlite::Result<GameSession> {
     })
 }
 
+fn map_duel_session(row: &rusqlite::Row<'_>) -> rusqlite::Result<DuelSession> {
+    Ok(DuelSession {
+        id: row.get(0)?,
+        challenger_id: row.get(1)?,
+        opponent_id: row.get(2)?,
+        subject_id: row.get(3)?,
+        topic_id: row.get(4)?,
+        duel_type: row.get(5)?,
+        question_count: row.get(6)?,
+        time_limit_seconds: row.get(7)?,
+        challenger_score_bp: row.get(8)?,
+        opponent_score_bp: row.get(9)?,
+        winner_id: row.get(10)?,
+        status: row.get(11)?,
+        created_at: row.get(12)?,
+        completed_at: row.get(13)?,
+    })
+}
+
 fn map_stored_trap_round(row: &rusqlite::Row<'_>) -> rusqlite::Result<StoredTrapRound> {
     Ok(StoredTrapRound {
         id: row.get(0)?,
@@ -73,9 +95,11 @@ fn map_stored_trap_round(row: &rusqlite::Row<'_>) -> rusqlite::Result<StoredTrap
         correct_choice_code: row.get(8)?,
         correct_choice_label: row.get(9)?,
         explanation_text: row.get(10)?,
-        reveal_count: row.get(11)?,
-        max_reveal_count: row.get(12)?,
-        answered_at: row.get(13)?,
+        review_payload_json: row.get(11)?,
+        mode_item_id: row.get(12)?,
+        reveal_count: row.get(13)?,
+        max_reveal_count: row.get(14)?,
+        answered_at: row.get(15)?,
     })
 }
 
@@ -84,6 +108,10 @@ fn parse_json_value(raw: &str) -> EcoachResult<Value> {
 }
 
 fn parse_json_choices(raw: &str) -> EcoachResult<Vec<TrapChoiceOption>> {
+    serde_json::from_str(raw).map_err(|err| EcoachError::Serialization(err.to_string()))
+}
+
+fn parse_string_list(raw: &str) -> EcoachResult<Vec<String>> {
     serde_json::from_str(raw).map_err(|err| EcoachError::Serialization(err.to_string()))
 }
 
@@ -286,6 +314,83 @@ fn choice_label_for_code(options: &[TrapChoiceOption], code: &str) -> Option<Str
         .map(|option| option.label.clone())
 }
 
+fn atom_supports_mode(atom: &ContrastAtomContext, mode: &str) -> bool {
+    atom.item_forms.is_empty() || atom.item_forms.iter().any(|item| item == mode)
+}
+
+fn contrast_review_payload(
+    pair: &ContrastPairContext,
+    atom: &ContrastAtomContext,
+    correct_choice_code: &str,
+) -> Value {
+    let choice_label = similarity_choice_label(pair, correct_choice_code);
+    let why_correct = atom.review_payload["why_correct"]
+        .as_str()
+        .map(ToString::to_string)
+        .or_else(|| atom.explanation_text.clone())
+        .unwrap_or_else(|| {
+            format!(
+                "This clue belongs to {} because the decisive signal sits in the {} lane.",
+                choice_label, atom.lane
+            )
+        });
+    let why_other_wrong = atom.review_payload["why_other_wrong"]
+        .as_str()
+        .map(ToString::to_string)
+        .unwrap_or_else(|| match atom.ownership_type.as_str() {
+            "both" => format!(
+                "The clue applies to both {} and {}, so forcing it into one side would be wrong.",
+                pair.left_label, pair.right_label
+            ),
+            "neither" => format!(
+                "This is a trap statement, so it should not be accepted as a clean fit for {} or {}.",
+                pair.left_label, pair.right_label
+            ),
+            _ => format!(
+                "The competing concept misses the decisive {} clue in this prompt.",
+                atom.lane
+            ),
+        });
+    let missed_clue = atom.review_payload["missed_clue"]
+        .as_str()
+        .map(ToString::to_string)
+        .or_else(|| atom.trap_angle.clone())
+        .unwrap_or_else(|| {
+            format!(
+                "Watch the {} lane and the wording that points to {}.",
+                atom.lane, choice_label
+            )
+        });
+    let mut common_confusions = atom.review_payload["common_confusions"]
+        .as_array()
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|item| item.as_str().map(ToString::to_string))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    if common_confusions.is_empty() {
+        common_confusions.push(format!(
+            "Learners often blur {} and {} in the {} lane.",
+            pair.left_label, pair.right_label, atom.lane
+        ));
+        if let Some(trap_angle) = atom.trap_angle.clone() {
+            common_confusions.push(trap_angle);
+        }
+    }
+
+    json!({
+        "lane": atom.lane,
+        "ownership_type": atom.ownership_type,
+        "choice_label": choice_label,
+        "why_correct": why_correct,
+        "why_other_wrong": why_other_wrong,
+        "missed_clue": missed_clue,
+        "common_confusions": common_confusions,
+    })
+}
+
 fn build_difference_drill_rounds(
     pair: &ContrastPairContext,
     atoms: &[ContrastAtomContext],
@@ -293,7 +398,10 @@ fn build_difference_drill_rounds(
 ) -> EcoachResult<Vec<TrapRoundBlueprint>> {
     let candidates: Vec<&ContrastAtomContext> = atoms
         .iter()
-        .filter(|atom| matches!(atom.ownership_type.as_str(), "left_only" | "right_only"))
+        .filter(|atom| {
+            matches!(atom.ownership_type.as_str(), "left_only" | "right_only")
+                && atom_supports_mode(atom, TrapsMode::DifferenceDrill.as_str())
+        })
         .collect();
     if candidates.is_empty() {
         return Err(EcoachError::Validation(format!(
@@ -311,13 +419,18 @@ fn build_difference_drill_rounds(
             } else {
                 "right"
             };
+            let review_payload = contrast_review_payload(pair, atom, correct_choice_code);
             TrapRoundBlueprint {
+                mode_item_id: None,
                 atom_id: Some(atom.id),
                 lane: atom.lane.clone(),
                 prompt_text: atom.atom_text.clone(),
                 prompt_payload: json!({
                     "mode_family": "sorting",
+                    "prompt_type": if atom.diagram_capable { "diagram_card" } else { "text_card" },
                     "ownership_type": atom.ownership_type,
+                    "diagram_capable": atom.diagram_capable,
+                    "trap_angle": atom.trap_angle,
                 }),
                 answer_options: vec![
                     TrapChoiceOption {
@@ -336,6 +449,7 @@ fn build_difference_drill_rounds(
                     pair.right_label.clone()
                 },
                 explanation_text: contrast_explanation(pair, atom, correct_choice_code),
+                review_payload,
                 max_reveal_count: 1,
             }
         })
@@ -347,14 +461,18 @@ fn build_similarity_trap_rounds(
     atoms: &[ContrastAtomContext],
     round_count: usize,
 ) -> EcoachResult<Vec<TrapRoundBlueprint>> {
-    if atoms.is_empty() {
+    let candidates: Vec<&ContrastAtomContext> = atoms
+        .iter()
+        .filter(|atom| atom_supports_mode(atom, TrapsMode::SimilarityTrap.as_str()))
+        .collect();
+    if candidates.is_empty() {
         return Err(EcoachError::Validation(format!(
             "pair {} does not contain trap atoms",
             pair.title
         )));
     }
 
-    Ok(atoms
+    Ok(candidates
         .iter()
         .take(round_count)
         .map(|atom| {
@@ -364,13 +482,17 @@ fn build_similarity_trap_rounds(
                 "both" => BOTH_CHOICE_CODE,
                 _ => NEITHER_CHOICE_CODE,
             };
+            let review_payload = contrast_review_payload(pair, atom, correct_choice_code);
             TrapRoundBlueprint {
+                mode_item_id: None,
                 atom_id: Some(atom.id),
                 lane: atom.lane.clone(),
                 prompt_text: atom.atom_text.clone(),
                 prompt_payload: json!({
                     "mode_family": "overlap",
+                    "prompt_type": if atom.diagram_capable { "diagram_statement" } else { "statement_card" },
                     "ownership_type": atom.ownership_type,
+                    "trap_angle": atom.trap_angle,
                 }),
                 answer_options: vec![
                     TrapChoiceOption {
@@ -393,6 +515,7 @@ fn build_similarity_trap_rounds(
                 correct_choice_code: correct_choice_code.to_string(),
                 correct_choice_label: similarity_choice_label(pair, correct_choice_code),
                 explanation_text: contrast_explanation(pair, atom, correct_choice_code),
+                review_payload,
                 max_reveal_count: 1,
             }
         })
@@ -406,11 +529,17 @@ fn build_know_difference_rounds(
 ) -> EcoachResult<Vec<TrapRoundBlueprint>> {
     let left_atoms: Vec<&ContrastAtomContext> = atoms
         .iter()
-        .filter(|atom| atom.ownership_type == "left_only")
+        .filter(|atom| {
+            atom.ownership_type == "left_only"
+                && atom_supports_mode(atom, TrapsMode::KnowTheDifference.as_str())
+        })
         .collect();
     let right_atoms: Vec<&ContrastAtomContext> = atoms
         .iter()
-        .filter(|atom| atom.ownership_type == "right_only")
+        .filter(|atom| {
+            atom.ownership_type == "right_only"
+                && atom_supports_mode(atom, TrapsMode::KnowTheDifference.as_str())
+        })
         .collect();
     if left_atoms.is_empty() || right_atoms.is_empty() {
         return Err(EcoachError::Validation(format!(
@@ -418,8 +547,12 @@ fn build_know_difference_rounds(
             pair.title
         )));
     }
-    let both_atom = atoms.iter().find(|atom| atom.ownership_type == "both");
-    let neither_atom = atoms.iter().find(|atom| atom.ownership_type == "neither");
+    let both_atom = atoms.iter().find(|atom| {
+        atom.ownership_type == "both" && atom_supports_mode(atom, TrapsMode::KnowTheDifference.as_str())
+    });
+    let neither_atom = atoms.iter().find(|atom| {
+        atom.ownership_type == "neither" && atom_supports_mode(atom, TrapsMode::KnowTheDifference.as_str())
+    });
 
     let mut rounds = Vec::new();
     for index in 0..round_count {
@@ -469,8 +602,11 @@ fn build_know_difference_rounds(
             .find(|choice| choice.label == correct_atom.atom_text)
             .map(|choice| choice.code.clone())
             .unwrap_or_else(|| "A".to_string());
+        let focus_code = if focus_left { "left" } else { "right" };
+        let review_payload = contrast_review_payload(pair, correct_atom, focus_code);
 
         rounds.push(TrapRoundBlueprint {
+            mode_item_id: None,
             atom_id: Some(correct_atom.id),
             lane: correct_atom.lane.clone(),
             prompt_text: format!(
@@ -486,15 +622,17 @@ fn build_know_difference_rounds(
                     &pair.left_label
                 }
             ),
-            prompt_payload: json!({ "focus": if focus_left { "left" } else { "right" } }),
+            prompt_payload: json!({
+                "prompt_type": "comparison_prompt",
+                "focus": if focus_left { "left" } else { "right" },
+                "compare_label": correct_atom.lane,
+                "decisive_clue": review_payload["missed_clue"],
+            }),
             answer_options: choices,
             correct_choice_code,
             correct_choice_label: correct_atom.atom_text.clone(),
-            explanation_text: contrast_explanation(
-                pair,
-                correct_atom,
-                if focus_left { "left" } else { "right" },
-            ),
+            explanation_text: contrast_explanation(pair, correct_atom, focus_code),
+            review_payload,
             max_reveal_count: 1,
         });
     }
@@ -511,13 +649,17 @@ fn build_which_is_which_rounds(
         .iter()
         .filter(|atom| {
             matches!(atom.ownership_type.as_str(), "left_only" | "right_only")
+                && atom_supports_mode(atom, TrapsMode::WhichIsWhich.as_str())
                 && atom.is_speed_ready
         })
         .collect();
     if candidates.is_empty() {
         candidates = atoms
             .iter()
-            .filter(|atom| matches!(atom.ownership_type.as_str(), "left_only" | "right_only"))
+            .filter(|atom| {
+                matches!(atom.ownership_type.as_str(), "left_only" | "right_only")
+                    && atom_supports_mode(atom, TrapsMode::WhichIsWhich.as_str())
+            })
             .collect();
     }
     if candidates.is_empty() {
@@ -536,13 +678,17 @@ fn build_which_is_which_rounds(
             } else {
                 "right"
             };
+            let review_payload = contrast_review_payload(pair, atom, correct_choice_code);
             TrapRoundBlueprint {
+                mode_item_id: None,
                 atom_id: Some(atom.id),
                 lane: atom.lane.clone(),
                 prompt_text: atom.atom_text.clone(),
                 prompt_payload: json!({
                     "mode_family": "rapid_recognition",
+                    "prompt_type": if atom.diagram_capable { "mini_diagram" } else { "phrase_fragment" },
                     "speed_ready": atom.is_speed_ready,
+                    "diagram_capable": atom.diagram_capable,
                 }),
                 answer_options: vec![
                     TrapChoiceOption {
@@ -561,6 +707,7 @@ fn build_which_is_which_rounds(
                     pair.right_label.clone()
                 },
                 explanation_text: contrast_explanation(pair, atom, correct_choice_code),
+                review_payload,
                 max_reveal_count: 1,
             }
         })
@@ -574,11 +721,17 @@ fn build_unmask_rounds(
 ) -> EcoachResult<Vec<TrapRoundBlueprint>> {
     let left_atoms: Vec<&ContrastAtomContext> = atoms
         .iter()
-        .filter(|atom| atom.ownership_type == "left_only")
+        .filter(|atom| {
+            atom.ownership_type == "left_only"
+                && atom_supports_mode(atom, TrapsMode::Unmask.as_str())
+        })
         .collect();
     let right_atoms: Vec<&ContrastAtomContext> = atoms
         .iter()
-        .filter(|atom| atom.ownership_type == "right_only")
+        .filter(|atom| {
+            atom.ownership_type == "right_only"
+                && atom_supports_mode(atom, TrapsMode::Unmask.as_str())
+        })
         .collect();
     if left_atoms.is_empty() || right_atoms.is_empty() {
         return Err(EcoachError::Validation(format!(
@@ -602,11 +755,18 @@ fn build_unmask_rounds(
             .map(|atom| atom.atom_text.clone())
             .collect::<Vec<_>>();
         let payload = json!({
+            "prompt_type": "clue_ladder",
             "clues": clues,
             "target": if target_left { "left" } else { "right" },
         });
+        let review_payload = contrast_review_payload(
+            pair,
+            lead_atom,
+            if target_left { "left" } else { "right" },
+        );
 
         rounds.push(TrapRoundBlueprint {
+            mode_item_id: None,
             atom_id: Some(lead_atom.id),
             lane: lead_atom.lane.clone(),
             prompt_text: "Identify the concept before all the clues are revealed.".to_string(),
@@ -632,6 +792,7 @@ fn build_unmask_rounds(
                 lead_atom,
                 if target_left { "left" } else { "right" },
             ),
+            review_payload,
             max_reveal_count: clues_len_from_payload(&payload).max(1),
         });
     }
@@ -666,19 +827,14 @@ fn contrast_explanation(
     atom: &ContrastAtomContext,
     correct_choice_code: &str,
 ) -> String {
-    let base = atom
-        .explanation_text
-        .clone()
-        .unwrap_or_else(|| atom.atom_text.clone());
-    let choice_label = similarity_choice_label(pair, correct_choice_code);
-    if let Some(summary) = &pair.summary_text {
-        format!(
-            "{} {} This clue belongs to {}.",
-            base, summary, choice_label
-        )
-    } else {
-        format!("{} This clue belongs to {}.", base, choice_label)
-    }
+    let review_payload = contrast_review_payload(pair, atom, correct_choice_code);
+    format!(
+        "{} {}",
+        review_payload["why_correct"].as_str().unwrap_or_default(),
+        review_payload["why_other_wrong"].as_str().unwrap_or_default()
+    )
+    .trim()
+    .to_string()
 }
 
 fn clues_len_from_payload(payload: &Value) -> i64 {
@@ -1116,6 +1272,59 @@ mod tests {
         assert!(last_result.session_complete);
     }
 
+    #[test]
+    fn duel_session_lifecycle_round_trips_through_storage() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+        let identity = IdentityService::new(&conn);
+        let challenger = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Ama".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("challenger should be created");
+        let opponent = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Kojo".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("opponent should be created");
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        let service = GamesService::new(&conn);
+
+        let duel = service
+            .create_duel_session(
+                challenger.id,
+                Some(opponent.id),
+                subject_id,
+                Some(topic_id),
+                "topic_duel",
+                8,
+                Some(180),
+            )
+            .expect("duel should be created");
+        assert_eq!(duel.status, "pending");
+        assert_eq!(duel.question_count, 8);
+
+        let listed = service
+            .list_duel_sessions(challenger.id)
+            .expect("duel sessions should list");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].id, duel.id);
+
+        let completed = service
+            .record_duel_outcome(duel.id, 7_800, 6_200, Some(challenger.id))
+            .expect("duel outcome should record");
+        assert_eq!(completed.status, "completed");
+        assert_eq!(completed.winner_id, Some(challenger.id));
+        assert_eq!(completed.challenger_score_bp, Some(7_800));
+        assert_eq!(completed.opponent_score_bp, Some(6_200));
+    }
+
     fn open_test_database() -> Connection {
         let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
         run_runtime_migrations(&mut conn).expect("migrations should apply");
@@ -1187,11 +1396,16 @@ struct ContrastAtomContext {
     atom_text: String,
     lane: String,
     explanation_text: Option<String>,
+    item_forms: Vec<String>,
+    diagram_capable: bool,
+    trap_angle: Option<String>,
+    review_payload: Value,
     is_speed_ready: bool,
 }
 
 #[derive(Debug, Clone)]
 struct TrapRoundBlueprint {
+    mode_item_id: Option<i64>,
     atom_id: Option<i64>,
     lane: String,
     prompt_text: String,
@@ -1200,6 +1414,7 @@ struct TrapRoundBlueprint {
     correct_choice_code: String,
     correct_choice_label: String,
     explanation_text: String,
+    review_payload: Value,
     max_reveal_count: i64,
 }
 
@@ -1250,9 +1465,45 @@ struct StoredTrapRound {
     correct_choice_code: String,
     correct_choice_label: String,
     explanation_text: String,
+    review_payload_json: String,
+    mode_item_id: Option<i64>,
     reveal_count: i64,
     max_reveal_count: i64,
     answered_at: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct StoredContrastModeItem {
+    id: i64,
+    pair_id: i64,
+    mode: String,
+    source_atom_id: Option<i64>,
+    comparison_row_id: Option<i64>,
+    diagram_asset_id: Option<i64>,
+    prompt_type: String,
+    prompt_text: String,
+    prompt_payload: Value,
+    answer_options: Vec<TrapChoiceOption>,
+    correct_choice_code: Option<String>,
+    correct_choice_label: Option<String>,
+    difficulty_score: BasisPoints,
+    time_limit_seconds: Option<i64>,
+    explanation_bundle: Value,
+    misconception_reason_codes: Vec<String>,
+    is_active: bool,
+    display_order: i64,
+}
+
+#[derive(Debug, Clone)]
+struct StoredContrastPairProfileRow {
+    left_profile: Value,
+    right_profile: Value,
+    shared_traits: Vec<String>,
+    decisive_differences: Vec<String>,
+    common_confusions: Vec<String>,
+    trap_angles: Vec<String>,
+    coverage: Value,
+    generator_contract: Value,
 }
 
 pub struct GamesService<'a> {
@@ -1262,6 +1513,135 @@ pub struct GamesService<'a> {
 impl<'a> GamesService<'a> {
     pub fn new(conn: &'a Connection) -> Self {
         Self { conn }
+    }
+
+    pub fn create_duel_session(
+        &self,
+        challenger_id: i64,
+        opponent_id: Option<i64>,
+        subject_id: i64,
+        topic_id: Option<i64>,
+        duel_type: &str,
+        question_count: usize,
+        time_limit_seconds: Option<i64>,
+    ) -> EcoachResult<DuelSession> {
+        validate_duel_type(duel_type)?;
+        let question_count = question_count.max(1) as i64;
+        self.conn
+            .execute(
+                "INSERT INTO duel_sessions (
+                    challenger_id, opponent_id, subject_id, topic_id, duel_type,
+                    question_count, time_limit_seconds, status
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'pending')",
+                params![
+                    challenger_id,
+                    opponent_id,
+                    subject_id,
+                    topic_id,
+                    duel_type,
+                    question_count,
+                    time_limit_seconds,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let duel_session_id = self.conn.last_insert_rowid();
+        self.append_event(
+            "duel",
+            DomainEvent::new(
+                "duel.session_created",
+                duel_session_id.to_string(),
+                json!({
+                    "challenger_id": challenger_id,
+                    "opponent_id": opponent_id,
+                    "subject_id": subject_id,
+                    "topic_id": topic_id,
+                    "duel_type": duel_type,
+                    "question_count": question_count,
+                    "time_limit_seconds": time_limit_seconds,
+                }),
+            ),
+        )?;
+        self.get_duel_session(duel_session_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("duel session {} not found", duel_session_id))
+        })
+    }
+
+    pub fn list_duel_sessions(&self, student_id: i64) -> EcoachResult<Vec<DuelSession>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, challenger_id, opponent_id, subject_id, topic_id, duel_type,
+                        question_count, time_limit_seconds, challenger_score_bp,
+                        opponent_score_bp, winner_id, status, created_at, completed_at
+                 FROM duel_sessions
+                 WHERE challenger_id = ?1 OR opponent_id = ?1
+                 ORDER BY created_at DESC, id DESC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([student_id], map_duel_session)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(out)
+    }
+
+    pub fn record_duel_outcome(
+        &self,
+        duel_session_id: i64,
+        challenger_score_bp: BasisPoints,
+        opponent_score_bp: BasisPoints,
+        winner_id: Option<i64>,
+    ) -> EcoachResult<DuelSession> {
+        let duel_session = self.get_duel_session(duel_session_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("duel session {} not found", duel_session_id))
+        })?;
+        if let Some(winner_id) = winner_id {
+            if winner_id != duel_session.challenger_id
+                && Some(winner_id) != duel_session.opponent_id
+            {
+                return Err(EcoachError::Validation(format!(
+                    "winner {} does not belong to duel {}",
+                    winner_id, duel_session_id
+                )));
+            }
+        }
+        let completed_at = Utc::now().to_rfc3339();
+        self.conn
+            .execute(
+                "UPDATE duel_sessions
+                 SET challenger_score_bp = ?1,
+                     opponent_score_bp = ?2,
+                     winner_id = ?3,
+                     status = 'completed',
+                     completed_at = ?4
+                 WHERE id = ?5",
+                params![
+                    challenger_score_bp,
+                    opponent_score_bp,
+                    winner_id,
+                    completed_at,
+                    duel_session_id,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.append_event(
+            "duel",
+            DomainEvent::new(
+                "duel.session_completed",
+                duel_session_id.to_string(),
+                json!({
+                    "challenger_score_bp": challenger_score_bp,
+                    "opponent_score_bp": opponent_score_bp,
+                    "winner_id": winner_id,
+                }),
+            ),
+        )?;
+        self.get_duel_session(duel_session_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("duel session {} not found", duel_session_id))
+        })
     }
 
     pub fn start_game_session(&self, input: &StartGameInput) -> EcoachResult<GameSession> {
@@ -1535,6 +1915,113 @@ impl<'a> GamesService<'a> {
             .collect())
     }
 
+    pub fn get_contrast_pair_profile(
+        &self,
+        student_id: i64,
+        pair_id: i64,
+    ) -> EcoachResult<ContrastPairProfile> {
+        let pair = self
+            .load_contrast_pairs(student_id, 0)?
+            .into_iter()
+            .find(|candidate| candidate.id == pair_id)
+            .or_else(|| self.load_contrast_pair_context(pair_id).ok())
+            .ok_or_else(|| EcoachError::NotFound(format!("contrast pair {} not found", pair_id)))?;
+
+        let summary = ContrastPairSummary {
+            pair_id: pair.id,
+            pair_code: pair.pair_code.clone(),
+            title: pair.title.clone(),
+            left_label: pair.left_label.clone(),
+            right_label: pair.right_label.clone(),
+            summary_text: pair.summary_text.clone(),
+            trap_strength: pair.trap_strength,
+            difficulty_score: pair.difficulty_score,
+            confusion_score: pair.confusion_score,
+            last_accuracy_bp: pair.last_accuracy_bp,
+            recommended_mode: pair.recommended_mode.clone(),
+            available_modes: vec![
+                TrapsMode::DifferenceDrill.as_str().to_string(),
+                TrapsMode::SimilarityTrap.as_str().to_string(),
+                TrapsMode::KnowTheDifference.as_str().to_string(),
+                TrapsMode::WhichIsWhich.as_str().to_string(),
+                TrapsMode::Unmask.as_str().to_string(),
+            ],
+        };
+        let concept_attributes = self.load_contrast_concept_attributes(pair_id)?;
+        let comparison_rows = self.load_contrast_comparison_rows(pair_id)?;
+        let diagram_assets = self.load_contrast_diagram_assets(pair_id)?;
+        let mode_items = self.load_contrast_mode_items(pair_id, "")?;
+        let profile_row = self.load_contrast_pair_profile_row(pair_id)?;
+        let shared_traits = profile_row
+            .as_ref()
+            .map(|profile| profile.shared_traits.clone())
+            .unwrap_or_else(|| self.derive_shared_traits(pair_id));
+        let decisive_differences = profile_row
+            .as_ref()
+            .map(|profile| profile.decisive_differences.clone())
+            .unwrap_or_else(|| self.derive_decisive_differences(pair_id));
+        let common_confusions = profile_row
+            .as_ref()
+            .map(|profile| profile.common_confusions.clone())
+            .unwrap_or_else(|| self.derive_common_confusions(pair_id));
+        let trap_angles = profile_row
+            .as_ref()
+            .map(|profile| profile.trap_angles.clone())
+            .unwrap_or_else(|| self.derive_trap_angles(pair_id));
+        let coverage = profile_row
+            .as_ref()
+            .map(|profile| profile.coverage.clone())
+            .unwrap_or_else(|| self.derive_contrast_coverage(pair_id));
+
+        Ok(ContrastPairProfile {
+            pair_summary: summary,
+            left_profile: profile_row
+                .as_ref()
+                .map(|profile| profile.left_profile.clone())
+                .unwrap_or_else(|| {
+                    json!({
+                        "label": pair.left_label,
+                        "summary_text": pair.summary_text,
+                    })
+                }),
+            right_profile: profile_row
+                .as_ref()
+                .map(|profile| profile.right_profile.clone())
+                .unwrap_or_else(|| {
+                    json!({
+                        "label": pair.right_label,
+                        "summary_text": pair.summary_text,
+                    })
+                }),
+            shared_traits,
+            decisive_differences,
+            common_confusions,
+            trap_angles,
+            coverage,
+            generator_contract: profile_row
+                .map(|profile| profile.generator_contract)
+                .unwrap_or_else(|| json!({})),
+            concept_attributes,
+            comparison_rows,
+            diagram_assets,
+            mode_items,
+        })
+    }
+
+    pub fn list_trap_misconception_reasons(
+        &self,
+        mode: Option<&str>,
+    ) -> EcoachResult<Vec<TrapMisconceptionReason>> {
+        let reasons = self.load_trap_misconception_reasons()?;
+        Ok(match mode {
+            Some(mode_code) if !mode_code.trim().is_empty() => reasons
+                .into_iter()
+                .filter(|reason| reason.modes.iter().any(|item| item == mode_code))
+                .collect(),
+            _ => reasons,
+        })
+    }
+
     pub fn start_traps_session(
         &self,
         input: &StartTrapsSessionInput,
@@ -1545,9 +2032,14 @@ impl<'a> GamesService<'a> {
             &input.topic_ids,
             input.pair_id,
         )?;
-        let atoms = self.load_contrast_atoms(pair.id)?;
-        let rounds =
-            self.build_traps_rounds(input.mode, &pair, &atoms, input.round_count.max(4))?;
+        let requested_rounds = input.round_count.max(4);
+        let stored_mode_items = self.load_contrast_mode_items(pair.id, input.mode.as_str())?;
+        let rounds = if !stored_mode_items.is_empty() {
+            self.mode_item_blueprints(&stored_mode_items, requested_rounds)?
+        } else {
+            let atoms = self.load_contrast_atoms(pair.id)?;
+            self.build_traps_rounds(input.mode, &pair, &atoms, requested_rounds)?
+        };
         if rounds.is_empty() {
             return Err(EcoachError::Validation(
                 "no traps rounds could be generated for the selected pair".to_string(),
@@ -1594,14 +2086,15 @@ impl<'a> GamesService<'a> {
             self.conn
                 .execute(
                     "INSERT INTO traps_rounds (
-                        game_session_id, pair_id, atom_id, round_number, mode, lane, prompt_text,
-                        prompt_payload_json, options_json, correct_choice_code, correct_choice_label,
-                        explanation_text, max_reveal_count
-                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                        game_session_id, pair_id, atom_id, mode_item_id, round_number, mode, lane,
+                        prompt_text, prompt_payload_json, options_json, correct_choice_code,
+                        correct_choice_label, explanation_text, review_payload_json, max_reveal_count
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
                     params![
                         session_id,
                         pair.id,
                         round.atom_id,
+                        round.mode_item_id,
                         (index + 1) as i64,
                         input.mode.as_str(),
                         round.lane,
@@ -1613,6 +2106,8 @@ impl<'a> GamesService<'a> {
                         round.correct_choice_code,
                         round.correct_choice_label,
                         round.explanation_text,
+                        serde_json::to_string(&round.review_payload)
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
                         round.max_reveal_count,
                     ],
                 )
@@ -1958,6 +2453,7 @@ impl<'a> GamesService<'a> {
             correct_choice_code: round.correct_choice_code,
             correct_choice_label: round.correct_choice_label,
             explanation_text: round.explanation_text,
+            review_payload: parse_json_value(&round.review_payload_json)?,
             confusion_signal,
             next_round_id,
         })
@@ -2101,7 +2597,7 @@ impl<'a> GamesService<'a> {
                 "SELECT round_number, mode, lane, prompt_text, prompt_payload_json, reveal_count,
                         correct_choice_label, selected_choice_label, COALESCE(is_correct, 0),
                         timed_out, response_time_ms, confusion_reason_code, confusion_reason_text,
-                        explanation_text, id
+                        explanation_text, review_payload_json, id
                  FROM traps_rounds
                  WHERE game_session_id = ?1
                  ORDER BY round_number ASC",
@@ -2125,7 +2621,8 @@ impl<'a> GamesService<'a> {
                     row.get::<_, Option<String>>(11)?,
                     row.get::<_, Option<String>>(12)?,
                     row.get::<_, String>(13)?,
-                    row.get::<_, i64>(14)?,
+                    row.get::<_, String>(14)?,
+                    row.get::<_, i64>(15)?,
                 ))
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -2150,6 +2647,7 @@ impl<'a> GamesService<'a> {
                 confusion_reason_code,
                 confusion_reason_text,
                 explanation_text,
+                review_payload_json,
                 round_id,
             ) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
             total += 1;
@@ -2176,6 +2674,7 @@ impl<'a> GamesService<'a> {
                 confusion_reason_code,
                 confusion_reason_text,
                 explanation_text,
+                review_payload: parse_json_value(&review_payload_json)?,
             });
         }
 
@@ -2582,7 +3081,7 @@ impl<'a> GamesService<'a> {
                  INNER JOIN knowledge_entries rk ON rk.id = cp.right_entry_id
                  LEFT JOIN student_contrast_states scs
                     ON scs.student_id = ?1 AND scs.pair_id = cp.id
-                 WHERE cp.subject_id = ?2
+                 WHERE (?2 = 0 OR cp.subject_id = ?2)
                  ORDER BY COALESCE(scs.confusion_score, cp.trap_strength) DESC,
                           cp.trap_strength DESC,
                           cp.id ASC",
@@ -2628,7 +3127,8 @@ impl<'a> GamesService<'a> {
             .conn
             .prepare(
                 "SELECT id, ownership_type, atom_text, lane, explanation_text,
-                        difficulty_score, is_speed_ready, reveal_order
+                        difficulty_score, is_speed_ready, reveal_order, item_forms_json,
+                        diagram_capable, trap_angle, review_payload_json
                  FROM contrast_evidence_atoms
                  WHERE pair_id = ?1
                  ORDER BY reveal_order ASC, difficulty_score ASC, id ASC",
@@ -2637,12 +3137,18 @@ impl<'a> GamesService<'a> {
 
         let rows = statement
             .query_map([pair_id], |row| {
+                let item_forms_json: String = row.get(8)?;
+                let review_payload_json: String = row.get(11)?;
                 Ok(ContrastAtomContext {
                     id: row.get(0)?,
                     ownership_type: row.get(1)?,
                     atom_text: row.get(2)?,
                     lane: row.get(3)?,
                     explanation_text: row.get(4)?,
+                    item_forms: serde_json::from_str(&item_forms_json).unwrap_or_default(),
+                    diagram_capable: row.get::<_, i64>(9)? == 1,
+                    trap_angle: row.get(10)?,
+                    review_payload: serde_json::from_str(&review_payload_json).unwrap_or_else(|_| json!({})),
                     is_speed_ready: row.get::<_, i64>(6)? == 1,
                 })
             })
@@ -2655,6 +3161,416 @@ impl<'a> GamesService<'a> {
         Ok(atoms)
     }
 
+    fn mode_item_blueprints(
+        &self,
+        items: &[ContrastModeItem],
+        round_count: usize,
+    ) -> EcoachResult<Vec<TrapRoundBlueprint>> {
+        if items.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        (0..round_count)
+            .map(|index| {
+                let item = &items[index % items.len()];
+                let correct_choice_code = item.correct_choice_code.clone().ok_or_else(|| {
+                    EcoachError::Validation(format!(
+                        "contrast mode item {} is missing correct_choice_code",
+                        item.id
+                    ))
+                })?;
+                let correct_choice_label = item.correct_choice_label.clone().ok_or_else(|| {
+                    EcoachError::Validation(format!(
+                        "contrast mode item {} is missing correct_choice_label",
+                        item.id
+                    ))
+                })?;
+                Ok(TrapRoundBlueprint {
+                    mode_item_id: Some(item.id),
+                    atom_id: item.source_atom_id,
+                    lane: item
+                        .prompt_payload
+                        .get("lane")
+                        .and_then(|value| value.as_str())
+                        .map(ToString::to_string)
+                        .unwrap_or_else(|| "feature".to_string()),
+                    prompt_text: item.prompt_text.clone(),
+                    prompt_payload: item.prompt_payload.clone(),
+                    answer_options: item.answer_options.clone(),
+                    correct_choice_code,
+                    correct_choice_label,
+                    explanation_text: item
+                        .explanation_bundle
+                        .get("why_correct")
+                        .and_then(|value| value.as_str())
+                        .map(ToString::to_string)
+                        .unwrap_or_else(|| item.prompt_text.clone()),
+                    review_payload: item.explanation_bundle.clone(),
+                    max_reveal_count: item
+                        .prompt_payload
+                        .get("clues")
+                        .and_then(|value| value.as_array())
+                        .map(|items| items.len() as i64)
+                        .unwrap_or(1)
+                        .max(1),
+                })
+            })
+            .collect()
+    }
+
+    fn load_contrast_pair_context(&self, pair_id: i64) -> EcoachResult<ContrastPairContext> {
+        self.conn
+            .query_row(
+                "SELECT cp.id, cp.pair_code, cp.title, cp.subject_id, cp.topic_id,
+                        COALESCE(cp.left_label, left_entry.title),
+                        COALESCE(cp.right_label, right_entry.title),
+                        cp.summary_text, cp.trap_strength, cp.difficulty_score
+                 FROM contrast_pairs cp
+                 LEFT JOIN knowledge_entries left_entry ON left_entry.id = cp.left_entry_id
+                 LEFT JOIN knowledge_entries right_entry ON right_entry.id = cp.right_entry_id
+                 WHERE cp.id = ?1",
+                [pair_id],
+                |row| {
+                    Ok(ContrastPairContext {
+                        id: row.get(0)?,
+                        pair_code: row.get(1)?,
+                        title: row.get(2)?,
+                        topic_id: row.get(4)?,
+                        left_label: row.get(5)?,
+                        right_label: row.get(6)?,
+                        summary_text: row.get(7)?,
+                        trap_strength: clamp_bp(row.get::<_, i64>(8)?),
+                        difficulty_score: clamp_bp(row.get::<_, i64>(9)?),
+                        confusion_score: clamp_bp(row.get::<_, i64>(8)?),
+                        last_accuracy_bp: 0,
+                        recommended_mode: TrapsMode::DifferenceDrill.as_str().to_string(),
+                    })
+                },
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_contrast_pair_profile_row(
+        &self,
+        pair_id: i64,
+    ) -> EcoachResult<Option<StoredContrastPairProfileRow>> {
+        self.conn
+            .query_row(
+                "SELECT left_profile_json, right_profile_json, shared_traits_json,
+                        decisive_differences_json, common_confusions_json, trap_angles_json,
+                        coverage_json, generator_contract_json
+                 FROM contrast_pair_profiles
+                 WHERE pair_id = ?1",
+                [pair_id],
+                |row| {
+                    let left_profile_json: String = row.get(0)?;
+                    let right_profile_json: String = row.get(1)?;
+                    let shared_traits_json: String = row.get(2)?;
+                    let decisive_differences_json: String = row.get(3)?;
+                    let common_confusions_json: String = row.get(4)?;
+                    let trap_angles_json: String = row.get(5)?;
+                    let coverage_json: String = row.get(6)?;
+                    let generator_contract_json: String = row.get(7)?;
+                    Ok(StoredContrastPairProfileRow {
+                        left_profile: serde_json::from_str(&left_profile_json)
+                            .unwrap_or_else(|_| json!({})),
+                        right_profile: serde_json::from_str(&right_profile_json)
+                            .unwrap_or_else(|_| json!({})),
+                        shared_traits: serde_json::from_str(&shared_traits_json).unwrap_or_default(),
+                        decisive_differences: serde_json::from_str(&decisive_differences_json)
+                            .unwrap_or_default(),
+                        common_confusions: serde_json::from_str(&common_confusions_json)
+                            .unwrap_or_default(),
+                        trap_angles: serde_json::from_str(&trap_angles_json).unwrap_or_default(),
+                        coverage: serde_json::from_str(&coverage_json).unwrap_or_else(|_| json!({})),
+                        generator_contract: serde_json::from_str(&generator_contract_json)
+                            .unwrap_or_else(|_| json!({})),
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn load_contrast_concept_attributes(
+        &self,
+        pair_id: i64,
+    ) -> EcoachResult<Vec<ContrastConceptAttribute>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, pair_id, concept_side, lane, attribute_label, attribute_value,
+                        importance_weight_bp, difficulty_score, source_confidence_bp
+                 FROM contrast_concept_attributes
+                 WHERE pair_id = ?1
+                 ORDER BY concept_side ASC, lane ASC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([pair_id], |row| {
+                Ok(ContrastConceptAttribute {
+                    id: row.get(0)?,
+                    pair_id: row.get(1)?,
+                    concept_side: row.get(2)?,
+                    lane: row.get(3)?,
+                    attribute_label: row.get(4)?,
+                    attribute_value: row.get(5)?,
+                    importance_weight_bp: clamp_bp(row.get::<_, i64>(6)?),
+                    difficulty_score: clamp_bp(row.get::<_, i64>(7)?),
+                    source_confidence_bp: clamp_bp(row.get::<_, i64>(8)?),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut attributes = Vec::new();
+        for row in rows {
+            attributes.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(attributes)
+    }
+
+    fn load_contrast_comparison_rows(
+        &self,
+        pair_id: i64,
+    ) -> EcoachResult<Vec<ContrastComparisonRow>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, pair_id, lane, compare_label, left_value, right_value,
+                        overlap_note, decisive_clue, teaching_note, diagram_asset_id,
+                        display_order
+                 FROM contrast_comparison_rows
+                 WHERE pair_id = ?1
+                 ORDER BY display_order ASC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([pair_id], |row| {
+                Ok(ContrastComparisonRow {
+                    id: row.get(0)?,
+                    pair_id: row.get(1)?,
+                    lane: row.get(2)?,
+                    compare_label: row.get(3)?,
+                    left_value: row.get(4)?,
+                    right_value: row.get(5)?,
+                    overlap_note: row.get(6)?,
+                    decisive_clue: row.get(7)?,
+                    teaching_note: row.get(8)?,
+                    diagram_asset_id: row.get(9)?,
+                    display_order: row.get(10)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut rows_out = Vec::new();
+        for row in rows {
+            rows_out.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(rows_out)
+    }
+    fn load_contrast_diagram_assets(
+        &self,
+        pair_id: i64,
+    ) -> EcoachResult<Vec<ContrastDiagramAsset>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, pair_id, concept_side, lane, diagram_type, asset_ref,
+                        prompt_payload_json, visual_clues_json, decisive_visual_clue,
+                        trap_potential, usable_modes_json
+                 FROM contrast_diagram_assets
+                 WHERE pair_id = ?1
+                 ORDER BY id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([pair_id], |row| {
+                let prompt_payload_json: String = row.get(6)?;
+                let visual_clues_json: String = row.get(7)?;
+                let usable_modes_json: String = row.get(10)?;
+                Ok(ContrastDiagramAsset {
+                    id: row.get(0)?,
+                    pair_id: row.get(1)?,
+                    concept_side: row.get(2)?,
+                    lane: row.get(3)?,
+                    diagram_type: row.get(4)?,
+                    asset_ref: row.get(5)?,
+                    prompt_payload: serde_json::from_str(&prompt_payload_json)
+                        .unwrap_or_else(|_| json!({})),
+                    visual_clues: serde_json::from_str(&visual_clues_json).unwrap_or_default(),
+                    decisive_visual_clue: row.get(8)?,
+                    trap_potential: row.get(9)?,
+                    usable_modes: serde_json::from_str(&usable_modes_json).unwrap_or_default(),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut assets = Vec::new();
+        for row in rows {
+            assets.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(assets)
+    }
+
+    fn load_contrast_mode_items(
+        &self,
+        pair_id: i64,
+        mode: &str,
+    ) -> EcoachResult<Vec<ContrastModeItem>> {
+        let mut sql = "SELECT id, pair_id, mode, source_atom_id, comparison_row_id, diagram_asset_id,
+                              prompt_type, prompt_text, prompt_payload_json, options_json,
+                              correct_choice_code, correct_choice_label, difficulty_score,
+                              time_limit_seconds, explanation_bundle_json,
+                              misconception_reason_codes_json, is_active, display_order
+                       FROM contrast_mode_items
+                       WHERE pair_id = ?1 AND is_active = 1".to_string();
+        if !mode.trim().is_empty() {
+            sql.push_str(" AND mode = ?2");
+        }
+        sql.push_str(" ORDER BY mode ASC, display_order ASC, id ASC");
+
+        let mut statement = self
+            .conn
+            .prepare(&sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut items = Vec::new();
+        if mode.trim().is_empty() {
+            let rows = statement
+                .query_map([pair_id], |row| self.map_contrast_mode_item(row))
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            for row in rows {
+                items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+            }
+        } else {
+            let rows = statement
+                .query_map(params![pair_id, mode], |row| self.map_contrast_mode_item(row))
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            for row in rows {
+                items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+            }
+        }
+        Ok(items)
+    }
+
+    fn map_contrast_mode_item(&self, row: &rusqlite::Row<'_>) -> rusqlite::Result<ContrastModeItem> {
+        let prompt_payload_json: String = row.get(8)?;
+        let options_json: String = row.get(9)?;
+        let explanation_bundle_json: String = row.get(14)?;
+        let misconception_reason_codes_json: String = row.get(15)?;
+        Ok(ContrastModeItem {
+            id: row.get(0)?,
+            pair_id: row.get(1)?,
+            mode: row.get(2)?,
+            source_atom_id: row.get(3)?,
+            comparison_row_id: row.get(4)?,
+            diagram_asset_id: row.get(5)?,
+            prompt_type: row.get(6)?,
+            prompt_text: row.get(7)?,
+            prompt_payload: serde_json::from_str(&prompt_payload_json)
+                .unwrap_or_else(|_| json!({})),
+            answer_options: serde_json::from_str(&options_json).unwrap_or_default(),
+            correct_choice_code: row.get(10)?,
+            correct_choice_label: row.get(11)?,
+            difficulty_score: clamp_bp(row.get::<_, i64>(12)?),
+            time_limit_seconds: row.get(13)?,
+            explanation_bundle: serde_json::from_str(&explanation_bundle_json)
+                .unwrap_or_else(|_| json!({})),
+            misconception_reason_codes: serde_json::from_str(&misconception_reason_codes_json)
+                .unwrap_or_default(),
+            is_active: row.get::<_, i64>(16)? == 1,
+            display_order: row.get(17)?,
+        })
+    }
+
+    fn load_trap_misconception_reasons(&self) -> EcoachResult<Vec<TrapMisconceptionReason>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT code, label, category, modes_json, display_order, is_active
+                 FROM contrast_misconception_reasons
+                 WHERE is_active = 1
+                 ORDER BY display_order ASC, code ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([], |row| {
+                let modes_json: String = row.get(3)?;
+                Ok(TrapMisconceptionReason {
+                    code: row.get(0)?,
+                    label: row.get(1)?,
+                    category: row.get(2)?,
+                    modes: serde_json::from_str(&modes_json).unwrap_or_default(),
+                    display_order: row.get(4)?,
+                    is_active: row.get::<_, i64>(5)? == 1,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut reasons = Vec::new();
+        for row in rows {
+            reasons.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(reasons)
+    }
+
+    fn derive_shared_traits(&self, pair_id: i64) -> Vec<String> {
+        self.load_contrast_atoms(pair_id)
+            .map(|atoms| {
+                atoms
+                    .into_iter()
+                    .filter(|atom| atom.ownership_type == "both")
+                    .take(6)
+                    .map(|atom| atom.atom_text)
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    fn derive_decisive_differences(&self, pair_id: i64) -> Vec<String> {
+        self.load_contrast_atoms(pair_id)
+            .map(|atoms| {
+                atoms
+                    .into_iter()
+                    .filter(|atom| matches!(atom.ownership_type.as_str(), "left_only" | "right_only"))
+                    .take(8)
+                    .map(|atom| atom.atom_text)
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    fn derive_common_confusions(&self, pair_id: i64) -> Vec<String> {
+        self.load_contrast_atoms(pair_id)
+            .map(|atoms| {
+                atoms
+                    .into_iter()
+                    .filter_map(|atom| atom.trap_angle.or(atom.explanation_text))
+                    .take(6)
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    fn derive_trap_angles(&self, pair_id: i64) -> Vec<String> {
+        self.load_contrast_atoms(pair_id)
+            .map(|atoms| {
+                atoms
+                    .into_iter()
+                    .filter_map(|atom| atom.trap_angle)
+                    .take(6)
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    fn derive_contrast_coverage(&self, pair_id: i64) -> Value {
+        match self.load_contrast_atoms(pair_id) {
+            Ok(atoms) => {
+                let mut coverage = BTreeMap::<String, i64>::new();
+                for atom in atoms {
+                    *coverage.entry(atom.lane).or_insert(0) += 1;
+                }
+                serde_json::to_value(coverage).unwrap_or_else(|_| json!({}))
+            }
+            Err(_) => json!({}),
+        }
+    }
     fn build_traps_rounds(
         &self,
         mode: TrapsMode,
@@ -2728,7 +3644,8 @@ impl<'a> GamesService<'a> {
             .query_row(
                 "SELECT id, pair_id, round_number, mode, lane, prompt_text, prompt_payload_json,
                         options_json, correct_choice_code, correct_choice_label, explanation_text,
-                        reveal_count, max_reveal_count, answered_at
+                        review_payload_json, mode_item_id, reveal_count, max_reveal_count,
+                        answered_at
                  FROM traps_rounds
                  WHERE id = ?1 AND game_session_id = ?2",
                 params![round_id, game_session_id],
@@ -3112,6 +4029,21 @@ impl<'a> GamesService<'a> {
         Ok(effect.to_string())
     }
 
+    fn get_duel_session(&self, duel_session_id: i64) -> EcoachResult<Option<DuelSession>> {
+        self.conn
+            .query_row(
+                "SELECT id, challenger_id, opponent_id, subject_id, topic_id, duel_type,
+                        question_count, time_limit_seconds, challenger_score_bp,
+                        opponent_score_bp, winner_id, status, created_at, completed_at
+                 FROM duel_sessions
+                 WHERE id = ?1",
+                [duel_session_id],
+                map_duel_session,
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
     fn append_event(&self, aggregate_kind: &str, event: DomainEvent) -> EcoachResult<()> {
         let payload_json = serde_json::to_string(&event.payload)
             .map_err(|e| EcoachError::Serialization(e.to_string()))?;
@@ -3129,8 +4061,19 @@ impl<'a> GamesService<'a> {
                     payload_json,
                     event.occurred_at.to_rfc3339(),
                 ],
-            )
-            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        )
+        .map_err(|e| EcoachError::Storage(e.to_string()))?;
         Ok(())
+    }
+}
+
+fn validate_duel_type(duel_type: &str) -> EcoachResult<()> {
+    match duel_type {
+        "topic_duel" | "speed_challenge" | "accuracy_battle" | "revenge_match"
+        | "class_challenge" => Ok(()),
+        _ => Err(EcoachError::Validation(format!(
+            "unknown duel type: {}",
+            duel_type
+        ))),
     }
 }

@@ -91,12 +91,10 @@ impl BackupService {
 
         let metadata = std::fs::metadata(backup_path).ok();
         let size = metadata.as_ref().map(|m| m.len() as i64).unwrap_or(0);
-        let modified = metadata
-            .and_then(|m| m.modified().ok())
-            .map(|t| {
-                let elapsed = t.elapsed().unwrap_or_default();
-                format!("{} seconds ago", elapsed.as_secs())
-            });
+        let modified = metadata.and_then(|m| m.modified().ok()).map(|t| {
+            let elapsed = t.elapsed().unwrap_or_default();
+            format!("{} seconds ago", elapsed.as_secs())
+        });
 
         BackupStatus {
             exists: true,

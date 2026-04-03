@@ -3,7 +3,10 @@ use ecoach_games::{
 };
 
 use crate::{
-    dtos::{ContrastPairSummaryDto, TrapReviewDto, TrapRoundResultDto, TrapSessionSnapshotDto},
+    dtos::{
+        ContrastPairProfileDto, ContrastPairSummaryDto, TrapMisconceptionReasonDto, TrapReviewDto,
+        TrapRoundResultDto, TrapSessionSnapshotDto,
+    },
     error::CommandError,
     state::AppState,
 };
@@ -20,6 +23,32 @@ pub fn list_traps_pairs(
         Ok(pairs
             .into_iter()
             .map(ContrastPairSummaryDto::from)
+            .collect())
+    })
+}
+
+pub fn get_contrast_pair_profile(
+    state: &AppState,
+    student_id: i64,
+    pair_id: i64,
+) -> Result<ContrastPairProfileDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = GamesService::new(conn);
+        let profile = service.get_contrast_pair_profile(student_id, pair_id)?;
+        Ok(ContrastPairProfileDto::from(profile))
+    })
+}
+
+pub fn list_trap_misconception_reasons(
+    state: &AppState,
+    mode: Option<String>,
+) -> Result<Vec<TrapMisconceptionReasonDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = GamesService::new(conn);
+        let reasons = service.list_trap_misconception_reasons(mode.as_deref())?;
+        Ok(reasons
+            .into_iter()
+            .map(TrapMisconceptionReasonDto::from)
             .collect())
     })
 }

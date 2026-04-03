@@ -1,14 +1,19 @@
 use ecoach_questions::{
-    QuestionSelectionRequest, QuestionSelector, QuestionService, SelectedQuestion,
+    Question, QuestionOption, QuestionSelectionRequest, QuestionSelector, QuestionService,
+    SelectedQuestion,
 };
 use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Map, Value, json};
 
 use crate::models::{
-    DiagnosticBattery, DiagnosticCauseEvolution, DiagnosticLongitudinalSummary, DiagnosticMode,
-    DiagnosticPhaseCode, DiagnosticPhaseItem, DiagnosticPhasePlan, DiagnosticResult,
-    DiagnosticRootCauseHypothesis, DiagnosticTopicAnalytics, TopicDiagnosticLongitudinalSignal,
+    DiagnosticAudienceReport, DiagnosticBattery, DiagnosticCauseEvolution,
+    DiagnosticConditionMetrics, DiagnosticInterventionPrescription,
+    DiagnosticItemRoutingProfile, DiagnosticLearningProfile, DiagnosticLongitudinalSummary,
+    DiagnosticMode, DiagnosticOverallSummary, DiagnosticPhaseCode, DiagnosticPhaseItem,
+    DiagnosticPhasePlan, DiagnosticProblemCauseFixCard, DiagnosticRecommendation, DiagnosticResult,
+    DiagnosticRootCauseHypothesis, DiagnosticSessionScore, DiagnosticSkillResult,
+    DiagnosticSubjectBlueprint, DiagnosticTopicAnalytics, TopicDiagnosticLongitudinalSignal,
     TopicDiagnosticResult, WrongAnswerDiagnosis,
 };
 
@@ -77,6 +82,9 @@ impl<'a> DiagnosticEngine<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let diagnostic_id = self.conn.last_insert_rowid();
+        self.ensure_diagnostic_group_shadow(diagnostic_id, student_id, subject_id, mode)?;
+        self.ensure_subject_blueprint(subject_id)?;
+        self.ensure_routing_profiles_for_scope(subject_id, &topic_ids)?;
         let phase_templates = diagnostic_phase_templates(mode);
         let root_cause_topic_ids =
             self.load_root_cause_topic_ids(student_id, subject_id, &topic_ids)?;
@@ -145,6 +153,7 @@ impl<'a> DiagnosticEngine<'a> {
         topic_ids: Vec<i64>,
         count: usize,
     ) -> EcoachResult<Vec<SelectedQuestion>> {
+        self.ensure_routing_profiles_for_scope(subject_id, &topic_ids)?;
         let selector = QuestionSelector::new(self.conn);
         selector.select_questions(&QuestionSelectionRequest {
             subject_id,
@@ -154,6 +163,10 @@ impl<'a> DiagnosticEngine<'a> {
             weakness_topic_ids: topic_ids,
             recently_seen_question_ids: Vec::new(),
             timed: false,
+            diagnostic_stage: Some(DiagnosticPhaseCode::Baseline.as_str().to_string()),
+            condition_type: Some(DiagnosticPhaseCode::Baseline.condition_type().to_string()),
+            require_confidence_prompt: false,
+            require_concept_guess_prompt: false,
         })
     }
 
@@ -215,6 +228,40 @@ impl<'a> DiagnosticEngine<'a> {
         skipped: bool,
         timed_out: bool,
     ) -> EcoachResult<()> {
+        self.submit_phase_attempt_details(
+            diagnostic_id,
+            attempt_id,
+            Some(selected_option_id),
+            response_time_ms,
+            confidence_level,
+            changed_answer_count,
+            skipped,
+            timed_out,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn submit_phase_attempt_details(
+        &self,
+        diagnostic_id: i64,
+        attempt_id: i64,
+        selected_option_id: Option<i64>,
+        response_time_ms: Option<i64>,
+        confidence_level: Option<&str>,
+        changed_answer_count: i64,
+        skipped: bool,
+        timed_out: bool,
+        first_focus_at: Option<&str>,
+        first_input_at: Option<&str>,
+        concept_guess: Option<&str>,
+        final_answer: Option<&Value>,
+        raw_interaction_log: Option<&Value>,
+    ) -> EcoachResult<()> {
         let question_id: i64 = self
             .conn
             .query_row(
@@ -226,20 +273,65 @@ impl<'a> DiagnosticEngine<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
         let question_service = QuestionService::new(self.conn);
-        let option = question_service
-            .get_option(selected_option_id)?
-            .ok_or_else(|| {
-                EcoachError::NotFound(format!(
-                    "diagnostic option {} not found",
-                    selected_option_id
-                ))
-            })?;
-        if option.question_id != question_id {
-            return Err(EcoachError::Validation(format!(
-                "option {} does not belong to diagnostic question {}",
-                selected_option_id, question_id
-            )));
+        let selected_option = if let Some(selected_option_id) = selected_option_id {
+            let option = question_service
+                .get_option(selected_option_id)?
+                .ok_or_else(|| {
+                    EcoachError::NotFound(format!(
+                        "diagnostic option {} not found",
+                        selected_option_id
+                    ))
+                })?;
+            if option.question_id != question_id {
+                return Err(EcoachError::Validation(format!(
+                    "option {} does not belong to diagnostic question {}",
+                    selected_option_id, question_id
+                )));
+            }
+            Some(option)
+        } else {
+            None
+        };
+        let correct_options = question_service
+            .list_options(question_id)?
+            .into_iter()
+            .filter(|option| option.is_correct)
+            .collect::<Vec<_>>();
+        let final_answer_json = final_answer
+            .map(serde_json::to_string)
+            .transpose()
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let raw_interaction_log_json =
+            raw_interaction_log
+                .map(serde_json::to_string)
+                .transpose()
+                .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let submitted_answer_text = final_answer.and_then(extract_final_answer_text);
+        if selected_option.is_none()
+            && submitted_answer_text.is_none()
+            && !skipped
+            && !timed_out
+        {
+            return Err(EcoachError::Validation(
+                "diagnostic attempt requires either an option selection or a final answer"
+                    .to_string(),
+            ));
         }
+        let is_correct = if let Some(option) = selected_option.as_ref() {
+            option.is_correct
+        } else if skipped || timed_out {
+            false
+        } else if correct_options.is_empty() {
+            return Err(EcoachError::Validation(format!(
+                "diagnostic question {} has no grading anchor for free-response submission",
+                question_id
+            )));
+        } else {
+            submitted_answer_text
+                .as_deref()
+                .map(|text| answer_matches_correct_options(text, &correct_options))
+                .unwrap_or(false)
+        };
 
         self.conn
             .execute(
@@ -251,16 +343,26 @@ impl<'a> DiagnosticEngine<'a> {
                      confidence_level = ?4,
                      changed_answer_count = ?5,
                      skipped = ?6,
-                     timed_out = ?7
-                 WHERE id = ?8 AND diagnostic_id = ?9",
+                     timed_out = ?7,
+                     first_focus_at = COALESCE(?8, first_focus_at),
+                     first_input_at = COALESCE(?9, first_input_at),
+                     concept_guess = COALESCE(?10, concept_guess),
+                     final_answer_json = COALESCE(?11, final_answer_json),
+                     raw_interaction_log_json = COALESCE(?12, raw_interaction_log_json)
+                 WHERE id = ?13 AND diagnostic_id = ?14",
                 params![
                     response_time_ms,
                     selected_option_id,
-                    if option.is_correct { 1 } else { 0 },
+                    if is_correct { 1 } else { 0 },
                     confidence_level,
                     changed_answer_count,
                     if skipped { 1 } else { 0 },
                     if timed_out { 1 } else { 0 },
+                    first_focus_at,
+                    first_input_at,
+                    concept_guess,
+                    final_answer_json,
+                    raw_interaction_log_json,
                     attempt_id,
                     diagnostic_id,
                 ],
@@ -290,6 +392,7 @@ impl<'a> DiagnosticEngine<'a> {
                 diagnostic_id, completed_phase_number
             )));
         }
+        self.persist_phase_summary(diagnostic_id, completed_phase_number)?;
 
         let next_phase = self
             .conn
@@ -345,7 +448,10 @@ impl<'a> DiagnosticEngine<'a> {
             self.conn
                 .execute(
                     "UPDATE diagnostic_instances SET status = ?1 WHERE id = ?2",
-                    params![format!("phase_{}", phase_number), diagnostic_id],
+                    params![
+                        diagnostic_instance_status_for_phase(phase_number),
+                        diagnostic_id
+                    ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             let phases = self.list_diagnostic_phases(diagnostic_id)?;
@@ -360,6 +466,7 @@ impl<'a> DiagnosticEngine<'a> {
                 [diagnostic_id],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.complete_diagnostic_group_shadow(diagnostic_id)?;
         Ok(None)
     }
 
@@ -438,6 +545,9 @@ impl<'a> DiagnosticEngine<'a> {
                 flexibility_score: analytics.flexibility_score,
                 stability_score: analytics.stability_score,
                 classification: analytics.classification,
+                endurance_score: analytics.endurance_score,
+                weakness_type: analytics.weakness_type.clone(),
+                failure_stage: analytics.failure_stage.clone(),
                 longitudinal_signal,
             });
         }
@@ -461,6 +571,49 @@ impl<'a> DiagnosticEngine<'a> {
         }
         .to_string();
 
+        let session_scores = self.compute_session_scores(diagnostic_id)?;
+        let skill_results = self.compute_skill_results(diagnostic_id, student_id)?;
+        let condition_metrics =
+            self.build_condition_metrics(&topic_results, &session_scores, &skill_results);
+        let overall_summary = build_overall_summary(
+            &readiness_band,
+            &topic_results,
+            &skill_results,
+            recommended_next_actions.first().cloned(),
+        );
+        let learning_profile = self.build_learning_profile(
+            diagnostic_id,
+            student_id,
+            subject_id,
+            &topic_results,
+            &skill_results,
+            &condition_metrics,
+        )?;
+        let recommendations = build_recommendations(
+            student_id,
+            &topic_results,
+            &skill_results,
+            &condition_metrics,
+            learning_profile.as_ref(),
+        );
+        let audience_reports = build_audience_reports(
+            &overall_summary,
+            &topic_results,
+            &recommendations,
+            &condition_metrics,
+        );
+        self.persist_deep_diagnostic_outputs(
+            diagnostic_id,
+            student_id,
+            subject_id,
+            &session_scores,
+            &topic_results,
+            &skill_results,
+            &condition_metrics,
+            learning_profile.as_ref(),
+            &recommendations,
+            &audience_reports,
+        )?;
         let longitudinal_summary = build_longitudinal_summary(
             previous_context.as_ref(),
             overall_readiness,
@@ -471,7 +624,16 @@ impl<'a> DiagnosticEngine<'a> {
             readiness_band,
             topic_results,
             recommended_next_actions: unique_actions(recommended_next_actions),
+            overall_summary,
+            session_scores,
+            condition_metrics,
+            skill_results,
+            recommendations,
+            learning_profile,
+            audience_reports,
             longitudinal_summary,
+            problem_cause_fix_cards: Vec::new(),
+            intervention_prescriptions: Vec::new(),
         };
 
         let serialized = serde_json::to_string(&result)
@@ -525,9 +687,187 @@ impl<'a> DiagnosticEngine<'a> {
         let Some(result_json) = result_json else {
             return Ok(None);
         };
-        let result = serde_json::from_str::<DiagnosticResult>(&result_json)
+        let mut result = serde_json::from_str::<DiagnosticResult>(&result_json)
             .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        result.problem_cause_fix_cards = self.list_problem_cause_fix_cards(diagnostic_id)?;
+        result.intervention_prescriptions = self.list_intervention_prescriptions(diagnostic_id)?;
         Ok(Some(result))
+    }
+
+    pub fn get_subject_blueprint(
+        &self,
+        subject_id: i64,
+    ) -> EcoachResult<Option<DiagnosticSubjectBlueprint>> {
+        self.conn
+            .query_row(
+                "SELECT subject_id, blueprint_code, subject_name, session_modes_json,
+                        stage_rules_json, item_family_mix_json, routing_contract_json,
+                        report_contract_json
+                 FROM diagnostic_subject_blueprints
+                 WHERE subject_id = ?1",
+                [subject_id],
+                |row| {
+                    let session_modes_json: String = row.get(3)?;
+                    let stage_rules_json: String = row.get(4)?;
+                    let item_family_mix_json: String = row.get(5)?;
+                    let routing_contract_json: String = row.get(6)?;
+                    let report_contract_json: String = row.get(7)?;
+                    Ok(DiagnosticSubjectBlueprint {
+                        subject_id: row.get(0)?,
+                        blueprint_code: row.get(1)?,
+                        subject_name: row.get(2)?,
+                        session_modes: serde_json::from_str(&session_modes_json)
+                            .unwrap_or_else(|_| json!({})),
+                        stage_rules: serde_json::from_str(&stage_rules_json)
+                            .unwrap_or_else(|_| json!({})),
+                        item_family_mix: serde_json::from_str(&item_family_mix_json)
+                            .unwrap_or_default(),
+                        routing_contract: serde_json::from_str(&routing_contract_json)
+                            .unwrap_or_else(|_| json!({})),
+                        report_contract: serde_json::from_str(&report_contract_json)
+                            .unwrap_or_else(|_| json!({})),
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    pub fn list_item_routing_profiles(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Vec<DiagnosticItemRoutingProfile>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT dirp.question_id, dirp.subject_id, dirp.topic_id, dirp.family_id,
+                        dirp.item_family, dirp.recognition_suitable, dirp.recall_suitable,
+                        dirp.transfer_suitable, dirp.timed_suitable, dirp.confidence_prompt,
+                        dirp.recommended_stages_json, dirp.sibling_variant_modes_json,
+                        dirp.routing_notes_json
+                 FROM diagnostic_item_routing_profiles dirp
+                 INNER JOIN diagnostic_item_attempts dia ON dia.question_id = dirp.question_id
+                 WHERE dia.diagnostic_id = ?1
+                 GROUP BY dirp.question_id, dirp.subject_id, dirp.topic_id, dirp.family_id,
+                          dirp.item_family, dirp.recognition_suitable, dirp.recall_suitable,
+                          dirp.transfer_suitable, dirp.timed_suitable, dirp.confidence_prompt,
+                          dirp.recommended_stages_json, dirp.sibling_variant_modes_json,
+                          dirp.routing_notes_json
+                 ORDER BY dirp.topic_id ASC, dirp.question_id ASC"
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([diagnostic_id], |row| {
+                let recommended_stages_json: String = row.get(10)?;
+                let sibling_variant_modes_json: String = row.get(11)?;
+                let routing_notes_json: String = row.get(12)?;
+                Ok(DiagnosticItemRoutingProfile {
+                    question_id: row.get(0)?,
+                    subject_id: row.get(1)?,
+                    topic_id: row.get(2)?,
+                    family_id: row.get(3)?,
+                    item_family: row.get(4)?,
+                    recognition_suitable: row.get::<_, i64>(5)? == 1,
+                    recall_suitable: row.get::<_, i64>(6)? == 1,
+                    transfer_suitable: row.get::<_, i64>(7)? == 1,
+                    timed_suitable: row.get::<_, i64>(8)? == 1,
+                    confidence_prompt: row.get(9)?,
+                    recommended_stages: serde_json::from_str(&recommended_stages_json)
+                        .unwrap_or_default(),
+                    sibling_variant_modes: serde_json::from_str(&sibling_variant_modes_json)
+                        .unwrap_or_default(),
+                    routing_notes: serde_json::from_str(&routing_notes_json)
+                        .unwrap_or_else(|_| json!({})),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut profiles = Vec::new();
+        for row in rows {
+            profiles.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(profiles)
+    }
+
+    pub fn list_problem_cause_fix_cards(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Vec<DiagnosticProblemCauseFixCard>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT topic_id, topic_name, problem_summary, cause_summary, fix_summary,
+                        confidence_score_bp, impact_score_bp, unlock_summary, evidence_json
+                 FROM diagnostic_problem_cause_fix_cards
+                 WHERE diagnostic_id = ?1
+                 ORDER BY impact_score_bp DESC, confidence_score_bp DESC, topic_id ASC"
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([diagnostic_id], |row| {
+                let evidence_json: String = row.get(8)?;
+                Ok(DiagnosticProblemCauseFixCard {
+                    topic_id: row.get(0)?,
+                    topic_name: row.get(1)?,
+                    problem_summary: row.get(2)?,
+                    cause_summary: row.get(3)?,
+                    fix_summary: row.get(4)?,
+                    confidence_score: row.get(5)?,
+                    impact_score: row.get(6)?,
+                    unlock_summary: row.get(7)?,
+                    evidence: serde_json::from_str(&evidence_json)
+                        .unwrap_or_else(|_| json!({})),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut cards = Vec::new();
+        for row in rows {
+            cards.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(cards)
+    }
+
+    pub fn list_intervention_prescriptions(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Vec<DiagnosticInterventionPrescription>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT topic_id, topic_name, primary_mode_code, support_mode_code,
+                        recheck_mode_code, mode_chain_json, contraindications_json,
+                        success_signals_json, confidence_score_bp, payload_json
+                 FROM diagnostic_intervention_prescriptions
+                 WHERE diagnostic_id = ?1
+                 ORDER BY confidence_score_bp DESC, topic_id ASC"
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([diagnostic_id], |row| {
+                let mode_chain_json: String = row.get(5)?;
+                let contraindications_json: String = row.get(6)?;
+                let success_signals_json: String = row.get(7)?;
+                let payload_json: String = row.get(9)?;
+                Ok(DiagnosticInterventionPrescription {
+                    topic_id: row.get(0)?,
+                    topic_name: row.get(1)?,
+                    primary_mode_code: row.get(2)?,
+                    support_mode_code: row.get(3)?,
+                    recheck_mode_code: row.get(4)?,
+                    mode_chain: serde_json::from_str(&mode_chain_json).unwrap_or_default(),
+                    contraindications: serde_json::from_str(&contraindications_json)
+                        .unwrap_or_default(),
+                    success_signals: serde_json::from_str(&success_signals_json)
+                        .unwrap_or_default(),
+                    confidence_score: row.get(8)?,
+                    payload: serde_json::from_str(&payload_json).unwrap_or_else(|_| json!({})),
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut prescriptions = Vec::new();
+        for row in rows {
+            prescriptions.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(prescriptions)
     }
 
     pub fn get_longitudinal_summary(
@@ -559,7 +899,8 @@ impl<'a> DiagnosticEngine<'a> {
                 "SELECT dta.diagnostic_id, dta.topic_id, t.name, dta.mastery_score, dta.fluency_score,
                         dta.precision_score, dta.pressure_score, dta.flexibility_score,
                         dta.stability_score, dta.classification, dta.confidence_score,
-                        dta.recommended_action
+                        dta.recommended_action, dta.endurance_score_bp,
+                        dta.error_distribution_json, dta.weakness_type, dta.failure_stage
                  FROM diagnostic_topic_analytics dta
                  INNER JOIN topics t ON t.id = dta.topic_id
                  WHERE dta.diagnostic_id = ?1
@@ -581,6 +922,21 @@ impl<'a> DiagnosticEngine<'a> {
                     classification: row.get(9)?,
                     confidence_score: row.get(10)?,
                     recommended_action: row.get(11)?,
+                    endurance_score: row.get::<_, Option<BasisPoints>>(12)?.unwrap_or(0),
+                    error_distribution: row
+                        .get::<_, Option<String>>(13)?
+                        .map(|value| serde_json::from_str::<Value>(&value))
+                        .transpose()
+                        .map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                13,
+                                rusqlite::types::Type::Text,
+                                Box::new(err),
+                            )
+                        })?
+                        .unwrap_or_else(|| json!({})),
+                    weakness_type: row.get(14)?,
+                    failure_stage: row.get(15)?,
                 })
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -630,6 +986,922 @@ impl<'a> DiagnosticEngine<'a> {
         Ok(items)
     }
 
+    pub fn list_skill_results(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Vec<DiagnosticSkillResult>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT dsr.skill_key, dsr.skill_name, dsr.skill_type, dsr.topic_id, t.name,
+                        dsr.baseline_score, dsr.speed_score, dsr.precision_score,
+                        dsr.pressure_score, dsr.flex_score, dsr.root_cause_score,
+                        dsr.endurance_score, dsr.recovery_score, dsr.mastery_score,
+                        dsr.fragility_index, dsr.pressure_collapse_index,
+                        dsr.recognition_gap_index, dsr.formula_recall_use_delta,
+                        dsr.stability_score, dsr.mastery_state, dsr.weakness_type_primary,
+                        dsr.weakness_type_secondary, dsr.recommended_intervention,
+                        dsr.evidence_json
+                 FROM diagnostic_skill_results dsr
+                 INNER JOIN topics t ON t.id = dsr.topic_id
+                 WHERE dsr.diagnostic_id = ?1
+                 ORDER BY dsr.mastery_score ASC, dsr.fragility_index DESC, dsr.skill_name ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([diagnostic_id], |row| {
+                let evidence_json: String = row.get(23)?;
+                let evidence = serde_json::from_str::<Value>(&evidence_json).map_err(|err| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        23,
+                        rusqlite::types::Type::Text,
+                        Box::new(err),
+                    )
+                })?;
+                Ok(DiagnosticSkillResult {
+                    skill_key: row.get(0)?,
+                    skill_name: row.get(1)?,
+                    skill_type: row.get(2)?,
+                    topic_id: row.get(3)?,
+                    topic_name: row.get(4)?,
+                    baseline_score: row.get(5)?,
+                    speed_score: row.get(6)?,
+                    precision_score: row.get(7)?,
+                    pressure_score: row.get(8)?,
+                    flex_score: row.get(9)?,
+                    root_cause_score: row.get(10)?,
+                    endurance_score: row.get(11)?,
+                    recovery_score: row.get(12)?,
+                    mastery_score: row.get(13)?,
+                    fragility_index: row.get(14)?,
+                    pressure_collapse_index: row.get(15)?,
+                    recognition_gap_index: row.get(16)?,
+                    formula_recall_use_delta: row.get(17)?,
+                    stability_score: row.get(18)?,
+                    mastery_state: row.get(19)?,
+                    weakness_type_primary: row.get(20)?,
+                    weakness_type_secondary: row.get(21)?,
+                    recommended_intervention: row.get(22)?,
+                    evidence,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut results = Vec::new();
+        for row in rows {
+            results.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(results)
+    }
+
+    pub fn list_recommendations(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Vec<DiagnosticRecommendation>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT category, action_code, title, rationale, priority,
+                        target_kind, target_ref
+                 FROM diagnostic_recommendations
+                 WHERE diagnostic_id = ?1
+                 ORDER BY priority DESC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([diagnostic_id], |row| {
+                Ok(DiagnosticRecommendation {
+                    category: row.get(0)?,
+                    action_code: row.get(1)?,
+                    title: row.get(2)?,
+                    rationale: row.get(3)?,
+                    priority: row.get(4)?,
+                    target_kind: row.get(5)?,
+                    target_ref: row.get(6)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut results = Vec::new();
+        for row in rows {
+            results.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(results)
+    }
+
+    pub fn get_audience_report(
+        &self,
+        diagnostic_id: i64,
+        audience: &str,
+    ) -> EcoachResult<Option<DiagnosticAudienceReport>> {
+        self.conn
+            .query_row(
+                "SELECT audience, headline, narrative, payload_json
+                 FROM diagnostic_audience_reports
+                 WHERE diagnostic_id = ?1 AND audience = ?2",
+                params![diagnostic_id, audience],
+                |row| {
+                    let payload_json: String = row.get(3)?;
+                    let payload = serde_json::from_str::<Value>(&payload_json).map_err(|err| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            3,
+                            rusqlite::types::Type::Text,
+                            Box::new(err),
+                        )
+                    })?;
+                    Ok(DiagnosticAudienceReport {
+                        audience: row.get(0)?,
+                        headline: row.get(1)?,
+                        narrative: row.get(2)?,
+                        strengths: parse_report_list(&payload, "strengths"),
+                        fragile_areas: parse_report_list(&payload, "fragile_areas"),
+                        critical_areas: parse_report_list(&payload, "critical_areas"),
+                        action_plan: parse_report_list(&payload, "action_plan"),
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn ensure_diagnostic_group_shadow(
+        &self,
+        diagnostic_id: i64,
+        student_id: i64,
+        subject_id: i64,
+        mode: DiagnosticMode,
+    ) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "INSERT INTO diagnostic_session_groups (
+                    id, student_id, subject_id, group_type, status, stages_completed_json,
+                    comparison_deltas_json, created_at
+                 ) VALUES (?1, ?2, ?3, ?4, 'in_progress', '{}', '{}', datetime('now'))
+                 ON CONFLICT(id) DO UPDATE SET
+                    student_id = excluded.student_id,
+                    subject_id = excluded.subject_id,
+                    group_type = excluded.group_type,
+                    status = 'in_progress'",
+                params![
+                    diagnostic_id,
+                    student_id,
+                    subject_id,
+                    diagnostic_group_type(mode),
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn persist_phase_summary(
+        &self,
+        diagnostic_id: i64,
+        completed_phase_number: i64,
+    ) -> EcoachResult<()> {
+        let phase = self
+            .list_diagnostic_phases(diagnostic_id)?
+            .into_iter()
+            .find(|phase| phase.phase_number == completed_phase_number)
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!(
+                    "diagnostic {} missing phase {}",
+                    diagnostic_id, completed_phase_number
+                ))
+            })?;
+        let score = self.compute_session_score_for_phase(diagnostic_id, &phase)?;
+        let phase_result_json = serde_json::to_string(&score)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        self.conn
+            .execute(
+                "UPDATE diagnostic_session_phases
+                 SET phase_result_json = ?1
+                 WHERE id = ?2",
+                params![phase_result_json, phase.phase_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .execute(
+                "DELETE FROM diagnostic_phase_results
+                 WHERE group_id = ?1 AND phase_type = ?2",
+                params![diagnostic_id, deep_phase_type_from_code(&phase.phase_code)],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO diagnostic_phase_results (
+                    group_id, phase_type, session_id, accuracy_bp, fluency_bp, precision_bp,
+                    pressure_bp, flexibility_bp, stability_bp, early_segment_accuracy_bp,
+                    middle_segment_accuracy_bp, final_segment_accuracy_bp, confidence_capture_json
+                 ) VALUES (?1, ?2, NULL, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+                params![
+                    diagnostic_id,
+                    deep_phase_type_from_code(&phase.phase_code),
+                    score.raw_accuracy,
+                    if phase.phase_code == "speed" {
+                        score.adjusted_accuracy
+                    } else {
+                        0
+                    },
+                    if phase.phase_code == "precision" {
+                        score.adjusted_accuracy
+                    } else {
+                        0
+                    },
+                    if phase.phase_code == "pressure" {
+                        score.adjusted_accuracy
+                    } else {
+                        0
+                    },
+                    if phase.phase_code == "flex" {
+                        score.adjusted_accuracy
+                    } else {
+                        0
+                    },
+                    score.stability_measure,
+                    score.early_segment_accuracy,
+                    score.middle_segment_accuracy,
+                    score.final_segment_accuracy,
+                    "{}",
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.sync_group_stage_progress(diagnostic_id)?;
+        Ok(())
+    }
+
+    fn complete_diagnostic_group_shadow(&self, diagnostic_id: i64) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "UPDATE diagnostic_session_groups
+                 SET status = 'completed', completed_at = datetime('now')
+                 WHERE id = ?1",
+                [diagnostic_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn sync_group_stage_progress(&self, diagnostic_id: i64) -> EcoachResult<()> {
+        let stages = self
+            .list_diagnostic_phases(diagnostic_id)?
+            .into_iter()
+            .filter(|phase| phase.status == "completed")
+            .map(|phase| (phase.phase_code, json!(true)))
+            .collect::<Map<String, Value>>();
+        self.conn
+            .execute(
+                "UPDATE diagnostic_session_groups
+                 SET stages_completed_json = ?1
+                 WHERE id = ?2",
+                params![
+                    serde_json::to_string(&stages)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    diagnostic_id,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn compute_session_scores(
+        &self,
+        diagnostic_id: i64,
+    ) -> EcoachResult<Vec<DiagnosticSessionScore>> {
+        let phases = self.list_diagnostic_phases(diagnostic_id)?;
+        let mut scores = Vec::new();
+        for phase in phases {
+            scores.push(self.compute_session_score_for_phase(diagnostic_id, &phase)?);
+        }
+        Ok(scores)
+    }
+
+    fn compute_session_score_for_phase(
+        &self,
+        diagnostic_id: i64,
+        phase: &DiagnosticPhasePlan,
+    ) -> EcoachResult<DiagnosticSessionScore> {
+        let attempts = self.load_phase_attempt_snapshots(phase.phase_id)?;
+        let answered = attempts
+            .iter()
+            .filter(|item| item.is_correct.is_some())
+            .count();
+        let correct = attempts
+            .iter()
+            .filter(|item| item.is_correct == Some(true))
+            .count();
+        let timeout_count = attempts.iter().filter(|item| item.timed_out).count();
+        let careless_count = attempts.iter().filter(|item| item.looks_careless()).count();
+        let misread_count = attempts.iter().filter(|item| item.looks_misread()).count();
+        let median_response_time_ms = median_i64(
+            attempts
+                .iter()
+                .filter_map(|item| item.response_time_ms)
+                .collect::<Vec<_>>(),
+        );
+        let segment_scores = segment_accuracy_profile(&attempts);
+        let raw_accuracy = accuracy_bp(correct, answered);
+        let timeout_rate = accuracy_bp(timeout_count, attempts.len());
+        let careless_error_rate = accuracy_bp(careless_count, attempts.len());
+        let misread_rate = accuracy_bp(misread_count, attempts.len());
+        let pressure_volatility =
+            segment_volatility_bp(segment_scores.0, segment_scores.1, segment_scores.2);
+        let adjusted_accuracy = raw_accuracy
+            .saturating_sub(timeout_rate / 3)
+            .saturating_sub(careless_error_rate / 4)
+            .saturating_sub(misread_rate / 5);
+        let stability_measure = 10_000u16.saturating_sub(pressure_volatility);
+
+        if phase.status == "completed" {
+            let phase_result_json = serde_json::to_string(&json!({
+                "raw_accuracy": raw_accuracy,
+                "adjusted_accuracy": adjusted_accuracy,
+                "median_response_time_ms": median_response_time_ms,
+                "stability_measure": stability_measure,
+                "careless_error_rate": careless_error_rate,
+                "timeout_rate": timeout_rate,
+                "misread_rate": misread_rate,
+                "pressure_volatility": pressure_volatility,
+                "early_segment_accuracy": segment_scores.0,
+                "middle_segment_accuracy": segment_scores.1,
+                "final_segment_accuracy": segment_scores.2,
+            }))
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+            self.conn
+                .execute(
+                    "UPDATE diagnostic_session_phases
+                     SET phase_result_json = ?1
+                     WHERE diagnostic_id = ?2 AND id = ?3",
+                    params![phase_result_json, diagnostic_id, phase.phase_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        Ok(DiagnosticSessionScore {
+            phase_code: phase.phase_code.clone(),
+            phase_title: phase.phase_title.clone(),
+            raw_accuracy,
+            adjusted_accuracy,
+            median_response_time_ms,
+            stability_measure,
+            careless_error_rate,
+            timeout_rate,
+            misread_rate,
+            pressure_volatility,
+            early_segment_accuracy: segment_scores.0,
+            middle_segment_accuracy: segment_scores.1,
+            final_segment_accuracy: segment_scores.2,
+        })
+    }
+
+    fn load_phase_attempt_snapshots(
+        &self,
+        phase_id: i64,
+    ) -> EcoachResult<Vec<PhaseAttemptSnapshot>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT dia.display_order, dia.is_correct, dia.response_time_ms,
+                        COALESCE(dia.changed_answer_count, 0), COALESCE(dia.skipped, 0),
+                        COALESCE(dia.timed_out, 0), COALESCE(q.estimated_time_seconds, 30),
+                        qo.distractor_intent, dia.confidence_level
+                 FROM diagnostic_item_attempts dia
+                 INNER JOIN questions q ON q.id = dia.question_id
+                 LEFT JOIN question_options qo ON qo.id = dia.selected_option_id
+                 WHERE dia.phase_id = ?1
+                 ORDER BY dia.display_order ASC, dia.id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([phase_id], |row| {
+                Ok(PhaseAttemptSnapshot {
+                    display_order: row.get(0)?,
+                    is_correct: row.get::<_, Option<i64>>(1)?.map(|value| value == 1),
+                    response_time_ms: row.get(2)?,
+                    changed_answer_count: row.get(3)?,
+                    skipped: row.get::<_, i64>(4)? == 1,
+                    timed_out: row.get::<_, i64>(5)? == 1,
+                    estimated_time_ms: row.get::<_, i64>(6)? * 1_000,
+                    distractor_intent: row.get(7)?,
+                    confidence_level: row.get(8)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut attempts = Vec::new();
+        for row in rows {
+            attempts.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(attempts)
+    }
+
+    fn compute_skill_results(
+        &self,
+        diagnostic_id: i64,
+        student_id: i64,
+    ) -> EcoachResult<Vec<DiagnosticSkillResult>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT
+                    CASE
+                        WHEN q.micro_skill_id IS NOT NULL THEN 'micro_skill'
+                        WHEN q.primary_skill_id IS NOT NULL THEN 'academic_node'
+                        ELSE 'derived'
+                    END,
+                    COALESCE(q.micro_skill_id, q.primary_skill_id, q.id),
+                    CASE
+                        WHEN q.micro_skill_id IS NOT NULL THEN 'micro:' || q.micro_skill_id
+                        WHEN q.primary_skill_id IS NOT NULL THEN 'node:' || q.primary_skill_id
+                        ELSE 'question:' || q.id
+                    END,
+                    COALESCE(ms.skill_name, an.short_label, an.canonical_title,
+                             q.primary_knowledge_role, q.primary_cognitive_demand, 'diagnostic_skill'),
+                    COALESCE(q.primary_knowledge_role, an.node_type, q.primary_cognitive_demand, 'derived'),
+                    q.topic_id,
+                    t.name,
+                    COALESCE(dsp.phase_code, lower(replace(dsp.phase_type, ' ', '_'))),
+                    dia.is_correct,
+                    q.family_id
+                 FROM diagnostic_item_attempts dia
+                 INNER JOIN diagnostic_session_phases dsp ON dsp.id = dia.phase_id
+                 INNER JOIN questions q ON q.id = dia.question_id
+                 INNER JOIN topics t ON t.id = q.topic_id
+                 LEFT JOIN micro_skills ms ON ms.id = q.micro_skill_id
+                 LEFT JOIN academic_nodes an ON an.id = q.primary_skill_id
+                 WHERE dia.diagnostic_id = ?1
+                   AND dia.is_correct IS NOT NULL
+                 ORDER BY q.topic_id ASC, skill_name ASC, dsp.phase_number ASC, dia.display_order ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([diagnostic_id], |row| {
+                Ok(SkillAttemptSnapshot {
+                    skill_kind: row.get(0)?,
+                    skill_id: row.get(1)?,
+                    skill_key: row.get(2)?,
+                    skill_name: row.get(3)?,
+                    skill_type: row.get(4)?,
+                    topic_id: row.get(5)?,
+                    topic_name: row.get(6)?,
+                    phase_code: row.get(7)?,
+                    is_correct: row.get::<_, Option<i64>>(8)?.unwrap_or(0) == 1,
+                    family_id: row.get(9)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut grouped: std::collections::BTreeMap<String, SkillAggregate> =
+            std::collections::BTreeMap::new();
+        for row in rows {
+            let item = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            grouped
+                .entry(item.skill_key.clone())
+                .and_modify(|aggregate| aggregate.push(item.clone()))
+                .or_insert_with(|| SkillAggregate::from_attempt(item));
+        }
+
+        let mut results = grouped
+            .into_values()
+            .map(|aggregate| aggregate.into_result(student_id))
+            .collect::<Vec<_>>();
+        results.sort_by(|left, right| {
+            left.mastery_score
+                .cmp(&right.mastery_score)
+                .then_with(|| right.fragility_index.cmp(&left.fragility_index))
+                .then_with(|| left.skill_name.cmp(&right.skill_name))
+        });
+        Ok(results)
+    }
+
+    fn build_condition_metrics(
+        &self,
+        topic_results: &[TopicDiagnosticResult],
+        session_scores: &[DiagnosticSessionScore],
+        skill_results: &[DiagnosticSkillResult],
+    ) -> DiagnosticConditionMetrics {
+        let fragility_index = average_bp(
+            skill_results
+                .iter()
+                .map(|item| item.fragility_index)
+                .collect::<Vec<_>>(),
+        )
+        .unwrap_or_else(|| {
+            average_bp(
+                topic_results
+                    .iter()
+                    .map(|item| item.mastery_score.saturating_sub(item.flexibility_score))
+                    .collect::<Vec<_>>(),
+            )
+            .unwrap_or(0)
+        });
+        let pressure_collapse_index = average_bp(
+            skill_results
+                .iter()
+                .map(|item| item.pressure_collapse_index)
+                .collect::<Vec<_>>(),
+        )
+        .unwrap_or_else(|| {
+            average_bp(
+                topic_results
+                    .iter()
+                    .map(|item| item.mastery_score.saturating_sub(item.pressure_score))
+                    .collect::<Vec<_>>(),
+            )
+            .unwrap_or(0)
+        });
+        let recognition_gap_index = average_bp(
+            skill_results
+                .iter()
+                .map(|item| item.recognition_gap_index)
+                .collect::<Vec<_>>(),
+        )
+        .unwrap_or_else(|| {
+            average_bp(
+                topic_results
+                    .iter()
+                    .map(|item| item.mastery_score.saturating_sub(item.flexibility_score))
+                    .collect::<Vec<_>>(),
+            )
+            .unwrap_or(0)
+        });
+        let formula_recall_use_delta = average_bp(
+            skill_results
+                .iter()
+                .filter(|item| item.formula_recall_use_delta > 0)
+                .map(|item| item.formula_recall_use_delta)
+                .collect::<Vec<_>>(),
+        )
+        .unwrap_or(0);
+        let endurance_drop = session_scores
+            .iter()
+            .find(|score| score.phase_code == "endurance")
+            .map(|score| {
+                score
+                    .early_segment_accuracy
+                    .unwrap_or(score.raw_accuracy)
+                    .saturating_sub(score.final_segment_accuracy.unwrap_or(score.raw_accuracy))
+            })
+            .unwrap_or(0);
+        let early_late_delta = endurance_drop;
+        let confidence_correctness_delta = average_bp(
+            topic_results
+                .iter()
+                .map(|item| item.mastery_score.saturating_sub(item.stability_score))
+                .collect::<Vec<_>>(),
+        )
+        .unwrap_or(0);
+
+        DiagnosticConditionMetrics {
+            fragility_index,
+            pressure_collapse_index,
+            recognition_gap_index,
+            formula_recall_use_delta,
+            early_late_delta,
+            confidence_correctness_delta,
+            endurance_drop,
+        }
+    }
+
+    fn build_learning_profile(
+        &self,
+        diagnostic_id: i64,
+        _student_id: i64,
+        _subject_id: i64,
+        topic_results: &[TopicDiagnosticResult],
+        skill_results: &[DiagnosticSkillResult],
+        condition_metrics: &DiagnosticConditionMetrics,
+    ) -> EcoachResult<Option<DiagnosticLearningProfile>> {
+        if topic_results.is_empty() && skill_results.is_empty() {
+            return Ok(None);
+        }
+        let profile_type = classify_learning_profile(skill_results, condition_metrics).to_string();
+        let confidence_score =
+            10_000u16.saturating_sub(condition_metrics.confidence_correctness_delta);
+        Ok(Some(DiagnosticLearningProfile {
+            profile_type,
+            confidence_score,
+            evidence: json!({
+                "diagnostic_id": diagnostic_id,
+                "topic_count": topic_results.len(),
+                "skill_count": skill_results.len(),
+                "fragility_index": condition_metrics.fragility_index,
+                "pressure_collapse_index": condition_metrics.pressure_collapse_index,
+                "recognition_gap_index": condition_metrics.recognition_gap_index,
+                "formula_recall_use_delta": condition_metrics.formula_recall_use_delta,
+            }),
+        }))
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn persist_deep_diagnostic_outputs(
+        &self,
+        diagnostic_id: i64,
+        student_id: i64,
+        subject_id: i64,
+        session_scores: &[DiagnosticSessionScore],
+        topic_results: &[TopicDiagnosticResult],
+        skill_results: &[DiagnosticSkillResult],
+        condition_metrics: &DiagnosticConditionMetrics,
+        learning_profile: Option<&DiagnosticLearningProfile>,
+        recommendations: &[DiagnosticRecommendation],
+        audience_reports: &[DiagnosticAudienceReport],
+    ) -> EcoachResult<()> {
+        let stages_completed = session_scores
+            .iter()
+            .map(|score| (score.phase_code.clone(), json!(true)))
+            .collect::<Map<String, Value>>();
+        let comparison_deltas_json = serde_json::to_string(&json!({
+            "fragility_index": condition_metrics.fragility_index,
+            "pressure_collapse_index": condition_metrics.pressure_collapse_index,
+            "recognition_gap_index": condition_metrics.recognition_gap_index,
+            "formula_recall_use_delta": condition_metrics.formula_recall_use_delta,
+            "early_late_delta": condition_metrics.early_late_delta,
+        }))
+        .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        self.conn
+            .execute(
+                "UPDATE diagnostic_session_groups
+                 SET status = 'completed',
+                     stages_completed_json = ?1,
+                     profile_type = ?2,
+                     comparison_deltas_json = ?3,
+                     completed_at = datetime('now')
+                 WHERE id = ?4",
+                params![
+                    serde_json::to_string(&stages_completed)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    learning_profile.map(|profile| profile.profile_type.as_str()),
+                    comparison_deltas_json,
+                    diagnostic_id,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.conn
+            .execute(
+                "DELETE FROM diagnostic_phase_results WHERE group_id = ?1",
+                [diagnostic_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for score in session_scores {
+            self.conn
+                .execute(
+                    "INSERT INTO diagnostic_phase_results (
+                        group_id, phase_type, session_id, accuracy_bp, fluency_bp, precision_bp,
+                        pressure_bp, flexibility_bp, stability_bp, early_segment_accuracy_bp,
+                        middle_segment_accuracy_bp, final_segment_accuracy_bp, confidence_capture_json
+                     ) VALUES (?1, ?2, NULL, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+                    params![
+                        diagnostic_id,
+                        deep_phase_type_from_code(&score.phase_code),
+                        score.raw_accuracy,
+                        if score.phase_code == "speed" { score.adjusted_accuracy } else { 0 },
+                        if score.phase_code == "precision" { score.adjusted_accuracy } else { 0 },
+                        if score.phase_code == "pressure" { score.adjusted_accuracy } else { 0 },
+                        if score.phase_code == "flex" { score.adjusted_accuracy } else { 0 },
+                        score.stability_measure,
+                        score.early_segment_accuracy,
+                        score.middle_segment_accuracy,
+                        score.final_segment_accuracy,
+                        "{}",
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        self.conn
+            .execute(
+                "DELETE FROM diagnostic_deltas WHERE group_id = ?1",
+                [diagnostic_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO diagnostic_deltas (
+                    group_id, student_id, topic_id, speed_accuracy_delta_bp, calm_pressure_delta_bp,
+                    direct_variant_delta_bp, recall_application_delta_bp, formula_recall_use_delta_bp,
+                    early_late_delta_bp
+                 ) VALUES (?1, ?2, NULL, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    diagnostic_id,
+                    student_id,
+                    session_delta(session_scores, "baseline", "speed"),
+                    condition_metrics.pressure_collapse_index,
+                    condition_metrics.recognition_gap_index,
+                    condition_metrics.recognition_gap_index,
+                    condition_metrics.formula_recall_use_delta,
+                    condition_metrics.early_late_delta,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.conn
+            .execute(
+                "DELETE FROM diagnostic_learning_dimensions WHERE group_id = ?1",
+                [diagnostic_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO diagnostic_learning_dimensions (
+                    group_id, student_id, coverage_bp, accuracy_bp, recall_strength_bp,
+                    recognition_vs_production_bp, reasoning_depth_bp, misconception_density_bp,
+                    speed_bp, pressure_response_bp, transfer_ability_bp, stability_bp,
+                    confidence_calibration_bp, fatigue_pattern_bp
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                params![
+                    diagnostic_id,
+                    student_id,
+                    average_bp(
+                        topic_results
+                            .iter()
+                            .map(|item| item.mastery_score)
+                            .collect()
+                    )
+                    .unwrap_or(0),
+                    average_bp(
+                        topic_results
+                            .iter()
+                            .map(|item| item.precision_score)
+                            .collect()
+                    )
+                    .unwrap_or(0),
+                    session_score_value(session_scores, "baseline"),
+                    10_000i64 - condition_metrics.recognition_gap_index as i64,
+                    average_bp(
+                        topic_results
+                            .iter()
+                            .map(|item| item.precision_score)
+                            .collect()
+                    )
+                    .unwrap_or(0),
+                    average_bp(
+                        topic_results
+                            .iter()
+                            .map(|item| item.endurance_score.saturating_sub(item.mastery_score))
+                            .collect()
+                    )
+                    .unwrap_or(0),
+                    average_bp(
+                        topic_results
+                            .iter()
+                            .map(|item| item.fluency_score)
+                            .collect()
+                    )
+                    .unwrap_or(0),
+                    10_000i64 - condition_metrics.pressure_collapse_index as i64,
+                    10_000i64 - condition_metrics.recognition_gap_index as i64,
+                    average_bp(
+                        topic_results
+                            .iter()
+                            .map(|item| item.stability_score)
+                            .collect()
+                    )
+                    .unwrap_or(0),
+                    10_000i64 - condition_metrics.confidence_correctness_delta as i64,
+                    condition_metrics.endurance_drop,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.conn
+            .execute(
+                "DELETE FROM diagnostic_skill_results WHERE diagnostic_id = ?1",
+                [diagnostic_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for skill in skill_results {
+            self.conn
+                .execute(
+                    "INSERT INTO diagnostic_skill_results (
+                        diagnostic_id, student_id, skill_kind, skill_id, skill_key, skill_name,
+                        skill_type, topic_id, baseline_score, speed_score, precision_score,
+                        pressure_score, flex_score, root_cause_score, endurance_score, recovery_score,
+                        mastery_score, fragility_index, pressure_collapse_index,
+                        recognition_gap_index, formula_recall_use_delta, stability_score,
+                        mastery_state, weakness_type_primary, weakness_type_secondary,
+                        recommended_intervention, evidence_json
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27)",
+                    params![
+                        diagnostic_id,
+                        student_id,
+                        skill_kind_from_key(&skill.skill_key),
+                        skill_id_from_key(&skill.skill_key),
+                        skill.skill_key,
+                        skill.skill_name,
+                        skill.skill_type,
+                        skill.topic_id,
+                        skill.baseline_score,
+                        skill.speed_score,
+                        skill.precision_score,
+                        skill.pressure_score,
+                        skill.flex_score,
+                        skill.root_cause_score,
+                        skill.endurance_score,
+                        skill.recovery_score,
+                        skill.mastery_score,
+                        skill.fragility_index,
+                        skill.pressure_collapse_index,
+                        skill.recognition_gap_index,
+                        skill.formula_recall_use_delta,
+                        skill.stability_score,
+                        skill.mastery_state,
+                        skill.weakness_type_primary,
+                        skill.weakness_type_secondary,
+                        skill.recommended_intervention,
+                        serde_json::to_string(&skill.evidence)
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        self.conn
+            .execute(
+                "DELETE FROM diagnostic_recommendations WHERE diagnostic_id = ?1",
+                [diagnostic_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for recommendation in recommendations {
+            self.conn
+                .execute(
+                    "INSERT INTO diagnostic_recommendations (
+                        diagnostic_id, student_id, category, action_code, title, rationale,
+                        priority, target_kind, target_ref, payload_json
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, '{}')",
+                    params![
+                        diagnostic_id,
+                        student_id,
+                        recommendation.category,
+                        recommendation.action_code,
+                        recommendation.title,
+                        recommendation.rationale,
+                        recommendation.priority,
+                        recommendation.target_kind,
+                        recommendation.target_ref,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        self.conn
+            .execute(
+                "DELETE FROM diagnostic_audience_reports WHERE diagnostic_id = ?1",
+                [diagnostic_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        for report in audience_reports {
+            let payload_json = serde_json::to_string(&json!({
+                "strengths": report.strengths,
+                "fragile_areas": report.fragile_areas,
+                "critical_areas": report.critical_areas,
+                "action_plan": report.action_plan,
+            }))
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+            self.conn
+                .execute(
+                    "INSERT INTO diagnostic_audience_reports (
+                        diagnostic_id, audience, headline, narrative, payload_json
+                     ) VALUES (?1, ?2, ?3, ?4, ?5)",
+                    params![
+                        diagnostic_id,
+                        report.audience,
+                        report.headline,
+                        report.narrative,
+                        payload_json,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        if let Some(profile) = learning_profile {
+            self.conn
+                .execute(
+                    "INSERT INTO student_learning_profiles (
+                        student_id, subject_id, profile_type, confidence_bp, evidence_json,
+                        diagnostic_group_id, updated_at
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
+                     ON CONFLICT(student_id, subject_id) DO UPDATE SET
+                        profile_type = excluded.profile_type,
+                        confidence_bp = excluded.confidence_bp,
+                        evidence_json = excluded.evidence_json,
+                        diagnostic_group_id = excluded.diagnostic_group_id,
+                        updated_at = datetime('now')",
+                    params![
+                        student_id,
+                        subject_id,
+                        profile.profile_type,
+                        profile.confidence_score,
+                        serde_json::to_string(&profile.evidence)
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                        diagnostic_id,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        Ok(())
+    }
+
     fn compute_topic_analytics(
         &self,
         diagnostic_id: i64,
@@ -644,6 +1916,7 @@ impl<'a> DiagnosticEngine<'a> {
         let pressure = self.topic_phase_accuracy(diagnostic_id, topic_id, "pressure")?;
         let flex = self.topic_phase_accuracy(diagnostic_id, topic_id, "flex")?;
         let root_cause = self.topic_phase_accuracy(diagnostic_id, topic_id, "root_cause")?;
+        let endurance = self.topic_phase_accuracy(diagnostic_id, topic_id, "endurance")?;
         let mut error_profile = self.load_error_profile(student_id, topic_id)?;
         let confidence_signals = self.load_confidence_signals(diagnostic_id, topic_id)?;
         error_profile.high_confidence_wrong_count = confidence_signals.high_confidence_wrong_count;
@@ -664,6 +1937,11 @@ impl<'a> DiagnosticEngine<'a> {
             + pressure_score as i64
             + flexibility_score as i64)
             / 4) as BasisPoints;
+        let endurance_score = if endurance > 0 {
+            endurance
+        } else {
+            stability_score
+        };
         let mastery_score =
             ((baseline as i64 + root_cause as i64 + precision_score as i64) / 3) as BasisPoints;
         let classification = classify_topic_analytics(
@@ -688,6 +1966,25 @@ impl<'a> DiagnosticEngine<'a> {
             &error_profile,
         )
         .to_string();
+        let weakness_type = Some(primary_weakness_type(
+            mastery_score,
+            fluency_score,
+            pressure_score,
+            flexibility_score,
+            endurance_score,
+            &error_profile,
+        ));
+        let failure_stage = Some(primary_failure_stage(&error_profile).to_string());
+        let error_distribution = json!({
+            "knowledge_gap": error_profile.knowledge_gap_score,
+            "conceptual_confusion": error_profile.conceptual_confusion_score,
+            "recognition_failure": error_profile.recognition_failure_score,
+            "pressure_breakdown": error_profile.pressure_breakdown_score,
+            "speed_error": error_profile.speed_error_score,
+            "misconception_signals": error_profile.misconception_signal_count,
+            "high_confidence_wrong": error_profile.high_confidence_wrong_count,
+            "low_confidence_correct": error_profile.low_confidence_correct_count,
+        });
 
         Ok(DiagnosticTopicAnalytics {
             diagnostic_id,
@@ -702,6 +1999,10 @@ impl<'a> DiagnosticEngine<'a> {
             classification,
             confidence_score,
             recommended_action,
+            endurance_score,
+            error_distribution,
+            weakness_type,
+            failure_stage,
         })
     }
 
@@ -711,8 +2012,9 @@ impl<'a> DiagnosticEngine<'a> {
                 "INSERT INTO diagnostic_topic_analytics (
                     diagnostic_id, topic_id, mastery_score, fluency_score, precision_score,
                     pressure_score, flexibility_score, stability_score, classification,
-                    confidence_score, recommended_action
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                    confidence_score, recommended_action, endurance_score_bp,
+                    error_distribution_json, weakness_type, failure_stage
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
                  ON CONFLICT(diagnostic_id, topic_id) DO UPDATE SET
                     mastery_score = excluded.mastery_score,
                     fluency_score = excluded.fluency_score,
@@ -723,6 +2025,10 @@ impl<'a> DiagnosticEngine<'a> {
                     classification = excluded.classification,
                     confidence_score = excluded.confidence_score,
                     recommended_action = excluded.recommended_action,
+                    endurance_score_bp = excluded.endurance_score_bp,
+                    error_distribution_json = excluded.error_distribution_json,
+                    weakness_type = excluded.weakness_type,
+                    failure_stage = excluded.failure_stage,
                     updated_at = datetime('now')",
                 params![
                     analytics.diagnostic_id,
@@ -736,6 +2042,11 @@ impl<'a> DiagnosticEngine<'a> {
                     analytics.classification,
                     analytics.confidence_score,
                     analytics.recommended_action,
+                    analytics.endurance_score,
+                    serde_json::to_string(&analytics.error_distribution)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    analytics.weakness_type,
+                    analytics.failure_stage,
                 ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -1132,7 +2443,7 @@ impl<'a> DiagnosticEngine<'a> {
                  WHERE dia.diagnostic_id = ?1
                    AND q.topic_id = ?2
                    AND COALESCE(dsp.phase_code, lower(replace(dsp.phase_type, ' ', '_'))) = ?3
-                   AND dia.selected_option_id IS NOT NULL",
+                   AND dia.is_correct IS NOT NULL",
                 params![diagnostic_id, topic_id, phase_code],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
@@ -1309,6 +2620,18 @@ impl<'a> DiagnosticEngine<'a> {
             weakness_topic_ids: topic_ids.to_vec(),
             recently_seen_question_ids: recently_seen_question_ids.to_vec(),
             timed: template.timed,
+            diagnostic_stage: Some(template.code.as_str().to_string()),
+            condition_type: Some(template.code.condition_type().to_string()),
+            require_confidence_prompt: matches!(
+                template.code,
+                DiagnosticPhaseCode::RootCause | DiagnosticPhaseCode::Recovery
+            ),
+            require_concept_guess_prompt: matches!(
+                template.code,
+                DiagnosticPhaseCode::Flex
+                    | DiagnosticPhaseCode::RootCause
+                    | DiagnosticPhaseCode::Recovery
+            ),
         })?;
 
         if !primary_selection.is_empty() || recently_seen_question_ids.is_empty() {
@@ -1323,6 +2646,18 @@ impl<'a> DiagnosticEngine<'a> {
             weakness_topic_ids: topic_ids.to_vec(),
             recently_seen_question_ids: Vec::new(),
             timed: template.timed,
+            diagnostic_stage: Some(template.code.as_str().to_string()),
+            condition_type: Some(template.code.condition_type().to_string()),
+            require_confidence_prompt: matches!(
+                template.code,
+                DiagnosticPhaseCode::RootCause | DiagnosticPhaseCode::Recovery
+            ),
+            require_concept_guess_prompt: matches!(
+                template.code,
+                DiagnosticPhaseCode::Flex
+                    | DiagnosticPhaseCode::RootCause
+                    | DiagnosticPhaseCode::Recovery
+            ),
         })
     }
 
@@ -1369,8 +2704,8 @@ impl<'a> DiagnosticEngine<'a> {
             "timed": template.timed,
             "time_limit_seconds": template.time_limit_seconds,
             "condition_type": template.code.condition_type(),
-            "confidence_prompt": matches!(template.code, DiagnosticPhaseCode::RootCause),
-            "concept_guess_prompt": matches!(template.code, DiagnosticPhaseCode::Flex | DiagnosticPhaseCode::RootCause),
+            "confidence_prompt": matches!(template.code, DiagnosticPhaseCode::RootCause | DiagnosticPhaseCode::Recovery),
+            "concept_guess_prompt": matches!(template.code, DiagnosticPhaseCode::Flex | DiagnosticPhaseCode::RootCause | DiagnosticPhaseCode::Recovery),
             "branch_topic_ids": branch_topics,
             "branch_reason": branch_reason_for_phase(template.code),
             "adaptive_retargeted": true,
@@ -1444,6 +2779,7 @@ impl<'a> DiagnosticEngine<'a> {
             .into_iter()
             .take(match phase_code {
                 DiagnosticPhaseCode::RootCause => 2,
+                DiagnosticPhaseCode::Recovery => 2,
                 _ => 3,
             })
             .map(|(topic_id, _)| topic_id)
@@ -1453,11 +2789,12 @@ impl<'a> DiagnosticEngine<'a> {
         }
 
         let fallback = match phase_code {
-            DiagnosticPhaseCode::RootCause => self.load_root_cause_topic_ids(
-                student_id,
-                subject_id,
-                &self.load_subject_topic_ids(subject_id)?,
-            )?,
+            DiagnosticPhaseCode::RootCause | DiagnosticPhaseCode::Recovery => self
+                .load_root_cause_topic_ids(
+                    student_id,
+                    subject_id,
+                    &self.load_subject_topic_ids(subject_id)?,
+                )?,
             _ => self.load_subject_topic_ids(subject_id)?,
         };
         topic_ids.extend(fallback.into_iter().take(3));
@@ -1498,8 +2835,8 @@ impl<'a> DiagnosticEngine<'a> {
             "timed": template.timed,
             "time_limit_seconds": template.time_limit_seconds,
             "condition_type": template.code.condition_type(),
-            "confidence_prompt": matches!(template.code, DiagnosticPhaseCode::RootCause),
-            "concept_guess_prompt": matches!(template.code, DiagnosticPhaseCode::Flex | DiagnosticPhaseCode::RootCause),
+            "confidence_prompt": matches!(template.code, DiagnosticPhaseCode::RootCause | DiagnosticPhaseCode::Recovery),
+            "concept_guess_prompt": matches!(template.code, DiagnosticPhaseCode::Flex | DiagnosticPhaseCode::RootCause | DiagnosticPhaseCode::Recovery),
         }))
         .map_err(|err| EcoachError::Serialization(err.to_string()))?;
 
@@ -1550,8 +2887,282 @@ impl<'a> DiagnosticEngine<'a> {
                     ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.upsert_item_routing_profile(&selected.question)?;
         }
 
+        Ok(())
+    }
+
+    fn ensure_subject_blueprint(&self, subject_id: i64) -> EcoachResult<()> {
+        let subject_name: String = self
+            .conn
+            .query_row(
+                "SELECT name FROM subjects WHERE id = ?1",
+                [subject_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT COALESCE(qip.primary_pedagogic_function, qip.primary_cognitive_demand, q.question_format) AS item_family,
+                        COUNT(*) AS item_count
+                 FROM questions q
+                 LEFT JOIN question_intelligence_profiles qip ON qip.question_id = q.id
+                 WHERE q.subject_id = ?1 AND q.is_active = 1
+                 GROUP BY item_family
+                 ORDER BY item_count DESC, item_family ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([subject_id], |row| {
+                Ok(json!({
+                    "item_family": row.get::<_, String>(0)?,
+                    "count": row.get::<_, i64>(1)?,
+                }))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut item_family_mix = Vec::new();
+        for row in rows {
+            item_family_mix.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+
+        let build_mode_json = |mode: DiagnosticMode, duration_minutes: i64| {
+            let phases = diagnostic_phase_templates(mode)
+                .into_iter()
+                .map(|template| {
+                    json!({
+                        "phase_code": template.code.as_str(),
+                        "question_count": template.question_count,
+                        "timed": template.timed,
+                        "time_limit_seconds": template.time_limit_seconds,
+                    })
+                })
+                .collect::<Vec<_>>();
+            json!({
+                "duration_minutes": duration_minutes,
+                "phase_count": phases.len(),
+                "phases": phases,
+            })
+        };
+
+        let session_modes_json = json!({
+            "quick": build_mode_json(DiagnosticMode::Quick, 35),
+            "standard": build_mode_json(DiagnosticMode::Standard, 60),
+            "deep": build_mode_json(DiagnosticMode::Deep, 90),
+        });
+        let stage_rules_json = json!({
+            "baseline": "scan broadly across the subject before deepening",
+            "adaptive_zoom": "retarget weak topics as evidence accumulates",
+            "condition_testing": "compare calm, timed, and endurance conditions",
+            "stability_recheck": "confirm whether success survives transfer and repetition",
+            "confidence_snapshot": "capture confidence and recognition signals before final classification"
+        });
+        let routing_contract_json = json!({
+            "confidence_prompt": "sure_not_sure_guessed",
+            "supports_transfer_checks": true,
+            "supports_timed_mirrors": true,
+            "supports_root_cause_branching": true,
+            "uses_question_intelligence": true,
+        });
+        let report_contract_json = json!({
+            "sections": [
+                "overall_dashboard",
+                "condition_deltas",
+                "topic_cards",
+                "problem_cause_fix_cards",
+                "intervention_prescriptions"
+            ],
+            "audiences": ["student", "parent", "teacher"],
+            "exports": ["json", "printable_summary"]
+        });
+
+        self.conn
+            .execute(
+                "INSERT INTO diagnostic_subject_blueprints (
+                    subject_id, blueprint_code, subject_name, session_modes_json,
+                    stage_rules_json, item_family_mix_json, routing_contract_json,
+                    report_contract_json, updated_at
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, datetime('now'))
+                 ON CONFLICT(subject_id) DO UPDATE SET
+                    blueprint_code = excluded.blueprint_code,
+                    subject_name = excluded.subject_name,
+                    session_modes_json = excluded.session_modes_json,
+                    stage_rules_json = excluded.stage_rules_json,
+                    item_family_mix_json = excluded.item_family_mix_json,
+                    routing_contract_json = excluded.routing_contract_json,
+                    report_contract_json = excluded.report_contract_json,
+                    updated_at = datetime('now')",
+                params![
+                    subject_id,
+                    format!("dna_subject_{}", subject_id),
+                    subject_name,
+                    serde_json::to_string(&session_modes_json)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&stage_rules_json)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&item_family_mix)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&routing_contract_json)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&report_contract_json)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn ensure_routing_profiles_for_scope(
+        &self,
+        subject_id: i64,
+        topic_ids: &[i64],
+    ) -> EcoachResult<()> {
+        if topic_ids.is_empty() {
+            return Ok(());
+        }
+
+        let question_service = QuestionService::new(self.conn);
+        for question in question_service.list_questions_for_scope(subject_id, topic_ids)? {
+            self.upsert_item_routing_profile(&question)?;
+        }
+        Ok(())
+    }
+
+    fn upsert_item_routing_profile(&self, question: &Question) -> EcoachResult<()> {
+        let question_service = QuestionService::new(self.conn);
+        let intelligence = question_service.get_question_intelligence(question.id)?;
+        let cognitive_demand = intelligence
+            .as_ref()
+            .and_then(|item| item.cognitive_demand.clone());
+        let pedagogic_function = intelligence
+            .as_ref()
+            .and_then(|item| item.pedagogic_function.clone());
+        let family_id = intelligence
+            .as_ref()
+            .and_then(|item| item.family.as_ref().and_then(|family| family.family_id));
+        let item_family = pedagogic_function
+            .clone()
+            .or(cognitive_demand.clone())
+            .unwrap_or_else(|| question.question_format.clone());
+        let recognition_suitable = matches!(
+            cognitive_demand.as_deref(),
+            Some("recognition")
+        ) || matches!(
+            question.question_format.as_str(),
+            "mcq" | "true_false" | "matching"
+        );
+        let recall_suitable = matches!(
+            cognitive_demand.as_deref(),
+            Some("recall") | Some("reasoning") | Some("application")
+        ) || intelligence
+            .as_ref()
+            .and_then(|item| item.knowledge_role.as_deref())
+            == Some("formula_recall");
+        let transfer_suitable = matches!(pedagogic_function.as_deref(), Some("transfer_check"))
+            || matches!(
+                cognitive_demand.as_deref(),
+                Some("application") | Some("reasoning")
+            );
+        let timed_suitable = question.estimated_time_seconds <= 60 || recognition_suitable;
+
+        let mut recommended_stages = vec!["baseline".to_string()];
+        if timed_suitable {
+            recommended_stages.push("speed".to_string());
+            recommended_stages.push("pressure".to_string());
+        }
+        if transfer_suitable {
+            recommended_stages.push("flex".to_string());
+        }
+        if intelligence
+            .as_ref()
+            .map(|item| !item.misconceptions.is_empty())
+            .unwrap_or(false)
+            || item_family.contains("misconception")
+        {
+            recommended_stages.push("root_cause".to_string());
+        }
+        let mut stage_seen = std::collections::BTreeSet::new();
+        recommended_stages.retain(|item| stage_seen.insert(item.clone()));
+
+        let mut sibling_variant_modes = vec!["isomorphic".to_string(), "rescue".to_string()];
+        if transfer_suitable {
+            sibling_variant_modes.push("representation_shift".to_string());
+        }
+        if intelligence
+            .as_ref()
+            .map(|item| !item.misconceptions.is_empty())
+            .unwrap_or(false)
+        {
+            sibling_variant_modes.push("misconception_probe".to_string());
+        }
+        if !timed_suitable {
+            sibling_variant_modes.push("stretch".to_string());
+        }
+        let mut mode_seen = std::collections::BTreeSet::new();
+        sibling_variant_modes.retain(|item| mode_seen.insert(item.clone()));
+
+        let routing_notes = json!({
+            "question_format": question.question_format,
+            "cognitive_demand": cognitive_demand,
+            "pedagogic_function": pedagogic_function,
+            "family_code": intelligence
+                .as_ref()
+                .and_then(|item| item.family.as_ref().and_then(|family| family.family_code.clone())),
+            "misconception_codes": intelligence
+                .as_ref()
+                .map(|item| {
+                    item.misconceptions
+                        .iter()
+                        .map(|misconception| misconception.misconception_code.clone())
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default(),
+        });
+
+        self.conn
+            .execute(
+                "INSERT INTO diagnostic_item_routing_profiles (
+                    question_id, subject_id, topic_id, family_id, item_family,
+                    recognition_suitable, recall_suitable, transfer_suitable, timed_suitable,
+                    confidence_prompt, recommended_stages_json, sibling_variant_modes_json,
+                    routing_notes_json, updated_at
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, datetime('now'))
+                 ON CONFLICT(question_id) DO UPDATE SET
+                    subject_id = excluded.subject_id,
+                    topic_id = excluded.topic_id,
+                    family_id = excluded.family_id,
+                    item_family = excluded.item_family,
+                    recognition_suitable = excluded.recognition_suitable,
+                    recall_suitable = excluded.recall_suitable,
+                    transfer_suitable = excluded.transfer_suitable,
+                    timed_suitable = excluded.timed_suitable,
+                    confidence_prompt = excluded.confidence_prompt,
+                    recommended_stages_json = excluded.recommended_stages_json,
+                    sibling_variant_modes_json = excluded.sibling_variant_modes_json,
+                    routing_notes_json = excluded.routing_notes_json,
+                    updated_at = datetime('now')",
+                params![
+                    question.id,
+                    question.subject_id,
+                    question.topic_id,
+                    family_id,
+                    item_family,
+                    recognition_suitable as i64,
+                    recall_suitable as i64,
+                    transfer_suitable as i64,
+                    timed_suitable as i64,
+                    "sure_not_sure_guessed",
+                    serde_json::to_string(&recommended_stages)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&sibling_variant_modes)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                    serde_json::to_string(&routing_notes)
+                        .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
         Ok(())
     }
 
@@ -1627,6 +3238,215 @@ struct TopicBranchSignal {
     high_conf_wrong: i64,
     low_conf_correct: i64,
     avg_response_time_ms: i64,
+}
+
+#[derive(Debug)]
+struct PhaseAttemptSnapshot {
+    display_order: i64,
+    is_correct: Option<bool>,
+    response_time_ms: Option<i64>,
+    changed_answer_count: i64,
+    skipped: bool,
+    timed_out: bool,
+    estimated_time_ms: i64,
+    distractor_intent: Option<String>,
+    confidence_level: Option<String>,
+}
+
+impl PhaseAttemptSnapshot {
+    fn looks_careless(&self) -> bool {
+        self.is_correct == Some(false)
+            && !self.timed_out
+            && (self.changed_answer_count > 0
+                || self
+                    .response_time_ms
+                    .map(|value| value < self.estimated_time_ms / 2)
+                    .unwrap_or(false))
+    }
+
+    fn looks_misread(&self) -> bool {
+        self.is_correct == Some(false)
+            && self
+                .distractor_intent
+                .as_deref()
+                .map(|intent| {
+                    let normalized = intent.to_ascii_lowercase();
+                    normalized.contains("misread")
+                        || normalized.contains("sign")
+                        || normalized.contains("unit")
+                })
+                .unwrap_or(false)
+    }
+}
+
+#[derive(Debug, Clone)]
+struct SkillAttemptSnapshot {
+    skill_kind: String,
+    skill_id: i64,
+    skill_key: String,
+    skill_name: String,
+    skill_type: String,
+    topic_id: i64,
+    topic_name: String,
+    phase_code: String,
+    is_correct: bool,
+    family_id: Option<i64>,
+}
+
+#[derive(Debug, Clone)]
+struct SkillAggregate {
+    skill_kind: String,
+    skill_id: i64,
+    skill_key: String,
+    skill_name: String,
+    skill_type: String,
+    topic_id: i64,
+    topic_name: String,
+    families: Vec<i64>,
+    phase_totals: std::collections::BTreeMap<String, (usize, usize)>,
+}
+
+impl SkillAggregate {
+    fn from_attempt(attempt: SkillAttemptSnapshot) -> Self {
+        let mut aggregate = Self {
+            skill_kind: attempt.skill_kind.clone(),
+            skill_id: attempt.skill_id,
+            skill_key: attempt.skill_key.clone(),
+            skill_name: attempt.skill_name.clone(),
+            skill_type: attempt.skill_type.clone(),
+            topic_id: attempt.topic_id,
+            topic_name: attempt.topic_name.clone(),
+            families: attempt.family_id.into_iter().collect(),
+            phase_totals: std::collections::BTreeMap::new(),
+        };
+        aggregate.push(attempt);
+        aggregate
+    }
+
+    fn push(&mut self, attempt: SkillAttemptSnapshot) {
+        if let Some(family_id) = attempt.family_id {
+            if !self.families.contains(&family_id) {
+                self.families.push(family_id);
+            }
+        }
+        let entry = self
+            .phase_totals
+            .entry(attempt.phase_code)
+            .or_insert((0usize, 0usize));
+        entry.0 += 1;
+        if attempt.is_correct {
+            entry.1 += 1;
+        }
+    }
+
+    fn into_result(self, _student_id: i64) -> DiagnosticSkillResult {
+        let baseline_score = phase_accuracy_from_totals(&self.phase_totals, "baseline");
+        let speed_score = phase_accuracy_from_totals(&self.phase_totals, "speed");
+        let precision_score = phase_accuracy_from_totals(&self.phase_totals, "precision");
+        let pressure_score = phase_accuracy_from_totals(&self.phase_totals, "pressure");
+        let flex_score = phase_accuracy_from_totals(&self.phase_totals, "flex");
+        let root_cause_score = phase_accuracy_from_totals(&self.phase_totals, "root_cause");
+        let endurance_score = phase_accuracy_from_totals(&self.phase_totals, "endurance");
+        let recovery_score = phase_accuracy_from_totals(&self.phase_totals, "recovery");
+        let effective_precision = if precision_score > 0 {
+            precision_score
+        } else {
+            baseline_score
+        };
+        let effective_flex = if flex_score > 0 {
+            flex_score
+        } else {
+            baseline_score
+        };
+        let effective_pressure = if pressure_score > 0 {
+            pressure_score
+        } else {
+            baseline_score
+        };
+        let effective_root_cause = if root_cause_score > 0 {
+            root_cause_score
+        } else {
+            baseline_score
+        };
+        let mastery_score = weighted_mastery_score(
+            baseline_score,
+            speed_score,
+            effective_precision,
+            effective_pressure,
+            effective_flex,
+            effective_root_cause,
+        );
+        let fragility_index = average_bp(vec![
+            baseline_score.saturating_sub(speed_score),
+            baseline_score.saturating_sub(effective_pressure),
+            baseline_score.saturating_sub(effective_flex),
+        ])
+        .unwrap_or(0);
+        let pressure_collapse_index = baseline_score.saturating_sub(effective_pressure);
+        let recognition_gap_index = baseline_score.saturating_sub(effective_flex);
+        let formula_recall_use_delta =
+            formula_recall_use_delta(&self.skill_type, effective_root_cause, effective_precision);
+        let stability_score = 10_000u16.saturating_sub(fragility_index);
+        let weakness_type_primary = primary_skill_weakness_type(
+            mastery_score,
+            speed_score,
+            effective_precision,
+            effective_pressure,
+            effective_flex,
+            endurance_score,
+            formula_recall_use_delta,
+        )
+        .to_string();
+        let weakness_type_secondary = secondary_skill_weakness_type(
+            &weakness_type_primary,
+            speed_score,
+            effective_pressure,
+            effective_flex,
+            endurance_score,
+        )
+        .map(str::to_string);
+        let mastery_state = classify_skill_mastery_state(
+            mastery_score,
+            fragility_index,
+            pressure_collapse_index,
+            recognition_gap_index,
+        )
+        .to_string();
+        let recommended_intervention =
+            recommendation_for_weakness_type(&weakness_type_primary).to_string();
+
+        DiagnosticSkillResult {
+            skill_key: self.skill_key,
+            skill_name: self.skill_name,
+            skill_type: self.skill_type,
+            topic_id: self.topic_id,
+            topic_name: self.topic_name,
+            baseline_score,
+            speed_score,
+            precision_score: effective_precision,
+            pressure_score: effective_pressure,
+            flex_score: effective_flex,
+            root_cause_score: effective_root_cause,
+            endurance_score,
+            recovery_score,
+            mastery_score,
+            fragility_index,
+            pressure_collapse_index,
+            recognition_gap_index,
+            formula_recall_use_delta,
+            stability_score,
+            mastery_state,
+            weakness_type_primary,
+            weakness_type_secondary,
+            recommended_intervention,
+            evidence: json!({
+                "skill_kind": self.skill_kind,
+                "skill_id": self.skill_id,
+                "family_count": self.families.len(),
+                "phase_totals": self.phase_totals,
+            }),
+        }
+    }
 }
 
 fn build_topic_longitudinal_signal(
@@ -2096,6 +3916,8 @@ fn branch_reason_for_phase(phase_code: DiagnosticPhaseCode) -> &'static str {
         DiagnosticPhaseCode::Pressure => "condition_testing_on_pressure_risk_topics",
         DiagnosticPhaseCode::Flex => "stability_recheck_on_fragile_topics",
         DiagnosticPhaseCode::RootCause => "root_cause_probe_on_confidence_or_accuracy_mismatch",
+        DiagnosticPhaseCode::Endurance => "fatigue_probe_on_inconsistent_topics",
+        DiagnosticPhaseCode::Recovery => "recovery_probe_after_error_heavy_topics",
         DiagnosticPhaseCode::Baseline => "broad_scan",
     }
 }
@@ -2126,6 +3948,12 @@ fn branch_priority_for_phase(signal: &TopicBranchSignal, phase_code: DiagnosticP
         }
         DiagnosticPhaseCode::RootCause => {
             inaccuracy + signal.high_conf_wrong * 1_500 + signal.low_conf_correct * 900
+        }
+        DiagnosticPhaseCode::Endurance => {
+            inaccuracy + signal.avg_response_time_ms.min(90_000) / 25 + signal.high_conf_wrong * 900
+        }
+        DiagnosticPhaseCode::Recovery => {
+            inaccuracy + signal.high_conf_wrong * 1_100 + signal.low_conf_correct * 650
         }
         DiagnosticPhaseCode::Baseline => inaccuracy,
     }
@@ -2284,8 +4112,639 @@ fn diagnostic_phase_templates(mode: DiagnosticMode) -> Vec<DiagnosticPhaseTempla
                 timed: false,
                 evidence_weight: 10_000,
             },
+            DiagnosticPhaseTemplate {
+                code: DiagnosticPhaseCode::Endurance,
+                question_count: 8,
+                time_limit_seconds: Some(30),
+                timed: true,
+                evidence_weight: 9_000,
+            },
+            DiagnosticPhaseTemplate {
+                code: DiagnosticPhaseCode::Recovery,
+                question_count: 6,
+                time_limit_seconds: Some(35),
+                timed: false,
+                evidence_weight: 8_800,
+            },
         ],
     }
+}
+
+fn diagnostic_instance_status_for_phase(phase_number: i64) -> &'static str {
+    match phase_number {
+        1 => "phase_1",
+        2 => "phase_2",
+        3 => "phase_3",
+        4 => "phase_4",
+        _ => "phase_5",
+    }
+}
+
+fn diagnostic_group_type(mode: DiagnosticMode) -> &'static str {
+    match mode {
+        DiagnosticMode::Quick => "light",
+        DiagnosticMode::Standard => "standard",
+        DiagnosticMode::Deep => "deep",
+    }
+}
+
+fn deep_phase_type_from_code(phase_code: &str) -> &'static str {
+    match phase_code {
+        "baseline" => "baseline",
+        "speed" => "speed",
+        "precision" => "precision",
+        "pressure" => "pressure",
+        "flex" => "flexibility",
+        "root_cause" => "root_cause",
+        "endurance" => "endurance",
+        "recovery" => "recovery",
+        _ => "baseline",
+    }
+}
+
+fn parse_report_list(payload: &Value, key: &str) -> Vec<String> {
+    payload
+        .get(key)
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
+}
+
+fn accuracy_bp(count: usize, total: usize) -> BasisPoints {
+    if total == 0 {
+        0
+    } else {
+        ((count as f64 / total as f64) * 10_000.0).round() as BasisPoints
+    }
+}
+
+fn median_i64(mut values: Vec<i64>) -> Option<i64> {
+    if values.is_empty() {
+        return None;
+    }
+    values.sort_unstable();
+    let middle = values.len() / 2;
+    if values.len() % 2 == 0 {
+        Some((values[middle - 1] + values[middle]) / 2)
+    } else {
+        Some(values[middle])
+    }
+}
+
+fn average_bp(values: Vec<BasisPoints>) -> Option<BasisPoints> {
+    if values.is_empty() {
+        return None;
+    }
+    Some(
+        (values.iter().map(|value| *value as i64).sum::<i64>() / values.len() as i64)
+            .clamp(0, 10_000) as BasisPoints,
+    )
+}
+
+fn segment_accuracy_profile(
+    attempts: &[PhaseAttemptSnapshot],
+) -> (
+    Option<BasisPoints>,
+    Option<BasisPoints>,
+    Option<BasisPoints>,
+) {
+    if attempts.is_empty() {
+        return (None, None, None);
+    }
+    let chunk_size = ((attempts.len() as f64) / 3.0).ceil() as usize;
+    let chunk_accuracy = |chunk: &[PhaseAttemptSnapshot]| -> Option<BasisPoints> {
+        if chunk.is_empty() {
+            return None;
+        }
+        let answered = chunk
+            .iter()
+            .filter(|item| item.is_correct.is_some())
+            .count();
+        let correct = chunk
+            .iter()
+            .filter(|item| item.is_correct == Some(true))
+            .count();
+        Some(accuracy_bp(correct, answered))
+    };
+    let early = chunk_accuracy(&attempts[..attempts.len().min(chunk_size)]);
+    let middle_start = attempts.len().min(chunk_size);
+    let middle_end = attempts.len().min(chunk_size * 2);
+    let middle = chunk_accuracy(&attempts[middle_start..middle_end]);
+    let final_segment = chunk_accuracy(&attempts[middle_end..]);
+    (early, middle, final_segment)
+}
+
+fn segment_volatility_bp(
+    early: Option<BasisPoints>,
+    middle: Option<BasisPoints>,
+    late: Option<BasisPoints>,
+) -> BasisPoints {
+    let values = [early, middle, late]
+        .into_iter()
+        .flatten()
+        .map(|value| value as i64)
+        .collect::<Vec<_>>();
+    if values.len() < 2 {
+        return 0;
+    }
+    let min = *values.iter().min().unwrap_or(&0);
+    let max = *values.iter().max().unwrap_or(&0);
+    (max - min).clamp(0, 10_000) as BasisPoints
+}
+
+fn phase_accuracy_from_totals(
+    phase_totals: &std::collections::BTreeMap<String, (usize, usize)>,
+    phase_code: &str,
+) -> BasisPoints {
+    phase_totals
+        .get(phase_code)
+        .map(|(total, correct)| accuracy_bp(*correct, *total))
+        .unwrap_or(0)
+}
+
+fn weighted_mastery_score(
+    baseline: BasisPoints,
+    speed: BasisPoints,
+    precision: BasisPoints,
+    pressure: BasisPoints,
+    flex: BasisPoints,
+    root_cause: BasisPoints,
+) -> BasisPoints {
+    (((baseline as i64 * 30)
+        + (precision as i64 * 20)
+        + (flex as i64 * 15)
+        + (root_cause as i64 * 15)
+        + (speed as i64 * 10)
+        + (pressure as i64 * 10))
+        / 100)
+        .clamp(0, 10_000) as BasisPoints
+}
+
+fn formula_recall_use_delta(
+    skill_type: &str,
+    root_cause_score: BasisPoints,
+    precision_score: BasisPoints,
+) -> BasisPoints {
+    if skill_type.contains("formula") {
+        root_cause_score.saturating_sub(precision_score)
+    } else {
+        0
+    }
+}
+
+fn primary_skill_weakness_type(
+    mastery_score: BasisPoints,
+    speed_score: BasisPoints,
+    precision_score: BasisPoints,
+    pressure_score: BasisPoints,
+    flex_score: BasisPoints,
+    endurance_score: BasisPoints,
+    formula_delta: BasisPoints,
+) -> &'static str {
+    if mastery_score < 4_500 {
+        "knowledge"
+    } else if pressure_score + 1_500 < mastery_score {
+        "pressure"
+    } else if flex_score + 1_500 < mastery_score {
+        "recognition"
+    } else if speed_score + 1_500 < precision_score {
+        "retrieval"
+    } else if formula_delta >= 1_500 {
+        "formula"
+    } else if endurance_score > 0 && endurance_score + 1_200 < mastery_score {
+        "endurance"
+    } else {
+        "execution"
+    }
+}
+
+fn secondary_skill_weakness_type(
+    primary: &str,
+    speed_score: BasisPoints,
+    pressure_score: BasisPoints,
+    flex_score: BasisPoints,
+    endurance_score: BasisPoints,
+) -> Option<&'static str> {
+    if primary != "pressure" && pressure_score < 5_500 {
+        Some("pressure")
+    } else if primary != "recognition" && flex_score < 5_500 {
+        Some("recognition")
+    } else if primary != "retrieval" && speed_score < 5_500 {
+        Some("retrieval")
+    } else if primary != "endurance" && endurance_score > 0 && endurance_score < 5_500 {
+        Some("endurance")
+    } else {
+        None
+    }
+}
+
+fn classify_skill_mastery_state(
+    mastery_score: BasisPoints,
+    fragility_index: BasisPoints,
+    pressure_collapse_index: BasisPoints,
+    recognition_gap_index: BasisPoints,
+) -> &'static str {
+    if mastery_score < 5_000 {
+        "critical"
+    } else if fragility_index >= 3_000
+        || pressure_collapse_index >= 2_000
+        || recognition_gap_index >= 2_000
+    {
+        "fragile"
+    } else if mastery_score >= 8_000 {
+        "strong"
+    } else {
+        "firming"
+    }
+}
+
+fn recommendation_for_weakness_type(weakness_type: &str) -> &'static str {
+    match weakness_type {
+        "knowledge" => "teach_mode_rebuild",
+        "retrieval" => "rapid_recall_drills",
+        "recognition" => "recognition_drills",
+        "formula" => "formula_selection_training",
+        "pressure" => "pressure_ladder_mode",
+        "endurance" => "stamina_builder",
+        _ => "step_check_precision_drills",
+    }
+}
+
+fn classify_learning_profile(
+    skill_results: &[DiagnosticSkillResult],
+    condition_metrics: &DiagnosticConditionMetrics,
+) -> &'static str {
+    if condition_metrics.pressure_collapse_index >= 2_500 {
+        "pressure_collapser"
+    } else if condition_metrics.formula_recall_use_delta >= 1_500 {
+        "formula_memorizer"
+    } else if condition_metrics.recognition_gap_index >= 2_000 {
+        "recognition_gap"
+    } else if condition_metrics.fragility_index >= 2_500 {
+        "fragile_knower"
+    } else if skill_results
+        .iter()
+        .any(|item| item.weakness_type_primary == "retrieval" && item.precision_score >= 6_500)
+    {
+        "careful_thinker"
+    } else if skill_results
+        .iter()
+        .any(|item| item.speed_score >= 7_500 && item.pressure_score + 1_500 < item.mastery_score)
+    {
+        "sprinter"
+    } else {
+        "balanced"
+    }
+}
+
+fn build_overall_summary(
+    readiness_band: &str,
+    topic_results: &[TopicDiagnosticResult],
+    skill_results: &[DiagnosticSkillResult],
+    top_recommended_action: Option<String>,
+) -> DiagnosticOverallSummary {
+    let strong_zones = topic_results
+        .iter()
+        .filter(|topic| topic.classification == "secure" || topic.mastery_score >= 8_000)
+        .map(|topic| topic.topic_name.clone())
+        .collect::<Vec<_>>();
+    let firming_zones = topic_results
+        .iter()
+        .filter(|topic| topic.mastery_score >= 6_500 && topic.mastery_score < 8_000)
+        .map(|topic| topic.topic_name.clone())
+        .collect::<Vec<_>>();
+    let fragile_zones = topic_results
+        .iter()
+        .filter(|topic| {
+            topic.classification.contains("fragile")
+                || topic.classification.contains("pressure")
+                || topic.classification.contains("distorted")
+        })
+        .map(|topic| topic.topic_name.clone())
+        .collect::<Vec<_>>();
+    let mut critical_zones = skill_results
+        .iter()
+        .filter(|skill| skill.mastery_state == "critical")
+        .take(5)
+        .map(|skill| skill.skill_name.clone())
+        .collect::<Vec<_>>();
+    if critical_zones.is_empty() {
+        critical_zones = topic_results
+            .iter()
+            .filter(|topic| topic.mastery_score < 5_000)
+            .map(|topic| topic.topic_name.clone())
+            .collect::<Vec<_>>();
+    }
+
+    DiagnosticOverallSummary {
+        mastery_level: readiness_band.to_string(),
+        strong_zones,
+        firming_zones,
+        fragile_zones,
+        critical_zones,
+        top_recommended_action,
+    }
+}
+
+fn build_recommendations(
+    _student_id: i64,
+    topic_results: &[TopicDiagnosticResult],
+    skill_results: &[DiagnosticSkillResult],
+    condition_metrics: &DiagnosticConditionMetrics,
+    learning_profile: Option<&DiagnosticLearningProfile>,
+) -> Vec<DiagnosticRecommendation> {
+    let mut recommendations = Vec::new();
+    for skill in skill_results.iter().take(4) {
+        recommendations.push(DiagnosticRecommendation {
+            category: "immediate_focus".to_string(),
+            action_code: skill.recommended_intervention.clone(),
+            title: format!("Repair {}", skill.skill_name),
+            rationale: format!(
+                "{} is {} with {} as the main weakness.",
+                skill.skill_name, skill.mastery_state, skill.weakness_type_primary
+            ),
+            priority: (10_000 - skill.mastery_score as i64).max(1),
+            target_kind: Some("skill".to_string()),
+            target_ref: Some(skill.skill_key.clone()),
+        });
+    }
+    for topic in topic_results
+        .iter()
+        .filter(|topic| topic.mastery_score >= 8_000)
+        .take(2)
+    {
+        recommendations.push(DiagnosticRecommendation {
+            category: "maintenance".to_string(),
+            action_code: "maintenance_only".to_string(),
+            title: format!("Maintain {}", topic.topic_name),
+            rationale: format!(
+                "{} is strong and only needs light spaced review.",
+                topic.topic_name
+            ),
+            priority: 500,
+            target_kind: Some("topic".to_string()),
+            target_ref: Some(format!("topic:{}", topic.topic_id)),
+        });
+    }
+    if condition_metrics.pressure_collapse_index >= 2_000 {
+        recommendations.push(DiagnosticRecommendation {
+            category: "conditioning".to_string(),
+            action_code: "pressure_ladder_mode".to_string(),
+            title: "Condition Pressure Response".to_string(),
+            rationale: "Performance drops meaningfully under pressure conditions.".to_string(),
+            priority: 7_500,
+            target_kind: Some("condition".to_string()),
+            target_ref: Some("pressure".to_string()),
+        });
+    }
+    if let Some(profile) = learning_profile {
+        recommendations.push(DiagnosticRecommendation {
+            category: "profile_route".to_string(),
+            action_code: profile.profile_type.clone(),
+            title: format!("Route {}", profile.profile_type.replace('_', " ")),
+            rationale: "Overall diagnostic pattern suggests a specific learning profile route."
+                .to_string(),
+            priority: 6_500,
+            target_kind: Some("profile".to_string()),
+            target_ref: Some(profile.profile_type.clone()),
+        });
+    }
+    recommendations.sort_by(|left, right| right.priority.cmp(&left.priority));
+    recommendations
+}
+
+fn build_audience_reports(
+    summary: &DiagnosticOverallSummary,
+    topic_results: &[TopicDiagnosticResult],
+    recommendations: &[DiagnosticRecommendation],
+    condition_metrics: &DiagnosticConditionMetrics,
+) -> Vec<DiagnosticAudienceReport> {
+    let strengths = summary.strong_zones.clone();
+    let fragile_areas = summary.fragile_zones.clone();
+    let critical_areas = summary.critical_zones.clone();
+    let action_plan = recommendations
+        .iter()
+        .take(4)
+        .map(|item| item.title.clone())
+        .collect::<Vec<_>>();
+    let top_topic = topic_results
+        .iter()
+        .min_by_key(|topic| topic.mastery_score)
+        .map(|topic| topic.topic_name.clone())
+        .unwrap_or_else(|| "the weakest area".to_string());
+
+    vec![
+        DiagnosticAudienceReport {
+            audience: "student".to_string(),
+            headline: "Your diagnostic map".to_string(),
+            narrative: format!(
+                "You know some areas well, but {} becomes less reliable when speed or pressure increases. Focus next on {}.",
+                top_topic,
+                action_plan
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| "steady repair practice".to_string())
+            ),
+            strengths: strengths.clone(),
+            fragile_areas: fragile_areas.clone(),
+            critical_areas: critical_areas.clone(),
+            action_plan: action_plan.clone(),
+        },
+        DiagnosticAudienceReport {
+            audience: "teacher".to_string(),
+            headline: "Condition-aware diagnostic summary".to_string(),
+            narrative: format!(
+                "Baseline understanding is mixed, with fragility index {} and pressure collapse index {}. The most urgent repair target is {}.",
+                condition_metrics.fragility_index,
+                condition_metrics.pressure_collapse_index,
+                top_topic
+            ),
+            strengths: strengths.clone(),
+            fragile_areas: fragile_areas.clone(),
+            critical_areas: critical_areas.clone(),
+            action_plan: action_plan.clone(),
+        },
+        DiagnosticAudienceReport {
+            audience: "parent".to_string(),
+            headline: "How your child is doing".to_string(),
+            narrative: format!(
+                "Your child shows real strengths, but some areas are still fragile and can break when time becomes tight. The next priority is {}.",
+                action_plan
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| "guided practice".to_string())
+            ),
+            strengths,
+            fragile_areas,
+            critical_areas,
+            action_plan,
+        },
+    ]
+}
+
+fn primary_weakness_type(
+    mastery_score: BasisPoints,
+    fluency_score: BasisPoints,
+    pressure_score: BasisPoints,
+    flexibility_score: BasisPoints,
+    endurance_score: BasisPoints,
+    error_profile: &ErrorProfileSnapshot,
+) -> String {
+    if error_profile.high_confidence_wrong_count > 0 {
+        "confidence_control".to_string()
+    } else if mastery_score < 4_500 || error_profile.knowledge_gap_score >= 5_000 {
+        "knowledge".to_string()
+    } else if pressure_score + 1_500 < mastery_score
+        || error_profile.pressure_breakdown_score >= 5_000
+    {
+        "pressure".to_string()
+    } else if flexibility_score + 1_500 < mastery_score
+        || error_profile.recognition_failure_score >= 5_000
+    {
+        "recognition".to_string()
+    } else if fluency_score + 1_500 < mastery_score || error_profile.speed_error_score >= 5_000 {
+        "retrieval".to_string()
+    } else if endurance_score > 0 && endurance_score + 1_200 < mastery_score {
+        "endurance".to_string()
+    } else if error_profile.conceptual_confusion_score >= 5_000
+        || error_profile.misconception_signal_count > 0
+    {
+        "conceptual".to_string()
+    } else {
+        "execution".to_string()
+    }
+}
+
+fn primary_failure_stage(error_profile: &ErrorProfileSnapshot) -> &'static str {
+    let mut stages = [
+        ("foundation_level", error_profile.knowledge_gap_score as i64),
+        (
+            "concept_level",
+            error_profile.conceptual_confusion_score as i64
+                + error_profile.misconception_signal_count * 400,
+        ),
+        (
+            "recognition_level",
+            error_profile.recognition_failure_score as i64,
+        ),
+        ("execution_level", error_profile.speed_error_score as i64),
+        (
+            "pressure_level",
+            error_profile.pressure_breakdown_score as i64,
+        ),
+    ];
+    stages.sort_by(|left, right| right.1.cmp(&left.1));
+    stages.first().map(|item| item.0).unwrap_or("concept_level")
+}
+
+fn session_delta(
+    session_scores: &[DiagnosticSessionScore],
+    left_phase: &str,
+    right_phase: &str,
+) -> BasisPoints {
+    let left = session_score_value(session_scores, left_phase);
+    let right = session_score_value(session_scores, right_phase);
+    left.saturating_sub(right)
+}
+
+fn session_score_value(session_scores: &[DiagnosticSessionScore], phase_code: &str) -> BasisPoints {
+    session_scores
+        .iter()
+        .find(|score| score.phase_code == phase_code)
+        .map(|score| score.adjusted_accuracy)
+        .unwrap_or(0)
+}
+
+fn skill_kind_from_key(skill_key: &str) -> &'static str {
+    if skill_key.starts_with("micro:") {
+        "micro_skill"
+    } else if skill_key.starts_with("node:") {
+        "academic_node"
+    } else {
+        "derived"
+    }
+}
+
+fn skill_id_from_key(skill_key: &str) -> Option<i64> {
+    skill_key
+        .split(':')
+        .nth(1)
+        .and_then(|value| value.parse::<i64>().ok())
+}
+
+fn extract_final_answer_text(value: &Value) -> Option<String> {
+    match value {
+        Value::String(text) => {
+            let trimmed = text.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_string())
+        }
+        Value::Number(number) => Some(number.to_string()),
+        Value::Bool(value) => Some(value.to_string()),
+        Value::Array(items) => {
+            let joined = items
+                .iter()
+                .filter_map(extract_final_answer_text)
+                .collect::<Vec<_>>()
+                .join(" ");
+            let trimmed = joined.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_string())
+        }
+        Value::Object(map) => {
+            for key in ["answer", "text", "value", "response", "final_answer"] {
+                if let Some(value) = map.get(key).and_then(extract_final_answer_text) {
+                    return Some(value);
+                }
+            }
+            None
+        }
+        Value::Null => None,
+    }
+}
+
+fn answer_matches_correct_options(submitted_answer: &str, correct_options: &[QuestionOption]) -> bool {
+    let normalized_submitted = normalize_answer_text(submitted_answer);
+    if normalized_submitted.is_empty() {
+        return false;
+    }
+
+    correct_options.iter().any(|option| {
+        let normalized_option_text = normalize_answer_text(&option.option_text);
+        let normalized_option_label = normalize_answer_text(&option.option_label);
+        normalized_submitted == normalized_option_text
+            || normalized_submitted == normalized_option_label
+            || numeric_answer_value(&normalized_submitted)
+                .zip(numeric_answer_value(&normalized_option_text))
+                .map(|(submitted, correct)| (submitted - correct).abs() < 0.000_001)
+                .unwrap_or(false)
+    })
+}
+
+fn normalize_answer_text(text: &str) -> String {
+    let lowered = text.trim().to_ascii_lowercase();
+    lowered
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || matches!(ch, '.' | '/' | '-') {
+                ch
+            } else {
+                ' '
+            }
+        })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn numeric_answer_value(text: &str) -> Option<f64> {
+    let compact = text.replace(',', "");
+    compact.parse::<f64>().ok()
 }
 
 #[cfg(test)]
@@ -2346,6 +4805,106 @@ mod tests {
         assert_eq!(battery.phases[0].phase_code, "baseline");
         assert_eq!(battery.phases[0].status, "active");
         assert!(!phase_one_items.is_empty());
+    }
+
+    #[test]
+    fn constructed_response_diagnostic_attempts_can_submit_without_option_ids() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, status)
+             VALUES ('student', 'Ama', 'hash', 'salt', 'active')",
+            [],
+        )
+        .expect("student should be insertable");
+        let student_id = conn.last_insert_rowid();
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("math subject should exist");
+        conn.execute(
+            "INSERT INTO topics (subject_id, code, name) VALUES (?1, 'DNA34_FR', 'Diagnostic Free Response')",
+            [subject_id],
+        )
+        .expect("topic should insert");
+        let topic_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO questions (
+                subject_id, topic_id, stem, question_format, explanation_text,
+                difficulty_level, estimated_time_seconds, marks, is_active
+             ) VALUES (?1, ?2, 'Simplify 6/9 as a fraction.', 'short_answer', 'Reduce to lowest terms.', 5200, 40, 1, 1)",
+            params![subject_id, topic_id],
+        )
+        .expect("question should insert");
+        let question_id = conn.last_insert_rowid();
+        conn.execute(
+            "INSERT INTO question_options (
+                question_id, option_label, option_text, is_correct, position
+             ) VALUES (?1, 'A', '2/3', 1, 1)",
+            [question_id],
+        )
+        .expect("correct answer anchor should insert");
+
+        let engine = DiagnosticEngine::new(&conn);
+        let battery = engine
+            .start_diagnostic_battery(student_id, subject_id, vec![topic_id], DiagnosticMode::Quick)
+            .expect("diagnostic battery should build");
+        let first_phase = battery.phases.first().expect("phase should exist");
+        let first_item = engine
+            .list_phase_items(battery.diagnostic_id, first_phase.phase_number)
+            .expect("phase items should load")
+            .into_iter()
+            .next()
+            .expect("constructed response item should exist");
+
+        engine
+            .submit_phase_attempt_details(
+                battery.diagnostic_id,
+                first_item.attempt_id,
+                None,
+                Some(12_000),
+                Some("sure"),
+                0,
+                false,
+                false,
+                None,
+                None,
+                Some("reduced_fraction"),
+                Some(&serde_json::json!({ "text": "2/3" })),
+                Some(&serde_json::json!({ "typed": true })),
+            )
+            .expect("constructed response submission should succeed");
+
+        let stored_attempt = conn
+            .query_row(
+                "SELECT selected_option_id, is_correct, final_answer_json
+                 FROM diagnostic_item_attempts
+                 WHERE id = ?1",
+                [first_item.attempt_id],
+                |row| {
+                    Ok((
+                        row.get::<_, Option<i64>>(0)?,
+                        row.get::<_, Option<i64>>(1)?,
+                        row.get::<_, Option<String>>(2)?,
+                    ))
+                },
+            )
+            .expect("attempt should persist");
+
+        assert_eq!(stored_attempt.0, None);
+        assert_eq!(stored_attempt.1, Some(1));
+        assert!(stored_attempt
+            .2
+            .as_deref()
+            .unwrap_or_default()
+            .contains("2/3"));
     }
 
     #[test]

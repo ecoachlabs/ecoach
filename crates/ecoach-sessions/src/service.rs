@@ -4,7 +4,9 @@ use std::{
 };
 
 use chrono::{DateTime, Utc};
-use ecoach_coach_brain::ReadinessEngine;
+use ecoach_coach_brain::{
+    CoachMissionBrief, PedagogicalRuntimeService, PlanEngine, ReadinessEngine,
+};
 use ecoach_questions::{
     Question, QuestionGenerationRequestInput, QuestionReactor, QuestionRemediationPlan,
     QuestionSelectionRequest, QuestionSelector, QuestionService, QuestionSlotSpec,
@@ -18,9 +20,11 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
 
 use crate::models::{
-    CustomTestStartInput, MockBlueprint, MockBlueprintInput, PracticeSessionStartInput, Session,
-    SessionAnswerInput, SessionEvidenceFabric, SessionInterpretation, SessionItem, SessionSnapshot,
-    SessionSummary, SessionTopicInterpretation,
+    CoachMissionSessionPlan, CustomTestStartInput, FocusModeConfig, MockBlueprint,
+    MockBlueprintInput, PracticeSessionStartInput, Session, SessionAnswerInput,
+    SessionEvidenceFabric, SessionInterpretation, SessionItem, SessionPresenceEvent,
+    SessionPresenceEventInput, SessionPresenceSnapshot, SessionSnapshot, SessionSummary,
+    SessionTopicInterpretation,
 };
 
 pub struct SessionService<'a> {
@@ -30,6 +34,165 @@ pub struct SessionService<'a> {
 impl<'a> SessionService<'a> {
     pub fn new(conn: &'a Connection) -> Self {
         Self { conn }
+    }
+
+    pub fn start_coach_mission_session(
+        &self,
+        student_id: i64,
+    ) -> EcoachResult<CoachMissionSessionPlan> {
+        let plan_engine = PlanEngine::new(self.conn);
+        let mission = plan_engine.get_or_prepare_today_mission(student_id)?;
+        if let Some(existing_session_id) = mission.session_id {
+            PedagogicalRuntimeService::new(self.conn)
+                .initialize_session_runtime(existing_session_id)?;
+            self.ensure_presence_snapshot(existing_session_id, None)?;
+            let snapshot = self
+                .get_session_snapshot(existing_session_id)?
+                .ok_or_else(|| {
+                    EcoachError::NotFound(format!(
+                        "coach mission session {} was not found",
+                        existing_session_id
+                    ))
+                })?;
+            return Ok(CoachMissionSessionPlan {
+                mission_id: mission.mission_id,
+                session_id: existing_session_id,
+                title: mission.title,
+                reason: mission.reason,
+                activity_type: mission.activity_type,
+                target_minutes: mission.target_minutes,
+                subject_id: mission.subject_id.unwrap_or_default(),
+                topic_id: mission.topic_id.unwrap_or_default(),
+                question_ids: mission.question_ids,
+                coverage: json!({
+                    "selected_count": snapshot.items.len(),
+                    "reused_existing_session": true,
+                }),
+                session_snapshot: snapshot,
+            });
+        }
+        let subject_id = mission
+            .subject_id
+            .ok_or_else(|| EcoachError::Validation("coach mission has no subject".to_string()))?;
+        let topic_id = mission
+            .topic_id
+            .ok_or_else(|| EcoachError::Validation("coach mission has no topic".to_string()))?;
+        let target_question_count =
+            desired_question_count_for_mission(&mission.activity_type, mission.target_minutes);
+        let topic_ids = vec![topic_id];
+        let timed = mission_uses_timed_questions(&mission.activity_type);
+        let recent_ids = self.load_recently_seen_question_ids(student_id, 40)?;
+        let selector = QuestionSelector::new(self.conn);
+        let mut selected_questions = selector.select_questions(&QuestionSelectionRequest {
+            subject_id,
+            topic_ids: topic_ids.clone(),
+            target_question_count,
+            target_difficulty: target_difficulty_for_mission(&mission.activity_type),
+            weakness_topic_ids: weakness_topic_ids_for_mission(&mission),
+            recently_seen_question_ids: recent_ids,
+            timed,
+            diagnostic_stage: None,
+            condition_type: None,
+            require_confidence_prompt: false,
+            require_concept_guess_prompt: false,
+        })?;
+        let target_topic_counts = distribute_topic_targets(&topic_ids, target_question_count);
+        if selected_questions.len() < target_question_count {
+            if let Err(err) = self.top_up_with_reactor(
+                subject_id,
+                &target_topic_counts,
+                &mut selected_questions,
+                target_difficulty_for_mission(&mission.activity_type),
+                timed,
+                choose_reactor_variant_mode(
+                    timed,
+                    target_difficulty_for_mission(&mission.activity_type),
+                ),
+                "slot_fill",
+                "Fill missing coach mission items with traced family variants",
+            ) {
+                if selected_questions.is_empty() {
+                    return Err(err);
+                }
+            }
+        }
+
+        if selected_questions.is_empty() {
+            plan_engine.mark_mission_no_question_recovery(
+                student_id,
+                mission.mission_id,
+                Some(topic_id),
+            )?;
+            return Err(EcoachError::NotFound(
+                "no real questions available for coach mission".to_string(),
+            ));
+        }
+
+        let question_ids = selected_questions
+            .iter()
+            .map(|selected| selected.question.id)
+            .collect::<Vec<_>>();
+        let now = Utc::now().to_rfc3339();
+        let topic_ids_json = serde_json::to_string(&topic_ids)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO sessions (
+                    student_id, session_type, subject_id, topic_ids, question_count, total_questions,
+                    duration_minutes, is_timed, difficulty_preference, status, started_at,
+                    last_activity_at, coach_mode_entered_at
+                 ) VALUES (?1, 'coach_mission', ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'active', ?9, ?9, ?9)",
+                params![
+                    student_id,
+                    subject_id,
+                    topic_ids_json,
+                    target_question_count as i64,
+                    selected_questions.len() as i64,
+                    mission.target_minutes,
+                    if timed { 1 } else { 0 },
+                    mission.activity_type.clone(),
+                    now,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let session_id = self.conn.last_insert_rowid();
+        self.persist_selected_items(session_id, &selected_questions)?;
+        PedagogicalRuntimeService::new(self.conn).initialize_session_runtime(session_id)?;
+        self.ensure_presence_snapshot(session_id, Some(&now))?;
+        self.tag_items_with_mission_intent(session_id, &mission.activity_type)?;
+        plan_engine.attach_session_to_mission(mission.mission_id, session_id, &question_ids)?;
+        plan_engine.start_mission(mission.mission_id)?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.coach_mission_created",
+                session_id.to_string(),
+                json!({
+                    "student_id": student_id,
+                    "mission_id": mission.mission_id,
+                    "topic_id": topic_id,
+                    "activity_type": mission.activity_type,
+                    "question_ids": question_ids,
+                }),
+            ),
+        )?;
+        let snapshot = self
+            .get_session_snapshot(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        let coverage = self.build_mission_question_coverage(subject_id, topic_id, &question_ids)?;
+        Ok(CoachMissionSessionPlan {
+            mission_id: mission.mission_id,
+            session_id,
+            title: mission.title,
+            reason: mission.reason,
+            activity_type: mission.activity_type,
+            target_minutes: mission.target_minutes,
+            subject_id,
+            topic_id,
+            question_ids,
+            coverage,
+            session_snapshot: snapshot,
+        })
     }
 
     pub fn start_practice_session(
@@ -45,6 +208,10 @@ impl<'a> SessionService<'a> {
             weakness_topic_ids: input.topic_ids.clone(),
             recently_seen_question_ids: Vec::new(),
             timed: input.is_timed,
+            diagnostic_stage: None,
+            condition_type: None,
+            require_confidence_prompt: false,
+            require_concept_guess_prompt: false,
         })?;
         let target_topic_counts = distribute_topic_targets(&input.topic_ids, input.question_count);
         let reactor_generated_count = self.top_up_with_reactor(
@@ -87,6 +254,8 @@ impl<'a> SessionService<'a> {
 
         let session_id = self.conn.last_insert_rowid();
         self.persist_selected_items(session_id, &questions)?;
+        PedagogicalRuntimeService::new(self.conn).initialize_session_runtime(session_id)?;
+        self.ensure_presence_snapshot(session_id, Some(&now))?;
         self.append_runtime_event(
             "session",
             DomainEvent::new(
@@ -157,6 +326,10 @@ impl<'a> SessionService<'a> {
             weakness_topic_ids,
             recently_seen_question_ids: Vec::new(),
             timed: input.is_timed,
+            diagnostic_stage: None,
+            condition_type: None,
+            require_confidence_prompt: false,
+            require_concept_guess_prompt: false,
         })?;
         let target_topic_counts = distribute_topic_targets(&topic_scope, input.question_count);
         let reactor_generated_count = self.top_up_with_reactor(
@@ -202,6 +375,8 @@ impl<'a> SessionService<'a> {
 
         let session_id = self.conn.last_insert_rowid();
         self.persist_selected_items(session_id, &questions)?;
+        PedagogicalRuntimeService::new(self.conn).initialize_session_runtime(session_id)?;
+        self.ensure_presence_snapshot(session_id, Some(&now))?;
         self.append_runtime_event(
             "session",
             DomainEvent::new(
@@ -441,6 +616,7 @@ impl<'a> SessionService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let session_id = self.conn.last_insert_rowid();
+        self.ensure_presence_snapshot(session_id, Some(&now))?;
 
         let question_service = QuestionService::new(self.conn);
         let mut selected_questions = Vec::new();
@@ -478,6 +654,7 @@ impl<'a> SessionService<'a> {
                 [blueprint_id],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        PedagogicalRuntimeService::new(self.conn).initialize_session_runtime(session_id)?;
 
         self.append_runtime_event(
             "session",
@@ -507,6 +684,126 @@ impl<'a> SessionService<'a> {
         Ok(Some(SessionSnapshot { session, items }))
     }
 
+    pub fn get_session_presence_snapshot(
+        &self,
+        session_id: i64,
+    ) -> EcoachResult<Option<SessionPresenceSnapshot>> {
+        self.load_presence_snapshot(session_id)
+    }
+
+    pub fn list_session_presence_events(
+        &self,
+        session_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<SessionPresenceEvent>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, session_id, event_type, occurred_at, state_before, state_after,
+                        segment_duration_ms, counted_credit_ms, metadata_json
+                 FROM session_presence_events
+                 WHERE session_id = ?1
+                 ORDER BY occurred_at DESC, id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![session_id, limit.max(1) as i64], |row| {
+                let metadata_json = row.get::<_, String>(8)?;
+                let metadata = serde_json::from_str::<Value>(&metadata_json).map_err(|err| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        8,
+                        rusqlite::types::Type::Text,
+                        Box::new(EcoachError::Serialization(err.to_string())),
+                    )
+                })?;
+                let occurred_at = row.get::<_, String>(3)?;
+                Ok(SessionPresenceEvent {
+                    id: row.get(0)?,
+                    session_id: row.get(1)?,
+                    event_type: row.get(2)?,
+                    occurred_at: DateTime::parse_from_rfc3339(&occurred_at)
+                        .map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                3,
+                                rusqlite::types::Type::Text,
+                                Box::new(EcoachError::Validation(err.to_string())),
+                            )
+                        })?
+                        .with_timezone(&Utc),
+                    state_before: row.get(4)?,
+                    state_after: row.get(5)?,
+                    segment_duration_ms: row.get(6)?,
+                    counted_credit_ms: row.get(7)?,
+                    metadata_json: metadata,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut events = Vec::new();
+        for row in rows {
+            events.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        events.reverse();
+        Ok(events)
+    }
+
+    pub fn record_session_presence_event(
+        &self,
+        session_id: i64,
+        input: &SessionPresenceEventInput,
+    ) -> EcoachResult<SessionPresenceSnapshot> {
+        let occurred_at = input
+            .occurred_at
+            .clone()
+            .unwrap_or_else(|| Utc::now().to_rfc3339());
+        let metadata_json = input
+            .metadata_json
+            .clone()
+            .unwrap_or_else(|| serde_json::json!({}));
+        self.record_presence_event_internal(
+            session_id,
+            &input.event_type,
+            &occurred_at,
+            metadata_json,
+        )?;
+        self.get_session_presence_snapshot(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} presence not found", session_id)))
+    }
+
+    pub fn manual_stop_session(
+        &self,
+        session_id: i64,
+        reason: Option<String>,
+    ) -> EcoachResult<SessionSnapshot> {
+        self.ensure_session_status(session_id, &["active", "paused"])?;
+        let now = Utc::now().to_rfc3339();
+        self.conn
+            .execute(
+                "UPDATE sessions
+                 SET status = 'paused', paused_at = ?1, last_activity_at = ?1, updated_at = datetime('now')
+                 WHERE id = ?2",
+                params![now, session_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.record_presence_event_internal(
+            session_id,
+            "manual_stop",
+            &now,
+            serde_json::json!({ "reason": reason }),
+        )?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.manually_stopped",
+                session_id.to_string(),
+                serde_json::json!({ "stopped_at": now, "reason": reason }),
+            ),
+        )?;
+        self.get_session_snapshot(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))
+    }
+
     pub fn pause_session(&self, session_id: i64) -> EcoachResult<Session> {
         self.ensure_session_status(session_id, &["active"])?;
         let now = Utc::now().to_rfc3339();
@@ -518,6 +815,12 @@ impl<'a> SessionService<'a> {
                 params![now, session_id],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.record_presence_event_internal(
+            session_id,
+            "manual_pause",
+            &now,
+            serde_json::json!({}),
+        )?;
         self.append_runtime_event(
             "session",
             DomainEvent::new(
@@ -541,6 +844,12 @@ impl<'a> SessionService<'a> {
                 params![now, session_id],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.record_presence_event_internal(
+            session_id,
+            "session_resumed",
+            &now,
+            serde_json::json!({}),
+        )?;
         self.append_runtime_event(
             "session",
             DomainEvent::new(
@@ -621,6 +930,16 @@ impl<'a> SessionService<'a> {
                 ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.record_presence_event_internal(
+            session_id,
+            "meaningful_interaction",
+            &answered_at,
+            serde_json::json!({
+                "item_id": item.id,
+                "question_id": item.question_id,
+                "response_time_ms": input.response_time_ms,
+            }),
+        )?;
 
         self.insert_session_attempt(&session, &session_meta, &item, &question, &option, input)?;
         self.refresh_session_progress(session_id, item.display_order)?;
@@ -712,20 +1031,38 @@ impl<'a> SessionService<'a> {
     }
 
     pub fn complete_session(&self, session_id: i64) -> EcoachResult<SessionSummary> {
+        let session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
         let summary = self.build_summary(session_id)?;
         let completed_at = Utc::now().to_rfc3339();
+        self.record_presence_event_internal(
+            session_id,
+            "session_completed",
+            &completed_at,
+            serde_json::json!({}),
+        )?;
+        let (active_study_time_ms, idle_time_ms) =
+            self.estimate_session_time_totals(session_id, session.started_at, &completed_at)?;
         self.conn
             .execute(
                 "UPDATE sessions
                  SET status = 'completed', completed_at = ?1, last_activity_at = ?1,
                      answered_questions = ?2, correct_questions = ?3, accuracy_score = ?4,
+                     active_study_time_ms = ?5, idle_time_ms = ?6,
+                     coach_mode_exited_at = CASE
+                        WHEN session_type = 'coach_mission' THEN ?1
+                        ELSE coach_mode_exited_at
+                     END,
                      updated_at = datetime('now')
-                 WHERE id = ?5",
+                 WHERE id = ?7",
                 params![
                     completed_at,
                     summary.answered_questions,
                     summary.correct_questions,
                     summary.accuracy_score,
+                    active_study_time_ms,
+                    idle_time_ms,
                     session_id,
                 ],
             )
@@ -793,6 +1130,12 @@ impl<'a> SessionService<'a> {
                 ),
             )?;
         }
+        if session.session_type == "coach_mission" {
+            if let Some(mission_id) = self.load_mission_id_for_session(session_id)? {
+                PlanEngine::new(self.conn)
+                    .complete_mission_from_session(mission_id, Some(session_id))?;
+            }
+        }
         self.build_summary(session_id)
     }
 
@@ -828,7 +1171,7 @@ impl<'a> SessionService<'a> {
         let observed_at = session
             .completed_at
             .or(session.last_activity_at)
-            .or(session.started_at)
+            .or_else(|| session.started_at.as_ref().map(|value| value.to_owned()))
             .unwrap_or_else(Utc::now);
 
         Ok(Some(SessionInterpretation {
@@ -1107,10 +1450,22 @@ impl<'a> SessionService<'a> {
         self.conn
             .query_row(
                 "SELECT id, student_id, session_type, subject_id, status, active_item_index,
+                        COALESCE(focus_mode, 0), focus_goal, break_schedule_json, ambient_profile,
                         started_at, paused_at, completed_at, last_activity_at
                  FROM sessions WHERE id = ?1",
                 [session_id],
                 |row| {
+                    let break_schedule_json = row
+                        .get::<_, Option<String>>(8)?
+                        .map(|raw| serde_json::from_str::<Value>(&raw))
+                        .transpose()
+                        .map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                8,
+                                rusqlite::types::Type::Text,
+                                Box::new(EcoachError::Serialization(err.to_string())),
+                            )
+                        })?;
                     Ok(Session {
                         id: row.get(0)?,
                         student_id: row.get(1)?,
@@ -1118,10 +1473,97 @@ impl<'a> SessionService<'a> {
                         subject_id: row.get(3)?,
                         status: row.get(4)?,
                         active_item_index: row.get(5)?,
-                        started_at: parse_datetime(row.get::<_, Option<String>>(6)?),
-                        paused_at: parse_datetime(row.get::<_, Option<String>>(7)?),
-                        completed_at: parse_datetime(row.get::<_, Option<String>>(8)?),
-                        last_activity_at: parse_datetime(row.get::<_, Option<String>>(9)?),
+                        focus_mode: row.get::<_, i64>(6)? == 1,
+                        focus_goal: row.get(7)?,
+                        break_schedule_json,
+                        ambient_profile: row.get(9)?,
+                        started_at: parse_datetime(row.get::<_, Option<String>>(10)?),
+                        paused_at: parse_datetime(row.get::<_, Option<String>>(11)?),
+                        completed_at: parse_datetime(row.get::<_, Option<String>>(12)?),
+                        last_activity_at: parse_datetime(row.get::<_, Option<String>>(13)?),
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    pub fn enable_focus_mode(
+        &self,
+        session_id: i64,
+        focus_goal: Option<String>,
+        break_schedule_json: Option<Value>,
+        ambient_profile: Option<String>,
+    ) -> EcoachResult<Session> {
+        self.ensure_session_status(session_id, &["active", "paused"])?;
+        let now = Utc::now().to_rfc3339();
+        let break_schedule_json = match break_schedule_json {
+            Some(value) => Some(
+                serde_json::to_string(&value)
+                    .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+            ),
+            None => None,
+        };
+        self.conn
+            .execute(
+                "UPDATE sessions
+                 SET focus_mode = 1,
+                     focus_goal = ?1,
+                     break_schedule_json = ?2,
+                     ambient_profile = ?3,
+                     last_activity_at = COALESCE(last_activity_at, ?4),
+                     updated_at = datetime('now')
+                 WHERE id = ?5",
+                params![
+                    focus_goal,
+                    break_schedule_json,
+                    ambient_profile,
+                    now,
+                    session_id,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let updated_session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.focus_mode_enabled",
+                session_id.to_string(),
+                serde_json::json!({
+                    "focus_mode": updated_session.focus_mode,
+                    "focus_goal": updated_session.focus_goal.clone(),
+                    "ambient_profile": updated_session.ambient_profile.clone(),
+                }),
+            ),
+        )?;
+        Ok(updated_session)
+    }
+
+    pub fn get_focus_mode_config(&self, session_id: i64) -> EcoachResult<Option<FocusModeConfig>> {
+        self.conn
+            .query_row(
+                "SELECT id, COALESCE(focus_mode, 0), focus_goal, break_schedule_json, ambient_profile
+                 FROM sessions
+                 WHERE id = ?1",
+                [session_id],
+                |row| {
+                    let break_schedule_json = row
+                        .get::<_, Option<String>>(3)?
+                        .map(|raw| serde_json::from_str::<Value>(&raw))
+                        .transpose()
+                        .map_err(|err| rusqlite::Error::FromSqlConversionFailure(
+                            3,
+                            rusqlite::types::Type::Text,
+                            Box::new(EcoachError::Serialization(err.to_string())),
+                        ))?;
+                    Ok(FocusModeConfig {
+                        session_id: row.get(0)?,
+                        focus_mode: row.get::<_, i64>(1)? == 1,
+                        focus_goal: row.get(2)?,
+                        break_schedule_json,
+                        ambient_profile: row.get(4)?,
                     })
                 },
             )
@@ -1417,6 +1859,450 @@ impl<'a> SessionService<'a> {
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
         }
         Ok(())
+    }
+
+    fn tag_items_with_mission_intent(
+        &self,
+        session_id: i64,
+        activity_type: &str,
+    ) -> EcoachResult<()> {
+        let question_intent = mission_question_intent(activity_type);
+        self.conn
+            .execute(
+                "UPDATE session_items
+                 SET question_intent = ?1
+                 WHERE session_id = ?2",
+                params![question_intent, session_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn build_mission_question_coverage(
+        &self,
+        subject_id: i64,
+        topic_id: i64,
+        question_ids: &[i64],
+    ) -> EcoachResult<Value> {
+        let total_found: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM questions
+                 WHERE is_active = 1 AND subject_id = ?1 AND topic_id = ?2",
+                params![subject_id, topic_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let family_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT family_id) FROM questions
+                 WHERE is_active = 1 AND subject_id = ?1 AND topic_id = ?2",
+                params![subject_id, topic_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(json!({
+            "topic_id": topic_id,
+            "total_found": total_found,
+            "selected_count": question_ids.len(),
+            "family_count": family_count,
+            "question_ids": question_ids,
+        }))
+    }
+
+    fn load_mission_id_for_session(&self, session_id: i64) -> EcoachResult<Option<i64>> {
+        self.conn
+            .query_row(
+                "SELECT id FROM coach_missions WHERE session_id = ?1 ORDER BY id DESC LIMIT 1",
+                [session_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn ensure_presence_snapshot(
+        &self,
+        session_id: i64,
+        started_at_hint: Option<&str>,
+    ) -> EcoachResult<()> {
+        let session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        let seeded_at = started_at_hint
+            .map(str::to_string)
+            .or_else(|| session.started_at.map(|value| value.to_rfc3339()))
+            .unwrap_or_else(|| Utc::now().to_rfc3339());
+        self.conn
+            .execute(
+                "INSERT OR IGNORE INTO session_presence_snapshots (
+                    session_id, current_state, current_segment_started_at, updated_at
+                 ) VALUES (?1, 'launched_unengaged', ?2, ?2)",
+                params![session_id, seeded_at],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn load_presence_snapshot(
+        &self,
+        session_id: i64,
+    ) -> EcoachResult<Option<SessionPresenceSnapshot>> {
+        self.conn
+            .query_row(
+                "SELECT session_id, current_state, current_segment_started_at, first_meaningful_at,
+                        last_meaningful_at, idle_started_at, idle_confirmed_at,
+                        interruption_started_at, gross_elapsed_ms, active_engaged_ms,
+                        passive_engaged_ms, thinking_time_ms, idle_time_ms,
+                        interruption_time_ms, counted_study_time_ms, abandonment_risk_bp,
+                        updated_at
+                 FROM session_presence_snapshots
+                 WHERE session_id = ?1",
+                [session_id],
+                |row| {
+                    let updated_at_raw = row.get::<_, String>(16)?;
+                    let updated_at = DateTime::parse_from_rfc3339(&updated_at_raw)
+                        .map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                16,
+                                rusqlite::types::Type::Text,
+                                Box::new(EcoachError::Validation(err.to_string())),
+                            )
+                        })?
+                        .with_timezone(&Utc);
+                    Ok(SessionPresenceSnapshot {
+                        session_id: row.get(0)?,
+                        current_state: row.get(1)?,
+                        current_segment_started_at: parse_datetime(row.get::<_, Option<String>>(2)?),
+                        first_meaningful_at: parse_datetime(row.get::<_, Option<String>>(3)?),
+                        last_meaningful_at: parse_datetime(row.get::<_, Option<String>>(4)?),
+                        idle_started_at: parse_datetime(row.get::<_, Option<String>>(5)?),
+                        idle_confirmed_at: parse_datetime(row.get::<_, Option<String>>(6)?),
+                        interruption_started_at: parse_datetime(row.get::<_, Option<String>>(7)?),
+                        gross_elapsed_ms: row.get(8)?,
+                        active_engaged_ms: row.get(9)?,
+                        passive_engaged_ms: row.get(10)?,
+                        thinking_time_ms: row.get(11)?,
+                        idle_time_ms: row.get(12)?,
+                        interruption_time_ms: row.get(13)?,
+                        counted_study_time_ms: row.get(14)?,
+                        abandonment_risk_bp: row.get(15)?,
+                        updated_at,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn persist_presence_snapshot(&self, snapshot: &SessionPresenceSnapshot) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "UPDATE session_presence_snapshots
+                 SET current_state = ?2,
+                     current_segment_started_at = ?3,
+                     first_meaningful_at = ?4,
+                     last_meaningful_at = ?5,
+                     idle_started_at = ?6,
+                     idle_confirmed_at = ?7,
+                     interruption_started_at = ?8,
+                     gross_elapsed_ms = ?9,
+                     active_engaged_ms = ?10,
+                     passive_engaged_ms = ?11,
+                     thinking_time_ms = ?12,
+                     idle_time_ms = ?13,
+                     interruption_time_ms = ?14,
+                     counted_study_time_ms = ?15,
+                     abandonment_risk_bp = ?16,
+                     updated_at = ?17
+                 WHERE session_id = ?1",
+                params![
+                    snapshot.session_id,
+                    snapshot.current_state,
+                    snapshot.current_segment_started_at.map(|value| value.to_rfc3339()),
+                    snapshot.first_meaningful_at.map(|value| value.to_rfc3339()),
+                    snapshot.last_meaningful_at.map(|value| value.to_rfc3339()),
+                    snapshot.idle_started_at.map(|value| value.to_rfc3339()),
+                    snapshot.idle_confirmed_at.map(|value| value.to_rfc3339()),
+                    snapshot.interruption_started_at.map(|value| value.to_rfc3339()),
+                    snapshot.gross_elapsed_ms,
+                    snapshot.active_engaged_ms,
+                    snapshot.passive_engaged_ms,
+                    snapshot.thinking_time_ms,
+                    snapshot.idle_time_ms,
+                    snapshot.interruption_time_ms,
+                    snapshot.counted_study_time_ms,
+                    snapshot.abandonment_risk_bp,
+                    snapshot.updated_at.to_rfc3339(),
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn record_presence_event_internal(
+        &self,
+        session_id: i64,
+        event_type: &str,
+        occurred_at: &str,
+        metadata_json: Value,
+    ) -> EcoachResult<()> {
+        let session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        self.ensure_presence_snapshot(session_id, None)?;
+        let snapshot = self
+            .load_presence_snapshot(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} presence not found", session_id)))?;
+        let occurred_at_dt = DateTime::parse_from_rfc3339(occurred_at)
+            .map_err(|err| EcoachError::Validation(err.to_string()))?
+            .with_timezone(&Utc);
+        let (next_snapshot, state_before, state_after, segment_duration_ms, counted_credit_ms) =
+            self.apply_presence_transition(&session, snapshot, event_type, occurred_at_dt, &metadata_json);
+        self.persist_presence_snapshot(&next_snapshot)?;
+        self.conn
+            .execute(
+                "INSERT INTO session_presence_events (
+                    session_id, event_type, occurred_at, state_before, state_after,
+                    segment_duration_ms, counted_credit_ms, metadata_json
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    session_id,
+                    event_type,
+                    occurred_at,
+                    state_before,
+                    state_after,
+                    segment_duration_ms,
+                    counted_credit_ms,
+                    metadata_json.to_string(),
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.presence_transition",
+                session_id.to_string(),
+                serde_json::json!({
+                    "event_type": event_type,
+                    "occurred_at": occurred_at,
+                    "state_before": state_before,
+                    "state_after": state_after,
+                    "segment_duration_ms": segment_duration_ms,
+                    "counted_credit_ms": counted_credit_ms,
+                    "metadata": metadata_json,
+                }),
+            ),
+        )?;
+        Ok(())
+    }
+
+    fn apply_presence_transition(
+        &self,
+        session: &Session,
+        mut snapshot: SessionPresenceSnapshot,
+        event_type: &str,
+        occurred_at: DateTime<Utc>,
+        metadata_json: &Value,
+    ) -> (
+        SessionPresenceSnapshot,
+        Option<String>,
+        String,
+        i64,
+        i64,
+    ) {
+        let previous_state = snapshot.current_state.clone();
+        let state_before = Some(previous_state.clone());
+        let segment_started_at = snapshot
+            .current_segment_started_at
+            .or(snapshot.last_meaningful_at)
+            .or(snapshot.first_meaningful_at)
+            .or_else(|| session.started_at.as_ref().map(|value| value.to_owned()))
+            .unwrap_or(occurred_at);
+        let segment_duration_ms = (occurred_at - segment_started_at).num_milliseconds().max(0);
+        let counted_credit_ms = Self::credit_presence_segment(
+            &mut snapshot,
+            &previous_state,
+            segment_duration_ms,
+        );
+        let explicit_reason = metadata_json
+            .get("reason")
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        let state_after = match event_type {
+            "session_started" => "launched_unengaged".to_string(),
+            "meaningful_interaction" | "session_resumed" | "reactivated" => {
+                if snapshot.first_meaningful_at.is_none() {
+                    snapshot.first_meaningful_at = Some(occurred_at);
+                }
+                snapshot.last_meaningful_at = Some(occurred_at);
+                snapshot.idle_started_at = None;
+                snapshot.idle_confirmed_at = None;
+                snapshot.interruption_started_at = None;
+                "active_engaged".to_string()
+            }
+            "passive_progress_event" => {
+                if snapshot.first_meaningful_at.is_none() {
+                    snapshot.first_meaningful_at = Some(occurred_at);
+                }
+                snapshot.last_meaningful_at = Some(occurred_at);
+                snapshot.idle_started_at = None;
+                snapshot.idle_confirmed_at = None;
+                snapshot.interruption_started_at = None;
+                "active_passive".to_string()
+            }
+            "thinking_mode_entered" => {
+                if snapshot.first_meaningful_at.is_none() {
+                    snapshot.first_meaningful_at = Some(occurred_at);
+                }
+                snapshot.last_meaningful_at = Some(occurred_at);
+                snapshot.idle_started_at = None;
+                snapshot.idle_confirmed_at = None;
+                snapshot.interruption_started_at = None;
+                "thinking_solving".to_string()
+            }
+            "quiet_started" => {
+                snapshot.idle_started_at = snapshot.last_meaningful_at.or(Some(occurred_at));
+                "quiet_grace".to_string()
+            }
+            "idle_suspected" => {
+                snapshot.idle_started_at = snapshot.last_meaningful_at.or(Some(occurred_at));
+                "suspected_idle".to_string()
+            }
+            "idle_confirmed" => {
+                snapshot.idle_started_at = snapshot.last_meaningful_at.or(Some(occurred_at));
+                snapshot.idle_confirmed_at = Some(occurred_at);
+                "idle_confirmed".to_string()
+            }
+            "background_interrupted" => {
+                snapshot.interruption_started_at = Some(occurred_at);
+                "background_interrupted".to_string()
+            }
+            "manual_pause" => {
+                snapshot.interruption_started_at = Some(occurred_at);
+                "manually_paused".to_string()
+            }
+            "manual_stop" => {
+                snapshot.interruption_started_at = Some(occurred_at);
+                if explicit_reason
+                    .as_deref()
+                    .is_some_and(|value| value == "continue_later" || value == "interrupted")
+                {
+                    "parked_recoverable".to_string()
+                } else {
+                    "manually_stopped".to_string()
+                }
+            }
+            "session_parked" => {
+                snapshot.interruption_started_at = Some(occurred_at);
+                "parked_recoverable".to_string()
+            }
+            "session_abandoned" => "abandoned".to_string(),
+            "session_completed" => {
+                if snapshot.first_meaningful_at.is_none() {
+                    snapshot.first_meaningful_at = session.started_at.as_ref().map(|value| value.to_owned()).or(Some(occurred_at));
+                }
+                snapshot.last_meaningful_at = Some(occurred_at);
+                "completed".to_string()
+            }
+            _ => snapshot.current_state.clone(),
+        };
+        snapshot.current_state = state_after.clone();
+        snapshot.current_segment_started_at = Some(occurred_at);
+        snapshot.gross_elapsed_ms = snapshot
+            .first_meaningful_at
+            .map(|started| (occurred_at - started).num_milliseconds().max(0))
+            .unwrap_or(0);
+        snapshot.abandonment_risk_bp = Self::presence_abandonment_risk_bp(&snapshot.current_state);
+        snapshot.updated_at = occurred_at;
+        (
+            snapshot,
+            state_before,
+            state_after,
+            segment_duration_ms,
+            counted_credit_ms,
+        )
+    }
+
+    fn credit_presence_segment(
+        snapshot: &mut SessionPresenceSnapshot,
+        state_before: &str,
+        segment_duration_ms: i64,
+    ) -> i64 {
+        let duration_ms = segment_duration_ms.max(0);
+        match state_before {
+            "active_engaged" => {
+                snapshot.active_engaged_ms += duration_ms;
+                snapshot.counted_study_time_ms += duration_ms;
+                duration_ms
+            }
+            "active_passive" => {
+                snapshot.passive_engaged_ms += duration_ms;
+                snapshot.counted_study_time_ms += duration_ms;
+                duration_ms
+            }
+            "thinking_solving" | "quiet_grace" => {
+                snapshot.thinking_time_ms += duration_ms;
+                snapshot.counted_study_time_ms += duration_ms;
+                duration_ms
+            }
+            "suspected_idle" | "idle_confirmed" => {
+                snapshot.idle_time_ms += duration_ms;
+                0
+            }
+            "background_interrupted" | "manually_paused" | "parked_recoverable"
+            | "manually_stopped" | "abandoned" => {
+                snapshot.interruption_time_ms += duration_ms;
+                0
+            }
+            _ => 0,
+        }
+    }
+
+    fn presence_abandonment_risk_bp(state: &str) -> BasisPoints {
+        clamp_bp(match state {
+            "suspected_idle" => 5_600,
+            "idle_confirmed" => 7_800,
+            "background_interrupted" | "manually_paused" | "parked_recoverable" => 4_200,
+            "manually_stopped" => 6_400,
+            "abandoned" => 9_500,
+            _ => 1_200,
+        })
+    }
+
+    fn estimate_session_time_totals(
+        &self,
+        session_id: i64,
+        started_at: Option<DateTime<Utc>>,
+        completed_at: &str,
+    ) -> EcoachResult<(i64, i64)> {
+        if let Some(snapshot) = self.load_presence_snapshot(session_id)? {
+            let active_study_time_ms = snapshot.counted_study_time_ms.max(0);
+            let idle_time_ms = (snapshot.idle_time_ms + snapshot.interruption_time_ms).max(0);
+            return Ok((active_study_time_ms, idle_time_ms));
+        }
+
+        let active_study_time_ms: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(SUM(response_time_ms), 0)
+                 FROM student_question_attempts
+                 WHERE session_id = ?1",
+                [session_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let completed_at = DateTime::parse_from_rfc3339(completed_at)
+            .map_err(|err| EcoachError::Validation(err.to_string()))?
+            .with_timezone(&Utc);
+        let idle_time_ms = started_at
+            .map(|started| {
+                let elapsed_ms = (completed_at - started).num_milliseconds().max(0);
+                (elapsed_ms - active_study_time_ms).max(0)
+            })
+            .unwrap_or(0);
+        Ok((active_study_time_ms, idle_time_ms))
     }
 
     fn resolve_custom_test_topic_scope(
@@ -1967,7 +2853,8 @@ impl<'a> SessionService<'a> {
             return Ok(BTreeMap::new());
         }
 
-        let (latest_subject_year, subject_year_span) = load_subject_year_bounds(self.conn, subject_id)?;
+        let (latest_subject_year, subject_year_span) =
+            load_subject_year_bounds(self.conn, subject_id)?;
         let placeholders = family_ids
             .iter()
             .map(|_| "?")
@@ -2021,8 +2908,7 @@ impl<'a> SessionService<'a> {
                     FamilyRuntimeSignal {
                         health_status: row.get::<_, String>(1)?,
                         quality_score: row.get::<_, i64>(2)?.clamp(0, 10_000) as BasisPoints,
-                        calibration_score: row.get::<_, i64>(3)?.clamp(0, 10_000)
-                            as BasisPoints,
+                        calibration_score: row.get::<_, i64>(3)?.clamp(0, 10_000) as BasisPoints,
                         recurrence_score,
                         coappearance_score,
                         replacement_score,
@@ -2156,7 +3042,7 @@ impl<'a> SessionService<'a> {
         let started_at = input
             .response_time_ms
             .map(|value| submitted_at - chrono::Duration::milliseconds(value.max(0)))
-            .or(session.started_at)
+            .or_else(|| session.started_at.as_ref().map(|value| value.to_owned()))
             .unwrap_or(submitted_at);
         let changed_answer_count = item
             .selected_option_id
@@ -2439,9 +3325,6 @@ fn derive_next_action_hint(
     unanswered_questions: i64,
     metrics: &AttemptMetrics,
 ) -> String {
-    if unanswered_questions > 0 {
-        return "resume_session".to_string();
-    }
     if metrics.misconception_hit_count > 0
         || metrics.dominant_error_type.as_deref() == Some("misconception_triggered")
     {
@@ -2449,6 +3332,9 @@ fn derive_next_action_hint(
     }
     if is_timed && (metrics.pressure_breakdown_count > 0 || accuracy_score.unwrap_or(0) < 6_500) {
         return "pressure_repair".to_string();
+    }
+    if unanswered_questions > 0 {
+        return "resume_session".to_string();
     }
     if accuracy_score.unwrap_or(0) >= 8_500 && metrics.supported_answer_count == 0 {
         return "advance_or_mix".to_string();
@@ -2677,7 +3563,7 @@ fn mock_candidate_fit(
                 (0.55 * bp_ratio(signal.inverse_pressure_score)
                     + 0.20 * bp_ratio(signal.comeback_score)
                     + 0.25 * family_quality)
-                .clamp(0.0, 1.0)
+                    .clamp(0.0, 1.0)
             }
         })
         .unwrap_or(0.45);
@@ -2713,7 +3599,10 @@ fn load_subject_year_bounds(conn: &Connection, subject_id: i64) -> EcoachResult<
         .map_err(|err| EcoachError::Storage(err.to_string()))?
         .unwrap_or(latest_subject_year);
 
-    Ok((latest_subject_year, (latest_subject_year - earliest_subject_year).max(1)))
+    Ok((
+        latest_subject_year,
+        (latest_subject_year - earliest_subject_year).max(1),
+    ))
 }
 
 fn composite_inverse_pressure(
@@ -2824,7 +3713,10 @@ fn resolve_runtime_generation_variant_mode(
     let Some(signal) = family_signal else {
         return resolved;
     };
-    if matches!(resolved, QuestionVariantMode::MisconceptionProbe | QuestionVariantMode::Rescue) {
+    if matches!(
+        resolved,
+        QuestionVariantMode::MisconceptionProbe | QuestionVariantMode::Rescue
+    ) {
         return resolved;
     }
     if signal.health_status == "fragile" || signal.calibration_score < 5_400 {
@@ -2888,7 +3780,9 @@ fn enrich_remediation_plan(
             && is_timed
             && (signal.inverse_pressure_score >= 7_000 || signal.comeback_score >= 6_500)
         {
-            plan.variant_mode = QuestionVariantMode::RepresentationShift.as_str().to_string();
+            plan.variant_mode = QuestionVariantMode::RepresentationShift
+                .as_str()
+                .to_string();
             rationale_parts.push(
                 "Past-paper inverse/comeback pressure is high, so rehearse this family under exam-like surface variation."
                     .to_string(),
@@ -2925,7 +3819,8 @@ fn enrich_remediation_plan(
         );
     }
 
-    if session_type == "mock" && plan.variant_mode == QuestionVariantMode::RepresentationShift.as_str()
+    if session_type == "mock"
+        && plan.variant_mode == QuestionVariantMode::RepresentationShift.as_str()
     {
         priority_score += 300;
     }
@@ -3016,6 +3911,64 @@ fn take_ranked_question(
         .map(|index| bucket.remove(index).question)
 }
 
+fn desired_question_count_for_mission(activity_type: &str, target_minutes: i64) -> usize {
+    let baseline = match activity_type {
+        "learn" | "worked_example" => 5,
+        "guided_practice" | "review" | "memory_reactivation" => 6,
+        "repair" | "checkpoint" => 7,
+        "speed_drill" | "pressure_conditioning" => 8,
+        "mixed_test" => 10,
+        _ => 6,
+    };
+    baseline.max((target_minutes / 4).clamp(4, 12) as usize)
+}
+
+fn target_difficulty_for_mission(activity_type: &str) -> Option<BasisPoints> {
+    match activity_type {
+        "learn" | "worked_example" => Some(3_600),
+        "repair" | "memory_reactivation" => Some(4_200),
+        "guided_practice" | "review" => Some(5_200),
+        "checkpoint" => Some(6_300),
+        "mixed_test" => Some(6_800),
+        "speed_drill" | "pressure_conditioning" => Some(7_100),
+        _ => None,
+    }
+}
+
+fn mission_uses_timed_questions(activity_type: &str) -> bool {
+    matches!(
+        activity_type,
+        "checkpoint" | "mixed_test" | "speed_drill" | "pressure_conditioning"
+    )
+}
+
+fn weakness_topic_ids_for_mission(mission: &CoachMissionBrief) -> Vec<i64> {
+    match mission.topic_id {
+        Some(topic_id)
+            if matches!(
+                mission.activity_type.as_str(),
+                "repair" | "worked_example" | "memory_reactivation" | "review"
+            ) =>
+        {
+            vec![topic_id]
+        }
+        _ => Vec::new(),
+    }
+}
+
+fn mission_question_intent(activity_type: &str) -> &'static str {
+    match activity_type {
+        "learn" => "discovery",
+        "guided_practice" => "coverage",
+        "worked_example" | "repair" => "repair",
+        "review" | "memory_reactivation" => "retention",
+        "checkpoint" => "confirmation",
+        "speed_drill" | "pressure_conditioning" => "pressure",
+        "mixed_test" => "mini_mock",
+        _ => "coverage",
+    }
+}
+
 fn title_for_mock_blueprint(blueprint_type: &str) -> &'static str {
     match blueprint_type {
         "repair_mock" => "Repair",
@@ -3038,7 +3991,7 @@ mod tests {
     use ecoach_storage::run_runtime_migrations;
     use ecoach_student_model::{AnswerSubmission, ErrorType, StudentModelService};
     use ecoach_substrate::{AccountType, EntitlementTier};
-    use rusqlite::Connection;
+    use rusqlite::{Connection, params};
 
     use super::*;
 
@@ -3122,7 +4075,8 @@ mod tests {
                 student.id,
                 &AnswerSubmission {
                     question_id: snapshot.items[0].question_id,
-                    selected_option_id: misconception_option.id,
+                    selected_option_id: Some(misconception_option.id),
+                    answer_text: None,
                     session_id: Some(session.id),
                     session_type: Some("practice".to_string()),
                     started_at: now - Duration::seconds(18),
@@ -3260,6 +4214,303 @@ mod tests {
                 .iter()
                 .any(|target| target.engine_key == "student_truth")
         );
+    }
+
+    #[test]
+    fn session_presence_tracking_captures_idle_pause_resume_and_completion() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let identity = IdentityService::new(&conn);
+        let student = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Yaw".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student account should be created");
+
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        let session_service = SessionService::new(&conn);
+        let (session, _) = session_service
+            .start_practice_session(&PracticeSessionStartInput {
+                student_id: student.id,
+                subject_id,
+                topic_ids: vec![topic_id],
+                question_count: 2,
+                is_timed: false,
+            })
+            .expect("practice session should start");
+
+        let initial_presence = session_service
+            .get_session_presence_snapshot(session.id)
+            .expect("presence snapshot should load")
+            .expect("presence snapshot should exist");
+        assert_eq!(initial_presence.current_state, "launched_unengaged");
+
+        let base = Utc::now() - Duration::minutes(15);
+        let base_rfc3339 = base.to_rfc3339();
+        conn.execute(
+            "UPDATE sessions
+             SET started_at = ?1, last_activity_at = ?1
+             WHERE id = ?2",
+            params![base_rfc3339.clone(), session.id],
+        )
+        .expect("session timestamps should update");
+        conn.execute(
+            "UPDATE session_presence_snapshots
+             SET current_segment_started_at = ?1, updated_at = ?1
+             WHERE session_id = ?2",
+            params![base_rfc3339, session.id],
+        )
+        .expect("presence snapshot timestamps should update");
+
+        let thinking_snapshot = session_service
+            .record_session_presence_event(
+                session.id,
+                &SessionPresenceEventInput {
+                    event_type: "thinking_mode_entered".to_string(),
+                    occurred_at: Some((base + Duration::minutes(2)).to_rfc3339()),
+                    metadata_json: Some(serde_json::json!({ "source": "test" })),
+                },
+            )
+            .expect("thinking event should record");
+        assert_eq!(thinking_snapshot.current_state, "thinking_solving");
+
+        let idle_snapshot = session_service
+            .record_session_presence_event(
+                session.id,
+                &SessionPresenceEventInput {
+                    event_type: "idle_confirmed".to_string(),
+                    occurred_at: Some((base + Duration::minutes(5)).to_rfc3339()),
+                    metadata_json: None,
+                },
+            )
+            .expect("idle event should record");
+        assert_eq!(idle_snapshot.current_state, "idle_confirmed");
+        assert!(idle_snapshot.counted_study_time_ms >= Duration::minutes(3).num_milliseconds());
+
+        let snapshot = session_service
+            .get_session_snapshot(session.id)
+            .expect("session snapshot should load")
+            .expect("session should exist");
+        let question_service = QuestionService::new(&conn);
+        let option_id = question_service
+            .list_options(snapshot.items[0].question_id)
+            .expect("question options should load")
+            .first()
+            .map(|option| option.id)
+            .expect("question should have at least one option");
+        session_service
+            .record_answer(
+                session.id,
+                &SessionAnswerInput {
+                    item_id: snapshot.items[0].id,
+                    selected_option_id: option_id,
+                    response_time_ms: Some(12_000),
+                },
+            )
+            .expect("answer should record");
+
+        let stopped = session_service
+            .manual_stop_session(session.id, Some("continue_later".to_string()))
+            .expect("session should stop manually");
+        assert_eq!(stopped.session.status, "paused");
+        let resumed = session_service
+            .resume_session(session.id)
+            .expect("session should resume");
+        assert_eq!(resumed.session.status, "active");
+
+        let summary = session_service
+            .complete_session(session.id)
+            .expect("session should complete");
+        assert_eq!(summary.status, "completed");
+        assert_eq!(summary.answered_questions, 1);
+
+        let final_presence = session_service
+            .get_session_presence_snapshot(session.id)
+            .expect("final presence snapshot should load")
+            .expect("final presence snapshot should exist");
+        assert_eq!(final_presence.current_state, "completed");
+        assert!(final_presence.counted_study_time_ms >= Duration::minutes(3).num_milliseconds());
+        assert!(final_presence.idle_time_ms > 0);
+
+        let presence_events = session_service
+            .list_session_presence_events(session.id, 16)
+            .expect("presence events should load");
+        assert!(presence_events
+            .iter()
+            .any(|event| event.event_type == "thinking_mode_entered"));
+        assert!(presence_events
+            .iter()
+            .any(|event| event.event_type == "idle_confirmed"));
+        assert!(presence_events
+            .iter()
+            .any(|event| event.event_type == "meaningful_interaction"));
+        assert!(presence_events
+            .iter()
+            .any(|event| event.event_type == "manual_stop"));
+        assert!(presence_events
+            .iter()
+            .any(|event| event.event_type == "session_resumed"));
+        assert!(presence_events
+            .iter()
+            .any(|event| event.event_type == "session_completed"));
+
+        let (status, active_study_time_ms, idle_time_ms): (String, i64, i64) = conn
+            .query_row(
+                "SELECT status, COALESCE(active_study_time_ms, 0), COALESCE(idle_time_ms, 0)
+                 FROM sessions
+                 WHERE id = ?1",
+                [session.id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("session time totals should load");
+        assert_eq!(status, "completed");
+        assert_eq!(active_study_time_ms, final_presence.counted_study_time_ms);
+        assert_eq!(
+            idle_time_ms,
+            final_presence.idle_time_ms + final_presence.interruption_time_ms
+        );
+    }
+
+    #[test]
+    fn focus_mode_configuration_round_trips_on_session() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let identity = IdentityService::new(&conn);
+        let student = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Kojo".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student account should be created");
+
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        let session_service = SessionService::new(&conn);
+        let (session, _) = session_service
+            .start_practice_session(&PracticeSessionStartInput {
+                student_id: student.id,
+                subject_id,
+                topic_ids: vec![topic_id],
+                question_count: 2,
+                is_timed: false,
+            })
+            .expect("practice session should start");
+
+        let updated = session_service
+            .enable_focus_mode(
+                session.id,
+                Some("finish the last five problems".to_string()),
+                Some(serde_json::json!([15, 5, 10])),
+                Some("quiet_focus".to_string()),
+            )
+            .expect("focus mode should enable");
+
+        assert!(updated.focus_mode);
+        assert_eq!(
+            updated.focus_goal.as_deref(),
+            Some("finish the last five problems")
+        );
+        assert_eq!(updated.ambient_profile.as_deref(), Some("quiet_focus"));
+        let config = session_service
+            .get_focus_mode_config(session.id)
+            .expect("focus mode config should load")
+            .expect("focus mode config should exist");
+        assert!(config.focus_mode);
+        assert_eq!(
+            config.focus_goal.as_deref(),
+            Some("finish the last five problems")
+        );
+        assert_eq!(config.ambient_profile.as_deref(), Some("quiet_focus"));
+        assert_eq!(
+            config.break_schedule_json,
+            Some(serde_json::json!([15, 5, 10]))
+        );
+    }
+
+    #[test]
+    fn coach_mission_session_uses_real_questions_and_links_back_to_mission() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let identity = IdentityService::new(&conn);
+        let student = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Ama".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student account should be created");
+
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        conn.execute(
+            "INSERT INTO student_profiles (account_id, preferred_subjects, daily_study_budget_minutes)
+             VALUES (?1, '[\"MATH\"]', 60)",
+            [student.id],
+        )
+        .expect("student profile should insert");
+        conn.execute(
+            "INSERT INTO diagnostic_instances (student_id, subject_id, session_mode, status, started_at, completed_at, result_json)
+             VALUES (?1, ?2, 'standard', 'completed', datetime('now'), datetime('now'), '{}')",
+            params![student.id, subject_id],
+        )
+        .expect("diagnostic instance should insert");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, gap_score, fragility_score, memory_strength, priority_score
+             ) VALUES (?1, ?2, 4600, 7800, 5200, 4200, 9300)",
+            params![student.id, topic_id],
+        )
+        .expect("topic state should insert");
+
+        let plan_engine = PlanEngine::new(&conn);
+        let exam_date = (Utc::now() + Duration::days(45)).date_naive().to_string();
+        plan_engine
+            .generate_plan(student.id, "BECE", &exam_date, 60)
+            .expect("plan should generate");
+
+        let service = SessionService::new(&conn);
+        let mission_session = service
+            .start_coach_mission_session(student.id)
+            .expect("coach mission session should start");
+
+        assert_eq!(
+            mission_session.session_snapshot.session.session_type,
+            "coach_mission"
+        );
+        assert!(!mission_session.question_ids.is_empty());
+        assert!(!mission_session.session_snapshot.items.is_empty());
+        assert_eq!(
+            mission_session.coverage["selected_count"].as_i64(),
+            Some(mission_session.question_ids.len() as i64)
+        );
+
+        let linked_session_id: Option<i64> = conn
+            .query_row(
+                "SELECT session_id FROM coach_missions WHERE id = ?1",
+                [mission_session.mission_id],
+                |row| row.get(0),
+            )
+            .expect("linked session should query");
+        assert_eq!(linked_session_id, Some(mission_session.session_id));
+
+        service
+            .complete_session(mission_session.session_id)
+            .expect("coach mission session should complete");
+        let mission_memory_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM coach_mission_memories WHERE mission_id = ?1",
+                [mission_session.mission_id],
+                |row| row.get(0),
+            )
+            .expect("mission memory count should query");
+        assert_eq!(mission_memory_count, 1);
     }
 
     #[test]
@@ -3531,9 +4782,22 @@ mod tests {
             comeback_score: 7_250,
         };
 
-        let low_score = mock_candidate_fit(&question, Some(6_500), true, 0.7, false, Some(&low_pressure));
-        let high_score =
-            mock_candidate_fit(&question, Some(6_500), true, 0.7, false, Some(&high_pressure));
+        let low_score = mock_candidate_fit(
+            &question,
+            Some(6_500),
+            true,
+            0.7,
+            false,
+            Some(&low_pressure),
+        );
+        let high_score = mock_candidate_fit(
+            &question,
+            Some(6_500),
+            true,
+            0.7,
+            false,
+            Some(&high_pressure),
+        );
 
         assert!(high_score > low_score);
     }
@@ -3551,7 +4815,9 @@ mod tests {
                 generated_instances: 0,
                 fit_score: 6_900,
             },
-            variant_mode: QuestionVariantMode::RepresentationShift.as_str().to_string(),
+            variant_mode: QuestionVariantMode::RepresentationShift
+                .as_str()
+                .to_string(),
             priority_score: 5_800,
             source_question_id: Some(900),
             request_kind: "remediation".to_string(),
@@ -3574,7 +4840,9 @@ mod tests {
 
         assert_eq!(enriched.variant_mode, QuestionVariantMode::Rescue.as_str());
         assert!(enriched.priority_score > 5_800);
-        assert!(enriched.rationale.contains("Past-paper") || enriched.rationale.contains("Dormant"));
+        assert!(
+            enriched.rationale.contains("Past-paper") || enriched.rationale.contains("Dormant")
+        );
         assert!(enriched.rationale.contains("fragile"));
     }
 

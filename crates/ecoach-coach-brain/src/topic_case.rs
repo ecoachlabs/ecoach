@@ -1169,7 +1169,17 @@ fn compute_diagnosis_certainty(
     } else {
         0
     };
-    clamp_bp((primary - secondary + 5000).clamp(2500, 9200) + evidence_bonus)
+    // A dominant, high-conviction primary cause should stay actionable even when nearby
+    // secondary hypotheses remain plausible. This prevents explicit blockers from being
+    // under-scored simply because the topic is also weak in adjacent ways.
+    let primary_signal_bonus = if primary >= 9000 {
+        700
+    } else if primary >= 8000 {
+        300
+    } else {
+        0
+    };
+    clamp_bp((primary - secondary + 5000).clamp(2500, 9200) + evidence_bonus + primary_signal_bonus)
 }
 
 fn blocked_topic_score(base: &BaseTopicState, blocker: Option<&TopicCaseBlocker>) -> i64 {

@@ -4,6 +4,7 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
+use crate::CanonicalIntelligenceStore;
 use crate::journey::JourneyService;
 use crate::readiness_engine::ReadinessEngine;
 use crate::topic_case::{TopicCase, list_priority_topic_cases};
@@ -37,6 +38,92 @@ pub struct PlanRewriteResult {
     pub reason: String,
     pub carryover_topic_ids: Vec<i64>,
     pub pending_review_count: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachPlanActivity {
+    pub id: i64,
+    pub plan_day_id: i64,
+    pub subject_id: Option<i64>,
+    pub topic_id: Option<i64>,
+    pub activity_type: String,
+    pub target_minutes: i64,
+    pub sequence_order: i64,
+    pub target_outcome: Value,
+    pub status: String,
+    pub notes: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachPlanDaySnapshot {
+    pub id: i64,
+    pub date: String,
+    pub phase: String,
+    pub target_minutes: i64,
+    pub carryover_minutes: i64,
+    pub status: String,
+    pub activities: Vec<CoachPlanActivity>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachRoadmapSnapshot {
+    pub plan_id: i64,
+    pub student_id: i64,
+    pub exam_target: String,
+    pub exam_date: String,
+    pub start_date: String,
+    pub total_days: i64,
+    pub days_completed: i64,
+    pub days_remaining: i64,
+    pub current_phase: String,
+    pub daily_budget_minutes: i64,
+    pub weekly_completion_bp: BasisPoints,
+    pub current_readiness_score: BasisPoints,
+    pub target_readiness_score: BasisPoints,
+    pub readiness_band: String,
+    pub today: Option<CoachPlanDaySnapshot>,
+    pub upcoming: Vec<CoachPlanDaySnapshot>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StudyBudgetSnapshot {
+    pub date: String,
+    pub planned_minutes: i64,
+    pub carryover_minutes: i64,
+    pub actual_minutes: i64,
+    pub focus_minutes: i64,
+    pub idle_minutes: i64,
+    pub remaining_minutes: i64,
+    pub completed_session_minutes: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachBlocker {
+    pub id: i64,
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub reason: String,
+    pub severity: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachMissionBrief {
+    pub mission_id: i64,
+    pub plan_day_id: Option<i64>,
+    pub student_id: i64,
+    pub session_id: Option<i64>,
+    pub title: String,
+    pub reason: String,
+    pub subject_id: Option<i64>,
+    pub topic_id: Option<i64>,
+    pub activity_type: String,
+    pub target_minutes: i64,
+    pub status: String,
+    pub plan_day_phase: Option<String>,
+    pub steps: Value,
+    pub success_criteria: Value,
+    pub question_ids: Vec<i64>,
 }
 
 pub struct PlanEngine<'a> {
@@ -125,6 +212,7 @@ impl<'a> PlanEngine<'a> {
         let total_days = (exam - today).num_days().max(1);
         let phase = phase_for_remaining_days(total_days);
         let selected_subjects = self.load_selected_subjects(student_id)?;
+        let selected_subject_ids = self.load_subject_ids_for_codes(&selected_subjects)?;
         let plan_data_json = serde_json::to_string(&serde_json::json!({
             "selected_subjects": selected_subjects,
             "generated_at": today.to_string(),
@@ -185,6 +273,19 @@ impl<'a> PlanEngine<'a> {
                     ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let plan_day_id = self.conn.last_insert_rowid();
+            self.seed_plan_day_activities(
+                plan_day_id,
+                student_id,
+                offset,
+                if is_review_day(offset) {
+                    "review_day"
+                } else {
+                    day_phase
+                },
+                day_target_minutes,
+                &selected_subject_ids,
+            )?;
         }
         self.append_runtime_event(DomainEvent::new(
             "plan.generated",
@@ -299,7 +400,13 @@ impl<'a> PlanEngine<'a> {
 
         let (plan_day_id, plan_day_phase, target_minutes) =
             self.ensure_active_plan_day(student_id, &today)?;
-        let topic_cases = list_priority_topic_cases(self.conn, student_id, 5)?;
+        let topic_cases = CanonicalIntelligenceStore::new(self.conn)
+            .list_priority_topic_cases(student_id, 5)?;
+        let topic_cases = if topic_cases.is_empty() {
+            list_priority_topic_cases(self.conn, student_id, 5)?
+        } else {
+            topic_cases
+        };
         let blueprint = self.build_mission_blueprint(
             student_id,
             &plan_day_phase,
@@ -330,6 +437,13 @@ impl<'a> PlanEngine<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mission_id = self.conn.last_insert_rowid();
+        self.activate_plan_activity_for_mission(
+            plan_day_id,
+            blueprint.subject_id,
+            blueprint.topic_id,
+            blueprint.activity_type,
+            blueprint.target_minutes,
+        )?;
         self.append_runtime_event(DomainEvent::new(
             "mission.generated",
             mission_id.to_string(),
@@ -425,6 +539,13 @@ impl<'a> PlanEngine<'a> {
                 params![mission.plan_day_id, outcome.attempt_count],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.complete_plan_activity_from_mission(
+            mission.plan_day_id,
+            mission.subject_id,
+            mission.topic_id,
+            &mission.activity_type,
+            &mission_status,
+        )?;
 
         self.conn
             .execute(
@@ -583,6 +704,352 @@ impl<'a> PlanEngine<'a> {
         Ok(())
     }
 
+    pub fn get_mission_brief(&self, mission_id: i64) -> EcoachResult<Option<CoachMissionBrief>> {
+        self.conn
+            .query_row(
+                "SELECT cm.id, cm.plan_day_id, cm.student_id, cm.session_id, cm.title, cm.reason,
+                        cm.subject_id, cm.primary_topic_id, cm.activity_type, cm.target_minutes,
+                        cm.status, cpd.phase, cm.steps_json, cm.success_criteria_json,
+                        cm.question_ids_json
+                 FROM coach_missions cm
+                 LEFT JOIN coach_plan_days cpd ON cpd.id = cm.plan_day_id
+                 WHERE cm.id = ?1",
+                [mission_id],
+                |row| {
+                    let steps_json: String = row.get(12)?;
+                    let success_criteria_json: String = row.get(13)?;
+                    let question_ids_json: String = row.get(14)?;
+                    Ok(CoachMissionBrief {
+                        mission_id: row.get(0)?,
+                        plan_day_id: row.get(1)?,
+                        student_id: row.get(2)?,
+                        session_id: row.get(3)?,
+                        title: row.get(4)?,
+                        reason: row.get(5)?,
+                        subject_id: row.get(6)?,
+                        topic_id: row.get(7)?,
+                        activity_type: row.get(8)?,
+                        target_minutes: row.get(9)?,
+                        status: row.get(10)?,
+                        plan_day_phase: row.get(11)?,
+                        steps: serde_json::from_str(&steps_json).map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                12,
+                                rusqlite::types::Type::Text,
+                                Box::new(err),
+                            )
+                        })?,
+                        success_criteria: serde_json::from_str(&success_criteria_json).map_err(
+                            |err| {
+                                rusqlite::Error::FromSqlConversionFailure(
+                                    13,
+                                    rusqlite::types::Type::Text,
+                                    Box::new(err),
+                                )
+                            },
+                        )?,
+                        question_ids: serde_json::from_str(&question_ids_json).map_err(|err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                14,
+                                rusqlite::types::Type::Text,
+                                Box::new(err),
+                            )
+                        })?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    pub fn get_today_mission_brief(
+        &self,
+        student_id: i64,
+    ) -> EcoachResult<Option<CoachMissionBrief>> {
+        let today = Utc::now().date_naive().to_string();
+        let mission_id = self.load_existing_today_mission(student_id, &today)?;
+        match mission_id {
+            Some(mission_id) => self.get_mission_brief(mission_id),
+            None => Ok(None),
+        }
+    }
+
+    pub fn get_or_prepare_today_mission(&self, student_id: i64) -> EcoachResult<CoachMissionBrief> {
+        let mission_id = self.generate_today_mission(student_id)?;
+        self.get_mission_brief(mission_id)?
+            .ok_or_else(|| EcoachError::NotFound("today mission could not be loaded".to_string()))
+    }
+
+    pub fn attach_session_to_mission(
+        &self,
+        mission_id: i64,
+        session_id: i64,
+        question_ids: &[i64],
+    ) -> EcoachResult<()> {
+        let question_ids_json = serde_json::to_string(question_ids)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        self.conn
+            .execute(
+                "UPDATE coach_missions
+                 SET session_id = ?1,
+                     question_ids_json = ?2
+                 WHERE id = ?3",
+                params![session_id, question_ids_json, mission_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    pub fn mark_mission_no_question_recovery(
+        &self,
+        student_id: i64,
+        mission_id: i64,
+        topic_id: Option<i64>,
+    ) -> EcoachResult<()> {
+        self.conn
+            .execute(
+                "UPDATE coach_missions
+                 SET status = 'deferred'
+                 WHERE id = ?1 AND status IN ('pending', 'active')",
+                [mission_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO coach_recovery_states (student_id, state_type, recovery_action)
+                 VALUES (?1, 'no_questions_for_topic', ?2)",
+                params![
+                    student_id,
+                    topic_id.map(|value| format!("load_real_questions_for_topic:{}", value)),
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.append_runtime_event(DomainEvent::new(
+            "mission.blocked_no_questions",
+            mission_id.to_string(),
+            json!({
+                "student_id": student_id,
+                "topic_id": topic_id,
+                "mission_id": mission_id,
+            }),
+        ))?;
+        Ok(())
+    }
+
+    pub fn get_coach_roadmap(
+        &self,
+        student_id: i64,
+        horizon_days: usize,
+    ) -> EcoachResult<Option<CoachRoadmapSnapshot>> {
+        let Some(plan) = self.load_active_plan_snapshot(student_id)? else {
+            return Ok(None);
+        };
+        let today = Utc::now().date_naive();
+        let exam_date = NaiveDate::parse_from_str(&plan.exam_date, "%Y-%m-%d").unwrap_or(today);
+        let days_remaining = (exam_date - today).num_days().max(0);
+        let days_completed: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM coach_plan_days
+                 WHERE plan_id = ?1 AND status = 'completed'",
+                [plan.plan_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let weekly_completion_bp = self.compute_weekly_completion_bp(plan.plan_id)?;
+        let current_readiness_score = self.compute_overall_readiness_score(student_id)?;
+        let target_readiness_score =
+            target_readiness_for_days_remaining(plan.total_days, days_remaining);
+
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, date, phase, target_minutes, carryover_minutes, status
+                 FROM coach_plan_days
+                 WHERE plan_id = ?1
+                   AND date >= date('now')
+                 ORDER BY date ASC, id ASC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![plan.plan_id, horizon_days.max(1) as i64], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, String>(5)?,
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut day_snapshots = Vec::new();
+        for row in rows {
+            let (plan_day_id, date, phase, target_minutes, carryover_minutes, status) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let activities = self.list_plan_day_activities(plan_day_id)?;
+            day_snapshots.push(CoachPlanDaySnapshot {
+                id: plan_day_id,
+                date,
+                phase,
+                target_minutes,
+                carryover_minutes,
+                status,
+                activities,
+            });
+        }
+        let today_snapshot = day_snapshots
+            .iter()
+            .find(|day| day.date == today.to_string())
+            .cloned()
+            .or_else(|| day_snapshots.first().cloned());
+        let upcoming = day_snapshots
+            .into_iter()
+            .filter(|day| Some(day.id) != today_snapshot.as_ref().map(|item| item.id))
+            .collect::<Vec<_>>();
+
+        Ok(Some(CoachRoadmapSnapshot {
+            plan_id: plan.plan_id,
+            student_id,
+            exam_target: plan.exam_target,
+            exam_date: plan.exam_date,
+            start_date: plan.start_date,
+            total_days: plan.total_days,
+            days_completed,
+            days_remaining,
+            current_phase: plan.current_phase,
+            daily_budget_minutes: plan.daily_budget_minutes,
+            weekly_completion_bp,
+            current_readiness_score,
+            target_readiness_score,
+            readiness_band: readiness_band_for_score(current_readiness_score).to_string(),
+            today: today_snapshot,
+            upcoming,
+        }))
+    }
+
+    pub fn build_study_budget_snapshot(
+        &self,
+        student_id: i64,
+        anchor_date: Option<&str>,
+    ) -> EcoachResult<Option<StudyBudgetSnapshot>> {
+        let date = anchor_date
+            .map(str::to_string)
+            .unwrap_or_else(|| Utc::now().date_naive().to_string());
+        let plan_day = self
+            .conn
+            .query_row(
+                "SELECT cpd.target_minutes, cpd.carryover_minutes
+                 FROM coach_plan_days cpd
+                 INNER JOIN coach_plans cp ON cp.id = cpd.plan_id
+                 WHERE cp.student_id = ?1
+                   AND cp.status IN ('active', 'stale')
+                   AND cpd.date = ?2
+                 ORDER BY cpd.id DESC
+                 LIMIT 1",
+                params![student_id, date],
+                |row| Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?)),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let Some((planned_minutes, carryover_minutes)) = plan_day else {
+            return Ok(None);
+        };
+
+        let (stored_active_ms, stored_idle_ms, focus_active_ms, completed_session_minutes): (
+            i64,
+            i64,
+            i64,
+            i64,
+        ) = self
+            .conn
+            .query_row(
+                "SELECT
+                    COALESCE(SUM(COALESCE(active_study_time_ms, 0)), 0),
+                    COALESCE(SUM(COALESCE(idle_time_ms, 0)), 0),
+                    COALESCE(SUM(CASE
+                        WHEN COALESCE(focus_mode, 0) = 1 OR session_type = 'coach_mission'
+                            THEN COALESCE(active_study_time_ms, 0)
+                        ELSE 0
+                    END), 0),
+                    COALESCE(SUM(CASE
+                        WHEN status = 'completed'
+                            THEN COALESCE(active_study_time_ms, 0) / 60000
+                        ELSE 0
+                    END), 0)
+                 FROM sessions
+                 WHERE student_id = ?1
+                   AND COALESCE(date(completed_at), date(last_activity_at), date(started_at), date(created_at)) = ?2",
+                params![student_id, date],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let fallback_active_ms: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(SUM(response_time_ms), 0)
+                 FROM student_question_attempts
+                 WHERE student_id = ?1
+                   AND date(submitted_at) = ?2",
+                params![student_id, date],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let active_ms = stored_active_ms.max(fallback_active_ms);
+        let actual_minutes = ((active_ms as f64) / 60000.0).ceil() as i64;
+        let focus_minutes = ((focus_active_ms as f64) / 60000.0).ceil() as i64;
+        let idle_minutes = ((stored_idle_ms as f64) / 60000.0).ceil() as i64;
+        let remaining_minutes = (planned_minutes + carryover_minutes - actual_minutes).max(0);
+
+        Ok(Some(StudyBudgetSnapshot {
+            date,
+            planned_minutes,
+            carryover_minutes,
+            actual_minutes,
+            focus_minutes,
+            idle_minutes,
+            remaining_minutes,
+            completed_session_minutes,
+        }))
+    }
+
+    pub fn list_active_blockers(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<CoachBlocker>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT cb.id, cb.topic_id, t.name, cb.reason, cb.severity, cb.created_at
+                 FROM coach_blockers cb
+                 INNER JOIN topics t ON t.id = cb.topic_id
+                 WHERE cb.student_id = ?1 AND cb.resolved_at IS NULL
+                 ORDER BY cb.created_at DESC, cb.id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, limit.max(1) as i64], |row| {
+                Ok(CoachBlocker {
+                    id: row.get(0)?,
+                    topic_id: row.get(1)?,
+                    topic_name: row.get(2)?,
+                    reason: row.get(3)?,
+                    severity: row.get(4)?,
+                    created_at: row.get(5)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(out)
+    }
+
     fn load_selected_subjects(&self, student_id: i64) -> EcoachResult<Vec<String>> {
         let raw: Option<String> = self
             .conn
@@ -595,6 +1062,340 @@ impl<'a> PlanEngine<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         serde_json::from_str::<Vec<String>>(raw.as_deref().unwrap_or("[]"))
             .map_err(|err| EcoachError::Serialization(err.to_string()))
+    }
+
+    fn load_subject_ids_for_codes(&self, subject_codes: &[String]) -> EcoachResult<Vec<i64>> {
+        if subject_codes.is_empty() {
+            return Ok(Vec::new());
+        }
+        let placeholders = subject_codes
+            .iter()
+            .map(|_| "?")
+            .collect::<Vec<_>>()
+            .join(", ");
+        let sql = format!(
+            "SELECT id
+             FROM subjects
+             WHERE code IN ({})
+             ORDER BY display_order ASC, id ASC",
+            placeholders
+        );
+        let mut statement = self
+            .conn
+            .prepare(&sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let params = subject_codes
+            .iter()
+            .map(|code| rusqlite::types::Value::from(code.clone()))
+            .collect::<Vec<_>>();
+        let rows = statement
+            .query_map(rusqlite::params_from_iter(params.iter()), |row| {
+                row.get::<_, i64>(0)
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut ids = Vec::new();
+        for row in rows {
+            ids.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(ids)
+    }
+
+    fn seed_plan_day_activities(
+        &self,
+        plan_day_id: i64,
+        student_id: i64,
+        day_offset: i64,
+        phase: &str,
+        target_minutes: i64,
+        selected_subject_ids: &[i64],
+    ) -> EcoachResult<()> {
+        let templates = activity_templates_for_phase(phase);
+        for (index, (activity_type, share_bp, outcome_text)) in templates.iter().enumerate() {
+            let subject_id = if selected_subject_ids.is_empty() {
+                None
+            } else {
+                Some(
+                    selected_subject_ids
+                        [((day_offset as usize) + index) % selected_subject_ids.len()],
+                )
+            };
+            let topic_id = match subject_id {
+                Some(subject_id) => {
+                    self.load_anchor_topic_for_subject(student_id, subject_id, activity_type)?
+                }
+                None => None,
+            };
+            let activity_minutes = (((target_minutes.max(10) as f64) * (*share_bp as f64 / 100.0))
+                .round() as i64)
+                .max(5);
+            self.conn
+                .execute(
+                    "INSERT INTO coach_plan_activities (
+                        plan_day_id, subject_id, topic_id, activity_type, target_minutes,
+                        sequence_order, target_outcome_json, status, notes
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'pending', ?8)",
+                    params![
+                        plan_day_id,
+                        subject_id,
+                        topic_id,
+                        *activity_type,
+                        activity_minutes,
+                        (index + 1) as i64,
+                        json!({
+                            "phase": phase,
+                            "headline": outcome_text,
+                            "target_minutes": activity_minutes,
+                        })
+                        .to_string(),
+                        format!("seeded_for_{}", phase),
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    fn load_anchor_topic_for_subject(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        activity_type: &str,
+    ) -> EcoachResult<Option<i64>> {
+        self.conn
+            .query_row(
+                "SELECT t.id
+                 FROM topics t
+                 LEFT JOIN student_topic_states sts
+                    ON sts.topic_id = t.id
+                   AND sts.student_id = ?1
+                 WHERE t.subject_id = ?2
+                 ORDER BY
+                    CASE
+                        WHEN ?3 IN ('repair', 'worked_example', 'review', 'memory_reactivation')
+                            THEN COALESCE(sts.gap_score, 10000)
+                        ELSE 10000 - COALESCE(sts.mastery_score, 0)
+                    END DESC,
+                    COALESCE(sts.priority_score, 0) DESC,
+                    t.display_order ASC,
+                    t.id ASC
+                 LIMIT 1",
+                params![student_id, subject_id, activity_type],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn activate_plan_activity_for_mission(
+        &self,
+        plan_day_id: i64,
+        subject_id: i64,
+        topic_id: i64,
+        activity_type: &str,
+        target_minutes: i64,
+    ) -> EcoachResult<()> {
+        let updated = self
+            .conn
+            .execute(
+                "UPDATE coach_plan_activities
+                 SET status = 'active',
+                     topic_id = COALESCE(topic_id, ?1),
+                     updated_at = datetime('now')
+                 WHERE id = (
+                    SELECT id
+                    FROM coach_plan_activities
+                    WHERE plan_day_id = ?2
+                      AND COALESCE(subject_id, ?3) = ?3
+                      AND activity_type = ?4
+                      AND status IN ('pending', 'deferred')
+                    ORDER BY sequence_order ASC, id ASC
+                    LIMIT 1
+                 )",
+                params![topic_id, plan_day_id, subject_id, activity_type],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if updated == 0 {
+            self.conn
+                .execute(
+                    "INSERT INTO coach_plan_activities (
+                        plan_day_id, subject_id, topic_id, activity_type, target_minutes,
+                        sequence_order, target_outcome_json, status, notes
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'active', ?8)",
+                    params![
+                        plan_day_id,
+                        subject_id,
+                        topic_id,
+                        activity_type,
+                        target_minutes,
+                        99i64,
+                        json!({ "source": "mission_fallback" }).to_string(),
+                        "inserted_from_mission_generation",
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+        Ok(())
+    }
+
+    fn complete_plan_activity_from_mission(
+        &self,
+        plan_day_id: Option<i64>,
+        subject_id: Option<i64>,
+        topic_id: Option<i64>,
+        activity_type: &str,
+        mission_status: &str,
+    ) -> EcoachResult<()> {
+        let Some(plan_day_id) = plan_day_id else {
+            return Ok(());
+        };
+        let Some(subject_id) = subject_id else {
+            return Ok(());
+        };
+        let resolved_status = if mission_status == "repair_required" {
+            "blocked"
+        } else if mission_status == "partial" {
+            "deferred"
+        } else {
+            "completed"
+        };
+        self.conn
+            .execute(
+                "UPDATE coach_plan_activities
+                 SET status = ?1,
+                     topic_id = COALESCE(topic_id, ?2),
+                     updated_at = datetime('now')
+                 WHERE id = (
+                    SELECT id
+                    FROM coach_plan_activities
+                    WHERE plan_day_id = ?3
+                      AND COALESCE(subject_id, ?4) = ?4
+                      AND activity_type = ?5
+                      AND status IN ('active', 'pending', 'deferred')
+                    ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END, sequence_order ASC, id ASC
+                    LIMIT 1
+                 )",
+                params![
+                    resolved_status,
+                    topic_id,
+                    plan_day_id,
+                    subject_id,
+                    activity_type
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn load_active_plan_snapshot(
+        &self,
+        student_id: i64,
+    ) -> EcoachResult<Option<ActivePlanSnapshot>> {
+        self.conn
+            .query_row(
+                "SELECT id, COALESCE(exam_target, 'BECE'), COALESCE(exam_date, date('now', '+30 day')),
+                        start_date, COALESCE(total_days, 1), daily_budget_minutes, current_phase
+                 FROM coach_plans
+                 WHERE student_id = ?1 AND status IN ('active', 'stale')
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [student_id],
+                |row| {
+                    Ok(ActivePlanSnapshot {
+                        plan_id: row.get(0)?,
+                        exam_target: row.get(1)?,
+                        exam_date: row.get(2)?,
+                        start_date: row.get(3)?,
+                        total_days: row.get(4)?,
+                        daily_budget_minutes: row.get(5)?,
+                        current_phase: row.get(6)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn list_plan_day_activities(&self, plan_day_id: i64) -> EcoachResult<Vec<CoachPlanActivity>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, plan_day_id, subject_id, topic_id, activity_type, target_minutes,
+                        sequence_order, target_outcome_json, status, notes
+                 FROM coach_plan_activities
+                 WHERE plan_day_id = ?1
+                 ORDER BY sequence_order ASC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([plan_day_id], |row| {
+                let target_outcome_json: String = row.get(7)?;
+                Ok(CoachPlanActivity {
+                    id: row.get(0)?,
+                    plan_day_id: row.get(1)?,
+                    subject_id: row.get(2)?,
+                    topic_id: row.get(3)?,
+                    activity_type: row.get(4)?,
+                    target_minutes: row.get(5)?,
+                    sequence_order: row.get(6)?,
+                    target_outcome: serde_json::from_str(&target_outcome_json).map_err(|err| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            7,
+                            rusqlite::types::Type::Text,
+                            Box::new(err),
+                        )
+                    })?,
+                    status: row.get(8)?,
+                    notes: row.get(9)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(out)
+    }
+
+    fn compute_weekly_completion_bp(&self, plan_id: i64) -> EcoachResult<BasisPoints> {
+        let (completed_days, total_days): (i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT
+                    COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0),
+                    COUNT(*)
+                 FROM coach_plan_days
+                 WHERE plan_id = ?1
+                   AND date >= date('now', '-6 day')
+                   AND date <= date('now')",
+                [plan_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if total_days == 0 {
+            return Ok(0);
+        }
+        Ok(clamp_bp((completed_days * 10_000) / total_days))
+    }
+
+    fn compute_overall_readiness_score(&self, student_id: i64) -> EcoachResult<BasisPoints> {
+        let subject_ids =
+            self.load_subject_ids_for_codes(&self.load_selected_subjects(student_id)?)?;
+        if subject_ids.is_empty() {
+            return Ok(0);
+        }
+        let mut total = 0i64;
+        let mut count = 0i64;
+        for subject_id in subject_ids {
+            let snapshot =
+                ReadinessEngine::new(self.conn).build_subject_readiness(student_id, subject_id)?;
+            total += snapshot.readiness_score as i64;
+            count += 1;
+        }
+        if count == 0 {
+            Ok(0)
+        } else {
+            Ok(clamp_bp(total / count))
+        }
     }
 
     fn load_latest_plan_context(&self, student_id: i64) -> EcoachResult<PlanContext> {
@@ -1301,6 +2102,19 @@ impl<'a> PlanEngine<'a> {
                 },
             }
         };
+        let subject_id = self.load_subject_id_for_topic(topic_case.topic_id)?;
+        let activity = match CanonicalIntelligenceStore::new(self.conn)
+            .suggest_activity_override(student_id, subject_id, topic_case, activity, plan_day_phase)?
+            .as_deref()
+        {
+            Some("memory_reactivation") => "memory_reactivation",
+            Some("review") => "review",
+            Some("checkpoint") => "checkpoint",
+            Some("pressure_conditioning") => "pressure_conditioning",
+            Some("speed_drill") => "speed_drill",
+            Some("repair") => "repair",
+            _ => activity,
+        };
 
         Ok(activity)
     }
@@ -1636,11 +2450,121 @@ struct PlanContext {
     daily_budget_minutes: i64,
 }
 
+#[derive(Debug)]
+struct ActivePlanSnapshot {
+    plan_id: i64,
+    exam_target: String,
+    exam_date: String,
+    start_date: String,
+    total_days: i64,
+    daily_budget_minutes: i64,
+    current_phase: String,
+}
+
 impl SubjectMomentumProfile {
     fn is_recovery_mode(&self) -> bool {
         self.current_mode == "recovery_mode"
             || self.strain_score >= 7000
             || self.recovery_need_score >= 7000
+    }
+}
+
+fn activity_templates_for_phase(phase: &str) -> [(&'static str, i64, &'static str); 3] {
+    match phase {
+        "review_day" => [
+            (
+                "review",
+                40,
+                "Consolidate the most recent learning before it fades.",
+            ),
+            (
+                "memory_reactivation",
+                35,
+                "Recover recall on the most fragile topic in scope.",
+            ),
+            (
+                "checkpoint",
+                25,
+                "Verify that the review held under light pressure.",
+            ),
+        ],
+        "foundation" => [
+            (
+                "learn",
+                40,
+                "Build first-pass understanding of the current topic.",
+            ),
+            (
+                "guided_practice",
+                40,
+                "Turn the new explanation into correct worked execution.",
+            ),
+            ("review", 20, "Close with a short retrieval loop."),
+        ],
+        "strengthening" => [
+            (
+                "guided_practice",
+                45,
+                "Improve consistency on currently weak areas.",
+            ),
+            (
+                "checkpoint",
+                30,
+                "Measure whether the topic is ready to advance.",
+            ),
+            ("review", 25, "Stabilize gains with short recall."),
+        ],
+        "performance" => [
+            ("speed_drill", 35, "Convert accuracy into usable exam pace."),
+            (
+                "mixed_test",
+                45,
+                "Practice switching under exam-style pressure.",
+            ),
+            ("review", 20, "Repair slips before they compound."),
+        ],
+        "consolidation" => [
+            ("review", 40, "Protect marks on fragile topics."),
+            (
+                "guided_practice",
+                35,
+                "Keep execution smooth on recently improved topics.",
+            ),
+            ("checkpoint", 25, "Confirm the topic remains stable."),
+        ],
+        "final_revision" => [
+            ("mixed_test", 50, "Run an exam-like mixed practice block."),
+            ("speed_drill", 25, "Sharpen pace on high-yield work."),
+            ("review", 25, "Protect weak marks before the exam."),
+        ],
+        _ => [
+            ("guided_practice", 40, "Keep the current topic moving."),
+            (
+                "checkpoint",
+                35,
+                "Check whether the topic is ready to advance.",
+            ),
+            ("review", 25, "Close with short retrieval."),
+        ],
+    }
+}
+
+fn target_readiness_for_days_remaining(total_days: i64, days_remaining: i64) -> BasisPoints {
+    if total_days <= 1 {
+        return 8_500;
+    }
+    let elapsed_days = (total_days - days_remaining).max(0);
+    let progress_bp = clamp_bp((elapsed_days * 10_000) / total_days.max(1));
+    clamp_bp(4_200 + ((progress_bp as i64 * 4_300) / 10_000))
+}
+
+fn readiness_band_for_score(score: BasisPoints) -> &'static str {
+    match score {
+        0..=2999 => "critical",
+        3000..=4999 => "fragile",
+        5000..=6799 => "developing",
+        6800..=8199 => "progressing",
+        _ => "ready",
     }
 }
 
@@ -2135,7 +3059,7 @@ mod tests {
     use rusqlite::{Connection, params};
 
     use super::*;
-    use crate::journey::JourneyService;
+    use crate::{TopicCaseHypothesis, TopicCaseIntervention, journey::JourneyService};
 
     #[test]
     fn generate_plan_creates_multiday_schedule_and_today_mission() {
@@ -2598,6 +3522,155 @@ mod tests {
         assert_eq!(original_status, "stale");
         assert_eq!(new_status, "active");
         assert!(!result.carryover_topic_ids.is_empty());
+    }
+
+    #[test]
+    fn generate_today_mission_prefers_canonical_timing_bundle() {
+        let conn = open_test_database();
+        let pack_service = PackService::new(&conn);
+        pack_service
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+
+        conn.execute(
+            "INSERT INTO accounts (id, account_type, display_name, pin_hash, pin_salt, status, first_run)
+             VALUES (1, 'student', 'Efua', 'hash', 'salt', 'active', 0)",
+            [],
+        )
+        .expect("student should insert");
+        conn.execute(
+            "INSERT INTO student_profiles (account_id, preferred_subjects, daily_study_budget_minutes)
+             VALUES (1, '[\"MATH\"]', 45)",
+            [],
+        )
+        .expect("student profile should insert");
+        let subject_id: i64 = conn
+            .query_row(
+                "SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("subject should exist");
+        let topic_id: i64 = conn
+            .query_row(
+                "SELECT id FROM topics WHERE subject_id = ?1 ORDER BY id ASC LIMIT 1",
+                [subject_id],
+                |row| row.get(0),
+            )
+            .expect("topic should exist");
+        conn.execute(
+            "INSERT INTO student_topic_states (
+                student_id, topic_id, mastery_score, mastery_state, gap_score, priority_score,
+                fragility_score, pressure_collapse_index, decay_risk, memory_strength, speed_score
+             ) VALUES (1, ?1, 6200, 'stable', 2800, 9500, 3100, 2200, 8200, 2600, 5200)",
+            [topic_id],
+        )
+        .expect("topic state should insert");
+        conn.execute(
+            "INSERT INTO memory_states (
+                student_id, topic_id, memory_state, memory_strength, decay_risk, review_due_at
+             ) VALUES (1, ?1, 'fading', 2600, 8200, datetime('now', '-1 day'))",
+            [topic_id],
+        )
+        .expect("memory state should insert");
+
+        let topic_case = TopicCase {
+            student_id: 1,
+            topic_id,
+            topic_name: "Canonical Review Topic".to_string(),
+            subject_code: "MATH".to_string(),
+            priority_score: 9500,
+            mastery_score: 6200,
+            mastery_state: "stable".to_string(),
+            gap_score: 2800,
+            fragility_score: 3100,
+            pressure_collapse_index: 2200,
+            memory_state: "fading".to_string(),
+            memory_strength: 2600,
+            decay_risk: 8200,
+            evidence_count: 5,
+            recent_attempt_count: 3,
+            recent_accuracy: Some(7200),
+            active_blocker: None,
+            recent_diagnoses: Vec::new(),
+            active_hypotheses: vec![TopicCaseHypothesis {
+                code: "memory_decay".to_string(),
+                label: "Memory Decay".to_string(),
+                confidence_score: 7800,
+                evidence_summary: "Recall is fading after delay.".to_string(),
+                recommended_probe: Some("Run a delayed recall check.".to_string()),
+                recommended_response: "Prioritize review before new learning.".to_string(),
+            }],
+            primary_hypothesis_code: "memory_decay".to_string(),
+            diagnosis_certainty: 7800,
+            requires_probe: false,
+            recommended_intervention: TopicCaseIntervention {
+                mode: "review".to_string(),
+                urgency: "high".to_string(),
+                next_action_type: "review".to_string(),
+                recommended_minutes: 25,
+                reason: "Memory is fading and needs recall repair.".to_string(),
+            },
+            proof_gaps: vec!["delayed_recall".to_string()],
+            open_questions: Vec::new(),
+        };
+        let strategy_file_json = serde_json::to_string(&json!({
+            "topic_case": topic_case,
+        }))
+        .expect("strategy file json should serialize");
+        conn.execute(
+            "INSERT INTO ic_topic_teaching (
+                learner_id, subject_id, topic_id, decision_id, dominant_hypothesis,
+                co_causes_json, teaching_mode, entry_point, mastery_state, false_mastery_score,
+                bottleneck_concept_id, evidence_spine_json, proof_contract_json,
+                strategy_file_json, delayed_recall_required, confidence_bundle_json,
+                owner_engine_key, updated_at
+             ) VALUES (
+                1, ?1, ?2, 'topic-decision-1', 'memory_decay',
+                '[]', 'review', 'review', 'stable', 2400,
+                NULL, '{}', '{}',
+                ?3, 1, '{\"priority_score\":9500,\"diagnosis_certainty\":7800}',
+                'topic', datetime('now')
+             )",
+            params![subject_id, topic_id, strategy_file_json],
+        )
+        .expect("canonical topic teaching should insert");
+        conn.execute(
+            "INSERT INTO ic_timing_decisions (
+                decision_id, learner_id, subject_id, topic_id, action_type, action_scope,
+                scheduled_for, current_phase, rationale_json, source_engine, consumed,
+                owner_engine_key, updated_at
+             ) VALUES (
+                'timing-1', 1, ?1, ?2, 'delayed_recall', 'topic',
+                datetime('now'), 'review', '{}', 'timing', 0,
+                'timing', datetime('now')
+             )",
+            params![subject_id, topic_id],
+        )
+        .expect("timing decision should insert");
+
+        let engine = PlanEngine::new(&conn);
+        let exam_date = Utc::now()
+            .date_naive()
+            .checked_add_days(Days::new(14))
+            .expect("future date should exist")
+            .to_string();
+        engine
+            .generate_plan(1, "BECE", &exam_date, 45)
+            .expect("plan should generate");
+        let mission_id = engine
+            .generate_today_mission(1)
+            .expect("mission should generate");
+
+        let activity_type: String = conn
+            .query_row(
+                "SELECT activity_type FROM coach_missions WHERE id = ?1",
+                [mission_id],
+                |row| row.get(0),
+            )
+            .expect("mission activity should query");
+
+        assert_eq!(activity_type, "memory_reactivation");
     }
 
     fn open_test_database() -> Connection {

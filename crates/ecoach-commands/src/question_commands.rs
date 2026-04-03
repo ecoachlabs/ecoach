@@ -1,12 +1,14 @@
 use ecoach_questions::{
-    QuestionGenerationRequestInput, QuestionReactor, QuestionService, QuestionSlotSpec,
+    QuestionGenerationRequestInput, QuestionIntelligenceFilter, QuestionReactor,
+    QuestionReviewActionInput, QuestionService, QuestionSlotSpec,
 };
 
 use crate::{
     dtos::{
         DuplicateCheckResultDto, GeneratedQuestionDraftDto, QuestionFamilyChoiceDto,
-        QuestionFamilyHealthDto, QuestionGenerationRequestDto, QuestionLineageGraphDto,
-        QuestionRemediationPlanDto, RelatedQuestionDto,
+        QuestionFamilyHealthDto, QuestionGenerationRequestDto, QuestionIntelligenceSnapshotDto,
+        QuestionLineageGraphDto, QuestionRemediationPlanDto, QuestionReviewQueueItemDto,
+        RelatedQuestionDto,
     },
     error::CommandError,
     state::AppState,
@@ -113,5 +115,86 @@ pub fn recommend_question_remediation_plan(
         Ok(reactor
             .recommend_remediation_plan(student_id, &slot_spec)?
             .map(QuestionRemediationPlanDto::from))
+    })
+}
+
+pub fn get_question_intelligence(
+    state: &AppState,
+    question_id: i64,
+) -> Result<Option<QuestionIntelligenceSnapshotDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = QuestionService::new(conn);
+        Ok(service
+            .get_question_intelligence(question_id)?
+            .map(QuestionIntelligenceSnapshotDto::from))
+    })
+}
+
+pub fn classify_question_intelligence(
+    state: &AppState,
+    question_id: i64,
+    reclassify: bool,
+) -> Result<QuestionIntelligenceSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = QuestionService::new(conn);
+        Ok(QuestionIntelligenceSnapshotDto::from(
+            service.classify_question(question_id, reclassify)?,
+        ))
+    })
+}
+
+pub fn find_questions_by_intelligence_filter(
+    state: &AppState,
+    filter: QuestionIntelligenceFilter,
+) -> Result<Vec<QuestionIntelligenceSnapshotDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = QuestionService::new(conn);
+        Ok(service
+            .find_questions_by_intelligence_filter(&filter)?
+            .into_iter()
+            .map(QuestionIntelligenceSnapshotDto::from)
+            .collect())
+    })
+}
+
+pub fn list_question_review_queue(
+    state: &AppState,
+    review_status: Option<String>,
+    limit: usize,
+) -> Result<Vec<QuestionReviewQueueItemDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = QuestionService::new(conn);
+        Ok(service
+            .list_question_review_queue(review_status.as_deref(), limit)?
+            .into_iter()
+            .map(QuestionReviewQueueItemDto::from)
+            .collect())
+    })
+}
+
+pub fn review_question_intelligence(
+    state: &AppState,
+    question_id: i64,
+    input: QuestionReviewActionInput,
+) -> Result<QuestionIntelligenceSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = QuestionService::new(conn);
+        Ok(QuestionIntelligenceSnapshotDto::from(
+            service.review_question_intelligence(question_id, &input)?,
+        ))
+    })
+}
+
+pub fn queue_question_reclassification(
+    state: &AppState,
+    question_id: i64,
+    trigger_reason: String,
+    requested_by: Option<String>,
+) -> Result<i64, CommandError> {
+    state.with_connection(|conn| {
+        let service = QuestionService::new(conn);
+        service
+            .queue_question_reclassification(question_id, &trigger_reason, requested_by.as_deref())
+            .map_err(CommandError::from)
     })
 }

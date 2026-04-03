@@ -4,10 +4,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use ecoach_questions::QuestionService;
 use ecoach_substrate::{DomainEvent, EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use crate::manifest::PackManifest;
 
@@ -304,6 +305,30 @@ struct ContrastPairRecord {
     #[serde(default)]
     difficulty_score: Option<i64>,
     #[serde(default)]
+    left_profile: Option<Value>,
+    #[serde(default)]
+    right_profile: Option<Value>,
+    #[serde(default)]
+    shared_traits: Vec<String>,
+    #[serde(default)]
+    decisive_differences: Vec<String>,
+    #[serde(default)]
+    common_confusions: Vec<String>,
+    #[serde(default)]
+    trap_angles: Vec<String>,
+    #[serde(default)]
+    coverage: Option<Value>,
+    #[serde(default)]
+    generator_contract: Option<Value>,
+    #[serde(default)]
+    concept_attributes: Vec<ContrastConceptAttributeRecord>,
+    #[serde(default)]
+    comparison_rows: Vec<ContrastComparisonRowRecord>,
+    #[serde(default)]
+    diagram_assets: Vec<ContrastDiagramAssetRecord>,
+    #[serde(default)]
+    mode_items: Vec<ContrastModeItemRecord>,
+    #[serde(default)]
     atoms: Vec<ContrastAtomRecord>,
 }
 
@@ -321,6 +346,107 @@ struct ContrastAtomRecord {
     is_speed_ready: Option<bool>,
     #[serde(default)]
     reveal_order: Option<i64>,
+    #[serde(default)]
+    item_forms_allowed: Vec<String>,
+    #[serde(default)]
+    diagram_capable: Option<bool>,
+    #[serde(default)]
+    trap_angle: Option<String>,
+    #[serde(default)]
+    review_payload: Option<Value>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ContrastConceptAttributeRecord {
+    concept_side: String,
+    lane: String,
+    attribute_label: String,
+    attribute_value: String,
+    #[serde(default)]
+    importance_weight_bp: Option<i64>,
+    #[serde(default)]
+    difficulty_score: Option<i64>,
+    #[serde(default)]
+    source_confidence_bp: Option<i64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ContrastComparisonRowRecord {
+    lane: String,
+    compare_label: String,
+    left_value: String,
+    right_value: String,
+    #[serde(default)]
+    overlap_note: Option<String>,
+    #[serde(default)]
+    decisive_clue: Option<String>,
+    #[serde(default)]
+    teaching_note: Option<String>,
+    #[serde(default)]
+    diagram_asset_ref: Option<String>,
+    #[serde(default)]
+    display_order: Option<i64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ContrastDiagramAssetRecord {
+    asset_ref: String,
+    #[serde(default)]
+    concept_side: Option<String>,
+    #[serde(default)]
+    lane: Option<String>,
+    #[serde(default)]
+    diagram_type: Option<String>,
+    #[serde(default)]
+    prompt_payload: Option<Value>,
+    #[serde(default)]
+    visual_clues: Vec<String>,
+    #[serde(default)]
+    decisive_visual_clue: Option<String>,
+    #[serde(default)]
+    trap_potential: Option<String>,
+    #[serde(default)]
+    usable_modes: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ContrastModeItemRecord {
+    mode: String,
+    prompt_text: String,
+    #[serde(default)]
+    source_atom_text: Option<String>,
+    #[serde(default)]
+    comparison_label: Option<String>,
+    #[serde(default)]
+    diagram_asset_ref: Option<String>,
+    #[serde(default)]
+    prompt_type: Option<String>,
+    #[serde(default)]
+    prompt_payload: Option<Value>,
+    #[serde(default)]
+    answer_options: Vec<ContrastModeChoiceRecord>,
+    #[serde(default)]
+    correct_choice_code: Option<String>,
+    #[serde(default)]
+    correct_choice_label: Option<String>,
+    #[serde(default)]
+    difficulty_score: Option<i64>,
+    #[serde(default)]
+    time_limit_seconds: Option<i64>,
+    #[serde(default)]
+    explanation_bundle: Option<Value>,
+    #[serde(default)]
+    misconception_reason_codes: Vec<String>,
+    #[serde(default)]
+    is_active: Option<bool>,
+    #[serde(default)]
+    display_order: Option<i64>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct ContrastModeChoiceRecord {
+    code: String,
+    label: String,
 }
 
 pub struct PackService<'a> {
@@ -882,6 +1008,7 @@ impl<'a> PackService<'a> {
                 intelligence_record,
                 family_id,
             )?;
+            QuestionService::new(self.conn).classify_question(question_id, false)?;
         }
 
         Ok(())
@@ -1309,14 +1436,171 @@ impl<'a> PackService<'a> {
 
             let pair_id = self.conn.last_insert_rowid();
 
+            let has_profile_payload = pair.left_profile.is_some()
+                || pair.right_profile.is_some()
+                || !pair.shared_traits.is_empty()
+                || !pair.decisive_differences.is_empty()
+                || !pair.common_confusions.is_empty()
+                || !pair.trap_angles.is_empty()
+                || pair.coverage.is_some()
+                || pair.generator_contract.is_some();
+            if has_profile_payload {
+                self.conn
+                    .execute(
+                        "INSERT INTO contrast_pair_profiles (
+                            pair_id, left_profile_json, right_profile_json, shared_traits_json,
+                            decisive_differences_json, common_confusions_json, trap_angles_json,
+                            coverage_json, generator_contract_json
+                        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                        params![
+                            pair_id,
+                            serde_json::to_string(
+                                pair.left_profile.as_ref().unwrap_or(&json!({}))
+                            )
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(
+                                pair.right_profile.as_ref().unwrap_or(&json!({}))
+                            )
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(&pair.shared_traits)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(&pair.decisive_differences)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(&pair.common_confusions)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(&pair.trap_angles)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(pair.coverage.as_ref().unwrap_or(&json!({})))
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(
+                                pair.generator_contract.as_ref().unwrap_or(&json!({}))
+                            )
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            }
+
+            for attribute in &pair.concept_attributes {
+                if !matches!(attribute.concept_side.as_str(), "left" | "right") {
+                    return Err(EcoachError::Validation(format!(
+                        "contrast pair {} contains unsupported concept side {}",
+                        pair.title, attribute.concept_side
+                    )));
+                }
+                self.conn
+                    .execute(
+                        "INSERT INTO contrast_concept_attributes (
+                            pair_id, concept_side, lane, attribute_label, attribute_value,
+                            importance_weight_bp, difficulty_score, source_confidence_bp
+                        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                        params![
+                            pair_id,
+                            attribute.concept_side,
+                            attribute.lane,
+                            attribute.attribute_label,
+                            attribute.attribute_value,
+                            attribute.importance_weight_bp.unwrap_or(5000),
+                            attribute.difficulty_score.unwrap_or(5000),
+                            attribute.source_confidence_bp.unwrap_or(5000),
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            }
+
+            let mut diagram_asset_ids = BTreeMap::new();
+            for asset in &pair.diagram_assets {
+                self.conn
+                    .execute(
+                        "INSERT INTO contrast_diagram_assets (
+                            pair_id, concept_side, lane, diagram_type, asset_ref,
+                            prompt_payload_json, visual_clues_json, decisive_visual_clue,
+                            trap_potential, usable_modes_json
+                        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                        params![
+                            pair_id,
+                            asset.concept_side,
+                            asset.lane.as_deref().unwrap_or("diagram"),
+                            asset.diagram_type.as_deref().unwrap_or("reference"),
+                            asset.asset_ref,
+                            serde_json::to_string(
+                                asset.prompt_payload.as_ref().unwrap_or(&json!({}))
+                            )
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(&asset.visual_clues)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            asset.decisive_visual_clue,
+                            asset.trap_potential,
+                            serde_json::to_string(&asset.usable_modes)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                diagram_asset_ids.insert(asset.asset_ref.clone(), self.conn.last_insert_rowid());
+            }
+
+            let mut comparison_row_ids = BTreeMap::new();
+            for row in &pair.comparison_rows {
+                let diagram_asset_id = row
+                    .diagram_asset_ref
+                    .as_ref()
+                    .map(|asset_ref| {
+                        diagram_asset_ids.get(asset_ref).copied().ok_or_else(|| {
+                            EcoachError::Validation(format!(
+                                "contrast pair {} references unknown diagram asset {}",
+                                pair.title, asset_ref
+                            ))
+                        })
+                    })
+                    .transpose()?;
+                self.conn
+                    .execute(
+                        "INSERT INTO contrast_comparison_rows (
+                            pair_id, lane, compare_label, left_value, right_value,
+                            overlap_note, decisive_clue, teaching_note, diagram_asset_id,
+                            display_order
+                        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                        params![
+                            pair_id,
+                            row.lane,
+                            row.compare_label,
+                            row.left_value,
+                            row.right_value,
+                            row.overlap_note,
+                            row.decisive_clue,
+                            row.teaching_note,
+                            diagram_asset_id,
+                            row.display_order.unwrap_or(1),
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                comparison_row_ids.insert(
+                    normalize_title_key(&row.compare_label),
+                    self.conn.last_insert_rowid(),
+                );
+            }
+
+            let mut atom_ids = BTreeMap::new();
             for atom in &pair.atoms {
                 validate_contrast_ownership(&atom.ownership_type, &pair.title)?;
+                let item_forms_allowed = if atom.item_forms_allowed.is_empty() {
+                    vec![
+                        "difference_drill".to_string(),
+                        "similarity_trap".to_string(),
+                        "know_the_difference".to_string(),
+                        "which_is_which".to_string(),
+                        "unmask".to_string(),
+                    ]
+                } else {
+                    atom.item_forms_allowed.clone()
+                };
                 self.conn
                     .execute(
                         "INSERT INTO contrast_evidence_atoms (
                             pair_id, ownership_type, atom_text, lane, explanation_text,
-                            difficulty_score, is_speed_ready, reveal_order
-                        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                            difficulty_score, is_speed_ready, reveal_order, item_forms_json,
+                            diagram_capable, trap_angle, review_payload_json
+                        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
                         params![
                             pair_id,
                             atom.ownership_type,
@@ -1326,6 +1610,107 @@ impl<'a> PackService<'a> {
                             atom.difficulty_score.unwrap_or(5000),
                             atom.is_speed_ready.unwrap_or(true) as i64,
                             atom.reveal_order.unwrap_or(1),
+                            serde_json::to_string(&item_forms_allowed)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            atom.diagram_capable.unwrap_or(false) as i64,
+                            atom.trap_angle,
+                            serde_json::to_string(
+                                atom.review_payload.as_ref().unwrap_or(&json!({}))
+                            )
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                atom_ids.insert(
+                    normalize_title_key(&atom.atom_text),
+                    self.conn.last_insert_rowid(),
+                );
+            }
+
+            for item in &pair.mode_items {
+                let source_atom_id = item
+                    .source_atom_text
+                    .as_ref()
+                    .map(|source_atom_text| {
+                        atom_ids
+                            .get(&normalize_title_key(source_atom_text))
+                            .copied()
+                            .ok_or_else(|| {
+                                EcoachError::Validation(format!(
+                                    "contrast mode item {} references unknown source atom {}",
+                                    item.prompt_text, source_atom_text
+                                ))
+                            })
+                    })
+                    .transpose()?;
+                let comparison_row_id = item
+                    .comparison_label
+                    .as_ref()
+                    .map(|comparison_label| {
+                        comparison_row_ids
+                            .get(&normalize_title_key(comparison_label))
+                            .copied()
+                            .ok_or_else(|| {
+                                EcoachError::Validation(format!(
+                                    "contrast mode item {} references unknown comparison row {}",
+                                    item.prompt_text, comparison_label
+                                ))
+                            })
+                    })
+                    .transpose()?;
+                let diagram_asset_id = item
+                    .diagram_asset_ref
+                    .as_ref()
+                    .map(|asset_ref| {
+                        diagram_asset_ids.get(asset_ref).copied().ok_or_else(|| {
+                            EcoachError::Validation(format!(
+                                "contrast mode item {} references unknown diagram asset {}",
+                                item.prompt_text, asset_ref
+                            ))
+                        })
+                    })
+                    .transpose()?;
+                self.conn
+                    .execute(
+                        "INSERT INTO contrast_mode_items (
+                            pair_id, mode, source_atom_id, comparison_row_id, diagram_asset_id,
+                            prompt_type, prompt_text, prompt_payload_json, options_json,
+                            correct_choice_code, correct_choice_label, difficulty_score,
+                            time_limit_seconds, explanation_bundle_json,
+                            misconception_reason_codes_json, is_active, display_order
+                        ) VALUES (
+                            ?1, ?2, ?3, ?4, ?5,
+                            ?6, ?7, ?8, ?9,
+                            ?10, ?11, ?12,
+                            ?13, ?14,
+                            ?15, ?16, ?17
+                        )",
+                        params![
+                            pair_id,
+                            item.mode,
+                            source_atom_id,
+                            comparison_row_id,
+                            diagram_asset_id,
+                            item.prompt_type.as_deref().unwrap_or("text_card"),
+                            item.prompt_text,
+                            serde_json::to_string(
+                                item.prompt_payload.as_ref().unwrap_or(&json!({}))
+                            )
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(&item.answer_options)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            item.correct_choice_code,
+                            item.correct_choice_label,
+                            item.difficulty_score.unwrap_or(5000),
+                            item.time_limit_seconds,
+                            serde_json::to_string(
+                                item.explanation_bundle.as_ref().unwrap_or(&json!({}))
+                            )
+                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(&item.misconception_reason_codes)
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            item.is_active.unwrap_or(true) as i64,
+                            item.display_order.unwrap_or(1),
                         ],
                     )
                     .map_err(|err| EcoachError::Storage(err.to_string()))?;

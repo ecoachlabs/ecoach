@@ -139,7 +139,6 @@ pub struct SolidificationProgress {
     pub topics_solidified: i64,
 }
 
-
 // Knowledge Gap Deep types
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

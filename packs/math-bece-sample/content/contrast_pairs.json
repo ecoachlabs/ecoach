@@ -8,6 +8,337 @@
     "summary_text": "Equivalent fractions name the same value, while simplest form asks for the most reduced name for that value.",
     "trap_strength": 7200,
     "difficulty_score": 5400,
+    "left_profile": {
+      "term": "Equivalent Fraction",
+      "definition": "Fractions that represent the same value using different numerators and denominators.",
+      "keywords": ["same value", "matching amount", "different name"]
+    },
+    "right_profile": {
+      "term": "Simplest Form",
+      "definition": "The most reduced name for a fraction after dividing by the greatest common factor.",
+      "keywords": ["reduce", "greatest common factor", "lowest terms"]
+    },
+    "shared_traits": [
+      "Both can appear inside the same worked example about one fraction value.",
+      "Both are used when learners compare 2/4 with 1/2."
+    ],
+    "decisive_differences": [
+      "Equivalent fractions focus on same value across different names.",
+      "Simplest form focuses on the single reduced name."
+    ],
+    "common_confusions": [
+      "Learners think simplest form means any matching fraction.",
+      "Learners see the same example and miss the difference in purpose."
+    ],
+    "trap_angles": [
+      "same value vs reduced name",
+      "example overlap without purpose distinction"
+    ],
+    "coverage": {
+      "lanes": ["definition", "procedure", "example", "overlap", "trap"],
+      "diagram_ready": true
+    },
+    "generator_contract": {
+      "required_modes": [
+        "difference_drill",
+        "similarity_trap",
+        "know_the_difference",
+        "which_is_which",
+        "unmask"
+      ],
+      "minimum_rounds": {
+        "difference_drill": 4,
+        "similarity_trap": 1,
+        "know_the_difference": 1,
+        "which_is_which": 1,
+        "unmask": 1
+      }
+    },
+    "concept_attributes": [
+      {
+        "concept_side": "left",
+        "lane": "definition",
+        "attribute_label": "Core idea",
+        "attribute_value": "Different fraction names can still represent the same value.",
+        "importance_weight_bp": 8600,
+        "difficulty_score": 4200,
+        "source_confidence_bp": 9200
+      },
+      {
+        "concept_side": "left",
+        "lane": "example",
+        "attribute_label": "Example pair",
+        "attribute_value": "2/4 and 1/2 are equivalent fractions.",
+        "importance_weight_bp": 8200,
+        "difficulty_score": 3500,
+        "source_confidence_bp": 9100
+      },
+      {
+        "concept_side": "right",
+        "lane": "procedure",
+        "attribute_label": "Reduction rule",
+        "attribute_value": "Divide numerator and denominator by the greatest common factor.",
+        "importance_weight_bp": 8700,
+        "difficulty_score": 4300,
+        "source_confidence_bp": 9300
+      },
+      {
+        "concept_side": "right",
+        "lane": "result",
+        "attribute_label": "Expected answer",
+        "attribute_value": "1/2 is the simplest form of 2/4.",
+        "importance_weight_bp": 8400,
+        "difficulty_score": 3600,
+        "source_confidence_bp": 9100
+      }
+    ],
+    "comparison_rows": [
+      {
+        "lane": "definition",
+        "compare_label": "Core idea",
+        "left_value": "Same value with a different fraction name",
+        "right_value": "Most reduced version of the fraction",
+        "decisive_clue": "Equivalent means same value; simplest form means reduced answer.",
+        "teaching_note": "Students often merge these because the same numbers can appear in both."
+      },
+      {
+        "lane": "procedure",
+        "compare_label": "What you do",
+        "left_value": "Generate or identify another matching fraction",
+        "right_value": "Reduce the fraction by its greatest common factor",
+        "overlap_note": "Both can appear in one worked example using 2/4 and 1/2.",
+        "decisive_clue": "Simplest form asks for one final reduced name.",
+        "teaching_note": "Ask what the question is requesting, not just what values are shown.",
+        "diagram_asset_ref": "diagram://fra/equivalent-vs-simplest/tiles"
+      }
+    ],
+    "diagram_assets": [
+      {
+        "asset_ref": "diagram://fra/equivalent-vs-simplest/tiles",
+        "concept_side": "both",
+        "lane": "diagram",
+        "diagram_type": "fraction_tiles",
+        "prompt_payload": {
+          "style": "tile_strip",
+          "caption": "Two shaded fraction bars showing the same amount."
+        },
+        "visual_clues": [
+          "same shaded area",
+          "different partitions",
+          "reduced representation"
+        ],
+        "decisive_visual_clue": "The same shaded amount appears with two different fraction names.",
+        "trap_potential": "Learners may think any matching diagram already means simplest form.",
+        "usable_modes": [
+          "difference_drill",
+          "similarity_trap",
+          "know_the_difference",
+          "which_is_which",
+          "unmask"
+        ]
+      }
+    ],
+    "mode_items": [
+      {
+        "mode": "difference_drill",
+        "source_atom_text": "Represents the same value using a different numerator and denominator.",
+        "prompt_type": "text_card",
+        "prompt_text": "Represents the same value using a different numerator and denominator.",
+        "prompt_payload": { "lane": "definition", "prompt_type": "text_card" },
+        "answer_options": [
+          { "code": "left", "label": "Equivalent Fraction" },
+          { "code": "right", "label": "Simplest Form" }
+        ],
+        "correct_choice_code": "left",
+        "correct_choice_label": "Equivalent Fraction",
+        "difficulty_score": 4200,
+        "time_limit_seconds": 6,
+        "explanation_bundle": {
+          "why_correct": "Equivalent fractions are different names for the same amount.",
+          "why_other_wrong": "Simplest form asks for the reduced final name, not just another matching fraction.",
+          "missed_clue": "same value using a different numerator and denominator",
+          "common_confusions": ["same value vs reduced name"]
+        },
+        "misconception_reason_codes": ["feature_confusion", "guessed"],
+        "display_order": 1
+      },
+      {
+        "mode": "difference_drill",
+        "source_atom_text": "Writes the fraction after dividing by the greatest common factor.",
+        "prompt_type": "text_card",
+        "prompt_text": "Writes the fraction after dividing by the greatest common factor.",
+        "prompt_payload": { "lane": "procedure", "prompt_type": "text_card" },
+        "answer_options": [
+          { "code": "left", "label": "Equivalent Fraction" },
+          { "code": "right", "label": "Simplest Form" }
+        ],
+        "correct_choice_code": "right",
+        "correct_choice_label": "Simplest Form",
+        "difficulty_score": 4300,
+        "time_limit_seconds": 6,
+        "explanation_bundle": {
+          "why_correct": "Simplest form is produced by dividing by the greatest common factor.",
+          "why_other_wrong": "Equivalent fractions can be matching names, but they do not require the most reduced answer.",
+          "missed_clue": "greatest common factor",
+          "common_confusions": ["procedure confusion"]
+        },
+        "misconception_reason_codes": ["condition_omission", "feature_confusion"],
+        "display_order": 2
+      },
+      {
+        "mode": "difference_drill",
+        "source_atom_text": "2/4 and 1/2 belong together as an example pair.",
+        "prompt_type": "text_card",
+        "prompt_text": "2/4 and 1/2 belong together as an example pair.",
+        "prompt_payload": { "lane": "example", "prompt_type": "text_card" },
+        "answer_options": [
+          { "code": "left", "label": "Equivalent Fraction" },
+          { "code": "right", "label": "Simplest Form" }
+        ],
+        "correct_choice_code": "left",
+        "correct_choice_label": "Equivalent Fraction",
+        "difficulty_score": 3500,
+        "time_limit_seconds": 5,
+        "explanation_bundle": {
+          "why_correct": "Those two fractions are equivalent because they name the same value.",
+          "why_other_wrong": "Simplest form would ask which single fraction is the reduced answer.",
+          "missed_clue": "example pair",
+          "common_confusions": ["example overlap"]
+        },
+        "misconception_reason_codes": ["example_confusion"],
+        "display_order": 3
+      },
+      {
+        "mode": "difference_drill",
+        "source_atom_text": "1/2 is the reduced answer for 2/4.",
+        "prompt_type": "text_card",
+        "prompt_text": "1/2 is the reduced answer for 2/4.",
+        "prompt_payload": { "lane": "result", "prompt_type": "text_card" },
+        "answer_options": [
+          { "code": "left", "label": "Equivalent Fraction" },
+          { "code": "right", "label": "Simplest Form" }
+        ],
+        "correct_choice_code": "right",
+        "correct_choice_label": "Simplest Form",
+        "difficulty_score": 3600,
+        "time_limit_seconds": 5,
+        "explanation_bundle": {
+          "why_correct": "1/2 is the final reduced form of 2/4.",
+          "why_other_wrong": "Equivalent fractions could include 3/6, 4/8, or 1/2, but simplest form asks for the reduced answer.",
+          "missed_clue": "reduced answer",
+          "common_confusions": ["same value vs reduced name"]
+        },
+        "misconception_reason_codes": ["definition_feature_gap", "guessed"],
+        "display_order": 4
+      },
+      {
+        "mode": "similarity_trap",
+        "source_atom_text": "Can appear in the same worked example about 2/4 and 1/2.",
+        "prompt_type": "statement_card",
+        "prompt_text": "Both ideas can appear in the same worked example about 2/4 and 1/2.",
+        "prompt_payload": { "lane": "overlap", "prompt_type": "statement_card" },
+        "answer_options": [
+          { "code": "left", "label": "Equivalent Fraction" },
+          { "code": "right", "label": "Simplest Form" },
+          { "code": "both", "label": "Both" },
+          { "code": "neither", "label": "Neither" }
+        ],
+        "correct_choice_code": "both",
+        "correct_choice_label": "Both",
+        "difficulty_score": 5200,
+        "time_limit_seconds": 8,
+        "explanation_bundle": {
+          "why_correct": "The same example can teach both ideas.",
+          "why_other_wrong": "The difference is the question being asked about the example.",
+          "missed_clue": "same worked example",
+          "common_confusions": ["overlap confusion"]
+        },
+        "misconception_reason_codes": ["example_confusion", "feature_confusion"],
+        "display_order": 1
+      },
+      {
+        "mode": "know_the_difference",
+        "comparison_label": "Core idea",
+        "prompt_type": "comparison_card",
+        "prompt_text": "Which statement best describes Equivalent Fraction rather than Simplest Form?",
+        "prompt_payload": {
+          "lane": "definition",
+          "focus": "left",
+          "prompt_type": "comparison_card"
+        },
+        "answer_options": [
+          { "code": "A", "label": "Same value with a different fraction name" },
+          { "code": "B", "label": "Most reduced version of the fraction" },
+          { "code": "C", "label": "Both always mean the reduced answer" },
+          { "code": "D", "label": "Neither can appear with 2/4 and 1/2" }
+        ],
+        "correct_choice_code": "A",
+        "correct_choice_label": "Same value with a different fraction name",
+        "difficulty_score": 5000,
+        "time_limit_seconds": 18,
+        "explanation_bundle": {
+          "why_correct": "Equivalent fractions keep the value the same while changing the name.",
+          "why_other_wrong": "Simplest form is specifically the reduced final name.",
+          "missed_clue": "different fraction name",
+          "common_confusions": ["compare row confusion"]
+        },
+        "misconception_reason_codes": ["definition_feature_gap", "feature_confusion"],
+        "display_order": 1
+      },
+      {
+        "mode": "which_is_which",
+        "source_atom_text": "Writes the fraction after dividing by the greatest common factor.",
+        "prompt_type": "phrase_fragment",
+        "prompt_text": "Greatest common factor reduction",
+        "prompt_payload": { "lane": "procedure", "prompt_type": "phrase_fragment" },
+        "answer_options": [
+          { "code": "left", "label": "Equivalent Fraction" },
+          { "code": "right", "label": "Simplest Form" }
+        ],
+        "correct_choice_code": "right",
+        "correct_choice_label": "Simplest Form",
+        "difficulty_score": 4100,
+        "time_limit_seconds": 3,
+        "explanation_bundle": {
+          "why_correct": "Reducing by the greatest common factor points to simplest form.",
+          "why_other_wrong": "Equivalent fraction is broader and not limited to the reduced answer.",
+          "missed_clue": "greatest common factor",
+          "common_confusions": ["speed_rush"]
+        },
+        "misconception_reason_codes": ["speed_rush", "guessed"],
+        "display_order": 1
+      },
+      {
+        "mode": "unmask",
+        "source_atom_text": "1/2 is the reduced answer for 2/4.",
+        "prompt_type": "clue_reveal",
+        "prompt_text": "Identify the idea before all clues are revealed.",
+        "prompt_payload": {
+          "lane": "result",
+          "clues": [
+            "Works with 2/4 and 1/2",
+            "Looks for the reduced answer",
+            "Uses the greatest common factor"
+          ]
+        },
+        "answer_options": [
+          { "code": "left", "label": "Equivalent Fraction" },
+          { "code": "right", "label": "Simplest Form" }
+        ],
+        "correct_choice_code": "right",
+        "correct_choice_label": "Simplest Form",
+        "difficulty_score": 4700,
+        "time_limit_seconds": 10,
+        "explanation_bundle": {
+          "why_correct": "The decisive clue is the reduced final answer.",
+          "why_other_wrong": "Equivalent fractions can match the value but do not require the reduced form.",
+          "missed_clue": "reduced answer",
+          "common_confusions": ["late clue recognition"]
+        },
+        "misconception_reason_codes": ["guessed", "partial_understanding"],
+        "display_order": 1
+      }
+    ],
     "atoms": [
       {
         "ownership_type": "left_only",
@@ -16,7 +347,16 @@
         "explanation_text": "Equivalent fractions are different names for the same amount.",
         "difficulty_score": 4200,
         "is_speed_ready": true,
-        "reveal_order": 2
+        "reveal_order": 2,
+        "item_forms_allowed": ["difference_drill", "know_the_difference", "which_is_which"],
+        "diagram_capable": false,
+        "trap_angle": "same value does not automatically mean reduced form",
+        "review_payload": {
+          "why_correct": "Equivalent fractions keep the value the same across different names.",
+          "why_other_wrong": "Simplest form is one reduced name, not every matching name.",
+          "missed_clue": "same value using a different numerator and denominator",
+          "common_confusions": ["same value vs reduced name"]
+        }
       },
       {
         "ownership_type": "right_only",
@@ -25,7 +365,16 @@
         "explanation_text": "Simplest form is the most reduced version of a fraction.",
         "difficulty_score": 4300,
         "is_speed_ready": true,
-        "reveal_order": 2
+        "reveal_order": 2,
+        "item_forms_allowed": ["difference_drill", "which_is_which", "unmask"],
+        "diagram_capable": false,
+        "trap_angle": "procedure clue",
+        "review_payload": {
+          "why_correct": "Simplest form is produced by reducing with the greatest common factor.",
+          "why_other_wrong": "Equivalent fractions may match the value without being the reduced answer.",
+          "missed_clue": "greatest common factor",
+          "common_confusions": ["procedure confusion"]
+        }
       },
       {
         "ownership_type": "left_only",
@@ -34,7 +383,16 @@
         "explanation_text": "Those two fractions are equivalent because they represent the same value.",
         "difficulty_score": 3500,
         "is_speed_ready": true,
-        "reveal_order": 1
+        "reveal_order": 1,
+        "item_forms_allowed": ["difference_drill", "which_is_which"],
+        "diagram_capable": true,
+        "trap_angle": "example overlap",
+        "review_payload": {
+          "why_correct": "The pair shows two names for the same value.",
+          "why_other_wrong": "Simplest form would ask which single name is reduced.",
+          "missed_clue": "example pair",
+          "common_confusions": ["example overlap"]
+        }
       },
       {
         "ownership_type": "right_only",
@@ -43,7 +401,16 @@
         "explanation_text": "Simplest form asks for the reduced version, not just another matching fraction.",
         "difficulty_score": 3600,
         "is_speed_ready": true,
-        "reveal_order": 1
+        "reveal_order": 1,
+        "item_forms_allowed": ["difference_drill", "which_is_which", "unmask"],
+        "diagram_capable": true,
+        "trap_angle": "reduced answer",
+        "review_payload": {
+          "why_correct": "1/2 is the reduced final form of 2/4.",
+          "why_other_wrong": "Equivalent fractions could include many matching names, not only the reduced one.",
+          "missed_clue": "reduced answer",
+          "common_confusions": ["same value vs reduced name"]
+        }
       },
       {
         "ownership_type": "both",
@@ -52,7 +419,16 @@
         "explanation_text": "The same example can teach both ideas, but each idea answers a different question.",
         "difficulty_score": 5200,
         "is_speed_ready": false,
-        "reveal_order": 3
+        "reveal_order": 3,
+        "item_forms_allowed": ["similarity_trap", "know_the_difference"],
+        "diagram_capable": true,
+        "trap_angle": "overlap without shared purpose",
+        "review_payload": {
+          "why_correct": "Both ideas can live inside the same example.",
+          "why_other_wrong": "What changes is the purpose of the question.",
+          "missed_clue": "same worked example",
+          "common_confusions": ["overlap confusion"]
+        }
       },
       {
         "ownership_type": "neither",
@@ -61,7 +437,16 @@
         "explanation_text": "Adding the numerator and denominator does not define equivalent fractions or simplest form.",
         "difficulty_score": 6500,
         "is_speed_ready": true,
-        "reveal_order": 4
+        "reveal_order": 4,
+        "item_forms_allowed": ["similarity_trap"],
+        "diagram_capable": false,
+        "trap_angle": "invented rule",
+        "review_payload": {
+          "why_correct": "That shortcut does not belong to either idea.",
+          "why_other_wrong": "Neither equivalent fractions nor simplest form are found by adding top and bottom.",
+          "missed_clue": "add the numerator and denominator",
+          "common_confusions": ["false procedure"]
+        }
       }
     ]
   }

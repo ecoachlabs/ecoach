@@ -157,8 +157,13 @@ impl<'a> GoalEngine<'a> {
                      urgency_band, confidence_level, recommended_default_mode)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                 params![
-                    student_id, subject_id, target_exam, exam_date,
-                    goal_type, urgency.as_str(), confidence_level,
+                    student_id,
+                    subject_id,
+                    target_exam,
+                    exam_date,
+                    goal_type,
+                    urgency.as_str(),
+                    confidence_level,
                     goal.default_topic_mode().as_str(),
                 ],
             )
@@ -173,7 +178,12 @@ impl<'a> GoalEngine<'a> {
         student_id: i64,
         subject_id: i64,
     ) -> EcoachResult<GoalRecommendation> {
-        let (goal_type_str, exam_date, urgency_str, confidence): (String, Option<String>, String, Option<String>) = self
+        let (goal_type_str, exam_date, urgency_str, confidence): (
+            String,
+            Option<String>,
+            String,
+            Option<String>,
+        ) = self
             .conn
             .query_row(
                 "SELECT goal_type, exam_date, urgency_band, confidence_level
@@ -183,7 +193,9 @@ impl<'a> GoalEngine<'a> {
                 params![student_id, subject_id],
                 |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
             )
-            .map_err(|e| EcoachError::NotFound(format!("no active goal for student {student_id}: {e}")))?;
+            .map_err(|e| {
+                EcoachError::NotFound(format!("no active goal for student {student_id}: {e}"))
+            })?;
 
         let goal = GoalType::from_str(&goal_type_str);
         let urgency = UrgencyBand::from_days(

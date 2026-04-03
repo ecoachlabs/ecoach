@@ -38,6 +38,10 @@ pub struct QuestionSelectionRequest {
     pub weakness_topic_ids: Vec<i64>,
     pub recently_seen_question_ids: Vec<i64>,
     pub timed: bool,
+    pub diagnostic_stage: Option<String>,
+    pub condition_type: Option<String>,
+    pub require_confidence_prompt: bool,
+    pub require_concept_guess_prompt: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,6 +72,104 @@ pub struct QuestionIntelligenceQuery {
     pub subject_id: Option<i64>,
     pub topic_id: Option<i64>,
     pub limit: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionFamilySummary {
+    pub family_id: Option<i64>,
+    pub family_code: Option<String>,
+    pub family_name: Option<String>,
+    pub family_type: Option<String>,
+    pub similarity_score: BasisPoints,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionMisconceptionTag {
+    pub misconception_code: String,
+    pub confidence_score: BasisPoints,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionReviewState {
+    pub review_status: String,
+    pub review_reason: Option<String>,
+    pub reviewer_id: Option<String>,
+    pub reviewed_at: Option<String>,
+    pub needs_review: bool,
+    pub classification_source: String,
+    pub taxonomy_version: String,
+    pub classification_version: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionIntelligenceSnapshot {
+    pub question: Question,
+    pub knowledge_role: Option<String>,
+    pub cognitive_demand: Option<String>,
+    pub solve_pattern: Option<String>,
+    pub pedagogic_function: Option<String>,
+    pub content_grain: Option<String>,
+    pub machine_confidence_score: BasisPoints,
+    pub family: Option<QuestionFamilySummary>,
+    pub misconceptions: Vec<QuestionMisconceptionTag>,
+    pub review: QuestionReviewState,
+    pub links: Vec<QuestionIntelligenceLink>,
+    pub snapshot: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionIntelligenceFilter {
+    pub axis_code: Option<String>,
+    pub concept_code: Option<String>,
+    pub subject_id: Option<i64>,
+    pub topic_id: Option<i64>,
+    pub family_id: Option<i64>,
+    pub misconception_code: Option<String>,
+    pub review_status: Option<String>,
+    pub reviewed_only: bool,
+    pub exclude_family_duplicates: bool,
+    pub limit: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionReviewQueueItem {
+    pub question_id: i64,
+    pub stem: String,
+    pub topic_id: i64,
+    pub machine_confidence_score: BasisPoints,
+    pub review_status: String,
+    pub review_reason: Option<String>,
+    pub family_candidate: Option<QuestionFamilySummary>,
+    pub misconception_candidates: Vec<QuestionMisconceptionTag>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionReviewActionInput {
+    pub reviewer_id: String,
+    pub action_code: String,
+    pub review_status: Option<String>,
+    pub note: Option<String>,
+    pub primary_knowledge_role: Option<String>,
+    pub primary_cognitive_demand: Option<String>,
+    pub primary_solve_pattern: Option<String>,
+    pub primary_pedagogic_function: Option<String>,
+    pub primary_content_grain: Option<String>,
+    pub family_id: Option<i64>,
+    pub misconception_codes: Vec<String>,
+    pub request_reclassification: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionReviewAuditRecord {
+    pub id: i64,
+    pub question_id: i64,
+    pub reviewer_id: String,
+    pub action_code: String,
+    pub previous_review_status: Option<String>,
+    pub new_review_status: String,
+    pub note: Option<String>,
+    pub created_at: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

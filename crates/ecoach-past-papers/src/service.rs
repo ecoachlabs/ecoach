@@ -4,10 +4,10 @@ use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
 
 use crate::models::{
-    CreateFamilyEdgeInput, FamilyRecurrenceMetric, FamilyRelationshipEdge,
-    FamilyReplacementTrail, FamilyStory, InverseAppearancePair, PaperDna,
-    PastPaperComebackSignal, PastPaperFamilyAnalytics, PastPaperInverseSignal, PastPaperSet,
-    PastPaperSetSummary, StudentFamilyPerformance,
+    CreateFamilyEdgeInput, FamilyRecurrenceMetric, FamilyRelationshipEdge, FamilyReplacementTrail,
+    FamilyStory, InverseAppearancePair, PaperDna, PastPaperComebackSignal,
+    PastPaperFamilyAnalytics, PastPaperInverseSignal, PastPaperSet, PastPaperSetSummary,
+    StudentFamilyPerformance,
 };
 
 pub struct PastPapersService<'a> {
@@ -643,10 +643,7 @@ impl<'a> PastPapersService<'a> {
         Ok(edges)
     }
 
-    pub fn list_inverse_pairs(
-        &self,
-        family_id: i64,
-    ) -> EcoachResult<Vec<InverseAppearancePair>> {
+    pub fn list_inverse_pairs(&self, family_id: i64) -> EcoachResult<Vec<InverseAppearancePair>> {
         let mut stmt = self
             .conn
             .prepare(
@@ -875,41 +872,53 @@ impl<'a> PastPapersService<'a> {
         family_b_id: i64,
         subject_id: i64,
     ) -> EcoachResult<(BasisPoints, BasisPoints, BasisPoints)> {
-        let total_papers: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT id) FROM past_paper_sets WHERE subject_id = ?1",
-            [subject_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let total_papers: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT id) FROM past_paper_sets WHERE subject_id = ?1",
+                [subject_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         if total_papers == 0 {
             return Ok((0, 0, 0));
         }
 
-        let papers_with_a: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
+        let papers_with_a: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
              JOIN questions q ON q.id = l.question_id
              WHERE q.family_id = ?1",
-            [family_a_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [family_a_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let papers_with_b: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
+        let papers_with_b: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
              JOIN questions q ON q.id = l.question_id
              WHERE q.family_id = ?1",
-            [family_b_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [family_b_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let papers_with_both: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT la.paper_id)
+        let papers_with_both: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT la.paper_id)
              FROM past_paper_question_links la
              JOIN questions qa ON qa.id = la.question_id AND qa.family_id = ?1
              JOIN past_paper_question_links lb ON lb.paper_id = la.paper_id
              JOIN questions qb ON qb.id = lb.question_id AND qb.family_id = ?2",
-            params![family_a_id, family_b_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![family_a_id, family_b_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let p_a = papers_with_a as f64 / total_papers as f64;
         let p_b = papers_with_b as f64 / total_papers as f64;
@@ -947,16 +956,16 @@ impl<'a> PastPapersService<'a> {
     }
 
     /// Compute and persist IAI for all family pairs in a subject
-    pub fn compute_inverse_pairs_for_subject(
-        &self,
-        subject_id: i64,
-    ) -> EcoachResult<i64> {
-        let mut stmt = self.conn.prepare(
-            "SELECT DISTINCT q.family_id FROM questions q
+    pub fn compute_inverse_pairs_for_subject(&self, subject_id: i64) -> EcoachResult<i64> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT q.family_id FROM questions q
              JOIN past_paper_question_links l ON l.question_id = q.id
              JOIN past_paper_sets p ON p.id = l.paper_id
-             WHERE p.subject_id = ?1 AND q.family_id IS NOT NULL"
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+             WHERE p.subject_id = ?1 AND q.family_id IS NOT NULL",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let family_ids: Vec<i64> = stmt
             .query_map([subject_id], |row| row.get(0))
@@ -967,14 +976,14 @@ impl<'a> PastPapersService<'a> {
         let mut pairs_created = 0i64;
         for i in 0..family_ids.len() {
             for j in (i + 1)..family_ids.len() {
-                let (iai, a_sup_b, b_sup_a) = self.compute_iai(
-                    family_ids[i], family_ids[j], subject_id
-                )?;
+                let (iai, a_sup_b, b_sup_a) =
+                    self.compute_iai(family_ids[i], family_ids[j], subject_id)?;
 
                 if iai >= 2000 {
                     let is_mutual = a_sup_b >= 2000 && b_sup_a >= 2000;
-                    self.conn.execute(
-                        "INSERT INTO inverse_appearance_pairs (
+                    self.conn
+                        .execute(
+                            "INSERT INTO inverse_appearance_pairs (
                             family_a_id, family_b_id, iai_score_bp,
                             directional_a_suppresses_b_bp, directional_b_suppresses_a_bp,
                             support_papers, is_mutual
@@ -985,11 +994,16 @@ impl<'a> PastPapersService<'a> {
                             directional_b_suppresses_a_bp = excluded.directional_b_suppresses_a_bp,
                             is_mutual = excluded.is_mutual,
                             computed_at = datetime('now')",
-                        params![
-                            family_ids[i], family_ids[j], iai,
-                            a_sup_b, b_sup_a, is_mutual as i64
-                        ],
-                    ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                            params![
+                                family_ids[i],
+                                family_ids[j],
+                                iai,
+                                a_sup_b,
+                                b_sup_a,
+                                is_mutual as i64
+                            ],
+                        )
+                        .map_err(|e| EcoachError::Storage(e.to_string()))?;
                     pairs_created += 1;
                 }
             }
@@ -1003,33 +1017,47 @@ impl<'a> PastPapersService<'a> {
         family_a_id: i64,
         family_b_id: i64,
     ) -> EcoachResult<BasisPoints> {
-        let papers_a: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
+        let papers_a: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
              JOIN questions q ON q.id = l.question_id WHERE q.family_id = ?1",
-            [family_a_id], |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [family_a_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let papers_b: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
+        let papers_b: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
              JOIN questions q ON q.id = l.question_id WHERE q.family_id = ?1",
-            [family_b_id], |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [family_b_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let papers_both: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT la.paper_id)
+        let papers_both: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT la.paper_id)
              FROM past_paper_question_links la
              JOIN questions qa ON qa.id = la.question_id AND qa.family_id = ?1
              JOIN past_paper_question_links lb ON lb.paper_id = la.paper_id
              JOIN questions qb ON qb.id = lb.question_id AND qb.family_id = ?2",
-            params![family_a_id, family_b_id], |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![family_a_id, family_b_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let union = papers_a + papers_b - papers_both;
         if union == 0 {
             return Ok(0);
         }
 
-        Ok(clamp_bp(((papers_both as f64 / union as f64) * 10_000.0).round() as i64))
+        Ok(clamp_bp(
+            ((papers_both as f64 / union as f64) * 10_000.0).round() as i64,
+        ))
     }
 
     /// Compute FRR (Family Recurrence Rate) and persist metrics
@@ -1038,36 +1066,46 @@ impl<'a> PastPapersService<'a> {
         family_id: i64,
         subject_id: i64,
     ) -> EcoachResult<BasisPoints> {
-        let total_papers: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT id) FROM past_paper_sets WHERE subject_id = ?1",
-            [subject_id], |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let total_papers: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT id) FROM past_paper_sets WHERE subject_id = ?1",
+                [subject_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         if total_papers == 0 {
             return Ok(0);
         }
 
-        let papers_appeared: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
+        let papers_appeared: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
              JOIN questions q ON q.id = l.question_id
              WHERE q.family_id = ?1",
-            [family_id], |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [family_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let frr = clamp_bp(
-            ((papers_appeared as f64 / total_papers as f64) * 10_000.0).round() as i64
-        );
+        let frr =
+            clamp_bp(((papers_appeared as f64 / total_papers as f64) * 10_000.0).round() as i64);
 
         // Get year range for persistence/dormancy
         let years: Vec<i64> = {
-            let mut stmt = self.conn.prepare(
-                "SELECT DISTINCT ps.exam_year
+            let mut stmt = self
+                .conn
+                .prepare(
+                    "SELECT DISTINCT ps.exam_year
                  FROM past_paper_question_links l
                  JOIN questions q ON q.id = l.question_id
                  JOIN past_paper_sets ps ON ps.id = l.paper_id
                  WHERE q.family_id = ?1
-                 ORDER BY ps.exam_year"
-            ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                 ORDER BY ps.exam_year",
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
             stmt.query_map([family_id], |row| row.get(0))
                 .map_err(|e| EcoachError::Storage(e.to_string()))?
                 .filter_map(|r| r.ok())
@@ -1078,8 +1116,9 @@ impl<'a> PastPapersService<'a> {
         let last_year = years.last().copied();
 
         // Persist
-        self.conn.execute(
-            "INSERT INTO family_recurrence_metrics (
+        self.conn
+            .execute(
+                "INSERT INTO family_recurrence_metrics (
                 family_id, subject_id, total_papers_in_window, papers_appeared,
                 recurrence_rate_bp, first_appearance_year, last_appearance_year
              ) VALUES (?1,?2,?3,?4,?5,?6,?7)
@@ -1090,8 +1129,17 @@ impl<'a> PastPapersService<'a> {
                 first_appearance_year = excluded.first_appearance_year,
                 last_appearance_year = excluded.last_appearance_year,
                 computed_at = datetime('now')",
-            params![family_id, subject_id, total_papers, papers_appeared, frr, first_year, last_year],
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![
+                    family_id,
+                    subject_id,
+                    total_papers,
+                    papers_appeared,
+                    frr,
+                    first_year,
+                    last_year
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         Ok(frr)
     }
@@ -1107,41 +1155,56 @@ impl<'a> PastPapersService<'a> {
         let (iai, _, _) = self.compute_iai(old_family_id, new_family_id, subject_id)?;
 
         // ChronoShift: old declining, new rising
-        let old_recent: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
+        let old_recent: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
              JOIN questions q ON q.id = l.question_id
              JOIN past_paper_sets ps ON ps.id = l.paper_id
              WHERE q.family_id = ?1 AND ps.exam_year >= (
                  SELECT MAX(exam_year) - 4 FROM past_paper_sets WHERE subject_id = ?2
              )",
-            params![old_family_id, subject_id], |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![old_family_id, subject_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let new_recent: i64 = self.conn.query_row(
-            "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
+        let new_recent: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(DISTINCT l.paper_id) FROM past_paper_question_links l
              JOIN questions q ON q.id = l.question_id
              JOIN past_paper_sets ps ON ps.id = l.paper_id
              WHERE q.family_id = ?1 AND ps.exam_year >= (
                  SELECT MAX(exam_year) - 4 FROM past_paper_sets WHERE subject_id = ?2
              )",
-            params![new_family_id, subject_id], |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![new_family_id, subject_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let chrono_shift = if new_recent > old_recent {
-            clamp_bp(((new_recent - old_recent) as f64 / (new_recent + old_recent).max(1) as f64 * 10_000.0).round() as i64)
+            clamp_bp(
+                ((new_recent - old_recent) as f64 / (new_recent + old_recent).max(1) as f64
+                    * 10_000.0)
+                    .round() as i64,
+            )
         } else {
             0
         };
 
         // TopicOverlap: same topic_id
         let topic_overlap: BasisPoints = {
-            let same_topic: i64 = self.conn.query_row(
-                "SELECT CASE WHEN q1.topic_id = q2.topic_id THEN 10000 ELSE 0 END
+            let same_topic: i64 = self
+                .conn
+                .query_row(
+                    "SELECT CASE WHEN q1.topic_id = q2.topic_id THEN 10000 ELSE 0 END
                  FROM (SELECT topic_id FROM question_families WHERE id = ?1) q1,
                       (SELECT topic_id FROM question_families WHERE id = ?2) q2",
-                params![old_family_id, new_family_id],
-                |row| row.get(0),
-            ).unwrap_or(0);
+                    params![old_family_id, new_family_id],
+                    |row| row.get(0),
+                )
+                .unwrap_or(0);
             clamp_bp(same_topic)
         };
 
@@ -1154,8 +1217,9 @@ impl<'a> PastPapersService<'a> {
         );
 
         // Persist
-        self.conn.execute(
-            "INSERT INTO family_replacement_trails (
+        self.conn
+            .execute(
+                "INSERT INTO family_replacement_trails (
                 old_family_id, new_family_id, replacement_index_bp,
                 iai_component_bp, chrono_shift_bp, topic_overlap_bp, cognitive_overlap_bp
              ) VALUES (?1,?2,?3,?4,?5,?6,?7)
@@ -1165,8 +1229,17 @@ impl<'a> PastPapersService<'a> {
                 chrono_shift_bp = excluded.chrono_shift_bp,
                 topic_overlap_bp = excluded.topic_overlap_bp,
                 computed_at = datetime('now')",
-            params![old_family_id, new_family_id, ri, iai, chrono_shift, topic_overlap, topic_overlap],
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![
+                    old_family_id,
+                    new_family_id,
+                    ri,
+                    iai,
+                    chrono_shift,
+                    topic_overlap,
+                    topic_overlap
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         Ok(ri)
     }

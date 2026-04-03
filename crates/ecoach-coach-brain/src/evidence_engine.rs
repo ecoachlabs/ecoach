@@ -87,10 +87,7 @@ impl<'a> EvidenceInterpretationEngine<'a> {
 
     /// Interpret a completed answer attempt and produce an evidence event.
     /// Call this AFTER process_answer in student_model has written the attempt.
-    pub fn interpret_attempt(
-        &self,
-        attempt_id: i64,
-    ) -> EcoachResult<EvidenceEvent> {
+    pub fn interpret_attempt(&self, attempt_id: i64) -> EcoachResult<EvidenceEvent> {
         // Load the raw attempt
         let attempt = self.load_attempt(attempt_id)?;
 
@@ -244,7 +241,11 @@ impl<'a> EvidenceInterpretationEngine<'a> {
     fn compute_mastery_delta(&self, attempt: &AttemptContext) -> i64 {
         if attempt.is_correct {
             // Higher delta for harder / more varied questions
-            let base = if attempt.was_transfer_variant { 400 } else { 200 };
+            let base = if attempt.was_transfer_variant {
+                400
+            } else {
+                200
+            };
             let difficulty_bonus = (attempt.difficulty_level / 2000).min(3) as i64 * 50;
             base + difficulty_bonus
         } else {
@@ -262,10 +263,18 @@ impl<'a> EvidenceInterpretationEngine<'a> {
     fn compute_stability_delta(&self, attempt: &AttemptContext) -> i64 {
         if attempt.is_correct {
             // Stability increases more for varied/delayed success
-            if attempt.was_retention_check { 300 } else { 100 }
+            if attempt.was_retention_check {
+                300
+            } else {
+                100
+            }
         } else {
             // Stability drops sharply for repeated errors
-            if attempt.attempt_number > 1 { -400 } else { -200 }
+            if attempt.attempt_number > 1 {
+                -400
+            } else {
+                -200
+            }
         }
     }
 
@@ -289,7 +298,11 @@ impl<'a> EvidenceInterpretationEngine<'a> {
         if attempt.was_timed {
             if attempt.is_correct {
                 // Fast correct = big boost, slow correct = small boost
-                if attempt.response_time_ms < 15_000 { 300 } else { 100 }
+                if attempt.response_time_ms < 15_000 {
+                    300
+                } else {
+                    100
+                }
             } else {
                 -200
             }
@@ -580,7 +593,14 @@ impl<'a> EvidenceInterpretationEngine<'a> {
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         // Update node_status based on current scores
-        let (mastery, stability, retention, transfer, timed, evidence): (i64, i64, i64, i64, i64, i64) = self
+        let (mastery, stability, retention, transfer, timed, evidence): (
+            i64,
+            i64,
+            i64,
+            i64,
+            i64,
+            i64,
+        ) = self
             .conn
             .query_row(
                 "SELECT mastery_score, stability_score, retention_confidence,
@@ -588,11 +608,21 @@ impl<'a> EvidenceInterpretationEngine<'a> {
                  FROM student_skill_states
                  WHERE student_id = ?1 AND node_id = ?2",
                 params![student_id, node_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?)),
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                    ))
+                },
             )
             .unwrap_or((0, 5000, 5000, 0, 0, 0));
 
-        let node_status = resolve_node_status(mastery, stability, retention, transfer, timed, evidence);
+        let node_status =
+            resolve_node_status(mastery, stability, retention, transfer, timed, evidence);
 
         self.conn
             .execute(
@@ -728,7 +758,12 @@ fn resolve_node_status(
     if evidence < 3 {
         return "sampled";
     }
-    if mastery >= 9000 && stability >= 8000 && retention >= 7000 && transfer >= 6000 && timed >= 6000 {
+    if mastery >= 9000
+        && stability >= 8000
+        && retention >= 7000
+        && transfer >= 6000
+        && timed >= 6000
+    {
         return "mastered";
     }
     if mastery >= 8000 && stability >= 7000 && timed >= 5000 {

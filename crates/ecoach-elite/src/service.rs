@@ -965,7 +965,9 @@ impl<'a> EliteService<'a> {
 
         // Get profile
         let profile = self.get_profile(student_id, subject_id)?;
-        let Some(profile) = profile else { return Ok(awarded); };
+        let Some(profile) = profile else {
+            return Ok(awarded);
+        };
 
         // Perfect Run badge
         let perfect_sessions: i64 = self
@@ -1023,11 +1025,14 @@ impl<'a> EliteService<'a> {
         subject_id: i64,
         badge_code: &str,
     ) -> EcoachResult<bool> {
-        let result = self.conn.execute(
-            "INSERT OR IGNORE INTO elite_earned_badges (student_id, subject_id, badge_code)
+        let result = self
+            .conn
+            .execute(
+                "INSERT OR IGNORE INTO elite_earned_badges (student_id, subject_id, badge_code)
              VALUES (?1, ?2, ?3)",
-            params![student_id, subject_id, badge_code],
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![student_id, subject_id, badge_code],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
         Ok(result > 0)
     }
 

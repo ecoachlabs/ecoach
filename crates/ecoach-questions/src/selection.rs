@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, from_bp};
 use rusqlite::{Connection, params};
+use serde_json::Value;
 
 use crate::models::{Question, QuestionSelectionRequest, SelectedQuestion};
 
@@ -22,6 +23,15 @@ struct CandidateContext {
     family_last_seen_year: Option<i64>,
     subject_latest_exam_year: i64,
     subject_year_span: i64,
+    routing_item_family: String,
+    recognition_suitable: bool,
+    recall_suitable: bool,
+    transfer_suitable: bool,
+    timed_suitable: bool,
+    confidence_prompt: Option<String>,
+    recommended_stages: Vec<String>,
+    routing_cognitive_demand: Option<String>,
+    routing_pedagogic_function: Option<String>,
 }
 
 impl<'a> QuestionSelector<'a> {
@@ -86,10 +96,19 @@ impl<'a> QuestionSelector<'a> {
                         INNER JOIN questions history_q ON history_q.id = ppql.question_id
                         INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
                         WHERE history_q.family_id = q.family_id
-                    ) AS last_seen_year
+                    ) AS last_seen_year,
+                    COALESCE(dirp.item_family, q.question_format),
+                    COALESCE(dirp.recognition_suitable, CASE WHEN q.question_format IN ('mcq', 'true_false', 'matching') THEN 1 ELSE 0 END),
+                    COALESCE(dirp.recall_suitable, CASE WHEN q.question_format IN ('short_answer', 'essay', 'numeric', 'fill_blank') THEN 1 ELSE 0 END),
+                    COALESCE(dirp.transfer_suitable, 0),
+                    COALESCE(dirp.timed_suitable, CASE WHEN q.estimated_time_seconds <= 60 THEN 1 ELSE 0 END),
+                    dirp.confidence_prompt,
+                    dirp.recommended_stages_json,
+                    dirp.routing_notes_json
              FROM questions q
              LEFT JOIN question_family_health qfh ON qfh.family_id = q.family_id
              LEFT JOIN question_family_analytics qfa ON qfa.family_id = q.family_id
+             LEFT JOIN diagnostic_item_routing_profiles dirp ON dirp.question_id = q.id
              WHERE q.is_active = 1 AND q.subject_id = ?1 AND q.topic_id IN ({})
              ORDER BY q.updated_at DESC, q.id DESC",
             placeholders
@@ -109,6 +128,16 @@ impl<'a> QuestionSelector<'a> {
 
         let rows = statement
             .query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+                let recommended_stages = row
+                    .get::<_, Option<String>>(26)?
+                    .as_deref()
+                    .and_then(|json| serde_json::from_str::<Vec<String>>(json).ok())
+                    .unwrap_or_else(|| vec!["baseline".to_string()]);
+                let routing_notes = row
+                    .get::<_, Option<String>>(27)?
+                    .as_deref()
+                    .and_then(|json| serde_json::from_str::<Value>(json).ok())
+                    .unwrap_or(Value::Null);
                 Ok(CandidateContext {
                     question: Question {
                         id: row.get(0)?,
@@ -134,6 +163,21 @@ impl<'a> QuestionSelector<'a> {
                     family_last_seen_year: row.get(19)?,
                     subject_latest_exam_year,
                     subject_year_span,
+                    routing_item_family: row.get(20)?,
+                    recognition_suitable: row.get::<_, i64>(21)? == 1,
+                    recall_suitable: row.get::<_, i64>(22)? == 1,
+                    transfer_suitable: row.get::<_, i64>(23)? == 1,
+                    timed_suitable: row.get::<_, i64>(24)? == 1,
+                    confidence_prompt: row.get(25)?,
+                    recommended_stages,
+                    routing_cognitive_demand: routing_notes
+                        .get("cognitive_demand")
+                        .and_then(Value::as_str)
+                        .map(str::to_string),
+                    routing_pedagogic_function: routing_notes
+                        .get("pedagogic_function")
+                        .and_then(Value::as_str)
+                        .map(str::to_string),
                 })
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -230,6 +274,74 @@ impl<'a> QuestionSelector<'a> {
         } else {
             (0.65 * family_state_bonus + 0.35 * exam_pressure).clamp(0.0, 1.0)
         };
+        let stage_alignment = request
+            .diagnostic_stage
+            .as_deref()
+            .map(|stage| {
+                if candidate
+                    .recommended_stages
+                    .iter()
+                    .any(|item| item == stage)
+                {
+                    1.0
+                } else if stage == "baseline" {
+                    0.85
+                } else {
+                    0.30
+                }
+            })
+            .unwrap_or(0.75);
+        let condition_alignment = request
+            .condition_type
+            .as_deref()
+            .map(|condition_type| match condition_type {
+                "timed" => bool_score(candidate.timed_suitable),
+                "transfer" => bool_score(candidate.transfer_suitable),
+                "recognition" => bool_score(candidate.recognition_suitable),
+                "stability" => {
+                    if candidate.timed_suitable {
+                        0.92
+                    } else if candidate.recall_suitable {
+                        0.70
+                    } else {
+                        0.40
+                    }
+                }
+                _ => {
+                    if candidate.recall_suitable || candidate.recognition_suitable {
+                        0.88
+                    } else {
+                        0.42
+                    }
+                }
+            })
+            .unwrap_or(0.75);
+        let confidence_prompt_alignment = if request.require_confidence_prompt {
+            if candidate.confidence_prompt.is_some() {
+                1.0
+            } else {
+                0.35
+            }
+        } else {
+            0.75
+        };
+        let concept_guess_alignment = if request.require_concept_guess_prompt {
+            if supports_concept_guess(candidate) {
+                1.0
+            } else {
+                0.28
+            }
+        } else {
+            0.75
+        };
+        let routing_family_bonus = if matches!(
+            candidate.routing_item_family.as_str(),
+            "transfer_check" | "misconception" | "reasoning" | "application"
+        ) {
+            1.0
+        } else {
+            0.55
+        };
 
         0.20 * scope_match
             + 0.17 * difficulty_fit
@@ -243,6 +355,11 @@ impl<'a> QuestionSelector<'a> {
             + 0.03 * pressure_alignment
             + 0.10 * (1.0 - recency_penalty)
             + 0.06 * paper_history_bonus
+            + 0.08 * stage_alignment
+            + 0.06 * condition_alignment
+            + 0.04 * confidence_prompt_alignment
+            + 0.05 * concept_guess_alignment
+            + 0.03 * routing_family_bonus
     }
 
     fn load_subject_year_bounds(&self, subject_id: i64) -> EcoachResult<(i64, i64)> {
@@ -265,7 +382,10 @@ impl<'a> QuestionSelector<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?
             .unwrap_or(latest_subject_year);
 
-        Ok((latest_subject_year, (latest_subject_year - earliest_subject_year).max(1)))
+        Ok((
+            latest_subject_year,
+            (latest_subject_year - earliest_subject_year).max(1),
+        ))
     }
 
     fn select_diverse_mix(
@@ -356,6 +476,23 @@ fn bp_to_ratio(value: i64) -> f64 {
     (value as f64 / 10_000.0).clamp(0.0, 1.0)
 }
 
+fn bool_score(value: bool) -> f64 {
+    if value { 1.0 } else { 0.25 }
+}
+
+fn supports_concept_guess(candidate: &CandidateContext) -> bool {
+    candidate.transfer_suitable
+        || candidate.recall_suitable
+        || matches!(
+            candidate.routing_cognitive_demand.as_deref(),
+            Some("application") | Some("reasoning") | Some("recall")
+        )
+        || matches!(
+            candidate.routing_pedagogic_function.as_deref(),
+            Some("transfer_check") | Some("error_probe") | Some("worked_example_gap")
+        )
+}
+
 fn composite_inverse_pressure(
     recurrence_score: BasisPoints,
     coappearance_score: BasisPoints,
@@ -426,6 +563,10 @@ mod tests {
                 weakness_topic_ids: vec![10],
                 recently_seen_question_ids: Vec::new(),
                 timed: true,
+                diagnostic_stage: None,
+                condition_type: None,
+                require_confidence_prompt: false,
+                require_concept_guess_prompt: false,
             })
             .expect("selection should succeed");
 
@@ -479,6 +620,10 @@ mod tests {
                 weakness_topic_ids: vec![10],
                 recently_seen_question_ids: Vec::new(),
                 timed: true,
+                diagnostic_stage: None,
+                condition_type: None,
+                require_confidence_prompt: false,
+                require_concept_guess_prompt: false,
             })
             .expect("selection should succeed");
 
@@ -569,8 +714,25 @@ mod tests {
                 section_label TEXT,
                 question_number TEXT
             )",
+            "CREATE TABLE diagnostic_item_routing_profiles (
+                question_id INTEGER PRIMARY KEY,
+                subject_id INTEGER NOT NULL,
+                topic_id INTEGER NOT NULL,
+                family_id INTEGER,
+                item_family TEXT,
+                recognition_suitable INTEGER NOT NULL DEFAULT 0,
+                recall_suitable INTEGER NOT NULL DEFAULT 0,
+                transfer_suitable INTEGER NOT NULL DEFAULT 0,
+                timed_suitable INTEGER NOT NULL DEFAULT 0,
+                confidence_prompt TEXT,
+                recommended_stages_json TEXT,
+                sibling_variant_modes_json TEXT,
+                routing_notes_json TEXT,
+                updated_at TEXT
+            )",
         ] {
-            conn.execute(sql, []).expect("schema statement should apply");
+            conn.execute(sql, [])
+                .expect("schema statement should apply");
         }
     }
 
@@ -687,5 +849,45 @@ mod tests {
             [],
         )
         .expect("past paper question links should insert");
+        conn.execute(
+            "INSERT INTO diagnostic_item_routing_profiles (
+                question_id, subject_id, topic_id, family_id, item_family,
+                recognition_suitable, recall_suitable, transfer_suitable, timed_suitable,
+                confidence_prompt, recommended_stages_json, sibling_variant_modes_json,
+                routing_notes_json, updated_at
+             ) VALUES
+                (1000, 1, 10, 100, 'recognition', 1, 1, 0, 1, 'sure_not_sure_guessed', '[\"baseline\",\"speed\",\"pressure\"]', '[\"isomorphic\"]', '{\"cognitive_demand\":\"recognition\",\"pedagogic_function\":\"fluency\"}', datetime('now')),
+                (1001, 1, 10, 100, 'recognition', 1, 1, 0, 1, 'sure_not_sure_guessed', '[\"baseline\",\"precision\"]', '[\"isomorphic\"]', '{\"cognitive_demand\":\"recall\",\"pedagogic_function\":\"fluency\"}', datetime('now')),
+                (2000, 1, 10, 200, 'transfer_check', 0, 1, 1, 1, 'sure_not_sure_guessed', '[\"baseline\",\"flex\",\"root_cause\"]', '[\"representation_shift\"]', '{\"cognitive_demand\":\"application\",\"pedagogic_function\":\"transfer_check\"}', datetime('now'))",
+            [],
+        )
+        .expect("routing profiles should insert");
+    }
+
+    #[test]
+    fn selector_prefers_routing_aligned_transfer_items_for_diagnostic_phase() {
+        let conn = Connection::open_in_memory().expect("in-memory db should open");
+        seed_selection_schema(&conn);
+        seed_selection_fixture(&conn);
+
+        let selector = QuestionSelector::new(&conn);
+        let selected = selector
+            .select_questions(&QuestionSelectionRequest {
+                subject_id: 1,
+                topic_ids: vec![10],
+                target_question_count: 1,
+                target_difficulty: Some(5_100),
+                weakness_topic_ids: vec![10],
+                recently_seen_question_ids: Vec::new(),
+                timed: false,
+                diagnostic_stage: Some("flex".to_string()),
+                condition_type: Some("transfer".to_string()),
+                require_confidence_prompt: false,
+                require_concept_guess_prompt: true,
+            })
+            .expect("selection should succeed");
+
+        assert_eq!(selected.len(), 1);
+        assert_eq!(selected[0].question.id, 2000);
     }
 }

@@ -31,10 +31,7 @@ impl<'a> PrerequisiteGraph<'a> {
     /// Get prerequisite links between topics in a subject.
     /// A topic A is prerequisite to topic B if any academic_node in A
     /// has a prerequisite edge to any academic_node in B.
-    pub fn get_topic_prerequisites(
-        &self,
-        subject_id: i64,
-    ) -> EcoachResult<Vec<PrerequisiteLink>> {
+    pub fn get_topic_prerequisites(&self, subject_id: i64) -> EcoachResult<Vec<PrerequisiteLink>> {
         let mut stmt = self
             .conn
             .prepare(

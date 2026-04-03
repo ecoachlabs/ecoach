@@ -978,7 +978,11 @@ fn merge_station_evidence(
         .get("times_entered")
         .and_then(Value::as_i64)
         .unwrap_or(0);
-    let times_entered = if prior_times_entered == 0 { 1 } else { prior_times_entered };
+    let times_entered = if prior_times_entered == 0 {
+        1
+    } else {
+        prior_times_entered
+    };
     merged.insert("times_entered".to_string(), Value::from(times_entered));
 
     for key in [

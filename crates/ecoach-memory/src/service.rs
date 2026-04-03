@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 
+mod idea32;
+
 use chrono::{Duration, Utc};
 use ecoach_substrate::{DomainEvent, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
@@ -44,6 +46,7 @@ impl<'a> MemoryService<'a> {
         input: &RecordMemoryEvidenceInput,
     ) -> EcoachResult<MemoryStateRecord> {
         let now = Utc::now().to_rfc3339();
+        let _ = self.record_idea32_attempt(input)?;
 
         // Insert evidence event
         self.conn
@@ -71,10 +74,17 @@ impl<'a> MemoryService<'a> {
         let existing =
             self.get_memory_state_by_node(input.student_id, input.topic_id, input.node_id)?;
 
-        match existing {
+        let record = match existing {
             Some(record) => self.update_memory_from_evidence(record, input),
             None => self.create_initial_memory_state(input),
-        }
+        }?;
+        let _ = self.sync_idea32_for_unit(
+            input.student_id,
+            input.topic_id,
+            input.node_id,
+            "attempt_ingestion",
+        )?;
+        Ok(record)
     }
 
     fn create_initial_memory_state(
@@ -326,6 +336,7 @@ impl<'a> MemoryService<'a> {
         struct OverdueItem {
             id: i64,
             student_id: i64,
+            topic_id: Option<i64>,
             node_id: Option<i64>,
             memory_state: String,
             memory_strength: i64,
@@ -337,6 +348,7 @@ impl<'a> MemoryService<'a> {
                 Ok(OverdueItem {
                     id: row.get(0)?,
                     student_id: row.get(1)?,
+                    topic_id: row.get(2)?,
                     node_id: row.get(3)?,
                     memory_state: row.get(4)?,
                     memory_strength: row.get(5)?,
@@ -455,6 +467,12 @@ impl<'a> MemoryService<'a> {
                     "new_strength": clamp_bp(new_strength),
                 }),
             ))?;
+            let _ = self.sync_idea32_for_unit(
+                item.student_id,
+                item.topic_id,
+                item.node_id,
+                "nightly_decay_scan",
+            )?;
         }
 
         Ok(result)
@@ -665,6 +683,8 @@ impl<'a> MemoryService<'a> {
                 "due_at": due_at,
             }),
         ))?;
+        self.sync_review_completion(student_id, node_id)?;
+        let _ = self.sync_idea32_for_unit(student_id, None, node_id, "review_completed")?;
         Ok(())
     }
 

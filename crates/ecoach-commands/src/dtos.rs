@@ -5,7 +5,11 @@ use ecoach_content::{
     ParseCandidateCount, SubjectFoundryDashboard, TopicPackageSnapshot,
 };
 use ecoach_diagnostics::{
-    DiagnosticCauseEvolution, DiagnosticLongitudinalSummary, DiagnosticResult,
+    DiagnosticAudienceReport, DiagnosticCauseEvolution, DiagnosticConditionMetrics,
+    DiagnosticInterventionPrescription, DiagnosticItemRoutingProfile,
+    DiagnosticLearningProfile, DiagnosticLongitudinalSummary, DiagnosticOverallSummary,
+    DiagnosticProblemCauseFixCard, DiagnosticRecommendation, DiagnosticResult,
+    DiagnosticSessionScore, DiagnosticSkillResult, DiagnosticSubjectBlueprint,
     TopicDiagnosticLongitudinalSignal, TopicDiagnosticResult,
 };
 use ecoach_elite::{
@@ -13,8 +17,9 @@ use ecoach_elite::{
     EliteSessionBlueprint, EliteTopicProfile, EliteTrapBlueprintSignal,
 };
 use ecoach_games::{
-    ContrastPairSummary, TrapChoiceOption, TrapReviewRound, TrapRoundCard, TrapRoundResult,
-    TrapSessionReview, TrapSessionSnapshot,
+    ContrastComparisonRow, ContrastConceptAttribute, ContrastDiagramAsset, ContrastModeItem,
+    ContrastPairProfile, ContrastPairSummary, TrapChoiceOption, TrapMisconceptionReason,
+    TrapReviewRound, TrapRoundCard, TrapRoundResult, TrapSessionReview, TrapSessionSnapshot,
 };
 use ecoach_glossary::KnowledgeBundleSequenceItem;
 use ecoach_goals_calendar::{DailyReplan, FreeNowRecommendation};
@@ -24,8 +29,10 @@ use ecoach_library::{LearningPathStep, PersonalizedLearningPath, TopicRelationsh
 use ecoach_past_papers::PastPaperComebackSignal;
 use ecoach_questions::{
     DuplicateCheckResult, GeneratedQuestionDraft, QuestionFamilyChoice, QuestionFamilyHealth,
-    QuestionGenerationRequest, QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode,
-    QuestionRemediationPlan, RelatedQuestion,
+    QuestionFamilySummary, QuestionGenerationRequest, QuestionIntelligenceLink,
+    QuestionIntelligenceSnapshot, QuestionLineageEdge, QuestionLineageGraph, QuestionLineageNode,
+    QuestionMisconceptionTag, QuestionRemediationPlan, QuestionReviewQueueItem,
+    QuestionReviewState, RelatedQuestion,
 };
 use ecoach_sessions::{
     MockBlueprint, SessionEvidenceFabric, SessionInterpretation, SessionSnapshot, SessionSummary,
@@ -1000,6 +1007,341 @@ impl From<DiagnosticCauseEvolution> for DiagnosticCauseEvolutionDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticSessionScoreDto {
+    pub phase_code: String,
+    pub phase_title: String,
+    pub raw_accuracy: i64,
+    pub adjusted_accuracy: i64,
+    pub median_response_time_ms: Option<i64>,
+    pub stability_measure: i64,
+    pub careless_error_rate: i64,
+    pub timeout_rate: i64,
+    pub misread_rate: i64,
+    pub pressure_volatility: i64,
+    pub early_segment_accuracy: Option<i64>,
+    pub middle_segment_accuracy: Option<i64>,
+    pub final_segment_accuracy: Option<i64>,
+}
+
+impl From<DiagnosticSessionScore> for DiagnosticSessionScoreDto {
+    fn from(value: DiagnosticSessionScore) -> Self {
+        Self {
+            phase_code: value.phase_code,
+            phase_title: value.phase_title,
+            raw_accuracy: value.raw_accuracy as i64,
+            adjusted_accuracy: value.adjusted_accuracy as i64,
+            median_response_time_ms: value.median_response_time_ms,
+            stability_measure: value.stability_measure as i64,
+            careless_error_rate: value.careless_error_rate as i64,
+            timeout_rate: value.timeout_rate as i64,
+            misread_rate: value.misread_rate as i64,
+            pressure_volatility: value.pressure_volatility as i64,
+            early_segment_accuracy: value.early_segment_accuracy.map(|value| value as i64),
+            middle_segment_accuracy: value.middle_segment_accuracy.map(|value| value as i64),
+            final_segment_accuracy: value.final_segment_accuracy.map(|value| value as i64),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticConditionMetricsDto {
+    pub fragility_index: i64,
+    pub pressure_collapse_index: i64,
+    pub recognition_gap_index: i64,
+    pub formula_recall_use_delta: i64,
+    pub early_late_delta: i64,
+    pub confidence_correctness_delta: i64,
+    pub endurance_drop: i64,
+}
+
+impl From<DiagnosticConditionMetrics> for DiagnosticConditionMetricsDto {
+    fn from(value: DiagnosticConditionMetrics) -> Self {
+        Self {
+            fragility_index: value.fragility_index as i64,
+            pressure_collapse_index: value.pressure_collapse_index as i64,
+            recognition_gap_index: value.recognition_gap_index as i64,
+            formula_recall_use_delta: value.formula_recall_use_delta as i64,
+            early_late_delta: value.early_late_delta as i64,
+            confidence_correctness_delta: value.confidence_correctness_delta as i64,
+            endurance_drop: value.endurance_drop as i64,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticOverallSummaryDto {
+    pub mastery_level: String,
+    pub strong_zones: Vec<String>,
+    pub firming_zones: Vec<String>,
+    pub fragile_zones: Vec<String>,
+    pub critical_zones: Vec<String>,
+    pub top_recommended_action: Option<String>,
+}
+
+impl From<DiagnosticOverallSummary> for DiagnosticOverallSummaryDto {
+    fn from(value: DiagnosticOverallSummary) -> Self {
+        Self {
+            mastery_level: value.mastery_level,
+            strong_zones: value.strong_zones,
+            firming_zones: value.firming_zones,
+            fragile_zones: value.fragile_zones,
+            critical_zones: value.critical_zones,
+            top_recommended_action: value.top_recommended_action,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticSkillResultDto {
+    pub skill_key: String,
+    pub skill_name: String,
+    pub skill_type: String,
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub baseline_score: i64,
+    pub speed_score: i64,
+    pub precision_score: i64,
+    pub pressure_score: i64,
+    pub flex_score: i64,
+    pub root_cause_score: i64,
+    pub endurance_score: i64,
+    pub recovery_score: i64,
+    pub mastery_score: i64,
+    pub fragility_index: i64,
+    pub pressure_collapse_index: i64,
+    pub recognition_gap_index: i64,
+    pub formula_recall_use_delta: i64,
+    pub stability_score: i64,
+    pub mastery_state: String,
+    pub weakness_type_primary: String,
+    pub weakness_type_secondary: Option<String>,
+    pub recommended_intervention: String,
+    pub evidence: Value,
+}
+
+impl From<DiagnosticSkillResult> for DiagnosticSkillResultDto {
+    fn from(value: DiagnosticSkillResult) -> Self {
+        Self {
+            skill_key: value.skill_key,
+            skill_name: value.skill_name,
+            skill_type: value.skill_type,
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            baseline_score: value.baseline_score as i64,
+            speed_score: value.speed_score as i64,
+            precision_score: value.precision_score as i64,
+            pressure_score: value.pressure_score as i64,
+            flex_score: value.flex_score as i64,
+            root_cause_score: value.root_cause_score as i64,
+            endurance_score: value.endurance_score as i64,
+            recovery_score: value.recovery_score as i64,
+            mastery_score: value.mastery_score as i64,
+            fragility_index: value.fragility_index as i64,
+            pressure_collapse_index: value.pressure_collapse_index as i64,
+            recognition_gap_index: value.recognition_gap_index as i64,
+            formula_recall_use_delta: value.formula_recall_use_delta as i64,
+            stability_score: value.stability_score as i64,
+            mastery_state: value.mastery_state,
+            weakness_type_primary: value.weakness_type_primary,
+            weakness_type_secondary: value.weakness_type_secondary,
+            recommended_intervention: value.recommended_intervention,
+            evidence: value.evidence,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticRecommendationDto {
+    pub category: String,
+    pub action_code: String,
+    pub title: String,
+    pub rationale: String,
+    pub priority: i64,
+    pub target_kind: Option<String>,
+    pub target_ref: Option<String>,
+}
+
+impl From<DiagnosticRecommendation> for DiagnosticRecommendationDto {
+    fn from(value: DiagnosticRecommendation) -> Self {
+        Self {
+            category: value.category,
+            action_code: value.action_code,
+            title: value.title,
+            rationale: value.rationale,
+            priority: value.priority,
+            target_kind: value.target_kind,
+            target_ref: value.target_ref,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticLearningProfileDto {
+    pub profile_type: String,
+    pub confidence_score: i64,
+    pub evidence: Value,
+}
+
+impl From<DiagnosticLearningProfile> for DiagnosticLearningProfileDto {
+    fn from(value: DiagnosticLearningProfile) -> Self {
+        Self {
+            profile_type: value.profile_type,
+            confidence_score: value.confidence_score as i64,
+            evidence: value.evidence,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticAudienceReportDto {
+    pub audience: String,
+    pub headline: String,
+    pub narrative: String,
+    pub strengths: Vec<String>,
+    pub fragile_areas: Vec<String>,
+    pub critical_areas: Vec<String>,
+    pub action_plan: Vec<String>,
+}
+
+impl From<DiagnosticAudienceReport> for DiagnosticAudienceReportDto {
+    fn from(value: DiagnosticAudienceReport) -> Self {
+        Self {
+            audience: value.audience,
+            headline: value.headline,
+            narrative: value.narrative,
+            strengths: value.strengths,
+            fragile_areas: value.fragile_areas,
+            critical_areas: value.critical_areas,
+            action_plan: value.action_plan,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticSubjectBlueprintDto {
+    pub subject_id: i64,
+    pub blueprint_code: String,
+    pub subject_name: String,
+    pub session_modes: Value,
+    pub stage_rules: Value,
+    pub item_family_mix: Vec<Value>,
+    pub routing_contract: Value,
+    pub report_contract: Value,
+}
+
+impl From<DiagnosticSubjectBlueprint> for DiagnosticSubjectBlueprintDto {
+    fn from(value: DiagnosticSubjectBlueprint) -> Self {
+        Self {
+            subject_id: value.subject_id,
+            blueprint_code: value.blueprint_code,
+            subject_name: value.subject_name,
+            session_modes: value.session_modes,
+            stage_rules: value.stage_rules,
+            item_family_mix: value.item_family_mix,
+            routing_contract: value.routing_contract,
+            report_contract: value.report_contract,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticItemRoutingProfileDto {
+    pub question_id: i64,
+    pub subject_id: i64,
+    pub topic_id: i64,
+    pub family_id: Option<i64>,
+    pub item_family: String,
+    pub recognition_suitable: bool,
+    pub recall_suitable: bool,
+    pub transfer_suitable: bool,
+    pub timed_suitable: bool,
+    pub confidence_prompt: String,
+    pub recommended_stages: Vec<String>,
+    pub sibling_variant_modes: Vec<String>,
+    pub routing_notes: Value,
+}
+
+impl From<DiagnosticItemRoutingProfile> for DiagnosticItemRoutingProfileDto {
+    fn from(value: DiagnosticItemRoutingProfile) -> Self {
+        Self {
+            question_id: value.question_id,
+            subject_id: value.subject_id,
+            topic_id: value.topic_id,
+            family_id: value.family_id,
+            item_family: value.item_family,
+            recognition_suitable: value.recognition_suitable,
+            recall_suitable: value.recall_suitable,
+            transfer_suitable: value.transfer_suitable,
+            timed_suitable: value.timed_suitable,
+            confidence_prompt: value.confidence_prompt,
+            recommended_stages: value.recommended_stages,
+            sibling_variant_modes: value.sibling_variant_modes,
+            routing_notes: value.routing_notes,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticProblemCauseFixCardDto {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub problem_summary: String,
+    pub cause_summary: String,
+    pub fix_summary: String,
+    pub confidence_score: i64,
+    pub impact_score: i64,
+    pub unlock_summary: Option<String>,
+    pub evidence: Value,
+}
+
+impl From<DiagnosticProblemCauseFixCard> for DiagnosticProblemCauseFixCardDto {
+    fn from(value: DiagnosticProblemCauseFixCard) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            problem_summary: value.problem_summary,
+            cause_summary: value.cause_summary,
+            fix_summary: value.fix_summary,
+            confidence_score: value.confidence_score as i64,
+            impact_score: value.impact_score as i64,
+            unlock_summary: value.unlock_summary,
+            evidence: value.evidence,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DiagnosticInterventionPrescriptionDto {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub primary_mode_code: String,
+    pub support_mode_code: Option<String>,
+    pub recheck_mode_code: Option<String>,
+    pub mode_chain: Vec<String>,
+    pub contraindications: Vec<String>,
+    pub success_signals: Vec<String>,
+    pub confidence_score: i64,
+    pub payload: Value,
+}
+
+impl From<DiagnosticInterventionPrescription> for DiagnosticInterventionPrescriptionDto {
+    fn from(value: DiagnosticInterventionPrescription) -> Self {
+        Self {
+            topic_id: value.topic_id,
+            topic_name: value.topic_name,
+            primary_mode_code: value.primary_mode_code,
+            support_mode_code: value.support_mode_code,
+            recheck_mode_code: value.recheck_mode_code,
+            mode_chain: value.mode_chain,
+            contraindications: value.contraindications,
+            success_signals: value.success_signals,
+            confidence_score: value.confidence_score as i64,
+            payload: value.payload,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TopicDiagnosticLongitudinalSignalDto {
     pub previous_diagnostic_id: Option<i64>,
     pub previous_completed_at: Option<String>,
@@ -1038,7 +1380,10 @@ pub struct TopicDiagnosticResultDto {
     pub pressure_score: i64,
     pub flexibility_score: i64,
     pub stability_score: i64,
+    pub endurance_score: i64,
     pub classification: String,
+    pub weakness_type: Option<String>,
+    pub failure_stage: Option<String>,
     pub longitudinal_signal: Option<TopicDiagnosticLongitudinalSignalDto>,
 }
 
@@ -1053,7 +1398,10 @@ impl From<TopicDiagnosticResult> for TopicDiagnosticResultDto {
             pressure_score: value.pressure_score as i64,
             flexibility_score: value.flexibility_score as i64,
             stability_score: value.stability_score as i64,
+            endurance_score: value.endurance_score as i64,
             classification: value.classification,
+            weakness_type: value.weakness_type,
+            failure_stage: value.failure_stage,
             longitudinal_signal: value
                 .longitudinal_signal
                 .map(TopicDiagnosticLongitudinalSignalDto::from),
@@ -1106,7 +1454,16 @@ pub struct DiagnosticResultDto {
     pub readiness_band: String,
     pub topic_results: Vec<TopicDiagnosticResultDto>,
     pub recommended_next_actions: Vec<String>,
+    pub overall_summary: DiagnosticOverallSummaryDto,
+    pub session_scores: Vec<DiagnosticSessionScoreDto>,
+    pub condition_metrics: DiagnosticConditionMetricsDto,
+    pub skill_results: Vec<DiagnosticSkillResultDto>,
+    pub recommendations: Vec<DiagnosticRecommendationDto>,
+    pub learning_profile: Option<DiagnosticLearningProfileDto>,
+    pub audience_reports: Vec<DiagnosticAudienceReportDto>,
     pub longitudinal_summary: Option<DiagnosticLongitudinalSummaryDto>,
+    pub problem_cause_fix_cards: Vec<DiagnosticProblemCauseFixCardDto>,
+    pub intervention_prescriptions: Vec<DiagnosticInterventionPrescriptionDto>,
 }
 
 impl From<DiagnosticResult> for DiagnosticResultDto {
@@ -1114,6 +1471,31 @@ impl From<DiagnosticResult> for DiagnosticResultDto {
         Self {
             overall_readiness: value.overall_readiness as i64,
             readiness_band: value.readiness_band,
+            overall_summary: value.overall_summary.into(),
+            session_scores: value
+                .session_scores
+                .into_iter()
+                .map(DiagnosticSessionScoreDto::from)
+                .collect(),
+            condition_metrics: value.condition_metrics.into(),
+            skill_results: value
+                .skill_results
+                .into_iter()
+                .map(DiagnosticSkillResultDto::from)
+                .collect(),
+            recommendations: value
+                .recommendations
+                .into_iter()
+                .map(DiagnosticRecommendationDto::from)
+                .collect(),
+            learning_profile: value
+                .learning_profile
+                .map(DiagnosticLearningProfileDto::from),
+            audience_reports: value
+                .audience_reports
+                .into_iter()
+                .map(DiagnosticAudienceReportDto::from)
+                .collect(),
             topic_results: value
                 .topic_results
                 .into_iter()
@@ -1123,6 +1505,16 @@ impl From<DiagnosticResult> for DiagnosticResultDto {
             longitudinal_summary: value
                 .longitudinal_summary
                 .map(DiagnosticLongitudinalSummaryDto::from),
+            problem_cause_fix_cards: value
+                .problem_cause_fix_cards
+                .into_iter()
+                .map(DiagnosticProblemCauseFixCardDto::from)
+                .collect(),
+            intervention_prescriptions: value
+                .intervention_prescriptions
+                .into_iter()
+                .map(DiagnosticInterventionPrescriptionDto::from)
+                .collect(),
         }
     }
 }
@@ -1385,6 +1777,228 @@ impl From<ContrastPairSummary> for ContrastPairSummaryDto {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastConceptAttributeDto {
+    pub id: i64,
+    pub pair_id: i64,
+    pub concept_side: String,
+    pub lane: String,
+    pub attribute_label: String,
+    pub attribute_value: String,
+    pub importance_weight_bp: i64,
+    pub difficulty_score: i64,
+    pub source_confidence_bp: i64,
+}
+
+impl From<ContrastConceptAttribute> for ContrastConceptAttributeDto {
+    fn from(value: ContrastConceptAttribute) -> Self {
+        Self {
+            id: value.id,
+            pair_id: value.pair_id,
+            concept_side: value.concept_side,
+            lane: value.lane,
+            attribute_label: value.attribute_label,
+            attribute_value: value.attribute_value,
+            importance_weight_bp: value.importance_weight_bp as i64,
+            difficulty_score: value.difficulty_score as i64,
+            source_confidence_bp: value.source_confidence_bp as i64,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastComparisonRowDto {
+    pub id: i64,
+    pub pair_id: i64,
+    pub lane: String,
+    pub compare_label: String,
+    pub left_value: String,
+    pub right_value: String,
+    pub overlap_note: Option<String>,
+    pub decisive_clue: Option<String>,
+    pub teaching_note: Option<String>,
+    pub diagram_asset_id: Option<i64>,
+    pub display_order: i64,
+}
+
+impl From<ContrastComparisonRow> for ContrastComparisonRowDto {
+    fn from(value: ContrastComparisonRow) -> Self {
+        Self {
+            id: value.id,
+            pair_id: value.pair_id,
+            lane: value.lane,
+            compare_label: value.compare_label,
+            left_value: value.left_value,
+            right_value: value.right_value,
+            overlap_note: value.overlap_note,
+            decisive_clue: value.decisive_clue,
+            teaching_note: value.teaching_note,
+            diagram_asset_id: value.diagram_asset_id,
+            display_order: value.display_order,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastDiagramAssetDto {
+    pub id: i64,
+    pub pair_id: i64,
+    pub concept_side: Option<String>,
+    pub lane: String,
+    pub diagram_type: String,
+    pub asset_ref: String,
+    pub prompt_payload: Value,
+    pub visual_clues: Vec<String>,
+    pub decisive_visual_clue: Option<String>,
+    pub trap_potential: Option<String>,
+    pub usable_modes: Vec<String>,
+}
+
+impl From<ContrastDiagramAsset> for ContrastDiagramAssetDto {
+    fn from(value: ContrastDiagramAsset) -> Self {
+        Self {
+            id: value.id,
+            pair_id: value.pair_id,
+            concept_side: value.concept_side,
+            lane: value.lane,
+            diagram_type: value.diagram_type,
+            asset_ref: value.asset_ref,
+            prompt_payload: value.prompt_payload,
+            visual_clues: value.visual_clues,
+            decisive_visual_clue: value.decisive_visual_clue,
+            trap_potential: value.trap_potential,
+            usable_modes: value.usable_modes,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastModeItemDto {
+    pub id: i64,
+    pub pair_id: i64,
+    pub mode: String,
+    pub source_atom_id: Option<i64>,
+    pub comparison_row_id: Option<i64>,
+    pub diagram_asset_id: Option<i64>,
+    pub prompt_type: String,
+    pub prompt_text: String,
+    pub prompt_payload: Value,
+    pub answer_options: Vec<TrapChoiceOptionDto>,
+    pub correct_choice_code: Option<String>,
+    pub correct_choice_label: Option<String>,
+    pub difficulty_score: i64,
+    pub time_limit_seconds: Option<i64>,
+    pub explanation_bundle: Value,
+    pub misconception_reason_codes: Vec<String>,
+    pub is_active: bool,
+    pub display_order: i64,
+}
+
+impl From<ContrastModeItem> for ContrastModeItemDto {
+    fn from(value: ContrastModeItem) -> Self {
+        Self {
+            id: value.id,
+            pair_id: value.pair_id,
+            mode: value.mode,
+            source_atom_id: value.source_atom_id,
+            comparison_row_id: value.comparison_row_id,
+            diagram_asset_id: value.diagram_asset_id,
+            prompt_type: value.prompt_type,
+            prompt_text: value.prompt_text,
+            prompt_payload: value.prompt_payload,
+            answer_options: value
+                .answer_options
+                .into_iter()
+                .map(TrapChoiceOptionDto::from)
+                .collect(),
+            correct_choice_code: value.correct_choice_code,
+            correct_choice_label: value.correct_choice_label,
+            difficulty_score: value.difficulty_score as i64,
+            time_limit_seconds: value.time_limit_seconds,
+            explanation_bundle: value.explanation_bundle,
+            misconception_reason_codes: value.misconception_reason_codes,
+            is_active: value.is_active,
+            display_order: value.display_order,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrapMisconceptionReasonDto {
+    pub code: String,
+    pub label: String,
+    pub category: String,
+    pub modes: Vec<String>,
+    pub display_order: i64,
+    pub is_active: bool,
+}
+
+impl From<TrapMisconceptionReason> for TrapMisconceptionReasonDto {
+    fn from(value: TrapMisconceptionReason) -> Self {
+        Self {
+            code: value.code,
+            label: value.label,
+            category: value.category,
+            modes: value.modes,
+            display_order: value.display_order,
+            is_active: value.is_active,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastPairProfileDto {
+    pub pair_summary: ContrastPairSummaryDto,
+    pub left_profile: Value,
+    pub right_profile: Value,
+    pub shared_traits: Vec<String>,
+    pub decisive_differences: Vec<String>,
+    pub common_confusions: Vec<String>,
+    pub trap_angles: Vec<String>,
+    pub coverage: Value,
+    pub generator_contract: Value,
+    pub concept_attributes: Vec<ContrastConceptAttributeDto>,
+    pub comparison_rows: Vec<ContrastComparisonRowDto>,
+    pub diagram_assets: Vec<ContrastDiagramAssetDto>,
+    pub mode_items: Vec<ContrastModeItemDto>,
+}
+
+impl From<ContrastPairProfile> for ContrastPairProfileDto {
+    fn from(value: ContrastPairProfile) -> Self {
+        Self {
+            pair_summary: ContrastPairSummaryDto::from(value.pair_summary),
+            left_profile: value.left_profile,
+            right_profile: value.right_profile,
+            shared_traits: value.shared_traits,
+            decisive_differences: value.decisive_differences,
+            common_confusions: value.common_confusions,
+            trap_angles: value.trap_angles,
+            coverage: value.coverage,
+            generator_contract: value.generator_contract,
+            concept_attributes: value
+                .concept_attributes
+                .into_iter()
+                .map(ContrastConceptAttributeDto::from)
+                .collect(),
+            comparison_rows: value
+                .comparison_rows
+                .into_iter()
+                .map(ContrastComparisonRowDto::from)
+                .collect(),
+            diagram_assets: value
+                .diagram_assets
+                .into_iter()
+                .map(ContrastDiagramAssetDto::from)
+                .collect(),
+            mode_items: value
+                .mode_items
+                .into_iter()
+                .map(ContrastModeItemDto::from)
+                .collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrapChoiceOptionDto {
     pub code: String,
     pub label: String,
@@ -1498,6 +2112,7 @@ pub struct TrapRoundResultDto {
     pub correct_choice_code: String,
     pub correct_choice_label: String,
     pub explanation_text: String,
+    pub review_payload: Value,
     pub confusion_signal: String,
     pub next_round_id: Option<i64>,
     pub session_complete: bool,
@@ -1517,6 +2132,7 @@ impl From<TrapRoundResult> for TrapRoundResultDto {
             correct_choice_code: value.correct_choice_code,
             correct_choice_label: value.correct_choice_label,
             explanation_text: value.explanation_text,
+            review_payload: value.review_payload,
             confusion_signal: value.confusion_signal,
             next_round_id: value.next_round_id,
             session_complete: value.session_complete,
@@ -1539,6 +2155,7 @@ pub struct TrapReviewRoundDto {
     pub confusion_reason_code: Option<String>,
     pub confusion_reason_text: Option<String>,
     pub explanation_text: String,
+    pub review_payload: Value,
 }
 
 impl From<TrapReviewRound> for TrapReviewRoundDto {
@@ -1557,6 +2174,7 @@ impl From<TrapReviewRound> for TrapReviewRoundDto {
             confusion_reason_code: value.confusion_reason_code,
             confusion_reason_text: value.confusion_reason_text,
             explanation_text: value.explanation_text,
+            review_payload: value.review_payload,
         }
     }
 }
@@ -1950,6 +2568,180 @@ impl From<RelatedQuestion> for RelatedQuestionDto {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionIntelligenceLinkDto {
+    pub axis_code: String,
+    pub concept_code: String,
+    pub display_name: String,
+    pub confidence_score: i64,
+    pub is_primary: bool,
+}
+
+impl From<QuestionIntelligenceLink> for QuestionIntelligenceLinkDto {
+    fn from(value: QuestionIntelligenceLink) -> Self {
+        Self {
+            axis_code: value.axis_code,
+            concept_code: value.concept_code,
+            display_name: value.display_name,
+            confidence_score: value.confidence_score as i64,
+            is_primary: value.is_primary,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionFamilySummaryDto {
+    pub family_id: Option<i64>,
+    pub family_code: Option<String>,
+    pub family_name: Option<String>,
+    pub family_type: Option<String>,
+    pub similarity_score: i64,
+}
+
+impl From<QuestionFamilySummary> for QuestionFamilySummaryDto {
+    fn from(value: QuestionFamilySummary) -> Self {
+        Self {
+            family_id: value.family_id,
+            family_code: value.family_code,
+            family_name: value.family_name,
+            family_type: value.family_type,
+            similarity_score: value.similarity_score as i64,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionMisconceptionTagDto {
+    pub misconception_code: String,
+    pub confidence_score: i64,
+    pub source: String,
+}
+
+impl From<QuestionMisconceptionTag> for QuestionMisconceptionTagDto {
+    fn from(value: QuestionMisconceptionTag) -> Self {
+        Self {
+            misconception_code: value.misconception_code,
+            confidence_score: value.confidence_score as i64,
+            source: value.source,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionReviewStateDto {
+    pub review_status: String,
+    pub review_reason: Option<String>,
+    pub reviewer_id: Option<String>,
+    pub reviewed_at: Option<String>,
+    pub needs_review: bool,
+    pub classification_source: String,
+    pub taxonomy_version: String,
+    pub classification_version: String,
+}
+
+impl From<QuestionReviewState> for QuestionReviewStateDto {
+    fn from(value: QuestionReviewState) -> Self {
+        Self {
+            review_status: value.review_status,
+            review_reason: value.review_reason,
+            reviewer_id: value.reviewer_id,
+            reviewed_at: value.reviewed_at,
+            needs_review: value.needs_review,
+            classification_source: value.classification_source,
+            taxonomy_version: value.taxonomy_version,
+            classification_version: value.classification_version,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionIntelligenceSnapshotDto {
+    pub question_id: i64,
+    pub subject_id: i64,
+    pub topic_id: i64,
+    pub subtopic_id: Option<i64>,
+    pub family_id: Option<i64>,
+    pub stem: String,
+    pub question_format: String,
+    pub difficulty_level: i64,
+    pub machine_confidence_score: i64,
+    pub knowledge_role: Option<String>,
+    pub cognitive_demand: Option<String>,
+    pub solve_pattern: Option<String>,
+    pub pedagogic_function: Option<String>,
+    pub content_grain: Option<String>,
+    pub family: Option<QuestionFamilySummaryDto>,
+    pub misconceptions: Vec<QuestionMisconceptionTagDto>,
+    pub review: QuestionReviewStateDto,
+    pub links: Vec<QuestionIntelligenceLinkDto>,
+    pub snapshot: Value,
+}
+
+impl From<QuestionIntelligenceSnapshot> for QuestionIntelligenceSnapshotDto {
+    fn from(value: QuestionIntelligenceSnapshot) -> Self {
+        Self {
+            question_id: value.question.id,
+            subject_id: value.question.subject_id,
+            topic_id: value.question.topic_id,
+            subtopic_id: value.question.subtopic_id,
+            family_id: value.question.family_id,
+            stem: value.question.stem,
+            question_format: value.question.question_format,
+            difficulty_level: value.question.difficulty_level as i64,
+            machine_confidence_score: value.machine_confidence_score as i64,
+            knowledge_role: value.knowledge_role,
+            cognitive_demand: value.cognitive_demand,
+            solve_pattern: value.solve_pattern,
+            pedagogic_function: value.pedagogic_function,
+            content_grain: value.content_grain,
+            family: value.family.map(QuestionFamilySummaryDto::from),
+            misconceptions: value
+                .misconceptions
+                .into_iter()
+                .map(QuestionMisconceptionTagDto::from)
+                .collect(),
+            review: QuestionReviewStateDto::from(value.review),
+            links: value
+                .links
+                .into_iter()
+                .map(QuestionIntelligenceLinkDto::from)
+                .collect(),
+            snapshot: value.snapshot,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionReviewQueueItemDto {
+    pub question_id: i64,
+    pub stem: String,
+    pub topic_id: i64,
+    pub machine_confidence_score: i64,
+    pub review_status: String,
+    pub review_reason: Option<String>,
+    pub family_candidate: Option<QuestionFamilySummaryDto>,
+    pub misconception_candidates: Vec<QuestionMisconceptionTagDto>,
+}
+
+impl From<QuestionReviewQueueItem> for QuestionReviewQueueItemDto {
+    fn from(value: QuestionReviewQueueItem) -> Self {
+        Self {
+            question_id: value.question_id,
+            stem: value.stem,
+            topic_id: value.topic_id,
+            machine_confidence_score: value.machine_confidence_score as i64,
+            review_status: value.review_status,
+            review_reason: value.review_reason,
+            family_candidate: value.family_candidate.map(QuestionFamilySummaryDto::from),
+            misconception_candidates: value
+                .misconception_candidates
+                .into_iter()
+                .map(QuestionMisconceptionTagDto::from)
+                .collect(),
+        }
+    }
+}
+
 fn last_active_label(last_active_at: Option<DateTime<Utc>>) -> String {
     let Some(last_active_at) = last_active_at else {
         return "Never active".to_string();
@@ -2278,6 +3070,10 @@ mod tests {
                 confusion_reason_code: Some("near_miss_language".to_string()),
                 confusion_reason_text: Some("Both sounded like movement.".to_string()),
                 explanation_text: "Displacement includes direction.".to_string(),
+                review_payload: serde_json::json!({
+                    "why_correct": "Displacement tracks direction.",
+                    "missed_clue": "includes direction"
+                }),
             }],
         });
 

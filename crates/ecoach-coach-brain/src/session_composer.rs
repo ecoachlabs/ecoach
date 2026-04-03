@@ -1,9 +1,8 @@
-use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
+use ecoach_substrate::{EcoachError, EcoachResult};
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
 
-use crate::journey_adaptation::RouteMode;
+use crate::{CanonicalIntelligenceStore, journey_adaptation::RouteMode};
 
 // ---------------------------------------------------------------------------
 // Question intent: why each question is being shown
@@ -24,6 +23,115 @@ pub enum QuestionIntent {
     Recovery,
     MiniMock,
     Challenge,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ecoach_content::PackService;
+    use ecoach_storage::run_runtime_migrations;
+    use rusqlite::Connection;
+    use std::path::PathBuf;
+
+    #[test]
+    fn session_composer_prefers_canonical_review_timing_actions() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+        seed_student(&conn);
+
+        conn.execute(
+            "INSERT INTO ic_timing_decisions (
+                decision_id, learner_id, subject_id, topic_id, action_type, action_scope,
+                scheduled_for, current_phase, rationale_json, source_engine, consumed,
+                owner_engine_key, updated_at
+             ) VALUES (
+                'timing-review', 1, 1, NULL, 'delayed_recall', 'subject',
+                datetime('now'), 'review', '{}', 'timing', 0,
+                'timing', datetime('now')
+             )",
+            [],
+        )
+        .expect("timing decision should insert");
+
+        let session =
+            SessionComposer::new(&conn).compose_session(1, 1, "foundation", RouteMode::Balanced, 40)
+                .expect("session should compose");
+
+        assert_eq!(session.route_mode, RouteMode::Balanced);
+        assert_eq!(session.segments[0].segment_mode, "spaced_recall");
+    }
+
+    #[test]
+    fn session_composer_prefers_canonical_risk_and_adaptation_inputs() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db should open");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        PackService::new(&conn)
+            .install_pack(&sample_pack_path())
+            .expect("sample pack should install");
+        seed_student(&conn);
+
+        conn.execute(
+            "INSERT INTO ic_adaptation_log (
+                adaptation_id, learner_id, subject_id, topic_id, mode, trigger_reason,
+                what_changed_json, previous_strategy_json, new_strategy_json,
+                tension_at_time_json, owner_engine_key, created_at, updated_at
+             ) VALUES (
+                'adaptation-1', 1, 1, NULL, 'reactivation', 'absence_warning',
+                '[]', '{}', '{}', '{}', 'adaptation', datetime('now'), datetime('now')
+             )",
+            [],
+        )
+        .expect("adaptation log should insert");
+        conn.execute(
+            "INSERT INTO ic_risk_assessments (
+                assessment_id, learner_id, subject_id, topic_id, scope, risk_code,
+                risk_level, risk_score, protection_policy_json, rationale_json,
+                owner_engine_key, updated_at
+             ) VALUES (
+                'risk-1', 1, 1, NULL, 'subject', 'coach_readiness',
+                'critical', 9000, '{}', '{}', 'risk', datetime('now')
+             )",
+            [],
+        )
+        .expect("risk assessment should insert");
+
+        let session =
+            SessionComposer::new(&conn).compose_session(1, 1, "foundation", RouteMode::Balanced, 40)
+                .expect("session should compose");
+
+        assert_eq!(session.route_mode, RouteMode::Rescue);
+        assert_eq!(session.segments[0].segment_mode, "triage");
+    }
+
+    fn seed_student(conn: &Connection) {
+        conn.execute(
+            "INSERT INTO accounts (
+                id, account_type, display_name, pin_hash, pin_salt, entitlement_tier
+             ) VALUES (1, 'student', 'Ama', 'hash', 'salt', 'standard')",
+            [],
+        )
+        .expect("student account should insert");
+        conn.execute(
+            "INSERT INTO student_profiles (
+                account_id, exam_target, exam_target_date, preferred_subjects
+             ) VALUES (1, 'BECE', date('now', '+90 day'), '[\"MTH\"]')",
+            [],
+        )
+        .expect("student profile should insert");
+    }
+
+    fn sample_pack_path() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("crate directory should have workspace parent")
+            .parent()
+            .expect("workspace root should exist")
+            .join("packs")
+            .join("math-bece-sample")
+    }
 }
 
 impl QuestionIntent {
@@ -93,8 +201,16 @@ impl<'a> SessionComposer<'a> {
         daily_budget_minutes: i64,
     ) -> EcoachResult<ComposedSession> {
         let budget = daily_budget_minutes.max(15).min(120);
+        let canonical_inputs = CanonicalIntelligenceStore::new(self.conn).resolve_session_inputs(
+            student_id,
+            subject_id,
+            station_type,
+            route_mode,
+        )?;
+        let effective_station_type = canonical_inputs.station_type.as_str();
+        let effective_route_mode = canonical_inputs.route_mode;
 
-        let segments = match (route_mode, station_type) {
+        let segments = match (effective_route_mode, effective_station_type) {
             // Deep mastery: thorough learning + practice + review
             (RouteMode::DeepMastery, "foundation") => self.deep_foundation_segments(budget),
             (RouteMode::DeepMastery, _) => self.deep_mastery_segments(budget),
@@ -123,7 +239,7 @@ impl<'a> SessionComposer<'a> {
         let total_questions: usize = segments.iter().map(|s| s.question_count).sum();
         let total_duration: i64 = segments.iter().map(|s| s.duration_minutes).sum();
 
-        let purpose = match route_mode {
+        let purpose = match effective_route_mode {
             RouteMode::DeepMastery => "Build deep understanding with thorough practice",
             RouteMode::Balanced => "Balanced preparation across concepts",
             RouteMode::HighYield => "Focus on highest exam-impact areas",
@@ -132,11 +248,11 @@ impl<'a> SessionComposer<'a> {
         };
 
         Ok(ComposedSession {
-            session_label: format!("{} session", route_mode.as_str()),
+            session_label: format!("{} session", effective_route_mode.as_str()),
             total_questions,
             total_duration_minutes: total_duration,
             segments,
-            route_mode,
+            route_mode: effective_route_mode,
             purpose: purpose.into(),
         })
     }
@@ -148,8 +264,8 @@ impl<'a> SessionComposer<'a> {
         composition: &ComposedSession,
     ) -> EcoachResult<()> {
         for segment in &composition.segments {
-            let intent_json = serde_json::to_string(&segment.question_intents)
-                .unwrap_or_else(|_| "[]".into());
+            let intent_json =
+                serde_json::to_string(&segment.question_intents).unwrap_or_else(|_| "[]".into());
 
             self.conn
                 .execute(
@@ -320,7 +436,10 @@ impl<'a> SessionComposer<'a> {
                 segment_label: "Spot the Gap".into(),
                 question_count: 3,
                 duration_minutes: (budget * 20 / 100).max(3),
-                question_intents: vec![QuestionIntent::Discovery, QuestionIntent::MisconceptionProbe],
+                question_intents: vec![
+                    QuestionIntent::Discovery,
+                    QuestionIntent::MisconceptionProbe,
+                ],
             },
             SessionSegment {
                 segment_order: 2,
@@ -623,7 +742,10 @@ impl<'a> SessionComposer<'a> {
                 segment_label: "Transfer Proof".into(),
                 question_count: 3,
                 duration_minutes: (budget * 25 / 100).max(5),
-                question_intents: vec![QuestionIntent::Transfer, QuestionIntent::MisconceptionProbe],
+                question_intents: vec![
+                    QuestionIntent::Transfer,
+                    QuestionIntent::MisconceptionProbe,
+                ],
             },
         ]
     }

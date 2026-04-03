@@ -53,10 +53,16 @@ impl TransformationStage {
 
     pub fn purpose(self) -> &'static str {
         match self {
-            Self::Rescue => "Find the lowest-level gaps, rebuild understanding, get first wins quickly",
-            Self::Stabilize => "Repeated practice, concept clusters, misconception correction, reliability",
+            Self::Rescue => {
+                "Find the lowest-level gaps, rebuild understanding, get first wins quickly"
+            }
+            Self::Stabilize => {
+                "Repeated practice, concept clusters, misconception correction, reliability"
+            }
             Self::Accelerate => "Timed drills, mixed topics, pressure tolerance, faster recall",
-            Self::Dominate => "Advanced variants, trap questions, exam strategy, speed + accuracy together",
+            Self::Dominate => {
+                "Advanced variants, trap questions, exam strategy, speed + accuracy together"
+            }
             Self::Completed => "You have been transformed from struggling to strong",
         }
     }
@@ -119,13 +125,16 @@ impl<'a> RiseModeEngine<'a> {
         let recovery_plan = self.build_recovery_plan(student_id, subject_id, stage)?;
 
         let readiness = self.compute_transformation_readiness(
-            foundation, recall, speed, accuracy, pressure, misconception,
+            foundation,
+            recall,
+            speed,
+            accuracy,
+            pressure,
+            misconception,
         );
 
-        let weakness_json = serde_json::to_string(&weakness_map)
-            .unwrap_or_else(|_| "{}".into());
-        let plan_json = serde_json::to_string(&recovery_plan)
-            .unwrap_or_else(|_| "{}".into());
+        let weakness_json = serde_json::to_string(&weakness_map).unwrap_or_else(|_| "{}".into());
+        let plan_json = serde_json::to_string(&recovery_plan).unwrap_or_else(|_| "{}".into());
 
         self.conn
             .execute(
@@ -144,10 +153,20 @@ impl<'a> RiseModeEngine<'a> {
                     weakness_map_json = ?13, recovery_plan_json = ?14,
                     stage_entered_at = datetime('now'), updated_at = datetime('now')",
                 params![
-                    student_id, subject_id, stage.as_str(),
-                    foundation as i64, recall as i64, speed as i64, accuracy as i64,
-                    pressure as i64, misconception as i64, momentum as i64,
-                    readiness as i64, confidence as i64, weakness_json, plan_json,
+                    student_id,
+                    subject_id,
+                    stage.as_str(),
+                    foundation as i64,
+                    recall as i64,
+                    speed as i64,
+                    accuracy as i64,
+                    pressure as i64,
+                    misconception as i64,
+                    momentum as i64,
+                    readiness as i64,
+                    confidence as i64,
+                    weakness_json,
+                    plan_json,
                 ],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -231,32 +250,46 @@ impl<'a> RiseModeEngine<'a> {
         let next = match current {
             TransformationStage::Rescue => {
                 if profile.foundation_score >= 5000 && profile.accuracy_score >= 4000 {
-                    Some((TransformationStage::Stabilize, "Foundation rebuilt — ready to stabilize"))
+                    Some((
+                        TransformationStage::Stabilize,
+                        "Foundation rebuilt — ready to stabilize",
+                    ))
                 } else {
                     None
                 }
             }
             TransformationStage::Stabilize => {
-                if profile.accuracy_score >= 6500 && profile.recall_score >= 5000
+                if profile.accuracy_score >= 6500
+                    && profile.recall_score >= 5000
                     && profile.misconception_density_score < 3000
                 {
-                    Some((TransformationStage::Accelerate, "Thinking is reliable — ready to accelerate"))
+                    Some((
+                        TransformationStage::Accelerate,
+                        "Thinking is reliable — ready to accelerate",
+                    ))
                 } else {
                     None
                 }
             }
             TransformationStage::Accelerate => {
-                if profile.speed_score >= 6000 && profile.pressure_stability_score >= 6000
+                if profile.speed_score >= 6000
+                    && profile.pressure_stability_score >= 6000
                     && profile.accuracy_score >= 7500
                 {
-                    Some((TransformationStage::Dominate, "Speed and composure achieved — ready to dominate"))
+                    Some((
+                        TransformationStage::Dominate,
+                        "Speed and composure achieved — ready to dominate",
+                    ))
                 } else {
                     None
                 }
             }
             TransformationStage::Dominate => {
                 if profile.transformation_readiness_score >= 8500 {
-                    Some((TransformationStage::Completed, "Transformation complete — you have risen"))
+                    Some((
+                        TransformationStage::Completed,
+                        "Transformation complete — you have risen",
+                    ))
                 } else {
                     None
                 }
@@ -289,56 +322,94 @@ impl<'a> RiseModeEngine<'a> {
     // Score computation
     // -----------------------------------------------------------------------
 
-    fn compute_foundation_score(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
-        let avg_mastery: i64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(mastery_score), 0) FROM student_topic_states
+    fn compute_foundation_score(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<BasisPoints> {
+        let avg_mastery: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(mastery_score), 0) FROM student_topic_states
              WHERE student_id = ?1 AND topic_id IN (SELECT id FROM topics WHERE subject_id = ?2)",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         Ok(clamp_bp(avg_mastery))
     }
 
     fn compute_recall_score(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
-        let avg_retention: i64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(retention_score), 0) FROM student_topic_states
+        let avg_retention: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(retention_score), 0) FROM student_topic_states
              WHERE student_id = ?1 AND topic_id IN (SELECT id FROM topics WHERE subject_id = ?2)",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         Ok(clamp_bp(avg_retention))
     }
 
     fn compute_speed_score(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
-        let avg_speed: i64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(speed_score), 0) FROM student_topic_states
+        let avg_speed: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(speed_score), 0) FROM student_topic_states
              WHERE student_id = ?1 AND topic_id IN (SELECT id FROM topics WHERE subject_id = ?2)",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         Ok(clamp_bp(avg_speed))
     }
 
-    fn compute_accuracy_score(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
-        let (total, correct): (i64, i64) = self.conn.query_row(
-            "SELECT COUNT(*), SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END)
+    fn compute_accuracy_score(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<BasisPoints> {
+        let (total, correct): (i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*), SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END)
              FROM student_question_attempts
              WHERE student_id = ?1 AND question_id IN (
                  SELECT id FROM questions WHERE subject_id = ?2
              ) AND created_at >= datetime('now', '-30 days')",
-            params![student_id, subject_id], |row| Ok((row.get(0)?, row.get(1)?)),
-        ).unwrap_or((0, 0));
-        if total == 0 { return Ok(0); }
+                params![student_id, subject_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap_or((0, 0));
+        if total == 0 {
+            return Ok(0);
+        }
         Ok(to_bp(correct as f64 / total as f64))
     }
 
-    fn compute_pressure_stability(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
-        let avg_pci: i64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(pressure_collapse_index), 5000) FROM student_topic_states
+    fn compute_pressure_stability(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<BasisPoints> {
+        let avg_pci: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(pressure_collapse_index), 5000) FROM student_topic_states
              WHERE student_id = ?1 AND topic_id IN (SELECT id FROM topics WHERE subject_id = ?2)",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(5000);
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(5000);
         Ok(clamp_bp(10_000 - avg_pci)) // invert: high PCI = low stability
     }
 
-    fn compute_misconception_density(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
+    fn compute_misconception_density(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<BasisPoints> {
         let count: i64 = self.conn.query_row(
             "SELECT COUNT(*) FROM learner_misconception_states
              WHERE student_id = ?1 AND subject_id = ?2 AND current_status IN ('active', 'suspected')",
@@ -347,18 +418,31 @@ impl<'a> RiseModeEngine<'a> {
         Ok(clamp_bp((count as f64 / 5.0).min(1.0) as i64 * 10_000))
     }
 
-    fn compute_confidence_score(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
-        let avg_conf: i64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(confidence_score), 5000) FROM student_topic_states
+    fn compute_confidence_score(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<BasisPoints> {
+        let avg_conf: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(confidence_score), 5000) FROM student_topic_states
              WHERE student_id = ?1 AND topic_id IN (SELECT id FROM topics WHERE subject_id = ?2)",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(5000);
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(5000);
         Ok(clamp_bp(avg_conf))
     }
 
     fn compute_transformation_readiness(
-        &self, foundation: BasisPoints, recall: BasisPoints, speed: BasisPoints,
-        accuracy: BasisPoints, pressure: BasisPoints, misconception: BasisPoints,
+        &self,
+        foundation: BasisPoints,
+        recall: BasisPoints,
+        speed: BasisPoints,
+        accuracy: BasisPoints,
+        pressure: BasisPoints,
+        misconception: BasisPoints,
     ) -> BasisPoints {
         clamp_bp(
             ((foundation as f64 * 0.20
@@ -372,7 +456,10 @@ impl<'a> RiseModeEngine<'a> {
     }
 
     fn determine_initial_stage(
-        &self, foundation: BasisPoints, accuracy: BasisPoints, speed: BasisPoints,
+        &self,
+        foundation: BasisPoints,
+        accuracy: BasisPoints,
+        speed: BasisPoints,
     ) -> TransformationStage {
         if foundation < 3000 || accuracy < 3000 {
             TransformationStage::Rescue
@@ -386,28 +473,37 @@ impl<'a> RiseModeEngine<'a> {
     }
 
     fn build_weakness_map(&self, student_id: i64, subject_id: i64) -> EcoachResult<Value> {
-        let mut stmt = self.conn.prepare(
-            "SELECT t.name, sts.mastery_score, sts.gap_score
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT t.name, sts.mastery_score, sts.gap_score
              FROM student_topic_states sts
              INNER JOIN topics t ON t.id = sts.topic_id
              WHERE sts.student_id = ?1 AND t.subject_id = ?2
              ORDER BY sts.gap_score DESC LIMIT 10",
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let rows: Vec<Value> = stmt.query_map(params![student_id, subject_id], |row| {
-            Ok(json!({
-                "topic": row.get::<_, String>(1)?,
-                "mastery": row.get::<_, i64>(2)?,
-                "gap": row.get::<_, i64>(3)?,
-            }))
-        }).map_err(|e| EcoachError::Storage(e.to_string()))?
-        .filter_map(|r| r.ok()).collect();
+        let rows: Vec<Value> = stmt
+            .query_map(params![student_id, subject_id], |row| {
+                Ok(json!({
+                    "topic": row.get::<_, String>(1)?,
+                    "mastery": row.get::<_, i64>(2)?,
+                    "gap": row.get::<_, i64>(3)?,
+                }))
+            })
+            .map_err(|e| EcoachError::Storage(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .collect();
 
         Ok(json!({"weak_topics": rows}))
     }
 
     fn build_recovery_plan(
-        &self, student_id: i64, subject_id: i64, stage: TransformationStage,
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        stage: TransformationStage,
     ) -> EcoachResult<Value> {
         let plan = match stage {
             TransformationStage::Rescue => json!({

@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use chrono::{Duration, Utc};
-use ecoach_coach_brain::{JourneyRouteSnapshot, JourneyService, PlanEngine};
+use ecoach_coach_brain::{
+    InterventionLibraryService, JourneyRouteSnapshot, JourneyService, PlanEngine,
+};
 use ecoach_diagnostics::{
     DiagnosticBattery, DiagnosticEngine, DiagnosticMode, DiagnosticPhaseItem, DiagnosticPhasePlan,
     DiagnosticRootCauseHypothesis, DiagnosticTopicAnalytics,
@@ -12,7 +14,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::{
-    dtos::{DiagnosticCauseEvolutionDto, DiagnosticLongitudinalSummaryDto, DiagnosticResultDto},
+    dtos::{
+        DiagnosticAudienceReportDto, DiagnosticCauseEvolutionDto,
+        DiagnosticInterventionPrescriptionDto, DiagnosticItemRoutingProfileDto,
+        DiagnosticLongitudinalSummaryDto, DiagnosticProblemCauseFixCardDto,
+        DiagnosticRecommendationDto, DiagnosticResultDto, DiagnosticSkillResultDto,
+        DiagnosticSubjectBlueprintDto,
+    },
     error::CommandError,
     state::AppState,
 };
@@ -30,17 +38,25 @@ pub struct TopicAnalyticsDto {
     pub mastery_score: i64,
     pub confidence_score: i64,
     pub recommended_action: String,
+    pub endurance_score: i64,
+    pub weakness_type: Option<String>,
+    pub failure_stage: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubmitDiagnosticAttemptInput {
     pub attempt_id: i64,
-    pub selected_option_id: i64,
+    pub selected_option_id: Option<i64>,
     pub response_time_ms: Option<i64>,
     pub confidence_level: Option<String>,
     pub changed_answer_count: i64,
     pub skipped: bool,
     pub timed_out: bool,
+    pub first_focus_at: Option<String>,
+    pub first_input_at: Option<String>,
+    pub concept_guess: Option<String>,
+    pub final_answer: Option<serde_json::Value>,
+    pub interaction_log: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -62,6 +78,8 @@ pub struct DiagnosticCompletionSyncDto {
     pub diagnostic_result: DiagnosticResultDto,
     pub longitudinal_summary: Option<DiagnosticLongitudinalSummaryDto>,
     pub cause_evolution: Vec<DiagnosticCauseEvolutionDto>,
+    pub problem_cause_fix_cards: Vec<DiagnosticProblemCauseFixCardDto>,
+    pub intervention_prescriptions: Vec<DiagnosticInterventionPrescriptionDto>,
     pub synced_topic_count: usize,
     pub blocker_count: usize,
     pub rewritten_plan_id: Option<i64>,
@@ -95,6 +113,56 @@ pub fn get_diagnostic_battery(
     })
 }
 
+pub fn get_diagnostic_subject_blueprint(
+    state: &AppState,
+    subject_id: i64,
+) -> Result<Option<DiagnosticSubjectBlueprintDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .get_subject_blueprint(subject_id)?
+            .map(DiagnosticSubjectBlueprintDto::from))
+    })
+}
+
+pub fn list_diagnostic_item_routing_profiles(
+    state: &AppState,
+    diagnostic_id: i64,
+) -> Result<Vec<DiagnosticItemRoutingProfileDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .list_item_routing_profiles(diagnostic_id)?
+            .into_iter()
+            .map(DiagnosticItemRoutingProfileDto::from)
+            .collect())
+    })
+}
+
+pub fn list_diagnostic_problem_cause_fix_cards(
+    state: &AppState,
+    diagnostic_id: i64,
+) -> Result<Vec<DiagnosticProblemCauseFixCardDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .list_problem_cause_fix_cards(diagnostic_id)?
+            .into_iter()
+            .map(DiagnosticProblemCauseFixCardDto::from)
+            .collect())
+    })
+}
+
+pub fn list_diagnostic_intervention_prescriptions(
+    state: &AppState,
+    diagnostic_id: i64,
+) -> Result<Vec<DiagnosticInterventionPrescriptionDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .list_intervention_prescriptions(diagnostic_id)?
+            .into_iter()
+            .map(DiagnosticInterventionPrescriptionDto::from)
+            .collect())
+    })
+}
+
 pub fn list_diagnostic_phase_items(
     state: &AppState,
     diagnostic_id: i64,
@@ -111,7 +179,7 @@ pub fn submit_diagnostic_attempt(
     input: SubmitDiagnosticAttemptInput,
 ) -> Result<(), CommandError> {
     state.with_connection(|conn| {
-        DiagnosticEngine::new(conn).submit_phase_attempt(
+        DiagnosticEngine::new(conn).submit_phase_attempt_details(
             diagnostic_id,
             input.attempt_id,
             input.selected_option_id,
@@ -120,6 +188,11 @@ pub fn submit_diagnostic_attempt(
             input.changed_answer_count,
             input.skipped,
             input.timed_out,
+            input.first_focus_at.as_deref(),
+            input.first_input_at.as_deref(),
+            input.concept_guess.as_deref(),
+            input.final_answer.as_ref(),
+            input.interaction_log.as_ref(),
         )?;
         Ok(())
     })
@@ -200,6 +273,14 @@ pub fn complete_diagnostic_and_sync(
         let generated_mission_id = rewritten_plan_id
             .map(|_| PlanEngine::new(conn).generate_today_mission(battery.student_id))
             .transpose()?;
+        let topic_ids = analytics.iter().map(|item| item.topic_id).collect::<Vec<_>>();
+        if !topic_ids.is_empty() {
+            InterventionLibraryService::new(conn).sync_diagnostic_prescriptions(
+                diagnostic_id,
+                battery.student_id,
+                &topic_ids,
+            )?;
+        }
 
         append_runtime_event(
             conn,
@@ -220,8 +301,26 @@ pub fn complete_diagnostic_and_sync(
         let synced_topic_count = result.topic_results.len();
         let overall_readiness = result.overall_readiness as i64;
         let readiness_band = result.readiness_band.clone();
-        let diagnostic_result = DiagnosticResultDto::from(result.clone());
-        let longitudinal_summary = result
+        let refreshed_result = engine
+            .get_diagnostic_result(diagnostic_id)?
+            .ok_or_else(|| CommandError::from(EcoachError::NotFound(format!(
+                "diagnostic {} result was not persisted",
+                diagnostic_id
+            ))))?;
+        let problem_cause_fix_cards = refreshed_result
+            .problem_cause_fix_cards
+            .clone()
+            .into_iter()
+            .map(DiagnosticProblemCauseFixCardDto::from)
+            .collect();
+        let intervention_prescriptions = refreshed_result
+            .intervention_prescriptions
+            .clone()
+            .into_iter()
+            .map(DiagnosticInterventionPrescriptionDto::from)
+            .collect();
+        let diagnostic_result = DiagnosticResultDto::from(refreshed_result.clone());
+        let longitudinal_summary = refreshed_result
             .longitudinal_summary
             .clone()
             .map(DiagnosticLongitudinalSummaryDto::from);
@@ -242,6 +341,8 @@ pub fn complete_diagnostic_and_sync(
             diagnostic_result,
             longitudinal_summary,
             cause_evolution,
+            problem_cause_fix_cards,
+            intervention_prescriptions,
             synced_topic_count,
             blocker_count,
             rewritten_plan_id,
@@ -270,6 +371,44 @@ pub fn get_diagnostic_result(
         Ok(DiagnosticEngine::new(conn)
             .get_diagnostic_result(diagnostic_id)?
             .map(DiagnosticResultDto::from))
+    })
+}
+
+pub fn list_diagnostic_skill_results(
+    state: &AppState,
+    diagnostic_id: i64,
+) -> Result<Vec<DiagnosticSkillResultDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .list_skill_results(diagnostic_id)?
+            .into_iter()
+            .map(DiagnosticSkillResultDto::from)
+            .collect())
+    })
+}
+
+pub fn list_diagnostic_recommendations(
+    state: &AppState,
+    diagnostic_id: i64,
+) -> Result<Vec<DiagnosticRecommendationDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .list_recommendations(diagnostic_id)?
+            .into_iter()
+            .map(DiagnosticRecommendationDto::from)
+            .collect())
+    })
+}
+
+pub fn get_diagnostic_audience_report(
+    state: &AppState,
+    diagnostic_id: i64,
+    audience: String,
+) -> Result<Option<DiagnosticAudienceReportDto>, CommandError> {
+    state.with_connection(|conn| {
+        Ok(DiagnosticEngine::new(conn)
+            .get_audience_report(diagnostic_id, &audience)?
+            .map(DiagnosticAudienceReportDto::from))
     })
 }
 
@@ -789,6 +928,9 @@ impl From<DiagnosticTopicAnalytics> for TopicAnalyticsDto {
             mastery_score: value.mastery_score as i64,
             confidence_score: value.confidence_score as i64,
             recommended_action: value.recommended_action,
+            endurance_score: value.endurance_score as i64,
+            weakness_type: value.weakness_type,
+            failure_stage: value.failure_stage,
         }
     }
 }
@@ -811,13 +953,16 @@ mod tests {
 
     use ecoach_content::PackService;
     use ecoach_identity::CreateAccountInput;
+    use ecoach_questions::QuestionService;
     use ecoach_substrate::{AccountType, EntitlementTier};
 
-    use crate::{identity_commands, state::AppState};
+    use crate::{error::CommandError, identity_commands, state::AppState};
 
     use super::{
-        complete_diagnostic_and_sync, get_diagnostic_longitudinal_summary, get_diagnostic_result,
-        launch_diagnostic, list_diagnostic_cause_evolution,
+        SubmitDiagnosticAttemptInput, complete_diagnostic_and_sync, get_diagnostic_audience_report,
+        get_diagnostic_battery, get_diagnostic_longitudinal_summary, get_diagnostic_result,
+        launch_diagnostic, list_diagnostic_cause_evolution, list_diagnostic_phase_items,
+        list_diagnostic_recommendations, list_diagnostic_skill_results, submit_diagnostic_attempt,
     };
 
     #[test]
@@ -865,6 +1010,243 @@ mod tests {
         );
         assert_eq!(cause_evolution, sync.cause_evolution);
         assert_eq!(result.longitudinal_summary, sync.longitudinal_summary);
+    }
+
+    #[test]
+    fn diagnostic_deep_outputs_are_exposed_through_command_layer() {
+        let state = setup_state();
+        let student = identity_commands::create_account(
+            &state,
+            CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Kojo".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            },
+        )
+        .expect("student account should create");
+
+        let battery = launch_diagnostic(&state, student.id, 1, "deep".to_string())
+            .expect("deep diagnostic should launch");
+        let battery_detail = get_diagnostic_battery(&state, battery.diagnostic_id)
+            .expect("diagnostic battery should be retrievable");
+
+        for phase in &battery_detail.phases {
+            let items =
+                list_diagnostic_phase_items(&state, battery.diagnostic_id, phase.phase_number)
+                    .expect("phase items should be retrievable");
+            let Some(first_item) = items.first() else {
+                continue;
+            };
+            let (correct_option_id, wrong_option_id) = state
+                .with_connection(|conn| {
+                    let question_service = QuestionService::new(conn);
+                    let options = question_service.list_options(first_item.question_id)?;
+                    let correct_option_id = options
+                        .iter()
+                        .find(|option| option.is_correct)
+                        .map(|option| option.id)
+                        .expect("correct option should exist");
+                    let wrong_option_id = options
+                        .iter()
+                        .find(|option| !option.is_correct)
+                        .map(|option| option.id)
+                        .expect("wrong option should exist");
+                    Ok((correct_option_id, wrong_option_id))
+                })
+                .expect("question options should load");
+            let selected_option_id = match phase.phase_code.as_str() {
+                "pressure" | "flex" | "root_cause" => wrong_option_id,
+                _ => correct_option_id,
+            };
+            submit_diagnostic_attempt(
+                &state,
+                battery.diagnostic_id,
+                SubmitDiagnosticAttemptInput {
+                    attempt_id: first_item.attempt_id,
+                    selected_option_id: Some(selected_option_id),
+                    response_time_ms: Some(phase.time_limit_seconds.unwrap_or(45) * 800),
+                    confidence_level: Some("not_sure".to_string()),
+                    changed_answer_count: 1,
+                    skipped: false,
+                    timed_out: false,
+                    first_focus_at: None,
+                    first_input_at: None,
+                    concept_guess: None,
+                    final_answer: None,
+                    interaction_log: None,
+                },
+            )
+            .expect("phase attempt should submit");
+        }
+
+        complete_diagnostic_and_sync(&state, battery.diagnostic_id)
+            .expect("deep diagnostic should complete");
+
+        let result = get_diagnostic_result(&state, battery.diagnostic_id)
+            .expect("diagnostic result command should succeed")
+            .expect("diagnostic result should exist");
+        let skill_results = list_diagnostic_skill_results(&state, battery.diagnostic_id)
+            .expect("skill results command should succeed");
+        let recommendations = list_diagnostic_recommendations(&state, battery.diagnostic_id)
+            .expect("recommendations command should succeed");
+        let primary_report = result
+            .audience_reports
+            .first()
+            .cloned()
+            .expect("audience report should exist");
+        let report = get_diagnostic_audience_report(
+            &state,
+            battery.diagnostic_id,
+            primary_report.audience.clone(),
+        )
+        .expect("audience report command should succeed");
+
+        assert!(
+            result
+                .session_scores
+                .iter()
+                .any(|score| score.phase_code == "endurance")
+        );
+        assert!(
+            result
+                .session_scores
+                .iter()
+                .any(|score| score.phase_code == "recovery")
+        );
+        assert!(!result.skill_results.is_empty());
+        assert!(!result.recommendations.is_empty());
+        assert!(!result.audience_reports.is_empty());
+        assert_eq!(skill_results, result.skill_results);
+        assert_eq!(recommendations, result.recommendations);
+        assert_eq!(report, Some(primary_report));
+    }
+
+    #[test]
+    fn submit_diagnostic_attempt_accepts_constructed_response_payloads() {
+        use ecoach_diagnostics::{DiagnosticEngine, DiagnosticMode};
+
+        let state = setup_state();
+        let student = identity_commands::create_account(
+            &state,
+            CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Abena".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            },
+        )
+        .expect("student account should create");
+
+        let (diagnostic_id, attempt_id) = state
+            .with_connection(|conn| {
+                let subject_id: i64 = conn
+                    .query_row("SELECT id FROM subjects WHERE code = 'MATH' LIMIT 1", [], |row| {
+                        row.get(0)
+                    })
+                    .map_err(|err| {
+                        CommandError::from(ecoach_substrate::EcoachError::Storage(
+                            err.to_string(),
+                        ))
+                    })?;
+                conn.execute(
+                    "INSERT INTO topics (subject_id, code, name)
+                     VALUES (?1, 'CMD_DNA34_FR', 'Command Diagnostic Free Response')",
+                    [subject_id],
+                )
+                .map_err(|err| {
+                    CommandError::from(ecoach_substrate::EcoachError::Storage(err.to_string()))
+                })?;
+                let topic_id = conn.last_insert_rowid();
+                conn.execute(
+                    "INSERT INTO questions (
+                        subject_id, topic_id, stem, question_format, explanation_text,
+                        difficulty_level, estimated_time_seconds, marks, is_active
+                     ) VALUES (?1, ?2, 'Write 0.75 as a fraction in simplest form.', 'short_answer', 'Convert decimal to fraction.', 5100, 45, 1, 1)",
+                    rusqlite::params![subject_id, topic_id],
+                )
+                .map_err(|err| {
+                    CommandError::from(ecoach_substrate::EcoachError::Storage(err.to_string()))
+                })?;
+                let question_id = conn.last_insert_rowid();
+                conn.execute(
+                    "INSERT INTO question_options (
+                        question_id, option_label, option_text, is_correct, position
+                     ) VALUES (?1, 'A', '3/4', 1, 1)",
+                    [question_id],
+                )
+                .map_err(|err| {
+                    CommandError::from(ecoach_substrate::EcoachError::Storage(err.to_string()))
+                })?;
+
+                let engine = DiagnosticEngine::new(conn);
+                let battery = engine.start_diagnostic_battery(
+                    student.id,
+                    subject_id,
+                    vec![topic_id],
+                    DiagnosticMode::Quick,
+                )?;
+                let first_phase = battery
+                    .phases
+                    .first()
+                    .expect("phase should exist")
+                    .phase_number;
+                let first_item = engine
+                    .list_phase_items(battery.diagnostic_id, first_phase)?
+                    .into_iter()
+                    .next()
+                    .expect("constructed response item should exist");
+                Ok((battery.diagnostic_id, first_item.attempt_id))
+            })
+            .expect("battery should be created");
+
+        submit_diagnostic_attempt(
+            &state,
+            diagnostic_id,
+            SubmitDiagnosticAttemptInput {
+                attempt_id,
+                selected_option_id: None,
+                response_time_ms: Some(11_000),
+                confidence_level: Some("sure".to_string()),
+                changed_answer_count: 0,
+                skipped: false,
+                timed_out: false,
+                first_focus_at: None,
+                first_input_at: None,
+                concept_guess: Some("fraction_form".to_string()),
+                final_answer: Some(serde_json::json!({ "text": "3/4" })),
+                interaction_log: Some(serde_json::json!({ "typed": true })),
+            },
+        )
+        .expect("constructed response command submission should succeed");
+
+        let stored = state
+            .with_connection(|conn| {
+                Ok(conn
+                    .query_row(
+                        "SELECT selected_option_id, is_correct, final_answer_json
+                         FROM diagnostic_item_attempts
+                         WHERE id = ?1",
+                        [attempt_id],
+                        |row| {
+                            Ok((
+                                row.get::<_, Option<i64>>(0)?,
+                                row.get::<_, Option<i64>>(1)?,
+                                row.get::<_, Option<String>>(2)?,
+                            ))
+                        },
+                    )
+                    .map_err(|err| {
+                        CommandError::from(ecoach_substrate::EcoachError::Storage(
+                            err.to_string(),
+                        ))
+                    })?)
+            })
+            .expect("attempt should persist");
+
+        assert_eq!(stored.0, None);
+        assert_eq!(stored.1, Some(1));
+        assert!(stored.2.as_deref().unwrap_or_default().contains("3/4"));
     }
 
     fn setup_state() -> AppState {

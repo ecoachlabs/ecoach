@@ -25,18 +25,13 @@ impl<'a> BlueprintResolver<'a> {
     ) -> EcoachResult<BlueprintQuotas> {
         let weaknesses = self.load_student_weaknesses(student_id)?;
 
-        let topic_quotas = self.allocate_topic_quotas(
-            blueprint,
-            mock_type,
-            total_questions,
-            &weaknesses,
-        );
+        let topic_quotas =
+            self.allocate_topic_quotas(blueprint, mock_type, total_questions, &weaknesses);
 
         let target_difficulty_mix =
             self.resolve_difficulty_mix(blueprint, mock_type, total_questions);
 
-        let target_format_mix =
-            self.resolve_format_mix(blueprint, total_questions);
+        let target_format_mix = self.resolve_format_mix(blueprint, total_questions);
 
         let min_surprise_items = match mock_type {
             MockType::Shock => (total_questions / 4).max(2),
@@ -199,7 +194,7 @@ impl<'a> BlueprintResolver<'a> {
         }
 
         let difficulty_bias = match mock_type {
-            MockType::Wisdom => 0.20,  // push harder
+            MockType::Wisdom => 0.20, // push harder
             MockType::Shock => 0.15,
             MockType::Remediation => -0.15, // push easier
             _ => 0.0,
@@ -240,10 +235,7 @@ impl<'a> BlueprintResolver<'a> {
     // Student state loading
     // -----------------------------------------------------------------------
 
-    fn load_student_weaknesses(
-        &self,
-        student_id: i64,
-    ) -> EcoachResult<Vec<StudentWeaknessSignal>> {
+    fn load_student_weaknesses(&self, student_id: i64) -> EcoachResult<Vec<StudentWeaknessSignal>> {
         let mut stmt = self
             .conn
             .prepare(
@@ -388,13 +380,28 @@ mod tests {
                 },
             ],
             format_distribution: vec![
-                ForecastFormatScore { format_code: "mcq".into(), probability_score: 6000 },
-                ForecastFormatScore { format_code: "structured".into(), probability_score: 4000 },
+                ForecastFormatScore {
+                    format_code: "mcq".into(),
+                    probability_score: 6000,
+                },
+                ForecastFormatScore {
+                    format_code: "structured".into(),
+                    probability_score: 4000,
+                },
             ],
             difficulty_distribution: vec![
-                ForecastDifficultyScore { difficulty_band: "easy".into(), probability_score: 3000 },
-                ForecastDifficultyScore { difficulty_band: "medium".into(), probability_score: 5000 },
-                ForecastDifficultyScore { difficulty_band: "hard".into(), probability_score: 2000 },
+                ForecastDifficultyScore {
+                    difficulty_band: "easy".into(),
+                    probability_score: 3000,
+                },
+                ForecastDifficultyScore {
+                    difficulty_band: "medium".into(),
+                    probability_score: 5000,
+                },
+                ForecastDifficultyScore {
+                    difficulty_band: "hard".into(),
+                    probability_score: 2000,
+                },
             ],
             bundles: vec![ForecastBundle {
                 bundle_key: "bundle_1".into(),

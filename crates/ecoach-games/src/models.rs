@@ -145,6 +145,24 @@ pub struct GameSession {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DuelSession {
+    pub id: i64,
+    pub challenger_id: i64,
+    pub opponent_id: Option<i64>,
+    pub subject_id: i64,
+    pub topic_id: Option<i64>,
+    pub duel_type: String,
+    pub question_count: i64,
+    pub time_limit_seconds: Option<i64>,
+    pub challenger_score_bp: Option<BasisPoints>,
+    pub opponent_score_bp: Option<BasisPoints>,
+    pub winner_id: Option<i64>,
+    pub status: String,
+    pub created_at: String,
+    pub completed_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameAnswerResult {
     pub is_correct: bool,
     pub points_earned: i64,
@@ -253,6 +271,7 @@ pub struct TrapRoundResult {
     pub correct_choice_code: String,
     pub correct_choice_label: String,
     pub explanation_text: String,
+    pub review_payload: Value,
     pub confusion_signal: String,
     pub next_round_id: Option<i64>,
 }
@@ -272,6 +291,7 @@ pub struct TrapReviewRound {
     pub confusion_reason_code: Option<String>,
     pub confusion_reason_text: Option<String>,
     pub explanation_text: String,
+    pub review_payload: Value,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -306,4 +326,96 @@ pub struct ContrastPairSummary {
     pub last_accuracy_bp: BasisPoints,
     pub recommended_mode: String,
     pub available_modes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastConceptAttribute {
+    pub id: i64,
+    pub pair_id: i64,
+    pub concept_side: String,
+    pub lane: String,
+    pub attribute_label: String,
+    pub attribute_value: String,
+    pub importance_weight_bp: BasisPoints,
+    pub difficulty_score: BasisPoints,
+    pub source_confidence_bp: BasisPoints,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastComparisonRow {
+    pub id: i64,
+    pub pair_id: i64,
+    pub lane: String,
+    pub compare_label: String,
+    pub left_value: String,
+    pub right_value: String,
+    pub overlap_note: Option<String>,
+    pub decisive_clue: Option<String>,
+    pub teaching_note: Option<String>,
+    pub diagram_asset_id: Option<i64>,
+    pub display_order: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastDiagramAsset {
+    pub id: i64,
+    pub pair_id: i64,
+    pub concept_side: Option<String>,
+    pub lane: String,
+    pub diagram_type: String,
+    pub asset_ref: String,
+    pub prompt_payload: Value,
+    pub visual_clues: Vec<String>,
+    pub decisive_visual_clue: Option<String>,
+    pub trap_potential: Option<String>,
+    pub usable_modes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastModeItem {
+    pub id: i64,
+    pub pair_id: i64,
+    pub mode: String,
+    pub source_atom_id: Option<i64>,
+    pub comparison_row_id: Option<i64>,
+    pub diagram_asset_id: Option<i64>,
+    pub prompt_type: String,
+    pub prompt_text: String,
+    pub prompt_payload: Value,
+    pub answer_options: Vec<TrapChoiceOption>,
+    pub correct_choice_code: Option<String>,
+    pub correct_choice_label: Option<String>,
+    pub difficulty_score: BasisPoints,
+    pub time_limit_seconds: Option<i64>,
+    pub explanation_bundle: Value,
+    pub misconception_reason_codes: Vec<String>,
+    pub is_active: bool,
+    pub display_order: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrapMisconceptionReason {
+    pub code: String,
+    pub label: String,
+    pub category: String,
+    pub modes: Vec<String>,
+    pub display_order: i64,
+    pub is_active: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContrastPairProfile {
+    pub pair_summary: ContrastPairSummary,
+    pub left_profile: Value,
+    pub right_profile: Value,
+    pub shared_traits: Vec<String>,
+    pub decisive_differences: Vec<String>,
+    pub common_confusions: Vec<String>,
+    pub trap_angles: Vec<String>,
+    pub coverage: Value,
+    pub generator_contract: Value,
+    pub concept_attributes: Vec<ContrastConceptAttribute>,
+    pub comparison_rows: Vec<ContrastComparisonRow>,
+    pub diagram_assets: Vec<ContrastDiagramAsset>,
+    pub mode_items: Vec<ContrastModeItem>,
 }

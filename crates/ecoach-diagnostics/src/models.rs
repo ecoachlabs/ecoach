@@ -29,6 +29,8 @@ pub enum DiagnosticPhaseCode {
     Pressure,
     Flex,
     RootCause,
+    Endurance,
+    Recovery,
 }
 
 impl DiagnosticPhaseCode {
@@ -40,6 +42,8 @@ impl DiagnosticPhaseCode {
             Self::Pressure => "pressure",
             Self::Flex => "flex",
             Self::RootCause => "root_cause",
+            Self::Endurance => "endurance",
+            Self::Recovery => "recovery",
         }
     }
 
@@ -51,6 +55,8 @@ impl DiagnosticPhaseCode {
             Self::Pressure => "Pressure Tolerance",
             Self::Flex => "Fragility and Transfer",
             Self::RootCause => "Root-Cause Isolation",
+            Self::Endurance => "Endurance Drift",
+            Self::Recovery => "Recovery After Error",
         }
     }
 
@@ -62,6 +68,8 @@ impl DiagnosticPhaseCode {
             Self::Pressure => "condition_testing",
             Self::Flex => "stability_recheck",
             Self::RootCause => "confidence_snapshot",
+            Self::Endurance => "condition_testing",
+            Self::Recovery => "confidence_snapshot",
         }
     }
 
@@ -73,8 +81,24 @@ impl DiagnosticPhaseCode {
             Self::Pressure => "timed",
             Self::Flex => "transfer",
             Self::RootCause => "recognition",
+            Self::Endurance => "stability",
+            Self::Recovery => "recognition",
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DiagnosticOverallSummary {
+    pub mastery_level: String,
+    #[serde(default)]
+    pub strong_zones: Vec<String>,
+    #[serde(default)]
+    pub firming_zones: Vec<String>,
+    #[serde(default)]
+    pub fragile_zones: Vec<String>,
+    #[serde(default)]
+    pub critical_zones: Vec<String>,
+    pub top_recommended_action: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -88,6 +112,9 @@ pub struct TopicDiagnosticResult {
     pub flexibility_score: BasisPoints,
     pub stability_score: BasisPoints,
     pub classification: String,
+    pub endurance_score: BasisPoints,
+    pub weakness_type: Option<String>,
+    pub failure_stage: Option<String>,
     #[serde(default)]
     pub longitudinal_signal: Option<TopicDiagnosticLongitudinalSignal>,
 }
@@ -115,7 +142,81 @@ pub struct DiagnosticResult {
     pub topic_results: Vec<TopicDiagnosticResult>,
     pub recommended_next_actions: Vec<String>,
     #[serde(default)]
+    pub overall_summary: DiagnosticOverallSummary,
+    #[serde(default)]
+    pub session_scores: Vec<DiagnosticSessionScore>,
+    #[serde(default)]
+    pub condition_metrics: DiagnosticConditionMetrics,
+    #[serde(default)]
+    pub skill_results: Vec<DiagnosticSkillResult>,
+    #[serde(default)]
+    pub recommendations: Vec<DiagnosticRecommendation>,
+    #[serde(default)]
+    pub learning_profile: Option<DiagnosticLearningProfile>,
+    #[serde(default)]
+    pub audience_reports: Vec<DiagnosticAudienceReport>,
+    #[serde(default)]
     pub longitudinal_summary: Option<DiagnosticLongitudinalSummary>,
+    #[serde(default)]
+    pub problem_cause_fix_cards: Vec<DiagnosticProblemCauseFixCard>,
+    #[serde(default)]
+    pub intervention_prescriptions: Vec<DiagnosticInterventionPrescription>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticSubjectBlueprint {
+    pub subject_id: i64,
+    pub blueprint_code: String,
+    pub subject_name: String,
+    pub session_modes: Value,
+    pub stage_rules: Value,
+    pub item_family_mix: Vec<Value>,
+    pub routing_contract: Value,
+    pub report_contract: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticItemRoutingProfile {
+    pub question_id: i64,
+    pub subject_id: i64,
+    pub topic_id: i64,
+    pub family_id: Option<i64>,
+    pub item_family: String,
+    pub recognition_suitable: bool,
+    pub recall_suitable: bool,
+    pub transfer_suitable: bool,
+    pub timed_suitable: bool,
+    pub confidence_prompt: String,
+    pub recommended_stages: Vec<String>,
+    pub sibling_variant_modes: Vec<String>,
+    pub routing_notes: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticProblemCauseFixCard {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub problem_summary: String,
+    pub cause_summary: String,
+    pub fix_summary: String,
+    pub confidence_score: BasisPoints,
+    pub impact_score: BasisPoints,
+    pub unlock_summary: Option<String>,
+    pub evidence: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticInterventionPrescription {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub primary_mode_code: String,
+    pub support_mode_code: Option<String>,
+    pub recheck_mode_code: Option<String>,
+    pub mode_chain: Vec<String>,
+    pub contraindications: Vec<String>,
+    pub success_signals: Vec<String>,
+    pub confidence_score: BasisPoints,
+    pub payload: Value,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -185,6 +286,97 @@ pub struct DiagnosticPhaseItem {
     pub topic_id: i64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DiagnosticSessionScore {
+    pub phase_code: String,
+    pub phase_title: String,
+    pub raw_accuracy: BasisPoints,
+    pub adjusted_accuracy: BasisPoints,
+    pub median_response_time_ms: Option<i64>,
+    pub stability_measure: BasisPoints,
+    pub careless_error_rate: BasisPoints,
+    pub timeout_rate: BasisPoints,
+    pub misread_rate: BasisPoints,
+    pub pressure_volatility: BasisPoints,
+    pub early_segment_accuracy: Option<BasisPoints>,
+    pub middle_segment_accuracy: Option<BasisPoints>,
+    pub final_segment_accuracy: Option<BasisPoints>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DiagnosticConditionMetrics {
+    pub fragility_index: BasisPoints,
+    pub pressure_collapse_index: BasisPoints,
+    pub recognition_gap_index: BasisPoints,
+    pub formula_recall_use_delta: BasisPoints,
+    pub early_late_delta: BasisPoints,
+    pub confidence_correctness_delta: BasisPoints,
+    pub endurance_drop: BasisPoints,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DiagnosticSkillResult {
+    pub skill_key: String,
+    pub skill_name: String,
+    pub skill_type: String,
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub baseline_score: BasisPoints,
+    pub speed_score: BasisPoints,
+    pub precision_score: BasisPoints,
+    pub pressure_score: BasisPoints,
+    pub flex_score: BasisPoints,
+    pub root_cause_score: BasisPoints,
+    pub endurance_score: BasisPoints,
+    pub recovery_score: BasisPoints,
+    pub mastery_score: BasisPoints,
+    pub fragility_index: BasisPoints,
+    pub pressure_collapse_index: BasisPoints,
+    pub recognition_gap_index: BasisPoints,
+    pub formula_recall_use_delta: BasisPoints,
+    pub stability_score: BasisPoints,
+    pub mastery_state: String,
+    pub weakness_type_primary: String,
+    pub weakness_type_secondary: Option<String>,
+    pub recommended_intervention: String,
+    #[serde(default)]
+    pub evidence: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DiagnosticRecommendation {
+    pub category: String,
+    pub action_code: String,
+    pub title: String,
+    pub rationale: String,
+    pub priority: i64,
+    pub target_kind: Option<String>,
+    pub target_ref: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DiagnosticLearningProfile {
+    pub profile_type: String,
+    pub confidence_score: BasisPoints,
+    #[serde(default)]
+    pub evidence: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DiagnosticAudienceReport {
+    pub audience: String,
+    pub headline: String,
+    pub narrative: String,
+    #[serde(default)]
+    pub strengths: Vec<String>,
+    #[serde(default)]
+    pub fragile_areas: Vec<String>,
+    #[serde(default)]
+    pub critical_areas: Vec<String>,
+    #[serde(default)]
+    pub action_plan: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticBattery {
     pub diagnostic_id: i64,
@@ -209,6 +401,11 @@ pub struct DiagnosticTopicAnalytics {
     pub classification: String,
     pub confidence_score: BasisPoints,
     pub recommended_action: String,
+    pub endurance_score: BasisPoints,
+    #[serde(default)]
+    pub error_distribution: Value,
+    pub weakness_type: Option<String>,
+    pub failure_stage: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

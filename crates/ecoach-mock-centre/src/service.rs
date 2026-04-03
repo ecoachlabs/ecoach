@@ -325,7 +325,12 @@ impl<'a> MockCentreService<'a> {
 
         let mock_type = parse_mock_type(input.mock_type.as_deref().unwrap_or("forecast"));
         let resolver = BlueprintResolver::new(self.conn);
-        let quotas = resolver.resolve(&blueprint, mock_type, input.question_count, input.student_id)?;
+        let quotas = resolver.resolve(
+            &blueprint,
+            mock_type,
+            input.question_count,
+            input.student_id,
+        )?;
 
         // Build a lookup of topic quotas
         let mut topic_remaining: BTreeMap<i64, usize> = BTreeMap::new();
@@ -370,11 +375,7 @@ impl<'a> MockCentreService<'a> {
                     0.4
                 };
 
-                let surprise_risk = if c.replacement_score > 7000 {
-                    0.8
-                } else {
-                    0.2
-                };
+                let surprise_risk = if c.replacement_score > 7000 { 0.8 } else { 0.2 };
 
                 let anti_repeat = if recent_ids.contains(&c.question_id) {
                     1.0
@@ -387,18 +388,10 @@ impl<'a> MockCentreService<'a> {
                     MockType::Forecast | MockType::FinalExam => {
                         (0.40, 0.15, 0.15, 0.10, 0.05, 0.10, 0.05, 0.25)
                     }
-                    MockType::Diagnostic => {
-                        (0.15, 0.35, 0.15, 0.15, 0.05, 0.10, 0.05, 0.25)
-                    }
-                    MockType::Remediation => {
-                        (0.10, 0.30, 0.25, 0.10, 0.10, 0.10, 0.05, 0.25)
-                    }
-                    MockType::Shock => {
-                        (0.25, 0.10, 0.10, 0.10, 0.10, 0.10, 0.25, 0.25)
-                    }
-                    MockType::Wisdom => {
-                        (0.30, 0.20, 0.15, 0.15, 0.05, 0.10, 0.05, 0.25)
-                    }
+                    MockType::Diagnostic => (0.15, 0.35, 0.15, 0.15, 0.05, 0.10, 0.05, 0.25),
+                    MockType::Remediation => (0.10, 0.30, 0.25, 0.10, 0.10, 0.10, 0.05, 0.25),
+                    MockType::Shock => (0.25, 0.10, 0.10, 0.10, 0.10, 0.10, 0.25, 0.25),
+                    MockType::Wisdom => (0.30, 0.20, 0.15, 0.15, 0.05, 0.10, 0.05, 0.25),
                 };
 
                 let score = w_bf * blueprint_fit
@@ -470,9 +463,7 @@ impl<'a> MockCentreService<'a> {
     fn load_weakness_map(&self, student_id: i64) -> EcoachResult<BTreeMap<i64, i64>> {
         let mut stmt = self
             .conn
-            .prepare(
-                "SELECT topic_id, gap_score FROM student_topic_states WHERE student_id = ?1",
-            )
+            .prepare("SELECT topic_id, gap_score FROM student_topic_states WHERE student_id = ?1")
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let rows = stmt
@@ -1059,11 +1050,7 @@ impl<'a> MockCentreService<'a> {
 
     // ── Section pacing ──
 
-    pub fn start_section(
-        &self,
-        mock_session_id: i64,
-        section_number: i64,
-    ) -> EcoachResult<()> {
+    pub fn start_section(&self, mock_session_id: i64, section_number: i64) -> EcoachResult<()> {
         // Validate mock is active
         let status: String = self
             .conn
@@ -1102,11 +1089,7 @@ impl<'a> MockCentreService<'a> {
         Ok(())
     }
 
-    pub fn complete_section(
-        &self,
-        mock_session_id: i64,
-        section_number: i64,
-    ) -> EcoachResult<()> {
+    pub fn complete_section(&self, mock_session_id: i64, section_number: i64) -> EcoachResult<()> {
         let now = Utc::now().to_rfc3339();
         let affected = self
             .conn

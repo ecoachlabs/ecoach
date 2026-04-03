@@ -14,23 +14,85 @@ pub struct MemoryIntelligenceEngine<'a> {
 // ---------------------------------------------------------------------------
 
 /// MSI = 0.30*A + 0.15*S + 0.20*R + 0.15*V + 0.10*I + 0.10*C
-fn compute_msi(accuracy: f64, speed: f64, retention: f64, variant: f64, independence: f64, connection: f64) -> BasisPoints {
-    clamp_bp(((0.30 * accuracy + 0.15 * speed + 0.20 * retention + 0.15 * variant + 0.10 * independence + 0.10 * connection) * 10_000.0).round() as i64)
+fn compute_msi(
+    accuracy: f64,
+    speed: f64,
+    retention: f64,
+    variant: f64,
+    independence: f64,
+    connection: f64,
+) -> BasisPoints {
+    clamp_bp(
+        ((0.30 * accuracy
+            + 0.15 * speed
+            + 0.20 * retention
+            + 0.15 * variant
+            + 0.10 * independence
+            + 0.10 * connection)
+            * 10_000.0)
+            .round() as i64,
+    )
 }
 
 /// RAS = 35*recent_accuracy + 20*speed + 20*independence + 15*consistency + 10*confidence
-fn compute_ras(accuracy: f64, speed: f64, independence: f64, consistency: f64, confidence: f64) -> BasisPoints {
-    clamp_bp(((0.35 * accuracy + 0.20 * speed + 0.20 * independence + 0.15 * consistency + 0.10 * confidence) * 10_000.0).round() as i64)
+fn compute_ras(
+    accuracy: f64,
+    speed: f64,
+    independence: f64,
+    consistency: f64,
+    confidence: f64,
+) -> BasisPoints {
+    clamp_bp(
+        ((0.35 * accuracy
+            + 0.20 * speed
+            + 0.20 * independence
+            + 0.15 * consistency
+            + 0.10 * confidence)
+            * 10_000.0)
+            .round() as i64,
+    )
 }
 
 /// DCS = 25*time_sep + 20*variant + 15*embedded + 15*interference + 15*recheck + 10*relearning
-fn compute_dcs(time_sep: f64, variant: f64, embedded: f64, interference: f64, recheck: f64, relearning: f64) -> BasisPoints {
-    clamp_bp(((0.25 * time_sep + 0.20 * variant + 0.15 * embedded + 0.15 * interference + 0.15 * recheck + 0.10 * relearning) * 10_000.0).round() as i64)
+fn compute_dcs(
+    time_sep: f64,
+    variant: f64,
+    embedded: f64,
+    interference: f64,
+    recheck: f64,
+    relearning: f64,
+) -> BasisPoints {
+    clamp_bp(
+        ((0.25 * time_sep
+            + 0.20 * variant
+            + 0.15 * embedded
+            + 0.15 * interference
+            + 0.15 * recheck
+            + 0.10 * relearning)
+            * 10_000.0)
+            .round() as i64,
+    )
 }
 
 /// DRS = 25*overdue + 20*accuracy_drop + 15*speed_drift + 15*relapse + 15*dependency + 10*interference
-fn compute_drs(overdue: f64, accuracy_drop: f64, speed_drift: f64, relapse: f64, dependency: f64, interference: f64) -> BasisPoints {
-    clamp_bp(((0.25 * overdue + 0.20 * accuracy_drop + 0.15 * speed_drift + 0.15 * relapse + 0.15 * dependency + 0.10 * interference) * 10_000.0).round() as i64)
+fn compute_drs(
+    overdue: f64,
+    accuracy_drop: f64,
+    speed_drift: f64,
+    relapse: f64,
+    dependency: f64,
+    interference: f64,
+) -> BasisPoints {
+    clamp_bp(
+        ((0.25 * overdue
+            + 0.20 * accuracy_drop
+            + 0.15 * speed_drift
+            + 0.15 * relapse
+            + 0.15 * dependency
+            + 0.10 * interference)
+            * 10_000.0)
+            .round() as i64,
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -156,7 +218,14 @@ impl<'a> MemoryIntelligenceEngine<'a> {
         let (accuracy, speed, retention, variant, independence, connection) =
             self.load_memory_dimensions(student_id, node_id)?;
 
-        let msi = compute_msi(accuracy, speed, retention, variant, independence, connection);
+        let msi = compute_msi(
+            accuracy,
+            speed,
+            retention,
+            variant,
+            independence,
+            connection,
+        );
 
         // RAS components
         let consistency = self.load_consistency(student_id, node_id)?;
@@ -168,7 +237,14 @@ impl<'a> MemoryIntelligenceEngine<'a> {
         let recheck = self.load_recheck_stability(student_id, node_id)?;
         let relearning = self.load_relearning_efficiency(student_id, node_id)?;
         let interference_res = self.load_interference_resistance(student_id, node_id)?;
-        let dcs = compute_dcs(time_sep, variant, connection, interference_res, recheck, relearning);
+        let dcs = compute_dcs(
+            time_sep,
+            variant,
+            connection,
+            interference_res,
+            recheck,
+            relearning,
+        );
 
         // DRS components
         let overdue = self.load_overdue_factor(student_id, node_id)?;
@@ -177,15 +253,21 @@ impl<'a> MemoryIntelligenceEngine<'a> {
         let relapse_factor = self.load_relapse_factor(student_id, node_id)?;
         let dep_damage = 0.0; // would need prerequisite graph
         let int_growth = self.load_interference_growth(student_id, node_id)?;
-        let drs = compute_drs(overdue, acc_drop, speed_drift, relapse_factor, dep_damage, int_growth);
+        let drs = compute_drs(
+            overdue,
+            acc_drop,
+            speed_drift,
+            relapse_factor,
+            dep_damage,
+            int_growth,
+        );
 
         // Update proof dimensions
         let satisfied_dims = self.update_proof_dimensions(student_id, node_id)?;
 
         // Run confirmation gate / state machine
-        let (new_state, state_changed) = self.run_state_machine(
-            student_id, node_id, ras, dcs, drs, &satisfied_dims,
-        )?;
+        let (new_state, state_changed) =
+            self.run_state_machine(student_id, node_id, ras, dcs, drs, &satisfied_dims)?;
 
         // Classify recovery path if fading/collapsed
         let recovery_path = if new_state == "fading" || new_state == "collapsed" {
@@ -217,8 +299,12 @@ impl<'a> MemoryIntelligenceEngine<'a> {
         self.schedule_adaptive_recheck(student_id, node_id, &new_state)?;
 
         Ok(MemoryScoreUpdate {
-            student_id, node_id,
-            msi, ras, dcs, drs,
+            student_id,
+            node_id,
+            msi,
+            ras,
+            dcs,
+            drs,
             new_state: new_state.clone(),
             state_changed,
             dimensions_satisfied: satisfied_dims,
@@ -239,10 +325,14 @@ impl<'a> MemoryIntelligenceEngine<'a> {
         drs: BasisPoints,
         satisfied_dims: &[String],
     ) -> EcoachResult<(String, bool)> {
-        let current: String = self.conn.query_row(
-            "SELECT memory_state FROM memory_states WHERE student_id = ?1 AND node_id = ?2",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or_else(|_| "seen".into());
+        let current: String = self
+            .conn
+            .query_row(
+                "SELECT memory_state FROM memory_states WHERE student_id = ?1 AND node_id = ?2",
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or_else(|_| "seen".into());
 
         let template_ok = self.check_proof_template(student_id, node_id)?;
         let has_delay = satisfied_dims.contains(&"delayed_recall".to_string());
@@ -251,11 +341,16 @@ impl<'a> MemoryIntelligenceEngine<'a> {
         let interference_block = self.check_interference_block(student_id, node_id)?;
         let dim_count = satisfied_dims.len();
 
-        let rescue_open = self.conn.query_row(
-            "SELECT COUNT(*) FROM memory_sessions WHERE student_id = ?1
+        let rescue_open = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM memory_sessions WHERE student_id = ?1
              AND primary_skill_ids_json LIKE '%' || ?2 || '%' AND status = 'active'",
-            params![student_id, node_id], |row| row.get::<_, i64>(0),
-        ).unwrap_or(0) > 0;
+                params![student_id, node_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .unwrap_or(0)
+            > 0;
 
         let new_state = if ras < 2500 && dcs < 2000 {
             "collapsed"
@@ -263,11 +358,18 @@ impl<'a> MemoryIntelligenceEngine<'a> {
             "fading"
         } else if rescue_open {
             "rebuilding"
-        } else if template_ok && has_delay && has_variant && !interference_block
-            && ras >= 7000 && dcs >= 7000
+        } else if template_ok
+            && has_delay
+            && has_variant
+            && !interference_block
+            && ras >= 7000
+            && dcs >= 7000
         {
             // Check for locked_in (stronger than confirmed)
-            if ras >= 8000 && dcs >= 8500 && self.has_long_interval_stability(student_id, node_id)? {
+            if ras >= 8000
+                && dcs >= 8500
+                && self.has_long_interval_stability(student_id, node_id)?
+            {
                 "locked_in"
             } else {
                 "confirmed"
@@ -294,41 +396,54 @@ impl<'a> MemoryIntelligenceEngine<'a> {
     // Proof dimension satisfaction
     // -----------------------------------------------------------------------
 
-    fn update_proof_dimensions(
-        &self,
-        student_id: i64,
-        node_id: i64,
-    ) -> EcoachResult<Vec<String>> {
+    fn update_proof_dimensions(&self, student_id: i64, node_id: i64) -> EcoachResult<Vec<String>> {
         let dimensions = [
-            "independent_recall", "delayed_recall", "variant_transfer",
-            "embedded_use", "interference_resistance", "explanation_reasoning",
-            "representation_shift", "sequence_relation", "speed_fluency",
+            "independent_recall",
+            "delayed_recall",
+            "variant_transfer",
+            "embedded_use",
+            "interference_resistance",
+            "explanation_reasoning",
+            "representation_shift",
+            "sequence_relation",
+            "speed_fluency",
         ];
 
         let mut satisfied = Vec::new();
 
         for dim in &dimensions {
             let supports_col = format!("supports_{}", dim);
-            let count: i64 = self.conn.query_row(
-                &format!(
-                    "SELECT COUNT(*) FROM memory_evidence_events
+            let count: i64 = self
+                .conn
+                .query_row(
+                    &format!(
+                        "SELECT COUNT(*) FROM memory_evidence_events
                      WHERE student_id = ?1 AND node_id = ?2 AND {} = 1 AND is_correct = 1",
-                    supports_col
-                ),
-                params![student_id, node_id],
-                |row| row.get(0),
-            ).unwrap_or(0);
+                        supports_col
+                    ),
+                    params![student_id, node_id],
+                    |row| row.get(0),
+                )
+                .unwrap_or(0);
 
-            let status = if count >= 2 { "satisfied" } else if count >= 1 { "partial" } else { "none" };
+            let status = if count >= 2 {
+                "satisfied"
+            } else if count >= 1 {
+                "partial"
+            } else {
+                "none"
+            };
 
-            self.conn.execute(
-                "INSERT INTO memory_proof_dimensions
+            self.conn
+                .execute(
+                    "INSERT INTO memory_proof_dimensions
                     (student_id, node_id, dimension_name, status, evidence_count)
                  VALUES (?1, ?2, ?3, ?4, ?5)
                  ON CONFLICT(student_id, node_id, dimension_name) DO UPDATE SET
                     status = ?4, evidence_count = ?5",
-                params![student_id, node_id, dim, status, count],
-            ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                    params![student_id, node_id, dim, status, count],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
             if status == "satisfied" {
                 satisfied.push(dim.to_string());
@@ -340,28 +455,40 @@ impl<'a> MemoryIntelligenceEngine<'a> {
 
     fn check_proof_template(&self, student_id: i64, node_id: i64) -> EcoachResult<bool> {
         // Load template for this node's topic
-        let required_json: Option<String> = self.conn.query_row(
-            "SELECT mpt.required_dimensions_json
+        let required_json: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT mpt.required_dimensions_json
              FROM memory_proof_templates mpt
              INNER JOIN memory_states ms ON ms.proof_template_id = mpt.id
              WHERE ms.student_id = ?1 AND ms.node_id = ?2",
-            params![student_id, node_id], |row| row.get(0),
-        ).optional().map_err(|e| EcoachError::Storage(e.to_string()))?.flatten();
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))?
+            .flatten();
 
         let Some(json_str) = required_json else {
             return Ok(true); // no template = pass by default
         };
 
         let required: Vec<String> = serde_json::from_str(&json_str).unwrap_or_default();
-        if required.is_empty() { return Ok(true); }
+        if required.is_empty() {
+            return Ok(true);
+        }
 
         // Check each required dimension is satisfied
         for dim in &required {
-            let status: String = self.conn.query_row(
-                "SELECT COALESCE(status, 'none') FROM memory_proof_dimensions
+            let status: String = self
+                .conn
+                .query_row(
+                    "SELECT COALESCE(status, 'none') FROM memory_proof_dimensions
                  WHERE student_id = ?1 AND node_id = ?2 AND dimension_name = ?3",
-                params![student_id, node_id, dim], |row| row.get(0),
-            ).unwrap_or_else(|_| "none".into());
+                    params![student_id, node_id, dim],
+                    |row| row.get(0),
+                )
+                .unwrap_or_else(|_| "none".into());
 
             if status != "satisfied" {
                 return Ok(false);
@@ -376,17 +503,25 @@ impl<'a> MemoryIntelligenceEngine<'a> {
     // -----------------------------------------------------------------------
 
     fn classify_recovery_path(&self, student_id: i64, node_id: i64) -> EcoachResult<String> {
-        let interference_risk: i64 = self.conn.query_row(
-            "SELECT COALESCE(interference_risk_score, 0) FROM memory_states
+        let interference_risk: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(interference_risk_score, 0) FROM memory_states
              WHERE student_id = ?1 AND node_id = ?2",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
 
-        let relapse: i64 = self.conn.query_row(
-            "SELECT COALESCE(relapse_count, 0) FROM memory_states
+        let relapse: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(relapse_count, 0) FROM memory_states
              WHERE student_id = ?1 AND node_id = ?2",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
 
         // Check if accuracy is decent but speed is poor
         let (accuracy, speed): (f64, f64) = self.load_accuracy_and_speed(student_id, node_id)?;
@@ -442,14 +577,17 @@ impl<'a> MemoryIntelligenceEngine<'a> {
         };
 
         let due_at = (chrono::Utc::now() + chrono::Duration::days(days_offset))
-            .format("%Y-%m-%d %H:%M:%S").to_string();
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
 
-        self.conn.execute(
-            "INSERT OR REPLACE INTO recheck_schedules
+        self.conn
+            .execute(
+                "INSERT OR REPLACE INTO recheck_schedules
                 (student_id, node_id, due_at, schedule_type, status, target_proof_dimension)
              VALUES (?1, ?2, ?3, ?4, 'pending', ?5)",
-            params![student_id, node_id, due_at, schedule_type, target_dim],
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![student_id, node_id, due_at, schedule_type, target_dim],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         Ok(())
     }
@@ -463,23 +601,30 @@ impl<'a> MemoryIntelligenceEngine<'a> {
         student_id: i64,
         node_id: i64,
     ) -> EcoachResult<Vec<ProofStatus>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT dimension_name, status, evidence_count
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT dimension_name, status, evidence_count
              FROM memory_proof_dimensions
              WHERE student_id = ?1 AND node_id = ?2
              ORDER BY dimension_name",
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let rows = stmt.query_map(params![student_id, node_id], |row| {
-            Ok(ProofStatus {
-                dimension: row.get(0)?,
-                status: row.get(1)?,
-                evidence_count: row.get(2)?,
+        let rows = stmt
+            .query_map(params![student_id, node_id], |row| {
+                Ok(ProofStatus {
+                    dimension: row.get(0)?,
+                    status: row.get(1)?,
+                    evidence_count: row.get(2)?,
+                })
             })
-        }).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let mut result = Vec::new();
-        for row in rows { result.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?); }
+        for row in rows {
+            result.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
         Ok(result)
     }
 
@@ -487,57 +632,101 @@ impl<'a> MemoryIntelligenceEngine<'a> {
     // Dimension score loaders (simplified — would be richer in production)
     // -----------------------------------------------------------------------
 
-    fn load_memory_dimensions(&self, student_id: i64, node_id: i64) -> EcoachResult<(f64, f64, f64, f64, f64, f64)> {
-        let (total, correct, avg_time): (i64, i64, i64) = self.conn.query_row(
-            "SELECT COUNT(*), SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END),
+    fn load_memory_dimensions(
+        &self,
+        student_id: i64,
+        node_id: i64,
+    ) -> EcoachResult<(f64, f64, f64, f64, f64, f64)> {
+        let (total, correct, avg_time): (i64, i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*), SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END),
                     COALESCE(AVG(CASE WHEN is_correct = 1 THEN response_time_ms END), 30000)
              FROM memory_evidence_events WHERE student_id = ?1 AND node_id = ?2",
-            params![student_id, node_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-        ).unwrap_or((0, 0, 30000));
+                params![student_id, node_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .unwrap_or((0, 0, 30000));
 
-        let accuracy = if total > 0 { correct as f64 / total as f64 } else { 0.0 };
+        let accuracy = if total > 0 {
+            correct as f64 / total as f64
+        } else {
+            0.0
+        };
         let speed = (1.0 - (avg_time as f64 / 60000.0).min(1.0)).max(0.0);
 
-        let time_sep_success: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM memory_evidence_events
+        let time_sep_success: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2 AND is_time_separated = 1 AND is_correct = 1",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         let retention = (time_sep_success as f64 / 3.0).min(1.0);
 
-        let variant_success: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM memory_evidence_events
+        let variant_success: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2 AND variant_type IS NOT NULL
                AND variant_type != 'canonical' AND is_correct = 1",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         let variant = (variant_success as f64 / 3.0).min(1.0);
 
-        let no_hint: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM memory_evidence_events
+        let no_hint: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2 AND hint_used = 0 AND is_correct = 1",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
-        let independence = if total > 0 { no_hint as f64 / total as f64 } else { 0.0 };
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+        let independence = if total > 0 {
+            no_hint as f64 / total as f64
+        } else {
+            0.0
+        };
 
-        let mixed_success: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM memory_evidence_events
+        let mixed_success: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2 AND is_mixed_context = 1 AND is_correct = 1",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         let connection = (mixed_success as f64 / 2.0).min(1.0);
 
-        Ok((accuracy, speed, retention, variant, independence, connection))
+        Ok((
+            accuracy,
+            speed,
+            retention,
+            variant,
+            independence,
+            connection,
+        ))
     }
 
     fn load_consistency(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
         // Ratio of correct in last 5 vs overall
-        let recent_acc: f64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(is_correct), 0.0) FROM (
+        let recent_acc: f64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(is_correct), 0.0) FROM (
                  SELECT is_correct FROM memory_evidence_events
                  WHERE student_id = ?1 AND node_id = ?2 ORDER BY occurred_at DESC LIMIT 5
-             )", params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0.0);
+             )",
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0.0);
         Ok(recent_acc)
     }
 
@@ -546,20 +735,28 @@ impl<'a> MemoryIntelligenceEngine<'a> {
     }
 
     fn load_time_separated_score(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
-        let count: i64 = self.conn.query_row(
-            "SELECT COALESCE(time_separated_success_count, 0) FROM memory_states
+        let count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(time_separated_success_count, 0) FROM memory_states
              WHERE student_id = ?1 AND node_id = ?2",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         Ok((count as f64 / 3.0).min(1.0))
     }
 
     fn load_recheck_stability(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
-        let passed: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM recheck_schedules
+        let passed: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM recheck_schedules
              WHERE student_id = ?1 AND node_id = ?2 AND status = 'completed'",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         Ok((passed as f64 / 3.0).min(1.0))
     }
 
@@ -568,37 +765,51 @@ impl<'a> MemoryIntelligenceEngine<'a> {
     }
 
     fn load_interference_resistance(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
-        let total_interference: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM memory_evidence_events
+        let total_interference: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2 AND interference_detected = 1",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         let correct_interference: i64 = self.conn.query_row(
             "SELECT COUNT(*) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2 AND interference_detected = 1 AND is_correct = 1",
             params![student_id, node_id], |row| row.get(0),
         ).unwrap_or(0);
-        if total_interference == 0 { return Ok(0.5); }
+        if total_interference == 0 {
+            return Ok(0.5);
+        }
         Ok(correct_interference as f64 / total_interference as f64)
     }
 
     fn load_overdue_factor(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
-        let overdue: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM recheck_schedules
+        let overdue: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM recheck_schedules
              WHERE student_id = ?1 AND node_id = ?2 AND status = 'pending'
                AND due_at < datetime('now')",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         Ok((overdue as f64 / 3.0).min(1.0))
     }
 
     fn load_accuracy_drop(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
         let recent: f64 = self.load_consistency(student_id, node_id)?;
-        let overall: f64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(is_correct), 0.5) FROM memory_evidence_events
+        let overall: f64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(is_correct), 0.5) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0.5);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0.5);
         Ok((overall - recent).max(0.0).min(1.0))
     }
 
@@ -607,11 +818,15 @@ impl<'a> MemoryIntelligenceEngine<'a> {
     }
 
     fn load_relapse_factor(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
-        let relapses: i64 = self.conn.query_row(
-            "SELECT COALESCE(relapse_count, 0) FROM memory_states
+        let relapses: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(relapse_count, 0) FROM memory_states
              WHERE student_id = ?1 AND node_id = ?2",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         Ok((relapses as f64 / 5.0).min(1.0))
     }
 
@@ -620,28 +835,40 @@ impl<'a> MemoryIntelligenceEngine<'a> {
     }
 
     fn check_interference_block(&self, student_id: i64, node_id: i64) -> EcoachResult<bool> {
-        let risk: i64 = self.conn.query_row(
-            "SELECT COALESCE(interference_risk_score, 0) FROM memory_states
+        let risk: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(interference_risk_score, 0) FROM memory_states
              WHERE student_id = ?1 AND node_id = ?2",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
 
-        let interference_satisfied: String = self.conn.query_row(
-            "SELECT COALESCE(status, 'none') FROM memory_proof_dimensions
+        let interference_satisfied: String = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(status, 'none') FROM memory_proof_dimensions
              WHERE student_id = ?1 AND node_id = ?2 AND dimension_name = 'interference_resistance'",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or_else(|_| "none".into());
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or_else(|_| "none".into());
 
         Ok(risk > 7000 && interference_satisfied != "satisfied")
     }
 
     fn has_long_interval_stability(&self, student_id: i64, node_id: i64) -> EcoachResult<bool> {
-        let long_gap_successes: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM memory_evidence_events
+        let long_gap_successes: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2
                AND delay_bucket IN ('long', 'very_long') AND is_correct = 1",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         Ok(long_gap_successes >= 2)
     }
 
@@ -651,28 +878,40 @@ impl<'a> MemoryIntelligenceEngine<'a> {
     }
 
     fn load_variant_gap(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
-        let canonical_acc: f64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(is_correct), 0.5) FROM memory_evidence_events
+        let canonical_acc: f64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(is_correct), 0.5) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2
                AND (variant_type IS NULL OR variant_type = 'canonical')",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0.5);
-        let variant_acc: f64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(is_correct), 0.5) FROM memory_evidence_events
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0.5);
+        let variant_acc: f64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(is_correct), 0.5) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2
                AND variant_type IS NOT NULL AND variant_type != 'canonical'",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0.5);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0.5);
         Ok((canonical_acc - variant_acc).max(0.0))
     }
 
     fn check_understanding_failure(&self, student_id: i64, node_id: i64) -> EcoachResult<bool> {
         // If accuracy is very low even with heavy cues, it's understanding not memory
-        let heavy_cue_accuracy: f64 = self.conn.query_row(
-            "SELECT COALESCE(AVG(is_correct), 0.5) FROM memory_evidence_events
+        let heavy_cue_accuracy: f64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(AVG(is_correct), 0.5) FROM memory_evidence_events
              WHERE student_id = ?1 AND node_id = ?2 AND cue_level = 'heavy'",
-            params![student_id, node_id], |row| row.get(0),
-        ).unwrap_or(0.5);
+                params![student_id, node_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0.5);
         Ok(heavy_cue_accuracy < 0.4)
     }
 }

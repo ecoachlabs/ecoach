@@ -1317,6 +1317,8 @@ fn push_unique_signal(values: &mut Vec<String>, value: String) {
     }
 }
 
+mod deep;
+
 #[cfg(test)]
 mod tests {
     use rusqlite::Connection;

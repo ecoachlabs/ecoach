@@ -1535,7 +1535,13 @@ impl<'a> PremiumService<'a> {
                 "INSERT INTO strategy_timeline (
                     student_id, shift_title, reason, evidence_snapshot, expected_result
                  ) VALUES (?1,?2,?3,?4,?5)",
-                params![student_id, shift_title, reason, evidence_snapshot, expected_result],
+                params![
+                    student_id,
+                    shift_title,
+                    reason,
+                    evidence_snapshot,
+                    expected_result
+                ],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
@@ -1811,8 +1817,10 @@ impl<'a> PremiumService<'a> {
         self.require_premium_or_elite(student_id)?;
         let mut created = Vec::new();
 
-        let mut stmt = self.conn.prepare(
-            "SELECT ms.topic_id, t.name, ms.memory_state, ms.decay_risk
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT ms.topic_id, t.name, ms.memory_state, ms.decay_risk
              FROM memory_states ms
              JOIN topics t ON t.id = ms.topic_id
              WHERE ms.student_id = ?1
@@ -1823,8 +1831,9 @@ impl<'a> PremiumService<'a> {
                    WHERE rf.student_id = ms.student_id AND rf.topic_id = ms.topic_id
                    AND rf.status IN ('active', 'monitoring')
                    AND rf.risk_category = 'knowledge'
-               )"
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+               )",
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let decaying: Vec<(i64, String, String, i64)> = stmt
             .query_map([student_id], |row| {
@@ -1866,8 +1875,10 @@ impl<'a> PremiumService<'a> {
 
         // Check for subjects where overconfidence rate is high
         if self.table_exists("student_confidence_profile")? {
-            let mut stmt = self.conn.prepare(
-                "SELECT scp.subject_id, s.name, scp.overconfidence_rate_bp
+            let mut stmt = self
+                .conn
+                .prepare(
+                    "SELECT scp.subject_id, s.name, scp.overconfidence_rate_bp
                  FROM student_confidence_profile scp
                  LEFT JOIN subjects s ON s.id = scp.subject_id
                  WHERE scp.student_id = ?1
@@ -1877,8 +1888,9 @@ impl<'a> PremiumService<'a> {
                        SELECT 1 FROM risk_flags rf
                        WHERE rf.student_id = ?1 AND rf.risk_category = 'confidence'
                        AND rf.status IN ('active', 'monitoring')
-                   )"
-            ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                   )",
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
             let overconfident: Vec<(Option<i64>, Option<String>, i64)> = stmt
                 .query_map([student_id], |row| {
@@ -1893,7 +1905,11 @@ impl<'a> PremiumService<'a> {
                 let flag = self.create_risk_flag(&CreateRiskFlagInput {
                     student_id,
                     topic_id: None,
-                    severity: if rate >= 5000 { RiskSeverity::High } else { RiskSeverity::Medium },
+                    severity: if rate >= 5000 {
+                        RiskSeverity::High
+                    } else {
+                        RiskSeverity::Medium
+                    },
                     title: format!("Overconfidence pattern in {}", name),
                     description: Some(format!(
                         "Overconfidence rate is {} bp — student is frequently confident but wrong",
@@ -1924,14 +1940,17 @@ impl<'a> PremiumService<'a> {
         let mut escalation_reasons = Vec::new();
 
         // Check: persistent high-severity risks
-        let persistent_high: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM risk_flags
+        let persistent_high: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM risk_flags
              WHERE student_id = ?1 AND severity IN ('high', 'critical')
              AND status = 'active'
              AND created_at <= datetime('now', '-14 days')",
-            [student_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         if persistent_high > 0 {
             escalation_reasons.push(format!(
@@ -1941,13 +1960,16 @@ impl<'a> PremiumService<'a> {
         }
 
         // Check: stalled interventions
-        let stalled: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM intervention_records
+        let stalled: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM intervention_records
              WHERE student_id = ?1 AND status = 'active'
              AND review_date IS NOT NULL AND review_date <= datetime('now')",
-            [student_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         if stalled > 0 {
             escalation_reasons.push(format!(
@@ -1958,8 +1980,10 @@ impl<'a> PremiumService<'a> {
 
         // Check: exam proximity with low readiness
         if self.table_exists("readiness_profiles")? {
-            let low_readiness_near_exam: Option<i64> = self.conn.query_row(
-                "SELECT rp.overall_readiness_bp
+            let low_readiness_near_exam: Option<i64> = self
+                .conn
+                .query_row(
+                    "SELECT rp.overall_readiness_bp
                  FROM readiness_profiles rp
                  JOIN student_profiles sp ON sp.account_id = rp.student_id
                  WHERE rp.student_id = ?1
@@ -1967,9 +1991,12 @@ impl<'a> PremiumService<'a> {
                    AND sp.exam_target_date <= datetime('now', '+30 days')
                    AND rp.overall_readiness_bp < 5000
                  ORDER BY rp.snapshot_date DESC LIMIT 1",
-                [student_id],
-                |row| row.get(0),
-            ).optional().map_err(|e| EcoachError::Storage(e.to_string()))?.flatten();
+                    [student_id],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(|e| EcoachError::Storage(e.to_string()))?
+                .flatten();
 
             if let Some(readiness) = low_readiness_near_exam {
                 escalation_reasons.push(format!(
@@ -1985,47 +2012,65 @@ impl<'a> PremiumService<'a> {
     // ── Readiness calculation (idea12 deep) ──
 
     pub fn calculate_overall_readiness(&self, student_id: i64) -> EcoachResult<(u16, String)> {
-        let avg_mastery: i64 = self.conn.query_row(
-            "SELECT COALESCE(CAST(AVG(mastery_score) AS INTEGER), 5000)
+        let avg_mastery: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(CAST(AVG(mastery_score) AS INTEGER), 5000)
              FROM student_topic_states WHERE student_id = ?1",
-            [student_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let avg_accuracy: i64 = self.conn.query_row(
-            "SELECT COALESCE(CAST(AVG(accuracy_score) AS INTEGER), 5000)
+        let avg_accuracy: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(CAST(AVG(accuracy_score) AS INTEGER), 5000)
              FROM student_topic_states WHERE student_id = ?1",
-            [student_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let avg_speed: i64 = self.conn.query_row(
-            "SELECT COALESCE(CAST(AVG(speed_score) AS INTEGER), 5000)
+        let avg_speed: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(CAST(AVG(speed_score) AS INTEGER), 5000)
              FROM student_topic_states WHERE student_id = ?1",
-            [student_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let avg_confidence: i64 = self.conn.query_row(
-            "SELECT COALESCE(CAST(AVG(confidence_score) AS INTEGER), 5000)
+        let avg_confidence: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(CAST(AVG(confidence_score) AS INTEGER), 5000)
              FROM student_topic_states WHERE student_id = ?1",
-            [student_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let avg_retention: i64 = self.conn.query_row(
-            "SELECT COALESCE(CAST(AVG(retention_score) AS INTEGER), 5000)
+        let avg_retention: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(CAST(AVG(retention_score) AS INTEGER), 5000)
              FROM student_topic_states WHERE student_id = ?1",
-            [student_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let avg_consistency: i64 = self.conn.query_row(
-            "SELECT COALESCE(CAST(AVG(consistency_score) AS INTEGER), 5000)
+        let avg_consistency: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(CAST(AVG(consistency_score) AS INTEGER), 5000)
              FROM student_topic_states WHERE student_id = ?1",
-            [student_id],
-            |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         // Weighted composite: knowledge=15%, application=15%, reasoning=15%, speed=10%, memory=15%, confidence=10%, consistency=10%, exam_technique=10%
         let overall = clamp_bp(

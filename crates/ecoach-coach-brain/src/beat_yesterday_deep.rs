@@ -130,8 +130,15 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
         student_id: i64,
         subject_id: i64,
     ) -> EcoachResult<BeatYesterdayExtendedProfile> {
-        let (climb_state, momentum_trend, growth_quality, speed_readiness,
-             confidence, recovery_need, streak): (String, String, String, i64, i64, i64, i64) = self
+        let (
+            climb_state,
+            momentum_trend,
+            growth_quality,
+            speed_readiness,
+            confidence,
+            recovery_need,
+            streak,
+        ): (String, String, String, i64, i64, i64, i64) = self
             .conn
             .query_row(
                 "SELECT COALESCE(climb_state, 'entry'), COALESCE(momentum_trend, 'steady'),
@@ -141,10 +148,27 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
                  FROM beat_yesterday_profiles
                  WHERE student_id = ?1 AND subject_id = ?2",
                 params![student_id, subject_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?,
-                          row.get(4)?, row.get(5)?, row.get(6)?)),
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                        row.get(6)?,
+                    ))
+                },
             )
-            .unwrap_or(("entry".into(), "steady".into(), "unknown".into(), 0, 5000, 0, 0));
+            .unwrap_or((
+                "entry".into(),
+                "steady".into(),
+                "unknown".into(),
+                0,
+                5000,
+                0,
+                0,
+            ));
 
         let badges = self.list_earned_badges(student_id, subject_id)?;
 
@@ -166,11 +190,7 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
     // Compute and update all missing scores after a daily climb completes
     // -----------------------------------------------------------------------
 
-    pub fn update_extended_scores(
-        &self,
-        student_id: i64,
-        subject_id: i64,
-    ) -> EcoachResult<()> {
+    pub fn update_extended_scores(&self, student_id: i64, subject_id: i64) -> EcoachResult<()> {
         let speed_readiness = self.compute_speed_readiness(student_id, subject_id)?;
         let confidence = self.compute_confidence(student_id, subject_id)?;
         let recovery_need = self.compute_recovery_need(student_id, subject_id)?;
@@ -188,9 +208,15 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
                      updated_at = datetime('now')
                  WHERE student_id = ?8 AND subject_id = ?9",
                 params![
-                    speed_readiness as i64, confidence as i64, recovery_need as i64,
-                    momentum_trend, growth_quality, climb_state.as_str(),
-                    streak, student_id, subject_id,
+                    speed_readiness as i64,
+                    confidence as i64,
+                    recovery_need as i64,
+                    momentum_trend,
+                    growth_quality,
+                    climb_state.as_str(),
+                    streak,
+                    student_id,
+                    subject_id,
                 ],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -205,7 +231,11 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
     // Score computations
     // -----------------------------------------------------------------------
 
-    fn compute_speed_readiness(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
+    fn compute_speed_readiness(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<BasisPoints> {
         // speed_readiness = 0.4*accuracy_stability + 0.25*topic_familiarity + 0.2*low_skip + 0.15*completion_consistency
         let accuracy_stability = self.recent_accuracy_stability(student_id, subject_id)?;
         let completion_rate = self.recent_completion_rate(student_id, subject_id)?;
@@ -239,11 +269,15 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
     }
 
     fn compute_recovery_need(&self, student_id: i64, subject_id: i64) -> EcoachResult<BasisPoints> {
-        let (strain, momentum): (i64, i64) = self.conn.query_row(
-            "SELECT COALESCE(strain_score, 0), COALESCE(momentum_score, 5000)
+        let (strain, momentum): (i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(strain_score, 0), COALESCE(momentum_score, 5000)
              FROM beat_yesterday_profiles WHERE student_id = ?1 AND subject_id = ?2",
-            params![student_id, subject_id], |row| Ok((row.get(0)?, row.get(1)?)),
-        ).unwrap_or((0, 5000));
+                params![student_id, subject_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap_or((0, 5000));
 
         let recent_drops = self.count_recent_drops(student_id, subject_id)?;
 
@@ -258,11 +292,14 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
 
     fn compute_momentum_trend(&self, student_id: i64, subject_id: i64) -> EcoachResult<String> {
         let scores: Vec<i64> = {
-            let mut stmt = self.conn.prepare(
-                "SELECT momentum_score FROM beat_yesterday_daily_summaries
+            let mut stmt = self
+                .conn
+                .prepare(
+                    "SELECT momentum_score FROM beat_yesterday_daily_summaries
                  WHERE student_id = ?1 AND subject_id = ?2
                  ORDER BY summary_date DESC LIMIT 5",
-            ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
             stmt.query_map(params![student_id, subject_id], |row| row.get(0))
                 .map_err(|e| EcoachError::Storage(e.to_string()))?
@@ -275,7 +312,8 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
         }
 
         let recent_avg = scores.iter().take(2).sum::<i64>() / 2;
-        let older_avg = scores.iter().skip(2).sum::<i64>() / scores.len().saturating_sub(2).max(1) as i64;
+        let older_avg =
+            scores.iter().skip(2).sum::<i64>() / scores.len().saturating_sub(2).max(1) as i64;
 
         let delta = recent_avg - older_avg;
         Ok(if delta > 1000 {
@@ -288,21 +326,32 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
             "slight_decline"
         } else {
             "steady"
-        }.into())
+        }
+        .into())
     }
 
     fn compute_growth_quality(&self, student_id: i64, subject_id: i64) -> EcoachResult<String> {
         // Check last summary for unhealthy patterns
-        let latest: Option<(bool, bool, bool, i64)> = self.conn.query_row(
-            "SELECT beat_attempt_target, beat_accuracy_target, beat_pace_target,
+        let latest: Option<(bool, bool, bool, i64)> = self
+            .conn
+            .query_row(
+                "SELECT beat_attempt_target, beat_accuracy_target, beat_pace_target,
                     COALESCE(guessed_count, 0)
              FROM beat_yesterday_daily_summaries
              WHERE student_id = ?1 AND subject_id = ?2
              ORDER BY summary_date DESC LIMIT 1",
-            params![student_id, subject_id],
-            |row| Ok((row.get::<_,i64>(0)? == 1, row.get::<_,i64>(1)? == 1,
-                      row.get::<_,i64>(2)? == 1, row.get(3)?)),
-        ).optional().map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![student_id, subject_id],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)? == 1,
+                        row.get::<_, i64>(1)? == 1,
+                        row.get::<_, i64>(2)? == 1,
+                        row.get(3)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         Ok(match latest {
             Some((beat_vol, beat_acc, beat_pace, guessed)) => {
@@ -319,23 +368,31 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
                 }
             }
             None => "unknown",
-        }.into())
+        }
+        .into())
     }
 
     fn compute_climb_state(&self, student_id: i64, subject_id: i64) -> EcoachResult<ClimbState> {
-        let (momentum, strain, streak, recovery_need): (i64, i64, i64, i64) = self.conn.query_row(
-            "SELECT COALESCE(momentum_score, 5000), COALESCE(strain_score, 0),
+        let (momentum, strain, streak, recovery_need): (i64, i64, i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(momentum_score, 5000), COALESCE(strain_score, 0),
                     COALESCE(streak_days, 0), COALESCE(recovery_need_score, 0)
              FROM beat_yesterday_profiles WHERE student_id = ?1 AND subject_id = ?2",
-            params![student_id, subject_id],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
-        ).unwrap_or((5000, 0, 0, 0));
+                params![student_id, subject_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .unwrap_or((5000, 0, 0, 0));
 
-        let session_count: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
+        let session_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
              WHERE student_id = ?1 AND subject_id = ?2",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
 
         Ok(if strain >= 7000 || recovery_need >= 7000 {
             ClimbState::Strained
@@ -354,12 +411,15 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
 
     fn compute_streak(&self, student_id: i64, subject_id: i64) -> EcoachResult<i64> {
         let dates: Vec<String> = {
-            let mut stmt = self.conn.prepare(
-                "SELECT summary_date FROM beat_yesterday_daily_summaries
+            let mut stmt = self
+                .conn
+                .prepare(
+                    "SELECT summary_date FROM beat_yesterday_daily_summaries
                  WHERE student_id = ?1 AND subject_id = ?2
                    AND (beat_attempt_target = 1 OR beat_accuracy_target = 1 OR beat_pace_target = 1)
                  ORDER BY summary_date DESC LIMIT 30",
-            ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
             stmt.query_map(params![student_id, subject_id], |row| row.get(0))
                 .map_err(|e| EcoachError::Storage(e.to_string()))?
@@ -367,7 +427,9 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
                 .collect()
         };
 
-        if dates.is_empty() { return Ok(0); }
+        if dates.is_empty() {
+            return Ok(0);
+        }
 
         let today = chrono::Utc::now().date_naive();
         let mut streak = 0i64;
@@ -394,41 +456,67 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
         let streak = self.compute_streak(student_id, subject_id)?;
 
         // First Beat
-        let total_beats: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
+        let total_beats: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
              WHERE student_id = ?1 AND subject_id = ?2
                AND (beat_attempt_target = 1 OR beat_accuracy_target = 1 OR beat_pace_target = 1)",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
 
-        if total_beats >= 1 { self.award_badge(student_id, subject_id, "first_beat")?; }
-        if streak >= 3 { self.award_badge(student_id, subject_id, "three_day_climb")?; }
-        if streak >= 5 { self.award_badge(student_id, subject_id, "five_day_climb")?; }
+        if total_beats >= 1 {
+            self.award_badge(student_id, subject_id, "first_beat")?;
+        }
+        if streak >= 3 {
+            self.award_badge(student_id, subject_id, "three_day_climb")?;
+        }
+        if streak >= 5 {
+            self.award_badge(student_id, subject_id, "five_day_climb")?;
+        }
 
         // Triple beat (all 3 targets in one day)
-        let triple: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
+        let triple: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
              WHERE student_id = ?1 AND subject_id = ?2
                AND beat_attempt_target = 1 AND beat_accuracy_target = 1 AND beat_pace_target = 1",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(0);
-        if triple >= 1 { self.award_badge(student_id, subject_id, "balanced_growth")?; }
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+        if triple >= 1 {
+            self.award_badge(student_id, subject_id, "balanced_growth")?;
+        }
 
         // Completion streak (7 days)
-        let completion_streak: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
+        let completion_streak: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
              WHERE student_id = ?1 AND subject_id = ?2
                AND summary_date >= date('now', '-7 days')",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(0);
-        if completion_streak >= 7 { self.award_badge(student_id, subject_id, "no_quit_week")?; }
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+        if completion_streak >= 7 {
+            self.award_badge(student_id, subject_id, "no_quit_week")?;
+        }
 
         // Recovery comeback
-        let recovery_return: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
+        let recovery_return: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
              WHERE student_id = ?1 AND subject_id = ?2 AND recovery_mode_triggered = 1",
-            params![student_id, subject_id], |row| row.get(0),
-        ).unwrap_or(0);
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
         if recovery_return >= 1 && streak >= 2 {
             self.award_badge(student_id, subject_id, "recovery_comeback")?;
         }
@@ -448,25 +536,36 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
         Ok(())
     }
 
-    fn list_earned_badges(&self, student_id: i64, subject_id: i64) -> EcoachResult<Vec<EarnedBadge>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT eb.badge_code, bd.badge_name, eb.earned_at
+    fn list_earned_badges(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+    ) -> EcoachResult<Vec<EarnedBadge>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT eb.badge_code, bd.badge_name, eb.earned_at
              FROM beat_yesterday_earned_badges eb
              INNER JOIN beat_yesterday_badge_definitions bd ON bd.badge_code = eb.badge_code
              WHERE eb.student_id = ?1 AND eb.subject_id = ?2
              ORDER BY eb.earned_at DESC",
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let rows = stmt.query_map(params![student_id, subject_id], |row| {
-            Ok(EarnedBadge {
-                badge_code: row.get(0)?,
-                badge_name: row.get(1)?,
-                earned_at: row.get(2)?,
+        let rows = stmt
+            .query_map(params![student_id, subject_id], |row| {
+                Ok(EarnedBadge {
+                    badge_code: row.get(0)?,
+                    badge_name: row.get(1)?,
+                    earned_at: row.get(2)?,
+                })
             })
-        }).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let mut badges = Vec::new();
-        for row in rows { badges.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?); }
+        for row in rows {
+            badges.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
         Ok(badges)
     }
 
@@ -481,22 +580,28 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
     ) -> EcoachResult<WeeklyReview> {
         let week_end = chrono::Utc::now().format("%Y-%m-%d").to_string();
         let week_start = (chrono::Utc::now() - chrono::Duration::days(7))
-            .format("%Y-%m-%d").to_string();
+            .format("%Y-%m-%d")
+            .to_string();
 
-        let (sessions, avg_attempts, avg_correct, avg_pace): (i64, i64, i64, i64) = self.conn.query_row(
-            "SELECT COUNT(*), COALESCE(AVG(actual_attempts), 0),
+        let (sessions, avg_attempts, avg_correct, avg_pace): (i64, i64, i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*), COALESCE(AVG(actual_attempts), 0),
                     COALESCE(AVG(actual_correct), 0),
                     COALESCE(AVG(actual_avg_response_time_ms), 0)
              FROM beat_yesterday_daily_summaries
              WHERE student_id = ?1 AND subject_id = ?2
                AND summary_date >= ?3 AND summary_date <= ?4",
-            params![student_id, subject_id, week_start, week_end],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
-        ).unwrap_or((0, 0, 0, 0));
+                params![student_id, subject_id, week_start, week_end],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .unwrap_or((0, 0, 0, 0));
 
         let avg_correctness = if avg_attempts > 0 {
             clamp_bp(((avg_correct as f64 / avg_attempts.max(1) as f64) * 10_000.0).round() as i64)
-        } else { 0 };
+        } else {
+            0
+        };
 
         let streak = self.compute_streak(student_id, subject_id)?;
         let momentum_trend = self.compute_momentum_trend(student_id, subject_id)?;
@@ -519,8 +624,9 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
         };
 
         // Persist
-        self.conn.execute(
-            "INSERT INTO beat_yesterday_weekly_reviews
+        self.conn
+            .execute(
+                "INSERT INTO beat_yesterday_weekly_reviews
                 (student_id, subject_id, week_start, week_end, sessions_completed,
                  avg_attempts_per_day, avg_correctness_bp, avg_pace_ms,
                  biggest_win, biggest_challenge, consistency_streak, momentum_trend)
@@ -530,21 +636,33 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
                 avg_correctness_bp = ?7, avg_pace_ms = ?8,
                 biggest_win = ?9, biggest_challenge = ?10,
                 consistency_streak = ?11, momentum_trend = ?12",
-            params![
-                student_id, subject_id, week_start, week_end,
-                sessions, avg_attempts, avg_correctness as i64, avg_pace,
-                biggest_win, biggest_challenge, streak, momentum_trend,
-            ],
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+                params![
+                    student_id,
+                    subject_id,
+                    week_start,
+                    week_end,
+                    sessions,
+                    avg_attempts,
+                    avg_correctness as i64,
+                    avg_pace,
+                    biggest_win,
+                    biggest_challenge,
+                    streak,
+                    momentum_trend,
+                ],
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         Ok(WeeklyReview {
-            student_id, subject_id,
+            student_id,
+            subject_id,
             week_start: week_start.clone(),
             sessions_completed: sessions,
             avg_attempts_per_day: avg_attempts,
             avg_correctness_bp: avg_correctness,
             avg_pace_ms: avg_pace,
-            biggest_win, biggest_challenge,
+            biggest_win,
+            biggest_challenge,
             consistency_streak: streak,
             momentum_trend,
             next_week_primary_focus: None,
@@ -560,8 +678,10 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
         &self,
         subject_id: i64,
     ) -> EcoachResult<Vec<TeacherClimbOverview>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT byp.student_id, a.display_name,
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT byp.student_id, a.display_name,
                     COALESCE(byp.climb_state, 'entry'),
                     COALESCE(byp.momentum_trend, 'steady'),
                     COALESCE(byp.streak_days, 0),
@@ -573,34 +693,43 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
              INNER JOIN accounts a ON a.id = byp.student_id
              WHERE byp.subject_id = ?1
              ORDER BY byp.momentum_score DESC",
-        ).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
-        let rows = stmt.query_map([subject_id], |row| {
-            let momentum: i64 = row.get(6)?;
-            let strain: i64 = row.get(7)?;
-            let streak: i64 = row.get(4)?;
+        let rows = stmt
+            .query_map([subject_id], |row| {
+                let momentum: i64 = row.get(6)?;
+                let strain: i64 = row.get(7)?;
+                let streak: i64 = row.get(4)?;
 
-            let risk = if strain >= 7000 { "high" }
-                else if momentum < 3000 && streak == 0 { "medium" }
-                else { "low" };
+                let risk = if strain >= 7000 {
+                    "high"
+                } else if momentum < 3000 && streak == 0 {
+                    "medium"
+                } else {
+                    "low"
+                };
 
-            Ok(TeacherClimbOverview {
-                student_id: row.get(0)?,
-                student_name: row.get(1)?,
-                climb_state: row.get(2)?,
-                momentum_trend: row.get(3)?,
-                streak_days: streak,
-                current_mode: row.get(5)?,
-                momentum_score: clamp_bp(momentum),
-                strain_score: clamp_bp(strain),
-                growth_quality: row.get(8)?,
-                biggest_bottleneck: None, // would require per-student topic analysis
-                disengagement_risk: risk.into(),
+                Ok(TeacherClimbOverview {
+                    student_id: row.get(0)?,
+                    student_name: row.get(1)?,
+                    climb_state: row.get(2)?,
+                    momentum_trend: row.get(3)?,
+                    streak_days: streak,
+                    current_mode: row.get(5)?,
+                    momentum_score: clamp_bp(momentum),
+                    strain_score: clamp_bp(strain),
+                    growth_quality: row.get(8)?,
+                    biggest_bottleneck: None, // would require per-student topic analysis
+                    disengagement_risk: risk.into(),
+                })
             })
-        }).map_err(|e| EcoachError::Storage(e.to_string()))?;
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let mut result = Vec::new();
-        for row in rows { result.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?); }
+        for row in rows {
+            result.push(row.map_err(|e| EcoachError::Storage(e.to_string()))?);
+        }
         Ok(result)
     }
 
@@ -618,27 +747,37 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
             ).map_err(|e| EcoachError::Storage(e.to_string()))?;
             stmt.query_map(params![student_id, subject_id], |row| row.get(0))
                 .map_err(|e| EcoachError::Storage(e.to_string()))?
-                .filter_map(|r| r.ok()).collect()
+                .filter_map(|r| r.ok())
+                .collect()
         };
 
-        if accuracies.len() < 2 { return Ok(5000); }
+        if accuracies.len() < 2 {
+            return Ok(5000);
+        }
 
         let avg: f64 = accuracies.iter().sum::<f64>() / accuracies.len() as f64;
-        let variance: f64 = accuracies.iter().map(|a| (a - avg).powi(2)).sum::<f64>() / accuracies.len() as f64;
+        let variance: f64 =
+            accuracies.iter().map(|a| (a - avg).powi(2)).sum::<f64>() / accuracies.len() as f64;
 
         // Low variance = high stability
         Ok(clamp_bp(((1.0 - variance.sqrt().min(1.0)) * 10_000.0).round() as i64) as i64)
     }
 
     fn recent_completion_rate(&self, student_id: i64, subject_id: i64) -> EcoachResult<i64> {
-        let (targets, completed): (i64, i64) = self.conn.query_row(
-            "SELECT COUNT(*), SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)
+        let (targets, completed): (i64, i64) = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*), SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)
              FROM beat_yesterday_daily_targets
              WHERE student_id = ?1 AND subject_id = ?2
                AND target_date >= date('now', '-14 days')",
-            params![student_id, subject_id], |row| Ok((row.get(0)?, row.get(1)?)),
-        ).unwrap_or((0, 0));
-        if targets == 0 { return Ok(5000); }
+                params![student_id, subject_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap_or((0, 0));
+        if targets == 0 {
+            return Ok(5000);
+        }
         Ok(to_bp(completed as f64 / targets as f64) as i64)
     }
 
@@ -651,17 +790,22 @@ impl<'a> BeatYesterdayDeepEngine<'a> {
                AND summary_date >= date('now', '-14 days')",
             params![student_id, subject_id], |row| Ok((row.get(0)?, row.get(1)?)),
         ).unwrap_or((0, 0));
-        if total == 0 { return Ok(5000); }
+        if total == 0 {
+            return Ok(5000);
+        }
         Ok(to_bp(beats as f64 / total as f64) as i64)
     }
 
     fn count_recent_drops(&self, student_id: i64, subject_id: i64) -> EcoachResult<i64> {
-        self.conn.query_row(
-            "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
+        self.conn
+            .query_row(
+                "SELECT COUNT(*) FROM beat_yesterday_daily_summaries
              WHERE student_id = ?1 AND subject_id = ?2
                AND summary_date >= date('now', '-7 days')
                AND beat_attempt_target = 0 AND beat_accuracy_target = 0",
-            params![student_id, subject_id], |row| row.get(0),
-        ).map_err(|e| EcoachError::Storage(e.to_string()))
+                params![student_id, subject_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| EcoachError::Storage(e.to_string()))
     }
 }

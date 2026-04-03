@@ -115,8 +115,11 @@ impl<'a> VelocityEngine<'a> {
         // Coverage expansion
         let coverage_rate = clamp_bp(station_rate as i64 * 8 / 10); // proxy
 
-        let overall = (station_rate as i64 + mastery_rate as i64 + retention_rate as i64
-            + mock_rate as i64 + speed_rate as i64)
+        let overall = (station_rate as i64
+            + mastery_rate as i64
+            + retention_rate as i64
+            + mock_rate as i64
+            + speed_rate as i64)
             / 5;
         let overall_label = match overall {
             0..=2000 => "stalled",
@@ -140,10 +143,14 @@ impl<'a> VelocityEngine<'a> {
                     speed_gain_rate = ?7, coverage_expansion_rate = ?8,
                     computed_at = datetime('now')",
                 params![
-                    student_id, subject_id,
-                    station_rate as i64, mastery_rate as i64,
-                    retention_rate as i64, mock_rate as i64,
-                    speed_rate as i64, coverage_rate as i64,
+                    student_id,
+                    subject_id,
+                    station_rate as i64,
+                    mastery_rate as i64,
+                    retention_rate as i64,
+                    mock_rate as i64,
+                    speed_rate as i64,
+                    coverage_rate as i64,
                 ],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -212,7 +219,8 @@ impl<'a> VelocityEngine<'a> {
 
         let days_needed = (sessions_needed as f64 / 1.5).ceil() as i64; // assume ~1.5 sessions/day
 
-        let capacity = clamp_bp((days_remaining as f64 / days_needed.max(1) as f64 * 10_000.0).round() as i64);
+        let capacity =
+            clamp_bp((days_remaining as f64 / days_needed.max(1) as f64 * 10_000.0).round() as i64);
 
         let feasibility = if days_remaining >= days_needed * 2 {
             "comfortable"
@@ -290,7 +298,12 @@ impl<'a> VelocityEngine<'a> {
 
         let rows: Vec<(i64, String, i64, Option<i64>)> = stmt
             .query_map(params![student_id, subject_id], |row| {
-                Ok((row.get(0)?, row.get(1)?, row.get::<_, Option<i64>>(2)?.unwrap_or(5000), row.get(3)?))
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get::<_, Option<i64>>(2)?.unwrap_or(5000),
+                    row.get(3)?,
+                ))
             })
             .map_err(|e| EcoachError::Storage(e.to_string()))?
             .filter_map(|r| r.ok())

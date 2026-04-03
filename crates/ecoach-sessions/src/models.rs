@@ -14,10 +14,64 @@ pub struct Session {
     pub subject_id: Option<i64>,
     pub status: String,
     pub active_item_index: i64,
+    pub focus_mode: bool,
+    pub focus_goal: Option<String>,
+    pub break_schedule_json: Option<Value>,
+    pub ambient_profile: Option<String>,
     pub started_at: Option<DateTime<Utc>>,
     pub paused_at: Option<DateTime<Utc>>,
     pub completed_at: Option<DateTime<Utc>>,
     pub last_activity_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FocusModeConfig {
+    pub session_id: i64,
+    pub focus_mode: bool,
+    pub focus_goal: Option<String>,
+    pub break_schedule_json: Option<Value>,
+    pub ambient_profile: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionPresenceEventInput {
+    pub event_type: String,
+    pub occurred_at: Option<String>,
+    pub metadata_json: Option<Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionPresenceEvent {
+    pub id: i64,
+    pub session_id: i64,
+    pub event_type: String,
+    pub occurred_at: DateTime<Utc>,
+    pub state_before: Option<String>,
+    pub state_after: String,
+    pub segment_duration_ms: i64,
+    pub counted_credit_ms: i64,
+    pub metadata_json: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionPresenceSnapshot {
+    pub session_id: i64,
+    pub current_state: String,
+    pub current_segment_started_at: Option<DateTime<Utc>>,
+    pub first_meaningful_at: Option<DateTime<Utc>>,
+    pub last_meaningful_at: Option<DateTime<Utc>>,
+    pub idle_started_at: Option<DateTime<Utc>>,
+    pub idle_confirmed_at: Option<DateTime<Utc>>,
+    pub interruption_started_at: Option<DateTime<Utc>>,
+    pub gross_elapsed_ms: i64,
+    pub active_engaged_ms: i64,
+    pub passive_engaged_ms: i64,
+    pub thinking_time_ms: i64,
+    pub idle_time_ms: i64,
+    pub interruption_time_ms: i64,
+    pub counted_study_time_ms: i64,
+    pub abandonment_risk_bp: BasisPoints,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,7 +95,7 @@ pub struct CustomTestStartInput {
     pub weakness_bias: bool,
 }
 
-// ── Custom test deep models (idea14) ──
+// â”€â”€ Custom test deep models (idea14) â”€â”€
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -290,6 +344,21 @@ pub struct SessionItem {
 pub struct SessionSnapshot {
     pub session: Session,
     pub items: Vec<SessionItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachMissionSessionPlan {
+    pub mission_id: i64,
+    pub session_id: i64,
+    pub title: String,
+    pub reason: String,
+    pub activity_type: String,
+    pub target_minutes: i64,
+    pub subject_id: i64,
+    pub topic_id: i64,
+    pub question_ids: Vec<i64>,
+    pub coverage: Value,
+    pub session_snapshot: SessionSnapshot,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
