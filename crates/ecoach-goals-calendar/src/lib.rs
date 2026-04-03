@@ -8,11 +8,12 @@ pub use models::{
     ClimbTrendPoint, CoachBadgeAward, CoachTitleCard, CoachTitleHistoryEntry, ComebackFlow,
     ComebackFlowTemplate, DailyAvailabilitySummary, DailyReplan, EngagementEvent,
     EngagementEventInput, EngagementRiskProfile, ExamPlanState, ExamPlanStateInput,
-    FreeNowRecommendation, Goal, ParentAccessSettings, ParentAccessSettingsInput,
-    ParentAlertRecord, ParentFeedbackInput, ParentFeedbackRecord, PreparationIntensityProfile,
-    ReminderSchedule, ReminderScheduleInput, RevengeQueueItem, ScheduleLedgerEntry,
-    ScheduleTriggerJob, StrategyAdjustmentLog, StudentMomentum, TimeOrchestrationSnapshot,
-    TimeSessionBlock, TitleDefenseBrief, TitleDefenseCompletionInput, TitleDefenseResult,
-    TitlesHallSnapshot,
+    FreeNowRecommendation, Goal, GoalArbitrationSnapshot, GoalConflict, GoalProfile,
+    GoalProfileInput, ParentAccessSettings, ParentAccessSettingsInput, ParentAlertRecord,
+    ParentFeedbackInput, ParentFeedbackRecord, PreparationIntensityProfile, ReminderSchedule,
+    ReminderScheduleInput, RevengeQueueItem, ScheduleLedgerEntry, ScheduleTriggerJob,
+    StrategyAdjustmentLog, StudentMomentum, TimeOrchestrationSnapshot, TimeSessionBlock,
+    TitleDefenseBrief, TitleDefenseCompletionInput, TitleDefenseResult, TitlesHallSnapshot,
+    WeeklyPlanBand, WeeklyPlanBlock, WeeklyPlanDay, WeeklyPlanSnapshot,
 };
 pub use service::GoalsCalendarService;

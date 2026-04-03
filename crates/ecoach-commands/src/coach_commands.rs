@@ -8,29 +8,28 @@ use ecoach_coach_brain::{
     CoachStateResolution, ComposedSession, CompressionAction, ConceptInterferenceCase,
     ConsistencySnapshot, ConstitutionalEngineHealth, ConstructedAnswerEvaluation,
     ConstructedAnswerEvaluationInput, ContentGovernorSnapshot, ContentReadinessResolution,
-    DeadlinePressure, DoctrineRule, EvidenceEvent, EvidenceInterpretationEngine,
-    EvidenceProbeRecommendation, ExamStrategyProfile, ExamStrategyService,
-    ExamStrategySessionInput, FeatureActivationDecision, GoalEngine, GoalFeasibility,
-    DiagnosticPrescriptionSync, GoalRecommendation, InstructionalObjectEnvelope,
+    DeadlinePressure, DiagnosticPrescriptionSync, DoctrineRule, EvidenceEvent,
+    EvidenceInterpretationEngine, EvidenceProbeRecommendation, ExamStrategyProfile,
+    ExamStrategyService, ExamStrategySessionInput, FeatureActivationDecision, GoalEngine,
+    GoalFeasibility, GoalRecommendation, InstructionalObjectEnvelope,
     InterventionEffectivenessProfile, InterventionLibraryService, InterventionModeDefinition,
-    InterventionPrescription, ProblemCauseFixCard,
-    JourneyAdaptationEngine, JourneyRouteSnapshot, JourneyService, KnowledgeMapNode,
-    LearnerMisconceptionSnapshot, MasteryMapNode, MasteryMapService,
+    InterventionPrescription, JourneyAdaptationEngine, JourneyRouteSnapshot, JourneyService,
+    KnowledgeMapNode, LearnerMisconceptionSnapshot, MasteryMapNode, MasteryMapService,
     PedagogicalRuntimeService, PersonalizationSnapshot, PlanEngine, PrerequisiteGraph,
-    ReentryProbeResult, RiseModeEngine, RiseModeProfile, RouteMode, SessionComposer,
-    StageTransitionResult, SteppedAttemptResult, SteppedQuestionEngine,
+    ProblemCauseFixCard, ReentryProbeResult, RiseModeEngine, RiseModeProfile, RouteMode,
+    SessionComposer, StageTransitionResult, SteppedAttemptResult, SteppedQuestionEngine,
     SurpriseEventRecommendation, TeacherClimbOverview, TeacherlessCapabilityReview,
     TeachingRuntimeSnapshot, TeachingTurnPlan, TopicActionEngine, TopicActionMode,
-    TopicActionSession, TopicActionSummary, TopicCase, TopicProofCertification,
-    TopicProofEngine, TopicTeachingProfile, TopicTeachingStrategy, UncertaintyProfile,
-    VelocityEngine, VelocitySnapshot,
-    assess_content_readiness, evaluate_coach_brain, list_priority_topic_cases, resolve_coach_state,
-    resolve_next_coach_action,
+    TopicActionSession, TopicActionSummary, TopicCase, TopicProofCertification, TopicProofEngine,
+    TopicTeachingProfile, TopicTeachingStrategy, UncertaintyProfile, VelocityEngine,
+    VelocitySnapshot, assess_content_readiness, evaluate_coach_brain, list_priority_topic_cases,
+    resolve_coach_state, resolve_next_coach_action,
 };
 use ecoach_goals_calendar::{
     AvailabilityException, AvailabilityProfile, AvailabilityWindow, DailyAvailabilitySummary,
-    ExamPlanState, ExamPlanStateInput, GoalsCalendarService, ScheduleLedgerEntry,
-    ScheduleTriggerJob, TimeOrchestrationSnapshot, TimeSessionBlock,
+    ExamPlanState, ExamPlanStateInput, GoalArbitrationSnapshot, GoalProfile, GoalProfileInput,
+    GoalsCalendarService, ScheduleLedgerEntry, ScheduleTriggerJob, TimeOrchestrationSnapshot,
+    TimeSessionBlock, WeeklyPlanSnapshot,
 };
 use ecoach_reporting::{DashboardService, StudentDashboard};
 use ecoach_substrate::EngineRegistry;
@@ -246,6 +245,10 @@ pub type TitleDefenseResultDto = ecoach_goals_calendar::TitleDefenseResult;
 pub type StudentMomentumDto = ecoach_goals_calendar::StudentMomentum;
 pub type ComebackFlowDto = ecoach_goals_calendar::ComebackFlow;
 pub type RevengeQueueItemDto = ecoach_goals_calendar::RevengeQueueItem;
+pub type GoalProfileDto = GoalProfile;
+pub type GoalProfileInputDto = GoalProfileInput;
+pub type GoalArbitrationSnapshotDto = GoalArbitrationSnapshot;
+pub type WeeklyPlanSnapshotDto = WeeklyPlanSnapshot;
 pub type AnswerRubricDto = AnswerRubric;
 pub type ConstructedAnswerEvaluationDto = ConstructedAnswerEvaluation;
 pub type ExamStrategyProfileDto = ExamStrategyProfile;
@@ -428,9 +431,8 @@ pub fn build_personalization_snapshot(
     topic_id: Option<i64>,
 ) -> Result<PersonalizationSnapshotDto, CommandError> {
     state.with_connection(|conn| {
-        Ok(PedagogicalRuntimeService::new(conn).build_personalization_snapshot(
-            student_id, subject_id, topic_id,
-        )?)
+        Ok(PedagogicalRuntimeService::new(conn)
+            .build_personalization_snapshot(student_id, subject_id, topic_id)?)
     })
 }
 
@@ -485,7 +487,9 @@ pub fn list_surprise_event_recommendations(
 pub fn list_intervention_mode_library(
     state: &AppState,
 ) -> Result<Vec<InterventionModeDefinitionDto>, CommandError> {
-    state.with_connection(|conn| Ok(InterventionLibraryService::new(conn).list_intervention_modes()?))
+    state.with_connection(|conn| {
+        Ok(InterventionLibraryService::new(conn).list_intervention_modes()?)
+    })
 }
 
 pub fn get_topic_intervention_prescription(
@@ -592,6 +596,62 @@ pub fn build_academic_calendar_snapshot(
     })
 }
 
+pub fn save_goal_profile(
+    state: &AppState,
+    student_id: i64,
+    input: GoalProfileInputDto,
+) -> Result<GoalProfileDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).save_goal_profile(student_id, input)?)
+    })
+}
+
+pub fn list_goal_profiles(
+    state: &AppState,
+    student_id: i64,
+) -> Result<Vec<GoalProfileDto>, CommandError> {
+    state.with_connection(|conn| Ok(GoalsCalendarService::new(conn).list_goal_profiles(student_id)?))
+}
+
+pub fn update_goal_profile_state(
+    state: &AppState,
+    goal_id: i64,
+    goal_state: String,
+    blocked_reason: Option<String>,
+) -> Result<GoalProfileDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).update_goal_profile_state(
+            goal_id,
+            &goal_state,
+            blocked_reason.as_deref(),
+        )?)
+    })
+}
+
+pub fn get_goal_arbitration_snapshot(
+    state: &AppState,
+    student_id: i64,
+) -> Result<GoalArbitrationSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).build_goal_arbitration_snapshot(student_id)?)
+    })
+}
+
+pub fn get_weekly_plan_snapshot(
+    state: &AppState,
+    student_id: i64,
+    subject_id: Option<i64>,
+    anchor_date: String,
+) -> Result<WeeklyPlanSnapshotDto, CommandError> {
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).build_weekly_plan_snapshot(
+            student_id,
+            subject_id,
+            &anchor_date,
+        )?)
+    })
+}
+
 pub fn get_preparation_intensity_profile(
     state: &AppState,
     student_id: i64,
@@ -619,7 +679,9 @@ pub fn get_availability_profile(
     state: &AppState,
     student_id: i64,
 ) -> Result<Option<AvailabilityProfileDto>, CommandError> {
-    state.with_connection(|conn| Ok(GoalsCalendarService::new(conn).get_availability_profile(student_id)?))
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).get_availability_profile(student_id)?)
+    })
 }
 
 pub fn replace_availability_windows(
@@ -638,7 +700,9 @@ pub fn list_availability_windows(
     state: &AppState,
     student_id: i64,
 ) -> Result<Vec<AvailabilityWindowDto>, CommandError> {
-    state.with_connection(|conn| Ok(GoalsCalendarService::new(conn).list_availability_windows(student_id)?))
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).list_availability_windows(student_id)?)
+    })
 }
 
 pub fn add_availability_exception(
@@ -658,11 +722,13 @@ pub fn list_availability_exceptions(
     end_date: Option<String>,
 ) -> Result<Vec<AvailabilityExceptionDto>, CommandError> {
     state.with_connection(|conn| {
-        Ok(GoalsCalendarService::new(conn).list_availability_exceptions(
-            student_id,
-            start_date.as_deref(),
-            end_date.as_deref(),
-        )?)
+        Ok(
+            GoalsCalendarService::new(conn).list_availability_exceptions(
+                student_id,
+                start_date.as_deref(),
+                end_date.as_deref(),
+            )?,
+        )
     })
 }
 
@@ -671,7 +737,9 @@ pub fn get_daily_availability(
     student_id: i64,
     date: &str,
 ) -> Result<DailyAvailabilitySummaryDto, CommandError> {
-    state.with_connection(|conn| Ok(GoalsCalendarService::new(conn).get_daily_availability(student_id, date)?))
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).get_daily_availability(student_id, date)?)
+    })
 }
 
 pub fn is_free_now(
@@ -680,7 +748,9 @@ pub fn is_free_now(
     date: &str,
     minute_of_day: i64,
 ) -> Result<bool, CommandError> {
-    state.with_connection(|conn| Ok(GoalsCalendarService::new(conn).is_free_now(student_id, date, minute_of_day)?))
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).is_free_now(student_id, date, minute_of_day)?)
+    })
 }
 
 pub fn sync_exam_plan_state(
@@ -697,7 +767,8 @@ pub fn get_exam_plan_state(
     exam_date: &str,
 ) -> Result<Option<ExamPlanStateDto>, CommandError> {
     state.with_connection(|conn| {
-        Ok(GoalsCalendarService::new(conn).get_exam_plan_state(student_id, subject_id, exam_date)?)
+        Ok(GoalsCalendarService::new(conn)
+            .get_exam_plan_state(student_id, subject_id, exam_date)?)
     })
 }
 
@@ -707,7 +778,9 @@ pub fn get_schedule_ledger(
     subject_id: i64,
     date: &str,
 ) -> Result<ScheduleLedgerEntryDto, CommandError> {
-    state.with_connection(|conn| Ok(GoalsCalendarService::new(conn).get_schedule_ledger(student_id, subject_id, date)?))
+    state.with_connection(|conn| {
+        Ok(GoalsCalendarService::new(conn).get_schedule_ledger(student_id, subject_id, date)?)
+    })
 }
 
 pub fn list_time_session_blocks(
@@ -751,17 +824,19 @@ pub fn build_time_orchestration_snapshot(
     horizon_days: Option<usize>,
 ) -> Result<TimeOrchestrationSnapshotDto, CommandError> {
     state.with_connection(|conn| {
-        Ok(GoalsCalendarService::new(conn).build_time_orchestration_snapshot(
-            student_id,
-            subject_id,
-            anchor_date,
-            minute_of_day,
-            exam_date.as_deref(),
-            target_effective_minutes,
-            plan_mode.as_deref(),
-            auto_trigger_mode.as_deref(),
-            horizon_days.unwrap_or(7),
-        )?)
+        Ok(
+            GoalsCalendarService::new(conn).build_time_orchestration_snapshot(
+                student_id,
+                subject_id,
+                anchor_date,
+                minute_of_day,
+                exam_date.as_deref(),
+                target_effective_minutes,
+                plan_mode.as_deref(),
+                auto_trigger_mode.as_deref(),
+                horizon_days.unwrap_or(7),
+            )?,
+        )
     })
 }
 
@@ -1811,16 +1886,27 @@ mod tests {
         assert!(runtime_after.active_turn.is_some());
         assert!(!runtime_after.active_review_episodes.is_empty());
         assert!(runtime_after.personalization.is_some());
-        assert!(runtime_after
-            .turns
-            .iter()
-            .any(|turn| turn.outcome_status.as_deref() == Some("repair_required")));
+        assert!(
+            runtime_after
+                .turns
+                .iter()
+                .any(|turn| turn.outcome_status.as_deref() == Some("repair_required"))
+        );
 
         let personalization =
             super::build_personalization_snapshot(&state, student_id, subject_id, Some(topic_id))
                 .expect("personalization snapshot should build");
-        assert!(personalization.scope_key.contains(&format!("topic:{topic_id}")));
-        assert!(personalization.observed_profile.get("top_failures").is_some());
+        assert!(
+            personalization
+                .scope_key
+                .contains(&format!("topic:{topic_id}"))
+        );
+        assert!(
+            personalization
+                .observed_profile
+                .get("top_failures")
+                .is_some()
+        );
     }
 
     fn seeded_state() -> AppState {

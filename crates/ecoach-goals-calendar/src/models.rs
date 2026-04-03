@@ -13,6 +13,127 @@ pub struct Goal {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GoalProfileInput {
+    pub title: String,
+    pub description: Option<String>,
+    pub category: String,
+    pub level: String,
+    pub subject_id: Option<i64>,
+    pub topics: Vec<String>,
+    pub urgency_level: String,
+    pub start_date: Option<String>,
+    pub deadline: Option<String>,
+    pub exam_id: Option<i64>,
+    pub confidence_score_bp: BasisPoints,
+    pub coach_priority_bp: BasisPoints,
+    pub parent_priority_flag: bool,
+    pub evidence_sources: Vec<String>,
+    pub dependency_goal_ids: Vec<i64>,
+    pub risk_level: String,
+    pub suggested_weekly_effort_minutes: Option<i64>,
+    pub current_momentum_bp: BasisPoints,
+    pub completion_criteria: Vec<String>,
+    pub goal_state: String,
+    pub blocked_reason: Option<String>,
+    pub source_bundle_id: Option<i64>,
+    pub goal_signal_key: Option<String>,
+    pub metadata: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GoalProfile {
+    pub id: i64,
+    pub student_id: i64,
+    pub parent_goal_id: Option<i64>,
+    pub title: String,
+    pub description: Option<String>,
+    pub goal_type: String,
+    pub goal_category: String,
+    pub goal_level: String,
+    pub goal_state: String,
+    pub subject_id: Option<i64>,
+    pub topics: Vec<String>,
+    pub urgency_level: String,
+    pub start_date: Option<String>,
+    pub deadline: Option<String>,
+    pub exam_id: Option<i64>,
+    pub confidence_score_bp: BasisPoints,
+    pub coach_priority_bp: BasisPoints,
+    pub parent_priority_flag: bool,
+    pub evidence_sources: Vec<String>,
+    pub dependency_goal_ids: Vec<i64>,
+    pub risk_level: String,
+    pub suggested_weekly_effort_minutes: Option<i64>,
+    pub current_momentum_bp: BasisPoints,
+    pub completion_criteria: Vec<String>,
+    pub blocked_reason: Option<String>,
+    pub source_bundle_id: Option<i64>,
+    pub goal_signal_key: Option<String>,
+    pub metadata: Value,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GoalConflict {
+    pub goal_id: i64,
+    pub conflicting_goal_id: i64,
+    pub conflict_type: String,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GoalArbitrationSnapshot {
+    pub student_id: i64,
+    pub generated_at: String,
+    pub primary_goal_id: Option<i64>,
+    pub focus_goal_ids: Vec<i64>,
+    pub paused_goal_ids: Vec<i64>,
+    pub blocked_goal_ids: Vec<i64>,
+    pub conflicts: Vec<GoalConflict>,
+    pub rationale: Vec<String>,
+    pub goals: Vec<GoalProfile>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WeeklyPlanBand {
+    pub band_key: String,
+    pub allocated_minutes: i64,
+    pub rationale: String,
+    pub focus_topic_ids: Vec<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WeeklyPlanBlock {
+    pub band_key: String,
+    pub session_type: String,
+    pub duration_minutes: i64,
+    pub focus_topic_ids: Vec<i64>,
+    pub exam_support_scope: String,
+    pub rationale: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WeeklyPlanDay {
+    pub date: String,
+    pub available_minutes: i64,
+    pub planned_minutes: i64,
+    pub block_count: i64,
+    pub blocks: Vec<WeeklyPlanBlock>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WeeklyPlanSnapshot {
+    pub student_id: i64,
+    pub subject_id: Option<i64>,
+    pub anchor_date: String,
+    pub prioritized_exam_id: Option<i64>,
+    pub priorities: Vec<String>,
+    pub bands: Vec<WeeklyPlanBand>,
+    pub days: Vec<WeeklyPlanDay>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalendarEvent {
     pub id: i64,
     pub student_id: i64,

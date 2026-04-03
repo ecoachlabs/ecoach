@@ -1,4 +1,7 @@
-use ecoach_student_model::{LearnerTruthSnapshot, StudentModelService, StudentTopicState};
+use ecoach_student_model::{
+    LearnerTruthSnapshot, StudentModelService, StudentTopicState,
+};
+use ecoach_substrate::LearnerEvidenceFabric;
 use serde::{Deserialize, Serialize};
 
 use crate::{error::CommandError, state::AppState};
@@ -33,6 +36,8 @@ impl From<LearnerTruthSnapshot> for LearnerTruthDto {
         }
     }
 }
+
+pub type LearnerEvidenceFabricDto = LearnerEvidenceFabric;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TopicStateDto {
@@ -83,6 +88,17 @@ pub fn get_learner_truth(
         let service = StudentModelService::new(conn);
         let snapshot = service.get_learner_truth_snapshot(student_id)?;
         Ok(LearnerTruthDto::from(snapshot))
+    })
+}
+
+pub fn get_learner_evidence_fabric(
+    state: &AppState,
+    student_id: i64,
+    limit_per_stream: usize,
+) -> Result<LearnerEvidenceFabricDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = StudentModelService::new(conn);
+        Ok(service.get_learner_evidence_fabric(student_id, limit_per_stream)?)
     })
 }
 

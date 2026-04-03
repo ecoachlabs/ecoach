@@ -231,7 +231,10 @@ impl<'a> InterventionLibraryService<'a> {
     fn build_problem_card(&self, topic_case: &TopicCase) -> ProblemCauseFixCard {
         let primary_hypothesis = topic_case.active_hypotheses.first();
         let problem_summary = if let Some(blocker) = &topic_case.active_blocker {
-            format!("{} is currently blocked because {}.", topic_case.topic_name, blocker.reason)
+            format!(
+                "{} is currently blocked because {}.",
+                topic_case.topic_name, blocker.reason
+            )
         } else if topic_case.primary_hypothesis_code == "pressure_collapse" {
             format!(
                 "{} works better in calm conditions than under time pressure.",
@@ -443,31 +446,65 @@ impl<'a> InterventionLibraryService<'a> {
     }
 }
 
-fn prescription_triplet(topic_case: &TopicCase) -> (&'static str, Option<&'static str>, Option<&'static str>) {
+fn prescription_triplet(
+    topic_case: &TopicCase,
+) -> (&'static str, Option<&'static str>, Option<&'static str>) {
     if topic_case
         .active_hypotheses
         .iter()
         .any(|item| item.code == "conceptual_confusion")
     {
-        ("compare_contrast_drill", Some("misconception_correction_set"), Some("guided_transfer_drill"))
+        (
+            "compare_contrast_drill",
+            Some("misconception_correction_set"),
+            Some("guided_transfer_drill"),
+        )
     } else if topic_case.primary_hypothesis_code == "pressure_collapse" {
-        ("pressure_ladder", Some("fluency_burst"), Some("stability_recheck_cycle"))
+        (
+            "pressure_ladder",
+            Some("fluency_burst"),
+            Some("stability_recheck_cycle"),
+        )
     } else if topic_case.primary_hypothesis_code == "memory_decay" {
-        ("recall_probe", Some("stability_recheck_cycle"), Some("guided_transfer_drill"))
+        (
+            "recall_probe",
+            Some("stability_recheck_cycle"),
+            Some("guided_transfer_drill"),
+        )
     } else if topic_case.primary_hypothesis_code == "knowledge_gap" {
-        ("concept_rebuild", Some("translation_scaffold"), Some("guided_transfer_drill"))
+        (
+            "concept_rebuild",
+            Some("translation_scaffold"),
+            Some("guided_transfer_drill"),
+        )
     } else if topic_case.primary_hypothesis_code == "execution_drift" {
-        ("guided_worked_step_repair", Some("error_diagnosis_drill"), Some("stability_recheck_cycle"))
+        (
+            "guided_worked_step_repair",
+            Some("error_diagnosis_drill"),
+            Some("stability_recheck_cycle"),
+        )
     } else if topic_case
         .active_hypotheses
         .iter()
         .any(|item| item.code.contains("confidence"))
     {
-        ("confidence_reflection_check", Some("misconception_correction_set"), Some("stability_recheck_cycle"))
+        (
+            "confidence_reflection_check",
+            Some("misconception_correction_set"),
+            Some("stability_recheck_cycle"),
+        )
     } else if topic_case.requires_probe {
-        ("mixed_root_repair_set", Some("guided_transfer_drill"), Some("stability_recheck_cycle"))
+        (
+            "mixed_root_repair_set",
+            Some("guided_transfer_drill"),
+            Some("stability_recheck_cycle"),
+        )
     } else {
-        ("secure_zone_reinforcement", Some("guided_transfer_drill"), Some("stability_recheck_cycle"))
+        (
+            "secure_zone_reinforcement",
+            Some("guided_transfer_drill"),
+            Some("stability_recheck_cycle"),
+        )
     }
 }
 
@@ -489,6 +526,10 @@ mod tests {
 
         assert!(modes.iter().any(|item| item.mode_code == "concept_rebuild"));
         assert!(modes.iter().any(|item| item.mode_code == "pressure_ladder"));
-        assert!(modes.iter().any(|item| item.mode_code == "guided_transfer_drill"));
+        assert!(
+            modes
+                .iter()
+                .any(|item| item.mode_code == "guided_transfer_drill")
+        );
     }
 }

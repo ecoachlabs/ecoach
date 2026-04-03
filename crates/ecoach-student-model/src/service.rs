@@ -88,7 +88,9 @@ impl<'a> StudentModelService<'a> {
             question.topic_id,
             is_correct,
             error_type,
-            selected_option.as_ref().and_then(|option| option.misconception_id),
+            selected_option
+                .as_ref()
+                .and_then(|option| option.misconception_id),
             evidence_weight,
         )
         .map_err(|err| EcoachError::Storage(format!("write_attempt failed: {}", err)))?;
@@ -117,7 +119,9 @@ impl<'a> StudentModelService<'a> {
                     student_id,
                     &question,
                     submission,
-                    selected_option.as_ref().and_then(|option| option.misconception_id),
+                    selected_option
+                        .as_ref()
+                        .and_then(|option| option.misconception_id),
                     error_type,
                     &topic_state,
                 )

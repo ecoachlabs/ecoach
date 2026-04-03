@@ -1,4 +1,7 @@
-use ecoach_identity::{CreateAccountInput, IdentityService};
+use ecoach_identity::{
+    CreateAccountInput, EntitlementAuditEntry, EntitlementEvent, IdentityService,
+    UpdateAccountAccessInput, UpdateEntitlementInput,
+};
 
 use crate::{
     dtos::{AccountDto, AccountSummaryDto},
@@ -65,5 +68,58 @@ pub fn list_linked_students(
         let service = IdentityService::new(conn);
         let students = service.get_linked_students(parent_id)?;
         Ok(students.into_iter().map(AccountSummaryDto::from).collect())
+    })
+}
+
+pub type EntitlementAuditEntryDto = EntitlementAuditEntry;
+pub type EntitlementEventDto = EntitlementEvent;
+pub type UpdateEntitlementInputDto = UpdateEntitlementInput;
+
+pub fn update_account_access(
+    state: &AppState,
+    account_id: i64,
+    input: UpdateAccountAccessInput,
+) -> Result<AccountDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = IdentityService::new(conn);
+        let account = service.update_account_access(account_id, input)?;
+        Ok(AccountDto::from(account))
+    })
+}
+
+pub fn list_entitlement_audit_entries(
+    state: &AppState,
+    limit: usize,
+) -> Result<Vec<EntitlementAuditEntryDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = IdentityService::new(conn);
+        service
+            .list_entitlement_audit_entries(limit)
+            .map_err(Into::into)
+    })
+}
+
+pub fn update_account_entitlement(
+    state: &AppState,
+    account_id: i64,
+    input: UpdateEntitlementInputDto,
+) -> Result<AccountDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = IdentityService::new(conn);
+        let account = service.update_entitlement(account_id, input)?;
+        Ok(AccountDto::from(account))
+    })
+}
+
+pub fn list_entitlement_events(
+    state: &AppState,
+    account_id: i64,
+    limit: usize,
+) -> Result<Vec<EntitlementEventDto>, CommandError> {
+    state.with_connection(|conn| {
+        let service = IdentityService::new(conn);
+        service
+            .list_entitlement_events(account_id, limit)
+            .map_err(Into::into)
     })
 }

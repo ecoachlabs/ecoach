@@ -1,7 +1,6 @@
 use chrono::Utc;
 use ecoach_coach_brain::{
-    CoachBrainTrigger, PedagogicalAttemptSignal, PedagogicalRuntimeService,
-    evaluate_coach_brain,
+    CoachBrainTrigger, PedagogicalAttemptSignal, PedagogicalRuntimeService, evaluate_coach_brain,
 };
 use ecoach_sessions::{SessionAnswerInput, SessionService};
 use ecoach_student_model::{AnswerSubmission, StudentModelService};
@@ -113,7 +112,10 @@ pub fn submit_attempt(
                 was_mixed_context: false,
             },
         )?;
-        let error_type = result.error_type.as_ref().map(|error| error.as_str().to_string());
+        let error_type = result
+            .error_type
+            .as_ref()
+            .map(|error| error.as_str().to_string());
         let recommended_action = result.recommended_action.clone();
         PedagogicalRuntimeService::new(conn).record_attempt_feedback(PedagogicalAttemptSignal {
             student_id: input.student_id,

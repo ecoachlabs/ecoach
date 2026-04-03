@@ -381,21 +381,15 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
     },
     Migration {
         id: "091_idea27_content_intelligence_engine",
-        sql: include_str!(
-            "../../../migrations/runtime/091_idea27_content_intelligence_engine.sql"
-        ),
+        sql: include_str!("../../../migrations/runtime/091_idea27_content_intelligence_engine.sql"),
     },
     Migration {
         id: "092_idea28_engine_store_foundation",
-        sql: include_str!(
-            "../../../migrations/runtime/092_idea28_engine_store_foundation.sql"
-        ),
+        sql: include_str!("../../../migrations/runtime/092_idea28_engine_store_foundation.sql"),
     },
     Migration {
         id: "093_idea29_pedagogical_runtime_os",
-        sql: include_str!(
-            "../../../migrations/runtime/093_idea29_pedagogical_runtime_os.sql"
-        ),
+        sql: include_str!("../../../migrations/runtime/093_idea29_pedagogical_runtime_os.sql"),
     },
     Migration {
         id: "094_idea30_time_orchestration_and_session_awareness",
@@ -405,9 +399,7 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
     },
     Migration {
         id: "095_idea31_smart_central_curriculum",
-        sql: include_str!(
-            "../../../migrations/runtime/095_idea31_smart_central_curriculum.sql"
-        ),
+        sql: include_str!("../../../migrations/runtime/095_idea31_smart_central_curriculum.sql"),
     },
     Migration {
         id: "096_idea32_memory_decay_spine_completion",
@@ -417,13 +409,19 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
     },
     Migration {
         id: "097_idea33_contrast_engine_completion",
-        sql: include_str!(
-            "../../../migrations/runtime/097_idea33_contrast_engine_completion.sql"
-        ),
+        sql: include_str!("../../../migrations/runtime/097_idea33_contrast_engine_completion.sql"),
     },
     Migration {
         id: "098_idea34_dna_runtime",
         sql: include_str!("../../../migrations/runtime/098_idea34_dna_runtime.sql"),
+    },
+    Migration {
+        id: "099_idea36_coachhub_completion",
+        sql: include_str!("../../../migrations/runtime/099_idea36_coachhub_completion.sql"),
+    },
+    Migration {
+        id: "100_idea38_operating_system_surfaces",
+        sql: include_str!("../../../migrations/runtime/100_idea38_operating_system_surfaces.sql"),
     },
 ];
 

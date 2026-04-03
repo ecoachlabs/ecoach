@@ -32,3 +32,42 @@ pub struct AccountSummary {
     pub first_run: bool,
     pub last_active_at: Option<DateTime<Utc>>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateAccountAccessInput {
+    pub entitlement_tier: EntitlementTier,
+    pub status: Option<String>,
+    pub changed_by_account_id: Option<i64>,
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EntitlementAuditEntry {
+    pub id: i64,
+    pub account_id: i64,
+    pub changed_by_account_id: Option<i64>,
+    pub previous_tier: String,
+    pub new_tier: String,
+    pub previous_status: String,
+    pub new_status: String,
+    pub reason: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateEntitlementInput {
+    pub entitlement_tier: EntitlementTier,
+    pub changed_by_account_id: Option<i64>,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EntitlementEvent {
+    pub id: i64,
+    pub account_id: i64,
+    pub previous_tier: EntitlementTier,
+    pub new_tier: EntitlementTier,
+    pub changed_by_account_id: Option<i64>,
+    pub note: Option<String>,
+    pub created_at: DateTime<Utc>,
+}

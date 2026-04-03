@@ -7,12 +7,11 @@ use serde_json::{Value, json};
 
 use crate::models::{
     ContrastComparisonRow, ContrastConceptAttribute, ContrastDiagramAsset, ContrastModeItem,
-    ContrastPairProfile, ContrastPairSummary, DuelSession, GameAnswerResult,
-    GameLeaderboardEntry, GameSession, GameSummary, GameType, MindstackState, StartGameInput,
-    StartTrapsSessionInput, SubmitGameAnswerInput, SubmitTrapConfusionReasonInput,
-    SubmitTrapRoundInput, TrapChoiceOption, TrapMisconceptionReason, TrapRoundCard,
-    TrapRoundResult, TrapSessionReview, TrapSessionSnapshot, TrapsMode, TrapsState,
-    TugOfWarState,
+    ContrastPairProfile, ContrastPairSummary, DuelSession, GameAnswerResult, GameLeaderboardEntry,
+    GameSession, GameSummary, GameType, MindstackState, StartGameInput, StartTrapsSessionInput,
+    SubmitGameAnswerInput, SubmitTrapConfusionReasonInput, SubmitTrapRoundInput, TrapChoiceOption,
+    TrapMisconceptionReason, TrapRoundCard, TrapRoundResult, TrapSessionReview,
+    TrapSessionSnapshot, TrapsMode, TrapsState, TugOfWarState,
 };
 
 const STREAK_BONUS_MULTIPLIER: f64 = 0.10;
@@ -548,10 +547,12 @@ fn build_know_difference_rounds(
         )));
     }
     let both_atom = atoms.iter().find(|atom| {
-        atom.ownership_type == "both" && atom_supports_mode(atom, TrapsMode::KnowTheDifference.as_str())
+        atom.ownership_type == "both"
+            && atom_supports_mode(atom, TrapsMode::KnowTheDifference.as_str())
     });
     let neither_atom = atoms.iter().find(|atom| {
-        atom.ownership_type == "neither" && atom_supports_mode(atom, TrapsMode::KnowTheDifference.as_str())
+        atom.ownership_type == "neither"
+            && atom_supports_mode(atom, TrapsMode::KnowTheDifference.as_str())
     });
 
     let mut rounds = Vec::new();
@@ -759,11 +760,8 @@ fn build_unmask_rounds(
             "clues": clues,
             "target": if target_left { "left" } else { "right" },
         });
-        let review_payload = contrast_review_payload(
-            pair,
-            lead_atom,
-            if target_left { "left" } else { "right" },
-        );
+        let review_payload =
+            contrast_review_payload(pair, lead_atom, if target_left { "left" } else { "right" });
 
         rounds.push(TrapRoundBlueprint {
             mode_item_id: None,
@@ -831,7 +829,9 @@ fn contrast_explanation(
     format!(
         "{} {}",
         review_payload["why_correct"].as_str().unwrap_or_default(),
-        review_payload["why_other_wrong"].as_str().unwrap_or_default()
+        review_payload["why_other_wrong"]
+            .as_str()
+            .unwrap_or_default()
     )
     .trim()
     .to_string()
@@ -3148,7 +3148,8 @@ impl<'a> GamesService<'a> {
                     item_forms: serde_json::from_str(&item_forms_json).unwrap_or_default(),
                     diagram_capable: row.get::<_, i64>(9)? == 1,
                     trap_angle: row.get(10)?,
-                    review_payload: serde_json::from_str(&review_payload_json).unwrap_or_else(|_| json!({})),
+                    review_payload: serde_json::from_str(&review_payload_json)
+                        .unwrap_or_else(|_| json!({})),
                     is_speed_ready: row.get::<_, i64>(6)? == 1,
                 })
             })
@@ -3276,13 +3277,15 @@ impl<'a> GamesService<'a> {
                             .unwrap_or_else(|_| json!({})),
                         right_profile: serde_json::from_str(&right_profile_json)
                             .unwrap_or_else(|_| json!({})),
-                        shared_traits: serde_json::from_str(&shared_traits_json).unwrap_or_default(),
+                        shared_traits: serde_json::from_str(&shared_traits_json)
+                            .unwrap_or_default(),
                         decisive_differences: serde_json::from_str(&decisive_differences_json)
                             .unwrap_or_default(),
                         common_confusions: serde_json::from_str(&common_confusions_json)
                             .unwrap_or_default(),
                         trap_angles: serde_json::from_str(&trap_angles_json).unwrap_or_default(),
-                        coverage: serde_json::from_str(&coverage_json).unwrap_or_else(|_| json!({})),
+                        coverage: serde_json::from_str(&coverage_json)
+                            .unwrap_or_else(|_| json!({})),
                         generator_contract: serde_json::from_str(&generator_contract_json)
                             .unwrap_or_else(|_| json!({})),
                     })
@@ -3414,13 +3417,15 @@ impl<'a> GamesService<'a> {
         pair_id: i64,
         mode: &str,
     ) -> EcoachResult<Vec<ContrastModeItem>> {
-        let mut sql = "SELECT id, pair_id, mode, source_atom_id, comparison_row_id, diagram_asset_id,
+        let mut sql =
+            "SELECT id, pair_id, mode, source_atom_id, comparison_row_id, diagram_asset_id,
                               prompt_type, prompt_text, prompt_payload_json, options_json,
                               correct_choice_code, correct_choice_label, difficulty_score,
                               time_limit_seconds, explanation_bundle_json,
                               misconception_reason_codes_json, is_active, display_order
                        FROM contrast_mode_items
-                       WHERE pair_id = ?1 AND is_active = 1".to_string();
+                       WHERE pair_id = ?1 AND is_active = 1"
+                .to_string();
         if !mode.trim().is_empty() {
             sql.push_str(" AND mode = ?2");
         }
@@ -3440,7 +3445,9 @@ impl<'a> GamesService<'a> {
             }
         } else {
             let rows = statement
-                .query_map(params![pair_id, mode], |row| self.map_contrast_mode_item(row))
+                .query_map(params![pair_id, mode], |row| {
+                    self.map_contrast_mode_item(row)
+                })
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             for row in rows {
                 items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
@@ -3449,7 +3456,10 @@ impl<'a> GamesService<'a> {
         Ok(items)
     }
 
-    fn map_contrast_mode_item(&self, row: &rusqlite::Row<'_>) -> rusqlite::Result<ContrastModeItem> {
+    fn map_contrast_mode_item(
+        &self,
+        row: &rusqlite::Row<'_>,
+    ) -> rusqlite::Result<ContrastModeItem> {
         let prompt_payload_json: String = row.get(8)?;
         let options_json: String = row.get(9)?;
         let explanation_bundle_json: String = row.get(14)?;
@@ -3527,7 +3537,9 @@ impl<'a> GamesService<'a> {
             .map(|atoms| {
                 atoms
                     .into_iter()
-                    .filter(|atom| matches!(atom.ownership_type.as_str(), "left_only" | "right_only"))
+                    .filter(|atom| {
+                        matches!(atom.ownership_type.as_str(), "left_only" | "right_only")
+                    })
                     .take(8)
                     .map(|atom| atom.atom_text)
                     .collect()

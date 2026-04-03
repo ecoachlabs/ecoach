@@ -19,8 +19,9 @@ use ecoach_commands::coach_commands::{
     ConsistencySnapshotDto, ConstructedAnswerEvaluationDto, ContentReadinessDto,
     DeadlinePressureDto, DiagnosticPrescriptionSyncDto, EngagementEventDto,
     EngagementEventInputDto, EngagementRiskProfileDto, EngineRegistryDto, EvidenceEventDto,
-    EvidenceProbeRecommendationDto, ExamStrategyProfileDto, GoalFeasibilityDto,
-    GoalRecommendationDto, InstructionalObjectEnvelopeDto, InterventionModeDefinitionDto,
+    EvidenceProbeRecommendationDto, ExamStrategyProfileDto, GoalArbitrationSnapshotDto,
+    GoalFeasibilityDto, GoalProfileDto, GoalProfileInputDto, GoalRecommendationDto,
+    InstructionalObjectEnvelopeDto, InterventionModeDefinitionDto,
     JourneyRouteSnapshotDto, KnowledgeMapNodeDto, LearnerMisconceptionSnapshotDto,
     MasteryMapNodeDto, ParentAccessSettingsDto, ParentAccessSettingsInputDto, ParentAlertRecordDto,
     ParentFeedbackInputDto, ParentFeedbackRecordDto, PersonalizationSnapshotDto,
@@ -31,9 +32,20 @@ use ecoach_commands::coach_commands::{
     TitleDefenseBriefDto, TitleDefenseCompletionInputDto, TitleDefenseResultDto,
     TitlesHallSnapshotDto, TopicActionSessionDto, TopicActionSummaryDto, TopicCaseDto,
     TopicProofCertificationDto, TopicTeachingProfileDto, TopicTeachingStrategyDto,
-    UncertaintyProfileDto, VelocitySnapshotDto,
+    VelocitySnapshotDto, WeeklyPlanSnapshotDto,
+};
+use ecoach_commands::intake_commands::{
+    BundleCoachApplicationResultDto, BundleConfirmationInputDto, BundleInboxItemDto,
+    BundleOcrWorkspaceDto, BundleReviewReflectionInputDto, BundleSharedPromotionDto,
+    PersonalAcademicVaultSnapshotDto, UploadedPaperReviewSnapshotDto,
 };
 use ecoach_commands::content_commands::{
+    ContentEvaluationRunDto, ContentEvidenceRecordDto, ContentIntelligenceOverviewDto,
+    ContentPublishDecisionDto, ContentResearchCandidateDto, ContentResearchMissionDto,
+    ContentRetrievalResultDto, ContentSnapshotDto, ContentSourceDetailDto,
+    ContentSourceGovernanceInputDto, ContentSourcePolicyDto,
+    ContentSourceRegistryEntryDto, ContentSourceSegmentDto,
+    RebuildContentIndexResult,
     ResourceApplicabilityResolutionDto, ResourceLearningRecordDto, ResourceOrchestrationResultDto,
     TopicResourceIntelligenceSnapshotDto,
 };
@@ -109,23 +121,37 @@ use ecoach_commands::reporting_commands::{
     ReportingStrategySummaryDto,
 };
 use ecoach_commands::session_commands::{CoachMissionSessionPlanDto, FocusModeConfigDto};
-use ecoach_commands::student_commands::LearnerTruthDto;
+use ecoach_commands::product_commands::{
+    ARealProfileDto, ARealProfileInputDto, ARealSurfaceDto, AdminProductSurfaceDto, CapabilityRegistryDto,
+    ContentHealthReadModelDto, EntitlementManagerSnapshotDto, ParentProductSurfaceDto,
+    PersonalAcademicVaultDto, SemanticsRegistryDto, StudentProductSurfaceDto,
+    SuperAdminControlTowerDto,
+};
+use ecoach_commands::student_commands::{
+    AcademicScanResult, AttentionNeededItem, LearnerEvidenceFabricDto, LearnerTruthDto,
+    WeeklyChangeDto,
+};
 use ecoach_commands::{
     AppState, CommandError, assessment_commands, attempt_commands, coach_commands,
     content_commands, curriculum_commands, diagnostic_commands, dtos::*, game_commands,
     identity_commands, intake_commands, library_commands, memory_commands, mock_commands,
-    premium_commands, question_commands, readiness_commands, recovery_commands, repair_commands,
-    reporting_commands, session_commands, student_commands, traps_commands,
+    premium_commands, product_commands, question_commands, readiness_commands,
+    recovery_commands, repair_commands, reporting_commands, session_commands, student_commands,
+    traps_commands,
 };
 use ecoach_content::{
-    ParseCandidateInput, RecordResourceLearningInput, ResourceOrchestrationRequest,
-    SourceUploadInput,
+    ContentEvaluationRunInput, ContentEvidenceRecordInput, ContentPublishDecisionInput,
+    ContentResearchCandidateInput, ContentResearchMissionInput, ContentRetrievalQueryInput,
+    ContentSnapshotBuildInput, ContentSourcePolicyInput, ContentSourceProfileInput,
+    ContentSourceSegmentInput, ParseCandidateInput, RecordResourceLearningInput,
+    ResourceOrchestrationRequest, SourceUploadInput,
 };
 use ecoach_games::{
     StartGameInput, StartTrapsSessionInput, SubmitGameAnswerInput, SubmitTrapConfusionReasonInput,
     SubmitTrapRoundInput,
 };
 use ecoach_identity::CreateAccountInput;
+use ecoach_identity::UpdateAccountAccessInput;
 use ecoach_library::{TeachExplanationUpsertInput, TeachMicroCheckInput, TutorInteractionInput};
 use ecoach_memory::RecordMemoryEvidenceInput;
 use ecoach_mock_centre::{CompileMockInput, SubmitMockAnswerInput};
@@ -170,6 +196,67 @@ pub fn login_with_pin(
     pin: String,
 ) -> Result<AccountDto, CommandError> {
     identity_commands::login_with_pin(&state, account_id, pin)
+}
+
+#[tauri::command]
+pub fn reset_pin(
+    state: State<'_, AppState>,
+    account_id: i64,
+    new_pin: String,
+) -> Result<(), CommandError> {
+    identity_commands::reset_pin(&state, account_id, new_pin)
+}
+
+#[tauri::command]
+pub fn link_parent_student(
+    state: State<'_, AppState>,
+    parent_id: i64,
+    student_id: i64,
+) -> Result<(), CommandError> {
+    identity_commands::link_parent_student(&state, parent_id, student_id)
+}
+
+#[tauri::command]
+pub fn list_linked_students(
+    state: State<'_, AppState>,
+    parent_id: i64,
+) -> Result<Vec<AccountSummaryDto>, CommandError> {
+    identity_commands::list_linked_students(&state, parent_id)
+}
+
+#[tauri::command]
+pub fn update_account_access(
+    state: State<'_, AppState>,
+    account_id: i64,
+    input: UpdateAccountAccessInput,
+) -> Result<AccountDto, CommandError> {
+    identity_commands::update_account_access(&state, account_id, input)
+}
+
+#[tauri::command]
+pub fn list_entitlement_audit_entries(
+    state: State<'_, AppState>,
+    limit: usize,
+) -> Result<Vec<ecoach_commands::identity_commands::EntitlementAuditEntryDto>, CommandError> {
+    identity_commands::list_entitlement_audit_entries(&state, limit)
+}
+
+#[tauri::command]
+pub fn update_account_entitlement(
+    state: State<'_, AppState>,
+    account_id: i64,
+    input: ecoach_commands::identity_commands::UpdateEntitlementInputDto,
+) -> Result<AccountDto, CommandError> {
+    identity_commands::update_account_entitlement(&state, account_id, input)
+}
+
+#[tauri::command]
+pub fn list_entitlement_events(
+    state: State<'_, AppState>,
+    account_id: i64,
+    limit: usize,
+) -> Result<Vec<ecoach_commands::identity_commands::EntitlementEventDto>, CommandError> {
+    identity_commands::list_entitlement_events(&state, account_id, limit)
 }
 
 #[tauri::command]
@@ -468,6 +555,51 @@ pub fn build_academic_calendar_snapshot(
     anchor_date: Option<String>,
 ) -> Result<AcademicCalendarSnapshotDto, CommandError> {
     coach_commands::build_academic_calendar_snapshot(&state, student_id, anchor_date)
+}
+
+#[tauri::command]
+pub fn save_goal_profile(
+    state: State<'_, AppState>,
+    student_id: i64,
+    input: GoalProfileInputDto,
+) -> Result<GoalProfileDto, CommandError> {
+    coach_commands::save_goal_profile(&state, student_id, input)
+}
+
+#[tauri::command]
+pub fn list_goal_profiles(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<Vec<GoalProfileDto>, CommandError> {
+    coach_commands::list_goal_profiles(&state, student_id)
+}
+
+#[tauri::command]
+pub fn update_goal_profile_state(
+    state: State<'_, AppState>,
+    goal_id: i64,
+    goal_state: String,
+    blocked_reason: Option<String>,
+) -> Result<GoalProfileDto, CommandError> {
+    coach_commands::update_goal_profile_state(&state, goal_id, goal_state, blocked_reason)
+}
+
+#[tauri::command]
+pub fn get_goal_arbitration_snapshot(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<GoalArbitrationSnapshotDto, CommandError> {
+    coach_commands::get_goal_arbitration_snapshot(&state, student_id)
+}
+
+#[tauri::command]
+pub fn get_weekly_plan_snapshot(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: Option<i64>,
+    anchor_date: String,
+) -> Result<WeeklyPlanSnapshotDto, CommandError> {
+    coach_commands::get_weekly_plan_snapshot(&state, student_id, subject_id, anchor_date)
 }
 
 #[tauri::command]
@@ -1708,6 +1840,127 @@ pub fn get_learner_truth(
     student_commands::get_learner_truth(&state, student_id)
 }
 
+#[tauri::command]
+pub fn get_learner_evidence_fabric(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit_per_stream: Option<usize>,
+) -> Result<LearnerEvidenceFabricDto, CommandError> {
+    student_commands::get_learner_evidence_fabric(
+        &state,
+        student_id,
+        limit_per_stream.unwrap_or(8),
+    )
+}
+
+#[tauri::command]
+pub fn get_academic_scan(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<AcademicScanResult, CommandError> {
+    student_commands::get_academic_scan(&state, student_id)
+}
+
+#[tauri::command]
+pub fn get_weekly_change_summary(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<WeeklyChangeDto, CommandError> {
+    student_commands::get_weekly_change_summary(&state, student_id)
+}
+
+#[tauri::command]
+pub fn get_attention_needed_queue(
+    state: State<'_, AppState>,
+    parent_id: i64,
+) -> Result<Vec<AttentionNeededItem>, CommandError> {
+    student_commands::get_attention_needed_queue(&state, parent_id)
+}
+
+#[tauri::command]
+pub fn get_capability_registry() -> Result<CapabilityRegistryDto, CommandError> {
+    product_commands::get_capability_registry()
+}
+
+#[tauri::command]
+pub fn get_semantics_registry() -> Result<SemanticsRegistryDto, CommandError> {
+    product_commands::get_semantics_registry()
+}
+
+#[tauri::command]
+pub fn get_student_product_surface(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<StudentProductSurfaceDto, CommandError> {
+    product_commands::get_student_product_surface(&state, student_id)
+}
+
+#[tauri::command]
+pub fn get_parent_product_surface(
+    state: State<'_, AppState>,
+    parent_id: i64,
+    student_id: Option<i64>,
+) -> Result<ParentProductSurfaceDto, CommandError> {
+    product_commands::get_parent_product_surface(&state, parent_id, student_id)
+}
+
+#[tauri::command]
+pub fn get_content_health_read_model(
+    state: State<'_, AppState>,
+) -> Result<ContentHealthReadModelDto, CommandError> {
+    product_commands::get_content_health_read_model(&state)
+}
+
+#[tauri::command]
+pub fn get_admin_product_surface(
+    state: State<'_, AppState>,
+    admin_id: i64,
+) -> Result<AdminProductSurfaceDto, CommandError> {
+    product_commands::get_admin_product_surface(&state, admin_id)
+}
+
+#[tauri::command]
+pub fn get_entitlement_manager_snapshot(
+    state: State<'_, AppState>,
+    limit: Option<usize>,
+) -> Result<EntitlementManagerSnapshotDto, CommandError> {
+    product_commands::get_entitlement_manager_snapshot(&state, limit)
+}
+
+#[tauri::command]
+pub fn get_personal_academic_vault(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit: Option<usize>,
+) -> Result<PersonalAcademicVaultDto, CommandError> {
+    product_commands::get_personal_academic_vault(&state, student_id, limit)
+}
+
+#[tauri::command]
+pub fn get_areal_surface(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<ARealSurfaceDto, CommandError> {
+    product_commands::get_areal_surface(&state, student_id)
+}
+
+#[tauri::command]
+pub fn save_areal_profile(
+    state: State<'_, AppState>,
+    input: ARealProfileInputDto,
+) -> Result<ARealProfileDto, CommandError> {
+    product_commands::save_areal_profile(&state, input)
+}
+
+#[tauri::command]
+pub fn get_super_admin_control_tower(
+    state: State<'_, AppState>,
+    admin_id: i64,
+    limit: Option<usize>,
+) -> Result<SuperAdminControlTowerDto, CommandError> {
+    product_commands::get_super_admin_control_tower(&state, admin_id, limit)
+}
+
 // Content and Foundry
 
 #[tauri::command]
@@ -1925,6 +2178,137 @@ pub fn record_resource_learning_outcome(
     content_commands::record_resource_learning_outcome(&state, input)
 }
 
+#[tauri::command]
+pub fn upsert_content_source_policy(
+    state: State<'_, AppState>,
+    input: ContentSourcePolicyInput,
+) -> Result<ContentSourcePolicyDto, CommandError> {
+    content_commands::upsert_content_source_policy(&state, input)
+}
+
+#[tauri::command]
+pub fn list_content_source_policies(
+    state: State<'_, AppState>,
+    status: Option<String>,
+) -> Result<Vec<ContentSourcePolicyDto>, CommandError> {
+    content_commands::list_content_source_policies(&state, status)
+}
+
+#[tauri::command]
+pub fn save_content_source_profile(
+    state: State<'_, AppState>,
+    source_upload_id: i64,
+    input: ContentSourceProfileInput,
+) -> Result<ContentSourceRegistryEntryDto, CommandError> {
+    content_commands::save_content_source_profile(&state, source_upload_id, input)
+}
+
+#[tauri::command]
+pub fn list_content_sources(
+    state: State<'_, AppState>,
+    status: Option<String>,
+    source_kind: Option<String>,
+    limit: Option<usize>,
+) -> Result<Vec<ContentSourceRegistryEntryDto>, CommandError> {
+    content_commands::list_content_sources(&state, status, source_kind, limit)
+}
+
+#[tauri::command]
+pub fn get_content_source_detail(
+    state: State<'_, AppState>,
+    source_upload_id: i64,
+) -> Result<ContentSourceDetailDto, CommandError> {
+    content_commands::get_content_source_detail(&state, source_upload_id)
+}
+
+#[tauri::command]
+pub fn govern_content_source(
+    state: State<'_, AppState>,
+    source_upload_id: i64,
+    input: ContentSourceGovernanceInputDto,
+) -> Result<ContentSourceDetailDto, CommandError> {
+    content_commands::govern_content_source(&state, source_upload_id, input)
+}
+
+#[tauri::command]
+pub fn ingest_content_source_segments(
+    state: State<'_, AppState>,
+    source_upload_id: i64,
+    segments: Vec<ContentSourceSegmentInput>,
+) -> Result<Vec<ContentSourceSegmentDto>, CommandError> {
+    content_commands::ingest_content_source_segments(&state, source_upload_id, segments)
+}
+
+#[tauri::command]
+pub fn plan_content_research_mission(
+    state: State<'_, AppState>,
+    input: ContentResearchMissionInput,
+) -> Result<ContentResearchMissionDto, CommandError> {
+    content_commands::plan_content_research_mission(&state, input)
+}
+
+#[tauri::command]
+pub fn add_content_research_candidate(
+    state: State<'_, AppState>,
+    mission_id: i64,
+    input: ContentResearchCandidateInput,
+) -> Result<ContentResearchCandidateDto, CommandError> {
+    content_commands::add_content_research_candidate(&state, mission_id, input)
+}
+
+#[tauri::command]
+pub fn record_content_evidence(
+    state: State<'_, AppState>,
+    input: ContentEvidenceRecordInput,
+) -> Result<ContentEvidenceRecordDto, CommandError> {
+    content_commands::record_content_evidence(&state, input)
+}
+
+#[tauri::command]
+pub fn record_content_publish_decision(
+    state: State<'_, AppState>,
+    input: ContentPublishDecisionInput,
+) -> Result<ContentPublishDecisionDto, CommandError> {
+    content_commands::record_content_publish_decision(&state, input)
+}
+
+#[tauri::command]
+pub fn build_content_topic_snapshot(
+    state: State<'_, AppState>,
+    input: ContentSnapshotBuildInput,
+) -> Result<ContentSnapshotDto, CommandError> {
+    content_commands::build_content_topic_snapshot(&state, input)
+}
+
+#[tauri::command]
+pub fn retrieve_content_intelligence(
+    state: State<'_, AppState>,
+    input: ContentRetrievalQueryInput,
+) -> Result<ContentRetrievalResultDto, CommandError> {
+    content_commands::retrieve_content_intelligence(&state, input)
+}
+
+#[tauri::command]
+pub fn record_content_evaluation(
+    state: State<'_, AppState>,
+    input: ContentEvaluationRunInput,
+) -> Result<ContentEvaluationRunDto, CommandError> {
+    content_commands::record_content_evaluation(&state, input)
+}
+
+#[tauri::command]
+pub fn get_content_intelligence_overview(
+    state: State<'_, AppState>,
+    topic_id: i64,
+) -> Result<ContentIntelligenceOverviewDto, CommandError> {
+    content_commands::get_content_intelligence_overview(&state, topic_id)
+}
+
+#[tauri::command]
+pub fn rebuild_content_index(state: State<'_, AppState>) -> Result<RebuildContentIndexResult, CommandError> {
+    content_commands::rebuild_content_index(&state)
+}
+
 // Intake
 
 #[tauri::command]
@@ -1968,6 +2352,81 @@ pub fn list_submission_bundle_insights(
     bundle_id: i64,
 ) -> Result<Vec<ExtractedInsightDto>, CommandError> {
     intake_commands::list_submission_bundle_insights(&state, bundle_id)
+}
+
+#[tauri::command]
+pub fn list_submission_bundle_inbox(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<BundleInboxItemDto>, CommandError> {
+    intake_commands::list_submission_bundle_inbox(&state, student_id, limit)
+}
+
+#[tauri::command]
+pub fn confirm_submission_bundle(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+    input: BundleConfirmationInputDto,
+) -> Result<BundleProcessReportDto, CommandError> {
+    intake_commands::confirm_submission_bundle(&state, bundle_id, input)
+}
+
+#[tauri::command]
+pub fn record_bundle_review_reflection(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+    input: BundleReviewReflectionInputDto,
+) -> Result<(), CommandError> {
+    intake_commands::record_bundle_review_reflection(&state, bundle_id, input)
+}
+
+#[tauri::command]
+pub fn get_uploaded_paper_review(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+) -> Result<UploadedPaperReviewSnapshotDto, CommandError> {
+    intake_commands::get_uploaded_paper_review(&state, bundle_id)
+}
+
+#[tauri::command]
+pub fn apply_submission_bundle_to_coach(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+) -> Result<BundleCoachApplicationResultDto, CommandError> {
+    intake_commands::apply_submission_bundle_to_coach(&state, bundle_id)
+}
+
+#[tauri::command]
+pub fn get_submission_bundle_ocr_workspace(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+) -> Result<BundleOcrWorkspaceDto, CommandError> {
+    intake_commands::get_submission_bundle_ocr_workspace(&state, bundle_id)
+}
+
+#[tauri::command]
+pub fn get_student_personal_academic_vault_snapshot(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit: usize,
+) -> Result<PersonalAcademicVaultSnapshotDto, CommandError> {
+    intake_commands::get_personal_academic_vault(&state, student_id, limit)
+}
+
+#[tauri::command]
+pub fn promote_submission_bundle_to_shared_source(
+    state: State<'_, AppState>,
+    bundle_id: i64,
+    requested_by_account_id: Option<i64>,
+    source_kind_override: Option<String>,
+) -> Result<BundleSharedPromotionDto, CommandError> {
+    intake_commands::promote_submission_bundle_to_shared_source(
+        &state,
+        bundle_id,
+        requested_by_account_id,
+        source_kind_override,
+    )
 }
 
 // Sessions and attempt pipeline

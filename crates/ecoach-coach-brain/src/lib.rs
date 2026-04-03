@@ -4,8 +4,8 @@ pub mod constitution;
 pub mod evidence_engine;
 pub mod exam_strategy;
 pub mod goal_engine;
-pub mod intelligence_store;
 pub mod intelligence_dome;
+pub mod intelligence_store;
 pub mod intervention_library;
 pub mod journey;
 pub mod journey_adaptation;
@@ -42,7 +42,6 @@ pub use evidence_engine::{
 };
 pub use exam_strategy::{ExamStrategyProfile, ExamStrategyService, ExamStrategySessionInput};
 pub use goal_engine::{GoalEngine, GoalRecommendation, GoalType, UrgencyBand};
-pub use intelligence_store::{CanonicalIntelligenceStore, CanonicalSessionInputs};
 pub use intelligence_dome::{
     AcademicIntentCoreSnapshot, CoachIntelligenceDomeService, CoachIntelligenceDomeSnapshot,
     CoachReflectionCycle, ConceptInterferenceCase, DoctrineRule, EvidenceProbeRecommendation,
@@ -50,6 +49,7 @@ pub use intelligence_dome::{
     SystemHealthSnapshot, TensionSignal, TopicConceptRank, TopicTeachingStrategy,
     UncertaintyProfile,
 };
+pub use intelligence_store::{CanonicalIntelligenceStore, CanonicalSessionInputs};
 pub use intervention_library::{
     DiagnosticPrescriptionSync, InterventionLibraryService, InterventionModeDefinition,
     InterventionPrescription, ProblemCauseFixCard,

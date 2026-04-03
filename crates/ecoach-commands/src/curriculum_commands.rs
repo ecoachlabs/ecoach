@@ -1,20 +1,19 @@
 use ecoach_curriculum::{
     CurriculumAdminNodeDetail, CurriculumCohortPin, CurriculumCohortPinInput,
     CurriculumCoverageStats, CurriculumFamily, CurriculumFamilyInput, CurriculumImpactAnalysis,
-    CurriculumIngestionWorkspace, CurriculumLevel, CurriculumLevelInput,
-    CurriculumLinkedResource, CurriculumNodeBundle, CurriculumNodeBundleInput,
-    CurriculumNodeCitation, CurriculumNodeCitationInput, CurriculumNodeComment,
-    CurriculumNodeCommentInput, CurriculumNodeExemplar, CurriculumNodeExemplarInput,
-    CurriculumNodeIntelligence, CurriculumNodeIntelligenceInput, CurriculumParentSummary,
-    CurriculumPrerequisiteStep, CurriculumPublicSubjectOverview, CurriculumPublicTopicDetail,
-    CurriculumPublishResult, CurriculumRecommendation, CurriculumRegenerationJob,
-    CurriculumRegistryEntry, CurriculumRemediationMap, CurriculumReviewQueueItem,
-    CurriculumSearchResult, CurriculumService, CurriculumSourceReport, CurriculumSourceUpload,
-    CurriculumStudentHomeSnapshot, CurriculumStudentSubjectMap, CurriculumSubjectTrack,
-    CurriculumSubjectTrackInput, CurriculumTermPeriod, CurriculumTermPeriodInput,
-    CurriculumTopicContext, CurriculumTreeNode, CurriculumVersion, CurriculumVersionDiffReport,
-    CurriculumVersionInput, StudentCurriculumAssignment, StudentCurriculumAssignmentInput,
-    Subject, TopicSummary,
+    CurriculumIngestionWorkspace, CurriculumLevel, CurriculumLevelInput, CurriculumLinkedResource,
+    CurriculumNodeBundle, CurriculumNodeBundleInput, CurriculumNodeCitation,
+    CurriculumNodeCitationInput, CurriculumNodeComment, CurriculumNodeCommentInput,
+    CurriculumNodeExemplar, CurriculumNodeExemplarInput, CurriculumNodeIntelligence,
+    CurriculumNodeIntelligenceInput, CurriculumParentSummary, CurriculumPrerequisiteStep,
+    CurriculumPublicSubjectOverview, CurriculumPublicTopicDetail, CurriculumPublishResult,
+    CurriculumRecommendation, CurriculumRegenerationJob, CurriculumRegistryEntry,
+    CurriculumRemediationMap, CurriculumReviewQueueItem, CurriculumSearchResult, CurriculumService,
+    CurriculumSourceReport, CurriculumSourceUpload, CurriculumStudentHomeSnapshot,
+    CurriculumStudentSubjectMap, CurriculumSubjectTrack, CurriculumSubjectTrackInput,
+    CurriculumTermPeriod, CurriculumTermPeriodInput, CurriculumTopicContext, CurriculumTreeNode,
+    CurriculumVersion, CurriculumVersionDiffReport, CurriculumVersionInput,
+    StudentCurriculumAssignment, StudentCurriculumAssignmentInput, Subject, TopicSummary,
 };
 use serde::{Deserialize, Serialize};
 
@@ -136,49 +135,77 @@ pub fn list_topics(state: &AppState, subject_id: i64) -> Result<Vec<TopicDto>, C
 pub fn list_curriculum_families(
     state: &AppState,
 ) -> Result<Vec<CurriculumFamilyDto>, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).list_curriculum_families().map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .list_curriculum_families()
+            .map_err(Into::into)
+    })
 }
 
 pub fn save_curriculum_family(
     state: &AppState,
     input: CurriculumFamilyInput,
 ) -> Result<CurriculumFamilyDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).save_curriculum_family(input).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .save_curriculum_family(input)
+            .map_err(Into::into)
+    })
 }
 
 pub fn save_curriculum_version(
     state: &AppState,
     input: CurriculumVersionInput,
 ) -> Result<CurriculumVersionDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).save_curriculum_version(input).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .save_curriculum_version(input)
+            .map_err(Into::into)
+    })
 }
 
 pub fn save_curriculum_subject_track(
     state: &AppState,
     input: CurriculumSubjectTrackInput,
 ) -> Result<CurriculumSubjectTrackDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).save_curriculum_subject_track(input).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .save_curriculum_subject_track(input)
+            .map_err(Into::into)
+    })
 }
 
 pub fn save_curriculum_level(
     state: &AppState,
     input: CurriculumLevelInput,
 ) -> Result<CurriculumLevelDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).save_curriculum_level(input).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .save_curriculum_level(input)
+            .map_err(Into::into)
+    })
 }
 
 pub fn save_curriculum_term_period(
     state: &AppState,
     input: CurriculumTermPeriodInput,
 ) -> Result<CurriculumTermPeriodDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).save_curriculum_term_period(input).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .save_curriculum_term_period(input)
+            .map_err(Into::into)
+    })
 }
 
 pub fn save_curriculum_node_bundle(
     state: &AppState,
     input: CurriculumNodeBundleInput,
 ) -> Result<CurriculumNodeBundleDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).save_curriculum_node_bundle(input).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .save_curriculum_node_bundle(input)
+            .map_err(Into::into)
+    })
 }
 
 pub fn approve_curriculum_node(
@@ -252,14 +279,22 @@ pub fn get_curriculum_source_report(
     state: &AppState,
     source_upload_id: i64,
 ) -> Result<Option<CurriculumSourceReportDto>, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).get_source_report(source_upload_id).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .get_source_report(source_upload_id)
+            .map_err(Into::into)
+    })
 }
 
 pub fn list_curriculum_review_queue(
     state: &AppState,
     limit: i64,
 ) -> Result<Vec<CurriculumReviewQueueItemDto>, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).list_curriculum_review_queue(limit).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .list_curriculum_review_queue(limit)
+            .map_err(Into::into)
+    })
 }
 
 pub fn publish_curriculum_version(
@@ -270,7 +305,11 @@ pub fn publish_curriculum_version(
 ) -> Result<CurriculumPublishResultDto, CommandError> {
     state.with_connection(|conn| {
         CurriculumService::new(conn)
-            .publish_curriculum_version(curriculum_version_id, generated_by_account_id, notes.as_deref())
+            .publish_curriculum_version(
+                curriculum_version_id,
+                generated_by_account_id,
+                notes.as_deref(),
+            )
             .map_err(Into::into)
     })
 }
@@ -353,14 +392,22 @@ pub fn get_curriculum_topic_resources(
     state: &AppState,
     node_id: i64,
 ) -> Result<Vec<CurriculumLinkedResourceDto>, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).get_curriculum_topic_resources(node_id).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .get_curriculum_topic_resources(node_id)
+            .map_err(Into::into)
+    })
 }
 
 pub fn get_curriculum_topic_context(
     state: &AppState,
     node_id: i64,
 ) -> Result<CurriculumTopicContextDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).get_curriculum_topic_context(node_id).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .get_curriculum_topic_context(node_id)
+            .map_err(Into::into)
+    })
 }
 
 pub fn get_curriculum_next_best_topics(
@@ -380,21 +427,33 @@ pub fn get_curriculum_prerequisite_chain(
     state: &AppState,
     node_id: i64,
 ) -> Result<Vec<CurriculumPrerequisiteStepDto>, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).get_curriculum_prerequisite_chain(node_id).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .get_curriculum_prerequisite_chain(node_id)
+            .map_err(Into::into)
+    })
 }
 
 pub fn get_curriculum_remediation_map(
     state: &AppState,
     node_id: i64,
 ) -> Result<CurriculumRemediationMapDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).get_curriculum_remediation_map(node_id).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .get_curriculum_remediation_map(node_id)
+            .map_err(Into::into)
+    })
 }
 
 pub fn get_curriculum_coverage_stats(
     state: &AppState,
     subject_track_id: i64,
 ) -> Result<CurriculumCoverageStatsDto, CommandError> {
-    state.with_connection(|conn| CurriculumService::new(conn).get_curriculum_coverage_stats(subject_track_id).map_err(Into::into))
+    state.with_connection(|conn| {
+        CurriculumService::new(conn)
+            .get_curriculum_coverage_stats(subject_track_id)
+            .map_err(Into::into)
+    })
 }
 
 pub fn get_curriculum_registry(

@@ -5,8 +5,8 @@ use serde_json::{Value, json};
 
 use crate::{
     CanonicalIntelligenceStore, TopicProofEngine, build_topic_case,
-    journey_adaptation::JourneyAdaptationEngine, list_priority_topic_cases, plan_engine::PlanEngine,
-    prerequisite_graph::PrerequisiteGraph, topic_case::TopicCase,
+    journey_adaptation::JourneyAdaptationEngine, list_priority_topic_cases,
+    plan_engine::PlanEngine, prerequisite_graph::PrerequisiteGraph, topic_case::TopicCase,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

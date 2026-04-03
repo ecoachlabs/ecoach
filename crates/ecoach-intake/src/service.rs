@@ -13,9 +13,12 @@ use serde_json::{Value, json};
 use zip::ZipArchive;
 
 use crate::models::{
-    AcquisitionEvidenceCandidate, AcquisitionJobReport, BundleFile, BundleProcessReport,
-    CoachGoalSignal, ContentAcquisitionJob, ExtractedInsight, FollowUpRecommendation,
-    SubmissionBundle, TopicActionSummary,
+    AcquisitionEvidenceCandidate, AcquisitionJobReport, BundleCoachApplicationResult, BundleFile,
+    BundleInboxItem, BundleOcrPage, BundleOcrWorkspace, BundleProcessReport,
+    BundleReviewNote, BundleReviewReflectionInput, BundleSharedPromotion,
+    BundleConfirmationInput, CoachGoalSignal, ContentAcquisitionJob, ExtractedInsight,
+    FollowUpRecommendation, PersonalAcademicVaultEntry, PersonalAcademicVaultSnapshot,
+    SubmissionBundle, TopicActionSummary, UploadedPaperReviewSnapshot, UploadedReviewItem,
 };
 
 pub struct IntakeService<'a> {
@@ -260,6 +263,604 @@ impl<'a> IntakeService<'a> {
             items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
         }
         Ok(items)
+    }
+
+    pub fn list_bundle_inbox(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<BundleInboxItem>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, confirmation_state, coach_application_status
+                 FROM submission_bundles
+                 WHERE student_id = ?1
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, limit.max(1) as i64], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            let (bundle_id, confirmation_state, coach_application_status) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let report = self.get_bundle_report(bundle_id)?;
+            let mut summary_points: Vec<String> = report
+                .recommended_actions
+                .iter()
+                .take(2)
+                .cloned()
+                .collect();
+            if summary_points.is_empty() {
+                summary_points.extend(report.review_reasons.iter().take(2).cloned());
+            }
+            items.push(BundleInboxItem {
+                bundle: report.bundle,
+                confirmation_state,
+                coach_application_status,
+                review_priority: report.review_priority,
+                needs_confirmation: report.needs_confirmation,
+                detected_subjects: report.detected_subjects,
+                detected_topics: report.detected_topics,
+                summary_points,
+            });
+        }
+        Ok(items)
+    }
+
+    pub fn confirm_bundle(
+        &self,
+        bundle_id: i64,
+        input: BundleConfirmationInput,
+    ) -> EcoachResult<BundleProcessReport> {
+        self.conn
+            .execute(
+                "UPDATE submission_bundles
+                 SET confirmation_state = ?2,
+                     status = CASE
+                         WHEN ?2 = 'confirmed' AND status IN ('uploaded', 'classified', 'processing')
+                             THEN 'review_required'
+                         ELSE status
+                     END,
+                     last_reviewed_at = datetime('now')
+                 WHERE id = ?1",
+                params![bundle_id, input.confirmation_state],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.insert_insight(
+            bundle_id,
+            "human_confirmation",
+            &json!({
+                "confirmation_state": input.confirmation_state,
+                "note": input.note,
+                "topic_overrides": input.topic_overrides,
+                "document_role_overrides": input.document_role_overrides,
+            }),
+        )?;
+        self.get_bundle_report(bundle_id)
+    }
+
+    pub fn record_bundle_review_reflection(
+        &self,
+        bundle_id: i64,
+        input: BundleReviewReflectionInput,
+    ) -> EcoachResult<BundleReviewNote> {
+        self.conn
+            .execute(
+                "INSERT INTO submission_bundle_review_notes (
+                    bundle_id, question_ref, topic_label, review_side, reflection_kind,
+                    reflection_text, recommended_action, severity_bp
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    bundle_id,
+                    input.question_ref,
+                    input.topic_label,
+                    input.review_side,
+                    input.reflection_kind,
+                    input.reflection_text,
+                    input.recommended_action,
+                    input.severity_bp,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let note_id = self.conn.last_insert_rowid();
+        self.get_bundle_review_note(note_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("review note {} not found", note_id)))
+    }
+
+    pub fn build_uploaded_paper_review(
+        &self,
+        bundle_id: i64,
+    ) -> EcoachResult<UploadedPaperReviewSnapshot> {
+        let report = self.get_bundle_report(bundle_id)?;
+        let alignment_payload = report
+            .insights
+            .iter()
+            .find(|item| item.insight_type == "question_answer_alignment")
+            .map(|item| item.payload.clone())
+            .unwrap_or_else(|| json!({}));
+        let direct_alignments = alignment_payload
+            .get("direct_alignments")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        let reflections = self.list_bundle_review_notes(bundle_id)?;
+        let mut items = Vec::new();
+        for alignment in direct_alignments {
+            let question_ref = alignment
+                .get("question_number")
+                .and_then(Value::as_str)
+                .filter(|value| !value.trim().is_empty())
+                .map(str::to_string)
+                .or_else(|| {
+                    alignment
+                        .get("question_prompt")
+                        .and_then(Value::as_str)
+                        .and_then(|value| trim_display_line(value, 24))
+                })
+                .unwrap_or_else(|| "unknown-question".to_string());
+            let topic_label = detect_review_topic_label(&report.detected_topics, &question_ref);
+            let linked_reflections = reflections
+                .iter()
+                .filter(|note| note.question_ref == question_ref)
+                .cloned()
+                .collect::<Vec<_>>();
+            let reason_codes = alignment
+                .get("reason_codes")
+                .and_then(Value::as_array)
+                .map(|items| {
+                    items.iter()
+                        .filter_map(Value::as_str)
+                        .map(str::to_string)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            let coach_explanation = format!(
+                "Review {} with the exact answer trail, then reinforce the linked topic.",
+                question_ref
+            );
+            let recommended_actions = if report.recommended_actions.is_empty() {
+                vec!["retry_question".to_string(), "teach_topic".to_string()]
+            } else {
+                report.recommended_actions.iter().take(3).cloned().collect()
+            };
+            items.push(UploadedReviewItem {
+                question_ref,
+                topic_label,
+                alignment_confidence: alignment
+                    .get("confidence_level")
+                    .and_then(Value::as_str)
+                    .unwrap_or("low")
+                    .to_string(),
+                weakness_signals: reason_codes,
+                coach_explanation,
+                recommended_actions,
+                reflections: linked_reflections,
+            });
+        }
+
+        Ok(UploadedPaperReviewSnapshot {
+            bundle: report.bundle,
+            coach_impact_summary: json!({
+                "review_priority": report.review_priority,
+                "coach_goal_signals": report.coach_goal_signals,
+                "topic_action_summaries": report.topic_action_summaries,
+                "follow_up_recommendations": report.follow_up_recommendations,
+            }),
+            parent_summary: report
+                .follow_up_recommendations
+                .iter()
+                .filter(|item| item.audience == "parent")
+                .map(|item| item.summary.clone())
+                .collect(),
+            items,
+        })
+    }
+
+    pub fn build_bundle_ocr_workspace(&self, bundle_id: i64) -> EcoachResult<BundleOcrWorkspace> {
+        let report = self.get_bundle_report(bundle_id)?;
+        let mut pages = Vec::new();
+        for insight in report
+            .insights
+            .iter()
+            .filter(|item| item.insight_type == "file_reconstruction")
+        {
+            let file_id = insight
+                .payload
+                .get("file_id")
+                .and_then(Value::as_i64)
+                .unwrap_or_default();
+            let file_name = insight
+                .payload
+                .get("file_name")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown-file")
+                .to_string();
+            let document_role = insight
+                .payload
+                .get("document_role")
+                .and_then(Value::as_str)
+                .unwrap_or("document")
+                .to_string();
+            let page_items = insight
+                .payload
+                .get("page_recovery")
+                .and_then(|value| value.get("pages"))
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            for page in page_items {
+                pages.push(BundleOcrPage {
+                    file_id,
+                    file_name: file_name.clone(),
+                    document_role: document_role.clone(),
+                    page_number: page.get("page_number").and_then(Value::as_i64).unwrap_or(1),
+                    label: page
+                        .get("label")
+                        .and_then(Value::as_str)
+                        .unwrap_or("document_page")
+                        .to_string(),
+                    confidence_score: page
+                        .get("confidence_score")
+                        .and_then(Value::as_i64)
+                        .unwrap_or(0),
+                    preview: page
+                        .get("preview")
+                        .and_then(Value::as_str)
+                        .map(str::to_string),
+                });
+            }
+        }
+        pages.sort_by_key(|page| (page.file_id, page.page_number));
+
+        Ok(BundleOcrWorkspace {
+            bundle: report.bundle,
+            review_priority: report.review_priority,
+            files_with_ocr: report.ocr_candidate_file_count,
+            recovered_file_count: report.ocr_recovered_file_count,
+            pages,
+        })
+    }
+
+    pub fn build_personal_academic_vault(
+        &self,
+        student_id: i64,
+        limit: usize,
+    ) -> EcoachResult<PersonalAcademicVaultSnapshot> {
+        let bundle_ids = self.list_student_bundle_ids(student_id, limit.max(1))?;
+        let total_bundle_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM submission_bundles WHERE student_id = ?1",
+                [student_id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut bundles = Vec::new();
+        let mut active_topics = BTreeSet::new();
+        let mut pending_review_count = 0i64;
+        let mut coach_applied_count = 0i64;
+        let mut promoted_bundle_count = 0i64;
+
+        for bundle_id in bundle_ids {
+            let report = self.get_bundle_report(bundle_id)?;
+            let files = self.list_bundle_files(bundle_id)?;
+            let (confirmation_state, coach_application_status) = self
+                .conn
+                .query_row(
+                    "SELECT confirmation_state, coach_application_status
+                     FROM submission_bundles
+                     WHERE id = ?1",
+                    [bundle_id],
+                    |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let promotion = self.get_bundle_shared_promotion(bundle_id)?;
+            if report.review_priority == "high" || report.needs_confirmation {
+                pending_review_count += 1;
+            }
+            if coach_application_status == "applied" {
+                coach_applied_count += 1;
+            }
+            if promotion.is_some() {
+                promoted_bundle_count += 1;
+            }
+            for topic in &report.detected_topics {
+                active_topics.insert(topic.clone());
+            }
+            bundles.push(PersonalAcademicVaultEntry {
+                bundle: report.bundle,
+                bundle_kind: report.bundle_kind,
+                review_priority: report.review_priority,
+                confirmation_state,
+                coach_application_status,
+                detected_subjects: report.detected_subjects,
+                detected_topics: report.detected_topics,
+                summary_points: report.recommended_actions.into_iter().take(3).collect(),
+                file_count: files.len() as i64,
+                files,
+                promotion,
+            });
+        }
+
+        Ok(PersonalAcademicVaultSnapshot {
+            student_id,
+            total_bundle_count,
+            pending_review_count,
+            coach_applied_count,
+            promoted_bundle_count,
+            active_topics: active_topics.into_iter().collect(),
+            bundles,
+        })
+    }
+
+    pub fn record_bundle_shared_promotion(
+        &self,
+        bundle_id: i64,
+        source_upload_id: Option<i64>,
+        requested_by_account_id: Option<i64>,
+        promotion_status: &str,
+        promotion_summary: &Value,
+    ) -> EcoachResult<BundleSharedPromotion> {
+        let summary_json = serde_json::to_string(promotion_summary)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let existing_id = self
+            .conn
+            .query_row(
+                "SELECT id FROM bundle_shared_promotions WHERE bundle_id = ?1",
+                [bundle_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        if let Some(existing_id) = existing_id {
+            self.conn
+                .execute(
+                    "UPDATE bundle_shared_promotions
+                     SET source_upload_id = ?2,
+                         requested_by_account_id = ?3,
+                         promotion_status = ?4,
+                         promotion_summary_json = ?5,
+                         updated_at = datetime('now')
+                     WHERE id = ?1",
+                    params![
+                        existing_id,
+                        source_upload_id,
+                        requested_by_account_id,
+                        promotion_status,
+                        summary_json,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            return self.get_bundle_shared_promotion(bundle_id)?.ok_or_else(|| {
+                EcoachError::NotFound(format!(
+                    "bundle promotion for bundle {} not found",
+                    bundle_id
+                ))
+            });
+        }
+
+        self.conn
+            .execute(
+                "INSERT INTO bundle_shared_promotions (
+                    bundle_id, source_upload_id, requested_by_account_id, promotion_status,
+                    promotion_summary_json
+                 ) VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![
+                    bundle_id,
+                    source_upload_id,
+                    requested_by_account_id,
+                    promotion_status,
+                    summary_json,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.get_bundle_shared_promotion(bundle_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!(
+                "bundle promotion for bundle {} not found",
+                bundle_id
+            ))
+        })
+    }
+
+    pub fn apply_bundle_to_coach(
+        &self,
+        bundle_id: i64,
+    ) -> EcoachResult<BundleCoachApplicationResult> {
+        let report = self.get_bundle_report(bundle_id)?;
+        let confirmation_state = self
+            .conn
+            .query_row(
+                "SELECT confirmation_state FROM submission_bundles WHERE id = ?1",
+                [bundle_id],
+                |row| row.get::<_, String>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if report.needs_confirmation && confirmation_state != "confirmed" {
+            return Err(EcoachError::Validation(
+                "bundle needs confirmation before coach application".to_string(),
+            ));
+        }
+
+        let subject_id = resolve_subject_id_from_labels(self.conn, &report.detected_subjects)?;
+        let profile_snapshot = build_question_environment_snapshot(&report);
+        self.upsert_question_environment_profile(report.bundle.student_id, subject_id, &profile_snapshot)?;
+
+        let mut created_goal_ids = Vec::new();
+        for signal in &report.coach_goal_signals {
+            let existing = self
+                .conn
+                .query_row(
+                    "SELECT id
+                     FROM goals
+                     WHERE student_id = ?1
+                       AND source_bundle_id = ?2
+                       AND goal_signal_key = ?3
+                     LIMIT 1",
+                    params![report.bundle.student_id, bundle_id, signal.signal_key],
+                    |row| row.get::<_, i64>(0),
+                )
+                .optional()
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let topics_json = serde_json::to_string(&signal.supporting_topics)
+                .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+            let evidence_sources_json = serde_json::to_string(&signal.source_document_roles)
+                .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+            let completion_criteria_json = serde_json::to_string(&vec![
+                "coach_review_completed".to_string(),
+                "follow_up_action_done".to_string(),
+            ])
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+            let goal_level = if signal.signal_key.contains("campaign") {
+                "campaign"
+            } else {
+                "tactical"
+            };
+            if let Some(goal_id) = existing {
+                self.conn
+                    .execute(
+                        "UPDATE goals
+                         SET title = ?2,
+                             description = ?3,
+                             goal_type = ?4,
+                             goal_level = ?4,
+                             goal_state = 'active',
+                             status = 'active',
+                             goal_category = ?5,
+                             subject_id = ?6,
+                             topics_json = ?7,
+                             urgency_level = ?8,
+                             confidence_score_bp = ?9,
+                             coach_priority_bp = ?10,
+                             evidence_sources_json = ?11,
+                             risk_level = ?12,
+                             completion_criteria_json = ?13,
+                             source_bundle_id = ?14,
+                             metadata_json = ?15,
+                             updated_at = datetime('now')
+                         WHERE id = ?1",
+                        params![
+                            goal_id,
+                            signal.title,
+                            signal.summary,
+                            goal_level,
+                            goal_category_for_signal(signal.signal_key.as_str()),
+                            subject_id,
+                            topics_json,
+                            signal.priority,
+                            confidence_bp_for_band(signal.confidence_band.as_str()),
+                            coach_priority_bp_for_priority(signal.priority.as_str()),
+                            evidence_sources_json,
+                            signal.priority,
+                            completion_criteria_json,
+                            bundle_id,
+                            json!({ "signal_key": signal.signal_key }).to_string(),
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                created_goal_ids.push(goal_id);
+            } else {
+                self.conn
+                    .execute(
+                        "INSERT INTO goals (
+                            student_id, goal_type, title, description, status, goal_level,
+                            goal_state, coach_priority_bp, evidence_sources_json, risk_level,
+                            completion_criteria_json, goal_category, subject_id, topics_json,
+                            urgency_level, confidence_score_bp, goal_signal_key,
+                            source_bundle_id, metadata_json, created_at, updated_at
+                         ) VALUES (
+                            ?1, ?2, ?3, ?4, 'active', ?5, 'active', ?6, ?7, ?8, ?9,
+                            ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, datetime('now'),
+                            datetime('now')
+                         )",
+                        params![
+                            report.bundle.student_id,
+                            goal_level,
+                            signal.title,
+                            signal.summary,
+                            goal_level,
+                            coach_priority_bp_for_priority(signal.priority.as_str()),
+                            evidence_sources_json,
+                            signal.priority,
+                            completion_criteria_json,
+                            goal_category_for_signal(signal.signal_key.as_str()),
+                            subject_id,
+                            topics_json,
+                            signal.priority,
+                            confidence_bp_for_band(signal.confidence_band.as_str()),
+                            signal.signal_key,
+                            bundle_id,
+                            json!({ "signal_key": signal.signal_key }).to_string(),
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                created_goal_ids.push(self.conn.last_insert_rowid());
+            }
+        }
+
+        let parent_alert_count =
+            self.create_parent_alerts_from_followups(report.bundle.student_id, &report)?;
+        let summary = vec![
+            format!("{} goal signals were applied to CoachHub.", created_goal_ids.len()),
+            format!(
+                "{} topic action summaries were promoted into the planning layer.",
+                report.topic_action_summaries.len()
+            ),
+        ];
+
+        self.conn
+            .execute(
+                "UPDATE submission_bundles
+                 SET coach_application_status = 'applied',
+                     coach_application_summary_json = ?2,
+                     status = 'completed',
+                     last_applied_at = datetime('now')
+                 WHERE id = ?1",
+                params![
+                    bundle_id,
+                    json!({
+                        "created_goal_ids": created_goal_ids,
+                        "updated_topic_labels": report.detected_topics,
+                        "parent_alert_count": parent_alert_count,
+                        "summary": summary,
+                    })
+                    .to_string()
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.append_runtime_event(
+            "submission_bundle",
+            bundle_id,
+            "submission_bundle.applied_to_coach",
+            json!({
+                "student_id": report.bundle.student_id,
+                "created_goal_ids": created_goal_ids,
+                "updated_topic_labels": report.detected_topics,
+                "parent_alert_count": parent_alert_count,
+            }),
+        )?;
+
+        Ok(BundleCoachApplicationResult {
+            bundle_id,
+            coach_application_status: "applied".to_string(),
+            created_goal_ids,
+            updated_topic_labels: report.detected_topics,
+            parent_alert_count,
+            question_environment_profile: profile_snapshot,
+            summary,
+        })
     }
 
     pub fn get_bundle_report(&self, bundle_id: i64) -> EcoachResult<BundleProcessReport> {
@@ -757,6 +1358,65 @@ impl<'a> IntakeService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
+    fn list_student_bundle_ids(&self, student_id: i64, limit: usize) -> EcoachResult<Vec<i64>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id
+                 FROM submission_bundles
+                 WHERE student_id = ?1
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![student_id, limit.max(1) as i64], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut bundle_ids = Vec::new();
+        for row in rows {
+            bundle_ids.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(bundle_ids)
+    }
+
+    fn get_bundle_shared_promotion(
+        &self,
+        bundle_id: i64,
+    ) -> EcoachResult<Option<BundleSharedPromotion>> {
+        self.conn
+            .query_row(
+                "SELECT id, bundle_id, source_upload_id, requested_by_account_id,
+                        promotion_status, promotion_summary_json, created_at, updated_at
+                 FROM bundle_shared_promotions
+                 WHERE bundle_id = ?1",
+                [bundle_id],
+                |row| {
+                    let summary_json: String = row.get(5)?;
+                    let promotion_summary = serde_json::from_str::<Value>(&summary_json).map_err(
+                        |err| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                5,
+                                rusqlite::types::Type::Text,
+                                Box::new(err),
+                            )
+                        },
+                    )?;
+                    Ok(BundleSharedPromotion {
+                        id: row.get(0)?,
+                        bundle_id: row.get(1)?,
+                        source_upload_id: row.get(2)?,
+                        requested_by_account_id: row.get(3)?,
+                        promotion_status: row.get(4)?,
+                        promotion_summary,
+                        created_at: row.get(6)?,
+                        updated_at: row.get(7)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
     fn update_bundle_status(&self, bundle_id: i64, status: &str) -> EcoachResult<()> {
         self.conn
             .execute(
@@ -782,6 +1442,231 @@ impl<'a> IntakeService<'a> {
                 "INSERT INTO extracted_insights (bundle_id, insight_type, payload_json)
                  VALUES (?1, ?2, ?3)",
                 params![bundle_id, insight_type, payload_json],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn get_bundle_review_note(&self, note_id: i64) -> EcoachResult<Option<BundleReviewNote>> {
+        self.conn
+            .query_row(
+                "SELECT id, bundle_id, question_ref, topic_label, review_side, reflection_kind,
+                        reflection_text, recommended_action, severity_bp, created_at
+                 FROM submission_bundle_review_notes
+                 WHERE id = ?1",
+                [note_id],
+                |row| {
+                    Ok(BundleReviewNote {
+                        id: row.get(0)?,
+                        bundle_id: row.get(1)?,
+                        question_ref: row.get(2)?,
+                        topic_label: row.get(3)?,
+                        review_side: row.get(4)?,
+                        reflection_kind: row.get(5)?,
+                        reflection_text: row.get(6)?,
+                        recommended_action: row.get(7)?,
+                        severity_bp: row.get(8)?,
+                        created_at: row.get(9)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
+    fn list_bundle_review_notes(&self, bundle_id: i64) -> EcoachResult<Vec<BundleReviewNote>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, bundle_id, question_ref, topic_label, review_side, reflection_kind,
+                        reflection_text, recommended_action, severity_bp, created_at
+                 FROM submission_bundle_review_notes
+                 WHERE bundle_id = ?1
+                 ORDER BY created_at DESC, id DESC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([bundle_id], |row| {
+                Ok(BundleReviewNote {
+                    id: row.get(0)?,
+                    bundle_id: row.get(1)?,
+                    question_ref: row.get(2)?,
+                    topic_label: row.get(3)?,
+                    review_side: row.get(4)?,
+                    reflection_kind: row.get(5)?,
+                    reflection_text: row.get(6)?,
+                    recommended_action: row.get(7)?,
+                    severity_bp: row.get(8)?,
+                    created_at: row.get(9)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+
+    fn upsert_question_environment_profile(
+        &self,
+        student_id: i64,
+        subject_id: Option<i64>,
+        snapshot: &Value,
+    ) -> EcoachResult<()> {
+        let mark_loss_patterns_json = serde_json::to_string(
+            snapshot
+                .get("mark_loss_patterns")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default()
+                .as_slice(),
+        )
+        .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let environment_signals_json = serde_json::to_string(snapshot)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO student_question_environment_profiles (
+                    student_id, subject_id, teacher_style, directness_profile,
+                    answer_depth_expectation, objective_vs_structured_balance,
+                    typical_difficulty, mark_loss_patterns_json, environment_signals_json, updated_at
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, datetime('now'))
+                 ON CONFLICT(student_id, subject_id) DO UPDATE SET
+                    teacher_style = excluded.teacher_style,
+                    directness_profile = excluded.directness_profile,
+                    answer_depth_expectation = excluded.answer_depth_expectation,
+                    objective_vs_structured_balance = excluded.objective_vs_structured_balance,
+                    typical_difficulty = excluded.typical_difficulty,
+                    mark_loss_patterns_json = excluded.mark_loss_patterns_json,
+                    environment_signals_json = excluded.environment_signals_json,
+                    updated_at = datetime('now')",
+                params![
+                    student_id,
+                    subject_id,
+                    snapshot
+                        .get("teacher_style")
+                        .and_then(Value::as_str)
+                        .unwrap_or("balanced"),
+                    snapshot
+                        .get("directness_profile")
+                        .and_then(Value::as_str)
+                        .unwrap_or("mixed"),
+                    snapshot
+                        .get("answer_depth_expectation")
+                        .and_then(Value::as_str)
+                        .unwrap_or("balanced"),
+                    snapshot
+                        .get("objective_vs_structured_balance")
+                        .and_then(Value::as_str)
+                        .unwrap_or("mixed"),
+                    snapshot
+                        .get("typical_difficulty")
+                        .and_then(Value::as_str)
+                        .unwrap_or("medium"),
+                    mark_loss_patterns_json,
+                    environment_signals_json,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(())
+    }
+
+    fn create_parent_alerts_from_followups(
+        &self,
+        student_id: i64,
+        report: &BundleProcessReport,
+    ) -> EcoachResult<i64> {
+        let parent_ids = self.list_parent_ids_for_student(student_id)?;
+        if parent_ids.is_empty() {
+            return Ok(0);
+        }
+        let mut count = 0i64;
+        for recommendation in report
+            .follow_up_recommendations
+            .iter()
+            .filter(|item| item.audience == "parent")
+        {
+            let severity = match recommendation.priority.as_str() {
+                "critical" => "urgent",
+                "high" => "high",
+                "medium" => "watch",
+                _ => "info",
+            };
+            if severity == "info" {
+                continue;
+            }
+            for parent_id in &parent_ids {
+                self.conn
+                    .execute(
+                        "INSERT INTO parent_alert_records (
+                            learner_id, parent_id, trigger_type, severity, message,
+                            action_required, metadata_json
+                         ) VALUES (?1, ?2, 'uploaded_review', ?3, ?4, ?5, ?6)",
+                        params![
+                            student_id,
+                            parent_id,
+                            severity,
+                            recommendation.summary,
+                            recommendation.topic_label,
+                            json!({
+                                "bundle_id": report.bundle.id,
+                                "recommendation_key": recommendation.recommendation_key,
+                            })
+                            .to_string(),
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                count += 1;
+            }
+        }
+        Ok(count)
+    }
+
+    fn list_parent_ids_for_student(&self, student_id: i64) -> EcoachResult<Vec<i64>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT parent_account_id
+                 FROM parent_student_links
+                 WHERE student_account_id = ?1",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([student_id], |row| row.get(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+
+    fn append_runtime_event(
+        &self,
+        aggregate_kind: &str,
+        aggregate_id: i64,
+        event_type: &str,
+        payload: Value,
+    ) -> EcoachResult<()> {
+        let seed = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .as_nanos();
+        self.conn
+            .execute(
+                "INSERT INTO runtime_events (
+                    event_id, event_type, aggregate_kind, aggregate_id, trace_id,
+                    payload_json, occurred_at
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))",
+                params![
+                    format!("{}-{}-{}", aggregate_kind, aggregate_id, seed),
+                    event_type,
+                    aggregate_kind,
+                    aggregate_id.to_string(),
+                    format!("trace-{}-{}", aggregate_id, seed),
+                    payload.to_string(),
+                ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         Ok(())
@@ -5836,10 +6721,130 @@ fn is_question_like(file_name: &str, text: Option<&str>) -> bool {
 
 fn confidence_band_for_score(score: i64) -> String {
     match score {
-        80.. => "high".to_string(),
-        55.. => "medium".to_string(),
+        75.. => "high".to_string(),
+        50.. => "medium".to_string(),
         _ => "low".to_string(),
     }
+}
+
+fn confidence_bp_for_band(band: &str) -> i64 {
+    match band {
+        "high" => 8_600,
+        "medium" => 6_400,
+        _ => 4_300,
+    }
+}
+
+fn coach_priority_bp_for_priority(priority: &str) -> i64 {
+    match priority {
+        "critical" => 9_500,
+        "high" => 8_300,
+        "medium" => 6_500,
+        _ => 4_500,
+    }
+}
+
+fn goal_category_for_signal(signal_key: &str) -> &'static str {
+    if signal_key.contains("teacher") {
+        "parent_teacher"
+    } else if signal_key.contains("resource") || signal_key.contains("glossary") {
+        "resource"
+    } else if signal_key.contains("assessment") || signal_key.contains("test") {
+        "preparation"
+    } else {
+        "weakness_repair"
+    }
+}
+
+fn detect_review_topic_label(detected_topics: &[String], question_ref: &str) -> Option<String> {
+    detected_topics
+        .iter()
+        .find(|topic| question_ref.to_lowercase().contains(&topic.to_lowercase()))
+        .cloned()
+        .or_else(|| detected_topics.first().cloned())
+}
+
+fn build_question_environment_snapshot(report: &BundleProcessReport) -> Value {
+    let teacher_style = if report
+        .detected_document_roles
+        .iter()
+        .any(|role| matches!(role.as_str(), "teacher_comments" | "teacher_handout"))
+    {
+        "teacher_guided"
+    } else if report
+        .bundle_kind
+        .contains("exam")
+        || report.detected_document_roles.iter().any(|role| role.contains("mark"))
+    {
+        "exam_heavy"
+    } else {
+        "balanced"
+    };
+    let directness_profile = if report.low_confidence_alignment_count > 0 {
+        "tricky"
+    } else {
+        "direct"
+    };
+    let answer_depth_expectation = if report.answer_like_file_count > report.question_like_file_count
+    {
+        "deep"
+    } else {
+        "balanced"
+    };
+    let objective_vs_structured_balance = if report.answer_like_file_count > 0
+        && report.estimated_answer_count > report.estimated_question_count / 2
+    {
+        "structured_heavy"
+    } else {
+        "mixed"
+    };
+    let typical_difficulty = if report.review_priority == "critical" {
+        "hard"
+    } else if report.review_priority == "medium" {
+        "medium"
+    } else {
+        "accessible"
+    };
+    json!({
+        "teacher_style": teacher_style,
+        "directness_profile": directness_profile,
+        "answer_depth_expectation": answer_depth_expectation,
+        "objective_vs_structured_balance": objective_vs_structured_balance,
+        "typical_difficulty": typical_difficulty,
+        "mark_loss_patterns": report.weakness_signals,
+        "signals": {
+            "bundle_kind": report.bundle_kind,
+            "review_priority": report.review_priority,
+            "score_signal_count": report.score_signal_count,
+            "remark_signal_count": report.remark_signal_count,
+            "detected_topics": report.detected_topics,
+        }
+    })
+}
+
+fn resolve_subject_id_from_labels(
+    conn: &Connection,
+    detected_subjects: &[String],
+) -> EcoachResult<Option<i64>> {
+    for label in detected_subjects {
+        let normalized = label.trim();
+        let maybe = conn
+            .query_row(
+                "SELECT id
+                 FROM subjects
+                 WHERE lower(name) = lower(?1)
+                    OR lower(code) = lower(?1)
+                 LIMIT 1",
+                [normalized],
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if maybe.is_some() {
+            return Ok(maybe);
+        }
+    }
+    Ok(None)
 }
 
 fn build_topic_action_summaries_from_accumulators(
@@ -7805,6 +8810,211 @@ mod tests {
                     == "review_key_terms_before_retry"
                     && recommendation.audience == "learner")
         );
+    }
+
+    #[test]
+    fn confirm_bundle_keeps_runtime_status_valid_for_confirmation_flow() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_confirm_bundle");
+        let scan_path = temp_dir.join("Biology leaf diagram scan.png");
+        fs::write(&scan_path, [137, 80, 78, 71]).expect("scan file should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Scan upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&scan_path),
+                scan_path.to_string_lossy().as_ref(),
+            )
+            .expect("scan file should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+        assert!(report.needs_confirmation);
+        assert_eq!(report.bundle.status, "review_required");
+
+        let confirmed = service
+            .confirm_bundle(
+                bundle_id,
+                BundleConfirmationInput {
+                    confirmation_state: "confirmed".to_string(),
+                    note: Some("Teacher confirmed this is the right paper".to_string()),
+                    topic_overrides: vec!["photosynthesis".to_string()],
+                    document_role_overrides: vec!["question_paper".to_string()],
+                },
+            )
+            .expect("bundle confirmation should succeed");
+
+        let confirmation_state: String = conn
+            .query_row(
+                "SELECT confirmation_state FROM submission_bundles WHERE id = ?1",
+                [bundle_id],
+                |row| row.get(0),
+            )
+            .expect("confirmation state should query");
+
+        assert_eq!(confirmation_state, "confirmed");
+        assert_eq!(confirmed.bundle.status, "review_required");
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn apply_bundle_to_coach_creates_goal_and_environment_artifacts() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_apply_bundle");
+        let report_path = temp_dir.join("Term 2 Report Card.txt");
+        fs::write(
+            &report_path,
+            "REPORT CARD\nDate: 12 March 2026\nMathematics Score: 42%\nEnglish Score: 71%\nTeacher Comment: Weak in algebra and comprehension. Needs urgent intervention.\n",
+        )
+        .expect("report card should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Report card upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&report_path),
+                report_path.to_string_lossy().as_ref(),
+            )
+            .expect("report card should insert");
+
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+        assert!(!report.needs_confirmation);
+        assert!(
+            report
+                .coach_goal_signals
+                .iter()
+                .any(|signal| signal.signal_key == "stabilize_detected_weaknesses")
+        );
+
+        let result = service
+            .apply_bundle_to_coach(bundle_id)
+            .expect("bundle should apply to coach");
+
+        let (status, application_status): (String, String) = conn
+            .query_row(
+                "SELECT status, coach_application_status FROM submission_bundles WHERE id = ?1",
+                [bundle_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("bundle state should query");
+        let goal_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM goals WHERE student_id = 1 AND source_bundle_id = ?1",
+                [bundle_id],
+                |row| row.get(0),
+            )
+            .expect("goal count should query");
+        let profile_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM student_question_environment_profiles WHERE student_id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("question environment profile count should query");
+
+        assert_eq!(status, "completed");
+        assert_eq!(application_status, "applied");
+        assert!(!result.created_goal_ids.is_empty());
+        assert_eq!(goal_count, result.created_goal_ids.len() as i64);
+        assert_eq!(profile_count, 1);
+        assert!(
+            result
+                .question_environment_profile
+                .get("mark_loss_patterns")
+                .and_then(Value::as_array)
+                .map(|items| !items.is_empty())
+                .unwrap_or(false)
+        );
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn vault_snapshot_and_ocr_workspace_surface_personal_upload_state() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations should apply");
+        seed_student(&conn);
+
+        let temp_dir = test_temp_dir("intake_vault_workspace");
+        let question_path = temp_dir.join("Science Corrected Script.txt");
+        fs::write(
+            &question_path,
+            "INTEGRATED SCIENCE CORRECTED SCRIPT\nTopic: Osmosis and Diffusion\n1. Define osmosis.\nTeacher Comment: Weak in osmosis and diffusion definitions.\n",
+        )
+        .expect("question file should write");
+
+        let service = IntakeService::new(&conn);
+        let bundle_id = service
+            .create_bundle(1, "Corrected script upload")
+            .expect("bundle should create");
+        service
+            .add_bundle_file(
+                bundle_id,
+                file_name(&question_path),
+                question_path.to_string_lossy().as_ref(),
+            )
+            .expect("bundle file should add");
+        let report = service
+            .reconstruct_bundle(bundle_id)
+            .expect("bundle should reconstruct");
+        service
+            .confirm_bundle(
+                bundle_id,
+                BundleConfirmationInput {
+                    confirmation_state: "confirmed".to_string(),
+                    note: Some("Reviewed by student".to_string()),
+                    topic_overrides: Vec::new(),
+                    document_role_overrides: Vec::new(),
+                },
+            )
+            .expect("bundle should confirm");
+        service
+            .record_bundle_shared_promotion(
+                bundle_id,
+                None,
+                Some(1),
+                "queued",
+                &json!({ "reason": "high_value_personal_material" }),
+            )
+            .expect("promotion should record");
+
+        let vault = service
+            .build_personal_academic_vault(1, 10)
+            .expect("vault should build");
+        let workspace = service
+            .build_bundle_ocr_workspace(bundle_id)
+            .expect("workspace should build");
+
+        assert_eq!(vault.total_bundle_count, 1);
+        assert_eq!(vault.promoted_bundle_count, 1);
+        assert!(
+            vault.active_topics.iter().any(|topic| {
+                topic.to_ascii_lowercase().contains("osmosis")
+                    || topic.to_ascii_lowercase().contains("diffusion")
+            })
+        );
+        assert_eq!(workspace.bundle.id, bundle_id);
+        assert_eq!(workspace.review_priority, report.review_priority);
+        assert!(!workspace.pages.is_empty());
+
+        let _ = fs::remove_dir_all(temp_dir);
     }
 
     fn seed_student(conn: &Connection) {

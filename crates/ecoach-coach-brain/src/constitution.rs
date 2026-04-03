@@ -1,8 +1,8 @@
 use crate::{
     CanonicalIntelligenceStore, CoachIntelligenceDomeService, CoachJudgmentEngine,
-    CoachJudgmentSnapshot, CoachNextAction, ComposedSession, ContentReadinessResolution,
-    RouteMode, SessionComposer, SystemHealthSnapshot, UncertaintyProfile,
-    assess_content_readiness, resolve_coach_state, resolve_next_coach_action,
+    CoachJudgmentSnapshot, CoachNextAction, ComposedSession, ContentReadinessResolution, RouteMode,
+    SessionComposer, SystemHealthSnapshot, UncertaintyProfile, assess_content_readiness,
+    resolve_coach_state, resolve_next_coach_action,
 };
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, EngineRegistry, clamp_bp};
 use rusqlite::{Connection, params};

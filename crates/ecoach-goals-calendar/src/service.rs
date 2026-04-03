@@ -12,12 +12,13 @@ use crate::models::{
     ClimbTrendPoint, CoachBadgeAward, CoachTitleCard, CoachTitleHistoryEntry, ComebackFlow,
     ComebackFlowTemplate, DailyAvailabilitySummary, DailyReplan, EngagementEvent,
     EngagementEventInput, EngagementRiskProfile, ExamPlanState, ExamPlanStateInput,
-    FreeNowRecommendation, Goal, ParentAccessSettings, ParentAccessSettingsInput,
-    ParentAlertRecord, ParentFeedbackInput, ParentFeedbackRecord, PreparationIntensityProfile,
-    ReminderSchedule, ReminderScheduleInput, RevengeQueueItem, ScheduleLedgerEntry,
-    ScheduleTriggerJob, StrategyAdjustmentLog, StudentMomentum, TimeOrchestrationSnapshot,
-    TimeSessionBlock, TitleDefenseBrief, TitleDefenseCompletionInput, TitleDefenseResult,
-    TitlesHallSnapshot,
+    FreeNowRecommendation, Goal, GoalArbitrationSnapshot, GoalConflict, GoalProfile,
+    GoalProfileInput, ParentAccessSettings, ParentAccessSettingsInput, ParentAlertRecord,
+    ParentFeedbackInput, ParentFeedbackRecord, PreparationIntensityProfile, ReminderSchedule,
+    ReminderScheduleInput, RevengeQueueItem, ScheduleLedgerEntry, ScheduleTriggerJob,
+    StrategyAdjustmentLog, StudentMomentum, TimeOrchestrationSnapshot, TimeSessionBlock,
+    TitleDefenseBrief, TitleDefenseCompletionInput, TitleDefenseResult, TitlesHallSnapshot,
+    WeeklyPlanBand, WeeklyPlanBlock, WeeklyPlanDay, WeeklyPlanSnapshot,
 };
 
 pub struct GoalsCalendarService<'a> {
@@ -220,6 +221,49 @@ fn map_schedule_trigger_job(row: &rusqlite::Row<'_>) -> rusqlite::Result<Schedul
     })
 }
 
+fn map_goal_profile(row: &rusqlite::Row<'_>) -> rusqlite::Result<GoalProfile> {
+    let topics_json: String = row.get(10)?;
+    let evidence_sources_json: String = row.get(17)?;
+    let dependency_goals_json: String = row.get(18)?;
+    let completion_criteria_json: String = row.get(22)?;
+    let metadata_json: String = row.get(27)?;
+    Ok(GoalProfile {
+        id: row.get(0)?,
+        student_id: row.get(1)?,
+        parent_goal_id: row.get(2)?,
+        title: row.get(3)?,
+        description: row.get(4)?,
+        goal_type: row.get(5)?,
+        goal_category: row.get(6)?,
+        goal_level: row.get(7)?,
+        goal_state: row.get(8)?,
+        subject_id: row.get(9)?,
+        topics: parse_string_list(&topics_json).map_err(to_sql_conversion_error)?,
+        urgency_level: row.get(11)?,
+        start_date: row.get(12)?,
+        deadline: row.get(13)?,
+        exam_id: row.get(14)?,
+        confidence_score_bp: row.get(15)?,
+        coach_priority_bp: row.get(16)?,
+        parent_priority_flag: row.get::<_, i64>(19)? == 1,
+        evidence_sources: parse_string_list(&evidence_sources_json)
+            .map_err(to_sql_conversion_error)?,
+        dependency_goal_ids: parse_i64_list(&dependency_goals_json)
+            .map_err(to_sql_conversion_error)?,
+        risk_level: row.get::<_, Option<String>>(20)?.unwrap_or_else(|| "normal".to_string()),
+        suggested_weekly_effort_minutes: row.get(21)?,
+        current_momentum_bp: row.get(23)?,
+        completion_criteria: parse_string_list(&completion_criteria_json)
+            .map_err(to_sql_conversion_error)?,
+        blocked_reason: row.get(24)?,
+        source_bundle_id: row.get(25)?,
+        goal_signal_key: row.get(26)?,
+        metadata: parse_json_value(&metadata_json).map_err(to_sql_conversion_error)?,
+        created_at: row.get(28)?,
+        updated_at: row.get(29)?,
+    })
+}
+
 fn map_daily_summary(row: &rusqlite::Row<'_>) -> rusqlite::Result<BeatYesterdayDailySummary> {
     let summary_json: String = row.get(14)?;
     Ok(BeatYesterdayDailySummary {
@@ -359,12 +403,7 @@ fn derive_block_trigger_mode(
 
 fn combine_date_minute(date: &str, minute_of_day: i64) -> String {
     let normalized = minute_of_day.clamp(0, 1_439);
-    format!(
-        "{}T{:02}:{:02}:00",
-        date,
-        normalized / 60,
-        normalized % 60
-    )
+    format!("{}T{:02}:{:02}:00", date, normalized / 60, normalized % 60)
 }
 
 fn map_student_momentum(row: &rusqlite::Row<'_>) -> rusqlite::Result<StudentMomentum> {
@@ -894,6 +933,56 @@ fn validate_comeback_trigger_reason(trigger_reason: &str) -> EcoachResult<()> {
     }
 }
 
+fn normalize_goal_level(level: &str) -> &'static str {
+    match level {
+        "north_star" => "north_star",
+        "current_campaign" | "campaign" => "campaign",
+        "background" => "background",
+        _ => "tactical",
+    }
+}
+
+fn normalize_goal_state(goal_state: &str) -> &'static str {
+    match goal_state {
+        "drafted" => "drafted",
+        "confirmed" => "confirmed",
+        "paused" => "paused",
+        "blocked" => "blocked",
+        "completed" => "completed",
+        "at_risk" => "at_risk",
+        "recalibrating" => "recalibrating",
+        _ => "active",
+    }
+}
+
+fn legacy_goal_status(goal_state: &str) -> &'static str {
+    match goal_state {
+        "drafted" => "draft",
+        "paused" => "paused",
+        "completed" => "completed",
+        _ => "active",
+    }
+}
+
+fn score_goal_urgency(urgency_level: &str) -> BasisPoints {
+    match urgency_level {
+        "critical" => 10_000,
+        "high" => 8_300,
+        "elevated" => 7_000,
+        "low" => 3_500,
+        _ => 5_500,
+    }
+}
+
+fn score_goal_level(level: &str) -> BasisPoints {
+    match level {
+        "north_star" => 9_400,
+        "campaign" | "current_campaign" => 8_100,
+        "background" => 2_800,
+        _ => 6_200,
+    }
+}
+
 impl<'a> GoalsCalendarService<'a> {
     pub fn new(conn: &'a Connection) -> Self {
         Self { conn }
@@ -928,6 +1017,495 @@ impl<'a> GoalsCalendarService<'a> {
             out.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
         }
         Ok(out)
+    }
+
+    pub fn save_goal_profile(
+        &self,
+        student_id: i64,
+        input: GoalProfileInput,
+    ) -> EcoachResult<GoalProfile> {
+        let goal_level = normalize_goal_level(&input.level).to_string();
+        let goal_state = normalize_goal_state(&input.goal_state).to_string();
+        let topics_json = serde_json::to_string(&input.topics)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let evidence_sources_json = serde_json::to_string(&input.evidence_sources)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let dependency_goals_json = serde_json::to_string(&input.dependency_goal_ids)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let completion_criteria_json = serde_json::to_string(&input.completion_criteria)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let metadata_json = serde_json::to_string(&input.metadata)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let existing_id = if input.source_bundle_id.is_some() || input.goal_signal_key.is_some() {
+            self.conn
+                .query_row(
+                    "SELECT id
+                     FROM goals
+                     WHERE student_id = ?1
+                       AND COALESCE(source_bundle_id, -1) = COALESCE(?2, -1)
+                       AND COALESCE(goal_signal_key, '') = COALESCE(?3, '')
+                     ORDER BY updated_at DESC
+                     LIMIT 1",
+                    params![student_id, input.source_bundle_id, input.goal_signal_key],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(|err| EcoachError::Storage(err.to_string()))?
+        } else {
+            None
+        };
+
+        if let Some(goal_id) = existing_id {
+            self.conn
+                .execute(
+                    "UPDATE goals
+                     SET title = ?2,
+                         description = ?3,
+                         goal_type = ?4,
+                         goal_category = ?5,
+                         goal_level = ?6,
+                         goal_state = ?7,
+                         status = ?8,
+                         subject_id = ?9,
+                         topics_json = ?10,
+                         urgency_level = ?11,
+                         start_date = ?12,
+                         deadline = ?13,
+                         exam_id = ?14,
+                         confidence_score_bp = ?15,
+                         coach_priority_bp = ?16,
+                         parent_priority_flag = ?17,
+                         evidence_sources_json = ?18,
+                         dependency_goals_json = ?19,
+                         risk_level = ?20,
+                         suggested_weekly_effort_minutes = ?21,
+                         current_momentum_bp = ?22,
+                         completion_criteria_json = ?23,
+                         blocked_reason = ?24,
+                         source_bundle_id = ?25,
+                         goal_signal_key = ?26,
+                         metadata_json = ?27,
+                         updated_at = datetime('now')
+                     WHERE id = ?1",
+                    params![
+                        goal_id,
+                        input.title,
+                        input.description,
+                        goal_level,
+                        input.category,
+                        goal_level,
+                        goal_state,
+                        legacy_goal_status(&goal_state),
+                        input.subject_id,
+                        topics_json,
+                        input.urgency_level,
+                        input.start_date,
+                        input.deadline,
+                        input.exam_id,
+                        input.confidence_score_bp,
+                        input.coach_priority_bp,
+                        if input.parent_priority_flag { 1 } else { 0 },
+                        evidence_sources_json,
+                        dependency_goals_json,
+                        input.risk_level,
+                        input.suggested_weekly_effort_minutes,
+                        input.current_momentum_bp,
+                        completion_criteria_json,
+                        input.blocked_reason,
+                        input.source_bundle_id,
+                        input.goal_signal_key,
+                        metadata_json,
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            return self
+                .load_goal_profile(goal_id)?
+                .ok_or_else(|| EcoachError::NotFound(format!("goal {} not found", goal_id)));
+        }
+
+        self.conn
+            .execute(
+                "INSERT INTO goals (
+                    student_id, goal_type, title, description, status, goal_level, goal_state,
+                    coach_priority_bp, evidence_sources_json, dependency_goals_json, risk_level,
+                    completion_criteria_json, momentum_state, goal_category, subject_id,
+                    topics_json, urgency_level, start_date, deadline, exam_id,
+                    confidence_score_bp, parent_priority_flag, suggested_weekly_effort_minutes,
+                    current_momentum_bp, blocked_reason, goal_signal_key, source_bundle_id,
+                    metadata_json, created_at, updated_at
+                 ) VALUES (
+                    ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15,
+                    ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28,
+                    datetime('now'), datetime('now')
+                 )",
+                params![
+                    student_id,
+                    goal_level,
+                    input.title,
+                    input.description,
+                    legacy_goal_status(&goal_state),
+                    goal_level,
+                    goal_state,
+                    input.coach_priority_bp,
+                    evidence_sources_json,
+                    dependency_goals_json,
+                    input.risk_level,
+                    completion_criteria_json,
+                    Some(format!("bp:{}", input.current_momentum_bp)),
+                    input.category,
+                    input.subject_id,
+                    topics_json,
+                    input.urgency_level,
+                    input.start_date,
+                    input.deadline,
+                    input.exam_id,
+                    input.confidence_score_bp,
+                    if input.parent_priority_flag { 1 } else { 0 },
+                    input.suggested_weekly_effort_minutes,
+                    input.current_momentum_bp,
+                    input.blocked_reason,
+                    input.goal_signal_key,
+                    input.source_bundle_id,
+                    metadata_json,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let goal_id = self.conn.last_insert_rowid();
+        self.load_goal_profile(goal_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("goal {} not found", goal_id)))
+    }
+
+    pub fn update_goal_profile_state(
+        &self,
+        goal_id: i64,
+        goal_state: &str,
+        blocked_reason: Option<&str>,
+    ) -> EcoachResult<GoalProfile> {
+        let normalized = normalize_goal_state(goal_state);
+        self.conn
+            .execute(
+                "UPDATE goals
+                 SET goal_state = ?2,
+                     status = ?3,
+                     blocked_reason = ?4,
+                     updated_at = datetime('now')
+                 WHERE id = ?1",
+                params![
+                    goal_id,
+                    normalized,
+                    legacy_goal_status(normalized),
+                    blocked_reason
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.load_goal_profile(goal_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("goal {} not found", goal_id)))
+    }
+
+    pub fn list_goal_profiles(&self, student_id: i64) -> EcoachResult<Vec<GoalProfile>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, student_id, parent_goal_id, title, description, goal_type,
+                        goal_category, goal_level, goal_state, subject_id, topics_json,
+                        urgency_level, start_date, deadline, exam_id, confidence_score_bp,
+                        coach_priority_bp, evidence_sources_json, dependency_goals_json,
+                        parent_priority_flag, risk_level, suggested_weekly_effort_minutes,
+                        completion_criteria_json, current_momentum_bp, blocked_reason,
+                        source_bundle_id, goal_signal_key, metadata_json, created_at, updated_at
+                 FROM goals
+                 WHERE student_id = ?1
+                 ORDER BY coach_priority_bp DESC, parent_priority_flag DESC, deadline ASC, updated_at DESC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([student_id], map_goal_profile)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+
+    pub fn build_goal_arbitration_snapshot(
+        &self,
+        student_id: i64,
+    ) -> EcoachResult<GoalArbitrationSnapshot> {
+        let goals = self.list_goal_profiles(student_id)?;
+        let mut ranked: Vec<(BasisPoints, &GoalProfile)> = goals
+            .iter()
+            .map(|goal| {
+                let mut score = goal.coach_priority_bp as i64
+                    + score_goal_urgency(&goal.urgency_level) as i64 / 3
+                    + score_goal_level(&goal.goal_level) as i64 / 4
+                    + goal.current_momentum_bp as i64 / 6
+                    + if goal.parent_priority_flag { 900 } else { 0 };
+                if matches!(goal.goal_state.as_str(), "blocked" | "paused") {
+                    score -= 2_500;
+                }
+                if goal.goal_state == "at_risk" {
+                    score += 1_200;
+                }
+                if goal.deadline.is_some() {
+                    score += 700;
+                }
+                (clamp_bp(score), goal)
+            })
+            .collect();
+        ranked.sort_by(|left, right| right.0.cmp(&left.0).then_with(|| left.1.id.cmp(&right.1.id)));
+
+        let focus_goal_ids = ranked
+            .iter()
+            .filter(|(_, goal)| !matches!(goal.goal_state.as_str(), "paused" | "blocked" | "completed"))
+            .take(3)
+            .map(|(_, goal)| goal.id)
+            .collect::<Vec<_>>();
+        let primary_goal_id = focus_goal_ids.first().copied();
+        let paused_goal_ids = goals
+            .iter()
+            .filter(|goal| goal.goal_state == "paused")
+            .map(|goal| goal.id)
+            .collect::<Vec<_>>();
+        let blocked_goal_ids = goals
+            .iter()
+            .filter(|goal| goal.goal_state == "blocked")
+            .map(|goal| goal.id)
+            .collect::<Vec<_>>();
+        let mut conflicts = Vec::new();
+        for left in &goals {
+            for right in &goals {
+                if left.id >= right.id {
+                    continue;
+                }
+                if left.subject_id == right.subject_id
+                    && left.goal_state != "completed"
+                    && right.goal_state != "completed"
+                    && left.goal_level == right.goal_level
+                    && left.deadline.is_some()
+                    && right.deadline.is_some()
+                {
+                    conflicts.push(GoalConflict {
+                        goal_id: left.id,
+                        conflicting_goal_id: right.id,
+                        conflict_type: "same_lane_pressure".to_string(),
+                        summary: format!(
+                            "{} and {} are competing for the same study lane.",
+                            left.title, right.title
+                        ),
+                    });
+                }
+            }
+        }
+        let mut rationale = Vec::new();
+        if let Some(primary_goal_id) = primary_goal_id {
+            if let Some(primary) = goals.iter().find(|goal| goal.id == primary_goal_id) {
+                rationale.push(format!(
+                    "{} is primary because it leads on coach priority and urgency.",
+                    primary.title
+                ));
+            }
+        }
+        if !conflicts.is_empty() {
+            rationale.push("Some goals are competing for the same weekly capacity.".to_string());
+        }
+        if !blocked_goal_ids.is_empty() {
+            rationale.push("Blocked goals should be resolved before they re-enter the main queue.".to_string());
+        }
+
+        Ok(GoalArbitrationSnapshot {
+            student_id,
+            generated_at: Utc::now().to_rfc3339(),
+            primary_goal_id,
+            focus_goal_ids,
+            paused_goal_ids,
+            blocked_goal_ids,
+            conflicts,
+            rationale,
+            goals,
+        })
+    }
+
+    pub fn build_weekly_plan_snapshot(
+        &self,
+        student_id: i64,
+        subject_id: Option<i64>,
+        anchor_date: &str,
+    ) -> EcoachResult<WeeklyPlanSnapshot> {
+        let anchor =
+            NaiveDate::parse_from_str(anchor_date, "%Y-%m-%d").map_err(|err| {
+                EcoachError::Validation(format!("invalid anchor_date {}: {}", anchor_date, err))
+            })?;
+        let arbitration = self.build_goal_arbitration_snapshot(student_id)?;
+        let prioritized_event = self.build_academic_calendar_snapshot(student_id, Some(anchor_date))?
+            .prioritized_event;
+        let prioritized_exam_id = prioritized_event.as_ref().map(|event| event.id);
+        let prioritized_subject_id = subject_id.or_else(|| prioritized_event.as_ref().and_then(|event| event.subject_id));
+        let weak_topic_ids = if let Some(subject_id) = prioritized_subject_id {
+            let mut statement = self
+                .conn
+                .prepare(
+                    "SELECT topic_id
+                     FROM student_topic_states
+                     WHERE student_id = ?1
+                       AND topic_id IN (SELECT id FROM topics WHERE subject_id = ?2)
+                     ORDER BY priority_score DESC, gap_score DESC
+                     LIMIT 6",
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let rows = statement
+                .query_map(params![student_id, subject_id], |row| row.get(0))
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let mut items = Vec::new();
+            for row in rows {
+                items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+            }
+            items
+        } else {
+            Vec::new()
+        };
+        let due_memory_count: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM memory_states
+                 WHERE student_id = ?1
+                   AND review_due_at IS NOT NULL
+                   AND review_due_at <= ?2",
+                params![student_id, Utc::now().to_rfc3339()],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+
+        let exam_weight = if prioritized_event.is_some() { 3 } else { 2 };
+        let weakness_weight = if !weak_topic_ids.is_empty() { 3 } else { 2 };
+        let maintenance_weight = if due_memory_count > 0 { 2 } else { 1 };
+        let continuity_weight = 1;
+        let weight_total = exam_weight + weakness_weight + maintenance_weight + continuity_weight;
+        let mut bands = vec![
+            WeeklyPlanBand {
+                band_key: "exam_prep".to_string(),
+                allocated_minutes: 0,
+                rationale: "Protect time for the nearest exam horizon.".to_string(),
+                focus_topic_ids: prioritized_event
+                    .as_ref()
+                    .map(|event| event.linked_topic_ids.clone())
+                    .unwrap_or_default(),
+            },
+            WeeklyPlanBand {
+                band_key: "weakness_repair".to_string(),
+                allocated_minutes: 0,
+                rationale: "Repair high-gap topics before they spread into new work.".to_string(),
+                focus_topic_ids: weak_topic_ids.clone(),
+            },
+            WeeklyPlanBand {
+                band_key: "maintenance".to_string(),
+                allocated_minutes: 0,
+                rationale: "Keep memory-return and review debt under control.".to_string(),
+                focus_topic_ids: weak_topic_ids.iter().copied().take(3).collect(),
+            },
+            WeeklyPlanBand {
+                band_key: "continuity".to_string(),
+                allocated_minutes: 0,
+                rationale: "Preserve rhythm even on lighter days.".to_string(),
+                focus_topic_ids: Vec::new(),
+            },
+        ];
+        let mut days = Vec::new();
+        for offset in 0..7 {
+            let date = anchor + Duration::days(offset);
+            let date_text = date.format("%Y-%m-%d").to_string();
+            let availability = self.get_daily_availability(student_id, &date_text)?;
+            let planned_minutes = (availability.adjusted_minutes * 82 / 100).max(0);
+            let mut blocks = Vec::new();
+            if planned_minutes > 0 {
+                let exam_minutes = planned_minutes * exam_weight / weight_total;
+                let repair_minutes = planned_minutes * weakness_weight / weight_total;
+                let maintenance_minutes = planned_minutes * maintenance_weight / weight_total;
+                let continuity_minutes =
+                    (planned_minutes - exam_minutes - repair_minutes - maintenance_minutes).max(0);
+                bands[0].allocated_minutes += exam_minutes;
+                bands[1].allocated_minutes += repair_minutes;
+                bands[2].allocated_minutes += maintenance_minutes;
+                bands[3].allocated_minutes += continuity_minutes;
+
+                if exam_minutes > 0 {
+                    blocks.push(WeeklyPlanBlock {
+                        band_key: "exam_prep".to_string(),
+                        session_type: if offset >= 4 { "timed_drill" } else { "exam_focus" }
+                            .to_string(),
+                        duration_minutes: exam_minutes,
+                        focus_topic_ids: bands[0].focus_topic_ids.clone(),
+                        exam_support_scope: if prioritized_event.is_some() {
+                            "nearest_plus_final".to_string()
+                        } else {
+                            "all_active_tracks".to_string()
+                        },
+                        rationale: "Move the nearest exam track forward without dropping long-range preparation.".to_string(),
+                    });
+                }
+                if repair_minutes > 0 {
+                    blocks.push(WeeklyPlanBlock {
+                        band_key: "weakness_repair".to_string(),
+                        session_type: "repair".to_string(),
+                        duration_minutes: repair_minutes,
+                        focus_topic_ids: weak_topic_ids.iter().copied().take(3).collect(),
+                        exam_support_scope: "all_active_tracks".to_string(),
+                        rationale: "Repair recurring upload and learner-truth weaknesses.".to_string(),
+                    });
+                }
+                if maintenance_minutes > 0 {
+                    blocks.push(WeeklyPlanBlock {
+                        band_key: "maintenance".to_string(),
+                        session_type: "memory_return".to_string(),
+                        duration_minutes: maintenance_minutes,
+                        focus_topic_ids: weak_topic_ids.iter().copied().skip(1).take(2).collect(),
+                        exam_support_scope: "maintenance".to_string(),
+                        rationale: "Prevent fragile knowledge from slipping out of reach.".to_string(),
+                    });
+                }
+                if continuity_minutes > 0 {
+                    blocks.push(WeeklyPlanBlock {
+                        band_key: "continuity".to_string(),
+                        session_type: "light_continuity".to_string(),
+                        duration_minutes: continuity_minutes,
+                        focus_topic_ids: Vec::new(),
+                        exam_support_scope: "all_active_tracks".to_string(),
+                        rationale: "Keep momentum alive on the day, even if capacity is tight.".to_string(),
+                    });
+                }
+            }
+            days.push(WeeklyPlanDay {
+                date: date_text,
+                available_minutes: availability.adjusted_minutes,
+                planned_minutes,
+                block_count: blocks.len() as i64,
+                blocks,
+            });
+        }
+
+        let mut priorities = arbitration
+            .goals
+            .iter()
+            .take(3)
+            .map(|goal| format!("{} ({})", goal.title, goal.goal_state))
+            .collect::<Vec<_>>();
+        if due_memory_count > 0 {
+            priorities.push(format!("{} memory items are due for return-loop work.", due_memory_count));
+        }
+        if let Some(event) = prioritized_event.as_ref() {
+            priorities.push(format!("{} is shaping this week.", event.title));
+        }
+
+        Ok(WeeklyPlanSnapshot {
+            student_id,
+            subject_id: prioritized_subject_id,
+            anchor_date: anchor_date.to_string(),
+            prioritized_exam_id,
+            priorities,
+            bands,
+            days,
+        })
     }
 
     pub fn create_event(
@@ -2057,8 +2635,9 @@ impl<'a> GoalsCalendarService<'a> {
 
     pub fn upsert_availability_profile(&self, profile: &AvailabilityProfile) -> EcoachResult<()> {
         validate_time_trigger_mode(Some(&profile.trigger_mode))?;
-        self.conn.execute(
-            "INSERT INTO availability_profiles (
+        self.conn
+            .execute(
+                "INSERT INTO availability_profiles (
                 student_id, timezone_name, preferred_daily_minutes, ideal_session_minutes,
                 min_session_minutes, max_session_minutes, split_sessions_allowed,
                 max_split_sessions, min_break_minutes, trigger_mode,
@@ -2095,28 +2674,29 @@ impl<'a> GoalsCalendarService<'a> {
                 idle_confirmation_seconds = excluded.idle_confirmation_seconds,
                 abandonment_seconds = excluded.abandonment_seconds,
                 updated_at = datetime('now')",
-            params![
-                profile.student_id,
-                profile.timezone_name,
-                profile.preferred_daily_minutes,
-                profile.ideal_session_minutes,
-                profile.min_session_minutes,
-                profile.max_session_minutes,
-                if profile.split_sessions_allowed { 1 } else { 0 },
-                profile.max_split_sessions,
-                profile.min_break_minutes,
-                profile.trigger_mode,
-                profile.notification_lead_minutes,
-                profile.weekday_capacity_weight_bp,
-                profile.weekend_capacity_weight_bp,
-                profile.schedule_buffer_ratio_bp,
-                profile.fatigue_start_minute,
-                profile.fatigue_end_minute,
-                profile.thinking_idle_grace_seconds,
-                profile.idle_confirmation_seconds,
-                profile.abandonment_seconds,
-            ],
-        ).map_err(|err| EcoachError::Storage(err.to_string()))?;
+                params![
+                    profile.student_id,
+                    profile.timezone_name,
+                    profile.preferred_daily_minutes,
+                    profile.ideal_session_minutes,
+                    profile.min_session_minutes,
+                    profile.max_session_minutes,
+                    if profile.split_sessions_allowed { 1 } else { 0 },
+                    profile.max_split_sessions,
+                    profile.min_break_minutes,
+                    profile.trigger_mode,
+                    profile.notification_lead_minutes,
+                    profile.weekday_capacity_weight_bp,
+                    profile.weekend_capacity_weight_bp,
+                    profile.schedule_buffer_ratio_bp,
+                    profile.fatigue_start_minute,
+                    profile.fatigue_end_minute,
+                    profile.thinking_idle_grace_seconds,
+                    profile.idle_confirmation_seconds,
+                    profile.abandonment_seconds,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
         Ok(())
     }
 
@@ -2181,7 +2761,10 @@ impl<'a> GoalsCalendarService<'a> {
         self.load_availability_profile(student_id)
     }
 
-    pub fn list_availability_windows(&self, student_id: i64) -> EcoachResult<Vec<AvailabilityWindow>> {
+    pub fn list_availability_windows(
+        &self,
+        student_id: i64,
+    ) -> EcoachResult<Vec<AvailabilityWindow>> {
         let mut statement = self
             .conn
             .prepare(
@@ -2258,18 +2841,15 @@ impl<'a> GoalsCalendarService<'a> {
             &input.anchor_date,
             &input.exam_date,
         )?;
-        let completed_effective_minutes = self.load_effective_minutes_completed(
-            input.student_id,
-            input.subject_id,
-        )?;
+        let completed_effective_minutes =
+            self.load_effective_minutes_completed(input.student_id, input.subject_id)?;
         let (buffer_consumed_minutes, missed_debt_minutes, bonus_credit_minutes) =
             self.load_schedule_carryover(input.student_id, input.subject_id)?;
         let target_effective_minutes = input.target_effective_minutes.max(0);
         let protected_buffer_minutes = total_available_minutes
             .saturating_mul(profile.schedule_buffer_ratio_bp as i64)
             / 10_000;
-        let raw_remaining_minutes = target_effective_minutes
-            - completed_effective_minutes
+        let raw_remaining_minutes = target_effective_minutes - completed_effective_minutes
             + missed_debt_minutes
             - bonus_credit_minutes;
         let remaining_effective_minutes = raw_remaining_minutes.max(0);
@@ -2285,17 +2865,14 @@ impl<'a> GoalsCalendarService<'a> {
         } else {
             clamp_bp((usable_capacity_minutes * 10_000) / remaining_effective_minutes.max(1))
         };
-        let pressure_score_bp = clamp_bp(
-            ((remaining_effective_minutes * 10_000) / usable_capacity_minutes.max(30)),
-        );
-        let schedule_truth_score_bp = clamp_bp(
-            ((feasibility_score_bp as i64 + (10_000 - pressure_score_bp as i64)) / 2),
-        );
+        let pressure_score_bp =
+            clamp_bp(((remaining_effective_minutes * 10_000) / usable_capacity_minutes.max(30)));
+        let schedule_truth_score_bp =
+            clamp_bp(((feasibility_score_bp as i64 + (10_000 - pressure_score_bp as i64)) / 2));
         let days_to_exam = days_between_inclusive(&input.anchor_date, &input.exam_date)?;
-        let plan_mode = input
-            .plan_mode
-            .clone()
-            .unwrap_or_else(|| derive_time_plan_mode(days_to_exam, pressure_score_bp, feasibility_score_bp));
+        let plan_mode = input.plan_mode.clone().unwrap_or_else(|| {
+            derive_time_plan_mode(days_to_exam, pressure_score_bp, feasibility_score_bp)
+        });
         let auto_trigger_mode = input
             .auto_trigger_mode
             .clone()
@@ -2432,7 +3009,10 @@ impl<'a> GoalsCalendarService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map(params![student_id, subject_id, from_date, limit.max(1) as i64], map_time_session_block)
+            .query_map(
+                params![student_id, subject_id, from_date, limit.max(1) as i64],
+                map_time_session_block,
+            )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mut blocks = Vec::new();
         for row in rows {
@@ -2461,7 +3041,10 @@ impl<'a> GoalsCalendarService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map(params![as_of, student_id, limit.max(1) as i64], map_schedule_trigger_job)
+            .query_map(
+                params![as_of, student_id, limit.max(1) as i64],
+                map_schedule_trigger_job,
+            )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mut jobs = Vec::new();
         for row in rows {
@@ -2495,7 +3078,9 @@ impl<'a> GoalsCalendarService<'a> {
         horizon_days: usize,
     ) -> EcoachResult<TimeOrchestrationSnapshot> {
         let availability_profile = self.load_availability_profile_or_default(student_id)?;
-        let plan_state = if let Some(existing) = self.latest_exam_plan_state(student_id, subject_id, exam_date)? {
+        let plan_state = if let Some(existing) =
+            self.latest_exam_plan_state(student_id, subject_id, exam_date)?
+        {
             existing
         } else {
             let exam_date = exam_date.ok_or_else(|| {
@@ -2527,7 +3112,8 @@ impl<'a> GoalsCalendarService<'a> {
             minute_of_day,
             daily_availability.adjusted_minutes.max(0),
         )?;
-        let replan = self.replan_remaining_day(student_id, subject_id, anchor_date, minute_of_day)?;
+        let replan =
+            self.replan_remaining_day(student_id, subject_id, anchor_date, minute_of_day)?;
         let ledger = self.sync_schedule_ledger_entry(student_id, subject_id, anchor_date)?;
         let session_blocks = self.rebuild_time_session_blocks(
             student_id,
@@ -3811,6 +4397,25 @@ impl<'a> GoalsCalendarService<'a> {
             .unwrap_or_else(|| default_availability_profile(student_id)))
     }
 
+    fn load_goal_profile(&self, goal_id: i64) -> EcoachResult<Option<GoalProfile>> {
+        self.conn
+            .query_row(
+                "SELECT id, student_id, parent_goal_id, title, description, goal_type,
+                        goal_category, goal_level, goal_state, subject_id, topics_json,
+                        urgency_level, start_date, deadline, exam_id, confidence_score_bp,
+                        coach_priority_bp, evidence_sources_json, dependency_goals_json,
+                        parent_priority_flag, risk_level, suggested_weekly_effort_minutes,
+                        completion_criteria_json, current_momentum_bp, blocked_reason,
+                        source_bundle_id, goal_signal_key, metadata_json, created_at, updated_at
+                 FROM goals
+                 WHERE id = ?1",
+                [goal_id],
+                map_goal_profile,
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+
     fn latest_exam_plan_state(
         &self,
         student_id: i64,
@@ -3847,11 +4452,16 @@ impl<'a> GoalsCalendarService<'a> {
             .prepare(sql)
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let result = if let Some(exam_date) = exam_date {
-            statement.query_row(params![student_id, subject_id, exam_date], map_exam_plan_state)
+            statement.query_row(
+                params![student_id, subject_id, exam_date],
+                map_exam_plan_state,
+            )
         } else {
             statement.query_row(params![student_id, subject_id], map_exam_plan_state)
         };
-        result.optional().map_err(|err| EcoachError::Storage(err.to_string()))
+        result
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
     fn count_available_study_days(
@@ -3937,7 +4547,8 @@ impl<'a> GoalsCalendarService<'a> {
             if matches!(session_type.as_str(), "mock" | "custom_test") {
                 quality_bp += 500;
             }
-            let credited_ms = active_study_time_ms.saturating_mul(clamp_bp(quality_bp) as i64) / 10_000;
+            let credited_ms =
+                active_study_time_ms.saturating_mul(clamp_bp(quality_bp) as i64) / 10_000;
             effective_minutes += credited_ms / 60_000;
         }
         if saw_session_minutes {
@@ -4011,7 +4622,8 @@ impl<'a> GoalsCalendarService<'a> {
             if matches!(session_type.as_str(), "mock" | "custom_test") {
                 quality_bp += 500;
             }
-            effective_minutes += active_minutes.saturating_mul(clamp_bp(quality_bp) as i64) / 10_000;
+            effective_minutes +=
+                active_minutes.saturating_mul(clamp_bp(quality_bp) as i64) / 10_000;
         }
         Ok((completed_minutes.max(0), effective_minutes.max(0)))
     }
@@ -4041,7 +4653,11 @@ impl<'a> GoalsCalendarService<'a> {
             };
             daily_goal
                 .min((availability.adjusted_minutes - buffer_minutes_reserved).max(0))
-                .max(profile.min_session_minutes.min(availability.adjusted_minutes))
+                .max(
+                    profile
+                        .min_session_minutes
+                        .min(availability.adjusted_minutes),
+                )
         } else {
             profile
                 .ideal_session_minutes
@@ -4054,8 +4670,8 @@ impl<'a> GoalsCalendarService<'a> {
         let buffer_minutes_consumed = (scheduled_minutes - completed_minutes)
             .max(0)
             .min(buffer_minutes_reserved.max(0));
-        let missed_minutes_debt = (scheduled_minutes - effective_credit_minutes - buffer_minutes_reserved)
-            .max(0);
+        let missed_minutes_debt =
+            (scheduled_minutes - effective_credit_minutes - buffer_minutes_reserved).max(0);
         let pressure_score_bp = plan_state
             .as_ref()
             .map(|item| item.pressure_score_bp)
@@ -4177,7 +4793,10 @@ impl<'a> GoalsCalendarService<'a> {
                 .copied()
                 .or_else(|| day_windows.first().copied());
             let base_minutes = (availability.adjusted_minutes
-                - availability.adjusted_minutes.saturating_mul(profile.schedule_buffer_ratio_bp as i64) / 10_000)
+                - availability
+                    .adjusted_minutes
+                    .saturating_mul(profile.schedule_buffer_ratio_bp as i64)
+                    / 10_000)
                 .max(0);
             let remaining_days = (horizon_days - offset).max(1) as i64;
             let evenly_spread = if remaining_minutes <= 0 {
@@ -7235,10 +7854,10 @@ mod tests {
         assert_eq!(snapshot.ledger.student_id, student_id);
         assert!(!snapshot.session_blocks.is_empty());
         assert!(!snapshot.trigger_jobs.is_empty());
-        assert!(snapshot
-            .trigger_jobs
-            .iter()
-            .all(|job| matches!(job.trigger_kind.as_str(), "launch" | "reminder" | "hybrid_prompt")));
+        assert!(snapshot.trigger_jobs.iter().all(|job| matches!(
+            job.trigger_kind.as_str(),
+            "launch" | "reminder" | "hybrid_prompt"
+        )));
 
         let due_jobs = service
             .dispatch_due_trigger_jobs("2026-03-30T20:00:00", Some(student_id), 10)

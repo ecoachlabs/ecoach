@@ -8,10 +8,10 @@ use serde_json::{Map, Value, json};
 
 use crate::models::{
     DiagnosticAudienceReport, DiagnosticBattery, DiagnosticCauseEvolution,
-    DiagnosticConditionMetrics, DiagnosticInterventionPrescription,
-    DiagnosticItemRoutingProfile, DiagnosticLearningProfile, DiagnosticLongitudinalSummary,
-    DiagnosticMode, DiagnosticOverallSummary, DiagnosticPhaseCode, DiagnosticPhaseItem,
-    DiagnosticPhasePlan, DiagnosticProblemCauseFixCard, DiagnosticRecommendation, DiagnosticResult,
+    DiagnosticConditionMetrics, DiagnosticInterventionPrescription, DiagnosticItemRoutingProfile,
+    DiagnosticLearningProfile, DiagnosticLongitudinalSummary, DiagnosticMode,
+    DiagnosticOverallSummary, DiagnosticPhaseCode, DiagnosticPhaseItem, DiagnosticPhasePlan,
+    DiagnosticProblemCauseFixCard, DiagnosticRecommendation, DiagnosticResult,
     DiagnosticRootCauseHypothesis, DiagnosticSessionScore, DiagnosticSkillResult,
     DiagnosticSubjectBlueprint, DiagnosticTopicAnalytics, TopicDiagnosticLongitudinalSignal,
     TopicDiagnosticResult, WrongAnswerDiagnosis,
@@ -307,11 +307,7 @@ impl<'a> DiagnosticEngine<'a> {
                 .transpose()
                 .map_err(|err| EcoachError::Serialization(err.to_string()))?;
         let submitted_answer_text = final_answer.and_then(extract_final_answer_text);
-        if selected_option.is_none()
-            && submitted_answer_text.is_none()
-            && !skipped
-            && !timed_out
-        {
+        if selected_option.is_none() && submitted_answer_text.is_none() && !skipped && !timed_out {
             return Err(EcoachError::Validation(
                 "diagnostic attempt requires either an option selection or a final answer"
                     .to_string(),
@@ -753,7 +749,7 @@ impl<'a> DiagnosticEngine<'a> {
                           dirp.transfer_suitable, dirp.timed_suitable, dirp.confidence_prompt,
                           dirp.recommended_stages_json, dirp.sibling_variant_modes_json,
                           dirp.routing_notes_json
-                 ORDER BY dirp.topic_id ASC, dirp.question_id ASC"
+                 ORDER BY dirp.topic_id ASC, dirp.question_id ASC",
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
@@ -799,7 +795,7 @@ impl<'a> DiagnosticEngine<'a> {
                         confidence_score_bp, impact_score_bp, unlock_summary, evidence_json
                  FROM diagnostic_problem_cause_fix_cards
                  WHERE diagnostic_id = ?1
-                 ORDER BY impact_score_bp DESC, confidence_score_bp DESC, topic_id ASC"
+                 ORDER BY impact_score_bp DESC, confidence_score_bp DESC, topic_id ASC",
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
@@ -814,8 +810,7 @@ impl<'a> DiagnosticEngine<'a> {
                     confidence_score: row.get(5)?,
                     impact_score: row.get(6)?,
                     unlock_summary: row.get(7)?,
-                    evidence: serde_json::from_str(&evidence_json)
-                        .unwrap_or_else(|_| json!({})),
+                    evidence: serde_json::from_str(&evidence_json).unwrap_or_else(|_| json!({})),
                 })
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
@@ -838,7 +833,7 @@ impl<'a> DiagnosticEngine<'a> {
                         success_signals_json, confidence_score_bp, payload_json
                  FROM diagnostic_intervention_prescriptions
                  WHERE diagnostic_id = ?1
-                 ORDER BY confidence_score_bp DESC, topic_id ASC"
+                 ORDER BY confidence_score_bp DESC, topic_id ASC",
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
@@ -3046,13 +3041,11 @@ impl<'a> DiagnosticEngine<'a> {
             .clone()
             .or(cognitive_demand.clone())
             .unwrap_or_else(|| question.question_format.clone());
-        let recognition_suitable = matches!(
-            cognitive_demand.as_deref(),
-            Some("recognition")
-        ) || matches!(
-            question.question_format.as_str(),
-            "mcq" | "true_false" | "matching"
-        );
+        let recognition_suitable = matches!(cognitive_demand.as_deref(), Some("recognition"))
+            || matches!(
+                question.question_format.as_str(),
+                "mcq" | "true_false" | "matching"
+            );
         let recall_suitable = matches!(
             cognitive_demand.as_deref(),
             Some("recall") | Some("reasoning") | Some("application")
@@ -4707,7 +4700,10 @@ fn extract_final_answer_text(value: &Value) -> Option<String> {
     }
 }
 
-fn answer_matches_correct_options(submitted_answer: &str, correct_options: &[QuestionOption]) -> bool {
+fn answer_matches_correct_options(
+    submitted_answer: &str,
+    correct_options: &[QuestionOption],
+) -> bool {
     let normalized_submitted = normalize_answer_text(submitted_answer);
     if normalized_submitted.is_empty() {
         return false;
@@ -4854,7 +4850,12 @@ mod tests {
 
         let engine = DiagnosticEngine::new(&conn);
         let battery = engine
-            .start_diagnostic_battery(student_id, subject_id, vec![topic_id], DiagnosticMode::Quick)
+            .start_diagnostic_battery(
+                student_id,
+                subject_id,
+                vec![topic_id],
+                DiagnosticMode::Quick,
+            )
             .expect("diagnostic battery should build");
         let first_phase = battery.phases.first().expect("phase should exist");
         let first_item = engine
@@ -4900,11 +4901,13 @@ mod tests {
 
         assert_eq!(stored_attempt.0, None);
         assert_eq!(stored_attempt.1, Some(1));
-        assert!(stored_attempt
-            .2
-            .as_deref()
-            .unwrap_or_default()
-            .contains("2/3"));
+        assert!(
+            stored_attempt
+                .2
+                .as_deref()
+                .unwrap_or_default()
+                .contains("2/3")
+        );
     }
 
     #[test]

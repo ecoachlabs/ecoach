@@ -400,8 +400,8 @@ impl<'a> PlanEngine<'a> {
 
         let (plan_day_id, plan_day_phase, target_minutes) =
             self.ensure_active_plan_day(student_id, &today)?;
-        let topic_cases = CanonicalIntelligenceStore::new(self.conn)
-            .list_priority_topic_cases(student_id, 5)?;
+        let topic_cases =
+            CanonicalIntelligenceStore::new(self.conn).list_priority_topic_cases(student_id, 5)?;
         let topic_cases = if topic_cases.is_empty() {
             list_priority_topic_cases(self.conn, student_id, 5)?
         } else {
@@ -2104,7 +2104,13 @@ impl<'a> PlanEngine<'a> {
         };
         let subject_id = self.load_subject_id_for_topic(topic_case.topic_id)?;
         let activity = match CanonicalIntelligenceStore::new(self.conn)
-            .suggest_activity_override(student_id, subject_id, topic_case, activity, plan_day_phase)?
+            .suggest_activity_override(
+                student_id,
+                subject_id,
+                topic_case,
+                activity,
+                plan_day_phase,
+            )?
             .as_deref()
         {
             Some("memory_reactivation") => "memory_reactivation",

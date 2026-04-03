@@ -251,10 +251,7 @@ impl<'a> CanonicalIntelligenceStore<'a> {
             };
             let intervention_id = format!(
                 "intervention:{}:{}:{}:{}",
-                student_id,
-                topic_id,
-                profile.intervention_family,
-                profile.last_outcome
+                student_id, topic_id, profile.intervention_family, profile.last_outcome
             );
             let evidence = json!({
                 "times_used": profile.times_used,
@@ -758,18 +755,20 @@ impl<'a> CanonicalIntelligenceStore<'a> {
         current_activity: &str,
         plan_day_phase: &str,
     ) -> EcoachResult<Option<String>> {
-        let timing = self.load_timing_decisions(student_id, subject_id, Some(topic_case.topic_id))?;
+        let timing =
+            self.load_timing_decisions(student_id, subject_id, Some(topic_case.topic_id))?;
         if timing
             .iter()
             .any(|item| matches!(item.action_type.as_str(), "delayed_recall" | "review_topic"))
         {
-            return Ok(Some(if plan_day_phase == "review_day" || requires_delayed_recall(topic_case)
-            {
-                "memory_reactivation"
-            } else {
-                "review"
-            }
-            .to_string()));
+            return Ok(Some(
+                if plan_day_phase == "review_day" || requires_delayed_recall(topic_case) {
+                    "memory_reactivation"
+                } else {
+                    "review"
+                }
+                .to_string(),
+            ));
         }
         if timing.iter().any(|item| item.action_type == "retest_topic") {
             return Ok(Some("checkpoint".to_string()));
@@ -840,7 +839,10 @@ impl<'a> CanonicalIntelligenceStore<'a> {
             station_type = "readiness_gate".to_string();
         } else if timing.iter().any(|item| item.action_type == "run_mock") {
             station_type = "mini_mock".to_string();
-        } else if timing.iter().any(|item| item.action_type == "start_timed_work") {
+        } else if timing
+            .iter()
+            .any(|item| item.action_type == "start_timed_work")
+        {
             station_type = "challenge".to_string();
         }
 
@@ -1011,12 +1013,15 @@ impl<'a> CanonicalIntelligenceStore<'a> {
         for topic_case in topic_cases {
             let (bucket, base_bucket, review_due, gap_types, session_demand, urgency_score) =
                 classify_topic_case(topic_case);
-            *portfolio_counts.entry(bucket.to_string()).or_insert_with(|| json!(0)) =
-                json!(portfolio_counts
+            *portfolio_counts
+                .entry(bucket.to_string())
+                .or_insert_with(|| json!(0)) = json!(
+                portfolio_counts
                     .get(bucket)
                     .and_then(Value::as_i64)
                     .unwrap_or(0)
-                    + 1);
+                    + 1
+            );
             if review_due {
                 review_obligations.push(json!({
                     "topic_id": topic_case.topic_id,
@@ -1121,13 +1126,18 @@ impl<'a> CanonicalIntelligenceStore<'a> {
                     student_id,
                     subject_id,
                     to_json(&Value::Object(portfolio_counts))?,
-                    to_json(&json!(topic_cases.iter().map(|item| json!({
-                        "topic_id": item.topic_id,
-                        "topic_name": item.topic_name,
-                        "primary_hypothesis_code": item.primary_hypothesis_code,
-                        "proof_gaps": item.proof_gaps,
-                        "open_questions": item.open_questions,
-                    })).collect::<Vec<_>>()))?,
+                    to_json(&json!(
+                        topic_cases
+                            .iter()
+                            .map(|item| json!({
+                                "topic_id": item.topic_id,
+                                "topic_name": item.topic_name,
+                                "primary_hypothesis_code": item.primary_hypothesis_code,
+                                "proof_gaps": item.proof_gaps,
+                                "open_questions": item.open_questions,
+                            }))
+                            .collect::<Vec<_>>()
+                    ))?,
                     to_json(&review_obligations)?,
                     to_json(&json!({
                         "repair_minutes": total_repair_minutes,
@@ -1160,7 +1170,12 @@ impl<'a> CanonicalIntelligenceStore<'a> {
 
         let chosen_model = if ordered.iter().any(|item| item.active_blocker.is_some()) {
             "repair_first"
-        } else if ordered.iter().filter(|item| requires_delayed_recall(item)).count() >= 3 {
+        } else if ordered
+            .iter()
+            .filter(|item| requires_delayed_recall(item))
+            .count()
+            >= 3
+        {
             "review_wave"
         } else {
             match route_mode_hint.unwrap_or(RouteMode::Balanced) {
@@ -1173,7 +1188,11 @@ impl<'a> CanonicalIntelligenceStore<'a> {
         };
         let decision_id = runtime_id(
             "sequence",
-            &[student_id.to_string(), subject_id.to_string(), chosen_model.to_string()],
+            &[
+                student_id.to_string(),
+                subject_id.to_string(),
+                chosen_model.to_string(),
+            ],
         );
         let model_scores = json!({
             "repair_pressure": average_bp(ordered.iter().map(|item| item.priority_score as i64)),
@@ -1677,7 +1696,10 @@ fn lowest_concept_rank(strategy: &TopicTeachingStrategy) -> Option<i64> {
 
 fn requires_delayed_recall(topic_case: &TopicCase) -> bool {
     topic_case.decay_risk >= 5_500
-        || matches!(topic_case.memory_state.as_str(), "fading" | "fragile" | "unstable")
+        || matches!(
+            topic_case.memory_state.as_str(),
+            "fading" | "fragile" | "unstable"
+        )
         || topic_case.memory_strength <= 4_300
 }
 
@@ -1686,7 +1708,9 @@ fn compute_false_mastery_score(
     proof: Option<&TopicProofCertification>,
 ) -> BasisPoints {
     let accuracy_gap = (topic_case.mastery_score as i64
-        - topic_case.recent_accuracy.unwrap_or(topic_case.mastery_score) as i64)
+        - topic_case
+            .recent_accuracy
+            .unwrap_or(topic_case.mastery_score) as i64)
         .max(0);
     let proof_penalty = proof
         .map(|item| (10_000 - item.composite_score as i64).max(0) * 20 / 100)
@@ -1702,7 +1726,14 @@ fn compute_false_mastery_score(
 
 fn classify_topic_case(
     topic_case: &TopicCase,
-) -> (&'static str, &'static str, bool, Vec<String>, i64, BasisPoints) {
+) -> (
+    &'static str,
+    &'static str,
+    bool,
+    Vec<String>,
+    i64,
+    BasisPoints,
+) {
     let review_due = requires_delayed_recall(topic_case);
     let bucket = if topic_case.active_blocker.is_some()
         || topic_case.primary_hypothesis_code == "blocked_topic"

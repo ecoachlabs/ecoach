@@ -10,10 +10,10 @@ mod smart_central;
 
 use crate::models::{
     AcademicNode, CurriculumAlias, CurriculumAliasInput, CurriculumAssessmentPattern,
-    CurriculumConceptAtom, CurriculumConceptAtomInput, CurriculumCoverageStats,
-    CurriculumFamily, CurriculumFamilyInput, CurriculumLevel, CurriculumLevelInput,
-    CurriculumLinkedResource, CurriculumNode, CurriculumNodeBundle, CurriculumNodeBundleInput,
-    CurriculumNodeInput, CurriculumObjective, CurriculumObjectiveInput, CurriculumParseCandidate,
+    CurriculumConceptAtom, CurriculumConceptAtomInput, CurriculumCoverageStats, CurriculumFamily,
+    CurriculumFamilyInput, CurriculumLevel, CurriculumLevelInput, CurriculumLinkedResource,
+    CurriculumNode, CurriculumNodeBundle, CurriculumNodeBundleInput, CurriculumNodeInput,
+    CurriculumObjective, CurriculumObjectiveInput, CurriculumParseCandidate,
     CurriculumPrerequisiteStep, CurriculumPublicSnapshot, CurriculumPublicSubjectOverview,
     CurriculumPublicTopicDetail, CurriculumPublishResult, CurriculumRecommendation,
     CurriculumRelationship, CurriculumRelationshipInput, CurriculumRemediationMap,
@@ -417,7 +417,9 @@ impl<'a> CurriculumService<'a> {
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             self.get_curriculum_family(self.conn.last_insert_rowid())?
-                .ok_or_else(|| EcoachError::Storage("curriculum family insert did not persist".to_string()))
+                .ok_or_else(|| {
+                    EcoachError::Storage("curriculum family insert did not persist".to_string())
+                })
         }
     }
 
@@ -489,7 +491,9 @@ impl<'a> CurriculumService<'a> {
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             self.get_curriculum_version(self.conn.last_insert_rowid())?
-                .ok_or_else(|| EcoachError::Storage("curriculum version insert did not persist".to_string()))
+                .ok_or_else(|| {
+                    EcoachError::Storage("curriculum version insert did not persist".to_string())
+                })
         }
     }
 
@@ -692,7 +696,9 @@ impl<'a> CurriculumService<'a> {
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             self.get_curriculum_term_period(self.conn.last_insert_rowid())?
-                .ok_or_else(|| EcoachError::Storage("term period insert did not persist".to_string()))
+                .ok_or_else(|| {
+                    EcoachError::Storage("term period insert did not persist".to_string())
+                })
         }
     }
 
@@ -702,7 +708,9 @@ impl<'a> CurriculumService<'a> {
     ) -> EcoachResult<CurriculumNodeBundle> {
         let version_id = if let Some(node_id) = input.node.id {
             self.get_curriculum_node(node_id)?
-                .ok_or_else(|| EcoachError::NotFound(format!("curriculum node {} not found", node_id)))?
+                .ok_or_else(|| {
+                    EcoachError::NotFound(format!("curriculum node {} not found", node_id))
+                })?
                 .curriculum_version_id
         } else {
             input.node.curriculum_version_id
@@ -910,9 +918,14 @@ impl<'a> CurriculumService<'a> {
         generated_by_account_id: Option<i64>,
         notes: Option<&str>,
     ) -> EcoachResult<CurriculumPublishResult> {
-        let version = self.get_curriculum_version(curriculum_version_id)?.ok_or_else(|| {
-            EcoachError::NotFound(format!("curriculum version {} not found", curriculum_version_id))
-        })?;
+        let version = self
+            .get_curriculum_version(curriculum_version_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!(
+                    "curriculum version {} not found",
+                    curriculum_version_id
+                ))
+            })?;
         let subject_count = self.count_subject_tracks(curriculum_version_id)?;
         let node_count = self.count_curriculum_nodes(curriculum_version_id)?;
         if subject_count == 0 || node_count == 0 {
@@ -950,7 +963,11 @@ impl<'a> CurriculumService<'a> {
                     curriculum_version_id, snapshot_kind, status, snapshot_json,
                     generated_by_account_id, generated_at, published_at
                  ) VALUES (?1, 'portal', 'live', ?2, ?3, datetime('now'), datetime('now'))",
-                params![curriculum_version_id, snapshot_json, generated_by_account_id],
+                params![
+                    curriculum_version_id,
+                    snapshot_json,
+                    generated_by_account_id
+                ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let snapshot_id = self.conn.last_insert_rowid();
@@ -960,7 +977,12 @@ impl<'a> CurriculumService<'a> {
                 "INSERT INTO curriculum_publish_logs (
                     curriculum_version_id, snapshot_id, action_type, actor_account_id, notes
                  ) VALUES (?1, ?2, 'snapshot_generated', ?3, ?4)",
-                params![curriculum_version_id, snapshot_id, generated_by_account_id, notes],
+                params![
+                    curriculum_version_id,
+                    snapshot_id,
+                    generated_by_account_id,
+                    notes
+                ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         self.conn
@@ -988,7 +1010,12 @@ impl<'a> CurriculumService<'a> {
                 "INSERT INTO curriculum_publish_logs (
                     curriculum_version_id, snapshot_id, action_type, actor_account_id, notes
                  ) VALUES (?1, ?2, 'published', ?3, ?4)",
-                params![curriculum_version_id, snapshot_id, generated_by_account_id, notes],
+                params![
+                    curriculum_version_id,
+                    snapshot_id,
+                    generated_by_account_id,
+                    notes
+                ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
@@ -997,12 +1024,14 @@ impl<'a> CurriculumService<'a> {
             .ok_or_else(|| {
                 EcoachError::NotFound(format!("curriculum snapshot {} not found", snapshot_id))
             })?;
-        let version = self.get_curriculum_version(curriculum_version_id)?.ok_or_else(|| {
-            EcoachError::NotFound(format!(
-                "curriculum version {} not found after publish",
-                curriculum_version_id
-            ))
-        })?;
+        let version = self
+            .get_curriculum_version(curriculum_version_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!(
+                    "curriculum version {} not found after publish",
+                    curriculum_version_id
+                ))
+            })?;
         let diff_report = if let Some(previous) = previous_published {
             Some(self.get_curriculum_version_diff(previous.id, curriculum_version_id)?)
         } else {
@@ -1113,7 +1142,10 @@ impl<'a> CurriculumService<'a> {
                     entity_key: slug.clone(),
                     old_value: Some(node.public_title.clone()),
                     new_value: None,
-                    summary: format!("{} was removed from the compared version.", node.public_title),
+                    summary: format!(
+                        "{} was removed from the compared version.",
+                        node.public_title
+                    ),
                 });
             }
         }
@@ -1153,7 +1185,10 @@ impl<'a> CurriculumService<'a> {
                         entity_key: slug.clone(),
                         old_value: base_node.parent_node_id.map(|id| id.to_string()),
                         new_value: compare_node.parent_node_id.map(|id| id.to_string()),
-                        summary: format!("{} moved within the curriculum tree.", compare_node.public_title),
+                        summary: format!(
+                            "{} moved within the curriculum tree.",
+                            compare_node.public_title
+                        ),
                     });
                 }
                 if base_node.sequence_no != compare_node.sequence_no {
@@ -1163,7 +1198,10 @@ impl<'a> CurriculumService<'a> {
                         entity_key: slug.clone(),
                         old_value: Some(base_node.sequence_no.to_string()),
                         new_value: Some(compare_node.sequence_no.to_string()),
-                        summary: format!("{} changed position in the curriculum order.", compare_node.public_title),
+                        summary: format!(
+                            "{} changed position in the curriculum order.",
+                            compare_node.public_title
+                        ),
                     });
                 }
                 if (base_node.exam_relevance_score - compare_node.exam_relevance_score).abs() >= 500
@@ -1196,7 +1234,8 @@ impl<'a> CurriculumService<'a> {
                 compare_version_id,
                 "glossary",
             )?,
-            migratable_study_plans: self.count_migratable_goals(base_version_id, compare_version_id)?,
+            migratable_study_plans: self
+                .count_migratable_goals(base_version_id, compare_version_id)?,
             migratable_mastery_records: self
                 .count_migratable_mastery_records(base_version_id, compare_version_id)?,
             entries,
@@ -1268,7 +1307,10 @@ impl<'a> CurriculumService<'a> {
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         for row in rows {
-            merge_search_result(&mut results, row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+            merge_search_result(
+                &mut results,
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?,
+            );
         }
 
         let mut alias_stmt = self
@@ -1306,7 +1348,10 @@ impl<'a> CurriculumService<'a> {
             })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         for row in alias_rows {
-            merge_search_result(&mut results, row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+            merge_search_result(
+                &mut results,
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?,
+            );
         }
 
         let mut items: Vec<_> = results.into_values().collect();
@@ -1358,7 +1403,10 @@ impl<'a> CurriculumService<'a> {
         Ok(resources)
     }
 
-    pub fn get_curriculum_topic_context(&self, node_id: i64) -> EcoachResult<CurriculumTopicContext> {
+    pub fn get_curriculum_topic_context(
+        &self,
+        node_id: i64,
+    ) -> EcoachResult<CurriculumTopicContext> {
         let detail = self.build_public_topic_detail(node_id)?;
         let formulas = detail
             .concepts
@@ -1386,14 +1434,19 @@ impl<'a> CurriculumService<'a> {
         subject_id: i64,
         limit: i64,
     ) -> EcoachResult<Vec<CurriculumRecommendation>> {
-        let subject_track = self.latest_subject_track_for_legacy_subject(subject_id)?.ok_or_else(|| {
-            EcoachError::NotFound(format!(
-                "curriculum subject track for legacy subject {} not found",
-                subject_id
-            ))
-        })?;
-        let nodes =
-            self.list_nodes_for_subject(subject_track.curriculum_version_id, subject_track.id, false)?;
+        let subject_track = self
+            .latest_subject_track_for_legacy_subject(subject_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!(
+                    "curriculum subject track for legacy subject {} not found",
+                    subject_id
+                ))
+            })?;
+        let nodes = self.list_nodes_for_subject(
+            subject_track.curriculum_version_id,
+            subject_track.id,
+            false,
+        )?;
         let coverage = self.load_coverage_map(student_id)?;
         let package_scores = self.load_package_scores()?;
         let memory_states = self.load_memory_states(student_id)?;
@@ -1546,8 +1599,10 @@ impl<'a> CurriculumService<'a> {
 
         for node in nodes {
             let resources = self.get_curriculum_topic_resources(node.id)?;
-            let kinds: BTreeSet<String> =
-                resources.iter().map(|item| item.resource_type.clone()).collect();
+            let kinds: BTreeSet<String> = resources
+                .iter()
+                .map(|item| item.resource_type.clone())
+                .collect();
             if kinds.contains("question") {
                 nodes_with_questions += 1;
             }
@@ -1966,8 +2021,16 @@ impl<'a> CurriculumService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mut items = Vec::new();
         for row in rows {
-            let (id, entity_type, entity_id, resource_type, resource_id, link_strength, source, review_status) =
-                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let (
+                id,
+                entity_type,
+                entity_id,
+                resource_type,
+                resource_id,
+                link_strength,
+                source,
+                review_status,
+            ) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
             items.push(CurriculumLinkedResource {
                 id,
                 entity_type,
@@ -1990,7 +2053,9 @@ impl<'a> CurriculumService<'a> {
     ) -> EcoachResult<(CurriculumFamily, CurriculumVersion)> {
         let family = self
             .get_curriculum_family_by_slug(family_slug)?
-            .ok_or_else(|| EcoachError::NotFound(format!("curriculum family {} not found", family_slug)))?;
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("curriculum family {} not found", family_slug))
+            })?;
         let version = self
             .get_published_version_by_family_and_label(family.id, version_label)?
             .ok_or_else(|| {
@@ -2024,12 +2089,14 @@ impl<'a> CurriculumService<'a> {
         let node = self.get_curriculum_node(node_id)?.ok_or_else(|| {
             EcoachError::NotFound(format!("curriculum node {} not found", node_id))
         })?;
-        let version = self.get_curriculum_version(node.curriculum_version_id)?.ok_or_else(|| {
-            EcoachError::NotFound(format!(
-                "curriculum version {} not found",
-                node.curriculum_version_id
-            ))
-        })?;
+        let version = self
+            .get_curriculum_version(node.curriculum_version_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!(
+                    "curriculum version {} not found",
+                    node.curriculum_version_id
+                ))
+            })?;
         let family_id = version.curriculum_family_id.ok_or_else(|| {
             EcoachError::Validation(format!(
                 "curriculum version {} is missing its family",
@@ -2039,9 +2106,11 @@ impl<'a> CurriculumService<'a> {
         let family = self.get_curriculum_family(family_id)?.ok_or_else(|| {
             EcoachError::NotFound(format!("curriculum family {} not found", family_id))
         })?;
-        let subject = self.get_curriculum_subject_track(node.subject_track_id)?.ok_or_else(|| {
-            EcoachError::NotFound(format!("subject track {} not found", node.subject_track_id))
-        })?;
+        let subject = self
+            .get_curriculum_subject_track(node.subject_track_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("subject track {} not found", node.subject_track_id))
+            })?;
         let objectives = self.list_curriculum_objectives(node.id)?;
         let concepts = self.list_curriculum_concepts(node.id)?;
         let aliases = self.list_curriculum_aliases("node", node.id)?;
@@ -2086,7 +2155,9 @@ impl<'a> CurriculumService<'a> {
         let subjects = self.list_subject_tracks_for_version(version_id)?;
         let mut subject_payloads = Vec::new();
         for subject in subjects {
-            let tree = self.build_curriculum_tree(&self.list_nodes_for_subject(version_id, subject.id, false)?)?;
+            let tree = self.build_curriculum_tree(
+                &self.list_nodes_for_subject(version_id, subject.id, false)?,
+            )?;
             subject_payloads.push(json!({
                 "subject": subject,
                 "tree": tree,
@@ -2099,7 +2170,10 @@ impl<'a> CurriculumService<'a> {
         }))
     }
 
-    fn build_curriculum_tree(&self, nodes: &[CurriculumNode]) -> EcoachResult<Vec<CurriculumTreeNode>> {
+    fn build_curriculum_tree(
+        &self,
+        nodes: &[CurriculumNode],
+    ) -> EcoachResult<Vec<CurriculumTreeNode>> {
         let mut by_parent: HashMap<Option<i64>, Vec<CurriculumNode>> = HashMap::new();
         let node_ids: Vec<i64> = nodes.iter().map(|item| item.id).collect();
         let objective_counts = self.count_grouped(
@@ -2116,7 +2190,10 @@ impl<'a> CurriculumService<'a> {
         )?;
 
         for node in nodes {
-            by_parent.entry(node.parent_node_id).or_default().push(node.clone());
+            by_parent
+                .entry(node.parent_node_id)
+                .or_default()
+                .push(node.clone());
         }
         for children in by_parent.values_mut() {
             children.sort_by(|left, right| {
@@ -2191,7 +2268,10 @@ impl<'a> CurriculumService<'a> {
             ))
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map(rusqlite::params_from_iter(params_vec.iter()), map_curriculum_node)
+            .query_map(
+                rusqlite::params_from_iter(params_vec.iter()),
+                map_curriculum_node,
+            )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         collect_rows(rows)
     }
@@ -2269,12 +2349,17 @@ impl<'a> CurriculumService<'a> {
         collect_rows(rows)
     }
 
-    fn resource_display_label(&self, resource_type: &str, resource_id: i64) -> EcoachResult<String> {
+    fn resource_display_label(
+        &self,
+        resource_type: &str,
+        resource_id: i64,
+    ) -> EcoachResult<String> {
         let sql = match resource_type {
             "question" => Some(("SELECT stem FROM questions WHERE id = ?1", "Question")),
-            "glossary" | "note" | "lesson" => {
-                Some(("SELECT title FROM knowledge_entries WHERE id = ?1", "Knowledge Entry"))
-            }
+            "glossary" | "note" | "lesson" => Some((
+                "SELECT title FROM knowledge_entries WHERE id = ?1",
+                "Knowledge Entry",
+            )),
             _ => None,
         };
         if let Some((statement, fallback)) = sql {
@@ -2288,7 +2373,11 @@ impl<'a> CurriculumService<'a> {
             }
             return Ok(format!("{} {}", fallback, resource_id));
         }
-        Ok(format!("{} {}", resource_type.replace('_', " "), resource_id))
+        Ok(format!(
+            "{} {}",
+            resource_type.replace('_', " "),
+            resource_id
+        ))
     }
 
     fn latest_snapshot_id(&self, version_id: i64) -> EcoachResult<Option<i64>> {
@@ -2493,7 +2582,10 @@ impl<'a> CurriculumService<'a> {
         collect_rows(rows)
     }
 
-    fn list_nodes_for_subject_track(&self, subject_track_id: i64) -> EcoachResult<Vec<CurriculumNode>> {
+    fn list_nodes_for_subject_track(
+        &self,
+        subject_track_id: i64,
+    ) -> EcoachResult<Vec<CurriculumNode>> {
         let mut statement = self
             .conn
             .prepare(
@@ -2657,10 +2749,14 @@ impl<'a> CurriculumService<'a> {
              LIMIT 1"
         };
         let result = if let Some(exclude_version_id) = exclude_version_id {
-            self.conn
-                .query_row(sql, params![family_id, exclude_version_id], map_curriculum_version)
+            self.conn.query_row(
+                sql,
+                params![family_id, exclude_version_id],
+                map_curriculum_version,
+            )
         } else {
-            self.conn.query_row(sql, [family_id], map_curriculum_version)
+            self.conn
+                .query_row(sql, [family_id], map_curriculum_version)
         };
         result
             .optional()
@@ -2719,7 +2815,9 @@ impl<'a> CurriculumService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map([student_id], |row| Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?)))
+            .query_map([student_id], |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?))
+            })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mut map = HashMap::new();
         for row in rows {
@@ -2755,7 +2853,10 @@ impl<'a> CurriculumService<'a> {
         resources: &[CurriculumLinkedResource],
     ) -> EcoachResult<Vec<CurriculumAssessmentPattern>> {
         let mut patterns = BTreeMap::<String, i64>::new();
-        for resource in resources.iter().filter(|item| item.resource_type == "question") {
+        for resource in resources
+            .iter()
+            .filter(|item| item.resource_type == "question")
+        {
             let format = self
                 .conn
                 .query_row(
@@ -2771,7 +2872,9 @@ impl<'a> CurriculumService<'a> {
         if patterns.is_empty() {
             for concept in self.list_curriculum_concepts(node.id)? {
                 if concept.concept_type == "formula" {
-                    *patterns.entry("formula_application".to_string()).or_default() += 1;
+                    *patterns
+                        .entry("formula_application".to_string())
+                        .or_default() += 1;
                 }
             }
         }
@@ -2827,7 +2930,10 @@ impl<'a> CurriculumService<'a> {
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
-        Ok(matches!(state.as_deref(), Some("fragile") | Some("decayed")))
+        Ok(matches!(
+            state.as_deref(),
+            Some("fragile") | Some("decayed")
+        ))
     }
 
     fn count_migratable_resource_links(
@@ -2859,7 +2965,8 @@ impl<'a> CurriculumService<'a> {
         base_version_id: i64,
         compare_version_id: i64,
     ) -> EcoachResult<i64> {
-        match self.conn
+        match self
+            .conn
             .query_row(
                 "SELECT COUNT(*)
                  FROM goals goal
@@ -3037,9 +3144,7 @@ fn map_curriculum_level(row: &rusqlite::Row<'_>) -> rusqlite::Result<CurriculumL
     })
 }
 
-fn map_curriculum_term_period(
-    row: &rusqlite::Row<'_>,
-) -> rusqlite::Result<CurriculumTermPeriod> {
+fn map_curriculum_term_period(row: &rusqlite::Row<'_>) -> rusqlite::Result<CurriculumTermPeriod> {
     Ok(CurriculumTermPeriod {
         id: row.get(0)?,
         level_id: row.get(1)?,
@@ -3091,9 +3196,7 @@ fn map_curriculum_objective(row: &rusqlite::Row<'_>) -> rusqlite::Result<Curricu
     })
 }
 
-fn map_curriculum_concept_atom(
-    row: &rusqlite::Row<'_>,
-) -> rusqlite::Result<CurriculumConceptAtom> {
+fn map_curriculum_concept_atom(row: &rusqlite::Row<'_>) -> rusqlite::Result<CurriculumConceptAtom> {
     Ok(CurriculumConceptAtom {
         id: row.get(0)?,
         curriculum_node_id: row.get(1)?,
@@ -3246,7 +3349,10 @@ fn build_tree_children(
         .map(|node| CurriculumTreeNode {
             objective_count: objective_counts.get(&node.id).copied().unwrap_or_default(),
             concept_count: concept_counts.get(&node.id).copied().unwrap_or_default(),
-            prerequisite_count: prerequisite_counts.get(&node.id).copied().unwrap_or_default(),
+            prerequisite_count: prerequisite_counts
+                .get(&node.id)
+                .copied()
+                .unwrap_or_default(),
             children: build_tree_children(
                 Some(node.id),
                 by_parent,
@@ -3493,7 +3599,9 @@ mod tests {
                     id: None,
                     legacy_learning_objective_id: None,
                     objective_text: "Solve one-step linear equations.".to_string(),
-                    simplified_text: Some("Find the missing value in simple equations.".to_string()),
+                    simplified_text: Some(
+                        "Find the missing value in simple equations.".to_string(),
+                    ),
                     cognitive_level: Some("application".to_string()),
                     objective_type: "application".to_string(),
                     sequence_no: 1,
@@ -3566,10 +3674,12 @@ mod tests {
         let context = service
             .get_curriculum_topic_context(target.node.id)
             .expect("topic context should load");
-        assert!(context
-            .prerequisite_chain
-            .iter()
-            .any(|node| node.slug == "fractions-foundations"));
+        assert!(
+            context
+                .prerequisite_chain
+                .iter()
+                .any(|node| node.slug == "fractions-foundations")
+        );
         let remediation = service
             .get_curriculum_remediation_map(target.node.id)
             .expect("remediation map should load");

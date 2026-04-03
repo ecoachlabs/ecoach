@@ -273,7 +273,10 @@ pub fn complete_diagnostic_and_sync(
         let generated_mission_id = rewritten_plan_id
             .map(|_| PlanEngine::new(conn).generate_today_mission(battery.student_id))
             .transpose()?;
-        let topic_ids = analytics.iter().map(|item| item.topic_id).collect::<Vec<_>>();
+        let topic_ids = analytics
+            .iter()
+            .map(|item| item.topic_id)
+            .collect::<Vec<_>>();
         if !topic_ids.is_empty() {
             InterventionLibraryService::new(conn).sync_diagnostic_prescriptions(
                 diagnostic_id,
@@ -303,10 +306,12 @@ pub fn complete_diagnostic_and_sync(
         let readiness_band = result.readiness_band.clone();
         let refreshed_result = engine
             .get_diagnostic_result(diagnostic_id)?
-            .ok_or_else(|| CommandError::from(EcoachError::NotFound(format!(
-                "diagnostic {} result was not persisted",
-                diagnostic_id
-            ))))?;
+            .ok_or_else(|| {
+                CommandError::from(EcoachError::NotFound(format!(
+                    "diagnostic {} result was not persisted",
+                    diagnostic_id
+                )))
+            })?;
         let problem_cause_fix_cards = refreshed_result
             .problem_cause_fix_cards
             .clone()
@@ -1237,9 +1242,7 @@ mod tests {
                         },
                     )
                     .map_err(|err| {
-                        CommandError::from(ecoach_substrate::EcoachError::Storage(
-                            err.to_string(),
-                        ))
+                        CommandError::from(ecoach_substrate::EcoachError::Storage(err.to_string()))
                     })?)
             })
             .expect("attempt should persist");

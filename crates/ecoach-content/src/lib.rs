@@ -1,5 +1,5 @@
-pub mod content_strategy_registry;
 pub mod content_intelligence;
+pub mod content_strategy_registry;
 pub mod foundry_coordinator;
 pub mod manifest;
 pub mod pack_service;
@@ -7,17 +7,18 @@ pub mod publish_pipeline;
 pub mod resource_intelligence;
 pub mod resource_readiness;
 
-pub use content_strategy_registry::{ContentStrategyRegistry, ContentTypeStrategy};
 pub use content_intelligence::{
     ContentEvaluationRun, ContentEvaluationRunInput, ContentEvidenceRecord,
     ContentEvidenceRecordInput, ContentIntelligenceOverview, ContentIntelligenceService,
     ContentPublishDecision, ContentPublishDecisionInput, ContentResearchCandidate,
     ContentResearchCandidateInput, ContentResearchMission, ContentResearchMissionInput,
-    ContentRetrievalHit, ContentRetrievalQueryInput, ContentRetrievalResult,
-    ContentSnapshot, ContentSnapshotBuildInput, ContentSnapshotItem, ContentSourcePolicy,
+    ContentRetrievalHit, ContentRetrievalQueryInput, ContentRetrievalResult, ContentSnapshot,
+    ContentSnapshotBuildInput, ContentSnapshotItem, ContentSourceDetail,
+    ContentSourceGovernanceEvent, ContentSourceGovernanceInput, ContentSourcePolicy,
     ContentSourcePolicyInput, ContentSourceProfileInput, ContentSourceRegistryEntry,
     ContentSourceSegment, ContentSourceSegmentInput,
 };
+pub use content_strategy_registry::{ContentStrategyRegistry, ContentTypeStrategy};
 pub use foundry_coordinator::{
     ContentFoundrySourceReport, CurriculumParseCandidate, CurriculumReviewTask,
     CurriculumSourceUpload, FoundryCoordinatorService, FoundryJob, FoundryJobBoard,

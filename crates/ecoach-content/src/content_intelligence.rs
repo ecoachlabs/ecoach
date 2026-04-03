@@ -407,6 +407,36 @@ pub struct ContentIntelligenceOverview {
     pub average_quality_bp: BasisPoints,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContentSourceGovernanceInput {
+    pub source_status: String,
+    pub decided_by_account_id: Option<i64>,
+    pub note: Option<String>,
+    pub confidence_score: Option<BasisPoints>,
+    pub review_due_at: Option<String>,
+    pub stale_flag: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContentSourceGovernanceEvent {
+    pub id: i64,
+    pub source_upload_id: i64,
+    pub source_status: String,
+    pub decided_by_account_id: Option<i64>,
+    pub note: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContentSourceDetail {
+    pub source: ContentSourceRegistryEntry,
+    pub segments: Vec<ContentSourceSegment>,
+    pub missions: Vec<ContentResearchMission>,
+    pub evidence_records: Vec<ContentEvidenceRecord>,
+    pub publish_decisions: Vec<ContentPublishDecision>,
+    pub governance_events: Vec<ContentSourceGovernanceEvent>,
+}
+
 #[derive(Debug, Clone)]
 struct RetrievalCandidate {
     snapshot_item_id: Option<i64>,
@@ -534,9 +564,9 @@ impl<'a> ContentIntelligenceService<'a> {
         source_upload_id: i64,
         input: ContentSourceProfileInput,
     ) -> EcoachResult<ContentSourceRegistryEntry> {
-        let existing = self
-            .get_source(source_upload_id)?
-            .ok_or_else(|| EcoachError::NotFound(format!("source upload {} not found", source_upload_id)))?;
+        let existing = self.get_source(source_upload_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("source upload {} not found", source_upload_id))
+        })?;
         let merged_metadata = merge_json(existing.metadata, input.metadata_patch);
         self.conn
             .execute(
@@ -565,9 +595,7 @@ impl<'a> ContentIntelligenceService<'a> {
                     input.author.or(existing.author),
                     input.publication_date.or(existing.publication_date),
                     input.license_type.or(existing.license_type),
-                    input
-                        .crawl_permission
-                        .unwrap_or(existing.crawl_permission),
+                    input.crawl_permission.unwrap_or(existing.crawl_permission),
                     input.source_tier.unwrap_or(existing.source_tier),
                     input.trust_score_bp.unwrap_or(existing.trust_score_bp) as i64,
                     input
@@ -595,8 +623,9 @@ impl<'a> ContentIntelligenceService<'a> {
                 ],
             )
             .map_err(storage_error)?;
-        self.get_source(source_upload_id)?
-            .ok_or_else(|| EcoachError::NotFound(format!("source upload {} not found", source_upload_id)))
+        self.get_source(source_upload_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("source upload {} not found", source_upload_id))
+        })
     }
 
     pub fn list_content_sources(
@@ -619,7 +648,9 @@ impl<'a> ContentIntelligenceService<'a> {
                  ORDER BY updated_at DESC, id DESC",
             )
             .map_err(storage_error)?;
-        let rows = stmt.query_map([], map_source_registry_entry).map_err(storage_error)?;
+        let rows = stmt
+            .query_map([], map_source_registry_entry)
+            .map_err(storage_error)?;
         let mut items = collect_rows(rows)?;
         if let Some(status) = status {
             items.retain(|item| item.source_status == status);
@@ -631,6 +662,66 @@ impl<'a> ContentIntelligenceService<'a> {
             items.truncate(limit);
         }
         Ok(items)
+    }
+
+    pub fn get_content_source_detail(
+        &self,
+        source_upload_id: i64,
+    ) -> EcoachResult<ContentSourceDetail> {
+        let source = self.get_source(source_upload_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("source upload {} not found", source_upload_id))
+        })?;
+        Ok(ContentSourceDetail {
+            segments: self.list_source_segments(source_upload_id, 24)?,
+            missions: self.list_source_missions(source_upload_id, 12)?,
+            evidence_records: self.list_source_evidence(source_upload_id, 12)?,
+            publish_decisions: self.list_source_publish_decisions(source_upload_id, 12)?,
+            governance_events: self.list_source_governance_events(source_upload_id, 12)?,
+            source,
+        })
+    }
+
+    pub fn govern_source_upload(
+        &self,
+        source_upload_id: i64,
+        input: ContentSourceGovernanceInput,
+    ) -> EcoachResult<ContentSourceDetail> {
+        validate_source_status(&input.source_status)?;
+        let existing = self.get_source(source_upload_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("source upload {} not found", source_upload_id))
+        })?;
+        self.conn
+            .execute(
+                "UPDATE curriculum_source_uploads
+                 SET source_status = ?2,
+                     confidence_score = ?3,
+                     review_due_at = COALESCE(?4, review_due_at),
+                     stale_flag = COALESCE(?5, stale_flag),
+                     updated_at = datetime('now')
+                 WHERE id = ?1",
+                params![
+                    source_upload_id,
+                    input.source_status,
+                    input.confidence_score.unwrap_or(existing.confidence_score) as i64,
+                    input.review_due_at,
+                    input.stale_flag.map(|value| if value { 1 } else { 0 }),
+                ],
+            )
+            .map_err(storage_error)?;
+        self.conn
+            .execute(
+                "INSERT INTO content_source_governance_events (
+                    source_upload_id, source_status, decided_by_account_id, note
+                 ) VALUES (?1, ?2, ?3, ?4)",
+                params![
+                    source_upload_id,
+                    input.source_status,
+                    input.decided_by_account_id,
+                    input.note,
+                ],
+            )
+            .map_err(storage_error)?;
+        self.get_content_source_detail(source_upload_id)
     }
 
     pub fn ingest_source_segments(
@@ -731,9 +822,10 @@ impl<'a> ContentIntelligenceService<'a> {
                     ],
                 )
                 .map_err(storage_error)?;
-            persisted.push(self.get_source_segment(self.conn.last_insert_rowid())?.ok_or_else(
-                || EcoachError::NotFound("inserted segment missing".to_string()),
-            )?);
+            persisted.push(
+                self.get_source_segment(self.conn.last_insert_rowid())?
+                    .ok_or_else(|| EcoachError::NotFound("inserted segment missing".to_string()))?,
+            );
         }
         Ok(persisted)
     }
@@ -833,9 +925,9 @@ impl<'a> ContentIntelligenceService<'a> {
         mission_id: i64,
         input: ContentResearchCandidateInput,
     ) -> EcoachResult<ContentResearchCandidate> {
-        let mission = self
-            .get_research_mission(mission_id)?
-            .ok_or_else(|| EcoachError::NotFound(format!("research mission {} not found", mission_id)))?;
+        let mission = self.get_research_mission(mission_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("research mission {} not found", mission_id))
+        })?;
         self.conn
             .execute(
                 "INSERT INTO acquisition_evidence_candidates (
@@ -982,7 +1074,11 @@ impl<'a> ContentIntelligenceService<'a> {
                     input.pedagogy_score_bp as i64,
                     input.freshness_score_bp as i64,
                     final_quality as i64,
-                    if input.verified { "verified" } else { "pending" },
+                    if input.verified {
+                        "verified"
+                    } else {
+                        "pending"
+                    },
                     to_json(&input.provenance)?,
                     if input.verified { 1 } else { 0 },
                 ],
@@ -1052,7 +1148,9 @@ impl<'a> ContentIntelligenceService<'a> {
         let snapshot_id = if input.build_snapshot {
             let snapshot = self.build_topic_snapshot(ContentSnapshotBuildInput {
                 topic_id: topic_id.ok_or_else(|| {
-                    EcoachError::Validation("topic_id is required for snapshot publishing".to_string())
+                    EcoachError::Validation(
+                        "topic_id is required for snapshot publishing".to_string(),
+                    )
                 })?,
                 subject_id,
                 audience_type: input
@@ -1194,7 +1292,8 @@ impl<'a> ContentIntelligenceService<'a> {
         &self,
         input: ContentRetrievalQueryInput,
     ) -> EcoachResult<ContentRetrievalResult> {
-        let snapshot = self.resolve_active_snapshot(input.topic_id, input.audience_type.as_deref())?;
+        let snapshot =
+            self.resolve_active_snapshot(input.topic_id, input.audience_type.as_deref())?;
         self.conn
             .execute(
                 "INSERT INTO content_retrieval_queries (
@@ -1376,8 +1475,10 @@ impl<'a> ContentIntelligenceService<'a> {
             "SELECT COUNT(*) FROM content_source_segments WHERE topic_id = ?1",
             topic_id,
         )?;
-        let evidence_count =
-            self.count_query("SELECT COUNT(*) FROM evidence_blocks WHERE topic_id = ?1", topic_id)?;
+        let evidence_count = self.count_query(
+            "SELECT COUNT(*) FROM evidence_blocks WHERE topic_id = ?1",
+            topic_id,
+        )?;
         let open_gap_ticket_count = self.count_query(
             "SELECT COUNT(*)
              FROM content_gap_tickets
@@ -1472,7 +1573,10 @@ impl<'a> ContentIntelligenceService<'a> {
             .map_err(storage_error)
     }
 
-    fn get_source(&self, source_upload_id: i64) -> EcoachResult<Option<ContentSourceRegistryEntry>> {
+    fn get_source(
+        &self,
+        source_upload_id: i64,
+    ) -> EcoachResult<Option<ContentSourceRegistryEntry>> {
         self.conn
             .query_row(
                 "SELECT id, uploader_account_id, source_kind, title, source_path, country_code,
@@ -1489,6 +1593,135 @@ impl<'a> ContentIntelligenceService<'a> {
             )
             .optional()
             .map_err(storage_error)
+    }
+
+    fn list_source_segments(
+        &self,
+        source_upload_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<ContentSourceSegment>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, source_upload_id, topic_id, concept_id, section_title, raw_text,
+                        normalized_text, markdown_text, image_refs_json, equation_refs_json,
+                        page_range, checksum, semantic_hash, extraction_confidence_bp,
+                        relevance_score_bp, metadata_json, created_at
+                 FROM content_source_segments
+                 WHERE source_upload_id = ?1
+                 ORDER BY id ASC
+                 LIMIT ?2",
+            )
+            .map_err(storage_error)?;
+        let rows = statement
+            .query_map(params![source_upload_id, limit.max(1) as i64], map_source_segment)
+            .map_err(storage_error)?;
+        collect_rows(rows)
+    }
+
+    fn list_source_missions(
+        &self,
+        source_upload_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<ContentResearchMission>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, acquisition_job_id, gap_ticket_id, source_upload_id, subject_id, topic_id,
+                        mission_type, mission_brief, allowed_source_classes_json,
+                        requested_asset_types_json, coverage_snapshot_json, priority_bp,
+                        mission_stage, status, planner_notes
+                 FROM content_research_missions
+                 WHERE source_upload_id = ?1
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(storage_error)?;
+        let rows = statement
+            .query_map(params![source_upload_id, limit.max(1) as i64], map_research_mission)
+            .map_err(storage_error)?;
+        collect_rows(rows)
+    }
+
+    fn list_source_evidence(
+        &self,
+        source_upload_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<ContentEvidenceRecord>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, source_type, source_id, source_upload_id, source_segment_id, topic_id,
+                        concept_id, evidence_type, claim_text, supporting_text,
+                        extraction_confidence_bp, corroboration_score_bp, contradiction_score_bp,
+                        pedagogy_score_bp, freshness_score_bp, final_quality_bp, status,
+                        verified_at, provenance_json
+                 FROM content_evidence_records
+                 WHERE source_upload_id = ?1
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(storage_error)?;
+        let rows = statement
+            .query_map(params![source_upload_id, limit.max(1) as i64], map_evidence_record)
+            .map_err(storage_error)?;
+        collect_rows(rows)
+    }
+
+    fn list_source_publish_decisions(
+        &self,
+        source_upload_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<ContentPublishDecision>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, publish_job_id, source_upload_id, subject_id, topic_id, gate_name,
+                        decision_status, decision_reason, decision_score_bp, snapshot_id,
+                        decided_by_account_id, created_at
+                 FROM content_publish_decisions
+                 WHERE source_upload_id = ?1
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(storage_error)?;
+        let rows = statement
+            .query_map(
+                params![source_upload_id, limit.max(1) as i64],
+                map_publish_decision,
+            )
+            .map_err(storage_error)?;
+        collect_rows(rows)
+    }
+
+    fn list_source_governance_events(
+        &self,
+        source_upload_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<ContentSourceGovernanceEvent>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, source_upload_id, source_status, decided_by_account_id, note, created_at
+                 FROM content_source_governance_events
+                 WHERE source_upload_id = ?1
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(storage_error)?;
+        let rows = statement
+            .query_map(params![source_upload_id, limit.max(1) as i64], |row| {
+                Ok(ContentSourceGovernanceEvent {
+                    id: row.get(0)?,
+                    source_upload_id: row.get(1)?,
+                    source_status: row.get(2)?,
+                    decided_by_account_id: row.get(3)?,
+                    note: row.get(4)?,
+                    created_at: row.get(5)?,
+                })
+            })
+            .map_err(storage_error)?;
+        collect_rows(rows)
     }
 
     fn get_source_segment(&self, segment_id: i64) -> EcoachResult<Option<ContentSourceSegment>> {
@@ -1547,10 +1780,7 @@ impl<'a> ContentIntelligenceService<'a> {
             .map_err(storage_error)
     }
 
-    fn get_evidence_record(
-        &self,
-        evidence_id: i64,
-    ) -> EcoachResult<Option<ContentEvidenceRecord>> {
+    fn get_evidence_record(&self, evidence_id: i64) -> EcoachResult<Option<ContentEvidenceRecord>> {
         self.conn
             .query_row(
                 "SELECT id, source_type, source_id, source_upload_id, source_segment_id,
@@ -1627,10 +1857,7 @@ impl<'a> ContentIntelligenceService<'a> {
             .map_err(storage_error)
     }
 
-    fn get_evaluation_run(
-        &self,
-        evaluation_id: i64,
-    ) -> EcoachResult<Option<ContentEvaluationRun>> {
+    fn get_evaluation_run(&self, evaluation_id: i64) -> EcoachResult<Option<ContentEvaluationRun>> {
         self.conn
             .query_row(
                 "SELECT id, query_id, topic_id, metric_family, groundedness_bp, relevance_bp,
@@ -1644,10 +1871,7 @@ impl<'a> ContentIntelligenceService<'a> {
             .map_err(storage_error)
     }
 
-    fn load_snapshot_artifact_items(
-        &self,
-        topic_id: i64,
-    ) -> EcoachResult<Vec<RetrievalCandidate>> {
+    fn load_snapshot_artifact_items(&self, topic_id: i64) -> EcoachResult<Vec<RetrievalCandidate>> {
         let mut stmt = self
             .conn
             .prepare(
@@ -1693,10 +1917,7 @@ impl<'a> ContentIntelligenceService<'a> {
         Ok(items)
     }
 
-    fn load_snapshot_evidence_items(
-        &self,
-        topic_id: i64,
-    ) -> EcoachResult<Vec<RetrievalCandidate>> {
+    fn load_snapshot_evidence_items(&self, topic_id: i64) -> EcoachResult<Vec<RetrievalCandidate>> {
         let mut stmt = self
             .conn
             .prepare(
@@ -1781,8 +2002,16 @@ impl<'a> ContentIntelligenceService<'a> {
                 .query_map(params![topic_id, source_upload_id], map_segment_row)
                 .map_err(storage_error)?;
             for row in rows {
-                let (segment_id, upload_id, section_title, body, relevance, source_title, freshness, metadata_json) =
-                    row.map_err(storage_error)?;
+                let (
+                    segment_id,
+                    upload_id,
+                    section_title,
+                    body,
+                    relevance,
+                    source_title,
+                    freshness,
+                    metadata_json,
+                ) = row.map_err(storage_error)?;
                 items.push(RetrievalCandidate {
                     snapshot_item_id: None,
                     live_source_type: "segment".to_string(),
@@ -1801,8 +2030,16 @@ impl<'a> ContentIntelligenceService<'a> {
                 .query_map([topic_id], map_segment_row)
                 .map_err(storage_error)?;
             for row in rows {
-                let (segment_id, upload_id, section_title, body, relevance, source_title, freshness, metadata_json) =
-                    row.map_err(storage_error)?;
+                let (
+                    segment_id,
+                    upload_id,
+                    section_title,
+                    body,
+                    relevance,
+                    source_title,
+                    freshness,
+                    metadata_json,
+                ) = row.map_err(storage_error)?;
                 items.push(RetrievalCandidate {
                     snapshot_item_id: None,
                     live_source_type: "segment".to_string(),
@@ -1839,10 +2076,7 @@ impl<'a> ContentIntelligenceService<'a> {
                 Ok(RetrievalCandidate {
                     snapshot_item_id: Some(row.get::<_, i64>(0)?),
                     live_source_type: row.get::<_, String>(1)?,
-                    live_source_id: row
-                        .get::<_, String>(2)?
-                        .parse::<i64>()
-                        .unwrap_or_default(),
+                    live_source_id: row.get::<_, String>(2)?.parse::<i64>().unwrap_or_default(),
                     item_type: row.get::<_, String>(3)?,
                     title: row.get::<_, String>(4)?,
                     body: row.get::<_, String>(5)?,
@@ -1901,7 +2135,9 @@ impl<'a> ContentIntelligenceService<'a> {
             )
             .optional()
             .map_err(storage_error)?
-            .ok_or_else(|| EcoachError::NotFound(format!("publish job {} not found", publish_job_id)))?;
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("publish job {} not found", publish_job_id))
+            })?;
         Ok((topic_id.or(job_scope.0), subject_id.or(job_scope.1)))
     }
 
@@ -2144,11 +2380,7 @@ where
     T: for<'de> Deserialize<'de>,
 {
     serde_json::from_str(raw).map_err(|err| {
-        rusqlite::Error::FromSqlConversionFailure(
-            0,
-            rusqlite::types::Type::Text,
-            Box::new(err),
-        )
+        rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(err))
     })
 }
 
@@ -2162,16 +2394,7 @@ fn storage_error(err: rusqlite::Error) -> EcoachError {
 
 fn map_segment_row(
     row: &Row<'_>,
-) -> rusqlite::Result<(
-    i64,
-    i64,
-    Option<String>,
-    String,
-    i64,
-    String,
-    i64,
-    String,
-)> {
+) -> rusqlite::Result<(i64, i64, Option<String>, String, i64, String, i64, String)> {
     Ok((
         row.get::<_, i64>(0)?,
         row.get::<_, i64>(1)?,
@@ -2268,10 +2491,18 @@ fn excerpt(text: &str, max_chars: usize) -> String {
     trimmed.chars().take(max_chars).collect::<String>()
 }
 
-fn candidate_matches_requested_types(
-    metadata: &Value,
-    requested_types: &BTreeSet<String>,
-) -> bool {
+fn validate_source_status(status: &str) -> EcoachResult<()> {
+    match status {
+        "uploaded" | "parsed" | "review_required" | "reviewed" | "published" | "archived"
+        | "failed" => Ok(()),
+        other => Err(EcoachError::Validation(format!(
+            "unsupported source status: {}",
+            other
+        ))),
+    }
+}
+
+fn candidate_matches_requested_types(metadata: &Value, requested_types: &BTreeSet<String>) -> bool {
     requested_types.iter().any(|requested| {
         metadata
             .get("artifact_type")
@@ -2319,11 +2550,7 @@ fn score_candidate(
     }
     let lexical = matched_terms * 10_000 / terms.len() as i64;
     let topic_bonus = if topic_id.is_some()
-        && candidate
-            .metadata
-            .get("topic_id")
-            .and_then(Value::as_i64)
-            == topic_id
+        && candidate.metadata.get("topic_id").and_then(Value::as_i64) == topic_id
     {
         800
     } else {

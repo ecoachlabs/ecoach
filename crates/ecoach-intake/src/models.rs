@@ -42,6 +42,139 @@ pub struct SubmissionBundle {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleInboxItem {
+    pub bundle: SubmissionBundle,
+    pub confirmation_state: String,
+    pub coach_application_status: String,
+    pub review_priority: String,
+    pub needs_confirmation: bool,
+    pub detected_subjects: Vec<String>,
+    pub detected_topics: Vec<String>,
+    pub summary_points: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleConfirmationInput {
+    pub confirmation_state: String,
+    pub note: Option<String>,
+    pub topic_overrides: Vec<String>,
+    pub document_role_overrides: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleReviewReflectionInput {
+    pub question_ref: String,
+    pub topic_label: Option<String>,
+    pub review_side: String,
+    pub reflection_kind: String,
+    pub reflection_text: String,
+    pub recommended_action: Option<String>,
+    pub severity_bp: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleReviewNote {
+    pub id: i64,
+    pub bundle_id: i64,
+    pub question_ref: String,
+    pub topic_label: Option<String>,
+    pub review_side: String,
+    pub reflection_kind: String,
+    pub reflection_text: String,
+    pub recommended_action: Option<String>,
+    pub severity_bp: i64,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UploadedReviewItem {
+    pub question_ref: String,
+    pub topic_label: Option<String>,
+    pub alignment_confidence: String,
+    pub weakness_signals: Vec<String>,
+    pub coach_explanation: String,
+    pub recommended_actions: Vec<String>,
+    pub reflections: Vec<BundleReviewNote>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UploadedPaperReviewSnapshot {
+    pub bundle: SubmissionBundle,
+    pub coach_impact_summary: Value,
+    pub parent_summary: Vec<String>,
+    pub items: Vec<UploadedReviewItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleCoachApplicationResult {
+    pub bundle_id: i64,
+    pub coach_application_status: String,
+    pub created_goal_ids: Vec<i64>,
+    pub updated_topic_labels: Vec<String>,
+    pub parent_alert_count: i64,
+    pub question_environment_profile: Value,
+    pub summary: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleOcrPage {
+    pub file_id: i64,
+    pub file_name: String,
+    pub document_role: String,
+    pub page_number: i64,
+    pub label: String,
+    pub confidence_score: i64,
+    pub preview: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleOcrWorkspace {
+    pub bundle: SubmissionBundle,
+    pub review_priority: String,
+    pub files_with_ocr: i64,
+    pub recovered_file_count: i64,
+    pub pages: Vec<BundleOcrPage>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleSharedPromotion {
+    pub id: i64,
+    pub bundle_id: i64,
+    pub source_upload_id: Option<i64>,
+    pub requested_by_account_id: Option<i64>,
+    pub promotion_status: String,
+    pub promotion_summary: Value,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersonalAcademicVaultEntry {
+    pub bundle: SubmissionBundle,
+    pub bundle_kind: String,
+    pub review_priority: String,
+    pub confirmation_state: String,
+    pub coach_application_status: String,
+    pub detected_subjects: Vec<String>,
+    pub detected_topics: Vec<String>,
+    pub summary_points: Vec<String>,
+    pub file_count: i64,
+    pub files: Vec<BundleFile>,
+    pub promotion: Option<BundleSharedPromotion>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersonalAcademicVaultSnapshot {
+    pub student_id: i64,
+    pub total_bundle_count: i64,
+    pub pending_review_count: i64,
+    pub coach_applied_count: i64,
+    pub promoted_bundle_count: i64,
+    pub active_topics: Vec<String>,
+    pub bundles: Vec<PersonalAcademicVaultEntry>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BundleFile {
     pub id: i64,
     pub bundle_id: i64,

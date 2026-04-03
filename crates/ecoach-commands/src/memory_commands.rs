@@ -1,8 +1,8 @@
 use ecoach_memory::{
     CompleteInterventionStepInput, InterventionPlanRecord, MemoryCohortAnalytics,
     MemoryKnowledgeStateDetail, MemoryReturnLoop, MemoryReviewQueueItem, MemoryService,
-    RecordMemoryEvidenceInput, ReviewScheduleItemRecord, StudentInterferenceEdge, TopicKnowledgeMap,
-    TopicMemorySummary,
+    RecordMemoryEvidenceInput, ReviewScheduleItemRecord, StudentInterferenceEdge,
+    TopicKnowledgeMap, TopicMemorySummary,
 };
 
 use crate::{error::CommandError, state::AppState};
@@ -214,9 +214,7 @@ pub fn complete_intervention_step(
     state: &AppState,
     input: InterventionStepInputDto,
 ) -> Result<ActiveInterventionDto, CommandError> {
-    state.with_connection(|conn| {
-        Ok(MemoryService::new(conn).complete_intervention_step(&input)?)
-    })
+    state.with_connection(|conn| Ok(MemoryService::new(conn).complete_intervention_step(&input)?))
 }
 
 pub fn force_recompute_knowledge_state(
@@ -225,7 +223,8 @@ pub fn force_recompute_knowledge_state(
     knowledge_unit_id: i64,
 ) -> Result<MemoryKnowledgeStateDto, CommandError> {
     state.with_connection(|conn| {
-        Ok(MemoryService::new(conn).force_recompute_knowledge_state(student_id, knowledge_unit_id)?)
+        Ok(MemoryService::new(conn)
+            .force_recompute_knowledge_state(student_id, knowledge_unit_id)?)
     })
 }
 

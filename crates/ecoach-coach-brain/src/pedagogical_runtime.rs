@@ -228,17 +228,19 @@ impl<'a> PedagogicalRuntimeService<'a> {
         Self { conn }
     }
 
-    pub fn sync_topic_teaching_profile(
-        &self,
-        topic_id: i64,
-    ) -> EcoachResult<TopicTeachingProfile> {
+    pub fn sync_topic_teaching_profile(&self, topic_id: i64) -> EcoachResult<TopicTeachingProfile> {
         let topic = self.load_topic_context(topic_id)?;
         let registry = ContentStrategyRegistry::core();
         let units = self.load_topic_units(&topic, &registry)?;
         let prerequisite_topic_ids = self.list_prerequisite_topic_ids(topic_id)?;
-        let question_count = self.count_rows("SELECT COUNT(*) FROM questions WHERE topic_id = ?1", topic_id)?;
-        let knowledge_count =
-            self.count_rows("SELECT COUNT(*) FROM knowledge_entries WHERE topic_id = ?1", topic_id)?;
+        let question_count = self.count_rows(
+            "SELECT COUNT(*) FROM questions WHERE topic_id = ?1",
+            topic_id,
+        )?;
+        let knowledge_count = self.count_rows(
+            "SELECT COUNT(*) FROM knowledge_entries WHERE topic_id = ?1",
+            topic_id,
+        )?;
 
         let mut type_counts = BTreeMap::<String, i64>::new();
         let mut representation_modes = BTreeSet::<String>::new();
@@ -337,7 +339,10 @@ impl<'a> PedagogicalRuntimeService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
         self.get_topic_teaching_profile(topic_id)?.ok_or_else(|| {
-            EcoachError::NotFound(format!("topic teaching profile {} missing after sync", topic_id))
+            EcoachError::NotFound(format!(
+                "topic teaching profile {} missing after sync",
+                topic_id
+            ))
         })
     }
 
@@ -410,34 +415,37 @@ impl<'a> PedagogicalRuntimeService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map(params![topic_id, pedagogical_purpose, limit.max(1) as i64], |row| {
-                Ok(InstructionalObjectEnvelope {
-                    id: row.get(0)?,
-                    object_key: row.get(1)?,
-                    topic_id: row.get(2)?,
-                    learning_unit_id: row.get(3)?,
-                    object_type: row.get(4)?,
-                    pedagogical_purpose: row.get(5)?,
-                    title: row.get(6)?,
-                    content_type_primary: row.get(7)?,
-                    representation_mode: row.get(8)?,
-                    response_mode: row.get(9)?,
-                    strategy_families: parse_json_text(row.get::<_, String>(10)?)
-                        .map_err(map_serialization_err)?,
-                    drill_families: parse_json_text(row.get::<_, String>(11)?)
-                        .map_err(map_serialization_err)?,
-                    mastery_evidence: parse_json_text(row.get::<_, String>(12)?)
-                        .map_err(map_serialization_err)?,
-                    supported_failure_signatures: parse_json_text(row.get::<_, String>(13)?)
-                        .map_err(map_serialization_err)?,
-                    difficulty_bp: clamp_bp(row.get::<_, i64>(14)?),
-                    quality_score_bp: clamp_bp(row.get::<_, i64>(15)?),
-                    effectiveness_score_bp: clamp_bp(row.get::<_, i64>(16)?),
-                    source_ref: row.get(17)?,
-                    payload: parse_json_value(row.get::<_, String>(18)?),
-                    status: row.get(19)?,
-                })
-            })
+            .query_map(
+                params![topic_id, pedagogical_purpose, limit.max(1) as i64],
+                |row| {
+                    Ok(InstructionalObjectEnvelope {
+                        id: row.get(0)?,
+                        object_key: row.get(1)?,
+                        topic_id: row.get(2)?,
+                        learning_unit_id: row.get(3)?,
+                        object_type: row.get(4)?,
+                        pedagogical_purpose: row.get(5)?,
+                        title: row.get(6)?,
+                        content_type_primary: row.get(7)?,
+                        representation_mode: row.get(8)?,
+                        response_mode: row.get(9)?,
+                        strategy_families: parse_json_text(row.get::<_, String>(10)?)
+                            .map_err(map_serialization_err)?,
+                        drill_families: parse_json_text(row.get::<_, String>(11)?)
+                            .map_err(map_serialization_err)?,
+                        mastery_evidence: parse_json_text(row.get::<_, String>(12)?)
+                            .map_err(map_serialization_err)?,
+                        supported_failure_signatures: parse_json_text(row.get::<_, String>(13)?)
+                            .map_err(map_serialization_err)?,
+                        difficulty_bp: clamp_bp(row.get::<_, i64>(14)?),
+                        quality_score_bp: clamp_bp(row.get::<_, i64>(15)?),
+                        effectiveness_score_bp: clamp_bp(row.get::<_, i64>(16)?),
+                        source_ref: row.get(17)?,
+                        payload: parse_json_value(row.get::<_, String>(18)?),
+                        status: row.get(19)?,
+                    })
+                },
+            )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         collect_rows(rows)
     }
@@ -552,9 +560,11 @@ impl<'a> PedagogicalRuntimeService<'a> {
             None
         };
         let personalization = match (session.subject_id, primary_topic_id) {
-            (Some(subject_id), topic_id) => {
-                Some(self.build_personalization_snapshot(session.student_id, subject_id, topic_id)?)
-            }
+            (Some(subject_id), topic_id) => Some(self.build_personalization_snapshot(
+                session.student_id,
+                subject_id,
+                topic_id,
+            )?),
             _ => None,
         };
         let (move_type, intention, success_condition, purpose) =
@@ -596,7 +606,10 @@ impl<'a> PedagogicalRuntimeService<'a> {
     ) -> EcoachResult<TeachingRuntimeSnapshot> {
         let session = self.load_session_context(session_id)?;
         let turns = self.list_turns(session_id, 12)?;
-        let active_turn = turns.iter().find(|turn| turn.outcome_status.is_none()).cloned();
+        let active_turn = turns
+            .iter()
+            .find(|turn| turn.outcome_status.is_none())
+            .cloned();
         let primary_topic_id = session.topic_ids.first().copied();
         let topic_profile = match primary_topic_id {
             Some(topic_id) => self.get_topic_teaching_profile(topic_id)?,
@@ -629,8 +642,10 @@ impl<'a> PedagogicalRuntimeService<'a> {
     ) -> EcoachResult<TeachingRuntimeSnapshot> {
         let question = self.load_question_context(signal.question_id)?;
         let profile = self.sync_topic_teaching_profile(question.topic_id)?;
-        let learning_unit = self.resolve_learning_unit(question.topic_id, &question.primary_content_type)?;
-        let unit_state = self.upsert_learner_unit_state(&signal, &question, learning_unit.as_ref())?;
+        let learning_unit =
+            self.resolve_learning_unit(question.topic_id, &question.primary_content_type)?;
+        let unit_state =
+            self.upsert_learner_unit_state(&signal, &question, learning_unit.as_ref())?;
         let review_episode_id =
             self.record_review_episode(&signal, &question, learning_unit.as_ref(), &unit_state)?;
 
@@ -710,7 +725,19 @@ impl<'a> PedagogicalRuntimeService<'a> {
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        let Some((student_id, subject_id, topic_id, session_mode, session_id, outcome_status, usefulness_bp, confidence_shift_bp, speed_shift_bp, accuracy_shift_bp)) = event else {
+        let Some((
+            student_id,
+            subject_id,
+            topic_id,
+            session_mode,
+            session_id,
+            outcome_status,
+            usefulness_bp,
+            confidence_shift_bp,
+            speed_shift_bp,
+            accuracy_shift_bp,
+        )) = event
+        else {
             return Ok(());
         };
         let Some(subject_id) = subject_id else {
@@ -745,7 +772,11 @@ impl<'a> PedagogicalRuntimeService<'a> {
                         speed_shift_bp,
                         speed_shift_bp,
                         confidence_shift_bp,
-                        if usefulness_bp >= 7000 { "effective" } else { "mixed" },
+                        if usefulness_bp >= 7000 {
+                            "effective"
+                        } else {
+                            "mixed"
+                        },
                         json!({
                             "run_id": run_id,
                             "outcome_status": outcome_status,
@@ -820,8 +851,11 @@ impl<'a> PedagogicalRuntimeService<'a> {
                         + foundation_weight.clamp(0, 100) * 18
                         + exam_relevance_score.clamp(0, 100) * 18,
                 );
-                let quality_score_bp =
-                    clamp_bp(5_400 + foundation_weight.clamp(0, 100) * 10 + if preferred.is_empty() { 0 } else { 700 });
+                let quality_score_bp = clamp_bp(
+                    5_400
+                        + foundation_weight.clamp(0, 100) * 10
+                        + if preferred.is_empty() { 0 } else { 700 },
+                );
                 Ok(LearningUnitSeed {
                     unit_key: learning_unit_key(topic.topic_id, row.get::<_, i64>(0).ok()),
                     topic_id: topic.topic_id,
@@ -829,9 +863,10 @@ impl<'a> PedagogicalRuntimeService<'a> {
                     node_id: row.get::<_, i64>(0).ok(),
                     title: row.get(1)?,
                     content_type_primary: content_type,
-                    representation_tags: vec![row
-                        .get::<_, Option<String>>(3)?
-                        .unwrap_or_else(|| "text".to_string())],
+                    representation_tags: vec![
+                        row.get::<_, Option<String>>(3)?
+                            .unwrap_or_else(|| "text".to_string()),
+                    ],
                     prerequisite_links: prerequisite_links.clone(),
                     mastery_evidence: strategy
                         .map(|entry| entry.mastery_evidence.clone())
@@ -1139,12 +1174,16 @@ impl<'a> PedagogicalRuntimeService<'a> {
             )));
         };
         let scope_key = format!("topic:{}", question.topic_id);
-        let existing = self.load_learner_unit_state(signal.student_id, learning_unit.id, &scope_key)?;
+        let existing =
+            self.load_learner_unit_state(signal.student_id, learning_unit.id, &scope_key)?;
         let topic_truth = self.load_topic_truth(signal.student_id, question.topic_id)?;
         let failure_code = failure_code_for_signal(signal);
         let review_mode = review_mode_for_signal(signal, failure_code.as_deref(), learning_unit);
         let recent_accuracy_bp = ema_basis_points(
-            existing.as_ref().map(|item| item.recent_accuracy_bp).unwrap_or(5_000),
+            existing
+                .as_ref()
+                .map(|item| item.recent_accuracy_bp)
+                .unwrap_or(5_000),
             correctness_bp(signal.is_correct),
             0.45,
         );
@@ -1246,7 +1285,10 @@ impl<'a> PedagogicalRuntimeService<'a> {
                     .map(|item| item.failed_strategy_families.clone())
                     .unwrap_or_default()
             } else {
-                vec![recommended_strategy_family(&review_mode, failure_code.as_deref())]
+                vec![recommended_strategy_family(
+                    &review_mode,
+                    failure_code.as_deref(),
+                )]
             },
             last_review_mode: Some(review_mode.clone()),
             next_review_at: Some(next_review_at_for_mode(&review_mode, signal.is_correct)),
@@ -1327,14 +1369,15 @@ impl<'a> PedagogicalRuntimeService<'a> {
         let Some(learning_unit) = learning_unit else {
             return Ok(None);
         };
-        let review_mode_code =
-            unit_state
-                .last_review_mode
-                .clone()
-                .unwrap_or_else(|| "structural".to_string());
+        let review_mode_code = unit_state
+            .last_review_mode
+            .clone()
+            .unwrap_or_else(|| "structural".to_string());
         let review_mode_id = self.lookup_review_mode_id(&review_mode_code)?;
-        let intervention_family =
-            recommended_strategy_family(&review_mode_code, unit_state.dominant_failure_signature.as_deref());
+        let intervention_family = recommended_strategy_family(
+            &review_mode_code,
+            unit_state.dominant_failure_signature.as_deref(),
+        );
         self.conn
             .execute(
                 "INSERT INTO review_episodes (
@@ -1545,7 +1588,9 @@ impl<'a> PedagogicalRuntimeService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map(params![session_id, limit.max(1) as i64], |row| map_turn(row))
+            .query_map(params![session_id, limit.max(1) as i64], |row| {
+                map_turn(row)
+            })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         collect_rows(rows)
     }
@@ -1616,7 +1661,11 @@ impl<'a> PedagogicalRuntimeService<'a> {
                     unit_state.mixed_accuracy_bp as i64 - 5000,
                     unit_state.timed_accuracy_bp as i64 - 5000,
                     unit_state.confidence_alignment_bp as i64 - 5000,
-                    if signal.is_correct { "effective" } else { "repair_needed" },
+                    if signal.is_correct {
+                        "effective"
+                    } else {
+                        "repair_needed"
+                    },
                     json!({
                         "is_correct": signal.is_correct,
                         "error_type": signal.error_type,
@@ -1672,11 +1721,12 @@ impl<'a> PedagogicalRuntimeService<'a> {
         let mut objects = self.list_instructional_objects(topic_id, Some(purpose), 12)?;
         objects.sort_by_key(|object| {
             let base = -(object.effectiveness_score_bp as i64 + object.quality_score_bp as i64);
-            let unit_bonus = if learning_unit_id.is_some() && object.learning_unit_id == learning_unit_id {
-                -1_000
-            } else {
-                0
-            };
+            let unit_bonus =
+                if learning_unit_id.is_some() && object.learning_unit_id == learning_unit_id {
+                    -1_000
+                } else {
+                    0
+                };
             let failure_bonus = if failure_code
                 .map(|failure| {
                     object
@@ -2041,8 +2091,10 @@ fn map_learning_unit_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<LearningUn
         unit_key: row.get(1)?,
         title: row.get(2)?,
         content_type_primary: row.get(3)?,
-        representation_tags: parse_json_text(row.get::<_, String>(4)?).map_err(map_serialization_err)?,
-        mastery_evidence: parse_json_text(row.get::<_, String>(5)?).map_err(map_serialization_err)?,
+        representation_tags: parse_json_text(row.get::<_, String>(4)?)
+            .map_err(map_serialization_err)?,
+        mastery_evidence: parse_json_text(row.get::<_, String>(5)?)
+            .map_err(map_serialization_err)?,
         review_modes: parse_json_text(row.get::<_, String>(6)?).map_err(map_serialization_err)?,
     })
 }
@@ -2095,11 +2147,7 @@ fn collect_rows<T>(
 }
 
 fn map_serialization_err(err: EcoachError) -> rusqlite::Error {
-    rusqlite::Error::FromSqlConversionFailure(
-        0,
-        rusqlite::types::Type::Text,
-        Box::new(err),
-    )
+    rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(err))
 }
 
 fn normalize_content_type(value: &str) -> String {
@@ -2188,7 +2236,10 @@ fn title_case_code(value: &str) -> String {
 
 fn personalization_scope_key(student_id: i64, subject_id: i64, topic_id: Option<i64>) -> String {
     match topic_id {
-        Some(topic_id) => format!("student:{}:subject:{}:topic:{}", student_id, subject_id, topic_id),
+        Some(topic_id) => format!(
+            "student:{}:subject:{}:topic:{}",
+            student_id, subject_id, topic_id
+        ),
         None => format!("student:{}:subject:{}", student_id, subject_id),
     }
 }
@@ -2276,10 +2327,12 @@ fn review_mode_for_signal(
         .review_modes
         .first()
         .cloned()
-        .unwrap_or_else(|| if signal.is_correct {
-            "immediate_reinforcement".to_string()
-        } else {
-            "structural".to_string()
+        .unwrap_or_else(|| {
+            if signal.is_correct {
+                "immediate_reinforcement".to_string()
+            } else {
+                "structural".to_string()
+            }
         })
 }
 
@@ -2425,7 +2478,9 @@ fn recommended_strategy_family(review_mode: &str, failure_code: Option<&str>) ->
 
 fn infer_profile(observed: &Value, derived: &Value) -> Value {
     let attempts = observed["attempts"]["attempt_count"].as_i64().unwrap_or(0);
-    let hinted = observed["attempts"]["hinted_attempts"].as_i64().unwrap_or(0);
+    let hinted = observed["attempts"]["hinted_attempts"]
+        .as_i64()
+        .unwrap_or(0);
     let weakest_repr = observed["weakest_representations"]
         .as_array()
         .and_then(|items| items.first())
@@ -2483,8 +2538,16 @@ fn derive_recommendation(strategic_control: &Value, inferred: &Value, derived: &
 fn confidence_from_profile(observed: &Value, derived: &Value) -> BasisPoints {
     clamp_bp(
         3_500
-            + observed["attempts"]["attempt_count"].as_i64().unwrap_or(0).min(12) * 300
-            + derived["core"]["total_attempts"].as_i64().unwrap_or(0).min(15) * 220,
+            + observed["attempts"]["attempt_count"]
+                .as_i64()
+                .unwrap_or(0)
+                .min(12)
+                * 300
+            + derived["core"]["total_attempts"]
+                .as_i64()
+                .unwrap_or(0)
+                .min(15)
+                * 220,
     )
 }
 
@@ -2502,7 +2565,9 @@ fn pressure_level_from_snapshot(snapshot: Option<&PersonalizationSnapshot>) -> S
         .to_string()
 }
 
-fn initial_turn_spec(session_type: &str) -> (&'static str, &'static str, &'static str, &'static str) {
+fn initial_turn_spec(
+    session_type: &str,
+) -> (&'static str, &'static str, &'static str, &'static str) {
     match session_type {
         "coach_mission" => (
             "probe",
@@ -2529,7 +2594,13 @@ fn next_turn_spec(
     signal: &PedagogicalAttemptSignal,
     personalization: &PersonalizationSnapshot,
     profile: &TopicTeachingProfile,
-) -> (&'static str, &'static str, &'static str, &'static str, Option<String>) {
+) -> (
+    &'static str,
+    &'static str,
+    &'static str,
+    &'static str,
+    Option<String>,
+) {
     let failure_code = failure_code_for_signal(signal);
     if !signal.is_correct {
         if matches!(failure_code.as_deref(), Some("concept_confusion")) {

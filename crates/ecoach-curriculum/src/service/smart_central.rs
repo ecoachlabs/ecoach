@@ -5,7 +5,7 @@ use crate::models::{
     CurriculumNodeCitation, CurriculumNodeCitationInput, CurriculumNodeComment,
     CurriculumNodeCommentInput, CurriculumNodeExemplar, CurriculumNodeExemplarInput,
     CurriculumNodeIntelligence, CurriculumNodeIntelligenceInput, CurriculumParentSummary,
-    CurriculumRecommendation, CurriculumRegistryEntry, CurriculumRegenerationJob,
+    CurriculumRecommendation, CurriculumRegenerationJob, CurriculumRegistryEntry,
     CurriculumStudentHomeSnapshot, CurriculumStudentNodeState, CurriculumStudentSubjectCard,
     CurriculumStudentSubjectMap, StudentCurriculumAssignment, StudentCurriculumAssignmentInput,
 };
@@ -338,7 +338,9 @@ impl<'a> CurriculumService<'a> {
                 low_confidence_nodes,
                 current_cohorts,
                 latest_source_title: latest_source.as_ref().map(|item| item.title.clone()),
-                latest_source_status: latest_source.as_ref().map(|item| item.source_status.clone()),
+                latest_source_status: latest_source
+                    .as_ref()
+                    .map(|item| item.source_status.clone()),
                 workflow_state,
                 has_source_file: latest_source
                     .as_ref()
@@ -397,9 +399,9 @@ impl<'a> CurriculumService<'a> {
         &self,
         node_id: i64,
     ) -> EcoachResult<CurriculumAdminNodeDetail> {
-        let bundle = self
-            .get_curriculum_node_bundle(node_id)?
-            .ok_or_else(|| EcoachError::NotFound(format!("curriculum node {} not found", node_id)))?;
+        let bundle = self.get_curriculum_node_bundle(node_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("curriculum node {} not found", node_id))
+        })?;
         Ok(CurriculumAdminNodeDetail {
             citations: self.list_curriculum_node_citations(node_id)?,
             exemplars: self.list_curriculum_node_exemplars(node_id)?,
@@ -443,7 +445,10 @@ impl<'a> CurriculumService<'a> {
                         counts.get("question").and_then(Value::as_i64).unwrap_or(0),
                         counts.get("lesson").and_then(Value::as_i64).unwrap_or(0),
                         counts.get("drill").and_then(Value::as_i64).unwrap_or(0),
-                        counts.get("diagnostic").and_then(Value::as_i64).unwrap_or(0),
+                        counts
+                            .get("diagnostic")
+                            .and_then(Value::as_i64)
+                            .unwrap_or(0),
                     )
                 } else {
                     (0, 0, 0, 0)
@@ -537,7 +542,8 @@ impl<'a> CurriculumService<'a> {
         triggered_by_account_id: Option<i64>,
         max_jobs: i64,
     ) -> EcoachResult<Vec<CurriculumRegenerationJob>> {
-        let analysis = self.analyze_curriculum_version_impact(base_version_id, compare_version_id)?;
+        let analysis =
+            self.analyze_curriculum_version_impact(base_version_id, compare_version_id)?;
         let limit = max_jobs.max(1) as usize;
         let mut created = Vec::new();
         for item in analysis
@@ -596,7 +602,9 @@ impl<'a> CurriculumService<'a> {
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             created.push(
                 self.get_curriculum_regeneration_job(self.conn.last_insert_rowid())?
-                    .ok_or_else(|| EcoachError::Storage("regeneration job did not persist".to_string()))?,
+                    .ok_or_else(|| {
+                        EcoachError::Storage("regeneration job did not persist".to_string())
+                    })?,
             );
         }
         Ok(created)
@@ -648,9 +656,7 @@ impl<'a> CurriculumService<'a> {
         &self,
         input: CurriculumCohortPinInput,
     ) -> EcoachResult<CurriculumCohortPin> {
-        let rollout_status = input
-            .rollout_status
-            .unwrap_or_else(|| "active".to_string());
+        let rollout_status = input.rollout_status.unwrap_or_else(|| "active".to_string());
         if let Some(id) = input.id {
             self.conn
                 .execute(
@@ -704,7 +710,9 @@ impl<'a> CurriculumService<'a> {
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             self.get_curriculum_cohort_pin(self.conn.last_insert_rowid())?
-                .ok_or_else(|| EcoachError::Storage("cohort pin insert did not persist".to_string()))
+                .ok_or_else(|| {
+                    EcoachError::Storage("cohort pin insert did not persist".to_string())
+                })
         }
     }
 
@@ -794,7 +802,9 @@ impl<'a> CurriculumService<'a> {
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             self.get_student_curriculum_assignment(self.conn.last_insert_rowid())?
-                .ok_or_else(|| EcoachError::Storage("student assignment insert did not persist".to_string()))
+                .ok_or_else(|| {
+                    EcoachError::Storage("student assignment insert did not persist".to_string())
+                })
         }
     }
 
@@ -829,13 +839,20 @@ impl<'a> CurriculumService<'a> {
         let recent_movements = self.list_recent_movements(student_id, version.id)?;
         let mut subject_cards = Vec::new();
         for track in subject_tracks {
-            subject_cards.push(self.build_student_subject_card(student_id, &track, &coverage, &memory)?);
+            subject_cards
+                .push(self.build_student_subject_card(student_id, &track, &coverage, &memory)?);
         }
         let subject_count = subject_cards.len().max(1) as i64;
-        let entered_percent =
-            subject_cards.iter().map(|item| item.entered_percent).sum::<i64>() / subject_count;
-        let stable_percent =
-            subject_cards.iter().map(|item| item.stable_percent).sum::<i64>() / subject_count;
+        let entered_percent = subject_cards
+            .iter()
+            .map(|item| item.entered_percent)
+            .sum::<i64>()
+            / subject_count;
+        let stable_percent = subject_cards
+            .iter()
+            .map(|item| item.stable_percent)
+            .sum::<i64>()
+            / subject_count;
         let exam_readiness_percent = subject_cards
             .iter()
             .map(|item| item.exam_ready_percent)
@@ -861,8 +878,13 @@ impl<'a> CurriculumService<'a> {
         let mut recommended_topics = Vec::<CurriculumRecommendation>::new();
         for track in self.list_subject_tracks_for_version(version.id)? {
             if let Some(legacy_subject_id) = track.legacy_subject_id {
-                for item in self.get_curriculum_next_best_topics(student_id, legacy_subject_id, 2)? {
-                    if !recommended_topics.iter().any(|existing| existing.node_id == item.node_id) {
+                for item in
+                    self.get_curriculum_next_best_topics(student_id, legacy_subject_id, 2)?
+                {
+                    if !recommended_topics
+                        .iter()
+                        .any(|existing| existing.node_id == item.node_id)
+                    {
                         recommended_topics.push(item);
                     }
                 }
@@ -893,7 +915,12 @@ impl<'a> CurriculumService<'a> {
     ) -> EcoachResult<CurriculumStudentSubjectMap> {
         let subject = self
             .get_curriculum_subject_track(subject_track_id)?
-            .ok_or_else(|| EcoachError::NotFound(format!("curriculum subject track {} not found", subject_track_id)))?;
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!(
+                    "curriculum subject track {} not found",
+                    subject_track_id
+                ))
+            })?;
         let coverage = self.load_coverage_map(student_id)?;
         let memory = self.load_memory_states(student_id)?;
         let overview = self.build_student_subject_card(student_id, &subject, &coverage, &memory)?;
@@ -954,7 +981,12 @@ impl<'a> CurriculumService<'a> {
             for item in map
                 .nodes
                 .iter()
-                .filter(|item| matches!(item.status_label.as_str(), "Fragile" | "Slipping" | "Blocked"))
+                .filter(|item| {
+                    matches!(
+                        item.status_label.as_str(),
+                        "Fragile" | "Slipping" | "Blocked"
+                    )
+                })
                 .take(3)
             {
                 weak_topics.push(item.node.public_title.clone());
@@ -962,7 +994,8 @@ impl<'a> CurriculumService<'a> {
             for item in map.nodes.iter().filter(|item| item.review_due).take(2) {
                 overdue_topics.push(item.node.public_title.clone());
             }
-            let risk_label = if map.overview.blocked_count > 0 || map.overview.weak_area_count >= 4 {
+            let risk_label = if map.overview.blocked_count > 0 || map.overview.weak_area_count >= 4
+            {
                 "high"
             } else if map.overview.weak_area_count >= 2 || map.overview.review_due_count >= 2 {
                 "medium"
@@ -992,7 +1025,10 @@ impl<'a> CurriculumService<'a> {
         })
     }
 
-    fn get_curriculum_node_citation(&self, id: i64) -> EcoachResult<Option<CurriculumNodeCitation>> {
+    fn get_curriculum_node_citation(
+        &self,
+        id: i64,
+    ) -> EcoachResult<Option<CurriculumNodeCitation>> {
         self.conn
             .query_row(
                 "SELECT id, curriculum_node_id, source_upload_id, citation_kind, reference_code,
@@ -1028,7 +1064,10 @@ impl<'a> CurriculumService<'a> {
         collect_rows(rows)
     }
 
-    fn get_curriculum_node_exemplar(&self, id: i64) -> EcoachResult<Option<CurriculumNodeExemplar>> {
+    fn get_curriculum_node_exemplar(
+        &self,
+        id: i64,
+    ) -> EcoachResult<Option<CurriculumNodeExemplar>> {
         self.conn
             .query_row(
                 "SELECT id, curriculum_node_id, citation_id, exemplar_kind, raw_text,
@@ -1158,7 +1197,10 @@ impl<'a> CurriculumService<'a> {
             .map_err(|err| EcoachError::Storage(err.to_string()))
     }
 
-    fn count_pending_review_tasks_for_version(&self, version: &CurriculumVersion) -> EcoachResult<i64> {
+    fn count_pending_review_tasks_for_version(
+        &self,
+        version: &CurriculumVersion,
+    ) -> EcoachResult<i64> {
         self.conn
             .query_row(
                 "SELECT COUNT(*)
@@ -1196,11 +1238,14 @@ impl<'a> CurriculumService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map([node_id], |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?)))
+            .query_map([node_id], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+            })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mut payload = serde_json::Map::new();
         for row in rows {
-            let (resource_type, count) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let (resource_type, count) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
             payload.insert(resource_type, Value::from(count));
         }
         Ok(Value::Object(payload))
@@ -1224,7 +1269,9 @@ impl<'a> CurriculumService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let coverage_rows = coverage_statement
-            .query_map([topic_id], |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?)))
+            .query_map([topic_id], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+            })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mut coverage_payload = serde_json::Map::new();
         for row in coverage_rows {
@@ -1260,7 +1307,10 @@ impl<'a> CurriculumService<'a> {
         }))
     }
 
-    fn get_curriculum_regeneration_job(&self, id: i64) -> EcoachResult<Option<CurriculumRegenerationJob>> {
+    fn get_curriculum_regeneration_job(
+        &self,
+        id: i64,
+    ) -> EcoachResult<Option<CurriculumRegenerationJob>> {
         self.conn
             .query_row(
                 "SELECT id, base_version_id, compare_version_id, affected_node_id, entity_type,
@@ -1369,7 +1419,8 @@ impl<'a> CurriculumService<'a> {
         let mut weakest: Option<(i64, String)> = None;
 
         for node in nodes {
-            let state = self.build_student_node_state(student_id, coverage, memory, node.clone())?;
+            let state =
+                self.build_student_node_state(student_id, coverage, memory, node.clone())?;
             let strength_score = node
                 .legacy_topic_id
                 .and_then(|topic_id| coverage.get(&topic_id))
@@ -1384,7 +1435,10 @@ impl<'a> CurriculumService<'a> {
             if state.exam_ready {
                 exam_ready += 1;
             }
-            if matches!(state.status_label.as_str(), "Learning" | "Fragile" | "Slipping" | "Blocked") {
+            if matches!(
+                state.status_label.as_str(),
+                "Learning" | "Fragile" | "Slipping" | "Blocked"
+            ) {
                 weak += 1;
             }
             if state.blocked {
@@ -1393,10 +1447,18 @@ impl<'a> CurriculumService<'a> {
             if state.review_due {
                 review_due += 1;
             }
-            if strongest.as_ref().map(|item| strength_score > item.0).unwrap_or(true) {
+            if strongest
+                .as_ref()
+                .map(|item| strength_score > item.0)
+                .unwrap_or(true)
+            {
                 strongest = Some((strength_score, state.node.public_title.clone()));
             }
-            if weakest.as_ref().map(|item| strength_score < item.0).unwrap_or(true) {
+            if weakest
+                .as_ref()
+                .map(|item| strength_score < item.0)
+                .unwrap_or(true)
+            {
                 weakest = Some((strength_score, state.node.public_title.clone()));
             }
         }
@@ -1458,7 +1520,8 @@ impl<'a> CurriculumService<'a> {
                 .to_string()
         };
         let review_due = matches!(legacy_status.as_str(), "decayed" | "re_opened")
-            || (!matches!(status_label.as_str(), "Not Started" | "Blocked") && memory_strength < 4_500);
+            || (!matches!(status_label.as_str(), "Not Started" | "Blocked")
+                && memory_strength < 4_500);
         let exam_ready = status_label == "Exam Ready";
         let reason = if !blocked_by.is_empty() {
             format!("Blocked by prerequisites: {}", blocked_by.join(", "))
@@ -1529,7 +1592,11 @@ impl<'a> CurriculumService<'a> {
         let mut movements = Vec::new();
         for row in rows {
             let (title, status) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
-            movements.push(format!("{} moved into {}.", title, status.replace('_', " ")));
+            movements.push(format!(
+                "{} moved into {}.",
+                title,
+                status.replace('_', " ")
+            ));
         }
         Ok(movements)
     }
@@ -1638,7 +1705,9 @@ fn parse_i64_list_column(index: usize, raw: &str) -> rusqlite::Result<Vec<i64>> 
     })
 }
 
-fn map_curriculum_node_citation(row: &rusqlite::Row<'_>) -> rusqlite::Result<CurriculumNodeCitation> {
+fn map_curriculum_node_citation(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<CurriculumNodeCitation> {
     Ok(CurriculumNodeCitation {
         id: row.get(0)?,
         curriculum_node_id: row.get(1)?,
@@ -1655,7 +1724,9 @@ fn map_curriculum_node_citation(row: &rusqlite::Row<'_>) -> rusqlite::Result<Cur
     })
 }
 
-fn map_curriculum_node_exemplar(row: &rusqlite::Row<'_>) -> rusqlite::Result<CurriculumNodeExemplar> {
+fn map_curriculum_node_exemplar(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<CurriculumNodeExemplar> {
     let metadata_json: String = row.get(6)?;
     Ok(CurriculumNodeExemplar {
         id: row.get(0)?,

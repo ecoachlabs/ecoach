@@ -8,10 +8,10 @@ use super::MemoryService;
 use crate::models::{
     CompleteInterventionStepInput, InterventionPlanRecord, InterventionStep,
     KnowledgeStateTransitionRecord, KnowledgeUnitEdgeRecord, KnowledgeUnitRecord,
-    MemoryAnalyticsHotspot, MemoryCohortAnalytics, MemoryEngineEventRecord,
-    MemoryExplainability, MemoryKnowledgeStateDetail, PressureProfileRecord, RecallProfile,
-    RecordMemoryEvidenceInput, RetestPlan, RetrievalAttemptRecord, ReviewScheduleItemRecord,
-    StudentInterferenceEdge, StudentKnowledgeStateRecord, TopicKnowledgeMap,
+    MemoryAnalyticsHotspot, MemoryCohortAnalytics, MemoryEngineEventRecord, MemoryExplainability,
+    MemoryKnowledgeStateDetail, PressureProfileRecord, RecallProfile, RecordMemoryEvidenceInput,
+    RetestPlan, RetrievalAttemptRecord, ReviewScheduleItemRecord, StudentInterferenceEdge,
+    StudentKnowledgeStateRecord, TopicKnowledgeMap,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -54,7 +54,8 @@ impl<'a> MemoryService<'a> {
         &self,
         input: &RecordMemoryEvidenceInput,
     ) -> EcoachResult<Option<(i64, i64)>> {
-        let Some(knowledge_unit) = self.ensure_knowledge_unit(input.topic_id, input.node_id)? else {
+        let Some(knowledge_unit) = self.ensure_knowledge_unit(input.topic_id, input.node_id)?
+        else {
             return Ok(None);
         };
 
@@ -207,24 +208,30 @@ impl<'a> MemoryService<'a> {
         let legacy_state = self
             .load_legacy_memory_state(student_id, topic_id, node_id)?
             .or_else(|| {
-                previous_state.as_ref().map(|state| crate::models::MemoryStateRecord {
-                    id: 0,
-                    student_id,
-                    topic_id: state.topic_id,
-                    node_id: state.node_id,
-                    memory_state: state.memory_state.clone(),
-                    memory_strength: state.recall_profile.free_recall,
-                    recall_fluency: state.latency_score,
-                    decay_risk: state.decay_risk_score,
-                    review_due_at: state.next_review_at.clone(),
-                    last_recalled_at: state.last_attempt_at.clone(),
-                    created_at: state.created_at.clone(),
-                    updated_at: state.updated_at.clone(),
-                })
+                previous_state
+                    .as_ref()
+                    .map(|state| crate::models::MemoryStateRecord {
+                        id: 0,
+                        student_id,
+                        topic_id: state.topic_id,
+                        node_id: state.node_id,
+                        memory_state: state.memory_state.clone(),
+                        memory_strength: state.recall_profile.free_recall,
+                        recall_fluency: state.latency_score,
+                        decay_risk: state.decay_risk_score,
+                        review_due_at: state.next_review_at.clone(),
+                        last_recalled_at: state.last_attempt_at.clone(),
+                        created_at: state.created_at.clone(),
+                        updated_at: state.updated_at.clone(),
+                    })
             });
         let recent_attempts = self.list_recent_attempts(student_id, knowledge_unit.id, 24)?;
-        let features =
-            self.derive_feature_bundle(student_id, &knowledge_unit, &recent_attempts, legacy_state.as_ref())?;
+        let features = self.derive_feature_bundle(
+            student_id,
+            &knowledge_unit,
+            &recent_attempts,
+            legacy_state.as_ref(),
+        )?;
         let next_state = self.build_student_knowledge_state(
             student_id,
             &knowledge_unit,
@@ -291,7 +298,13 @@ impl<'a> MemoryService<'a> {
             }
         }
 
-        self.sync_decay_profiles(student_id, &knowledge_unit, &next_state, &features, &recent_attempts)?;
+        self.sync_decay_profiles(
+            student_id,
+            &knowledge_unit,
+            &next_state,
+            &features,
+            &recent_attempts,
+        )?;
         self.sync_pressure_profile(student_id, knowledge_unit.id, &recent_attempts)?;
         self.sync_review_schedule(student_id, knowledge_unit.id, &next_state, &features)?;
         self.sync_intervention_plan(student_id, knowledge_unit.id, &next_state, &features)?;
@@ -317,7 +330,8 @@ impl<'a> MemoryService<'a> {
         student_id: i64,
         node_id: Option<i64>,
     ) -> EcoachResult<()> {
-        let Some(knowledge_unit) = self.ensure_knowledge_unit_from_existing(student_id, node_id)? else {
+        let Some(knowledge_unit) = self.ensure_knowledge_unit_from_existing(student_id, node_id)?
+        else {
             return Ok(());
         };
 
@@ -538,7 +552,11 @@ impl<'a> MemoryService<'a> {
                     "UPDATE student_knowledge_states
                      SET current_intervention_plan_id = NULL, updated_at = ?3
                      WHERE student_id = ?1 AND knowledge_unit_id = ?2",
-                    params![plan.student_id, plan.knowledge_unit_id, Utc::now().to_rfc3339()],
+                    params![
+                        plan.student_id,
+                        plan.knowledge_unit_id,
+                        Utc::now().to_rfc3339()
+                    ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             self.append_memory_engine_event(
@@ -807,7 +825,10 @@ impl<'a> MemoryService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map(params![student_id, knowledge_unit.id, limit as i64], map_interference_edge)
+            .query_map(
+                params![student_id, knowledge_unit.id, limit as i64],
+                map_interference_edge,
+            )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mut edges = Vec::new();
         for row in rows {
@@ -889,8 +910,11 @@ impl<'a> MemoryService<'a> {
 
         let recent_slice = attempts.iter().take(5).collect::<Vec<_>>();
         let raw_average = average_bp(attempts.iter().map(|attempt| attempt.raw_score_bp as i64));
-        let recent_average =
-            average_bp(recent_slice.iter().map(|attempt| attempt.raw_score_bp as i64));
+        let recent_average = average_bp(
+            recent_slice
+                .iter()
+                .map(|attempt| attempt.raw_score_bp as i64),
+        );
         let recognition = mode_average(attempts, "recognition");
         let cued = mode_average(attempts, "cued_recall");
         let free = mode_average(attempts, "free_recall");
@@ -932,7 +956,7 @@ impl<'a> MemoryService<'a> {
         let resilience_score = clamp_bp(
             ((free as i64 + application as i64 + transfer as i64 + (10_000 - pressure_gap) as i64)
                 / 4)
-                .max(0),
+            .max(0),
         );
         let state_confidence = clamp_bp(
             (attempts.len() as i64 * 1_100)
@@ -1413,16 +1437,29 @@ impl<'a> MemoryService<'a> {
             .iter()
             .filter(|attempt| attempt.timed || attempt.mode == "pressure")
             .collect::<Vec<_>>();
-        let calm_accuracy = average_bp(calm_attempts.iter().map(|attempt| attempt.raw_score_bp as i64));
-        let timed_accuracy =
-            average_bp(pressure_attempts.iter().map(|attempt| attempt.raw_score_bp as i64));
+        let calm_accuracy = average_bp(
+            calm_attempts
+                .iter()
+                .map(|attempt| attempt.raw_score_bp as i64),
+        );
+        let timed_accuracy = average_bp(
+            pressure_attempts
+                .iter()
+                .map(|attempt| attempt.raw_score_bp as i64),
+        );
         let pressure_gap = clamp_bp((calm_accuracy as i64 - timed_accuracy as i64).max(0));
-        let switch_risk = average_bp(pressure_attempts.iter().map(|attempt| {
-            if attempt.switched_answer { 10_000 } else { 0 }
-        }));
-        let freeze_risk = average_bp(pressure_attempts.iter().map(|attempt| {
-            if attempt.freeze_marker { 10_000 } else { 0 }
-        }));
+        let switch_risk = average_bp(
+            pressure_attempts.iter().map(
+                |attempt| {
+                    if attempt.switched_answer { 10_000 } else { 0 }
+                },
+            ),
+        );
+        let freeze_risk = average_bp(
+            pressure_attempts
+                .iter()
+                .map(|attempt| if attempt.freeze_marker { 10_000 } else { 0 }),
+        );
         let pressure_state = if pressure_attempts.is_empty() {
             "neutral"
         } else if pressure_gap > 3_000 || freeze_risk > 3_000 {
@@ -1754,13 +1791,12 @@ impl<'a> MemoryService<'a> {
         raw_score_bp: BasisPoints,
         input: &RecordMemoryEvidenceInput,
     ) -> EcoachResult<()> {
-        let pressure_gap = if input.timed
-            || matches!(input.recall_mode, crate::models::RecallMode::Pressure)
-        {
-            clamp_bp((10_000 - raw_score_bp as i64).max(0))
-        } else {
-            0
-        };
+        let pressure_gap =
+            if input.timed || matches!(input.recall_mode, crate::models::RecallMode::Pressure) {
+                clamp_bp((10_000 - raw_score_bp as i64).max(0))
+            } else {
+                0
+            };
         self.conn
             .execute(
                 "INSERT INTO pressure_attempt_summaries (
@@ -1807,7 +1843,11 @@ impl<'a> MemoryService<'a> {
                  WHERE student_id = ?1
                    AND source_knowledge_unit_id = ?2
                    AND target_knowledge_unit_id = ?3",
-                params![student_id, source_knowledge_unit_id, target_knowledge_unit_id],
+                params![
+                    student_id,
+                    source_knowledge_unit_id,
+                    target_knowledge_unit_id
+                ],
                 |row| row.get(0),
             )
             .optional()
@@ -1988,7 +2028,12 @@ impl<'a> MemoryService<'a> {
                    AND student_id = ?2
                    AND knowledge_unit_id = ?3
                    AND status IN ('pending', 'running')",
-                params![job_type, student_id, knowledge_unit_id, Utc::now().to_rfc3339()],
+                params![
+                    job_type,
+                    student_id,
+                    knowledge_unit_id,
+                    Utc::now().to_rfc3339()
+                ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         Ok(())
@@ -2066,8 +2111,7 @@ impl<'a> MemoryService<'a> {
         } else {
             Vec::new()
         };
-        let recent_transitions =
-            self.list_recent_transitions(student_id, knowledge_unit_id, 6)?;
+        let recent_transitions = self.list_recent_transitions(student_id, knowledge_unit_id, 6)?;
         let recent_engine_events =
             self.list_recent_memory_engine_events(student_id, knowledge_unit_id, 8)?;
         let pressure_profile = self.load_pressure_profile(student_id, knowledge_unit_id)?;
@@ -2415,7 +2459,10 @@ impl<'a> MemoryService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map(params![student_id, knowledge_unit_id, limit as i64], map_transition)
+            .query_map(
+                params![student_id, knowledge_unit_id, limit as i64],
+                map_transition,
+            )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         rows.into_iter()
             .map(|row| row.map_err(|err| EcoachError::Storage(err.to_string())))
@@ -2512,11 +2559,9 @@ impl<'a> MemoryService<'a> {
         if let Some(topic_id) = topic_id {
             if let Some(name) = self
                 .conn
-                .query_row(
-                    "SELECT name FROM topics WHERE id = ?1",
-                    [topic_id],
-                    |row| row.get::<_, Option<String>>(0),
-                )
+                .query_row("SELECT name FROM topics WHERE id = ?1", [topic_id], |row| {
+                    row.get::<_, Option<String>>(0)
+                })
                 .optional()
                 .map_err(|err| EcoachError::Storage(err.to_string()))?
                 .flatten()
@@ -2575,7 +2620,9 @@ impl<'a> MemoryService<'a> {
         interference_rate: BasisPoints,
         regression_count_14d: i64,
     ) -> BasisPoints {
-        let legacy_risk = legacy_state.map(|state| state.decay_risk as i64).unwrap_or(0);
+        let legacy_risk = legacy_state
+            .map(|state| state.decay_risk as i64)
+            .unwrap_or(0);
         clamp_bp(
             (legacy_risk / 2)
                 + ((10_000 - rolling_accuracy as i64) / 4)
@@ -2698,10 +2745,18 @@ impl<'a> MemoryService<'a> {
         for row in rows {
             let (hour, score) = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
             time_map.insert(hour.clone(), json!(score));
-            if best.as_ref().map(|(_, value)| score > *value).unwrap_or(true) {
+            if best
+                .as_ref()
+                .map(|(_, value)| score > *value)
+                .unwrap_or(true)
+            {
                 best = Some((hour.clone(), score));
             }
-            if worst.as_ref().map(|(_, value)| score < *value).unwrap_or(true) {
+            if worst
+                .as_ref()
+                .map(|(_, value)| score < *value)
+                .unwrap_or(true)
+            {
                 worst = Some((hour, score));
             }
         }
@@ -3050,7 +3105,9 @@ fn confidence_alignment(
 fn compute_cue_recovery_rate(attempts: &[RetrievalAttemptRecord]) -> BasisPoints {
     let hinted = attempts
         .iter()
-        .filter(|attempt| attempt.hints_used > 0 || attempt.options_visible || attempt.formula_bank_visible)
+        .filter(|attempt| {
+            attempt.hints_used > 0 || attempt.options_visible || attempt.formula_bank_visible
+        })
         .collect::<Vec<_>>();
     if hinted.is_empty() {
         return 0;
@@ -3084,7 +3141,10 @@ fn dominant_intruder(attempts: &[RetrievalAttemptRecord]) -> Option<i64> {
             *counts.entry(intruder).or_insert(0) += 1;
         }
     }
-    counts.into_iter().max_by_key(|(_, count)| *count).map(|(node_id, _)| node_id)
+    counts
+        .into_iter()
+        .max_by_key(|(_, count)| *count)
+        .map(|(node_id, _)| node_id)
 }
 
 fn derive_failure_modes(
@@ -3175,7 +3235,9 @@ fn recommended_action_text(features: &DerivedFeatureBundle) -> Option<String> {
         }
         Some("retrieval_blockage") => Some("fade cues and require cleaner free recall".to_string()),
         Some("true_forgetting") => Some("reactivate with short spaced recovery".to_string()),
-        Some("incomplete_understanding") => Some("rebuild concept before more questions".to_string()),
+        Some("incomplete_understanding") => {
+            Some("rebuild concept before more questions".to_string())
+        }
         _ => None,
     }
 }
@@ -3394,11 +3456,13 @@ fn trend_label(value: BasisPoints, neutral: i64) -> &'static str {
 
 fn hours_since(timestamp: Option<&str>) -> Option<i64> {
     timestamp.and_then(|timestamp| {
-        chrono::DateTime::parse_from_rfc3339(timestamp).ok().map(|datetime| {
-            Utc::now()
-                .signed_duration_since(datetime.with_timezone(&Utc))
-                .num_hours()
-        })
+        chrono::DateTime::parse_from_rfc3339(timestamp)
+            .ok()
+            .map(|datetime| {
+                Utc::now()
+                    .signed_duration_since(datetime.with_timezone(&Utc))
+                    .num_hours()
+            })
     })
 }
 

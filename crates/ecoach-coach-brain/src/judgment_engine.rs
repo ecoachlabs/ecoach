@@ -5,8 +5,8 @@ use serde_json::{Value, json};
 
 use crate::{
     CanonicalIntelligenceStore, CoachIntelligenceDomeService, CoachIntelligenceDomeSnapshot,
-    ContentReadinessResolution, ContentReadinessStatus, ReadinessEngine,
-    StudentReadinessSnapshot, assess_content_readiness, resolve_next_coach_action,
+    ContentReadinessResolution, ContentReadinessStatus, ReadinessEngine, StudentReadinessSnapshot,
+    assess_content_readiness, resolve_next_coach_action,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

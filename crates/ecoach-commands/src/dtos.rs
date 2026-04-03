@@ -6,11 +6,10 @@ use ecoach_content::{
 };
 use ecoach_diagnostics::{
     DiagnosticAudienceReport, DiagnosticCauseEvolution, DiagnosticConditionMetrics,
-    DiagnosticInterventionPrescription, DiagnosticItemRoutingProfile,
-    DiagnosticLearningProfile, DiagnosticLongitudinalSummary, DiagnosticOverallSummary,
-    DiagnosticProblemCauseFixCard, DiagnosticRecommendation, DiagnosticResult,
-    DiagnosticSessionScore, DiagnosticSkillResult, DiagnosticSubjectBlueprint,
-    TopicDiagnosticLongitudinalSignal, TopicDiagnosticResult,
+    DiagnosticInterventionPrescription, DiagnosticItemRoutingProfile, DiagnosticLearningProfile,
+    DiagnosticLongitudinalSummary, DiagnosticOverallSummary, DiagnosticProblemCauseFixCard,
+    DiagnosticRecommendation, DiagnosticResult, DiagnosticSessionScore, DiagnosticSkillResult,
+    DiagnosticSubjectBlueprint, TopicDiagnosticLongitudinalSignal, TopicDiagnosticResult,
 };
 use ecoach_elite::{
     EliteBlueprintFamilyTarget, EliteBlueprintReport, EliteBlueprintTopicTarget, EliteProfile,

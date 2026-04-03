@@ -1,6 +1,7 @@
 use crate::types::BasisPoints;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThresholdRegistry {
     pub mastery_exam_ready: BasisPoints,
     pub mastery_stable: BasisPoints,

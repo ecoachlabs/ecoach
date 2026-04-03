@@ -768,7 +768,9 @@ impl<'a> SessionService<'a> {
             metadata_json,
         )?;
         self.get_session_presence_snapshot(session_id)?
-            .ok_or_else(|| EcoachError::NotFound(format!("session {} presence not found", session_id)))
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("session {} presence not found", session_id))
+            })
     }
 
     pub fn manual_stop_session(
@@ -1974,7 +1976,9 @@ impl<'a> SessionService<'a> {
                     Ok(SessionPresenceSnapshot {
                         session_id: row.get(0)?,
                         current_state: row.get(1)?,
-                        current_segment_started_at: parse_datetime(row.get::<_, Option<String>>(2)?),
+                        current_segment_started_at: parse_datetime(
+                            row.get::<_, Option<String>>(2)?,
+                        ),
                         first_meaningful_at: parse_datetime(row.get::<_, Option<String>>(3)?),
                         last_meaningful_at: parse_datetime(row.get::<_, Option<String>>(4)?),
                         idle_started_at: parse_datetime(row.get::<_, Option<String>>(5)?),
@@ -2020,12 +2024,16 @@ impl<'a> SessionService<'a> {
                 params![
                     snapshot.session_id,
                     snapshot.current_state,
-                    snapshot.current_segment_started_at.map(|value| value.to_rfc3339()),
+                    snapshot
+                        .current_segment_started_at
+                        .map(|value| value.to_rfc3339()),
                     snapshot.first_meaningful_at.map(|value| value.to_rfc3339()),
                     snapshot.last_meaningful_at.map(|value| value.to_rfc3339()),
                     snapshot.idle_started_at.map(|value| value.to_rfc3339()),
                     snapshot.idle_confirmed_at.map(|value| value.to_rfc3339()),
-                    snapshot.interruption_started_at.map(|value| value.to_rfc3339()),
+                    snapshot
+                        .interruption_started_at
+                        .map(|value| value.to_rfc3339()),
                     snapshot.gross_elapsed_ms,
                     snapshot.active_engaged_ms,
                     snapshot.passive_engaged_ms,
@@ -2052,14 +2060,20 @@ impl<'a> SessionService<'a> {
             .get_session(session_id)?
             .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
         self.ensure_presence_snapshot(session_id, None)?;
-        let snapshot = self
-            .load_presence_snapshot(session_id)?
-            .ok_or_else(|| EcoachError::NotFound(format!("session {} presence not found", session_id)))?;
+        let snapshot = self.load_presence_snapshot(session_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!("session {} presence not found", session_id))
+        })?;
         let occurred_at_dt = DateTime::parse_from_rfc3339(occurred_at)
             .map_err(|err| EcoachError::Validation(err.to_string()))?
             .with_timezone(&Utc);
         let (next_snapshot, state_before, state_after, segment_duration_ms, counted_credit_ms) =
-            self.apply_presence_transition(&session, snapshot, event_type, occurred_at_dt, &metadata_json);
+            self.apply_presence_transition(
+                &session,
+                snapshot,
+                event_type,
+                occurred_at_dt,
+                &metadata_json,
+            );
         self.persist_presence_snapshot(&next_snapshot)?;
         self.conn
             .execute(
@@ -2105,13 +2119,7 @@ impl<'a> SessionService<'a> {
         event_type: &str,
         occurred_at: DateTime<Utc>,
         metadata_json: &Value,
-    ) -> (
-        SessionPresenceSnapshot,
-        Option<String>,
-        String,
-        i64,
-        i64,
-    ) {
+    ) -> (SessionPresenceSnapshot, Option<String>, String, i64, i64) {
         let previous_state = snapshot.current_state.clone();
         let state_before = Some(previous_state.clone());
         let segment_started_at = snapshot
@@ -2121,11 +2129,8 @@ impl<'a> SessionService<'a> {
             .or_else(|| session.started_at.as_ref().map(|value| value.to_owned()))
             .unwrap_or(occurred_at);
         let segment_duration_ms = (occurred_at - segment_started_at).num_milliseconds().max(0);
-        let counted_credit_ms = Self::credit_presence_segment(
-            &mut snapshot,
-            &previous_state,
-            segment_duration_ms,
-        );
+        let counted_credit_ms =
+            Self::credit_presence_segment(&mut snapshot, &previous_state, segment_duration_ms);
         let explicit_reason = metadata_json
             .get("reason")
             .and_then(Value::as_str)
@@ -2201,7 +2206,11 @@ impl<'a> SessionService<'a> {
             "session_abandoned" => "abandoned".to_string(),
             "session_completed" => {
                 if snapshot.first_meaningful_at.is_none() {
-                    snapshot.first_meaningful_at = session.started_at.as_ref().map(|value| value.to_owned()).or(Some(occurred_at));
+                    snapshot.first_meaningful_at = session
+                        .started_at
+                        .as_ref()
+                        .map(|value| value.to_owned())
+                        .or(Some(occurred_at));
                 }
                 snapshot.last_meaningful_at = Some(occurred_at);
                 "completed".to_string()
@@ -2251,8 +2260,11 @@ impl<'a> SessionService<'a> {
                 snapshot.idle_time_ms += duration_ms;
                 0
             }
-            "background_interrupted" | "manually_paused" | "parked_recoverable"
-            | "manually_stopped" | "abandoned" => {
+            "background_interrupted"
+            | "manually_paused"
+            | "parked_recoverable"
+            | "manually_stopped"
+            | "abandoned" => {
                 snapshot.interruption_time_ms += duration_ms;
                 0
             }
@@ -4339,24 +4351,36 @@ mod tests {
         let presence_events = session_service
             .list_session_presence_events(session.id, 16)
             .expect("presence events should load");
-        assert!(presence_events
-            .iter()
-            .any(|event| event.event_type == "thinking_mode_entered"));
-        assert!(presence_events
-            .iter()
-            .any(|event| event.event_type == "idle_confirmed"));
-        assert!(presence_events
-            .iter()
-            .any(|event| event.event_type == "meaningful_interaction"));
-        assert!(presence_events
-            .iter()
-            .any(|event| event.event_type == "manual_stop"));
-        assert!(presence_events
-            .iter()
-            .any(|event| event.event_type == "session_resumed"));
-        assert!(presence_events
-            .iter()
-            .any(|event| event.event_type == "session_completed"));
+        assert!(
+            presence_events
+                .iter()
+                .any(|event| event.event_type == "thinking_mode_entered")
+        );
+        assert!(
+            presence_events
+                .iter()
+                .any(|event| event.event_type == "idle_confirmed")
+        );
+        assert!(
+            presence_events
+                .iter()
+                .any(|event| event.event_type == "meaningful_interaction")
+        );
+        assert!(
+            presence_events
+                .iter()
+                .any(|event| event.event_type == "manual_stop")
+        );
+        assert!(
+            presence_events
+                .iter()
+                .any(|event| event.event_type == "session_resumed")
+        );
+        assert!(
+            presence_events
+                .iter()
+                .any(|event| event.event_type == "session_completed")
+        );
 
         let (status, active_study_time_ms, idle_time_ms): (String, i64, i64) = conn
             .query_row(

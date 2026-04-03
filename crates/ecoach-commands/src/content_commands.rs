@@ -7,8 +7,9 @@ use ecoach_content::{
     ContentPublishDecision, ContentPublishDecisionInput, ContentResearchCandidate,
     ContentResearchCandidateInput, ContentResearchMission, ContentResearchMissionInput,
     ContentRetrievalQueryInput, ContentRetrievalResult, ContentSnapshot, ContentSnapshotBuildInput,
-    ContentSourcePolicy, ContentSourcePolicyInput, ContentSourceProfileInput,
-    ContentSourceRegistryEntry, ContentSourceSegment, ContentSourceSegmentInput,
+    ContentSourceDetail, ContentSourceGovernanceInput, ContentSourcePolicy,
+    ContentSourcePolicyInput, ContentSourceProfileInput, ContentSourceRegistryEntry,
+    ContentSourceSegment, ContentSourceSegmentInput,
     FoundryCoordinatorService, PackService, ParseCandidateInput, RecordResourceLearningInput,
     ResourceApplicabilityResolution, ResourceIntelligenceService, ResourceLearningRecord,
     ResourceOrchestrationRequest, ResourceOrchestrationResult, SourceUploadInput,
@@ -31,6 +32,8 @@ pub type ResourceApplicabilityResolutionDto = ResourceApplicabilityResolution;
 pub type ResourceLearningRecordDto = ResourceLearningRecord;
 pub type ContentSourcePolicyDto = ContentSourcePolicy;
 pub type ContentSourceRegistryEntryDto = ContentSourceRegistryEntry;
+pub type ContentSourceDetailDto = ContentSourceDetail;
+pub type ContentSourceGovernanceInputDto = ContentSourceGovernanceInput;
 pub type ContentSourceSegmentDto = ContentSourceSegment;
 pub type ContentResearchMissionDto = ContentResearchMission;
 pub type ContentResearchCandidateDto = ContentResearchCandidate;
@@ -326,7 +329,9 @@ pub fn list_content_source_policies(
 ) -> Result<Vec<ContentSourcePolicyDto>, CommandError> {
     state.with_connection(|conn| {
         let service = ContentIntelligenceService::new(conn);
-        service.list_source_policies(status.as_deref()).map_err(Into::into)
+        service
+            .list_source_policies(status.as_deref())
+            .map_err(Into::into)
     })
 }
 
@@ -353,6 +358,31 @@ pub fn list_content_sources(
         let service = ContentIntelligenceService::new(conn);
         service
             .list_content_sources(status.as_deref(), source_kind.as_deref(), limit)
+            .map_err(Into::into)
+    })
+}
+
+pub fn get_content_source_detail(
+    state: &AppState,
+    source_upload_id: i64,
+) -> Result<ContentSourceDetailDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = ContentIntelligenceService::new(conn);
+        service
+            .get_content_source_detail(source_upload_id)
+            .map_err(Into::into)
+    })
+}
+
+pub fn govern_content_source(
+    state: &AppState,
+    source_upload_id: i64,
+    input: ContentSourceGovernanceInputDto,
+) -> Result<ContentSourceDetailDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = ContentIntelligenceService::new(conn);
+        service
+            .govern_source_upload(source_upload_id, input)
             .map_err(Into::into)
     })
 }
@@ -673,9 +703,7 @@ mod tests {
                 concept_id: None,
                 section_title: Some("Quadratic Formula".to_string()),
                 raw_text: "The quadratic formula solves ax^2 + bx + c = 0".to_string(),
-                normalized_text: Some(
-                    "the quadratic formula solves ax^2 + bx + c = 0".to_string(),
-                ),
+                normalized_text: Some("the quadratic formula solves ax^2 + bx + c = 0".to_string()),
                 markdown_text: Some(
                     "The quadratic formula solves `ax^2 + bx + c = 0`.".to_string(),
                 ),
@@ -699,7 +727,8 @@ mod tests {
                 subject_id: Some(1),
                 topic_id: Some(1),
                 mission_type: "gap_fill".to_string(),
-                mission_brief: "Find stronger quadratic examples and misconception fixes".to_string(),
+                mission_brief: "Find stronger quadratic examples and misconception fixes"
+                    .to_string(),
                 allowed_source_classes: vec!["internal".to_string(), "approved_web".to_string()],
                 requested_asset_types: vec!["worked_example".to_string()],
                 coverage_snapshot: serde_json::json!({ "coverage": "thin" }),
@@ -817,12 +846,92 @@ mod tests {
         .expect("evaluation should record");
         assert_eq!(evaluation.query_id, Some(retrieval.query_id));
 
-        let overview =
-            get_content_intelligence_overview(&state, 1).expect("overview should build");
+        let overview = get_content_intelligence_overview(&state, 1).expect("overview should build");
         assert!(overview.segment_count >= 1);
         assert!(overview.evidence_count >= 1);
         assert!(overview.latest_snapshot_id.is_some());
         assert!(overview.retrieval_query_count >= 1);
         assert!(overview.evaluation_run_count >= 1);
+    }
+
+    #[test]
+    fn content_commands_surface_source_detail_and_governance_flow() {
+        let state = AppState::in_memory().expect("in-memory state should build");
+        let admin = identity_commands::create_account(
+            &state,
+            CreateAccountInput {
+                account_type: AccountType::Admin,
+                display_name: "Governor".to_string(),
+                pin: "246810".to_string(),
+                entitlement_tier: EntitlementTier::Elite,
+            },
+        )
+        .expect("admin should create");
+
+        let source = register_curriculum_source(
+            &state,
+            SourceUploadInput {
+                uploader_account_id: admin.id,
+                source_kind: "worksheet".to_string(),
+                title: "Annotated worksheet".to_string(),
+                source_path: Some("vault/annotated-worksheet.pdf".to_string()),
+                country_code: None,
+                exam_board: None,
+                education_level: None,
+                subject_code: None,
+                academic_year: None,
+                language_code: Some("en".to_string()),
+                version_label: Some("vault".to_string()),
+                metadata: serde_json::json!({ "origin": "personal_vault" }),
+            },
+        )
+        .expect("source should register");
+
+        let segments = ingest_content_source_segments(
+            &state,
+            source.id,
+            vec![ContentSourceSegmentInput {
+                topic_id: None,
+                concept_id: None,
+                section_title: Some("Teacher annotation".to_string()),
+                raw_text: "Focus on balancing both sides before simplifying.".to_string(),
+                normalized_text: None,
+                markdown_text: None,
+                image_refs: serde_json::json!([]),
+                equation_refs: serde_json::json!([]),
+                page_range: Some("1".to_string()),
+                checksum: None,
+                semantic_hash: Some("worksheet-annotation".to_string()),
+                extraction_confidence_bp: Some(7_700),
+                relevance_score_bp: Some(7_900),
+                metadata: serde_json::json!({ "role": "teacher_note" }),
+            }],
+        )
+        .expect("segments should ingest");
+        assert_eq!(segments.len(), 1);
+
+        let governed = govern_content_source(
+            &state,
+            source.id,
+            ContentSourceGovernanceInputDto {
+                source_status: "review_required".to_string(),
+                decided_by_account_id: Some(admin.id),
+                note: Some("Needs contradiction check before trust promotion.".to_string()),
+                confidence_score: Some(7_200),
+                review_due_at: Some("2026-05-01".to_string()),
+                stale_flag: Some(false),
+            },
+        )
+        .expect("governance should apply");
+        let detail = get_content_source_detail(&state, source.id).expect("detail should load");
+
+        assert_eq!(governed.source.source_status, "review_required");
+        assert_eq!(detail.source.id, source.id);
+        assert_eq!(detail.segments.len(), 1);
+        assert_eq!(detail.governance_events.len(), 1);
+        assert_eq!(
+            detail.governance_events[0].decided_by_account_id,
+            Some(admin.id)
+        );
     }
 }

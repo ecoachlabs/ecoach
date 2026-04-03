@@ -1454,10 +1454,8 @@ impl<'a> PackService<'a> {
                         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
                         params![
                             pair_id,
-                            serde_json::to_string(
-                                pair.left_profile.as_ref().unwrap_or(&json!({}))
-                            )
-                            .map_err(|err| EcoachError::Serialization(err.to_string()))?,
+                            serde_json::to_string(pair.left_profile.as_ref().unwrap_or(&json!({})))
+                                .map_err(|err| EcoachError::Serialization(err.to_string()))?,
                             serde_json::to_string(
                                 pair.right_profile.as_ref().unwrap_or(&json!({}))
                             )

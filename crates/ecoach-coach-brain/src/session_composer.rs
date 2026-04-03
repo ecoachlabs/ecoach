@@ -56,9 +56,9 @@ mod tests {
         )
         .expect("timing decision should insert");
 
-        let session =
-            SessionComposer::new(&conn).compose_session(1, 1, "foundation", RouteMode::Balanced, 40)
-                .expect("session should compose");
+        let session = SessionComposer::new(&conn)
+            .compose_session(1, 1, "foundation", RouteMode::Balanced, 40)
+            .expect("session should compose");
 
         assert_eq!(session.route_mode, RouteMode::Balanced);
         assert_eq!(session.segments[0].segment_mode, "spaced_recall");
@@ -98,9 +98,9 @@ mod tests {
         )
         .expect("risk assessment should insert");
 
-        let session =
-            SessionComposer::new(&conn).compose_session(1, 1, "foundation", RouteMode::Balanced, 40)
-                .expect("session should compose");
+        let session = SessionComposer::new(&conn)
+            .compose_session(1, 1, "foundation", RouteMode::Balanced, 40)
+            .expect("session should compose");
 
         assert_eq!(session.route_mode, RouteMode::Rescue);
         assert_eq!(session.segments[0].segment_mode, "triage");

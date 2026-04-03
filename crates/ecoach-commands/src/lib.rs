@@ -13,6 +13,7 @@ pub mod library_commands;
 pub mod memory_commands;
 pub mod mock_commands;
 pub mod premium_commands;
+pub mod product_commands;
 pub mod question_commands;
 pub mod readiness_commands;
 pub mod recovery_commands;

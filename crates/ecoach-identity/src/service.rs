@@ -4,12 +4,15 @@ use argon2::{
     Argon2,
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ecoach_substrate::{AccountType, EcoachError, EcoachResult, EntitlementTier};
 use rand_core::OsRng;
 use rusqlite::{Connection, OptionalExtension, params};
 
-use crate::models::{Account, AccountSummary, CreateAccountInput};
+use crate::models::{
+    Account, AccountSummary, CreateAccountInput, EntitlementAuditEntry, EntitlementEvent,
+    UpdateAccountAccessInput, UpdateEntitlementInput,
+};
 
 pub struct IdentityService<'a> {
     conn: &'a Connection,
@@ -159,6 +162,146 @@ impl<'a> IdentityService<'a> {
         Ok(students)
     }
 
+    pub fn update_account_access(
+        &self,
+        account_id: i64,
+        input: UpdateAccountAccessInput,
+    ) -> EcoachResult<Account> {
+        let current = self
+            .get_account(account_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("account {} not found", account_id)))?;
+        let next_status = input.status.unwrap_or_else(|| current.status.clone());
+        validate_account_status(&next_status)?;
+        if current.entitlement_tier == input.entitlement_tier && current.status == next_status {
+            return Ok(current);
+        }
+
+        self.conn
+            .execute(
+                "UPDATE accounts
+                 SET entitlement_tier = ?1,
+                     status = ?2,
+                     updated_at = datetime('now')
+                 WHERE id = ?3",
+                params![input.entitlement_tier.as_str(), next_status, account_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .execute(
+                "INSERT INTO account_entitlement_events (
+                    account_id, previous_tier, new_tier, changed_by_account_id,
+                    note, previous_status, new_status
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    account_id,
+                    current.entitlement_tier.as_str(),
+                    input.entitlement_tier.as_str(),
+                    input.changed_by_account_id,
+                    input.reason,
+                    current.status,
+                    next_status,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        self.get_account(account_id)?.ok_or_else(|| {
+            EcoachError::NotFound(format!(
+                "account {} disappeared after access update",
+                account_id
+            ))
+        })
+    }
+
+    pub fn update_entitlement(
+        &self,
+        account_id: i64,
+        input: UpdateEntitlementInput,
+    ) -> EcoachResult<Account> {
+        self.update_account_access(
+            account_id,
+            UpdateAccountAccessInput {
+                entitlement_tier: input.entitlement_tier,
+                status: None,
+                changed_by_account_id: input.changed_by_account_id,
+                reason: input.note,
+            },
+        )
+    }
+
+    pub fn list_entitlement_audit_entries(
+        &self,
+        limit: usize,
+    ) -> EcoachResult<Vec<EntitlementAuditEntry>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, account_id, changed_by_account_id, previous_tier, new_tier,
+                        previous_status, new_status, note, created_at
+                 FROM account_entitlement_events
+                 ORDER BY id DESC
+                 LIMIT ?1",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![limit.max(1) as i64], |row| {
+                Ok(EntitlementAuditEntry {
+                    id: row.get(0)?,
+                    account_id: row.get(1)?,
+                    changed_by_account_id: row.get(2)?,
+                    previous_tier: row.get(3)?,
+                    new_tier: row.get(4)?,
+                    previous_status: row.get(5)?,
+                    new_status: row.get(6)?,
+                    reason: row.get(7)?,
+                    created_at: row.get(8)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut entries = Vec::new();
+        for row in rows {
+            entries.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(entries)
+    }
+
+    pub fn list_entitlement_events(
+        &self,
+        account_id: i64,
+        limit: usize,
+    ) -> EcoachResult<Vec<EntitlementEvent>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, account_id, previous_tier, new_tier, changed_by_account_id, note, created_at
+                 FROM account_entitlement_events
+                 WHERE account_id = ?1
+                 ORDER BY id DESC
+                 LIMIT ?2",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![account_id, limit.max(1) as i64], |row| {
+                let created_at_raw: String = row.get(6)?;
+                Ok(EntitlementEvent {
+                    id: row.get(0)?,
+                    account_id: row.get(1)?,
+                    previous_tier: parse_entitlement(row.get::<_, String>(2)?)?,
+                    new_tier: parse_entitlement(row.get::<_, String>(3)?)?,
+                    changed_by_account_id: row.get(4)?,
+                    note: row.get(5)?,
+                    created_at: parse_required_datetime_column(6, &created_at_raw)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut events = Vec::new();
+        for row in rows {
+            events.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(events)
+    }
+
     /// Reset a learner's PIN. Only callable by parent/admin.
     pub fn reset_pin(&self, account_id: i64, new_pin: &str) -> EcoachResult<()> {
         let account_type: String = self
@@ -259,6 +402,16 @@ fn validate_pin(account_type: &AccountType, pin: &str) -> EcoachResult<()> {
     Ok(())
 }
 
+fn validate_account_status(status: &str) -> EcoachResult<()> {
+    if matches!(status, "active" | "inactive" | "archived") {
+        return Ok(());
+    }
+    Err(EcoachError::Validation(format!(
+        "unknown account status: {}",
+        status
+    )))
+}
+
 fn hash_pin(pin: &str) -> EcoachResult<(String, String)> {
     let salt = SaltString::generate(&mut OsRng);
     let pin_hash = Argon2::default()
@@ -309,9 +462,34 @@ fn parse_entitlement(value: String) -> rusqlite::Result<EntitlementTier> {
 }
 
 fn parse_datetime(value: Option<String>) -> Option<DateTime<Utc>> {
-    value
-        .and_then(|raw| DateTime::<Utc>::from_str(&raw).ok())
+    value.and_then(|raw| parse_datetime_value(&raw))
+}
+
+fn parse_datetime_value(value: &str) -> Option<DateTime<Utc>> {
+    DateTime::<Utc>::from_str(value)
+        .ok()
         .map(|dt| dt.with_timezone(&Utc))
+        .or_else(|| {
+            NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M:%S")
+                .ok()
+                .map(|dt| DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+        })
+}
+
+fn parse_required_datetime_column(
+    index: usize,
+    value: &str,
+) -> rusqlite::Result<DateTime<Utc>> {
+    parse_datetime_value(value).ok_or_else(|| {
+        rusqlite::Error::FromSqlConversionFailure(
+            index,
+            rusqlite::types::Type::Text,
+            Box::new(EcoachError::Serialization(format!(
+                "invalid datetime value: {}",
+                value
+            ))),
+        )
+    })
 }
 
 #[cfg(test)]
@@ -340,5 +518,49 @@ mod tests {
             .expect("pin should authenticate");
         assert_eq!(authenticated.id, account.id);
         assert_eq!(authenticated.display_name, "Ama");
+    }
+
+    #[test]
+    fn update_entitlement_records_audit_event() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations");
+
+        let service = IdentityService::new(&conn);
+        let student = service
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Kojo".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student should be created");
+        let admin = service
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Admin,
+                display_name: "Control".to_string(),
+                pin: "246810".to_string(),
+                entitlement_tier: EntitlementTier::Elite,
+            })
+            .expect("admin should be created");
+
+        let updated = service
+            .update_entitlement(
+                student.id,
+                UpdateEntitlementInput {
+                    entitlement_tier: EntitlementTier::Elite,
+                    changed_by_account_id: Some(admin.id),
+                    note: Some("Manual elite activation".to_string()),
+                },
+            )
+            .expect("entitlement update should succeed");
+        let events = service
+            .list_entitlement_events(student.id, 10)
+            .expect("events should load");
+
+        assert_eq!(updated.entitlement_tier, EntitlementTier::Elite);
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].previous_tier, EntitlementTier::Standard);
+        assert_eq!(events[0].new_tier, EntitlementTier::Elite);
+        assert_eq!(events[0].changed_by_account_id, Some(admin.id));
     }
 }
