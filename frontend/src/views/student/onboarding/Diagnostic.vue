@@ -7,17 +7,17 @@ const router = useRouter()
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-3xl mx-auto reveal-stagger">
-    <h1 class="font-display text-2xl font-bold tracking-tight mb-2" :style="{ color: 'var(--text)' }">Your First Diagnostic</h1>
-    <p class="text-sm mb-8" :style="{ color: 'var(--text-3)' }">A short assessment to understand where you are. This helps your coach plan the right path for you.</p>
+  <div class="flex-1 overflow-y-auto p-7">
+    <h1 class="font-display text-2xl font-bold tracking-tight mb-2" :style="{ color: 'var(--ink)' }">Your First Diagnostic</h1>
+    <p class="text-sm mb-8" :style="{ color: 'var(--ink-muted)' }">A short assessment to understand where you are. This helps your coach plan the right path for you.</p>
 
     <AppCard padding="lg" glow="accent">
       <div class="text-center">
         <div class="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
-          :style="{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }">◈</div>
-        <h2 class="font-display text-lg font-semibold mb-1" :style="{ color: 'var(--text)' }">Quick Diagnostic</h2>
-        <p class="text-sm mb-2" :style="{ color: 'var(--text-2)' }">15-20 questions · About 15 minutes</p>
-        <p class="text-xs mb-6 max-w-sm mx-auto" :style="{ color: 'var(--text-3)' }">
+          :style="{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent)' }">◈</div>
+        <h2 class="font-display text-lg font-semibold mb-1" :style="{ color: 'var(--ink)' }">Quick Diagnostic</h2>
+        <p class="text-sm mb-2" :style="{ color: 'var(--ink-secondary)' }">15-20 questions · About 15 minutes</p>
+        <p class="text-xs mb-6 max-w-sm mx-auto" :style="{ color: 'var(--ink-muted)' }">
           Answer honestly. There is no passing or failing here.
           We want to understand your current level so your coach can build the right plan.
         </p>

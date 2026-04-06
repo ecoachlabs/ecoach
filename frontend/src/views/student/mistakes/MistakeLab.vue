@@ -3,9 +3,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getRevengeQueue, type RevengeQueueItemDto } from '@/ipc/coach'
-import AppCard from '@/components/ui/AppCard.vue'
-import AppButton from '@/components/ui/AppButton.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
 import AppTabs from '@/components/ui/AppTabs.vue'
 
 const auth = useAuthStore()
@@ -33,7 +30,6 @@ onMounted(async () => {
 const pending = computed(() => mistakes.value.filter(m => !m.is_beaten))
 const beaten = computed(() => mistakes.value.filter(m => m.is_beaten))
 
-// Group by error type for patterns tab
 const errorPatterns = computed(() => {
   const counts: Record<string, number> = {}
   for (const m of mistakes.value) {
@@ -44,102 +40,204 @@ const errorPatterns = computed(() => {
     .sort((a, b) => b.count - a.count)
 })
 
+const topicPatterns = computed(() => {
+  const map: Record<number, { topic_id: number; count: number; pending: number }> = {}
+  for (const m of mistakes.value) {
+    if (!m.topic_id) continue
+    if (!map[m.topic_id]) map[m.topic_id] = { topic_id: m.topic_id, count: 0, pending: 0 }
+    map[m.topic_id].count++
+    if (!m.is_beaten) map[m.topic_id].pending++
+  }
+  return Object.values(map).sort((a, b) => b.pending - a.pending)
+})
+
 function errorTypeLabel(type: string): string {
   return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-}
-
-function errorTypeColor(type: string): string {
-  if (type.includes('knowledge')) return 'var(--danger)'
-  if (type.includes('conceptual')) return 'var(--accent)'
-  if (type.includes('careless')) return 'var(--gold)'
-  if (type.includes('pressure')) return 'var(--warm)'
-  return 'var(--text-3)'
 }
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-4xl mx-auto reveal-stagger">
-    <div class="flex items-start justify-between mb-6">
+  <div class="h-full flex flex-col overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
+
+    <!-- Header -->
+    <div
+      class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+    >
       <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--text)' }">Mistake Lab</h1>
-        <p class="text-sm mt-1" :style="{ color: 'var(--text-3)' }">Every mistake is diagnostic data. Understand your patterns to break them.</p>
+        <p class="eyebrow">Mistake Lab</p>
+        <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
+          Every mistake is data
+        </h1>
+        <p class="text-xs mt-1" :style="{ color: 'var(--ink-muted)' }">Understand your patterns to break them</p>
       </div>
-      <AppBadge color="danger" size="md">{{ pending.length }} pending</AppBadge>
+      <div class="flex items-center gap-5">
+        <div class="text-right">
+          <p class="text-2xl font-black tabular-nums" :style="{ color: 'var(--warm)' }">{{ pending.length }}</p>
+          <p class="text-[10px] uppercase font-semibold" :style="{ color: 'var(--ink-muted)' }">Pending</p>
+        </div>
+        <div class="text-right">
+          <p class="text-2xl font-black tabular-nums" :style="{ color: 'var(--accent)' }">{{ beaten.length }}</p>
+          <p class="text-[10px] uppercase font-semibold" :style="{ color: 'var(--ink-muted)' }">Beaten</p>
+        </div>
+      </div>
     </div>
 
-    <AppTabs :tabs="tabs" v-model="activeTab" class="mb-6" />
+    <!-- Tabs -->
+    <div class="flex-shrink-0 px-7 pt-4 border-b" :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+      <AppTabs :tabs="tabs" v-model="activeTab" />
+    </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="space-y-3">
-      <div v-for="i in 4" :key="i" class="h-16 rounded-lg animate-pulse" :style="{ backgroundColor: 'var(--border-soft)' }" />
+    <div v-if="loading" class="flex-1 p-6 space-y-3">
+      <div v-for="i in 5" :key="i" class="h-16 rounded-xl animate-pulse"
+        :style="{ backgroundColor: 'var(--border-soft)' }" />
     </div>
 
-    <!-- Pending mistakes -->
-    <div v-else-if="activeTab === 'pending'">
-      <div v-if="pending.length" class="space-y-3">
-        <AppCard v-for="m in pending" :key="m.id" padding="md" hover>
-          <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
-              :style="{ backgroundColor: 'var(--danger-light)', color: 'var(--danger)' }">✕</div>
+    <!-- Content -->
+    <div v-else class="flex-1 overflow-hidden flex">
+
+      <!-- Pending Tab -->
+      <div v-if="activeTab === 'pending'" class="flex-1 overflow-y-auto">
+        <div v-if="!pending.length" class="flex flex-col items-center justify-center h-full gap-4 text-center px-8">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-xl"
+            :style="{ background: 'rgba(13,148,136,0.1)', color: 'var(--accent)' }">✓</div>
+          <h3 class="font-display text-lg font-bold" :style="{ color: 'var(--ink)' }">No pending mistakes</h3>
+          <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">Practice more to track error patterns here.</p>
+          <button class="px-5 py-2.5 rounded-xl font-semibold text-sm"
+            :style="{ backgroundColor: 'var(--accent)', color: 'white' }"
+            @click="router.push('/student/practice')">Start Practice</button>
+        </div>
+
+        <div v-else class="divide-y" :style="{ borderColor: 'var(--border-soft)' }">
+          <div v-for="m in pending" :key="m.id" class="mistake-row px-7 py-4 flex items-start gap-4">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs flex-shrink-0 mt-0.5"
+              :style="{ background: 'rgba(194,65,12,0.1)', color: 'var(--warm)' }">✕</div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium line-clamp-2" :style="{ color: 'var(--text)' }">
+              <p class="text-sm font-semibold line-clamp-2 mb-1" :style="{ color: 'var(--ink)' }">
                 {{ m.question_text ?? 'Question #' + m.question_id }}
               </p>
-              <p v-if="m.original_error_type" class="text-[11px] mt-1" :style="{ color: 'var(--text-3)' }">
-                {{ errorTypeLabel(m.original_error_type) }}
-              </p>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span v-if="m.original_error_type"
+                  class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  :style="{ background: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid var(--border-soft)' }">
+                  {{ errorTypeLabel(m.original_error_type) }}
+                </span>
+                <span v-if="m.original_wrong_answer" class="text-[11px] truncate max-w-xs"
+                  :style="{ color: 'var(--warm)' }">
+                  You chose: {{ m.original_wrong_answer }}
+                </span>
+              </div>
             </div>
-            <AppBadge color="muted" size="xs">{{ m.attempts_to_beat }}x</AppBadge>
+            <div class="flex-shrink-0">
+              <span v-if="m.attempts_to_beat > 0"
+                class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                :style="{ background: 'var(--paper)', color: 'var(--ink-muted)', border: '1px solid var(--border-soft)' }">
+                {{ m.attempts_to_beat }}x tried
+              </span>
+            </div>
           </div>
-        </AppCard>
+        </div>
       </div>
-      <AppCard v-else padding="lg" class="text-center">
-        <div class="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
-          :style="{ backgroundColor: 'var(--success-light)', color: 'var(--success)' }">✓</div>
-        <h3 class="font-display text-lg font-semibold mb-1" :style="{ color: 'var(--text)' }">No pending mistakes</h3>
-        <p class="text-sm mb-4" :style="{ color: 'var(--text-3)' }">Practice more to track error patterns here.</p>
-        <AppButton variant="primary" @click="router.push('/student/practice')">Start Practice</AppButton>
-      </AppCard>
-    </div>
 
-    <!-- Beaten mistakes -->
-    <div v-else-if="activeTab === 'beaten'">
-      <div v-if="beaten.length" class="space-y-3">
-        <AppCard v-for="m in beaten" :key="m.id" padding="md">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
-              :style="{ backgroundColor: 'var(--success-light)', color: 'var(--success)' }">✓</div>
+      <!-- Beaten Tab -->
+      <div v-else-if="activeTab === 'beaten'" class="flex-1 overflow-y-auto">
+        <div v-if="!beaten.length" class="flex flex-col items-center justify-center h-full gap-4 text-center px-8">
+          <p class="text-3xl">🎯</p>
+          <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">No beaten mistakes yet. Keep practising!</p>
+        </div>
+        <div v-else class="divide-y" :style="{ borderColor: 'var(--border-soft)' }">
+          <div v-for="m in beaten" :key="m.id" class="mistake-row px-7 py-4 flex items-center gap-4">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs flex-shrink-0"
+              :style="{ background: 'rgba(13,148,136,0.1)', color: 'var(--accent)' }">✓</div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium line-clamp-1" :style="{ color: 'var(--text)' }">
+              <p class="text-sm font-semibold line-clamp-1" :style="{ color: 'var(--ink)' }">
                 {{ m.question_text ?? 'Question #' + m.question_id }}
               </p>
+              <p v-if="m.original_wrong_answer" class="text-[11px] mt-0.5" :style="{ color: 'var(--ink-muted)' }">
+                Was choosing: {{ m.original_wrong_answer }}
+              </p>
             </div>
-            <AppBadge color="success" size="xs">beaten</AppBadge>
+            <span class="text-[10px] font-bold px-3 py-1 rounded-full flex-shrink-0"
+              :style="{ background: 'rgba(13,148,136,0.1)', color: 'var(--accent)' }">beaten</span>
           </div>
-        </AppCard>
+        </div>
       </div>
-      <AppCard v-else padding="lg" class="text-center">
-        <p class="text-sm" :style="{ color: 'var(--text-3)' }">No beaten mistakes yet. Keep practising!</p>
-      </AppCard>
-    </div>
 
-    <!-- Error Patterns -->
-    <div v-else-if="activeTab === 'patterns'">
-      <div v-if="errorPatterns.length" class="space-y-3">
-        <AppCard v-for="ep in errorPatterns" :key="ep.type" padding="md" hover>
-          <div class="flex items-center gap-3">
-            <div class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: errorTypeColor(ep.type) }" />
-            <div class="flex-1">
-              <p class="text-sm font-medium" :style="{ color: 'var(--text)' }">{{ errorTypeLabel(ep.type) }}</p>
+      <!-- Patterns Tab -->
+      <div v-else-if="activeTab === 'patterns'" class="flex-1 overflow-y-auto p-6 space-y-6">
+        <div v-if="!errorPatterns.length && !topicPatterns.length"
+          class="flex flex-col items-center justify-center h-full gap-4 text-center">
+          <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">
+            No error patterns yet. Your patterns will appear after you practice.
+          </p>
+        </div>
+
+        <template v-else>
+          <div v-if="errorPatterns.length">
+            <p class="section-label mb-3">By Error Type</p>
+            <div class="space-y-2">
+              <div v-for="ep in errorPatterns" :key="ep.type"
+                class="flex items-center gap-4 px-5 py-3.5 rounded-xl border"
+                :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+                <div class="w-2 h-2 rounded-full flex-shrink-0" :style="{ backgroundColor: 'var(--ink-muted)' }" />
+                <p class="text-sm font-semibold flex-1" :style="{ color: 'var(--ink)' }">{{ errorTypeLabel(ep.type) }}</p>
+                <span class="text-sm font-black tabular-nums" :style="{ color: 'var(--ink)' }">{{ ep.count }}</span>
+                <button class="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                  :style="{ background: 'var(--accent-glow)', color: 'var(--accent)' }"
+                  @click="router.push('/student/practice')">Fix →</button>
+              </div>
             </div>
-            <span class="text-sm font-bold tabular-nums" :style="{ color: errorTypeColor(ep.type) }">{{ ep.count }}</span>
-            <AppButton variant="ghost" size="sm" @click="router.push('/student/practice')">Fix →</AppButton>
           </div>
-        </AppCard>
+
+          <div v-if="topicPatterns.length">
+            <p class="section-label mb-3">By Topic Cluster</p>
+            <div class="space-y-2">
+              <div v-for="tp in topicPatterns" :key="tp.topic_id"
+                class="flex items-center gap-4 px-5 py-3.5 rounded-xl border"
+                :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0"
+                  :style="{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">
+                  {{ tp.pending }}
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-semibold" :style="{ color: 'var(--ink)' }">Topic #{{ tp.topic_id }}</p>
+                  <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">
+                    {{ tp.count }} mistake{{ tp.count > 1 ? 's' : '' }} · {{ tp.pending }} pending
+                  </p>
+                </div>
+                <button class="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                  :style="{ background: 'var(--accent-glow)', color: 'var(--accent)' }"
+                  @click="router.push('/student/practice')">Drill →</button>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
-      <AppCard v-else padding="lg" class="text-center">
-        <p class="text-sm" :style="{ color: 'var(--text-3)' }">No error patterns yet. Your patterns will appear after you practice.</p>
-      </AppCard>
     </div>
   </div>
 </template>
+
+<style scoped>
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--warm);
+  margin-bottom: 4px;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.mistake-row {
+  transition: background-color 100ms;
+}
+.mistake-row:hover { background-color: var(--paper); }
+</style>

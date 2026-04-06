@@ -245,21 +245,21 @@ const phaseColors: Record<string, string> = {
 </script>
 
 <template>
-  <div class="h-full flex flex-col" :style="{ backgroundColor: 'var(--bg)' }">
+  <div class="h-full flex flex-col" :style="{ backgroundColor: 'var(--paper)' }">
 
     <!-- Header -->
     <div
       class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center gap-3">
         <AppBadge color="accent" size="sm" dot>Diagnostic</AppBadge>
-        <span v-if="currentPhase" class="text-xs font-medium" :style="{ color: 'var(--text-3)' }">
+        <span v-if="currentPhase" class="text-xs font-medium" :style="{ color: 'var(--ink-muted)' }">
           Phase {{ currentPhase.phase_number }}: {{ currentPhase.phase_title }}
         </span>
       </div>
       <div class="flex items-center gap-4">
-        <div v-if="overallProgress.total > 0" class="flex items-center gap-2 text-xs" :style="{ color: 'var(--text-3)' }">
+        <div v-if="overallProgress.total > 0" class="flex items-center gap-2 text-xs" :style="{ color: 'var(--ink-muted)' }">
           <AppProgress
             :value="overallProgress.answered"
             :max="overallProgress.total"
@@ -285,7 +285,7 @@ const phaseColors: Record<string, string> = {
       <!-- Error -->
       <div v-else-if="stage === 'error'" class="flex h-full items-center justify-center p-8">
         <AppCard padding="lg" class="max-w-sm text-center">
-          <p class="text-sm mb-4" :style="{ color: 'var(--danger)' }">{{ error }}</p>
+          <p class="text-sm mb-4" :style="{ color: 'var(--warm)' }">{{ error }}</p>
           <AppButton variant="secondary" @click="router.push('/student/diagnostic')">Go Back</AppButton>
         </AppCard>
       </div>
@@ -295,23 +295,23 @@ const phaseColors: Record<string, string> = {
         <AppCard padding="lg" class="max-w-md text-center" glow="accent">
           <div
             class="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
-            :style="{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }"
+            :style="{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent)' }"
           >
             {{ currentPhase.phase_number === 1 ? '◇' : currentPhase.phase_number === 2 ? '◈' : '◉' }}
           </div>
           <AppBadge :color="(phaseColors[currentPhase.phase_type] as any) || 'accent'" size="xs" class="mb-3">
             Phase {{ currentPhase.phase_number }} of {{ battery?.phases.length }}
           </AppBadge>
-          <h2 class="font-display text-xl font-bold mb-2" :style="{ color: 'var(--text)' }">
+          <h2 class="font-display text-xl font-bold mb-2" :style="{ color: 'var(--ink)' }">
             {{ currentPhase.phase_title }}
           </h2>
-          <p class="text-sm mb-2" :style="{ color: 'var(--text-2)' }">
+          <p class="text-sm mb-2" :style="{ color: 'var(--ink-secondary)' }">
             {{ currentPhase.question_count }} questions
             <span v-if="currentPhase.time_limit_seconds">
               · {{ Math.round(currentPhase.time_limit_seconds / 60) }} min limit
             </span>
           </p>
-          <p class="text-xs mb-6" :style="{ color: 'var(--text-3)' }">
+          <p class="text-xs mb-6" :style="{ color: 'var(--ink-muted)' }">
             <template v-if="currentPhase.condition_type === 'timed'">
               Answer as fast as you can — speed matters in this phase.
             </template>
@@ -332,7 +332,7 @@ const phaseColors: Record<string, string> = {
       <div v-else-if="stage === 'question' && currentItem" class="p-6 lg:p-8 max-w-3xl mx-auto w-full">
         <!-- Phase progress -->
         <div class="flex items-center justify-between mb-6">
-          <span class="text-xs font-medium" :style="{ color: 'var(--text-3)' }">
+          <span class="text-xs font-medium" :style="{ color: 'var(--ink-muted)' }">
             Question {{ currentItemIndex + 1 }} of {{ totalQuestionsInPhase }}
           </span>
           <AppBadge :color="(phaseColors[currentPhase?.phase_type ?? ''] as any) || 'muted'" size="xs">
@@ -358,14 +358,14 @@ const phaseColors: Record<string, string> = {
         <AppCard padding="lg" class="max-w-md text-center" glow="success">
           <div
             class="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
-            :style="{ backgroundColor: 'var(--success-light)', color: 'var(--success)' }"
+            :style="{ backgroundColor: 'var(--success-light)', color: 'var(--accent)' }"
           >
             ✓
           </div>
-          <h2 class="font-display text-xl font-bold mb-2" :style="{ color: 'var(--text)' }">
+          <h2 class="font-display text-xl font-bold mb-2" :style="{ color: 'var(--ink)' }">
             Diagnostic Complete!
           </h2>
-          <p class="text-sm mb-6" :style="{ color: 'var(--text-2)' }">
+          <p class="text-sm mb-6" :style="{ color: 'var(--ink-secondary)' }">
             Your coach is analysing your performance across all phases. Your personalised study plan is being built.
           </p>
           <AppButton variant="primary" size="lg" class="w-full mb-3" @click="goToReport">

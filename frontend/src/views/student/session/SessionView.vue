@@ -33,6 +33,7 @@ const answering = ref(false)
 const answered = ref(false)
 const result = ref<AttemptResultDto | null>(null)
 const startTime = ref(Date.now())
+const selectedOptionId = ref<number | null>(null)
 
 const questionCardRef = ref<InstanceType<typeof QuestionCard> | null>(null)
 
@@ -67,6 +68,7 @@ async function handleAnswer(optionId: number, confidence: string, responseTimeMs
   if (!q || !auth.currentAccount || answering.value) return
 
   answering.value = true
+  selectedOptionId.value = optionId
   try {
     result.value = await submitAttempt({
       student_id: auth.currentAccount.id,
@@ -94,6 +96,7 @@ function nextQuestion() {
   const sessionComplete = result.value?.session_complete ?? false
   answered.value = false
   result.value = null
+  selectedOptionId.value = null
   questionCardRef.value?.reset()
 
   if (sessionComplete || isLast.value) {
@@ -127,16 +130,16 @@ function handleFlag() {
 </script>
 
 <template>
-  <div class="h-full flex flex-col" :style="{ backgroundColor: 'var(--bg)' }">
+  <div class="h-full flex flex-col" :style="{ backgroundColor: 'var(--paper)' }">
 
     <!-- Header -->
     <div
       class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center gap-3">
-        <AppBadge color="accent" size="sm">Session</AppBadge>
-        <span class="text-xs" :style="{ color: 'var(--text-3)' }">
+        <span class="session-badge">Session</span>
+        <span class="text-xs" :style="{ color: 'var(--ink-muted)' }">
           {{ answeredCount }}/{{ totalQuestions }} answered
         </span>
       </div>
@@ -148,7 +151,7 @@ function handleFlag() {
           color="accent"
           class="w-28"
         />
-        <AppButton variant="ghost" size="sm" @click="completeSession">End Session</AppButton>
+        <button class="end-btn" @click="completeSession">End Session</button>
       </div>
     </div>
 
@@ -163,13 +166,13 @@ function handleFlag() {
 
       <!-- Error -->
       <div v-else-if="error" class="max-w-md mx-auto text-center py-16">
-        <p class="text-sm mb-4" :style="{ color: 'var(--danger)' }">{{ error }}</p>
+        <p class="text-sm mb-4" :style="{ color: 'var(--warm)' }">{{ error }}</p>
         <AppButton variant="secondary" @click="router.push('/student/practice')">Back</AppButton>
       </div>
 
       <!-- Empty -->
       <div v-else-if="questions.length === 0" class="max-w-md mx-auto text-center py-16">
-        <p class="text-sm mb-4" :style="{ color: 'var(--text-3)' }">No questions in this session.</p>
+        <p class="text-sm mb-4" :style="{ color: 'var(--ink-muted)' }">No questions in this session.</p>
         <AppButton variant="primary" @click="completeSession">Finish</AppButton>
       </div>
 
@@ -178,7 +181,7 @@ function handleFlag() {
 
         <!-- Position indicator -->
         <div class="flex items-center justify-between mb-6">
-          <span class="text-xs font-semibold" :style="{ color: 'var(--text-3)' }">
+          <span class="text-xs font-semibold" :style="{ color: 'var(--ink-muted)' }">
             Question {{ currentIndex + 1 }} of {{ totalQuestions }}
           </span>
         </div>
@@ -210,7 +213,7 @@ function handleFlag() {
         <AppCard v-else-if="answering" padding="lg" class="text-center">
           <div class="w-6 h-6 border-2 rounded-full animate-spin mx-auto"
             :style="{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }" />
-          <p class="text-sm mt-3" :style="{ color: 'var(--text-3)' }">Analysing your answer…</p>
+          <p class="text-sm mt-3" :style="{ color: 'var(--ink-muted)' }">Analysing your answer…</p>
         </AppCard>
 
         <!-- Feedback after answering -->
@@ -224,6 +227,9 @@ function handleFlag() {
           :selected-option-text="result.selected_option_text ?? ''"
           :correct-option-text="result.correct_option_text"
           :misconception-info="result.misconception_info"
+          :selected-option-id="selectedOptionId"
+          :correct-option-id="currentQuestion?.options.find(o => o.text === result?.correct_option_text)?.id ?? null"
+          :options="currentQuestion?.options"
           @next="nextQuestion"
           @review="router.push('/student/mistakes')"
         />
@@ -231,10 +237,36 @@ function handleFlag() {
 
       <!-- All answered -->
       <div v-else class="max-w-md mx-auto text-center py-16">
-        <p class="text-sm mb-4 font-medium" :style="{ color: 'var(--text)' }">All questions answered!</p>
+        <p class="text-sm mb-4 font-medium" :style="{ color: 'var(--ink)' }">All questions answered!</p>
         <AppButton variant="primary" size="lg" @click="completeSession">View Results →</AppButton>
       </div>
 
     </div>
   </div>
 </template>
+
+<style scoped>
+.session-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid rgba(13,148,136,0.2);
+}
+.end-btn {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-soft);
+  transition: all 100ms;
+}
+.end-btn:hover { background: rgba(194,65,12,0.08); color: var(--warm); border-color: rgba(194,65,12,0.3); }
+</style>

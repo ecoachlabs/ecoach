@@ -31,7 +31,7 @@ const modes = [
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-4xl mx-auto reveal-stagger">
+  <div class="flex-1 overflow-y-auto p-7">
     <PageHeader title="Concept Traps" subtitle="Can you tell the difference? Five modes to test your concept separation skills." back-to="/student/games" />
 
     <!-- Modes -->
@@ -42,10 +42,10 @@ const modes = [
             :style="{backgroundColor:'var(--gold-light)',color:'var(--gold)'}">{{ m.icon }}</div>
           <div class="flex-1">
             <div class="flex items-center gap-2">
-              <p class="text-sm font-semibold" :style="{color:'var(--text)'}">{{ m.label }}</p>
+              <p class="text-sm font-semibold" :style="{color:'var(--ink)'}">{{ m.label }}</p>
               <AppBadge color="muted" size="xs">{{ m.difficulty }}</AppBadge>
             </div>
-            <p class="text-[10px]" :style="{color:'var(--text-3)'}">{{ m.desc }}</p>
+            <p class="text-[10px]" :style="{color:'var(--ink-muted)'}">{{ m.desc }}</p>
           </div>
           <AppButton variant="secondary" size="sm">Play</AppButton>
         </div>
@@ -54,11 +54,11 @@ const modes = [
 
     <!-- Available pairs -->
     <div v-if="pairs.length">
-      <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{color:'var(--text-3)'}">Available Concept Pairs</h3>
+      <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{color:'var(--ink-muted)'}">Available Concept Pairs</h3>
       <div class="grid grid-cols-2 gap-2">
         <AppCard v-for="p in pairs" :key="p.pair_id" padding="sm" hover>
-          <p class="text-xs font-semibold" :style="{color:'var(--text)'}">{{ p.title }}</p>
-          <div class="flex items-center gap-2 mt-1 text-[10px]" :style="{color:'var(--text-3)'}">
+          <p class="text-xs font-semibold" :style="{color:'var(--ink)'}">{{ p.title }}</p>
+          <div class="flex items-center gap-2 mt-1 text-[10px]" :style="{color:'var(--ink-muted)'}">
             <span>{{ p.left_label }}</span> <span>vs</span> <span>{{ p.right_label }}</span>
           </div>
           <AppBadge color="gold" size="xs" class="mt-1">{{ p.recommended_mode }}</AppBadge>
@@ -69,7 +69,7 @@ const modes = [
     <!-- Recommended journey -->
     <AppCard padding="md" class="mt-6" glow="gold">
       <p class="text-xs font-semibold uppercase mb-1" :style="{color:'var(--gold)'}">Recommended Journey</p>
-      <p class="text-sm" :style="{color:'var(--text-2)'}">
+      <p class="text-sm" :style="{color:'var(--ink-secondary)'}">
         Know the Difference → Difference Drill → Similarity Trap → Which Is Which → Unmask
       </p>
     </AppCard>

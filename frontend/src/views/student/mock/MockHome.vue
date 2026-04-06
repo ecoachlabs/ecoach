@@ -4,45 +4,59 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getLearnerTruth, type LearnerTruthDto } from '@/ipc/coach'
 import { listMockSessions, type MockSessionSummaryDto } from '@/ipc/mock'
-import { listSubjects, type SubjectDto } from '@/ipc/coach'
-import AppCard from '@/components/ui/AppCard.vue'
-import AppButton from '@/components/ui/AppButton.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
-import ProgressRing from '@/components/viz/ProgressRing.vue'
+import { PhClockCountdown, PhSquaresFour, PhTarget, PhLightning } from '@phosphor-icons/vue'
 
 const auth = useAuthStore()
 const router = useRouter()
 
 const loading = ref(true)
 const truth = ref<LearnerTruthDto | null>(null)
-const subjects = ref<SubjectDto[]>([])
 const history = ref<MockSessionSummaryDto[]>([])
 
 const mockTypes = [
-  { key: 'full', label: 'Full Mock', desc: 'Complete exam simulation with all sections', icon: '⊞', time: '2h 30m', duration: 150, count: 40 },
-  { key: 'topic', label: 'Topic Mock', desc: 'Focus on specific topics you need to strengthen', icon: '◎', time: '30-45m', duration: 40, count: 20 },
-  { key: 'mini', label: 'Mini Mock', desc: 'Quick 20-question check across all topics', icon: '◇', time: '15-20m', duration: 20, count: 20 },
-  { key: 'pressure', label: 'Pressure Mock', desc: 'Tighter timing. Harder questions. Exam pressure.', icon: '⚡', time: '45m', duration: 45, count: 25 },
+  {
+    key: 'full',
+    label: 'Full Mock',
+    desc: 'Complete exam simulation with all sections and timing.',
+    icon: PhSquaresFour,
+    time: '2h 30m',
+  },
+  {
+    key: 'topic',
+    label: 'Topic Mock',
+    desc: 'Focus on specific topics you need to strengthen.',
+    icon: PhTarget,
+    time: '30–45m',
+  },
+  {
+    key: 'mini',
+    label: 'Mini Mock',
+    desc: 'Quick 20-question check across all topics.',
+    icon: PhClockCountdown,
+    time: '15–20m',
+  },
+  {
+    key: 'pressure',
+    label: 'Pressure Mock',
+    desc: 'Tighter timing, harder questions, full exam pressure.',
+    icon: PhLightning,
+    time: '45m',
+  },
 ]
 
-const readinessBand = ref('developing')
-const readinessScore = ref(0)
+const bandLabel: Record<string, string> = {
+  strong: 'Exam Ready', developing: 'Developing', weak: 'Needs Work', critical: 'Critical',
+}
 
 onMounted(async () => {
   if (!auth.currentAccount) return
   try {
-    const [t, subs, sessions] = await Promise.all([
+    const [t, sessions] = await Promise.all([
       getLearnerTruth(auth.currentAccount.id),
-      listSubjects(1),
       listMockSessions(auth.currentAccount.id, 5),
     ])
     truth.value = t
-    subjects.value = subs
     history.value = sessions
-    readinessBand.value = t.overall_readiness_band
-    // Map band to approximate score for ring display
-    const bandScores: Record<string, number> = { strong: 7500, developing: 4800, weak: 2800, critical: 1500 }
-    readinessScore.value = bandScores[t.overall_readiness_band] ?? 4800
   } catch (e) {
     console.error('Failed to load mock home:', e)
   }
@@ -53,90 +67,225 @@ function goToSetup(mockType: string) {
   router.push(`/student/mock/setup?type=${mockType}`)
 }
 
-function gradeColor(grade: string | null): string {
-  if (!grade) return 'bg-gray-100 text-gray-500'
-  if (['A1', 'B2', 'B3'].includes(grade)) return 'bg-emerald-50 text-emerald-600'
-  if (['C4', 'C5', 'C6'].includes(grade)) return 'bg-amber-50 text-amber-600'
-  return 'bg-red-50 text-red-500'
+function gradeColor(grade: string | null): { bg: string; text: string } {
+  if (!grade) return { bg: 'var(--paper)', text: 'var(--ink-muted)' }
+  if (['A1', 'B2', 'B3'].includes(grade)) return { bg: 'rgba(13,148,136,0.1)', text: 'var(--accent)' }
+  if (['C4', 'C5', 'C6'].includes(grade)) return { bg: 'rgba(180,83,9,0.1)', text: 'var(--gold)' }
+  return { bg: 'rgba(194,65,12,0.1)', text: 'var(--warm)' }
+}
+
+function readinessColor() {
+  const band = truth.value?.overall_readiness_band ?? 'developing'
+  if (band === 'strong') return 'var(--accent)'
+  if (band === 'developing') return 'var(--gold)'
+  return 'var(--warm)'
 }
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-5xl mx-auto reveal-stagger">
-    <div class="flex items-start justify-between mb-8">
+  <div class="h-full flex flex-col overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
+
+    <!-- Header -->
+    <div
+      class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+    >
       <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--text)' }">Mock Centre</h1>
-        <p class="text-sm mt-1" :style="{ color: 'var(--text-3)' }">Simulate real exam conditions. Discover where you truly stand.</p>
+        <p class="eyebrow">Mock Centre</p>
+        <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
+          Simulate. Discover. Improve.
+        </h1>
+        <p class="text-xs mt-1" :style="{ color: 'var(--ink-muted)' }">Exam conditions. Real pressure. Honest scores.</p>
       </div>
-      <ProgressRing
-        v-if="!loading"
-        :value="readinessScore"
-        :max="10000"
-        :size="64"
-        :stroke-width="4"
-        :color="readinessBand === 'strong' ? 'var(--success)' : readinessBand === 'developing' ? 'var(--accent)' : 'var(--danger)'"
-        label="Readiness"
-      />
-      <div v-else class="w-16 h-16 rounded-full animate-pulse" :style="{ backgroundColor: 'var(--border-soft)' }" />
-    </div>
-
-    <!-- Mock Type Cards -->
-    <div class="grid grid-cols-2 gap-4 mb-8">
-      <AppCard v-for="mock in mockTypes" :key="mock.key" hover padding="lg" @click="goToSetup(mock.key)">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-            :style="{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }">
-            {{ mock.icon }}
-          </div>
-          <div class="flex-1">
-            <h3 class="text-sm font-semibold mb-0.5" :style="{ color: 'var(--text)' }">{{ mock.label }}</h3>
-            <p class="text-[11px] leading-relaxed mb-3" :style="{ color: 'var(--text-3)' }">{{ mock.desc }}</p>
-            <AppBadge color="accent" size="xs">{{ mock.time }}</AppBadge>
-          </div>
+      <div class="flex items-center gap-4">
+        <div v-if="!loading && truth" class="text-right">
+          <p class="text-lg font-black capitalize" :style="{ color: readinessColor() }">
+            {{ bandLabel[truth.overall_readiness_band] ?? truth.overall_readiness_band }}
+          </p>
+          <p class="text-[10px] uppercase font-semibold" :style="{ color: 'var(--ink-muted)' }">Current Band</p>
         </div>
-      </AppCard>
+        <button
+          class="nav-pill"
+          @click="router.push('/student/mock/history')"
+        >View History</button>
+      </div>
     </div>
 
-    <!-- Battle History -->
-    <div>
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-xs font-semibold uppercase tracking-wider" :style="{ color: 'var(--text-3)' }">Battle History</h3>
-        <AppButton variant="ghost" size="sm" @click="router.push('/student/mock/history')">View All</AppButton>
+    <!-- Body -->
+    <div class="flex-1 overflow-hidden flex">
+
+      <!-- Mock type tiles -->
+      <div class="flex-1 p-6 overflow-y-auto">
+        <div v-if="loading" class="space-y-3">
+          <div v-for="i in 4" :key="i" class="h-28 rounded-2xl animate-pulse"
+            :style="{ backgroundColor: 'var(--border-soft)' }" />
+        </div>
+        <div v-else class="space-y-3">
+          <button
+            v-for="mock in mockTypes"
+            :key="mock.key"
+            class="mock-row w-full text-left"
+            @click="goToSetup(mock.key)"
+          >
+            <div class="mock-icon-box">
+              <component :is="mock.icon" :size="20" weight="duotone" :style="{ color: 'var(--ink)' }" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-bold" :style="{ color: 'var(--ink)' }">{{ mock.label }}</h3>
+              <p class="text-[11px] mt-0.5" :style="{ color: 'var(--ink-muted)' }">{{ mock.desc }}</p>
+            </div>
+            <div class="flex-shrink-0 flex flex-col items-end gap-1">
+              <span class="time-badge">{{ mock.time }}</span>
+              <span class="go-label">Begin →</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Practice note -->
+        <div class="mt-6 px-5 py-4 rounded-xl border" :style="{ borderColor: 'var(--border-soft)' }">
+          <p class="text-[11px] font-semibold mb-1" :style="{ color: 'var(--ink)' }">Before your mock</p>
+          <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">
+            Run a diagnostic first to get accurate topic weights. Mocks adapt to your current readiness level.
+          </p>
+          <button class="mt-2 text-[11px] font-semibold" :style="{ color: 'var(--accent)' }"
+            @click="router.push('/student/diagnostic')">Run Diagnostic →</button>
+        </div>
       </div>
 
-      <!-- Loading skeleton -->
-      <div v-if="loading" class="space-y-2">
-        <div v-for="i in 3" :key="i" class="h-14 rounded-lg animate-pulse" :style="{ backgroundColor: 'var(--border-soft)' }" />
-      </div>
-
-      <div v-else-if="history.length" class="space-y-2">
-        <AppCard v-for="entry in history" :key="entry.id" padding="sm" hover
-          @click="router.push(`/student/mock/review/${entry.id}`)">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold tabular-nums"
-              :class="gradeColor(entry.grade)">
-              {{ entry.grade ?? (entry.status === 'in_progress' ? '…' : '—') }}
-            </div>
-            <div class="flex-1">
-              <p class="text-sm font-medium" :style="{ color: 'var(--text)' }">{{ entry.mock_type.replace(/_/g, ' ') }}</p>
-              <p class="text-[11px]" :style="{ color: 'var(--text-3)' }">
-                {{ entry.percentage != null ? entry.percentage.toFixed(0) + '%' : entry.status }}
-                <span v-if="entry.paper_year" class="ml-2">· {{ entry.paper_year }}</span>
-              </p>
-            </div>
-            <AppBadge
-              :color="entry.status === 'completed' ? 'success' : entry.status === 'in_progress' ? 'warm' : 'muted'"
-              size="xs"
-            >
-              {{ entry.status }}
-            </AppBadge>
+      <!-- Recent history panel -->
+      <div
+        class="w-72 flex-shrink-0 flex flex-col overflow-hidden border-l"
+        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      >
+        <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
+          <p class="section-label">Recent Mocks</p>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 space-y-1">
+          <div v-if="loading">
+            <div v-for="i in 4" :key="i" class="h-14 rounded-xl animate-pulse mb-2"
+              :style="{ backgroundColor: 'var(--border-soft)' }" />
           </div>
-        </AppCard>
+          <div v-else-if="!history.length" class="py-10 text-center px-4">
+            <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">No mock sessions yet.<br>Start your first one!</p>
+          </div>
+          <button
+            v-for="entry in history"
+            :key="entry.id"
+            class="hist-btn w-full text-left px-3 py-2.5 rounded-xl"
+            :disabled="entry.status !== 'completed'"
+            @click="entry.status === 'completed' ? router.push(`/student/mock/review/${entry.id}`) : null"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                :style="{ backgroundColor: gradeColor(entry.grade).bg, color: gradeColor(entry.grade).text }"
+              >
+                {{ entry.grade ?? (entry.status === 'in_progress' ? '…' : '—') }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[11px] font-semibold capitalize" :style="{ color: 'var(--ink)' }">
+                  {{ entry.mock_type.replace(/_/g, ' ') }}
+                </p>
+                <p class="text-[9px]" :style="{ color: 'var(--ink-muted)' }">
+                  {{ entry.percentage != null ? entry.percentage.toFixed(0) + '%' : entry.status }}
+                </p>
+              </div>
+              <span v-if="entry.status === 'completed'" :style="{ color: 'var(--ink-muted)' }" class="text-xs">→</span>
+            </div>
+          </button>
+        </div>
+        <div class="p-3 border-t flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
+          <button class="w-full py-2.5 rounded-xl text-[11px] font-bold"
+            :style="{ backgroundColor: 'var(--accent)', color: 'white' }"
+            @click="goToSetup('full')">
+            Start Full Mock →
+          </button>
+        </div>
       </div>
-
-      <AppCard v-else padding="md" class="text-center">
-        <p class="text-sm" :style="{ color: 'var(--text-3)' }">No mock sessions yet. Start your first one!</p>
-      </AppCard>
     </div>
   </div>
 </template>
+
+<style scoped>
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.nav-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--paper);
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-soft);
+  transition: all 100ms;
+}
+.nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.mock-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background-color: var(--surface);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+}
+.mock-row:hover {
+  border-color: var(--ink);
+  transform: translateX(2px);
+}
+
+.mock-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: var(--paper);
+  border: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.time-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--paper);
+  color: var(--ink-muted);
+  border: 1px solid var(--border-soft);
+}
+
+.go-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  transition: color 120ms;
+}
+.mock-row:hover .go-label { color: var(--ink); }
+
+.hist-btn {
+  transition: background-color 100ms;
+}
+.hist-btn:not(:disabled):hover { background-color: var(--paper); }
+.hist-btn:disabled { opacity: 0.6; cursor: default; }
+</style>

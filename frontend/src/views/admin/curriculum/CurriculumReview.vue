@@ -12,10 +12,10 @@ const router = useRouter()
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-5xl mx-auto reveal-stagger">
+  <div class="flex-1 overflow-y-auto p-7">
 
-    <h1 class="text-lg font-bold mb-4" :style="{ color: 'var(--text)' }">Review Extractions</h1>
-    <p class="text-xs mb-4" :style="{ color: 'var(--text-3)' }">Split-pane review workbench: original source vs extracted structure.</p>
-    <div class="grid grid-cols-2 gap-4 min-h-[400px]"><AppCard padding="md"><h3 class="text-xs font-semibold uppercase mb-2" :style="{ color: 'var(--text-3)' }">Original Source</h3><p class="text-sm" :style="{ color: 'var(--text-3)' }">PDF preview renders here</p></AppCard><AppCard padding="md"><h3 class="text-xs font-semibold uppercase mb-2" :style="{ color: 'var(--text-3)' }">Extracted Structure</h3><p class="text-sm" :style="{ color: 'var(--text-3)' }">Parsed curriculum tree renders here</p></AppCard></div>
+    <h1 class="text-lg font-bold mb-4" :style="{ color: 'var(--ink)' }">Review Extractions</h1>
+    <p class="text-xs mb-4" :style="{ color: 'var(--ink-muted)' }">Split-pane review workbench: original source vs extracted structure.</p>
+    <div class="grid grid-cols-2 gap-4 min-h-[400px]"><AppCard padding="md"><h3 class="text-xs font-semibold uppercase mb-2" :style="{ color: 'var(--ink-muted)' }">Original Source</h3><p class="text-sm" :style="{ color: 'var(--ink-muted)' }">PDF preview renders here</p></AppCard><AppCard padding="md"><h3 class="text-xs font-semibold uppercase mb-2" :style="{ color: 'var(--ink-muted)' }">Extracted Structure</h3><p class="text-sm" :style="{ color: 'var(--ink-muted)' }">Parsed curriculum tree renders here</p></AppCard></div>
   </div>
 </template>

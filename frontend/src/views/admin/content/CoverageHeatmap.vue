@@ -12,9 +12,9 @@ const router = useRouter()
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-5xl mx-auto reveal-stagger">
+  <div class="flex-1 overflow-y-auto p-7">
 
-    <h1 class="text-lg font-bold mb-4" :style="{ color: 'var(--text)' }">Coverage Heatmap</h1>
-    <AppCard padding="lg" class="min-h-[400px] flex items-center justify-center"><p class="text-sm" :style="{ color: 'var(--text-3)' }">Topic × content-type coverage matrix heatmap will render here.</p></AppCard>
+    <h1 class="text-lg font-bold mb-4" :style="{ color: 'var(--ink)' }">Coverage Heatmap</h1>
+    <AppCard padding="lg" class="min-h-[400px] flex items-center justify-center"><p class="text-sm" :style="{ color: 'var(--ink-muted)' }">Topic × content-type coverage matrix heatmap will render here.</p></AppCard>
   </div>
 </template>

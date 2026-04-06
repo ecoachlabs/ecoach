@@ -4,9 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { listSubjects, type SubjectDto } from '@/ipc/coach'
 import { compileMock, startMock } from '@/ipc/mock'
-import AppCard from '@/components/ui/AppCard.vue'
-import AppButton from '@/components/ui/AppButton.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -18,7 +15,6 @@ const loading = ref(true)
 const starting = ref(false)
 const error = ref('')
 
-// Mock type from query param (set by MockHome)
 const mockType = computed(() => (route.query.type as string) ?? 'full')
 
 const mockConfigs: Record<string, { label: string; duration: number; count: number; desc: string }> = {
@@ -38,9 +34,7 @@ onMounted(async () => {
   questionCount.value = config.value.count
   try {
     subjects.value = await listSubjects(1)
-    if (subjects.value.length > 0) {
-      selectedSubjectId.value = subjects.value[0].id
-    }
+    if (subjects.value.length > 0) selectedSubjectId.value = subjects.value[0].id
   } catch (e) {
     console.error('Failed to load subjects:', e)
   }
@@ -72,94 +66,237 @@ async function enterHall() {
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-3xl mx-auto reveal-stagger">
-    <div class="mb-8">
-      <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--text)' }">{{ config.label }}</h1>
-      <p class="text-sm mt-1" :style="{ color: 'var(--text-3)' }">{{ config.desc }}</p>
+  <div class="h-full flex flex-col overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
+
+    <!-- Header -->
+    <div
+      class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+    >
+      <div class="flex items-center gap-4">
+        <button
+          class="back-btn"
+          @click="router.push('/student/mock')"
+        >← Back</button>
+        <div>
+          <p class="eyebrow">Mock Setup</p>
+          <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
+            {{ config.label }}
+          </h1>
+        </div>
+      </div>
+      <p class="text-sm max-w-xs text-right" :style="{ color: 'var(--ink-muted)' }">{{ config.desc }}</p>
     </div>
 
-    <div v-if="error" class="mb-4 p-3 rounded-lg text-sm"
-      :style="{ backgroundColor: 'var(--danger-light)', color: 'var(--danger)' }">
-      {{ error }}
-    </div>
+    <div v-if="error" class="px-7 py-2 text-xs flex-shrink-0"
+      style="background: rgba(194,65,12,0.08); color: var(--warm);">{{ error }}</div>
 
-    <div class="space-y-6 max-w-lg">
-      <!-- Subject -->
-      <AppCard padding="md">
-        <p class="text-sm font-semibold mb-3" :style="{ color: 'var(--text)' }">Subject</p>
-        <div v-if="loading" class="flex gap-2">
-          <div v-for="i in 3" :key="i" class="h-9 w-24 rounded-lg animate-pulse" :style="{ backgroundColor: 'var(--border-soft)' }" />
-        </div>
-        <div v-else class="flex flex-wrap gap-2">
-          <button
-            v-for="s in subjects"
-            :key="s.id"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            :class="selectedSubjectId === s.id
-              ? 'bg-[var(--accent)] text-white shadow-sm'
-              : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-2)] hover:border-[var(--accent)]'"
-            @click="selectedSubjectId = s.id"
-          >
-            {{ s.name }}
-          </button>
-        </div>
-      </AppCard>
+    <!-- Body -->
+    <div class="flex-1 overflow-hidden flex">
 
-      <!-- Duration -->
-      <AppCard padding="md">
-        <p class="text-sm font-semibold mb-3" :style="{ color: 'var(--text)' }">Duration</p>
-        <div class="flex gap-2 flex-wrap">
-          <button
-            v-for="mins in [20, 40, 60, 90]"
-            :key="mins"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            :class="durationMinutes === mins
-              ? 'bg-[var(--accent)] text-white'
-              : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-2)]'"
-            @click="durationMinutes = mins"
-          >
-            {{ mins }} min
-          </button>
-        </div>
-      </AppCard>
+      <!-- Config panels -->
+      <div class="flex-1 overflow-y-auto p-7 space-y-5">
 
-      <!-- Question Count -->
-      <AppCard padding="md">
-        <p class="text-sm font-semibold mb-3" :style="{ color: 'var(--text)' }">Questions</p>
-        <div class="flex gap-2">
-          <button
-            v-for="n in [10, 20, 30, 40]"
-            :key="n"
-            class="w-12 h-10 rounded-lg text-sm font-medium transition-all"
-            :class="questionCount === n
-              ? 'bg-[var(--accent)] text-white'
-              : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-2)]'"
-            @click="questionCount = n"
-          >
-            {{ n }}
-          </button>
+        <!-- Subject -->
+        <div class="config-section">
+          <p class="section-label mb-4">Subject</p>
+          <div v-if="loading" class="flex gap-2">
+            <div v-for="i in 3" :key="i" class="h-10 w-28 rounded-xl animate-pulse"
+              :style="{ backgroundColor: 'var(--border-soft)' }" />
+          </div>
+          <div v-else class="flex flex-wrap gap-2">
+            <button
+              v-for="s in subjects"
+              :key="s.id"
+              class="option-chip"
+              :class="{ active: selectedSubjectId === s.id }"
+              @click="selectedSubjectId = s.id"
+            >{{ s.name }}</button>
+          </div>
         </div>
-      </AppCard>
 
-      <!-- Summary badges -->
-      <div class="flex gap-2 flex-wrap">
-        <AppBadge color="accent" size="sm">{{ config.label }}</AppBadge>
-        <AppBadge color="muted" size="sm">{{ durationMinutes }} min</AppBadge>
-        <AppBadge color="muted" size="sm">{{ questionCount }} questions</AppBadge>
+        <!-- Duration -->
+        <div class="config-section">
+          <p class="section-label mb-4">Duration</p>
+          <div class="flex gap-2 flex-wrap">
+            <button
+              v-for="mins in [20, 40, 60, 90]"
+              :key="mins"
+              class="option-chip"
+              :class="{ active: durationMinutes === mins }"
+              @click="durationMinutes = mins"
+            >{{ mins }} min</button>
+          </div>
+        </div>
+
+        <!-- Question Count -->
+        <div class="config-section">
+          <p class="section-label mb-4">Questions</p>
+          <div class="flex gap-2">
+            <button
+              v-for="n in [10, 20, 30, 40]"
+              :key="n"
+              class="option-chip w-16 justify-center"
+              :class="{ active: questionCount === n }"
+              @click="questionCount = n"
+            >{{ n }}</button>
+          </div>
+        </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <AppButton
-          variant="primary"
-          size="lg"
-          :loading="starting"
-          :disabled="!selectedSubjectId || loading"
-          @click="enterHall"
-        >
-          Enter Exam Hall →
-        </AppButton>
-        <AppButton variant="ghost" @click="router.push('/student/mock')">Cancel</AppButton>
+      <!-- Right: summary + launch -->
+      <div
+        class="w-80 flex-shrink-0 border-l flex flex-col overflow-hidden"
+        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      >
+        <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
+          <p class="section-label">Session Summary</p>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-5 space-y-4">
+          <div class="summary-row">
+            <span class="summary-label">Type</span>
+            <span class="summary-val">{{ config.label }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Duration</span>
+            <span class="summary-val">{{ durationMinutes }} minutes</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Questions</span>
+            <span class="summary-val">{{ questionCount }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Subject</span>
+            <span class="summary-val">
+              {{ subjects.find(s => s.id === selectedSubjectId)?.name ?? '—' }}
+            </span>
+          </div>
+
+          <div class="pt-2 border-t" :style="{ borderColor: 'var(--border-soft)' }">
+            <div class="text-center py-4">
+              <p class="text-3xl font-black tabular-nums" :style="{ color: 'var(--ink)' }">{{ questionCount }}</p>
+              <p class="text-[10px] uppercase font-semibold mt-1" :style="{ color: 'var(--ink-muted)' }">questions · {{ durationMinutes }} min</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-5 border-t space-y-2" :style="{ borderColor: 'var(--border-soft)' }">
+          <button
+            class="launch-btn w-full"
+            :disabled="!selectedSubjectId || loading || starting"
+            @click="enterHall"
+          >
+            {{ starting ? 'Preparing Hall…' : 'Enter Exam Hall →' }}
+          </button>
+          <button class="cancel-btn w-full" @click="router.push('/student/mock')">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.back-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-soft);
+  transition: all 100ms;
+}
+.back-btn:hover { background: var(--border-soft); color: var(--ink); }
+
+.config-section {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.option-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--ink-secondary);
+  transition: all 120ms;
+}
+.option-chip:hover {
+  border-color: var(--ink-muted);
+  color: var(--ink);
+}
+.option-chip.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.summary-label {
+  font-size: 11px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+.summary-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.launch-btn {
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+  border: none;
+  transition: opacity 140ms, transform 140ms;
+}
+.launch-btn:hover:not(:disabled) { opacity: 0.87; transform: translateY(-1px); }
+.launch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.cancel-btn {
+  padding: 9px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-soft);
+  transition: all 100ms;
+}
+.cancel-btn:hover { background: var(--paper); color: var(--ink); }
+</style>

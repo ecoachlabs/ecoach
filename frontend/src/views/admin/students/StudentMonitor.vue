@@ -12,10 +12,10 @@ const router = useRouter()
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-5xl mx-auto reveal-stagger">
+  <div class="flex-1 overflow-y-auto p-7">
 
-    <h1 class="text-lg font-bold mb-4" :style="{ color: 'var(--text)' }">Student Monitor</h1>
-    <p class="text-xs mb-4" :style="{ color: 'var(--text-3)' }">Cross-student analytics dashboard.</p>
-    <AppCard padding="lg"><p class="text-sm" :style="{ color: 'var(--text-3)' }">Student list with filtering by mastery, readiness, and risk. Class-level heatmaps.</p></AppCard>
+    <h1 class="text-lg font-bold mb-4" :style="{ color: 'var(--ink)' }">Student Monitor</h1>
+    <p class="text-xs mb-4" :style="{ color: 'var(--ink-muted)' }">Cross-student analytics dashboard.</p>
+    <AppCard padding="lg"><p class="text-sm" :style="{ color: 'var(--ink-muted)' }">Student list with filtering by mastery, readiness, and risk. Class-level heatmaps.</p></AppCard>
   </div>
 </template>

@@ -2,13 +2,9 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { listSubjects, listTopics, getPriorityTopics, type SubjectDto, type TopicDto, type TopicCaseDto } from '@/ipc/coach'
+import { listSubjects, listTopics, getPriorityTopics, type SubjectDto, type TopicCaseDto } from '@/ipc/coach'
 import { startPracticeSession } from '@/ipc/sessions'
-import AppCard from '@/components/ui/AppCard.vue'
-import AppButton from '@/components/ui/AppButton.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
-import AppProgress from '@/components/ui/AppProgress.vue'
-import ProgressRing from '@/components/viz/ProgressRing.vue'
+import { PhArrowRight, PhTarget, PhFlame, PhClock, PhStar } from '@phosphor-icons/vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -19,10 +15,6 @@ const loading = ref(true)
 const starting = ref<number | null>(null)
 const error = ref('')
 
-const subjectIcons: Record<string, string> = {
-  MATH: '∑', ENG: 'Aa', SCI: '⚛', SS: '⊕', ICT: '⌘',
-}
-
 onMounted(async () => {
   if (!auth.currentAccount) return
   try {
@@ -32,7 +24,7 @@ onMounted(async () => {
     ])
     subjects.value = subs
     priorityTopics.value = topics
-  } catch (e: any) {
+  } catch {
     error.value = 'Failed to load subjects'
   }
   loading.value = false
@@ -43,13 +35,11 @@ async function startSubjectPractice(subjectId: number) {
   starting.value = subjectId
   error.value = ''
   try {
-    // Get priority topics for this subject to focus the session
     const subjectTopics = priorityTopics.value
       .filter((t) => t.subject_code === subjects.value.find(s => s.id === subjectId)?.code)
       .slice(0, 3)
       .map((t) => t.topic_id)
 
-    // Fallback: get first 3 topics for the subject
     let topicIds = subjectTopics
     if (topicIds.length === 0) {
       const topics = await listTopics(subjectId)
@@ -75,110 +65,242 @@ function formatBp(bp: number) {
   return (bp / 100).toFixed(0) + '%'
 }
 
-const urgencyColors: Record<string, string> = {
-  high: 'danger', medium: 'warm', low: 'success',
+const subjectIndex: Record<string, { symbol: string }> = {
+  MATH: { symbol: 'Σ' },
+  ENG:  { symbol: 'Aa' },
+  SCI:  { symbol: '⚛' },
+  SS:   { symbol: '⊕' },
+  ICT:  { symbol: '⌘' },
 }
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-5xl mx-auto reveal-stagger">
-    <div class="mb-8">
-      <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--text)' }">Practice</h1>
-      <p class="text-sm mt-1" :style="{ color: 'var(--text-3)' }">Choose a subject and start practising. Every question teaches you something.</p>
+  <div class="h-full flex flex-col overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
+
+    <!-- Header -->
+    <div
+      class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+    >
+      <div>
+        <p class="eyebrow">Practice Hub</p>
+        <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
+          Choose your subject
+        </h1>
+        <p class="text-xs mt-1" :style="{ color: 'var(--ink-muted)' }">Select a subject to start a smart practice session</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="header-link" @click="router.push('/student/practice/custom-test')">Custom Test</button>
+        <button class="header-link" @click="router.push('/student/knowledge-gap')">Gap Analysis</button>
+        <button class="header-link" @click="router.push('/student/mistakes')">Mistakes</button>
+      </div>
     </div>
 
-    <!-- Error -->
-    <div v-if="error" class="mb-4 p-3 rounded-[var(--radius-md)] text-sm"
-      :style="{ backgroundColor: 'var(--danger-light)', color: 'var(--danger)' }">
-      {{ error }}
-    </div>
+    <div v-if="error" class="px-7 py-2 text-xs flex-shrink-0"
+      style="background: rgba(194,65,12,0.08); color: var(--warm);">{{ error }}</div>
 
-    <!-- Subject Cards -->
-    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-      <div v-for="i in 3" :key="i" class="h-32 rounded-[var(--radius-xl)] animate-pulse"
-        :style="{ backgroundColor: 'var(--border-soft)' }" />
-    </div>
-    <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-      <AppCard
-        v-for="subject in subjects"
-        :key="subject.id"
-        hover padding="lg"
-      >
-        <div class="flex items-center gap-3 mb-4">
-          <div
-            class="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-bold"
-            :style="{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }"
-          >
-            {{ subjectIcons[subject.code] ?? subject.name.charAt(0) }}
-          </div>
-          <div>
-            <h3 class="text-sm font-semibold" :style="{ color: 'var(--text)' }">{{ subject.name }}</h3>
-            <p class="text-[11px]" :style="{ color: 'var(--text-3)' }">{{ subject.code }}</p>
-          </div>
+    <!-- Body -->
+    <div class="flex-1 overflow-hidden flex">
+
+      <!-- Subject list -->
+      <div class="flex-1 overflow-y-auto p-7">
+
+        <!-- Loading -->
+        <div v-if="loading" class="space-y-3">
+          <div v-for="i in 4" :key="i" class="h-24 rounded-2xl animate-pulse"
+            :style="{ backgroundColor: 'var(--border-soft)' }" />
         </div>
-        <AppButton
-          variant="primary"
-          size="sm"
-          class="w-full"
-          :loading="starting === subject.id"
-          :disabled="starting !== null"
-          @click="startSubjectPractice(subject.id)"
-        >
-          Start Practice →
-        </AppButton>
-      </AppCard>
-    </div>
 
-    <!-- Quick Actions -->
-    <div class="flex flex-wrap gap-2 mb-8">
-      <AppButton variant="secondary" size="sm" @click="router.push('/student/practice/custom-test')">
-        ✎ Custom Test
-      </AppButton>
-      <AppButton variant="secondary" size="sm" @click="router.push('/student/knowledge-gap')">
-        ◎ Knowledge Gap
-      </AppButton>
-      <AppButton variant="secondary" size="sm" @click="router.push('/student/mistakes')">
-        ↻ Review Mistakes
-      </AppButton>
-    </div>
-
-    <!-- Priority Topics -->
-    <div v-if="priorityTopics.length">
-      <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{ color: 'var(--text-3)' }">
-        Your Priority Topics
-      </h3>
-      <div class="space-y-2">
-        <AppCard
-          v-for="topic in priorityTopics.slice(0, 5)"
-          :key="topic.topic_id"
-          padding="sm" hover
-          @click="router.push('/student/practice/custom-test')"
-        >
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-              :style="{
-                backgroundColor: topic.mastery_score >= 6000 ? 'var(--success-light)' : topic.mastery_score >= 3000 ? 'var(--warning-light)' : 'var(--danger-light)',
-                color: topic.mastery_score >= 6000 ? 'var(--success)' : topic.mastery_score >= 3000 ? 'var(--warning)' : 'var(--danger)',
-              }"
-            >
-              {{ formatBp(topic.mastery_score) }}
+        <!-- Subjects -->
+        <div v-else class="space-y-3">
+          <button
+            v-for="subject in subjects"
+            :key="subject.id"
+            class="subject-row w-full text-left"
+            :disabled="starting !== null"
+            @click="startSubjectPractice(subject.id)"
+          >
+            <div class="symbol-box">
+              {{ subjectIndex[subject.code]?.symbol ?? subject.name.charAt(0) }}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium truncate" :style="{ color: 'var(--text)' }">{{ topic.topic_name }}</p>
-              <p class="text-[11px]" :style="{ color: 'var(--text-3)' }">
-                Gap: {{ formatBp(topic.gap_score) }} · {{ topic.intervention_mode.replace(/_/g, ' ') }}
-              </p>
+              <h3 class="text-base font-bold" :style="{ color: 'var(--ink)' }">{{ subject.name }}</h3>
+              <p class="text-[11px] mt-0.5" :style="{ color: 'var(--ink-muted)' }">{{ subject.code }} · Smart selection</p>
             </div>
-            <AppBadge
-              :color="(urgencyColors[topic.intervention_urgency] as any) ?? 'muted'"
-              size="xs"
-            >
-              {{ topic.intervention_urgency }}
-            </AppBadge>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span v-if="starting === subject.id" class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">Starting…</span>
+              <span v-else class="go-arrow">→</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- More options -->
+        <div class="mt-8">
+          <p class="section-label mb-3">More Options</p>
+          <div class="grid grid-cols-3 gap-3">
+            <button class="option-tile" @click="router.push('/student/practice/custom-test')">
+              <PhTarget :size="20" weight="duotone" :style="{ color: 'var(--ink-secondary)' }" />
+              <span class="text-[11px] font-semibold mt-2" :style="{ color: 'var(--ink)' }">Custom Test</span>
+              <span class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">Pick topics & length</span>
+            </button>
+            <button class="option-tile" @click="router.push('/student/mistakes')">
+              <PhFlame :size="20" weight="duotone" :style="{ color: 'var(--ink-secondary)' }" />
+              <span class="text-[11px] font-semibold mt-2" :style="{ color: 'var(--ink)' }">Mistake Lab</span>
+              <span class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">Revisit errors</span>
+            </button>
+            <button class="option-tile" @click="router.push('/student/spark')">
+              <PhStar :size="20" weight="duotone" :style="{ color: 'var(--ink-secondary)' }" />
+              <span class="text-[11px] font-semibold mt-2" :style="{ color: 'var(--ink)' }">Spark</span>
+              <span class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">Random challenge</span>
+            </button>
           </div>
-        </AppCard>
+        </div>
+      </div>
+
+      <!-- Priority topics sidebar -->
+      <div
+        class="w-72 flex-shrink-0 flex flex-col overflow-hidden border-l"
+        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      >
+        <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
+          <p class="section-label">Priority Topics</p>
+          <p class="text-[11px] mt-1" :style="{ color: 'var(--ink-muted)' }">Focus your next session here</p>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-3 space-y-1">
+          <div v-if="loading">
+            <div v-for="i in 6" :key="i" class="h-14 rounded-xl animate-pulse mb-2"
+              :style="{ backgroundColor: 'var(--border-soft)' }" />
+          </div>
+          <div v-else-if="!priorityTopics.length" class="py-10 text-center px-4">
+            <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">No priority topics yet.<br>Complete a diagnostic first.</p>
+          </div>
+          <button
+            v-for="topic in priorityTopics"
+            :key="topic.topic_id"
+            class="topic-btn w-full text-left px-3 py-2.5 rounded-xl"
+            @click="router.push('/student/practice/custom-test')"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0"
+                :style="{
+                  backgroundColor: topic.mastery_score >= 6000 ? 'rgba(13,148,136,0.1)' : topic.mastery_score >= 3000 ? 'rgba(180,83,9,0.1)' : 'rgba(194,65,12,0.1)',
+                  color: topic.mastery_score >= 6000 ? 'var(--accent)' : topic.mastery_score >= 3000 ? 'var(--gold)' : 'var(--warm)',
+                }"
+              >
+                {{ formatBp(topic.mastery_score) }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[11px] font-semibold truncate" :style="{ color: 'var(--ink)' }">{{ topic.topic_name }}</p>
+                <p class="text-[9px] truncate capitalize" :style="{ color: 'var(--ink-muted)' }">
+                  {{ topic.intervention_urgency }} · {{ topic.intervention_mode.replace(/_/g, ' ') }}
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div class="p-3 border-t flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
+          <button
+            class="w-full py-2.5 rounded-xl text-[11px] font-bold"
+            :style="{ backgroundColor: 'var(--accent)', color: 'white' }"
+            @click="router.push('/student/practice/custom-test')"
+          >
+            Custom Practice →
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.header-link {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--paper);
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-soft);
+  transition: all 100ms;
+}
+.header-link:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.subject-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background-color: var(--surface);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+}
+.subject-row:hover:not(:disabled) {
+  border-color: var(--ink);
+  transform: translateX(2px);
+}
+.subject-row:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.symbol-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background-color: var(--paper);
+  border: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.go-arrow {
+  font-size: 16px;
+  color: var(--ink-muted);
+  transition: transform 120ms ease, color 120ms ease;
+}
+.subject-row:hover .go-arrow { transform: translateX(3px); color: var(--ink); }
+
+.option-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  background-color: var(--surface);
+  cursor: pointer;
+  transition: border-color 100ms, background-color 100ms;
+  gap: 0;
+}
+.option-tile:hover { border-color: var(--ink); background-color: var(--paper); }
+
+.topic-btn {
+  transition: background-color 100ms;
+}
+.topic-btn:hover { background-color: var(--paper); }
+</style>

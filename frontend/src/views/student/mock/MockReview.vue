@@ -38,10 +38,10 @@ function formatTime(seconds: number): string {
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-3xl mx-auto reveal-stagger">
+  <div class="flex-1 overflow-y-auto p-7">
     <div class="mb-8">
-      <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--text)' }">Mock Review</h1>
-      <p class="text-sm mt-1" :style="{ color: 'var(--text-3)' }">See how you performed in this exam session.</p>
+      <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">Mock Review</h1>
+      <p class="text-sm mt-1" :style="{ color: 'var(--ink-muted)' }">See how you performed in this exam session.</p>
     </div>
 
     <!-- Loading -->
@@ -54,7 +54,7 @@ function formatTime(seconds: number): string {
 
     <!-- Error -->
     <div v-else-if="error" class="text-center py-16">
-      <p class="text-sm mb-4" :style="{ color: 'var(--danger)' }">{{ error }}</p>
+      <p class="text-sm mb-4" :style="{ color: 'var(--warm)' }">{{ error }}</p>
       <AppButton variant="secondary" @click="router.push('/student/mock')">Back</AppButton>
     </div>
 
@@ -67,21 +67,21 @@ function formatTime(seconds: number): string {
             :max="10000"
             :size="90"
             :stroke-width="6"
-            :color="report.accuracy_bp >= 7000 ? 'var(--success)' : report.accuracy_bp >= 5000 ? 'var(--gold)' : 'var(--danger)'"
+            :color="report.accuracy_bp >= 7000 ? 'var(--accent)' : report.accuracy_bp >= 5000 ? 'var(--gold)' : 'var(--warm)'"
             label="Score"
           />
           <div class="flex-1">
             <div class="flex items-center gap-3 mb-2">
-              <h2 class="font-display text-3xl font-bold" :style="{ color: 'var(--text)' }">
+              <h2 class="font-display text-3xl font-bold" :style="{ color: 'var(--ink)' }">
                 {{ report.percentage.toFixed(1) }}%
               </h2>
               <AppBadge :color="(gradeColor(report.grade) as any)" size="lg">{{ report.grade }}</AppBadge>
             </div>
-            <p class="text-sm" :style="{ color: 'var(--text-2)' }">
+            <p class="text-sm" :style="{ color: 'var(--ink-secondary)' }">
               Score: {{ report.total_score }} / {{ report.max_score }}
             </p>
             <p v-if="report.improvement_direction" class="text-sm mt-1"
-              :style="{ color: report.improvement_direction === 'up' ? 'var(--success)' : 'var(--danger)' }">
+              :style="{ color: report.improvement_direction === 'up' ? 'var(--accent)' : 'var(--warm)' }">
               {{ report.improvement_direction === 'up' ? '↑ Improving' : '↓ Dropped' }} since last mock
             </p>
           </div>
@@ -91,18 +91,18 @@ function formatTime(seconds: number): string {
       <!-- Stats Grid -->
       <div class="grid grid-cols-3 gap-3 mb-6">
         <AppCard padding="md" class="text-center">
-          <p class="font-display text-2xl font-bold" :style="{ color: 'var(--success)' }">{{ report.questions_answered }}</p>
-          <p class="text-[10px] font-medium mt-1 uppercase" :style="{ color: 'var(--text-3)' }">Answered</p>
+          <p class="font-display text-2xl font-bold" :style="{ color: 'var(--accent)' }">{{ report.questions_answered }}</p>
+          <p class="text-[10px] font-medium mt-1 uppercase" :style="{ color: 'var(--ink-muted)' }">Answered</p>
         </AppCard>
         <AppCard padding="md" class="text-center">
-          <p class="font-display text-2xl font-bold" :style="{ color: 'var(--danger)' }">{{ report.questions_unanswered }}</p>
-          <p class="text-[10px] font-medium mt-1 uppercase" :style="{ color: 'var(--text-3)' }">Skipped</p>
+          <p class="font-display text-2xl font-bold" :style="{ color: 'var(--warm)' }">{{ report.questions_unanswered }}</p>
+          <p class="text-[10px] font-medium mt-1 uppercase" :style="{ color: 'var(--ink-muted)' }">Skipped</p>
         </AppCard>
         <AppCard padding="md" class="text-center">
           <p class="font-display text-2xl font-bold" :style="{ color: 'var(--accent)' }">
             {{ formatTime(report.time_used_seconds) }}
           </p>
-          <p class="text-[10px] font-medium mt-1 uppercase" :style="{ color: 'var(--text-3)' }">Time Used</p>
+          <p class="text-[10px] font-medium mt-1 uppercase" :style="{ color: 'var(--ink-muted)' }">Time Used</p>
         </AppCard>
       </div>
 

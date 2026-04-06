@@ -144,16 +144,16 @@ function handleFlag() {
 </script>
 
 <template>
-  <div class="h-full flex flex-col" :style="{ backgroundColor: 'var(--bg)' }">
+  <div class="h-full flex flex-col" :style="{ backgroundColor: 'var(--paper)' }">
 
     <!-- Exam Header -->
     <div
       class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center gap-3">
         <AppBadge color="danger" size="sm" dot>EXAM IN PROGRESS</AppBadge>
-        <span class="text-xs" :style="{ color: 'var(--text-3)' }">
+        <span class="text-xs" :style="{ color: 'var(--ink-muted)' }">
           {{ answeredCount }}/{{ totalQuestions }} answered
         </span>
       </div>
@@ -163,7 +163,7 @@ function handleFlag() {
         <span
           v-if="timeRemainingSeconds > 0"
           class="text-sm font-mono font-semibold tabular-nums"
-          :style="{ color: timerUrgent ? 'var(--danger)' : 'var(--text-2)' }"
+          :style="{ color: timerUrgent ? 'var(--warm)' : 'var(--ink-secondary)' }"
         >
           {{ timerDisplay }}
         </span>
@@ -192,23 +192,23 @@ function handleFlag() {
 
       <!-- Error -->
       <div v-else-if="error" class="max-w-md mx-auto text-center py-16">
-        <p class="text-sm mb-4" :style="{ color: 'var(--danger)' }">{{ error }}</p>
+        <p class="text-sm mb-4" :style="{ color: 'var(--warm)' }">{{ error }}</p>
         <AppButton variant="secondary" @click="router.push('/student/mock')">Back</AppButton>
       </div>
 
       <!-- Empty -->
       <div v-else-if="questions.length === 0" class="max-w-md mx-auto text-center py-16">
-        <p class="text-sm mb-4" :style="{ color: 'var(--text-3)' }">No questions in this exam.</p>
+        <p class="text-sm mb-4" :style="{ color: 'var(--ink-muted)' }">No questions in this exam.</p>
         <AppButton variant="primary" @click="finishExam">Finish</AppButton>
       </div>
 
       <!-- Question -->
       <div v-else-if="currentQuestion" class="max-w-2xl mx-auto">
         <div class="flex items-center justify-between mb-6">
-          <span class="text-xs font-semibold" :style="{ color: 'var(--text-3)' }">
+          <span class="text-xs font-semibold" :style="{ color: 'var(--ink-muted)' }">
             Question {{ currentIndex + 1 }} of {{ totalQuestions }}
           </span>
-          <span v-if="timerUrgent" class="text-xs font-semibold" :style="{ color: 'var(--danger)' }">
+          <span v-if="timerUrgent" class="text-xs font-semibold" :style="{ color: 'var(--warm)' }">
             Time running low!
           </span>
         </div>
@@ -217,7 +217,7 @@ function handleFlag() {
         <AppCard v-if="submitting" padding="lg" class="text-center">
           <div class="w-6 h-6 border-2 rounded-full animate-spin mx-auto"
             :style="{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }" />
-          <p class="text-sm mt-3" :style="{ color: 'var(--text-3)' }">Recording answer…</p>
+          <p class="text-sm mt-3" :style="{ color: 'var(--ink-muted)' }">Recording answer…</p>
         </AppCard>
 
         <!-- NOTE: In exam mode there is no answer feedback — the exam continues immediately -->
@@ -246,7 +246,7 @@ function handleFlag() {
 
       <!-- All done -->
       <div v-else class="max-w-md mx-auto text-center py-16">
-        <p class="text-sm mb-4 font-medium" :style="{ color: 'var(--text)' }">All questions answered!</p>
+        <p class="text-sm mb-4 font-medium" :style="{ color: 'var(--ink)' }">All questions answered!</p>
         <AppButton variant="primary" size="lg" @click="finishExam">View Results →</AppButton>
       </div>
 

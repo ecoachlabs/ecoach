@@ -92,11 +92,11 @@ async function markComplete() {
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-3xl mx-auto reveal-stagger">
+  <div class="flex-1 overflow-y-auto p-7">
     <!-- Back -->
     <button
       class="flex items-center gap-1 text-xs mb-6 hover:underline"
-      :style="{ color: 'var(--text-3)' }"
+      :style="{ color: 'var(--ink-muted)' }"
       @click="router.push('/student/journey')"
     >
       ← Back to Journey
@@ -110,7 +110,7 @@ async function markComplete() {
 
     <!-- Error -->
     <div v-else-if="error && !station" class="text-center py-16">
-      <p class="text-sm mb-4" :style="{ color: 'var(--danger)' }">{{ error }}</p>
+      <p class="text-sm mb-4" :style="{ color: 'var(--warm)' }">{{ error }}</p>
       <AppButton variant="secondary" @click="router.push('/student/journey')">Back</AppButton>
     </div>
 
@@ -119,15 +119,15 @@ async function markComplete() {
       <AppCard padding="lg" glow="accent" class="mb-6">
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1">
-            <p class="text-xs font-semibold uppercase tracking-wider mb-1" :style="{ color: 'var(--text-3)' }">
+            <p class="text-xs font-semibold uppercase tracking-wider mb-1" :style="{ color: 'var(--ink-muted)' }">
               {{ stationPhase }}
             </p>
-            <h1 class="font-display text-2xl font-bold mb-3" :style="{ color: 'var(--text)' }">
+            <h1 class="font-display text-2xl font-bold mb-3" :style="{ color: 'var(--ink)' }">
               {{ station.title }}
             </h1>
             <div class="flex items-center gap-3">
               <AppBadge :color="(statusColor as any)" size="sm">{{ station.status }}</AppBadge>
-              <span class="text-xs" :style="{ color: 'var(--text-3)' }">Station #{{ station.sequence_no }}</span>
+              <span class="text-xs" :style="{ color: 'var(--ink-muted)' }">Station #{{ station.sequence_no }}</span>
             </div>
           </div>
           <!-- Circular progress -->
@@ -135,7 +135,7 @@ async function markComplete() {
             <p class="font-display text-3xl font-bold" :style="{ color: 'var(--accent)' }">
               {{ (station.progress_score / 100).toFixed(0) }}%
             </p>
-            <p class="text-[10px] uppercase mt-0.5" :style="{ color: 'var(--text-3)' }">Progress</p>
+            <p class="text-[10px] uppercase mt-0.5" :style="{ color: 'var(--ink-muted)' }">Progress</p>
           </div>
         </div>
         <div class="mt-4">
@@ -150,14 +150,14 @@ async function markComplete() {
 
       <!-- Error message -->
       <div v-if="error" class="mb-4 p-3 rounded-lg text-sm"
-        :style="{ backgroundColor: 'var(--danger-light)', color: 'var(--danger)' }">
+        :style="{ backgroundColor: 'rgba(194,65,12,0.08)', color: 'var(--warm)' }">
         {{ error }}
       </div>
 
       <!-- Station Description -->
       <AppCard padding="lg" class="mb-6">
-        <h3 class="text-sm font-semibold mb-3" :style="{ color: 'var(--text)' }">What to do in this station</h3>
-        <div class="space-y-2 text-sm" :style="{ color: 'var(--text-2)' }">
+        <h3 class="text-sm font-semibold mb-3" :style="{ color: 'var(--ink)' }">What to do in this station</h3>
+        <div class="space-y-2 text-sm" :style="{ color: 'var(--ink-secondary)' }">
           <template v-if="station.station_type === 'foundation'">
             <p>• Work through core concepts and fix fundamental gaps.</p>
             <p>• Complete practice sessions until you reach a solid baseline.</p>

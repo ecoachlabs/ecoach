@@ -4,9 +4,6 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { listSubjects, type SubjectDto } from '@/ipc/coach'
 import { launchDiagnostic } from '@/ipc/diagnostic'
-import AppCard from '@/components/ui/AppCard.vue'
-import AppButton from '@/components/ui/AppButton.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -18,9 +15,9 @@ const launching = ref(false)
 const error = ref('')
 
 const modes = [
-  { key: 'quick' as const, label: 'Quick Scan', desc: '10–15 questions · ~10 min', icon: '◇' },
-  { key: 'standard' as const, label: 'Standard', desc: '25–35 questions · ~20 min · Multi-phase', icon: '◈' },
-  { key: 'deep' as const, label: 'Deep Analysis', desc: '40–60 questions · ~35 min · Full battery', icon: '◉' },
+  { key: 'quick' as const, label: 'Quick Scan', desc: '10–15 questions · ~10 min', time: '10 min' },
+  { key: 'standard' as const, label: 'Standard', desc: '25–35 questions · ~20 min · Multi-phase', time: '20 min' },
+  { key: 'deep' as const, label: 'Deep Analysis', desc: '40–60 questions · ~35 min · Full battery', time: '35 min' },
 ]
 
 onMounted(async () => {
@@ -36,11 +33,7 @@ async function startDiagnostic() {
   launching.value = true
   error.value = ''
   try {
-    const result = await launchDiagnostic(
-      auth.currentAccount.id,
-      selectedSubject.value,
-      selectedMode.value,
-    )
+    const result = await launchDiagnostic(auth.currentAccount.id, selectedSubject.value, selectedMode.value)
     router.push(`/student/diagnostic/${result.diagnostic_id}`)
   } catch (e: any) {
     error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to start diagnostic'
@@ -48,81 +41,211 @@ async function startDiagnostic() {
     launching.value = false
   }
 }
+
+const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? modes[1]
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-3xl mx-auto reveal-stagger">
-    <h1 class="font-display text-2xl font-bold tracking-tight mb-2" :style="{ color: 'var(--text)' }">
-      Diagnostic Assessment
-    </h1>
-    <p class="text-sm mb-8" :style="{ color: 'var(--text-3)' }">
-      Discover exactly where you stand. Multiple phases test different dimensions of your knowledge.
-    </p>
+  <div class="h-full flex overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
 
-    <!-- Error -->
-    <div v-if="error" class="mb-6 p-3 rounded-[var(--radius-md)] text-sm" :style="{ backgroundColor: 'var(--danger-light)', color: 'var(--danger)' }">
-      {{ error }}
-    </div>
-
-    <!-- Subject -->
-    <div class="mb-6">
-      <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{ color: 'var(--text-3)' }">Subject</h3>
-      <div v-if="loading" class="flex gap-2">
-        <div v-for="i in 3" :key="i" class="h-9 w-24 rounded-[var(--radius-md)] animate-pulse" :style="{ backgroundColor: 'var(--border-soft)' }" />
-      </div>
-      <div v-else class="flex flex-wrap gap-2">
-        <button
-          v-for="s in subjects" :key="s.id"
-          class="px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-all"
-          :class="selectedSubject === s.id
-            ? 'bg-[var(--accent)] text-white'
-            : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-2)] hover:border-[var(--accent)]'"
-          @click="selectedSubject = s.id"
-        >
-          {{ s.name }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Mode -->
-    <div class="mb-8">
-      <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{ color: 'var(--text-3)' }">Diagnostic Depth</h3>
-      <div class="space-y-2">
-        <AppCard
-          v-for="mode in modes" :key="mode.key"
-          padding="md" hover
-          :class="selectedMode === mode.key ? 'ring-2 ring-[var(--accent)]' : ''"
-          @click="selectedMode = mode.key"
-        >
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-              :style="{
-                backgroundColor: selectedMode === mode.key ? 'var(--accent-light)' : 'var(--primary-light)',
-                color: selectedMode === mode.key ? 'var(--accent)' : 'var(--text-3)',
-              }"
-            >
-              {{ mode.icon }}
-            </div>
-            <div>
-              <p class="text-sm font-semibold" :style="{ color: 'var(--text)' }">{{ mode.label }}</p>
-              <p class="text-[11px]" :style="{ color: 'var(--text-3)' }">{{ mode.desc }}</p>
-            </div>
-            <div class="ml-auto">
-              <div v-if="selectedMode === mode.key" class="w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-xs font-bold">✓</div>
-            </div>
-          </div>
-        </AppCard>
-      </div>
-    </div>
-
-    <AppButton
-      variant="primary" size="lg"
-      :disabled="!selectedSubject || launching"
-      :loading="launching"
-      @click="startDiagnostic"
+    <!-- Left: info panel -->
+    <div
+      class="w-80 flex-shrink-0 flex flex-col justify-between p-8 border-r"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
     >
-      Begin Diagnostic →
-    </AppButton>
+      <div>
+        <p class="eyebrow mb-4">Diagnostic</p>
+        <h1 class="font-display text-3xl font-bold leading-tight mb-4" :style="{ color: 'var(--ink)' }">
+          Discover exactly where you stand
+        </h1>
+        <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">
+          Multiple phases test different dimensions of your knowledge — revealing blind spots and hidden strengths.
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
+            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">1</div>
+          <div>
+            <p class="text-xs font-semibold" :style="{ color: 'var(--ink)' }">Choose subject & depth</p>
+            <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">Pick what to test and how deep</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
+            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">2</div>
+          <div>
+            <p class="text-xs font-semibold" :style="{ color: 'var(--ink)' }">Answer honestly</p>
+            <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">No guessing — accuracy matters</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
+            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">3</div>
+          <div>
+            <p class="text-xs font-semibold" :style="{ color: 'var(--ink)' }">Get your report</p>
+            <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">Personalized gap analysis & plan</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: selection -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+      <div class="flex-1 overflow-y-auto px-10 py-8 space-y-8">
+        <div v-if="error" class="p-3 rounded-xl text-sm"
+          style="background: rgba(194,65,12,0.08); color: var(--warm);">{{ error }}</div>
+
+        <!-- Subject selector -->
+        <div>
+          <p class="section-label mb-3">Choose Subject</p>
+          <div v-if="loading" class="flex gap-2">
+            <div v-for="i in 3" :key="i" class="h-10 w-28 rounded-xl animate-pulse"
+              :style="{ backgroundColor: 'var(--border-soft)' }" />
+          </div>
+          <div v-else class="flex flex-wrap gap-2">
+            <button
+              v-for="s in subjects"
+              :key="s.id"
+              class="subject-chip"
+              :class="{ active: selectedSubject === s.id }"
+              @click="selectedSubject = s.id"
+            >{{ s.name }}</button>
+          </div>
+        </div>
+
+        <!-- Mode selector -->
+        <div>
+          <p class="section-label mb-3">Diagnostic Depth</p>
+          <div class="space-y-3">
+            <button
+              v-for="mode in modes"
+              :key="mode.key"
+              class="mode-card w-full text-left"
+              :class="{ selected: selectedMode === mode.key }"
+              @click="selectedMode = mode.key"
+            >
+              <div class="mode-check">
+                <div v-if="selectedMode === mode.key" class="mode-check-dot" />
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-bold" :style="{ color: 'var(--ink)' }">{{ mode.label }}</p>
+                <p class="text-[11px] mt-0.5" :style="{ color: 'var(--ink-muted)' }">{{ mode.desc }}</p>
+              </div>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid var(--border-soft)' }">
+                {{ mode.time }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Launch footer -->
+      <div class="flex-shrink-0 px-10 py-6 border-t flex items-center justify-between"
+        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+        <div>
+          <p class="text-sm font-semibold" :style="{ color: 'var(--ink)' }">
+            {{ selectedModeData().label }} · {{ selectedModeData().time }}
+          </p>
+          <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">{{ selectedModeData().desc }}</p>
+        </div>
+        <button
+          class="launch-btn"
+          :disabled="!selectedSubject || launching"
+          @click="startDiagnostic"
+        >{{ launching ? 'Starting…' : 'Begin Diagnostic →' }}</button>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.subject-chip {
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  color: var(--ink-secondary);
+  transition: all 120ms;
+}
+.subject-chip.active,
+.subject-chip:hover {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.mode-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 1.5px solid var(--border-soft);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 120ms;
+}
+.mode-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.mode-card:hover:not(.selected) { border-color: var(--ink-muted); }
+
+.mode-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border-soft);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 120ms;
+}
+.mode-card.selected .mode-check {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.mode-check-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+}
+
+.launch-btn {
+  padding: 12px 28px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+  transition: opacity 140ms, transform 140ms;
+}
+.launch-btn:hover:not(:disabled) { opacity: 0.87; transform: translateY(-1px); }
+.launch-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+</style>

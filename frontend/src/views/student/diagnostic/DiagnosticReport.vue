@@ -61,10 +61,10 @@ const bandColor = computed(() => {
 })
 
 const classificationColors: Record<string, string> = {
-  solid: 'var(--success)',
+  solid: 'var(--accent)',
   developing: 'var(--gold)',
   weak: 'var(--warning)',
-  critical: 'var(--danger)',
+  critical: 'var(--warm)',
   fragile: 'var(--warm)',
 }
 
@@ -107,18 +107,18 @@ function handleExport() {
             :max="10000"
             :size="110"
             :stroke-width="7"
-            :color="overallReadiness >= 7000 ? 'var(--success)' : overallReadiness >= 4000 ? 'var(--gold)' : 'var(--danger)'"
+            :color="overallReadiness >= 7000 ? 'var(--accent)' : overallReadiness >= 4000 ? 'var(--gold)' : 'var(--warm)'"
             label="Readiness"
           />
           <div class="flex-1">
-            <p class="text-xs font-semibold uppercase tracking-wider mb-1" :style="{ color: 'var(--text-3)' }">
+            <p class="text-xs font-semibold uppercase tracking-wider mb-1" :style="{ color: 'var(--ink-muted)' }">
               Overall Readiness
             </p>
-            <h2 class="font-display text-3xl font-bold mb-2" :style="{ color: 'var(--text)' }">
+            <h2 class="font-display text-3xl font-bold mb-2" :style="{ color: 'var(--ink)' }">
               {{ formatBp(overallReadiness) }}
             </h2>
             <AppBadge :color="(bandColor as any)" size="md">{{ readinessBand }}</AppBadge>
-            <p class="text-sm mt-3" :style="{ color: 'var(--text-2)' }">
+            <p class="text-sm mt-3" :style="{ color: 'var(--ink-secondary)' }">
               <template v-if="readinessBand === 'strong'">
                 You are performing strongly. Keep up the momentum and refine your weak areas.
               </template>
@@ -137,25 +137,25 @@ function handleExport() {
       <div v-if="topics.length" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <AppCard padding="md" class="text-center">
           <p class="font-display text-2xl font-bold" :style="{ color: 'var(--accent)' }">{{ topics.length }}</p>
-          <p class="text-[10px] font-medium uppercase mt-1" :style="{ color: 'var(--text-3)' }">Topics Assessed</p>
+          <p class="text-[10px] font-medium uppercase mt-1" :style="{ color: 'var(--ink-muted)' }">Topics Assessed</p>
         </AppCard>
         <AppCard padding="md" class="text-center">
-          <p class="font-display text-2xl font-bold" :style="{ color: 'var(--success)' }">
+          <p class="font-display text-2xl font-bold" :style="{ color: 'var(--accent)' }">
             {{ topics.filter(t => t.classification === 'solid').length }}
           </p>
-          <p class="text-[10px] font-medium uppercase mt-1" :style="{ color: 'var(--text-3)' }">Solid</p>
+          <p class="text-[10px] font-medium uppercase mt-1" :style="{ color: 'var(--ink-muted)' }">Solid</p>
         </AppCard>
         <AppCard padding="md" class="text-center">
           <p class="font-display text-2xl font-bold" :style="{ color: 'var(--gold)' }">
             {{ topics.filter(t => t.classification === 'developing').length }}
           </p>
-          <p class="text-[10px] font-medium uppercase mt-1" :style="{ color: 'var(--text-3)' }">Developing</p>
+          <p class="text-[10px] font-medium uppercase mt-1" :style="{ color: 'var(--ink-muted)' }">Developing</p>
         </AppCard>
         <AppCard padding="md" class="text-center">
-          <p class="font-display text-2xl font-bold" :style="{ color: 'var(--danger)' }">
+          <p class="font-display text-2xl font-bold" :style="{ color: 'var(--warm)' }">
             {{ topics.filter(t => ['weak', 'critical'].includes(t.classification)).length }}
           </p>
-          <p class="text-[10px] font-medium uppercase mt-1" :style="{ color: 'var(--text-3)' }">Needs Work</p>
+          <p class="text-[10px] font-medium uppercase mt-1" :style="{ color: 'var(--ink-muted)' }">Needs Work</p>
         </AppCard>
       </div>
 
@@ -165,7 +165,7 @@ function handleExport() {
       <!-- Overview tab -->
       <div v-if="activeTab === 'overview'">
         <div v-if="syncData?.top_hypotheses?.length" class="space-y-3 mb-6">
-          <h3 class="text-xs font-semibold uppercase tracking-wider" :style="{ color: 'var(--text-3)' }">
+          <h3 class="text-xs font-semibold uppercase tracking-wider" :style="{ color: 'var(--ink-muted)' }">
             Coach's Key Findings
           </h3>
           <AppCard
@@ -175,18 +175,18 @@ function handleExport() {
           >
             <div class="flex items-start gap-3">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                :style="{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }">
+                :style="{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent)' }">
                 {{ h.confidence_score >= 7000 ? '!' : '?' }}
               </div>
               <div class="flex-1">
-                <p class="text-sm font-semibold" :style="{ color: 'var(--text)' }">{{ h.topic_name }}</p>
-                <p class="text-xs mt-0.5" :style="{ color: 'var(--text-3)' }">
+                <p class="text-sm font-semibold" :style="{ color: 'var(--ink)' }">{{ h.topic_name }}</p>
+                <p class="text-xs mt-0.5" :style="{ color: 'var(--ink-muted)' }">
                   {{ h.hypothesis_code.replace(/_/g, ' ') }}
                 </p>
                 <p class="text-xs mt-1" :style="{ color: 'var(--accent)' }">→ {{ h.recommended_action }}</p>
               </div>
               <div class="text-right">
-                <p class="text-xs font-medium" :style="{ color: 'var(--text-3)' }">
+                <p class="text-xs font-medium" :style="{ color: 'var(--ink-muted)' }">
                   Confidence: {{ formatBp(h.confidence_score) }}
                 </p>
               </div>
@@ -196,7 +196,7 @@ function handleExport() {
 
         <!-- Weak topics summary -->
         <div v-if="topics.filter(t => t.mastery_score < 4000).length">
-          <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{ color: 'var(--text-3)' }">
+          <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{ color: 'var(--ink-muted)' }">
             Priority Areas to Fix
           </h3>
           <div class="space-y-2">
@@ -208,8 +208,8 @@ function handleExport() {
               <div class="flex items-center gap-3">
                 <MasteryBadge :state="t.classification" size="sm" glow />
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium truncate" :style="{ color: 'var(--text)' }">{{ t.topic_name }}</p>
-                  <p v-if="t.weakness_type" class="text-[11px]" :style="{ color: 'var(--text-3)' }">
+                  <p class="text-sm font-medium truncate" :style="{ color: 'var(--ink)' }">{{ t.topic_name }}</p>
+                  <p v-if="t.weakness_type" class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">
                     {{ t.weakness_type.replace(/_/g, ' ') }}
                   </p>
                 </div>
@@ -232,8 +232,8 @@ function handleExport() {
           <div class="flex items-center gap-3">
             <MasteryBadge :state="topic.classification" size="sm" glow />
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium truncate" :style="{ color: 'var(--text)' }">{{ topic.topic_name }}</p>
-              <div class="flex flex-wrap gap-3 mt-1 text-[10px]" :style="{ color: 'var(--text-3)' }">
+              <p class="text-sm font-medium truncate" :style="{ color: 'var(--ink)' }">{{ topic.topic_name }}</p>
+              <div class="flex flex-wrap gap-3 mt-1 text-[10px]" :style="{ color: 'var(--ink-muted)' }">
                 <span>Mastery: {{ formatBp(topic.mastery_score) }}</span>
                 <span>Confidence: {{ formatBp(topic.confidence_score) }}</span>
                 <span>Endurance: {{ formatBp(topic.endurance_score) }}</span>
@@ -257,16 +257,16 @@ function handleExport() {
         <AppCard v-for="(topic, i) in topics.filter(t => t.recommended_action).slice(0, 8)" :key="topic.topic_id" padding="md">
           <div class="flex items-start gap-3">
             <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-              :style="{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }">{{ i + 1 }}</div>
+              :style="{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent)' }">{{ i + 1 }}</div>
             <div>
-              <p class="text-sm font-semibold mb-0.5" :style="{ color: 'var(--text)' }">{{ topic.topic_name }}</p>
-              <p class="text-sm" :style="{ color: 'var(--text-2)' }">{{ topic.recommended_action }}</p>
+              <p class="text-sm font-semibold mb-0.5" :style="{ color: 'var(--ink)' }">{{ topic.topic_name }}</p>
+              <p class="text-sm" :style="{ color: 'var(--ink-secondary)' }">{{ topic.recommended_action }}</p>
             </div>
           </div>
         </AppCard>
 
         <AppCard v-if="!topics.filter(t => t.recommended_action).length" padding="lg" class="text-center">
-          <p class="text-sm" :style="{ color: 'var(--text-3)' }">Your coach is building your personalised action plan.</p>
+          <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">Your coach is building your personalised action plan.</p>
         </AppCard>
 
         <div class="mt-6">
@@ -278,7 +278,7 @@ function handleExport() {
 
       <!-- No data -->
       <div v-if="!loading && topics.length === 0" class="text-center py-16">
-        <p class="text-sm" :style="{ color: 'var(--text-3)' }">
+        <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">
           Report not available yet. Please complete the diagnostic first.
         </p>
         <AppButton variant="primary" class="mt-4" @click="router.push('/student/diagnostic')">

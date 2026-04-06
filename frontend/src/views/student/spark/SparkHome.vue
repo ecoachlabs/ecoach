@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import AppCard from '@/components/ui/AppCard.vue'
-import AppButton from '@/components/ui/AppButton.vue'
 
 const router = useRouter()
 const step = ref(0)
@@ -11,21 +9,21 @@ const questions = [
   {
     question: 'What frustrates you most about studying?',
     options: [
-      { key: 'overwhelmed', label: 'Too much to learn, don\'t know where to start', icon: '😵' },
-      { key: 'bored', label: 'It\'s boring, I lose focus quickly', icon: '😴' },
-      { key: 'defeated', label: 'I try but I keep failing', icon: '😞' },
-      { key: 'distracted', label: 'I get distracted by other things', icon: '📱' },
-      { key: 'disconnected', label: 'I don\'t see why it matters', icon: '🤷' },
-      { key: 'nervous', label: 'I panic when I see test questions', icon: '😰' },
+      { key: 'overwhelmed', label: "Too much to learn, don't know where to start" },
+      { key: 'bored', label: "It's boring, I lose focus quickly" },
+      { key: 'defeated', label: 'I try but I keep failing' },
+      { key: 'distracted', label: 'I get distracted by other things' },
+      { key: 'disconnected', label: "I don't see why it matters" },
+      { key: 'nervous', label: 'I panic when I see test questions' },
     ],
   },
   {
     question: 'How do you prefer to learn?',
     options: [
-      { key: 'challenge', label: 'Challenges and competitions', icon: '🏆' },
-      { key: 'story', label: 'Stories and real-life examples', icon: '📖' },
-      { key: 'quick', label: 'Quick, short activities', icon: '⚡' },
-      { key: 'guided', label: 'Step-by-step guidance', icon: '🗺' },
+      { key: 'challenge', label: 'Challenges and competitions' },
+      { key: 'story', label: 'Stories and real-life examples' },
+      { key: 'quick', label: 'Quick, short activities' },
+      { key: 'guided', label: 'Step-by-step guidance' },
     ],
   },
 ]
@@ -43,39 +41,99 @@ function selectAnswer(key: string) {
 </script>
 
 <template>
-  <div class="min-h-[80vh] flex flex-col items-center justify-center px-8 reveal-stagger">
-    <div class="max-w-lg w-full">
-      <!-- Progress -->
-      <div class="flex gap-2 mb-8">
-        <div v-for="i in questions.length" :key="i"
-          class="h-1 flex-1 rounded-full transition-all"
-          :style="{ backgroundColor: i <= step + 1 ? 'var(--accent)' : 'var(--border-soft)' }" />
+  <div class="h-full flex overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
+
+    <!-- Left: identity panel -->
+    <div
+      class="w-64 flex-shrink-0 flex flex-col justify-between p-8 border-r"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+    >
+      <div>
+        <p class="eyebrow mb-4">Spark Mode</p>
+        <h2 class="font-display text-2xl font-bold leading-tight" :style="{ color: 'var(--ink)' }">
+          Find your learning style
+        </h2>
+        <p class="text-xs mt-3" :style="{ color: 'var(--ink-muted)' }">
+          Answer a few questions so your coach can adapt your experience.
+        </p>
       </div>
+
+      <!-- Step indicator -->
+      <div>
+        <div class="flex gap-2 mb-3">
+          <div
+            v-for="(_, i) in questions"
+            :key="i"
+            class="h-1 rounded-full transition-all duration-300"
+            :style="{
+              flex: i === step ? '2' : '1',
+              backgroundColor: i <= step ? 'var(--ink)' : 'var(--border-soft)',
+            }"
+          />
+        </div>
+        <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">
+          Question {{ step + 1 }} of {{ questions.length }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Right: question + options -->
+    <div class="flex-1 flex flex-col overflow-hidden">
 
       <!-- Question -->
-      <h2 class="font-display text-xl font-bold text-center mb-8" :style="{ color: 'var(--text)' }">
-        {{ questions[step].question }}
-      </h2>
-
-      <!-- Options -->
-      <div class="space-y-3">
-        <AppCard
-          v-for="opt in questions[step].options"
-          :key="opt.key"
-          hover padding="md"
-          @click="selectAnswer(opt.key)"
-        >
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">{{ opt.icon }}</span>
-            <p class="text-sm font-medium" :style="{ color: 'var(--text)' }">{{ opt.label }}</p>
-          </div>
-        </AppCard>
+      <div class="flex-shrink-0 px-10 pt-12 pb-8 border-b" :style="{ borderColor: 'var(--border-soft)' }">
+        <h2 class="font-display text-2xl font-bold" :style="{ color: 'var(--ink)' }">
+          {{ questions[step].question }}
+        </h2>
       </div>
 
-      <!-- Skip -->
-      <div class="mt-6 text-center">
-        <AppButton variant="ghost" size="sm" @click="router.push('/student')">Skip for now</AppButton>
+      <!-- Options -->
+      <div class="flex-1 overflow-y-auto px-10 py-6">
+        <div class="space-y-2.5 max-w-xl">
+          <button
+            v-for="opt in questions[step].options"
+            :key="opt.key"
+            class="option-card w-full text-left"
+            @click="selectAnswer(opt.key)"
+          >
+            <p class="text-sm font-semibold" :style="{ color: 'var(--ink)' }">{{ opt.label }}</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex-shrink-0 px-10 py-5 border-t flex items-center justify-between"
+        :style="{ borderColor: 'var(--border-soft)' }">
+        <button class="text-xs font-semibold" :style="{ color: 'var(--ink-muted)' }"
+          @click="router.push('/student')">Skip for now →</button>
+        <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">~2 minutes to complete</p>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}
+
+.option-card {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 100ms ease, background-color 100ms ease;
+}
+.option-card:hover {
+  transform: translateX(4px);
+  border-color: var(--ink);
+  background-color: var(--paper);
+}
+</style>

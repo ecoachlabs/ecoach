@@ -3,16 +3,12 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getLearnerTruth, type LearnerTruthDto } from '@/ipc/coach'
-import AppButton from '@/components/ui/AppButton.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
-import PageHeader from '@/components/layout/PageHeader.vue'
 import ComparisonCard from '@/components/viz/ComparisonCard.vue'
 import StreakCounter from '@/components/viz/StreakCounter.vue'
 import MicroGainIndicator from '@/components/modes/beat-yesterday/MicroGainIndicator.vue'
 import DailyClimbSession from '@/components/modes/beat-yesterday/DailyClimbSession.vue'
 import GrowthBadges from '@/components/modes/beat-yesterday/GrowthBadges.vue'
 import WeeklyTrends from '@/components/modes/beat-yesterday/WeeklyTrends.vue'
-import AppCard from '@/components/ui/AppCard.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -50,11 +46,8 @@ const badges = [
 ]
 
 const modeLabels: Record<string, string> = {
-  volume: 'Volume Day — attempt more questions',
-  accuracy: 'Accuracy Day — get more right',
-  speed: 'Speed Day — answer faster',
-  mixed: 'Mixed Day — all dimensions',
-  recovery: 'Recovery Day — gentle rebuild',
+  volume: 'Volume Day', accuracy: 'Accuracy Day',
+  speed: 'Speed Day', mixed: 'Mixed Day', recovery: 'Recovery Day',
 }
 
 onMounted(async () => {
@@ -65,58 +58,174 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-4xl mx-auto reveal-stagger">
-    <PageHeader title="Beat Yesterday" subtitle="Small daily gains compound into transformation." back-to="/student">
-      <template #actions>
-        <StreakCounter :count="streak" label="Day Streak" animated />
-      </template>
-    </PageHeader>
+  <div class="h-full flex flex-col overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
 
-    <div v-if="loading" class="space-y-4">
-      <div v-for="i in 3" :key="i" class="h-24 rounded-xl animate-pulse" :style="{backgroundColor:'var(--border-soft)'}" />
+    <!-- Header -->
+    <div
+      class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
+      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+    >
+      <div>
+        <p class="eyebrow">Beat Yesterday</p>
+        <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
+          Small gains. Big transformation.
+        </h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="px-3 py-1.5 rounded-lg text-xs font-semibold"
+          :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid var(--border-soft)' }">
+          {{ modeLabels[growthMode] }}
+        </div>
+        <StreakCounter :count="streak" label="Day Streak" animated />
+      </div>
+    </div>
+
+    <div v-if="loading" class="flex-1 p-6 space-y-4">
+      <div v-for="i in 3" :key="i" class="h-24 rounded-2xl animate-pulse"
+        :style="{ backgroundColor: 'var(--border-soft)' }" />
     </div>
 
     <template v-else>
-      <!-- Yesterday vs Today -->
-      <div class="mb-6">
-        <ComparisonCard left-label="Yesterday" right-label="Today's Target"
-          :left-value="yesterday.correct + '/' + yesterday.attempted"
-          :right-value="targets.correct + '/' + targets.attempted"
-          :left-subtext="yesterday.avgTime + 's avg'" :right-subtext="targets.avgTime + 's avg'"
-          highlight="right" />
+      <div class="flex-1 overflow-hidden flex">
+
+        <!-- Left: comparison + session -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-5">
+          <ComparisonCard
+            left-label="Yesterday"
+            right-label="Today's Target"
+            :left-value="yesterday.correct + '/' + yesterday.attempted"
+            :right-value="targets.correct + '/' + targets.attempted"
+            :left-subtext="yesterday.avgTime + 's avg'"
+            :right-subtext="targets.avgTime + 's avg'"
+            highlight="right"
+          />
+
+          <div v-if="today.attempted > 0" class="flex items-center gap-4">
+            <MicroGainIndicator type="volume" :value="today.attempted - yesterday.attempted" />
+            <MicroGainIndicator type="accuracy" :value="today.correct - yesterday.correct" />
+            <MicroGainIndicator type="speed" :value="yesterday.avgTime - today.avgTime" unit="s" />
+          </div>
+
+          <DailyClimbSession :current-block="0" :blocks="blocks" />
+
+          <div class="pt-2">
+            <button
+              class="w-full py-3.5 rounded-2xl font-bold text-sm"
+              :style="{ backgroundColor: 'var(--ink)', color: 'var(--paper)' }"
+              @click="router.push('/student/session/beat-yesterday')"
+            >Start Today's Climb →</button>
+            <p class="text-xs text-center mt-2" :style="{ color: 'var(--ink-muted)' }">
+              ~9 minutes · {{ targets.attempted }} questions
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: weekly + badges -->
+        <div
+          class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
+          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        >
+          <!-- Weekly bars -->
+          <div class="px-5 pt-5 pb-4 border-b" :style="{ borderColor: 'var(--border-soft)' }">
+            <p class="section-label mb-4">This Week</p>
+            <div class="flex items-end justify-between gap-2" style="height: 64px;">
+              <div v-for="day in weekData" :key="day.day" class="flex-1 flex flex-col items-center gap-1">
+                <div class="flex-1 w-full flex flex-col justify-end">
+                  <div class="w-full rounded-t-sm"
+                    :style="{ height: (day.correct / 15 * 100) + '%', minHeight: '4px', backgroundColor: 'var(--accent-glow)', border: '1px solid var(--accent)' }" />
+                </div>
+                <span class="text-[9px] font-semibold" :style="{ color: 'var(--ink-muted)' }">{{ day.day }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badges -->
+          <div class="flex-1 overflow-y-auto p-4">
+            <p class="section-label mb-3">Badges</p>
+            <div class="grid grid-cols-2 gap-2">
+              <div
+                v-for="badge in badges"
+                :key="badge.name"
+                class="badge-card"
+                :class="badge.earned ? 'earned' : 'locked'"
+              >
+                <span class="text-xl mb-1">{{ badge.icon }}</span>
+                <span class="text-[10px] font-bold" :style="{ color: 'var(--ink)' }">{{ badge.name }}</span>
+                <span class="text-[9px]" :style="{ color: 'var(--ink-muted)' }">{{ badge.requirement }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 border-t flex gap-2" :style="{ borderColor: 'var(--border-soft)' }">
+            <button class="toggle-btn flex-1" :class="{ on: showTrends }"
+              @click="showTrends = !showTrends">Trends</button>
+            <button class="toggle-btn flex-1" :class="{ on: showBadges }"
+              @click="showBadges = !showBadges">Badges</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Growth Mode -->
-      <div class="text-center mb-6">
-        <AppBadge color="gold" size="md">{{ modeLabels[growthMode] }}</AppBadge>
+      <div v-if="showTrends || showBadges"
+        class="flex-shrink-0 border-t p-6"
+        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+        <WeeklyTrends v-if="showTrends" :week-data="weekData" :weekly-gains="{ volume: 3, accuracy: 2, speed: -2 }" class="mb-4" />
+        <GrowthBadges v-if="showBadges" :streak-days="streak" :badges="badges" />
       </div>
-
-      <!-- Micro Gains (if any today) -->
-      <div v-if="today.attempted > 0" class="flex items-center justify-center gap-3 mb-4">
-        <MicroGainIndicator type="volume" :value="today.attempted - yesterday.attempted" />
-        <MicroGainIndicator type="accuracy" :value="today.correct - yesterday.correct" />
-        <MicroGainIndicator type="speed" :value="yesterday.avgTime - today.avgTime" unit="s" />
-      </div>
-
-      <!-- Session Blocks -->
-      <div class="mb-6">
-        <DailyClimbSession :current-block="0" :blocks="blocks" />
-      </div>
-
-      <!-- CTA -->
-      <div class="text-center mb-6">
-        <AppButton variant="warm" size="lg" @click="router.push('/student/session/beat-yesterday')">Start Today's Climb →</AppButton>
-        <p class="text-xs mt-2" :style="{color:'var(--text-3)'}">~9 minutes · {{ targets.attempted }} questions</p>
-      </div>
-
-      <!-- Toggle sections -->
-      <div class="flex gap-2 mb-4">
-        <AppButton variant="secondary" size="sm" @click="showTrends = !showTrends">{{ showTrends ? 'Hide' : 'Show' }} Weekly Trends</AppButton>
-        <AppButton variant="secondary" size="sm" @click="showBadges = !showBadges">{{ showBadges ? 'Hide' : 'Show' }} Badges</AppButton>
-      </div>
-
-      <WeeklyTrends v-if="showTrends" :week-data="weekData" :weekly-gains="{ volume: 3, accuracy: 2, speed: -2 }" class="mb-6" />
-      <GrowthBadges v-if="showBadges" :streak-days="streak" :badges="badges" />
     </template>
   </div>
 </template>
+
+<style scoped>
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
+}
+
+.badge-card {
+  border-radius: 12px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  border: 1px solid var(--border-soft);
+  background: var(--paper);
+}
+.badge-card.earned {
+  background: var(--surface);
+  border-color: var(--border-soft);
+}
+.badge-card.locked {
+  opacity: 0.4;
+}
+
+.toggle-btn {
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--paper);
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-soft);
+  transition: all 120ms;
+}
+.toggle-btn.on {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+</style>

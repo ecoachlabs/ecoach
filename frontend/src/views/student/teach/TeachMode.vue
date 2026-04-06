@@ -12,14 +12,14 @@ const router = useRouter()
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-5xl mx-auto reveal-stagger">
+  <div class="flex-1 overflow-y-auto p-7">
 
-    <h1 class="font-display text-2xl font-bold tracking-tight mb-2" :style="{ color: 'var(--text)' }">Teach Mode</h1>
-    <p class="text-sm mb-6" :style="{ color: 'var(--text-3)' }">Learn a topic step by step, from simple to exam-level.</p>
+    <h1 class="font-display text-2xl font-bold tracking-tight mb-2" :style="{ color: 'var(--ink)' }">Teach Mode</h1>
+    <p class="text-sm mb-6" :style="{ color: 'var(--ink-muted)' }">Learn a topic step by step, from simple to exam-level.</p>
     <div class="space-y-4">
       <AppCard v-for="block in ['Concept Overview','Why It Matters','Simple Explanation','Formal Definition','Visual Understanding','Worked Examples','Common Mistakes','Misconception Alerts','Exam Appearance','Practice Problem']" :key="block" padding="md">
-        <h3 class="text-sm font-semibold mb-1" :style="{ color: 'var(--text)' }">{{ block }}</h3>
-        <p class="text-xs" :style="{ color: 'var(--text-3)' }">Teaching content for this block will be generated from the curriculum and rendered here.</p>
+        <h3 class="text-sm font-semibold mb-1" :style="{ color: 'var(--ink)' }">{{ block }}</h3>
+        <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">Teaching content for this block will be generated from the curriculum and rendered here.</p>
       </AppCard>
     </div>
   </div>

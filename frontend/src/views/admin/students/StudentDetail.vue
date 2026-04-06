@@ -12,9 +12,9 @@ const router = useRouter()
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 max-w-5xl mx-auto reveal-stagger">
+  <div class="flex-1 overflow-y-auto p-7">
 
-    <h1 class="text-lg font-bold mb-4" :style="{ color: 'var(--text)' }">Student Detail</h1>
-    <AppCard padding="lg"><p class="text-sm" :style="{ color: 'var(--text-3)' }">Full learner truth snapshot for this student. Topic states, diagnoses, memory, evidence.</p></AppCard>
+    <h1 class="text-lg font-bold mb-4" :style="{ color: 'var(--ink)' }">Student Detail</h1>
+    <AppCard padding="lg"><p class="text-sm" :style="{ color: 'var(--ink-muted)' }">Full learner truth snapshot for this student. Topic states, diagnoses, memory, evidence.</p></AppCard>
   </div>
 </template>
