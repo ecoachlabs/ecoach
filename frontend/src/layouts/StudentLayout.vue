@@ -407,21 +407,21 @@ watch(() => route.fullPath, updatePill)
     border-color 300ms ease,
     box-shadow 300ms ease;
 
-  /* Glass surface */
-  background: color-mix(in srgb, var(--pc, #3b82f6) 11%, rgba(255, 255, 255, 0.88));
-  border: 1px solid color-mix(in srgb, var(--pc, #3b82f6) 24%, rgba(255, 255, 255, 0.60));
+  /* Glass surface — more transparent, colour just tints */
+  background: color-mix(in srgb, var(--pc, #3b82f6) 6%, rgba(255, 255, 255, 0.48));
+  border: 1px solid color-mix(in srgb, var(--pc, #3b82f6) 18%, rgba(255, 255, 255, 0.50));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.28),
-    0 4px 16px color-mix(in srgb, var(--pc, #3b82f6) 20%, transparent),
-    0 1px 4px rgba(15, 23, 42, 0.07);
-  backdrop-filter: blur(18px) saturate(190%);
-  -webkit-backdrop-filter: blur(18px) saturate(190%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.22),
+    0 4px 18px color-mix(in srgb, var(--pc, #3b82f6) 14%, transparent),
+    0 1px 3px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
 }
 
 .glass-pill--visible { opacity: 1; }
 
-/* Top-left light catch — the refracting white sheen */
+/* Top-left light catch — refracting white sheen */
 .glass-pill::before {
   content: '';
   position: absolute;
@@ -431,26 +431,33 @@ watch(() => route.fullPath, updatePill)
   background:
     linear-gradient(
       148deg,
-      rgba(255, 255, 255, 0.78) 0%,
-      rgba(255, 255, 255, 0.22) 28%,
-      rgba(255, 255, 255, 0.05) 60%,
+      rgba(255, 255, 255, 0.70) 0%,
+      rgba(255, 255, 255, 0.18) 30%,
+      rgba(255, 255, 255, 0.04) 62%,
       transparent 100%
     ),
     radial-gradient(
-      85% 55% at 12% 18%,
-      rgba(255, 255, 255, 0.58) 0%,
-      transparent 68%
+      82% 52% at 12% 18%,
+      rgba(255, 255, 255, 0.50) 0%,
+      transparent 66%
     );
 }
 
-/* Colour wash layer */
+/* Left handle bar — solid colour, fully rounded pill */
 .glass-pill::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: 10px;
+  left: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 58%;
+  min-height: 14px;
+  border-radius: 99px;
+  background: var(--pc, #3b82f6);
   pointer-events: none;
-  background: color-mix(in srgb, var(--pc, #3b82f6) 12%, transparent);
+  /* transitions match the pill colour change */
+  transition: background 300ms ease, height 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .nav-section {
@@ -463,7 +470,7 @@ watch(() => route.fullPath, updatePill)
   align-items: center;
   gap: 9px;
   margin: 1px 8px;
-  padding: 8px 8px 8px 12px;
+  padding: 8px 8px 8px 18px;
   border-radius: 10px;
   border: 1px solid transparent;
   text-decoration: none;
