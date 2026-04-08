@@ -12,9 +12,13 @@ import {
 } from '@/ipc/coach'
 import MasteryBadge from '@/components/viz/MasteryBadge.vue'
 import {
-  PhPencilSimple, PhClockCountdown, PhTarget, PhBrain,
-  PhGameController, PhChartBar, PhArrowRight, PhLightning,
-  PhBookOpen, PhStar, PhFlame, PhTrendUp,
+  PhArrowRight,
+  PhBookOpen,
+  PhClockCountdown,
+  PhFlame,
+  PhLightning,
+  PhTarget,
+  PhTrendUp,
 } from '@phosphor-icons/vue'
 
 const auth = useAuthStore()
@@ -70,14 +74,198 @@ function bandLabel(band: string): string {
   return 'Weak'
 }
 
-const navLinks = [
-  { icon: PhPencilSimple, label: 'Practice', sub: 'Subject drill', to: '/student/practice' },
-  { icon: PhClockCountdown, label: 'Mock', sub: 'Exam simulation', to: '/student/mock' },
-  { icon: PhBrain, label: 'Memory', sub: 'Spaced review', to: '/student/memory' },
-  { icon: PhTarget, label: 'Gap Scan', sub: 'Find blind spots', to: '/student/knowledge-gap' },
-  { icon: PhStar, label: 'Journey', sub: 'Learning path', to: '/student/journey' },
-  { icon: PhChartBar, label: 'Progress', sub: 'Analytics', to: '/student/progress' },
+type QuickCheckOption = {
+  id: string
+  label: string
+  correct?: boolean
+}
+
+type QuickCheck = {
+  id: string
+  topic: string
+  prompt: string
+  options: QuickCheckOption[]
+  explanation: string
+  to: string
+}
+
+type FeedTone = 'accent' | 'warm' | 'gold' | 'muted'
+
+type LiveFeedItem = {
+  id: string
+  tone: FeedTone
+  title: string
+  detail: string
+  time: string
+  action: string
+  to: string
+}
+
+const quickChecks: QuickCheck[] = [
+  {
+    id: 'quick-gap',
+    topic: 'Gap Scan',
+    prompt: 'What is the fastest way to fix repeated mistakes in one topic?',
+    options: [
+      { id: 'a', label: 'Do random mixed questions only' },
+      { id: 'b', label: 'Review error pattern and run focused drills', correct: true },
+      { id: 'c', label: 'Skip that topic for now' },
+    ],
+    explanation: 'Pattern review + focused drilling fixes root causes faster than random practice.',
+    to: '/student/knowledge-gap',
+  },
+  {
+    id: 'quick-diagnostic',
+    topic: 'Diagnostic DNA',
+    prompt: 'A diagnostic test should mostly measure:',
+    options: [
+      { id: 'a', label: 'Your speed under pressure' },
+      { id: 'b', label: 'Your strongest topics only' },
+      { id: 'c', label: 'Your real weak points and misconceptions', correct: true },
+    ],
+    explanation: 'Diagnostics are best when they surface true gaps, not just speed.',
+    to: '/student/diagnostic',
+  },
+  {
+    id: 'quick-mock',
+    topic: 'Prepare Test',
+    prompt: 'Best move the day before a mock exam?',
+    options: [
+      { id: 'a', label: 'Learn brand new topics' },
+      { id: 'b', label: 'Do light revision + one timed set', correct: true },
+      { id: 'c', label: 'Avoid all practice' },
+    ],
+    explanation: 'Light revision and a controlled timed set keeps recall sharp without burnout.',
+    to: '/student/mock',
+  },
+  {
+    id: 'quick-review',
+    topic: 'Review Queue',
+    prompt: 'When should you revisit a recently learned idea?',
+    options: [
+      { id: 'a', label: 'Only when exams are near' },
+      { id: 'b', label: 'On spaced intervals before memory fades', correct: true },
+      { id: 'c', label: 'Never, once is enough' },
+    ],
+    explanation: 'Spaced review protects memory strength before decay becomes expensive.',
+    to: '/student/memory#reviews',
+  },
 ]
+
+const quickCheckIndex = ref(0)
+const selectedQuickOptionId = ref<string | null>(null)
+
+const activeQuickCheck = computed(() => quickChecks[quickCheckIndex.value % quickChecks.length])
+const quickAnswered = computed(() => selectedQuickOptionId.value !== null)
+const quickSelectionCorrect = computed(() => {
+  if (!selectedQuickOptionId.value) return false
+  const option = activeQuickCheck.value.options.find(opt => opt.id === selectedQuickOptionId.value)
+  return !!option?.correct
+})
+
+const quickStepLabel = computed(() => `${quickCheckIndex.value + 1}/${quickChecks.length}`)
+
+const liveFeed = computed<LiveFeedItem[]>(() => {
+  const items: LiveFeedItem[] = []
+
+  if (nextAction.value) {
+    items.push({
+      id: 'coach-directive',
+      tone: 'accent',
+      title: nextAction.value.title,
+      detail: nextAction.value.subtitle,
+      time: 'now',
+      action: 'Open',
+      to: nextAction.value.route,
+    })
+  }
+
+  if (topicCases.value.length) {
+    const topTopic = topicCases.value[0]
+    items.push({
+      id: `topic-${topTopic.topic_id}`,
+      tone: topTopic.intervention_urgency === 'high' ? 'warm' : 'gold',
+      title: `${topTopic.topic_name} flagged for recovery`,
+      detail: `${topTopic.intervention_mode.replace(/_/g, ' ')} recommended`,
+      time: '2m ago',
+      action: 'Practice',
+      to: '/student/practice',
+    })
+  }
+
+  if (dashboard.value?.subjects?.length) {
+    const weakest = [...dashboard.value.subjects].sort((a, b) => {
+      const aPct = Math.round(a.mastered_topic_count / Math.max(a.total_topic_count, 1) * 100)
+      const bPct = Math.round(b.mastered_topic_count / Math.max(b.total_topic_count, 1) * 100)
+      return aPct - bPct
+    })[0]
+
+    const weakestPct = Math.round(weakest.mastered_topic_count / Math.max(weakest.total_topic_count, 1) * 100)
+
+    items.push({
+      id: `subject-${weakest.subject_id}`,
+      tone: 'muted',
+      title: `${weakest.subject_name} is ${bandLabel(weakest.readiness_band)}`,
+      detail: `${weakestPct}% mastered - ${weakest.weak_topic_count} weak topics`,
+      time: '5m ago',
+      action: 'Review',
+      to: '/student/progress',
+    })
+  }
+
+  items.push(
+    {
+      id: 'revision-box',
+      tone: 'gold',
+      title: 'Revision Box refreshed',
+      detail: 'New revision pack suggestions are available',
+      time: '12m ago',
+      action: 'Open',
+      to: '/student/library#revision-box',
+    },
+    {
+      id: 'retry-zone',
+      tone: 'warm',
+      title: 'Retry Zone queued',
+      detail: 'High-impact mistakes are ready for rematch',
+      time: '17m ago',
+      action: 'Retry',
+      to: '/student/mistakes#retry-zone',
+    },
+    {
+      id: 'games-hub',
+      tone: 'accent',
+      title: 'Games challenge available',
+      detail: 'Train speed and focus in Games Hub',
+      time: '26m ago',
+      action: 'Play',
+      to: '/student/games',
+    },
+  )
+
+  return items.slice(0, 9)
+})
+
+function pickQuickOption(optionId: string) {
+  if (selectedQuickOptionId.value) return
+  selectedQuickOptionId.value = optionId
+}
+
+function nextQuickCheck() {
+  quickCheckIndex.value = (quickCheckIndex.value + 1) % quickChecks.length
+  selectedQuickOptionId.value = null
+}
+
+function openQuickCheckTopic() {
+  router.push(activeQuickCheck.value.to)
+}
+
+function feedToneColor(tone: FeedTone): string {
+  if (tone === 'warm') return 'var(--warm)'
+  if (tone === 'gold') return 'var(--gold)'
+  if (tone === 'accent') return 'var(--accent)'
+  return 'var(--ink-muted)'
+}
 </script>
 
 <template>
@@ -216,112 +404,479 @@ const navLinks = [
         </div>
       </div>
 
-      <!-- Right: navigation + subjects -->
-      <div
-        class="w-72 flex-shrink-0 flex flex-col overflow-hidden border-l"
-        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
-      >
-        <!-- Quick nav -->
-        <div class="flex-shrink-0 p-4 border-b" :style="{ borderColor: 'var(--border-soft)' }">
-          <p class="section-label mb-3">Navigate</p>
-          <div class="grid grid-cols-2 gap-2">
+      <!-- Right panel -->
+      <div class="right-panel">
+
+        <!-- ── TOP: Quick Test ── -->
+        <div class="qt-panel">
+          <!-- Progress dots + label -->
+          <div class="qt-header">
+            <span class="panel-label">Quick Test</span>
+            <div class="qt-dots">
+              <div
+                v-for="(_, i) in quickChecks"
+                :key="i"
+                class="qt-dot"
+                :class="{ 'qt-dot--active': i === quickCheckIndex }"
+              />
+            </div>
+          </div>
+
+          <!-- Topic pill -->
+          <div class="qt-topic-pill">
+            <PhTarget :size="11" weight="fill" />
+            {{ activeQuickCheck.topic }}
+          </div>
+
+          <!-- Question -->
+          <p class="qt-question">{{ activeQuickCheck.prompt }}</p>
+
+          <!-- Options -->
+          <div class="qt-options">
             <button
-              v-for="link in navLinks"
-              :key="link.to"
-              class="nav-tile flex flex-col gap-1 p-3 rounded-xl border text-left"
-              :style="{ borderColor: 'transparent', backgroundColor: 'var(--paper)' }"
-              @click="router.push(link.to)"
+              v-for="option in activeQuickCheck.options"
+              :key="option.id"
+              class="qt-option"
+              :class="{
+                'qt-option--correct': quickAnswered && option.correct,
+                'qt-option--wrong': quickAnswered && selectedQuickOptionId === option.id && !option.correct,
+                'qt-option--dim': quickAnswered && selectedQuickOptionId !== option.id && !option.correct,
+              }"
+              :disabled="quickAnswered"
+              @click="pickQuickOption(option.id)"
             >
-              <component :is="link.icon" :size="16" weight="duotone"
-                :style="{ color: 'var(--ink-secondary)' }" />
-              <p class="text-[11px] font-bold" :style="{ color: 'var(--ink)' }">{{ link.label }}</p>
-              <p class="text-[9px]" :style="{ color: 'var(--ink-muted)' }">{{ link.sub }}</p>
+              <span class="qt-letter">{{ option.id.toUpperCase() }}</span>
+              <span class="qt-option-text">{{ option.label }}</span>
+            </button>
+          </div>
+
+          <!-- Explanation -->
+          <Transition name="explain">
+            <div v-if="quickAnswered" class="qt-explain">
+              <div class="qt-explain-icon">
+                <PhBookOpen :size="13" weight="fill" :style="{ color: quickSelectionCorrect ? '#16a34a' : 'var(--warm)' }" />
+              </div>
+              <p class="qt-explain-text">{{ activeQuickCheck.explanation }}</p>
+              <div class="qt-explain-actions">
+                <button class="qt-btn qt-btn--secondary" @click="openQuickCheckTopic">Review Topic</button>
+                <button class="qt-btn qt-btn--primary" @click="nextQuickCheck">Next →</button>
+              </div>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- ── BOTTOM: Recent Activity ── -->
+        <div class="activity-panel">
+          <div class="activity-header">
+            <span class="panel-label">Recent Activity</span>
+            <span class="activity-count">{{ liveFeed.length }}</span>
+          </div>
+
+          <!-- Hero 3D card — most recent -->
+          <div
+            v-if="liveFeed[0]"
+            class="hero-card"
+            :style="{ '--hc': feedToneColor(liveFeed[0].tone) }"
+            @click="router.push(liveFeed[0].to)"
+          >
+            <div class="hero-card-shine" />
+            <div class="hero-card-body">
+              <span class="hero-card-now">Just now</span>
+              <p class="hero-card-title">{{ liveFeed[0].title }}</p>
+              <p class="hero-card-detail">{{ liveFeed[0].detail }}</p>
+              <button class="hero-card-cta">
+                {{ liveFeed[0].action }}
+                <PhArrowRight :size="12" weight="bold" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Compact feed list -->
+          <div class="compact-feed">
+            <button
+              v-for="item in liveFeed.slice(1, 7)"
+              :key="item.id"
+              class="feed-row"
+              @click="router.push(item.to)"
+            >
+              <span class="feed-row-dot" :style="{ background: feedToneColor(item.tone) }" />
+              <div class="feed-row-body">
+                <p class="feed-row-title">{{ item.title }}</p>
+                <p class="feed-row-time">{{ item.time }}</p>
+              </div>
+              <span class="feed-row-action" :style="{ color: feedToneColor(item.tone) }">
+                {{ item.action }}
+              </span>
             </button>
           </div>
         </div>
 
-        <!-- Subject overview -->
-        <div v-if="dashboard?.subjects?.length" class="flex-1 overflow-y-auto p-4">
-          <p class="section-label mb-3">Subjects</p>
-          <div class="space-y-2">
-            <div
-              v-for="s in dashboard.subjects"
-              :key="s.subject_id"
-              class="subject-row flex items-center gap-3 px-3 py-3 rounded-xl border cursor-pointer"
-              :style="{ borderColor: 'transparent', backgroundColor: 'var(--paper)' }"
-              @click="router.push('/student/progress')"
-            >
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0"
-                :style="{ backgroundColor: 'var(--border-soft)', color: 'var(--ink)' }">
-                {{ s.subject_name?.charAt(0) }}
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between mb-1">
-                  <p class="text-[11px] font-bold truncate" :style="{ color: 'var(--ink)' }">{{ s.subject_name }}</p>
-                  <p class="text-[10px] font-semibold" :style="{ color: 'var(--ink-secondary)' }">
-                    {{ Math.round(s.mastered_topic_count / Math.max(s.total_topic_count, 1) * 100) }}%
-                  </p>
-                </div>
-                <div class="h-1 rounded-full overflow-hidden" :style="{ backgroundColor: 'var(--border-soft)' }">
-                  <div class="h-full rounded-full"
-                    :style="{
-                      width: Math.round(s.mastered_topic_count / Math.max(s.total_topic_count, 1) * 100) + '%',
-                      backgroundColor: s.readiness_band === 'strong' ? 'var(--accent)' : s.readiness_band === 'developing' ? 'var(--gold)' : 'var(--warm)',
-                    }"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.section-label {
-  font-size: 10px;
+/* ── Shared ────────────────────────────────────────────── */
+.section-label, .panel-label {
+  font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.15em;
   color: var(--ink-muted);
 }
 
-.directive-card {
-  transition: border-color 140ms ease, box-shadow 140ms ease;
-}
-.directive-card:hover {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 1px var(--accent-glow);
-}
-
-.cta-btn {
-  transition: opacity 120ms ease, transform 120ms ease;
-}
+.directive-card { transition: box-shadow 140ms ease, transform 140ms ease; }
+.directive-card:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(15,23,42,0.07); }
+.cta-btn { transition: opacity 120ms ease, transform 120ms ease; }
 .cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.topic-row { transition: background-color 100ms ease; }
+.topic-row:hover { background-color: var(--paper) !important; }
 
-.topic-row {
-  transition: background-color 100ms ease, border-color 100ms ease;
-}
-.topic-row:hover {
-  background-color: var(--paper) !important;
-  border-color: var(--border-strong) !important;
+/* ── Right panel ───────────────────────────────────────── */
+.right-panel {
+  width: 22rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border-left: 1px solid var(--border-soft);
 }
 
-.nav-tile {
+/* ── Quick Test ────────────────────────────────────────── */
+.qt-panel {
+  flex-shrink: 0;
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.qt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.qt-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.qt-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--border-strong);
+  transition: width 220ms ease, background 220ms ease;
+}
+.qt-dot--active {
+  width: 18px;
+  background: var(--accent);
+}
+
+.qt-topic-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  background: var(--accent-glow);
+  margin-bottom: 10px;
+}
+
+.qt-question {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.qt-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qt-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: var(--paper);
+  border: 1px solid var(--border-soft);
   cursor: pointer;
-  transition: background-color 100ms ease, border-color 100ms ease;
+  text-align: left;
+  transition: transform 100ms ease, background 120ms ease, border-color 120ms ease;
 }
-.nav-tile:hover {
-  background-color: var(--accent-glow) !important;
-  border-color: var(--accent) !important;
+.qt-option:hover:not(:disabled) {
+  transform: translateX(3px);
+  background: var(--paper-warm);
+  border-color: var(--border-strong);
 }
-.nav-tile:hover p { color: var(--accent) !important; }
+.qt-option:disabled { cursor: default; }
+.qt-option:active:not(:disabled) { transform: scale(0.98); }
 
-.subject-row {
-  transition: background-color 100ms ease;
+.qt-option--correct {
+  background: rgba(22,163,74,0.09) !important;
+  border-color: rgba(22,163,74,0.35) !important;
 }
-.subject-row:hover { background-color: var(--surface) !important; }
+.qt-option--wrong {
+  background: rgba(194,65,12,0.09) !important;
+  border-color: rgba(194,65,12,0.35) !important;
+}
+.qt-option--dim { opacity: 0.45; }
+
+.qt-letter {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--border-strong);
+  color: var(--ink-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 120ms ease, color 120ms ease;
+}
+.qt-option--correct .qt-letter { background: rgba(22,163,74,0.2); color: #15803d; }
+.qt-option--wrong .qt-letter { background: rgba(194,65,12,0.2); color: var(--warm); }
+
+.qt-option-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+/* Explanation */
+.qt-explain {
+  margin-top: 10px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: var(--paper);
+  border: 1px solid var(--border-soft);
+}
+.qt-explain-icon { margin-bottom: 5px; }
+.qt-explain-text {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+  margin-bottom: 10px;
+}
+.qt-explain-actions { display: flex; gap: 6px; }
+.qt-btn {
+  padding: 5px 11px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 110ms ease, opacity 110ms ease;
+}
+.qt-btn:hover { transform: translateY(-1px); opacity: 0.88; }
+.qt-btn--primary { background: var(--ink); color: #fff; }
+.qt-btn--secondary { background: var(--accent-glow); color: var(--accent); }
+
+/* Explain transition */
+.explain-enter-active { transition: opacity 220ms ease, transform 220ms ease; }
+.explain-leave-active { transition: opacity 150ms ease; }
+.explain-enter-from { opacity: 0; transform: translateY(6px); }
+.explain-leave-to { opacity: 0; }
+
+/* ── Activity panel ─────────────────────────────────────── */
+.activity-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 12px;
+  overflow: hidden;
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.activity-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: var(--border-soft);
+  padding: 1px 7px;
+  border-radius: 99px;
+}
+
+/* Hero 3D card */
+.hero-card {
+  --hc: var(--accent);
+  position: relative;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  /* Gradient from the item's colour */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--hc) 90%, #000),
+    color-mix(in srgb, var(--hc) 60%, #000)
+  );
+
+  /* 3D depth */
+  transform: perspective(700px) rotateX(1.8deg);
+  transform-origin: top center;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  box-shadow:
+    0 8px 0 -2px color-mix(in srgb, var(--hc) 40%, #000),
+    0 16px 0 -4px color-mix(in srgb, var(--hc) 22%, #000),
+    0 20px 32px color-mix(in srgb, var(--hc) 28%, transparent),
+    0 4px 12px rgba(0,0,0,0.18);
+}
+.hero-card:hover {
+  transform: perspective(700px) rotateX(0deg) translateY(-2px);
+  box-shadow:
+    0 12px 0 -2px color-mix(in srgb, var(--hc) 40%, #000),
+    0 22px 0 -4px color-mix(in srgb, var(--hc) 22%, #000),
+    0 28px 40px color-mix(in srgb, var(--hc) 32%, transparent),
+    0 6px 16px rgba(0,0,0,0.22);
+}
+.hero-card:active {
+  transform: perspective(700px) rotateX(3deg) translateY(1px);
+}
+
+/* Glass shine overlay */
+.hero-card-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      148deg,
+      rgba(255,255,255,0.22) 0%,
+      rgba(255,255,255,0.06) 38%,
+      transparent 65%
+    ),
+    radial-gradient(
+      80% 50% at 18% 14%,
+      rgba(255,255,255,0.18) 0%,
+      transparent 70%
+    );
+}
+/* Bottom edge highlight */
+.hero-card-shine::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 0 0 16px 16px;
+}
+
+.hero-card-body { position: relative; z-index: 1; }
+
+.hero-card-now {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 6px;
+}
+.hero-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.hero-card-detail {
+  font-size: 11px;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+.hero-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 130ms ease;
+}
+.hero-card-cta:hover { background: rgba(255,255,255,0.28); }
+
+/* Compact feed list */
+.compact-feed {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.compact-feed::-webkit-scrollbar { display: none; }
+
+.feed-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 6px;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-soft);
+  transition: background 110ms ease, transform 110ms ease;
+}
+.feed-row:last-child { border-bottom: none; }
+.feed-row:hover { background: var(--paper); transform: translateX(2px); }
+
+.feed-row-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+.feed-row-body { flex: 1; min-width: 0; }
+.feed-row-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.feed-row-time {
+  font-size: 10px;
+  color: var(--ink-muted);
+  margin-top: 1px;
+}
+.feed-row-action {
+  font-size: 9.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
 </style>
 
