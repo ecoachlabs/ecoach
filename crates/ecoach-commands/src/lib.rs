@@ -1150,7 +1150,7 @@ mod tests {
             CreateAccountInput {
                 account_type: AccountType::Admin,
                 display_name: "Admin".to_string(),
-                pin: "999999".to_string(),
+                pin: "9999".to_string(),
                 entitlement_tier: EntitlementTier::Standard,
             },
         )
@@ -2271,7 +2271,7 @@ mod tests {
             CreateAccountInput {
                 account_type: AccountType::Parent,
                 display_name: "Ama Parent".to_string(),
-                pin: "222222".to_string(),
+                pin: "2222".to_string(),
                 entitlement_tier: EntitlementTier::Standard,
             },
         )
@@ -2281,7 +2281,7 @@ mod tests {
             CreateAccountInput {
                 account_type: AccountType::Admin,
                 display_name: "Curriculum Editor".to_string(),
-                pin: "333333".to_string(),
+                pin: "3333".to_string(),
                 entitlement_tier: EntitlementTier::Premium,
             },
         )

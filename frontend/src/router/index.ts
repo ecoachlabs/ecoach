@@ -19,6 +19,58 @@ import ParentHome from '@/views/parent/ParentHome.vue'
 // Admin views
 import AdminHome from '@/views/admin/AdminHome.vue'
 
+function resolveCoachRoute(path: string): string {
+  const normalized = path.replace(/\/+$/, '') || '/coach'
+
+  const directRedirects: Record<string, string> = {
+    '/coach': '/student',
+    '/coach/onboarding': '/student/onboarding/welcome',
+    '/coach/onboarding/subjects': '/student/onboarding/subjects',
+    '/coach/content': '/student/onboarding/content-packs',
+    '/coach/diagnostic': '/student/onboarding/diagnostic',
+    '/coach/plan': '/student/journey',
+    '/coach/plan/refresh': '/student/journey',
+    '/coach/repair': '/student/knowledge-gap',
+    '/coach/mission/today': '/student/journey',
+  }
+
+  if (directRedirects[normalized]) {
+    return directRedirects[normalized]
+  }
+
+  if (/^\/coach\/mission\/\d+$/.test(normalized)) {
+    return '/student/journey'
+  }
+
+  if (/^\/coach\/missions\/\d+$/.test(normalized)) {
+    return '/student/journey'
+  }
+
+  if (/^\/coach\/review\/\d+$/.test(normalized)) {
+    return '/student/journey'
+  }
+
+  return '/student'
+}
+
+function resolveRoleHome(): string {
+  const authStore = useAuthStoreForGuard()
+
+  if (!authStore.isAuthenticated) {
+    return '/'
+  }
+
+  if (authStore.role === 'parent') {
+    return '/parent'
+  }
+
+  if (authStore.role === 'admin') {
+    return '/admin'
+  }
+
+  return '/student'
+}
+
 const routes: RouteRecordRaw[] = [
   // === AUTH ===
   {
@@ -31,6 +83,10 @@ const routes: RouteRecordRaw[] = [
     name: 'pin',
     component: PinEntry,
     props: true,
+  },
+  {
+    path: '/coach/:pathMatch(.*)*',
+    redirect: to => resolveCoachRoute(to.path),
   },
 
   // === STUDENT PORTAL ===
@@ -84,6 +140,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'glossary', name: 'glossary', component: () => import('@/views/student/glossary/GlossaryHome.vue') },
       { path: 'glossary/entry/:id', name: 'glossary-entry', component: () => import('@/views/student/glossary/GlossaryEntry.vue'), props: true },
       { path: 'glossary/audio', name: 'glossary-audio', component: () => import('@/views/student/glossary/GlossaryAudio.vue') },
+      { path: 'glossary/formula-lab', name: 'glossary-formula-lab', component: () => import('@/views/student/glossary/FormulaLabView.vue') },
+      { path: 'glossary/compare', name: 'glossary-compare', component: () => import('@/views/student/glossary/GlossaryCompareView.vue') },
       { path: 'library', name: 'library', component: () => import('@/views/student/library/LibraryHome.vue') },
       { path: 'teach/:topicId', name: 'teach', component: () => import('@/views/student/teach/TeachMode.vue'), props: true },
       // Exam Intel
@@ -109,11 +167,14 @@ const routes: RouteRecordRaw[] = [
     meta: { role: 'parent' },
     children: [
       { path: '', name: 'parent-home', component: ParentHome },
+      { path: 'household', name: 'parent-household', component: () => import('@/views/parent/Household.vue') },
+      { path: 'children', name: 'parent-children', component: () => import('@/views/parent/Children.vue') },
       { path: 'child/:id', name: 'parent-child', component: () => import('@/views/parent/ChildDashboard.vue'), props: true },
       { path: 'attention', name: 'parent-attention', component: () => import('@/views/parent/AttentionNeeded.vue') },
       { path: 'performance', name: 'parent-performance', component: () => import('@/views/parent/Performance.vue') },
       { path: 'reports', name: 'parent-reports', component: () => import('@/views/parent/Reports.vue') },
       { path: 'intervention', name: 'parent-intervention', component: () => import('@/views/parent/InterventionCenter.vue') },
+      { path: 'curriculum', name: 'parent-curriculum', component: () => import('@/views/parent/Curriculum.vue') },
       { path: 'concierge', name: 'parent-concierge', component: () => import('@/views/parent/Concierge.vue') },
       { path: 'settings', name: 'parent-settings', component: () => import('@/views/parent/Settings.vue') },
     ],
@@ -142,6 +203,10 @@ const routes: RouteRecordRaw[] = [
       { path: 'quality', name: 'admin-quality', component: () => import('@/views/admin/QualityDashboard.vue') },
       { path: 'settings', name: 'admin-settings', component: () => import('@/views/admin/Settings.vue') },
     ],
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: () => resolveRoleHome(),
   },
 ]
 

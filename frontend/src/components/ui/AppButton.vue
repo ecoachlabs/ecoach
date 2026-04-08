@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useAttrs } from 'vue'
+
 defineProps<{
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'warm'
   size?: 'sm' | 'md' | 'lg'
@@ -6,10 +8,13 @@ defineProps<{
   disabled?: boolean
   icon?: boolean
 }>()
+
+const attrs = useAttrs()
 </script>
 
 <template>
   <button
+    v-bind="attrs"
     class="inline-flex items-center justify-center gap-2 font-medium transition-all select-none relative overflow-hidden"
     :class="[
       // Size

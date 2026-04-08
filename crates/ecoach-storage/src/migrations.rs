@@ -423,6 +423,10 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "100_idea38_operating_system_surfaces",
         sql: include_str!("../../../migrations/runtime/100_idea38_operating_system_surfaces.sql"),
     },
+    Migration {
+        id: "101_identity_pin_policy",
+        sql: include_str!("../../../migrations/runtime/101_identity_pin_policy.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {
@@ -484,7 +488,15 @@ mod tests {
                 |row| row.get(0),
             )
             .expect("table count should be queryable");
+        let pin_length_column_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM pragma_table_info('accounts') WHERE name = 'pin_length'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("accounts pin_length column should be queryable");
 
         assert_eq!(table_count, 5);
+        assert_eq!(pin_length_column_count, 1);
     }
 }

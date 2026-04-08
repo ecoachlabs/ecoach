@@ -1,6 +1,8 @@
+export const PIN_LENGTH = 4
+
 /** Validate PIN format */
 export function isValidPin(pin: string): boolean {
-  return /^\d{4,6}$/.test(pin)
+  return new RegExp(`^\\d{${PIN_LENGTH}}$`).test(pin)
 }
 
 /** Validate display name */

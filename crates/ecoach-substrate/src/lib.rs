@@ -17,4 +17,4 @@ pub use fabrics::{
 };
 pub use scoring::{clamp_bp, ema_update, from_bp, to_bp};
 pub use time::now_utc;
-pub use types::{AccountType, BasisPoints, EntitlementTier, Role};
+pub use types::{ACCOUNT_PIN_LENGTH, AccountType, BasisPoints, EntitlementTier, Role};

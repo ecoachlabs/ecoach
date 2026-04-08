@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 pub type BasisPoints = u16;
+pub const ACCOUNT_PIN_LENGTH: usize = 4;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -28,11 +29,8 @@ impl AccountType {
         }
     }
 
-    pub fn min_pin_len(self) -> usize {
-        match self {
-            Self::Student => 4,
-            Self::Parent | Self::Admin => 6,
-        }
+    pub fn pin_len(self) -> usize {
+        ACCOUNT_PIN_LENGTH
     }
 }
 

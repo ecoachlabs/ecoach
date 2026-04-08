@@ -7,7 +7,7 @@ defineProps<{
   coverage: number[][]
 }>()
 
-defineEmits<{ cellClick: [topic: number; contentType: number; value: number] }>()
+defineEmits<{ cellClick: [topic: number, contentType: number, value: number] }>()
 </script>
 
 <template>

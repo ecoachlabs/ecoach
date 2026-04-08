@@ -5,7 +5,9 @@ use argon2::{
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ecoach_substrate::{AccountType, EcoachError, EcoachResult, EntitlementTier};
+use ecoach_substrate::{
+    ACCOUNT_PIN_LENGTH, AccountType, EcoachError, EcoachResult, EntitlementTier,
+};
 use rand_core::OsRng;
 use rusqlite::{Connection, OptionalExtension, params};
 
@@ -24,18 +26,21 @@ impl<'a> IdentityService<'a> {
     }
 
     pub fn create_account(&self, input: CreateAccountInput) -> EcoachResult<Account> {
-        validate_pin(&input.account_type, &input.pin)?;
+        validate_pin(&input.pin)?;
         let (pin_hash, pin_salt) = hash_pin(&input.pin)?;
+        let pin_length = input.pin.len() as i64;
 
         self.conn
             .execute(
-                "INSERT INTO accounts (account_type, display_name, pin_hash, pin_salt, entitlement_tier)
-                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                "INSERT INTO accounts (
+                    account_type, display_name, pin_hash, pin_salt, pin_length, entitlement_tier
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 params![
                     input.account_type.as_str(),
                     input.display_name,
                     pin_hash,
                     pin_salt,
+                    pin_length,
                     input.entitlement_tier.as_str()
                 ],
             )
@@ -58,6 +63,8 @@ impl<'a> IdentityService<'a> {
                 ));
             }
         }
+
+        validate_pin(pin)?;
 
         if verify_pin(&account.pin_hash, pin)? {
             self.conn
@@ -304,26 +311,31 @@ impl<'a> IdentityService<'a> {
 
     /// Reset a learner's PIN. Only callable by parent/admin.
     pub fn reset_pin(&self, account_id: i64, new_pin: &str) -> EcoachResult<()> {
-        let account_type: String = self
+        let exists: i64 = self
             .conn
             .query_row(
-                "SELECT account_type FROM accounts WHERE id = ?1",
+                "SELECT EXISTS(SELECT 1 FROM accounts WHERE id = ?1)",
                 [account_id],
                 |row| row.get(0),
             )
-            .map_err(|e| EcoachError::NotFound(format!("account {account_id} not found: {e}")))?;
+            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        if exists == 0 {
+            return Err(EcoachError::NotFound(format!(
+                "account {} not found",
+                account_id
+            )));
+        }
 
-        let at = parse_account_type(account_type)
-            .map_err(|e| EcoachError::Validation(format!("invalid account type: {e}")))?;
-        validate_pin(&at, new_pin)?;
+        validate_pin(new_pin)?;
         let (pin_hash, pin_salt) = hash_pin(new_pin)?;
+        let pin_length = new_pin.len() as i64;
 
         self.conn
             .execute(
-                "UPDATE accounts SET pin_hash = ?1, pin_salt = ?2, failed_pin_attempts = 0,
+                "UPDATE accounts SET pin_hash = ?1, pin_salt = ?2, pin_length = ?3, failed_pin_attempts = 0,
                      locked_until = NULL, updated_at = datetime('now')
-                 WHERE id = ?3",
-                params![pin_hash, pin_salt, account_id],
+                 WHERE id = ?4",
+                params![pin_hash, pin_salt, pin_length, account_id],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
@@ -386,17 +398,16 @@ struct RawAccount {
     last_active_at: Option<DateTime<Utc>>,
 }
 
-fn validate_pin(account_type: &AccountType, pin: &str) -> EcoachResult<()> {
+fn validate_pin(pin: &str) -> EcoachResult<()> {
     if !pin.chars().all(|char| char.is_ascii_digit()) {
         return Err(EcoachError::Validation(
             "pin must contain only digits".to_string(),
         ));
     }
-    if pin.len() < account_type.min_pin_len() || pin.len() > 12 {
+    if pin.len() != ACCOUNT_PIN_LENGTH {
         return Err(EcoachError::Validation(format!(
-            "pin length for {:?} must be between {} and 12 digits",
-            account_type,
-            account_type.min_pin_len()
+            "pin must be exactly {} digits",
+            ACCOUNT_PIN_LENGTH
         )));
     }
     Ok(())
@@ -538,7 +549,7 @@ mod tests {
             .create_account(CreateAccountInput {
                 account_type: AccountType::Admin,
                 display_name: "Control".to_string(),
-                pin: "246810".to_string(),
+                pin: "2468".to_string(),
                 entitlement_tier: EntitlementTier::Elite,
             })
             .expect("admin should be created");
@@ -562,5 +573,21 @@ mod tests {
         assert_eq!(events[0].previous_tier, EntitlementTier::Standard);
         assert_eq!(events[0].new_tier, EntitlementTier::Elite);
         assert_eq!(events[0].changed_by_account_id, Some(admin.id));
+    }
+
+    #[test]
+    fn all_accounts_require_exactly_four_digit_pins() {
+        let mut conn = Connection::open_in_memory().expect("in-memory db");
+        run_runtime_migrations(&mut conn).expect("migrations");
+
+        let service = IdentityService::new(&conn);
+        let result = service.create_account(CreateAccountInput {
+            account_type: AccountType::Parent,
+            display_name: "Guardian".to_string(),
+            pin: "18035".to_string(),
+            entitlement_tier: EntitlementTier::Standard,
+        });
+
+        assert!(result.is_err());
     }
 }

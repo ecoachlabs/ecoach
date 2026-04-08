@@ -557,7 +557,7 @@ mod tests {
             CreateAccountInput {
                 account_type: AccountType::Admin,
                 display_name: "Curator".to_string(),
-                pin: "246810".to_string(),
+                pin: "2468".to_string(),
                 entitlement_tier: EntitlementTier::Elite,
             },
         )
@@ -862,7 +862,7 @@ mod tests {
             CreateAccountInput {
                 account_type: AccountType::Admin,
                 display_name: "Governor".to_string(),
-                pin: "246810".to_string(),
+                pin: "2468".to_string(),
                 entitlement_tier: EntitlementTier::Elite,
             },
         )

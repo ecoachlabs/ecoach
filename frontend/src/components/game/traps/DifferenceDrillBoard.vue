@@ -15,7 +15,7 @@ defineProps<{
   streak: number
 }>()
 
-defineEmits<{ drop: [cardId: number; bin: 'a' | 'b']; notSure: [cardId: number] }>()
+defineEmits<{ drop: [cardId: number, bin: 'a' | 'b']; notSure: [cardId: number] }>()
 
 const highlightedBin = ref<'a' | 'b' | null>(null)
 </script>
