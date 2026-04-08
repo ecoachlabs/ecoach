@@ -19,6 +19,13 @@ import {
   PhLightning,
   PhTarget,
   PhTrendUp,
+  PhBrain,
+  PhSword,
+  PhGameController,
+  PhWarning,
+  PhChartLineUp,
+  PhRepeat,
+  PhCards,
 } from '@phosphor-icons/vue'
 
 const auth = useAuthStore()
@@ -94,6 +101,7 @@ type FeedTone = 'accent' | 'warm' | 'gold' | 'muted'
 type LiveFeedItem = {
   id: string
   tone: FeedTone
+  icon: any
   title: string
   detail: string
   time: string
@@ -172,9 +180,10 @@ const liveFeed = computed<LiveFeedItem[]>(() => {
     items.push({
       id: 'coach-directive',
       tone: 'accent',
+      icon: PhBrain,
       title: nextAction.value.title,
       detail: nextAction.value.subtitle,
-      time: 'now',
+      time: 'just now',
       action: 'Open',
       to: nextAction.value.route,
     })
@@ -185,9 +194,10 @@ const liveFeed = computed<LiveFeedItem[]>(() => {
     items.push({
       id: `topic-${topTopic.topic_id}`,
       tone: topTopic.intervention_urgency === 'high' ? 'warm' : 'gold',
+      icon: PhWarning,
       title: `${topTopic.topic_name} flagged for recovery`,
-      detail: `${topTopic.intervention_mode.replace(/_/g, ' ')} recommended`,
-      time: '2m ago',
+      detail: `${topTopic.intervention_mode.replace(/_/g, ' ')} · tap to drill`,
+      time: '2 min ago',
       action: 'Practice',
       to: '/student/practice',
     })
@@ -205,9 +215,10 @@ const liveFeed = computed<LiveFeedItem[]>(() => {
     items.push({
       id: `subject-${weakest.subject_id}`,
       tone: 'muted',
-      title: `${weakest.subject_name} is ${bandLabel(weakest.readiness_band)}`,
-      detail: `${weakestPct}% mastered - ${weakest.weak_topic_count} weak topics`,
-      time: '5m ago',
+      icon: PhChartLineUp,
+      title: `${weakest.subject_name} needs attention`,
+      detail: `${weakestPct}% mastered · ${weakest.weak_topic_count} weak topics`,
+      time: '5 min ago',
       action: 'Review',
       to: '/student/progress',
     })
@@ -217,27 +228,30 @@ const liveFeed = computed<LiveFeedItem[]>(() => {
     {
       id: 'revision-box',
       tone: 'gold',
+      icon: PhCards,
       title: 'Revision Box refreshed',
-      detail: 'New revision pack suggestions are available',
-      time: '12m ago',
+      detail: 'New revision pack suggestions ready',
+      time: '12 min ago',
       action: 'Open',
       to: '/student/library#revision-box',
     },
     {
       id: 'retry-zone',
       tone: 'warm',
+      icon: PhRepeat,
       title: 'Retry Zone queued',
-      detail: 'High-impact mistakes are ready for rematch',
-      time: '17m ago',
+      detail: 'High-impact mistakes ready for rematch',
+      time: '17 min ago',
       action: 'Retry',
       to: '/student/mistakes#retry-zone',
     },
     {
       id: 'games-hub',
       tone: 'accent',
+      icon: PhGameController,
       title: 'Games challenge available',
       detail: 'Train speed and focus in Games Hub',
-      time: '26m ago',
+      time: '26 min ago',
       action: 'Play',
       to: '/student/games',
     },
@@ -404,22 +418,20 @@ function feedToneColor(tone: FeedTone): string {
         </div>
       </div>
 
-      <!-- Right panel — dark premium -->
+      <!-- Right: quick test + recent activity -->
       <div class="rp">
 
-        <!-- Quick Test -->
+        <!-- ── Quick Test ── -->
         <div class="rp-qt">
           <div class="rp-qt-head">
-            <span class="rp-label">Quick Test</span>
+            <p class="rp-section-label">Quick Test</p>
             <div class="rp-steps">
-              <span
-                v-for="(_, i) in quickChecks" :key="i"
-                class="rp-step" :class="{ 'rp-step--on': i === quickCheckIndex }"
-              />
+              <span v-for="(_, i) in quickChecks" :key="i"
+                class="rp-step" :class="{ 'rp-step--on': i === quickCheckIndex }" />
             </div>
           </div>
 
-          <div class="rp-topic-badge">{{ activeQuickCheck.topic }}</div>
+          <div class="rp-topic-chip">{{ activeQuickCheck.topic }}</div>
 
           <p class="rp-question">{{ activeQuickCheck.prompt }}</p>
 
@@ -445,48 +457,60 @@ function feedToneColor(tone: FeedTone): string {
               :class="quickSelectionCorrect ? 'rp-explain--ok' : 'rp-explain--err'">
               <p class="rp-explain-text">{{ activeQuickCheck.explanation }}</p>
               <div class="rp-explain-actions">
-                <button class="rp-ghost" @click="openQuickCheckTopic">Review topic</button>
-                <button class="rp-solid" @click="nextQuickCheck">Next →</button>
+                <button class="rp-btn-ghost" @click="openQuickCheckTopic">Review topic</button>
+                <button class="rp-btn-solid" @click="nextQuickCheck">Next →</button>
               </div>
             </div>
           </Transition>
         </div>
 
-        <!-- Recent Activity -->
+        <!-- ── Recent Activity ── -->
         <div class="rp-activity">
-          <span class="rp-label" style="display:block;margin-bottom:14px">Recent Activity</span>
+          <p class="rp-section-label" style="margin-bottom:14px">Recent Activity</p>
 
-          <!-- 3D hero card — most recent -->
+          <!-- Most recent — elevated hero card -->
           <div
             v-if="liveFeed[0]"
             class="rp-hero"
             :style="{ '--hc': feedToneColor(liveFeed[0].tone) }"
             @click="router.push(liveFeed[0].to)"
           >
-            <div class="rp-hero-body">
-              <span class="rp-hero-eyebrow">Just now</span>
-              <p class="rp-hero-title">{{ liveFeed[0].title }}</p>
-              <p class="rp-hero-sub">{{ liveFeed[0].detail }}</p>
-              <button class="rp-hero-cta">
-                {{ liveFeed[0].action }}
-                <PhArrowRight :size="11" weight="bold" />
-              </button>
+            <div class="rp-hero-top">
+              <span class="rp-hero-icon-wrap">
+                <component :is="liveFeed[0].icon" :size="15" weight="fill" style="color:#fff" />
+              </span>
+              <span class="rp-hero-eyebrow">{{ liveFeed[0].time }}</span>
             </div>
+            <p class="rp-hero-title">{{ liveFeed[0].title }}</p>
+            <p class="rp-hero-sub">{{ liveFeed[0].detail }}</p>
+            <button class="rp-hero-cta">
+              {{ liveFeed[0].action }}
+              <PhArrowRight :size="11" weight="bold" />
+            </button>
           </div>
 
-          <!-- Borderless feed list -->
+          <!-- Rest of feed — rich rows -->
           <div class="rp-feed">
             <button
               v-for="item in liveFeed.slice(1, 7)" :key="item.id"
               class="rp-feed-row"
+              :style="{ '--fc': feedToneColor(item.tone) }"
               @click="router.push(item.to)"
             >
-              <span class="rp-feed-dot" :style="{ background: feedToneColor(item.tone) }" />
+              <!-- Icon badge -->
+              <span class="rp-feed-icon" :style="{ background: feedToneColor(item.tone) + '1a' }">
+                <component :is="item.icon" :size="13" weight="fill" :style="{ color: feedToneColor(item.tone) }" />
+              </span>
+              <!-- Text block -->
               <div class="rp-feed-info">
                 <p class="rp-feed-title">{{ item.title }}</p>
-                <p class="rp-feed-time">{{ item.time }}</p>
+                <p class="rp-feed-detail">{{ item.detail }}</p>
               </div>
-              <span class="rp-feed-action" :style="{ color: feedToneColor(item.tone) }">{{ item.action }}</span>
+              <!-- Right side: time + action -->
+              <div class="rp-feed-meta">
+                <span class="rp-feed-time">{{ item.time }}</span>
+                <span class="rp-feed-action" :style="{ color: feedToneColor(item.tone) }">{{ item.action }}</span>
+              </div>
             </button>
           </div>
         </div>
@@ -525,386 +549,332 @@ function feedToneColor(tone: FeedTone): string {
   background-color: var(--paper) !important;
 }
 
-/* ═══════════════════════════════════════════
-   Dark right panel
-═══════════════════════════════════════════ */
+/* ── Right panel ──────────────────────────── */
 .rp {
   width: 22rem;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #1c1814;
+  background: var(--surface);
 }
 
 /* ── Quick Test ───────────────────────────── */
 .rp-qt {
   flex-shrink: 0;
-  padding: 22px 20px 20px;
+  padding: 20px 18px 18px;
 }
-
 .rp-qt-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-
-.rp-label {
+.rp-section-label {
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.20em;
-  color: rgba(255,255,255,0.28);
+  letter-spacing: 0.18em;
+  color: var(--ink-muted);
 }
-
 .rp-steps {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   align-items: center;
 }
 .rp-step {
   height: 3px;
   width: 14px;
   border-radius: 99px;
-  background: rgba(255,255,255,0.12);
-  transition: width 300ms ease, background 300ms ease;
+  background: var(--border-strong);
+  transition: width 280ms ease, background 280ms ease;
 }
-.rp-step--on {
-  width: 26px;
-  background: var(--accent);
-}
+.rp-step--on { width: 24px; background: var(--accent); }
 
-.rp-topic-badge {
+.rp-topic-chip {
   display: inline-block;
-  padding: 4px 11px;
+  padding: 3px 10px;
   border-radius: 99px;
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.13em;
-  background: rgba(13,148,136,0.18);
-  color: #2dd4bf;
-  margin-bottom: 13px;
+  letter-spacing: 0.12em;
+  background: var(--accent-glow);
+  color: var(--accent);
+  margin-bottom: 12px;
 }
 
 .rp-question {
   font-family: var(--font-display);
-  font-size: 15.5px;
+  font-size: 15px;
   font-weight: 700;
-  line-height: 1.55;
-  color: rgba(255,255,255,0.90);
-  margin-bottom: 16px;
+  line-height: 1.52;
+  color: var(--ink);
+  margin-bottom: 14px;
 }
 
-/* Options */
-.rp-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+/* Options — shadow-elevated, no borders */
+.rp-options { display: flex; flex-direction: column; gap: 7px; }
 
 .rp-option {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   width: 100%;
-  padding: 11px 14px;
-  border-radius: 13px;
-  background: rgba(255,255,255,0.06);
+  padding: 10px 13px;
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 0 2px 6px rgba(26,22,18,0.07), 0 1px 2px rgba(26,22,18,0.04);
   cursor: pointer;
   text-align: left;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
-  transition:
-    transform   160ms ease,
-    background  180ms ease,
-    box-shadow  180ms ease,
-    opacity     240ms ease;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 180ms ease, opacity 220ms ease;
 }
 .rp-option:hover:not(:disabled) {
-  background: rgba(255,255,255,0.11);
-  transform: translateX(5px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.28);
+  transform: translateX(4px);
+  box-shadow: 0 6px 18px rgba(26,22,18,0.10), 0 2px 5px rgba(26,22,18,0.06);
 }
-.rp-option:active:not(:disabled) {
-  transform: translateX(3px) scale(0.985);
-}
+.rp-option:active:not(:disabled) { transform: translateX(2px) scale(0.985); }
 .rp-option:disabled { cursor: default; }
 
 .rp-option--correct {
-  background: linear-gradient(135deg, #166534, #16a34a) !important;
-  box-shadow: 0 10px 32px rgba(22,163,74,0.50), 0 4px 10px rgba(0,0,0,0.22) !important;
-  transform: translateX(5px) !important;
+  background: linear-gradient(135deg, #15803d, #16a34a) !important;
+  box-shadow: 0 8px 24px rgba(22,163,74,0.30), 0 3px 8px rgba(0,0,0,0.10) !important;
+  transform: translateX(4px) !important;
 }
 .rp-option--wrong {
-  background: linear-gradient(135deg, #991b1b, #dc2626) !important;
-  box-shadow: 0 10px 32px rgba(220,38,38,0.50), 0 4px 10px rgba(0,0,0,0.22) !important;
-  transform: translateX(5px) !important;
+  background: linear-gradient(135deg, #b91c1c, #dc2626) !important;
+  box-shadow: 0 8px 24px rgba(185,28,28,0.30), 0 3px 8px rgba(0,0,0,0.10) !important;
+  transform: translateX(4px) !important;
 }
-.rp-option--faded { opacity: 0.25; }
+.rp-option--faded { opacity: 0.30; }
 
 .rp-letter {
-  width: 23px;
-  height: 23px;
+  width: 22px; height: 22px;
   border-radius: 7px;
-  background: rgba(255,255,255,0.09);
-  color: rgba(255,255,255,0.45);
-  font-size: 10px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--border-soft);
+  color: var(--ink-muted);
+  font-size: 10px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  transition: background 180ms ease, color 180ms ease;
+  transition: background 180ms, color 180ms;
 }
 .rp-option--correct .rp-letter,
-.rp-option--wrong .rp-letter {
-  background: rgba(255,255,255,0.20);
-  color: #fff;
-}
-.rp-option:hover:not(:disabled) .rp-letter {
-  background: rgba(255,255,255,0.14);
-  color: rgba(255,255,255,0.80);
-}
+.rp-option--wrong   .rp-letter { background: rgba(255,255,255,0.22); color: #fff; }
+
 .rp-option-text {
   font-size: 12.5px;
   font-weight: 500;
-  color: rgba(255,255,255,0.72);
+  color: var(--ink);
   line-height: 1.35;
-  transition: color 180ms ease;
 }
 .rp-option--correct .rp-option-text,
-.rp-option--wrong .rp-option-text { color: #fff; font-weight: 600; }
+.rp-option--wrong   .rp-option-text { color: #fff; font-weight: 600; }
 
 /* Explanation */
 .rp-explain {
-  margin-top: 14px;
-  padding-left: 14px;
+  margin-top: 12px;
+  padding-left: 13px;
   position: relative;
 }
 .rp-explain::before {
   content: '';
   position: absolute;
-  left: 0; top: 3px; bottom: 3px;
-  width: 3px;
-  border-radius: 99px;
+  left: 0; top: 2px; bottom: 2px;
+  width: 3px; border-radius: 99px;
 }
 .rp-explain--ok::before  { background: #16a34a; }
 .rp-explain--err::before { background: #dc2626; }
 .rp-explain-text {
-  font-size: 12px;
-  line-height: 1.65;
-  color: rgba(255,255,255,0.52);
-  margin-bottom: 13px;
+  font-size: 11.5px; line-height: 1.62;
+  color: var(--ink-secondary);
+  margin-bottom: 11px;
 }
-.rp-explain-actions { display: flex; gap: 8px; }
-.rp-ghost {
-  padding: 6px 13px;
-  border-radius: 9px;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.58);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 130ms ease;
+.rp-explain-actions { display: flex; gap: 7px; }
+.rp-btn-ghost {
+  padding: 5px 12px; border-radius: 8px;
+  background: var(--paper-warm); color: var(--ink-secondary);
+  font-size: 10.5px; font-weight: 600; cursor: pointer;
+  transition: background 130ms;
 }
-.rp-ghost:hover { background: rgba(255,255,255,0.14); }
-.rp-solid {
-  padding: 6px 13px;
-  border-radius: 9px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 130ms ease, transform 130ms ease;
+.rp-btn-ghost:hover { background: var(--border-soft); }
+.rp-btn-solid {
+  padding: 5px 12px; border-radius: 8px;
+  background: var(--ink); color: #fff;
+  font-size: 10.5px; font-weight: 700; cursor: pointer;
+  transition: opacity 130ms, transform 130ms;
 }
-.rp-solid:hover { opacity: 0.85; transform: translateY(-1px); }
+.rp-btn-solid:hover { opacity: 0.85; transform: translateY(-1px); }
 
-/* Reveal transition */
-.rp-reveal-enter-active { transition: opacity 260ms ease, transform 260ms ease; }
-.rp-reveal-leave-active { transition: opacity 160ms ease; }
-.rp-reveal-enter-from   { opacity: 0; transform: translateY(10px); }
+.rp-reveal-enter-active { transition: opacity 240ms ease, transform 240ms ease; }
+.rp-reveal-leave-active { transition: opacity 150ms ease; }
+.rp-reveal-enter-from   { opacity: 0; transform: translateY(8px); }
 .rp-reveal-leave-to     { opacity: 0; }
 
 /* ── Activity ─────────────────────────────── */
 .rp-activity {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 18px 20px 16px;
-  background: rgba(0,0,0,0.18);
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: 16px 18px 14px;
+  background: var(--paper);
   overflow: hidden;
 }
 
-/* Hero 3D card */
+/* Hero card — single elevation, genuine depth, no glow */
 .rp-hero {
   --hc: var(--accent);
   position: relative;
   border-radius: 18px;
   padding: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-shrink: 0;
   cursor: pointer;
   overflow: hidden;
 
   background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--hc) 80%, #fff),
-    color-mix(in srgb, var(--hc) 65%, #000)
+    138deg,
+    color-mix(in srgb, var(--hc) 82%, #fff),
+    color-mix(in srgb, var(--hc) 62%, #000)
   );
 
-  /* Tilted toward viewer from bottom */
-  transform: perspective(900px) rotateX(3deg);
-  transform-origin: bottom center;
-  transition:
-    transform  320ms cubic-bezier(0.34, 1.2, 0.64, 1),
-    box-shadow 320ms ease;
-
-  /* Stacked bottom shadows = physical depth */
+  /* One clean shadow — depth without glow */
   box-shadow:
-    0  2px 0  color-mix(in srgb, var(--hc) 55%, #000),
-    0  5px 0  color-mix(in srgb, var(--hc) 34%, #000),
-    0  9px 0  color-mix(in srgb, var(--hc) 18%, #000),
-    0 22px 40px color-mix(in srgb, var(--hc) 45%, transparent),
-    0  8px 18px rgba(0,0,0,0.36);
+    0 16px 40px rgba(26,22,18,0.18),
+    0  4px 12px rgba(26,22,18,0.10);
+
+  transition: transform 260ms ease, box-shadow 260ms ease;
 }
 
-/* Glass light sheen */
+/* Top sheen — light catching the card face */
 .rp-hero::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 18px;
-  background:
-    linear-gradient(
-      to bottom,
-      rgba(255,255,255,0.26) 0%,
-      rgba(255,255,255,0.07) 42%,
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 70% 55% at 20% 16%,
-      rgba(255,255,255,0.22) 0%,
-      transparent 66%
-    );
   pointer-events: none;
+  background: linear-gradient(
+    148deg,
+    rgba(255,255,255,0.22) 0%,
+    rgba(255,255,255,0.06) 38%,
+    transparent 65%
+  );
 }
 
 .rp-hero:hover {
-  transform: perspective(900px) rotateX(0deg) translateY(-6px);
+  transform: translateY(-4px);
   box-shadow:
-    0  4px 0  color-mix(in srgb, var(--hc) 55%, #000),
-    0  9px 0  color-mix(in srgb, var(--hc) 34%, #000),
-    0 15px 0  color-mix(in srgb, var(--hc) 18%, #000),
-    0 38px 56px color-mix(in srgb, var(--hc) 50%, transparent),
-    0 14px 28px rgba(0,0,0,0.42);
+    0 24px 52px rgba(26,22,18,0.22),
+    0  6px 16px rgba(26,22,18,0.12);
 }
 .rp-hero:active {
-  transform: perspective(900px) rotateX(5deg) translateY(2px);
+  transform: translateY(0px) scale(0.99);
   box-shadow:
-    0  1px 0  color-mix(in srgb, var(--hc) 55%, #000),
-    0  3px 0  color-mix(in srgb, var(--hc) 34%, #000),
-    0  6px 0  color-mix(in srgb, var(--hc) 18%, #000),
-    0 14px 22px color-mix(in srgb, var(--hc) 30%, transparent),
-    0  4px 10px rgba(0,0,0,0.26);
+    0 10px 26px rgba(26,22,18,0.14),
+    0  3px  8px rgba(26,22,18,0.08);
 }
 
-.rp-hero-body { position: relative; z-index: 1; }
-
+.rp-hero-top {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.rp-hero-icon-wrap {
+  width: 28px; height: 28px; border-radius: 9px;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
 .rp-hero-eyebrow {
-  display: block;
-  font-size: 8.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: rgba(255,255,255,0.55);
-  margin-bottom: 7px;
+  font-size: 8.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: rgba(255,255,255,0.62);
 }
 .rp-hero-title {
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.28;
+  font-size: 15px; font-weight: 700;
+  color: #fff; line-height: 1.28;
   margin-bottom: 5px;
+  position: relative;
 }
 .rp-hero-sub {
   font-size: 11.5px;
-  color: rgba(255,255,255,0.68);
+  color: rgba(255,255,255,0.70);
   line-height: 1.48;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  position: relative;
 }
 .rp-hero-cta {
   display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 14px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.18);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
+  align-items: center; gap: 5px;
+  padding: 6px 14px; border-radius: 10px;
+  background: rgba(255,255,255,0.20);
+  color: #fff; font-size: 11px; font-weight: 700;
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: background 140ms ease, transform 140ms ease;
+  position: relative;
+  transition: background 140ms, transform 140ms;
 }
-.rp-hero-cta:hover {
-  background: rgba(255,255,255,0.28);
-  transform: translateY(-1px);
-}
+.rp-hero-cta:hover { background: rgba(255,255,255,0.30); transform: translateY(-1px); }
 
-/* Feed rows — clean, no borders */
-.rp-feed {
-  flex: 1;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
+/* Feed rows */
+.rp-feed { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .rp-feed::-webkit-scrollbar { display: none; }
 
 .rp-feed-row {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  width: 100%;
-  padding: 9px 6px;
-  border-radius: 11px;
-  text-align: left;
-  cursor: pointer;
-  transition: background 120ms ease, transform 120ms ease;
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 8px 10px 8px 8px;
+  border-radius: 12px; text-align: left; cursor: pointer;
+  position: relative;
+  transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+.rp-feed-row::before {
+  content: '';
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 0; border-radius: 99px;
+  background: var(--fc, var(--accent));
+  transition: height 200ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms;
+  opacity: 0;
 }
 .rp-feed-row:hover {
-  background: rgba(255,255,255,0.055);
+  background: color-mix(in srgb, var(--fc, var(--accent)) 6%, var(--surface));
   transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(26,22,18,0.06);
 }
-.rp-feed-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 99px;
+.rp-feed-row:hover::before { height: 22px; opacity: 1; }
+.rp-feed-row:active { transform: translateX(2px) scale(0.99); }
+
+/* Icon badge */
+.rp-feed-icon {
+  width: 30px; height: 30px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 0 6px currentColor;
+  transition: transform 140ms ease;
 }
+.rp-feed-row:hover .rp-feed-icon { transform: scale(1.10); }
+
+/* Text block */
 .rp-feed-info { flex: 1; min-width: 0; }
 .rp-feed-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.80);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.3;
 }
-.rp-feed-time {
-  font-size: 9.5px;
-  color: rgba(255,255,255,0.28);
-  margin-top: 1px;
+.rp-feed-detail {
+  font-size: 10px; color: var(--ink-muted); margin-top: 1.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.3;
 }
+
+/* Right meta: time on top, action below */
+.rp-feed-meta {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 2px; flex-shrink: 0;
+}
+.rp-feed-time { font-size: 9px; color: var(--ink-muted); font-weight: 500; white-space: nowrap; }
 .rp-feed-action {
-  font-size: 10px;
-  font-weight: 700;
-  flex-shrink: 0;
+  font-size: 9.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  opacity: 0; transform: translateX(4px);
+  transition: opacity 140ms ease, transform 140ms ease;
 }
+.rp-feed-row:hover .rp-feed-action { opacity: 1; transform: translateX(0); }
 </style>
 
