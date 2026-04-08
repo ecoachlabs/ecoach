@@ -43,7 +43,7 @@ async function generateDigest() {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <p class="eyebrow">Family</p>
       <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">Reports</h1>
@@ -59,8 +59,8 @@ async function generateDigest() {
     <div class="flex-1 overflow-y-auto p-7 space-y-5">
 
       <!-- Weekly Digest CTA -->
-      <div class="px-6 py-5 rounded-2xl border"
-        :style="{ borderColor: 'rgba(13,148,136,0.25)', backgroundColor: 'var(--accent-glow)' }">
+      <div class="px-6 py-5 rounded-2xl"
+        :style="{ backgroundColor: 'var(--accent-glow)', boxShadow: 'var(--shadow-xs)' }">
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-sm font-bold mb-1" :style="{ color: 'var(--ink)' }">Weekly Parent Digest</p>
@@ -81,8 +81,8 @@ async function generateDigest() {
           <div
             v-for="student in dashboard.students"
             :key="student.student_id"
-            class="snapshot-card px-5 py-4 rounded-2xl border"
-            :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+            class="snapshot-card px-5 py-4 rounded-2xl"
+            :style="{ backgroundColor: 'var(--surface)', boxShadow: 'var(--shadow-xs)' }"
           >
             <div class="flex items-start justify-between gap-4 mb-3">
               <div>
@@ -121,6 +121,7 @@ async function generateDigest() {
 <style scoped>
 .eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--accent); margin-bottom: 4px; }
 .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-muted); }
-.snapshot-card { transition: background-color 100ms; }
+.snapshot-card { transition: background-color 100ms, box-shadow 100ms; }
 .snapshot-card:hover { background-color: var(--paper) !important; }
 </style>
+

@@ -43,7 +43,7 @@ defineEmits<{ equip: [itemId: string]; unequip: [itemId: string] }>()
       <h4 class="text-[10px] font-semibold uppercase tracking-wider mb-2" :style="{ color: 'var(--text-3)' }">Locked</h4>
       <div class="grid grid-cols-4 gap-2">
         <div v-for="item in lockedItems" :key="item.id"
-          class="p-2 rounded-[var(--radius-md)] text-center opacity-40 border" :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }">
+          class="p-2 rounded-[var(--radius-md)] text-center opacity-40" :style="{ backgroundColor: 'var(--card-bg)' }">
           <span class="text-2xl block mb-0.5">🔒</span>
           <span class="text-[8px] font-medium" :style="{ color: 'var(--text-3)' }">{{ item.requirement }}</span>
         </div>

@@ -19,8 +19,8 @@ const controlLabels: Record<string, { label: string; color: string; icon: string
 </script>
 
 <template>
-  <div class="flex items-center justify-between px-3 py-2 rounded-[var(--radius-md)] border"
-    :style="{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }">
+  <div class="flex items-center justify-between px-3 py-2 rounded-[var(--radius-md)]"
+    :style="{ backgroundColor: 'var(--card-bg)' }">
     <!-- Score -->
     <div class="text-center">
       <p class="font-display text-xl font-bold tabular-nums" :style="{ color: 'var(--text)' }">{{ score.toLocaleString() }}</p>

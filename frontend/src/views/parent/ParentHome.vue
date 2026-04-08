@@ -28,7 +28,7 @@ onMounted(async () => {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Family Overview</p>
@@ -103,8 +103,9 @@ onMounted(async () => {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
 </style>
+

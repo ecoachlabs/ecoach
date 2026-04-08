@@ -43,7 +43,7 @@ function progressColor(band: string): 'accent' | 'warm' | 'gold' {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Family</p>
@@ -67,8 +67,8 @@ function progressColor(band: string): 'accent' | 'warm' | 'gold' {
           <div
             v-for="student in dashboard.students"
             :key="student.student_id"
-            class="student-card px-6 py-5 rounded-2xl border"
-            :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+            class="student-card px-6 py-5 rounded-2xl"
+            :style="{ backgroundColor: 'var(--surface)', boxShadow: 'var(--shadow-xs)' }"
           >
             <!-- Student header -->
             <div class="flex items-center justify-between mb-5">
@@ -135,7 +135,7 @@ function progressColor(band: string): 'accent' | 'warm' | 'gold' {
 <style scoped>
 .eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--accent); margin-bottom: 4px; }
 
-.student-card { transition: background-color 100ms; }
+.student-card { transition: background-color 100ms, box-shadow 100ms; }
 .student-card:hover { background-color: var(--paper) !important; }
 
 .student-avatar {
@@ -165,8 +165,9 @@ function progressColor(band: string): 'accent' | 'warm' | 'gold' {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .view-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
 </style>
+

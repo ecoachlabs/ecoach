@@ -54,7 +54,7 @@ async function savePin() {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <p class="eyebrow">Parent</p>
       <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">Settings</h1>
@@ -130,8 +130,8 @@ async function savePin() {
 
       <!-- Sign out -->
       <button
-        class="w-full py-3 rounded-2xl border text-sm font-semibold"
-        :style="{ color: 'var(--warm)', borderColor: 'rgba(194,65,12,0.2)', backgroundColor: 'rgba(194,65,12,0.04)' }"
+        class="w-full py-3 rounded-2xl text-sm font-semibold"
+        :style="{ color: 'var(--warm)', backgroundColor: 'rgba(194,65,12,0.04)', boxShadow: 'var(--shadow-xs)' }"
         @click="auth.logout(); router.push('/')"
       >Sign Out</button>
     </div>
@@ -143,7 +143,8 @@ async function savePin() {
 .settings-card {
   padding: 20px;
   border-radius: 16px;
-  border: 1px solid var(--border-soft);
   background: var(--surface);
+  box-shadow: var(--shadow-xs);
 }
 </style>
+

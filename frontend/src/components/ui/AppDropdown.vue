@@ -27,11 +27,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
     <Transition name="dropdown">
       <div
         v-if="open"
-        class="absolute mt-1 min-w-[180px] py-1 rounded-[var(--radius-md)] border overflow-hidden"
+        class="absolute mt-1 min-w-[180px] py-1 rounded-[var(--radius-md)] overflow-hidden"
         :class="align === 'right' ? 'right-0' : 'left-0'"
         :style="{
           backgroundColor: 'var(--card-bg)',
-          borderColor: 'var(--card-border)',
           boxShadow: 'var(--shadow-lg)',
           zIndex: 'var(--z-dropdown)',
         }"

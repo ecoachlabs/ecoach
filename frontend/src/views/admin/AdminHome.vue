@@ -21,7 +21,7 @@ const sections = [
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <p class="eyebrow">Admin</p>
       <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">Command Center</h1>
@@ -35,8 +35,8 @@ const sections = [
           v-for="section in sections"
           :key="section.name"
           :to="section.to"
-          class="section-card flex flex-col items-center text-center p-5 rounded-2xl border"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+          class="section-card flex flex-col items-center text-center p-5 rounded-2xl"
+          :style="{ backgroundColor: 'var(--surface)', boxShadow: 'var(--shadow-xs)' }"
         >
           <div class="section-symbol mb-3">{{ section.symbol }}</div>
           <h3 class="text-sm font-bold mb-1" :style="{ color: 'var(--ink)' }">{{ section.label }}</h3>
@@ -53,9 +53,9 @@ const sections = [
 .section-card {
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 130ms, transform 130ms;
+  transition: transform 130ms, box-shadow 130ms;
 }
-.section-card:hover { transform: translateY(-2px); border-color: var(--ink-muted); }
+.section-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 
 .section-symbol {
   width: 44px;
@@ -68,6 +68,7 @@ const sections = [
   font-weight: 900;
   background: var(--paper);
   color: var(--ink);
-  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-xs);
 }
 </style>
+

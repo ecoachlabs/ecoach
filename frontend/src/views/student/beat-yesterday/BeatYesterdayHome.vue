@@ -63,7 +63,7 @@ onMounted(async () => {
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Beat Yesterday</p>
@@ -73,7 +73,7 @@ onMounted(async () => {
       </div>
       <div class="flex items-center gap-4">
         <div class="px-3 py-1.5 rounded-lg text-xs font-semibold"
-          :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid var(--border-soft)' }">
+          :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid transparent' }">
           {{ modeLabels[growthMode] }}
         </div>
         <StreakCounter :count="streak" label="Day Streak" animated />
@@ -123,7 +123,7 @@ onMounted(async () => {
         <!-- Right: weekly + badges -->
         <div
           class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+          :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
         >
           <!-- Weekly bars -->
           <div class="px-5 pt-5 pb-4 border-b" :style="{ borderColor: 'var(--border-soft)' }">
@@ -167,7 +167,7 @@ onMounted(async () => {
 
       <div v-if="showTrends || showBadges"
         class="flex-shrink-0 border-t p-6"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
         <WeeklyTrends v-if="showTrends" :week-data="weekData" :weekly-gains="{ volume: 3, accuracy: 2, speed: -2 }" class="mb-4" />
         <GrowthBadges v-if="showBadges" :streak-days="streak" :badges="badges" />
       </div>
@@ -201,12 +201,12 @@ onMounted(async () => {
   align-items: center;
   text-align: center;
   gap: 2px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--paper);
 }
 .badge-card.earned {
   background: var(--surface);
-  border-color: var(--border-soft);
+  border-color: transparent;
 }
 .badge-card.locked {
   opacity: 0.4;
@@ -220,7 +220,7 @@ onMounted(async () => {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
 }
 .toggle-btn.on {
@@ -229,3 +229,5 @@ onMounted(async () => {
   border-color: var(--accent);
 }
 </style>
+
+

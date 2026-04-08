@@ -135,7 +135,7 @@ function strengthColor(v: number) {
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Memory Mode</p>
@@ -155,7 +155,7 @@ function strengthColor(v: number) {
     <!-- Stat strip -->
     <div
       class="flex-shrink-0 grid grid-cols-4 divide-x border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="stat-cell">
         <p class="stat-big" :style="{ color: fadingCount > 0 ? 'var(--gold)' : 'var(--ink-muted)' }">{{ fadingCount }}</p>
@@ -206,7 +206,7 @@ function strengthColor(v: number) {
         <!-- Memory Heatmap -->
         <div v-if="heatmapTopics.length" id="memory-map">
           <p class="section-label mb-3">Memory Health Map</p>
-          <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+          <div class="rounded-2xl border p-4" :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
             <MemoryHeatmap :topics="heatmapTopics" />
           </div>
         </div>
@@ -214,7 +214,7 @@ function strengthColor(v: number) {
         <!-- Recovery Ladder -->
         <div id="recovery">
           <p class="section-label mb-3">Recovery Stage</p>
-          <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+          <div class="rounded-2xl border p-4" :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
             <RecoveryLadder :current-stage="recoveryStage" />
           </div>
         </div>
@@ -234,10 +234,10 @@ function strengthColor(v: number) {
       <div
         id="reviews"
         class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0 flex items-center justify-between"
-          :style="{ borderColor: 'var(--border-soft)' }">
+          :style="{ borderColor: 'transparent' }">
           <p class="section-label">Due Reviews</p>
           <span v-if="reviewQueue.length"
             class="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -252,7 +252,7 @@ function strengthColor(v: number) {
             v-for="item in reviewQueue"
             :key="item.id"
             class="review-item px-3 py-3 rounded-xl border"
-            :style="{ borderColor: 'var(--border-soft)' }"
+            :style="{ borderColor: 'transparent' }"
           >
             <div class="flex items-center gap-3">
               <div class="w-2 h-2 rounded-full flex-shrink-0"
@@ -321,7 +321,7 @@ function strengthColor(v: number) {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   color: var(--ink-secondary);
   background: transparent;
   transition: all 120ms;
@@ -351,3 +351,5 @@ function strengthColor(v: number) {
 .action-btn.secondary { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent); }
 .action-btn.secondary:hover:not(:disabled) { background: var(--accent); color: white; }
 </style>
+
+

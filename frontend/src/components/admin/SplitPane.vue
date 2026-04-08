@@ -29,8 +29,7 @@ function stopDrag() {
 </script>
 
 <template>
-  <div id="split-pane-container" class="flex h-full overflow-hidden rounded-[var(--radius-lg)] border"
-    :style="{ borderColor: 'var(--card-border)' }">
+  <div id="split-pane-container" class="flex h-full overflow-hidden rounded-[var(--radius-lg)]">
     <!-- Left pane -->
     <div :style="{ width: leftPaneWidth + '%' }" class="overflow-auto" :class="{ 'select-none': dividerDragging }">
       <slot name="left" />

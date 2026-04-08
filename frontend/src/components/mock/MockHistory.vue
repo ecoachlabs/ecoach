@@ -13,7 +13,7 @@ defineEmits<{ viewReview: [sessionId: number] }>()
 <template>
   <div>
     <!-- Trend chart -->
-    <div v-if="sessions.length >= 3" class="mb-6 p-4 rounded-[var(--radius-lg)] border" :style="{borderColor:'var(--card-border)',backgroundColor:'var(--card-bg)'}">
+    <div v-if="sessions.length >= 3" class="mb-6 p-4 rounded-[var(--radius-lg)]" :style="{backgroundColor:'var(--card-bg)'}">
       <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{color:'var(--text-3)'}">Score Trend</h3>
       <TrendLine :data="sessions.map(s => ({ label: new Date(s.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}), value: s.score }))" :max-value="10000" :height="100" color="var(--accent)" />
     </div>

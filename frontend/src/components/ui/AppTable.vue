@@ -10,7 +10,7 @@ defineEmits<{ rowClick: [row: Record<string, any>] }>()
 </script>
 
 <template>
-  <div class="overflow-x-auto rounded-[var(--radius-lg)] border" :style="{ borderColor: 'var(--card-border)' }">
+  <div class="overflow-x-auto rounded-[var(--radius-lg)]">
     <table class="w-full text-left" :class="compact ? 'text-xs' : 'text-sm'">
       <thead>
         <tr :style="{ backgroundColor: 'var(--primary-light)' }">

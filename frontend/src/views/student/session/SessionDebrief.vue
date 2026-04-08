@@ -60,7 +60,7 @@ const scoreColor = computed(() => {
       <!-- Score hero -->
       <div
         class="flex-shrink-0 flex flex-col items-center justify-center py-14 px-8 border-b"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <p class="eyebrow mb-8">Session Complete</p>
 
@@ -93,7 +93,7 @@ const scoreColor = computed(() => {
       <!-- Stat strip -->
       <div
         class="flex-shrink-0 grid grid-cols-3 divide-x border-b"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="stat-cell">
           <p class="stat-big" :style="{ color: 'var(--ink)' }">{{ summary.answered_questions }}</p>
@@ -200,7 +200,7 @@ const scoreColor = computed(() => {
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--surface);
   color: var(--ink);
   transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
@@ -216,3 +216,5 @@ const scoreColor = computed(() => {
 }
 .action-tile.primary:hover { opacity: 0.88; }
 </style>
+
+

@@ -69,8 +69,8 @@ function nextQuestion() {
 <template>
   <div class="h-full flex flex-col">
     <!-- Session header -->
-    <div class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }">
+    <div class="shrink-0 px-6 py-3 flex items-center justify-between"
+      :style="{ backgroundColor: 'var(--card-bg)' }">
       <div class="flex items-center gap-3">
         <AppBadge color="accent" size="sm">{{ sessionType || 'Practice' }}</AppBadge>
         <span class="text-xs tabular-nums" :style="{ color: 'var(--text-3)' }">

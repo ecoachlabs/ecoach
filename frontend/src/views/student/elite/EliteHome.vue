@@ -125,7 +125,7 @@ const dominationTopics = computed(() =>
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center gap-6 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex-1">
         <p class="eyebrow">Elite Mode</p>
@@ -175,7 +175,7 @@ const dominationTopics = computed(() =>
       <div class="flex-1 overflow-y-auto p-6 space-y-5">
         <div v-if="!profile"
           class="px-5 py-4 rounded-2xl border"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+          :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
           <p class="text-sm font-semibold mb-1" :style="{ color: 'var(--gold)' }">Elite Mode activates automatically</p>
           <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">
             Start a session below — Elite Mode unlocks when you meet the performance bar.
@@ -208,10 +208,10 @@ const dominationTopics = computed(() =>
       <!-- Right: topic domination board -->
       <div
         class="w-80 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0 flex items-center justify-between"
-          :style="{ borderColor: 'var(--border-soft)' }">
+          :style="{ borderColor: 'transparent' }">
           <p class="section-label">Topic Domination</p>
           <span class="text-[10px] font-semibold" :style="{ color: 'var(--ink-muted)' }">{{ dominationTopics.length }} topics</span>
         </div>
@@ -257,7 +257,7 @@ const dominationTopics = computed(() =>
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: transparent;
   color: var(--ink-secondary);
   transition: all 120ms;
@@ -276,7 +276,7 @@ const dominationTopics = computed(() =>
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
 }
 .nav-pill:hover {
@@ -285,3 +285,5 @@ const dominationTopics = computed(() =>
   border-color: var(--accent);
 }
 </style>
+
+

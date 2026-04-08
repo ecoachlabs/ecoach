@@ -28,7 +28,7 @@ function triggerFileInput() {
 <template>
   <div
     class="border-2 border-dashed rounded-[var(--radius-xl)] p-10 text-center cursor-pointer transition-all"
-    :class="dragging ? 'border-[var(--accent)] bg-[var(--accent-light)] scale-[1.01]' : 'border-[var(--card-border)] hover:border-[var(--accent)]'"
+    :class="dragging ? 'border-[var(--accent)] bg-[var(--accent-light)] scale-[1.01]' : 'border-transparent hover:border-[var(--accent)]'"
     :style="{ backgroundColor: !dragging ? 'var(--card-bg)' : undefined }"
     @dragenter.prevent="dragging = true"
     @dragover.prevent="dragging = true"

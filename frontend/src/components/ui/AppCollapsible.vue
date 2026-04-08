@@ -10,7 +10,7 @@ const open = ref(false)
 </script>
 
 <template>
-  <div class="border rounded-[var(--radius-md)] overflow-hidden" :style="{ borderColor: 'var(--card-border)' }">
+  <div class="rounded-[var(--radius-md)] overflow-hidden">
     <button
       class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors"
       :style="{ backgroundColor: open ? 'var(--primary-light)' : 'var(--card-bg)', color: 'var(--text)' }"

@@ -33,9 +33,8 @@ const urgencyColor = computed(() => {
 
 <template>
   <div
-    class="inline-flex items-center gap-3 px-4 py-2.5 rounded-[var(--radius-lg)] border"
+    class="inline-flex items-center gap-3 px-4 py-2.5 rounded-[var(--radius-lg)]"
     :style="{
-      borderColor: urgencyColor + '30',
       backgroundColor: urgencyColor + '08',
     }"
   >

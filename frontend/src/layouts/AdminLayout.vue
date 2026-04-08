@@ -134,17 +134,17 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
         </div>
       </div>
 
-      <nav class="flex-1 px-2 py-3 space-y-4 overflow-x-hidden">
+      <nav class="flex-1 px-2 py-3.5 space-y-5 overflow-x-hidden">
         <div v-for="group in navGroups" :key="group.label">
-          <p class="px-2 mb-1.5 text-[9px] font-bold uppercase tracking-[0.12em]" :style="{ color: 'var(--text-3)' }">
+          <p class="px-2 mb-2 text-[10px] font-bold uppercase tracking-[0.12em]" :style="{ color: 'var(--text-3)' }">
             {{ group.label }}
           </p>
-          <div class="space-y-px">
+          <div class="space-y-1">
             <RouterLink
               v-for="item in group.items"
               :key="item.hash ? `${item.to}${item.hash}` : item.to"
               :to="item.hash ? { path: item.to, hash: item.hash } : item.to"
-              class="admin-nav-link flex items-center gap-2.5 px-2.5 py-[7px] rounded-[9px] text-sm relative transition-colors"
+              class="admin-nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-[9px] text-sm relative transition-colors"
               :style="{
                 '--item-color': item.color,
                 backgroundColor: isActive(item) ? item.color + '18' : 'transparent',
@@ -159,7 +159,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
               />
               <component
                 :is="item.icon"
-                :size="17"
+                :size="18"
                 weight="fill"
                 class="shrink-0"
                 :style="{
@@ -167,7 +167,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
                   opacity: isActive(item) ? 1 : 0.65,
                 }"
               />
-              <span class="truncate text-[13px]">{{ item.label }}</span>
+              <span class="truncate text-[14px]">{{ item.label }}</span>
             </RouterLink>
           </div>
         </div>
@@ -190,9 +190,9 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
           </span>
         </div>
 
-        <button class="sign-out flex items-center gap-2.5 w-full px-2.5 py-[7px] rounded-[9px] text-sm transition-colors" @click="logout">
-          <PhSignOut :size="16" weight="fill" style="color: #F43F5E; opacity: 0.65;" />
-          <span class="text-[13px]" style="color: var(--text-3);">Sign Out</span>
+        <button class="sign-out flex items-center gap-2.5 w-full px-2.5 py-2 rounded-[9px] text-sm transition-colors" @click="logout">
+          <PhSignOut :size="17" weight="fill" style="color: #F43F5E; opacity: 0.65;" />
+          <span class="text-[14px]" style="color: var(--text-3);">Sign Out</span>
         </button>
       </div>
     </aside>

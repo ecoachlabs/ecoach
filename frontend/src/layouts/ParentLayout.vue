@@ -90,17 +90,17 @@ function isActive(target: string): boolean {
       </div>
 
       <!-- Nav -->
-      <nav class="flex-1 py-3 space-y-4 overflow-x-hidden px-2">
+      <nav class="flex-1 py-3.5 space-y-5 overflow-x-hidden px-2">
         <div v-for="group in navGroups" :key="group.label">
-          <p class="px-2 mb-1.5 text-[9px] font-bold uppercase tracking-[0.12em]" :style="{ color: 'var(--text-3)' }">
+          <p class="px-2 mb-2 text-[10px] font-bold uppercase tracking-[0.12em]" :style="{ color: 'var(--text-3)' }">
             {{ group.label }}
           </p>
-          <div class="space-y-px">
+          <div class="space-y-1">
             <RouterLink
               v-for="item in group.items"
               :key="item.name"
               :to="item.to"
-              class="parent-nav-link flex items-center gap-2.5 px-2.5 py-[7px] rounded-[9px] text-sm relative"
+              class="parent-nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-[9px] text-sm relative"
               :style="{
                 '--item-color': item.color,
                 backgroundColor: isActive(item.to) ? item.color + '18' : 'transparent',
@@ -116,7 +116,7 @@ function isActive(target: string): boolean {
               />
               <component
                 :is="item.icon"
-                :size="17"
+                :size="18"
                 weight="fill"
                 :style="{
                   color: isActive(item.to) ? item.color : 'var(--text-3)',
@@ -125,7 +125,7 @@ function isActive(target: string): boolean {
                 }"
                 class="shrink-0"
               />
-              <span class="truncate text-[13px]">{{ item.label }}</span>
+              <span class="truncate text-[14px]">{{ item.label }}</span>
             </RouterLink>
           </div>
         </div>
@@ -145,11 +145,11 @@ function isActive(target: string): boolean {
           </span>
         </div>
         <button
-          class="sign-out flex items-center gap-2.5 w-full px-2.5 py-[7px] rounded-[9px] text-sm transition-colors"
+          class="sign-out flex items-center gap-2.5 w-full px-2.5 py-2 rounded-[9px] text-sm transition-colors"
           @click="logout"
         >
-          <PhSignOut :size="16" weight="fill" style="color: #F43F5E; opacity: 0.65;" />
-          <span class="text-[13px]" style="color: var(--text-3);">Sign Out</span>
+          <PhSignOut :size="17" weight="fill" style="color: #F43F5E; opacity: 0.65;" />
+          <span class="text-[14px]" style="color: var(--text-3);">Sign Out</span>
         </button>
       </div>
     </aside>

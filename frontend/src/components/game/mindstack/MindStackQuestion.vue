@@ -20,7 +20,7 @@ function select(id: number) {
 </script>
 
 <template>
-  <div class="p-4 rounded-[var(--radius-lg)] border" :style="{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }">
+  <div class="p-4 rounded-[var(--radius-lg)]" :style="{ backgroundColor: 'var(--card-bg)' }">
     <p class="text-sm font-medium mb-3 leading-relaxed" :style="{ color: 'var(--text)' }">{{ stem }}</p>
     <div class="space-y-1.5">
       <button v-for="opt in options" :key="opt.id"

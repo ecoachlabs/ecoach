@@ -16,8 +16,8 @@ const parts = computed(() => props.stemWithBlanks.split('___BLANK___'))
 </script>
 
 <template>
-  <div class="p-5 rounded-[var(--radius-lg)] border leading-relaxed text-base"
-    :style="{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text)' }">
+  <div class="p-5 rounded-[var(--radius-lg)] leading-relaxed text-base"
+    :style="{ backgroundColor: 'var(--card-bg)', color: 'var(--text)' }">
     <template v-for="(part, i) in parts" :key="i">
       <span>{{ part }}</span>
       <input

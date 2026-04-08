@@ -15,7 +15,7 @@ const severityConfig: Record<string, { bg: string; text: string; border: string;
 
 <template>
   <div
-    class="px-4 py-3 rounded-[var(--radius-md)] border"
+    class="px-4 py-3 rounded-[var(--radius-md)]"
     :class="[
       severityConfig[severity]?.bg || 'bg-stone-50',
       severityConfig[severity]?.border || 'border-stone-200',

@@ -80,7 +80,7 @@ const subjectIndex: Record<string, { symbol: string }> = {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Practice Hub</p>
@@ -160,7 +160,7 @@ const subjectIndex: Record<string, { symbol: string }> = {
       <!-- Priority topics sidebar -->
       <div
         class="w-72 flex-shrink-0 flex flex-col overflow-hidden border-l"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Priority Topics</p>
@@ -233,7 +233,7 @@ const subjectIndex: Record<string, { symbol: string }> = {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .header-link:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
@@ -252,7 +252,7 @@ const subjectIndex: Record<string, { symbol: string }> = {
   gap: 16px;
   padding: 18px 20px;
   border-radius: 16px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background-color: var(--surface);
   cursor: pointer;
   transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
@@ -268,7 +268,7 @@ const subjectIndex: Record<string, { symbol: string }> = {
   height: 52px;
   border-radius: 14px;
   background-color: var(--paper);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -291,7 +291,7 @@ const subjectIndex: Record<string, { symbol: string }> = {
   align-items: center;
   padding: 16px 12px;
   border-radius: 14px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background-color: var(--surface);
   cursor: pointer;
   transition: border-color 100ms, background-color 100ms;
@@ -304,3 +304,5 @@ const subjectIndex: Record<string, { symbol: string }> = {
 }
 .topic-btn:hover { background-color: var(--paper); }
 </style>
+
+

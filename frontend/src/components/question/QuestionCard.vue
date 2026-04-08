@@ -74,8 +74,8 @@ defineExpose({ reset })
 
     <!-- Question Stem -->
     <div
-      class="p-5 rounded-[var(--radius-lg)] border mb-5"
-      :style="{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }"
+      class="p-5 rounded-[var(--radius-lg)] mb-5"
+      :style="{ backgroundColor: 'var(--card-bg)' }"
     >
       <p class="text-base leading-relaxed font-medium" :style="{ color: 'var(--text)' }">
         {{ stem }}

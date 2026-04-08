@@ -250,7 +250,7 @@ const phaseColors: Record<string, string> = {
     <!-- Header -->
     <div
       class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center gap-3">
         <AppBadge color="accent" size="sm" dot>Diagnostic</AppBadge>
@@ -380,3 +380,4 @@ const phaseColors: Record<string, string> = {
     </div>
   </div>
 </template>
+

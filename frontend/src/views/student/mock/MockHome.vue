@@ -88,7 +88,7 @@ function readinessColor() {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Mock Centre</p>
@@ -142,7 +142,7 @@ function readinessColor() {
         </div>
 
         <!-- Practice note -->
-        <div class="mt-6 px-5 py-4 rounded-xl border" :style="{ borderColor: 'var(--border-soft)' }">
+        <div class="mt-6 px-5 py-4 rounded-xl border" :style="{ borderColor: 'transparent' }">
           <p class="text-[11px] font-semibold mb-1" :style="{ color: 'var(--ink)' }">Before your mock</p>
           <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">
             Run a diagnostic first to get accurate topic weights. Mocks adapt to your current readiness level.
@@ -155,7 +155,7 @@ function readinessColor() {
       <!-- Recent history panel -->
       <div
         class="w-72 flex-shrink-0 flex flex-col overflow-hidden border-l"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Recent Mocks</p>
@@ -224,7 +224,7 @@ function readinessColor() {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
@@ -243,7 +243,7 @@ function readinessColor() {
   gap: 16px;
   padding: 18px 20px;
   border-radius: 16px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background-color: var(--surface);
   cursor: pointer;
   transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
@@ -258,7 +258,7 @@ function readinessColor() {
   height: 44px;
   border-radius: 12px;
   background-color: var(--paper);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -272,7 +272,7 @@ function readinessColor() {
   border-radius: 99px;
   background: var(--paper);
   color: var(--ink-muted);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 
 .go-label {
@@ -289,3 +289,5 @@ function readinessColor() {
 .hist-btn:not(:disabled):hover { background-color: var(--paper); }
 .hist-btn:disabled { opacity: 0.6; cursor: default; }
 </style>
+
+

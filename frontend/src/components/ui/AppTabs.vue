@@ -25,7 +25,7 @@ defineEmits<{
       <span
         v-if="tab.count !== undefined"
         class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full"
-        :class="modelValue === tab.key ? 'bg-[var(--primary)] text-white' : 'bg-[var(--card-border)] text-[var(--text-3)]'"
+        :class="modelValue === tab.key ? 'bg-[var(--primary)] text-white' : 'bg-[var(--field-border)] text-[var(--text-3)]'"
       >
         {{ tab.count }}
       </span>

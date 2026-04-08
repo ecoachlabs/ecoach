@@ -51,7 +51,7 @@ async function acknowledge(alert: ParentAlertRecordDto) {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <p class="eyebrow">Family</p>
       <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">Attention Needed</h1>
@@ -76,8 +76,8 @@ async function acknowledge(alert: ParentAlertRecordDto) {
           <div
             v-for="alert in pendingAlerts"
             :key="alert.id"
-            class="alert-row flex items-start gap-4 px-5 py-4 rounded-2xl border"
-            :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+            class="alert-row flex items-start gap-4 px-5 py-4 rounded-2xl"
+            :style="{ backgroundColor: 'var(--surface)', boxShadow: 'var(--shadow-xs)' }"
           >
             <div class="mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0"
               :style="{ backgroundColor: severityDot(alert.severity) }" />
@@ -134,3 +134,4 @@ async function acknowledge(alert: ParentAlertRecordDto) {
 .alert-row:hover { background-color: var(--paper) !important; }
 .severity-chip { font-size: 10px; font-weight: 700; text-transform: uppercase; }
 </style>
+

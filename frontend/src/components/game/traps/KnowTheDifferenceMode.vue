@@ -20,8 +20,7 @@ defineEmits<{ reveal: [dimension: string]; complete: [] }>()
     </div>
 
     <!-- Split comparison -->
-    <div class="grid grid-cols-[1fr_auto_1fr] gap-0 rounded-[var(--radius-xl)] border overflow-hidden"
-      :style="{ borderColor: 'var(--card-border)' }">
+    <div class="grid grid-cols-[1fr_auto_1fr] gap-0 rounded-[var(--radius-xl)] overflow-hidden">
 
       <!-- Headers -->
       <div class="px-4 py-3 text-center font-semibold text-sm" :style="{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }">

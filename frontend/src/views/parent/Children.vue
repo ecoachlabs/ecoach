@@ -102,7 +102,7 @@ function extractError(err: unknown, fallback: string) {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Family</p>
@@ -139,8 +139,8 @@ function extractError(err: unknown, fallback: string) {
           <div
             v-for="row in childRows"
             :key="row.child.id"
-            class="child-card px-6 py-5 rounded-2xl border"
-            :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+            class="child-card px-6 py-5 rounded-2xl"
+            :style="{ backgroundColor: 'var(--surface)', boxShadow: 'var(--shadow-xs)' }"
           >
             <div class="flex items-start justify-between gap-3 mb-4">
               <div class="flex items-center gap-3">
@@ -192,8 +192,8 @@ function extractError(err: unknown, fallback: string) {
 
       <!-- Right: stats -->
       <div
-        class="w-64 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        class="w-64 flex-shrink-0 flex flex-col overflow-hidden"
+        :style="{ backgroundColor: 'var(--surface)', boxShadow: 'var(--shadow-xs)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Overview</p>
@@ -277,8 +277,8 @@ function extractError(err: unknown, fallback: string) {
 .meta-box {
   padding: 12px;
   border-radius: 12px;
-  border: 1px solid var(--border-soft);
   background: var(--paper);
+  box-shadow: var(--shadow-xs);
 }
 
 .risk-tag {
@@ -299,13 +299,14 @@ function extractError(err: unknown, fallback: string) {
   cursor: pointer;
   background: transparent;
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .action-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
 .action-btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .action-btn.primary:hover { opacity: 0.85; background: var(--ink); }
 
-.stat-card { padding: 16px; border-radius: 14px; border: 1px solid var(--border-soft); background: var(--paper); }
+.stat-card { padding: 16px; border-radius: 14px; background: var(--paper); box-shadow: var(--shadow-xs); }
 .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); margin-top: 4px; }
 </style>
+

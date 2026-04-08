@@ -12,8 +12,8 @@ defineProps<{
 
 <template>
   <div
-    class="rounded-[var(--radius-lg)] border overflow-hidden"
-    :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }"
+    class="rounded-[var(--radius-lg)] overflow-hidden"
+    :style="{ backgroundColor: 'var(--card-bg)' }"
   >
     <div class="grid grid-cols-3">
       <!-- Left -->
@@ -28,7 +28,7 @@ defineProps<{
       </div>
 
       <!-- Divider / VS -->
-      <div class="flex items-center justify-center border-x" :style="{ borderColor: 'var(--card-border)' }">
+      <div class="flex items-center justify-center" :style="{ backgroundColor: 'var(--primary-light)' }">
         <span class="text-xs font-bold" :style="{ color: 'var(--text-3)' }">vs</span>
       </div>
 

@@ -51,7 +51,7 @@ function progressColor(band: string): 'accent' | 'warm' | 'gold' {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center gap-4"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <button class="back-btn" @click="router.push('/parent')">← Overview</button>
       <div class="flex-1">
@@ -103,8 +103,8 @@ function progressColor(band: string): 'accent' | 'warm' | 'gold' {
         </div>
 
         <!-- Subject readiness -->
-        <div v-if="readiness" class="px-6 py-5 rounded-2xl border mb-4"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+        <div v-if="readiness" class="px-6 py-5 rounded-2xl mb-4"
+          :style="{ backgroundColor: 'var(--surface)', boxShadow: 'var(--shadow-xs)' }">
           <p class="section-label mb-4">Subject Readiness</p>
           <div class="space-y-4">
             <div v-for="subject in readiness.subjects" :key="subject.subject_id">
@@ -130,8 +130,8 @@ function progressColor(band: string): 'accent' | 'warm' | 'gold' {
         </div>
 
         <!-- Coverage -->
-        <div v-if="readiness" class="flex items-center justify-between px-6 py-4 rounded-2xl border"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+        <div v-if="readiness" class="flex items-center justify-between px-6 py-4 rounded-2xl"
+          :style="{ backgroundColor: 'var(--surface)', boxShadow: 'var(--shadow-xs)' }">
           <div>
             <p class="text-sm font-bold" :style="{ color: 'var(--ink)' }">Overall BECE Coverage</p>
             <p class="text-xs mt-0.5" :style="{ color: 'var(--ink-muted)' }">Percentage of syllabus covered</p>
@@ -157,16 +157,17 @@ function progressColor(band: string): 'accent' | 'warm' | 'gold' {
   cursor: pointer;
   background: transparent;
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
   flex-shrink: 0;
 }
-.back-btn:hover { background: var(--border-soft); color: var(--ink); }
+.back-btn:hover { background: var(--paper); color: var(--ink); }
 
 .readiness-label { font-size: 13px; font-weight: 700; text-transform: capitalize; }
 
-.stat-card { padding: 16px; border-radius: 14px; border: 1px solid var(--border-soft); background: var(--surface); }
+.stat-card { padding: 16px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-xs); }
 .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); margin-top: 4px; }
 
 .readiness-chip { font-size: 10px; font-weight: 700; text-transform: capitalize; }
 </style>
+

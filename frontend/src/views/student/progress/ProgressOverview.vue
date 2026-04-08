@@ -46,7 +46,7 @@ const bandLabel: Record<string, string> = {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Progress</p>
@@ -64,7 +64,7 @@ const bandLabel: Record<string, string> = {
     <!-- Stats strip -->
     <div
       class="flex-shrink-0 grid grid-cols-5 divide-x border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <template v-if="loading">
         <div v-for="i in 5" :key="i" class="p-5 flex flex-col items-center gap-2">
@@ -101,7 +101,7 @@ const bandLabel: Record<string, string> = {
     <!-- Topic mastery list -->
     <div class="flex-1 overflow-hidden flex flex-col">
       <div class="px-7 py-3 border-b flex-shrink-0 flex items-center justify-between"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
         <p class="section-label">Topic Mastery — {{ topics.length }} topics</p>
         <button class="text-[11px] font-semibold" :style="{ color: 'var(--accent)' }"
           @click="router.push('/student/diagnostic')">Run Diagnostic →</button>
@@ -122,7 +122,7 @@ const bandLabel: Record<string, string> = {
           >Start Diagnostic</button>
         </div>
 
-        <div v-else class="divide-y" :style="{ borderColor: 'var(--border-soft)' }">
+        <div v-else class="divide-y divide-[var(--border-soft)]" :style="{ borderColor: 'transparent' }">
           <button
             v-for="topic in topics"
             :key="topic.topic_id"
@@ -175,7 +175,7 @@ const bandLabel: Record<string, string> = {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
@@ -217,3 +217,5 @@ const bandLabel: Record<string, string> = {
 }
 .topic-row:hover { background-color: var(--paper); }
 </style>
+
+

@@ -21,12 +21,12 @@ const emit = defineEmits<{ send: [message: string] }>()
   <div class="flex flex-col h-full">
     <div class="flex-1 overflow-y-auto p-4 space-y-3">
       <div v-for="(msg, i) in messages" :key="i" :class="msg.from === 'parent' ? 'flex justify-end' : 'flex justify-start'">
-        <div class="max-w-[80%] px-4 py-2.5 rounded-[var(--radius-lg)]"
+          <div class="max-w-[80%] px-4 py-2.5 rounded-[var(--radius-lg)]"
           :class="msg.from === 'parent' ? 'rounded-br-sm' : 'rounded-bl-sm'"
           :style="{
             backgroundColor: msg.from === 'parent' ? 'var(--accent)' : 'var(--card-bg)',
             color: msg.from === 'parent' ? 'white' : 'var(--text)',
-            border: msg.from === 'coach' ? '1px solid var(--card-border)' : 'none',
+            boxShadow: msg.from === 'coach' ? 'var(--shadow-xs)' : 'none',
           }">
           <p class="text-sm leading-relaxed">{{ msg.text }}</p>
           <p class="text-[9px] mt-1 opacity-60">{{ msg.time }}</p>

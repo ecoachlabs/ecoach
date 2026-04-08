@@ -18,8 +18,8 @@ const typeIcons: Record<string, string> = {
 
 <template>
   <Transition name="notif">
-    <div v-if="open" class="absolute top-full right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-[var(--radius-xl)] border"
-      :style="{backgroundColor:'var(--card-bg)',borderColor:'var(--card-border)',boxShadow:'var(--shadow-xl)',zIndex:'var(--z-dropdown)'}">
+    <div v-if="open" class="absolute top-full right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-[var(--radius-xl)]"
+      :style="{backgroundColor:'var(--card-bg)',boxShadow:'var(--shadow-xl)',zIndex:'var(--z-dropdown)'}">
       <div class="flex items-center justify-between px-4 py-3 border-b" :style="{borderColor:'var(--card-border)'}">
         <h3 class="text-xs font-semibold" :style="{color:'var(--text)'}">Notifications</h3>
         <AppButton variant="ghost" size="sm" @click="$emit('clearAll')">Clear all</AppButton>

@@ -35,7 +35,7 @@ const entryPoints = [
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center justify-between">
         <div>
@@ -84,7 +84,7 @@ const entryPoints = [
       <!-- Right: quick insight -->
       <div
         class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Quick Insight</p>
@@ -155,7 +155,7 @@ const entryPoints = [
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: transparent;
   color: var(--ink-secondary);
   transition: all 120ms;
@@ -173,7 +173,7 @@ const entryPoints = [
   text-align: center;
   padding: 20px 14px;
   border-radius: 16px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--surface);
   cursor: pointer;
   transition: border-color 130ms, transform 130ms;
@@ -191,14 +191,14 @@ const entryPoints = [
   font-weight: 900;
   background: var(--paper);
   color: var(--ink);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   margin-bottom: 10px;
 }
 
 .insight-card {
   padding: 14px;
   border-radius: 14px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--paper);
 }
 
@@ -210,8 +210,10 @@ const entryPoints = [
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
 }
 .insight-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
 </style>
+
+

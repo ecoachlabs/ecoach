@@ -33,7 +33,7 @@ const router = useRouter()
           { sym: '★', label: 'Track Progress', desc: 'See you improve' },
         ]" :key="item.label"
           class="flex flex-col items-center gap-2 px-3 py-4 rounded-2xl border"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+          :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
         >
           <span class="text-xl" :style="{ color: 'var(--ink-secondary)' }">{{ item.sym }}</span>
           <p class="text-xs font-bold" :style="{ color: 'var(--ink)' }">{{ item.label }}</p>
@@ -64,3 +64,4 @@ const router = useRouter()
 }
 .start-btn:hover { opacity: 0.87; transform: translateY(-2px); }
 </style>
+

@@ -209,7 +209,7 @@ const accuracy = computed(() =>
   <div class="min-h-screen flex flex-col" data-mode="game" :style="{ backgroundColor: 'var(--paper)' }">
     <!-- Header -->
     <div class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
       <div class="flex items-center gap-2">
         <span class="font-display font-bold" :style="{ color: 'var(--warm)' }">⟷ Tug of War</span>
         <span v-if="phase === 'playing'" class="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -282,7 +282,7 @@ const accuracy = computed(() =>
     <div v-else-if="phase === 'playing'" class="flex-1 flex flex-col p-4 max-w-2xl mx-auto w-full">
       <!-- Rope Visualization -->
       <div class="mb-6 py-4 rounded-2xl relative overflow-hidden"
-        :style="{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-soft)' }">
+        :style="{ backgroundColor: 'var(--surface)', border: '1px solid transparent' }">
         <div class="flex items-center justify-between px-4 mb-2">
           <span class="text-xs font-bold" :style="{ color: 'var(--warm)' }">LOSE ←</span>
           <span class="text-xs font-bold" :style="{ color: 'var(--accent)' }">→ WIN</span>
@@ -409,3 +409,4 @@ const accuracy = computed(() =>
     </div>
   </div>
 </template>
+

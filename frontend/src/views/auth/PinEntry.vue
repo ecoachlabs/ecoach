@@ -228,7 +228,7 @@ const digits = ['1','2','3','4','5','6','7','8','9','','0','⌫']
   font-weight: 600;
   color: var(--ink);
   background-color: var(--surface);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   cursor: pointer;
   transition: background-color 80ms ease, transform 80ms ease, border-color 80ms ease;
   display: flex;
@@ -273,3 +273,4 @@ const digits = ['1','2','3','4','5','6','7','8','9','','0','⌫']
   100% { transform: translateX(100%); }
 }
 </style>
+

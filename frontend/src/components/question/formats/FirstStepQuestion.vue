@@ -11,7 +11,7 @@ defineEmits<{ select: [id: number] }>()
 
 <template>
   <div>
-    <div class="p-4 rounded-[var(--radius-lg)] border mb-4" :style="{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }">
+    <div class="p-4 rounded-[var(--radius-lg)] mb-4" :style="{ backgroundColor: 'var(--card-bg)' }">
       <p class="text-xs font-semibold uppercase tracking-wider mb-2" :style="{ color: 'var(--accent)' }">What is the correct first step?</p>
       <p class="text-sm leading-relaxed" :style="{ color: 'var(--text)' }">{{ problem }}</p>
     </div>

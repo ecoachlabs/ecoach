@@ -24,7 +24,7 @@ const attrs = useAttrs()
       // Icon-only
       icon && (size === 'sm' ? 'px-1.5' : size === 'lg' ? 'px-3' : 'px-2'),
       // Variant
-      variant === 'secondary' ? 'bg-[var(--card-bg)] text-[var(--text)] border border-[var(--card-border)] hover:bg-[var(--primary-light)] hover:border-[var(--primary)] hover:text-[var(--primary)]' :
+      variant === 'secondary' ? 'bg-[var(--card-bg)] text-[var(--text)] border border-[var(--field-border)] hover:bg-[var(--primary-light)] hover:border-[var(--primary)] hover:text-[var(--primary)]' :
       variant === 'ghost' ? 'bg-transparent text-[var(--text-2)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)]' :
       variant === 'danger' ? 'bg-[var(--danger)] text-white hover:brightness-110 shadow-sm' :
       variant === 'warm' ? 'bg-gradient-to-r from-[var(--warm)] to-[var(--gold)] text-white hover:brightness-110 shadow-sm shadow-[var(--shadow-glow-warm)]' :

@@ -86,7 +86,7 @@ const navLinks = [
     <!-- Greeting strip -->
     <div
       class="flex-shrink-0 px-7 py-4 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="text-[11px] font-semibold" :style="{ color: 'var(--ink-muted)' }">{{ dateLabel }}</p>
@@ -133,7 +133,7 @@ const navLinks = [
         <!-- Coach directive -->
         <div v-if="nextAction"
           class="directive-card rounded-2xl border cursor-pointer"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+          :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
           @click="startAction"
         >
           <div class="directive-inner p-6">
@@ -155,7 +155,7 @@ const navLinks = [
               </div>
               <div v-if="nextAction.estimated_minutes"
                 class="flex-shrink-0 text-center px-3 py-2 rounded-xl border"
-                :style="{ borderColor: 'var(--border-soft)' }">
+                :style="{ borderColor: 'transparent' }">
                 <p class="text-lg font-black tabular-nums" :style="{ color: 'var(--ink)' }">{{ nextAction.estimated_minutes }}</p>
                 <p class="text-[9px] uppercase font-bold tracking-wide" :style="{ color: 'var(--ink-muted)' }">min</p>
               </div>
@@ -180,7 +180,7 @@ const navLinks = [
         <!-- Empty state if no directive -->
         <div v-else
           class="rounded-2xl border p-8 text-center"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+          :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
         >
           <p class="font-display text-lg font-bold mb-1" :style="{ color: 'var(--ink)' }">All caught up</p>
           <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">Your coach has no pending actions. Keep practising!</p>
@@ -194,7 +194,7 @@ const navLinks = [
               v-for="topic in topicCases"
               :key="topic.topic_id"
               class="topic-row flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer"
-              :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+              :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
               @click="router.push('/student/practice')"
             >
               <MasteryBadge :state="topic.mastery_state" size="sm" />
@@ -219,7 +219,7 @@ const navLinks = [
       <!-- Right: navigation + subjects -->
       <div
         class="w-72 flex-shrink-0 flex flex-col overflow-hidden border-l"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <!-- Quick nav -->
         <div class="flex-shrink-0 p-4 border-b" :style="{ borderColor: 'var(--border-soft)' }">
@@ -229,7 +229,7 @@ const navLinks = [
               v-for="link in navLinks"
               :key="link.to"
               class="nav-tile flex flex-col gap-1 p-3 rounded-xl border text-left"
-              :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--paper)' }"
+              :style="{ borderColor: 'transparent', backgroundColor: 'var(--paper)' }"
               @click="router.push(link.to)"
             >
               <component :is="link.icon" :size="16" weight="duotone"
@@ -248,7 +248,7 @@ const navLinks = [
               v-for="s in dashboard.subjects"
               :key="s.subject_id"
               class="subject-row flex items-center gap-3 px-3 py-3 rounded-xl border cursor-pointer"
-              :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--paper)' }"
+              :style="{ borderColor: 'transparent', backgroundColor: 'var(--paper)' }"
               @click="router.push('/student/progress')"
             >
               <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0"
@@ -324,3 +324,4 @@ const navLinks = [
 }
 .subject-row:hover { background-color: var(--surface) !important; }
 </style>
+

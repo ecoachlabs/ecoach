@@ -49,7 +49,7 @@ const settingGroups = [
     <!-- Left nav -->
     <div
       class="w-64 flex-shrink-0 flex flex-col border-r overflow-y-auto"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="px-6 pt-8 pb-5 border-b" :style="{ borderColor: 'var(--border-soft)' }">
         <p class="eyebrow mb-1">Settings</p>
@@ -57,7 +57,7 @@ const settingGroups = [
       </div>
 
       <!-- Profile card -->
-      <div class="p-4 mx-4 my-4 rounded-xl border" :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--paper)' }">
+      <div class="p-4 mx-4 my-4 rounded-xl border" :style="{ borderColor: 'transparent', backgroundColor: 'var(--paper)' }">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black"
             :style="{ backgroundColor: 'var(--ink)', color: 'var(--paper)' }">
@@ -87,7 +87,7 @@ const settingGroups = [
       <div v-for="group in settingGroups" :key="group.label">
         <p class="section-label mb-4">{{ group.label }}</p>
 
-        <div class="rounded-2xl border overflow-hidden divide-y" :style="{ borderColor: 'var(--border-soft)' }">
+        <div class="rounded-2xl border overflow-hidden divide-y divide-[var(--border-soft)]" :style="{ borderColor: 'transparent' }">
           <div
             v-for="item in group.items"
             :key="item.id"
@@ -171,7 +171,7 @@ const settingGroups = [
   background: var(--border-soft);
   transition: background-color 200ms;
   flex-shrink: 0;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 .toggle-switch.on {
   background: var(--accent);
@@ -200,7 +200,7 @@ const settingGroups = [
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
   flex-shrink: 0;
 }
@@ -210,3 +210,5 @@ const settingGroups = [
   border-color: var(--accent);
 }
 </style>
+
+

@@ -8,7 +8,7 @@ defineProps<{
 
 <template>
   <div
-    class="rounded-[var(--radius-lg)] border transition-all"
+    class="rounded-[var(--radius-lg)] transition-all"
     :class="[
       hover ? 'card-lift cursor-pointer' : '',
       padding === 'none' ? '' :
@@ -18,7 +18,6 @@ defineProps<{
     ]"
     :style="{
       backgroundColor: 'var(--card-bg)',
-      borderColor: 'var(--card-border)',
       boxShadow: glow === 'accent' ? 'var(--shadow-glow-accent)' :
                   glow === 'warm' ? 'var(--shadow-glow-warm)' :
                   glow === 'gold' ? 'var(--shadow-glow-gold)' :

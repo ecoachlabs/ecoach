@@ -20,7 +20,7 @@ defineEmits<{
       class="w-full pl-10 pr-4 py-2.5 rounded-[var(--radius-lg)] border text-sm transition-colors placeholder:text-[var(--text-3)]"
       :style="{
         backgroundColor: 'var(--card-bg)',
-        borderColor: 'var(--card-border)',
+        borderColor: 'var(--field-border)',
         color: 'var(--text)',
       }"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"

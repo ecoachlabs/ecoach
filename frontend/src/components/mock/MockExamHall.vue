@@ -50,8 +50,8 @@ function handleFlag() {
 <template>
   <div class="h-full flex flex-col" data-mode="pressure">
     <!-- Exam Header -->
-    <div class="shrink-0 px-4 py-2 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }">
+    <div class="shrink-0 px-4 py-2 flex items-center justify-between"
+      :style="{ backgroundColor: 'var(--card-bg)' }">
       <div class="flex items-center gap-3">
         <AppBadge color="danger" size="sm">EXAM</AppBadge>
         <span class="text-xs font-medium" :style="{ color: 'var(--text)' }">{{ mockTitle || 'Mock Exam' }}</span>
@@ -71,8 +71,8 @@ function handleFlag() {
     </div>
 
     <!-- Question Navigation Grid -->
-    <div class="shrink-0 px-4 py-2 border-b flex items-center gap-1 overflow-x-auto"
-      :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }">
+    <div class="shrink-0 px-4 py-2 flex items-center gap-1 overflow-x-auto"
+      :style="{ backgroundColor: 'var(--card-bg)' }">
       <button
         v-for="(q, i) in questions"
         :key="i"
@@ -103,8 +103,8 @@ function handleFlag() {
     </div>
 
     <!-- Bottom bar -->
-    <div class="shrink-0 px-4 py-2 flex items-center justify-between border-t"
-      :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }">
+    <div class="shrink-0 px-4 py-2 flex items-center justify-between"
+      :style="{ backgroundColor: 'var(--card-bg)' }">
       <AppButton variant="ghost" size="sm" :disabled="currentIndex === 0" @click="currentIndex--">← Previous</AppButton>
       <span class="text-xs tabular-nums" :style="{ color: 'var(--text-3)' }">
         {{ answeredCount }}/{{ questions.length }} answered

@@ -6,7 +6,7 @@ defineEmits<{ exit: [] }>()
 <template>
   <Transition name="focus">
     <div v-if="active" class="fixed inset-0 flex flex-col" :style="{zIndex:'var(--z-overlay)',backgroundColor:'var(--bg)'}" data-mode="focus">
-      <div class="shrink-0 flex items-center justify-between px-6 py-3 border-b" :style="{borderColor:'var(--card-border)',backgroundColor:'var(--card-bg)'}">
+      <div class="shrink-0 flex items-center justify-between px-6 py-3" :style="{backgroundColor:'var(--card-bg)'}">
         <span class="text-xs font-medium" :style="{color:'var(--text-3)'}">Focus Mode</span>
         <button class="text-xs px-3 py-1 rounded-[var(--radius-md)]" :style="{color:'var(--text-3)'}" @click="$emit('exit')">Exit Focus</button>
       </div>

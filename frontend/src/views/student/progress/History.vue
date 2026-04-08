@@ -59,7 +59,7 @@ const stats = computed(() => {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Progress</p>
@@ -97,7 +97,7 @@ const stats = computed(() => {
             v-for="session in filtered"
             :key="session.id"
             class="session-row flex items-center gap-4 px-5 py-4 rounded-2xl border"
-            :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+            :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
           >
             <!-- Score ring -->
             <div class="score-ring flex-shrink-0" :style="{ color: scoreColor(session.score) }">
@@ -136,7 +136,7 @@ const stats = computed(() => {
       <!-- Right: stats -->
       <div
         class="w-64 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Summary</p>
@@ -190,7 +190,7 @@ const stats = computed(() => {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
 }
 .nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
@@ -201,7 +201,7 @@ const stats = computed(() => {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: transparent;
   color: var(--ink-secondary);
   transition: all 120ms;
@@ -233,7 +233,7 @@ const stats = computed(() => {
 .stat-card {
   padding: 16px;
   border-radius: 14px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--paper);
 }
 .stat-label {
@@ -245,3 +245,5 @@ const stats = computed(() => {
   margin-top: 4px;
 }
 </style>
+
+

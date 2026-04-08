@@ -53,7 +53,7 @@ function masteryColor(state: string): string {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Progress</p>
@@ -93,7 +93,7 @@ function masteryColor(state: string): string {
       <!-- Right: topic detail -->
       <div
         class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Topic Detail</p>
@@ -109,7 +109,7 @@ function masteryColor(state: string): string {
               clickable
             />
 
-            <div class="px-4 py-3 rounded-xl border" :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--paper)' }">
+            <div class="px-4 py-3 rounded-xl border" :style="{ borderColor: 'transparent', backgroundColor: 'var(--paper)' }">
               <p class="text-xs font-bold mb-1" :style="{ color: 'var(--ink)' }">{{ selectedTopic.intervention_mode }}</p>
               <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">{{ selectedTopic.intervention_reason }}</p>
             </div>
@@ -133,7 +133,7 @@ function masteryColor(state: string): string {
 
           <div v-else class="py-16 text-center px-4">
             <div class="w-12 h-12 rounded-full border-2 flex items-center justify-center mx-auto mb-3"
-              :style="{ borderColor: 'var(--border-soft)' }">
+              :style="{ borderColor: 'transparent' }">
               <span class="text-lg" :style="{ color: 'var(--ink-muted)' }">◎</span>
             </div>
             <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">
@@ -185,7 +185,7 @@ function masteryColor(state: string): string {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
 }
 .nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
@@ -203,3 +203,5 @@ function masteryColor(state: string): string {
 }
 .start-btn:hover { opacity: 0.87; }
 </style>
+
+

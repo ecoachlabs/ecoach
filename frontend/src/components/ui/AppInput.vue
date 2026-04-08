@@ -22,7 +22,7 @@ defineEmits<{
       :placeholder="placeholder"
       :value="modelValue"
       class="w-full px-3.5 py-2.5 rounded-[var(--radius-md)] border text-sm transition-colors placeholder:text-[var(--text-3)]"
-      :class="error ? 'border-[var(--danger)] bg-[var(--danger-light)]' : 'border-[var(--card-border)] bg-[var(--card-bg)] focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]'"
+      :class="error ? 'border-[var(--danger)] bg-[var(--danger-light)]' : 'border-[var(--field-border)] bg-[var(--card-bg)] focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]'"
       :style="{ color: 'var(--text)', outlineColor: 'transparent' }"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />

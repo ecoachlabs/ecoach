@@ -158,8 +158,8 @@ onUnmounted(() => { simulation?.stop() })
 </script>
 
 <template>
-  <div ref="container" class="w-full rounded-[var(--radius-lg)] overflow-hidden border"
-    :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)', minHeight: (height ?? 400) + 'px' }">
+  <div ref="container" class="w-full rounded-[var(--radius-lg)] overflow-hidden"
+    :style="{ backgroundColor: 'var(--card-bg)', minHeight: (height ?? 400) + 'px' }">
     <p v-if="!nodes.length" class="text-sm text-center py-16" :style="{ color: 'var(--text-3)' }">
       No knowledge map data available. Complete more practice sessions to build your map.
     </p>

@@ -46,7 +46,7 @@ function selectAnswer(key: string) {
     <!-- Left: identity panel -->
     <div
       class="w-64 flex-shrink-0 flex flex-col justify-between p-8 border-r"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow mb-4">Spark Mode</p>
@@ -103,7 +103,7 @@ function selectAnswer(key: string) {
 
       <!-- Footer -->
       <div class="flex-shrink-0 px-10 py-5 border-t flex items-center justify-between"
-        :style="{ borderColor: 'var(--border-soft)' }">
+        :style="{ borderColor: 'transparent' }">
         <button class="text-xs font-semibold" :style="{ color: 'var(--ink-muted)' }"
           @click="router.push('/student')">Skip for now →</button>
         <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">~2 minutes to complete</p>
@@ -127,7 +127,7 @@ function selectAnswer(key: string) {
   padding: 16px 20px;
   border-radius: 12px;
   background: var(--surface);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   cursor: pointer;
   transition: border-color 120ms ease, transform 100ms ease, background-color 100ms ease;
 }
@@ -137,3 +137,5 @@ function selectAnswer(key: string) {
   background-color: var(--paper);
 }
 </style>
+
+

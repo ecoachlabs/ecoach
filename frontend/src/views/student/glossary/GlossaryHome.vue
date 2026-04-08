@@ -47,7 +47,7 @@ const tools = [
     <!-- Header + search -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center justify-between mb-4">
         <div>
@@ -57,7 +57,7 @@ const tools = [
           </h1>
         </div>
         <div class="flex items-center gap-3 px-4 py-2.5 rounded-xl border"
-          :style="{ borderColor: 'var(--border-soft)' }">
+          :style="{ borderColor: 'transparent' }">
           <p class="text-[10px] font-bold uppercase tracking-wide" :style="{ color: 'var(--ink-muted)' }">Daily Drill</p>
           <p class="text-xs font-semibold" :style="{ color: 'var(--ink)' }">5 terms due today</p>
           <button class="px-3 py-1 rounded-full text-xs font-bold"
@@ -137,7 +137,7 @@ const tools = [
       <!-- Right: quick access -->
       <div
         class="w-60 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Quick Access</p>
@@ -194,7 +194,7 @@ const tools = [
   align-items: center;
   cursor: pointer;
   background: var(--surface);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: border-color 130ms ease, transform 130ms ease;
 }
 .section-tile:hover {
@@ -213,7 +213,7 @@ const tools = [
   font-weight: 900;
   background: var(--paper);
   color: var(--ink);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   margin-bottom: 12px;
 }
 
@@ -224,7 +224,7 @@ const tools = [
   border-radius: 999px;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 
 .tool-card {
@@ -233,7 +233,7 @@ const tools = [
   gap: 12px;
   padding: 14px 16px;
   border-radius: 14px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--surface);
   cursor: pointer;
   transition: border-color 120ms, background-color 120ms;
@@ -257,3 +257,5 @@ const tools = [
 }
 .quick-link:hover { background-color: var(--paper); color: var(--ink); }
 </style>
+
+

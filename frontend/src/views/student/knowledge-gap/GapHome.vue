@@ -57,7 +57,7 @@ const allGapTopics = computed(() => gapDash.value?.gaps ?? [])
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Knowledge Gaps</p>
@@ -81,7 +81,7 @@ const allGapTopics = computed(() => gapDash.value?.gaps ?? [])
     <!-- Stat strip -->
     <div
       class="flex-shrink-0 grid grid-cols-4 divide-x border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="stat-cell">
         <p class="stat-big" :style="{ color: 'var(--warm)' }">{{ gapPercentage }}%</p>
@@ -135,7 +135,7 @@ const allGapTopics = computed(() => gapDash.value?.gaps ?? [])
             <div class="space-y-2">
               <div v-for="plan in gapDash.repairs" :key="plan.id"
                 class="repair-row flex items-center gap-3 px-4 py-3 rounded-xl border"
-                :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+                :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold truncate" :style="{ color: 'var(--ink)' }">{{ plan.topic_name ?? 'Topic' }}</p>
                   <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">
@@ -163,7 +163,7 @@ const allGapTopics = computed(() => gapDash.value?.gaps ?? [])
       <!-- Right: Gap map -->
       <div
         class="w-80 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Gap Map</p>
@@ -235,7 +235,7 @@ const allGapTopics = computed(() => gapDash.value?.gaps ?? [])
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
@@ -265,3 +265,5 @@ const allGapTopics = computed(() => gapDash.value?.gaps ?? [])
 .repair-row { transition: background-color 100ms; }
 .repair-row:hover { background-color: var(--paper) !important; }
 </style>
+
+

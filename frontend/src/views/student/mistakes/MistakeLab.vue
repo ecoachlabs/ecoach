@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getRevengeQueue, type RevengeQueueItemDto } from '@/ipc/coach'
 import AppTabs from '@/components/ui/AppTabs.vue'
 
 const auth = useAuthStore()
+const route = useRoute()
 const router = useRouter()
 const loading = ref(true)
 const mistakes = ref<RevengeQueueItemDto[]>([])
@@ -54,6 +55,14 @@ const topicPatterns = computed(() => {
 function errorTypeLabel(type: string): string {
   return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
+
+watch([() => route.hash, loading], () => {
+  if (!loading.value && route.hash) {
+    nextTick(() => {
+      document.getElementById(route.hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -62,7 +71,7 @@ function errorTypeLabel(type: string): string {
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Mistake Lab</p>
@@ -84,7 +93,7 @@ function errorTypeLabel(type: string): string {
     </div>
 
     <!-- Tabs -->
-    <div class="flex-shrink-0 px-7 pt-4 border-b" :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+    <div id="retry-zone" class="flex-shrink-0 px-7 pt-4 border-b" :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
       <AppTabs :tabs="tabs" v-model="activeTab" />
     </div>
 
@@ -109,7 +118,7 @@ function errorTypeLabel(type: string): string {
             @click="router.push('/student/practice')">Start Practice</button>
         </div>
 
-        <div v-else class="divide-y" :style="{ borderColor: 'var(--border-soft)' }">
+        <div v-else class="divide-y divide-[var(--border-soft)]" :style="{ borderColor: 'transparent' }">
           <div v-for="m in pending" :key="m.id" class="mistake-row px-7 py-4 flex items-start gap-4">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs flex-shrink-0 mt-0.5"
               :style="{ background: 'rgba(194,65,12,0.1)', color: 'var(--warm)' }">✕</div>
@@ -120,7 +129,7 @@ function errorTypeLabel(type: string): string {
               <div class="flex items-center gap-2 flex-wrap">
                 <span v-if="m.original_error_type"
                   class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                  :style="{ background: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid var(--border-soft)' }">
+                  :style="{ background: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid transparent' }">
                   {{ errorTypeLabel(m.original_error_type) }}
                 </span>
                 <span v-if="m.original_wrong_answer" class="text-[11px] truncate max-w-xs"
@@ -132,7 +141,7 @@ function errorTypeLabel(type: string): string {
             <div class="flex-shrink-0">
               <span v-if="m.attempts_to_beat > 0"
                 class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                :style="{ background: 'var(--paper)', color: 'var(--ink-muted)', border: '1px solid var(--border-soft)' }">
+                :style="{ background: 'var(--paper)', color: 'var(--ink-muted)', border: '1px solid transparent' }">
                 {{ m.attempts_to_beat }}x tried
               </span>
             </div>
@@ -146,7 +155,7 @@ function errorTypeLabel(type: string): string {
           <p class="text-3xl">🎯</p>
           <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">No beaten mistakes yet. Keep practising!</p>
         </div>
-        <div v-else class="divide-y" :style="{ borderColor: 'var(--border-soft)' }">
+        <div v-else class="divide-y divide-[var(--border-soft)]" :style="{ borderColor: 'transparent' }">
           <div v-for="m in beaten" :key="m.id" class="mistake-row px-7 py-4 flex items-center gap-4">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs flex-shrink-0"
               :style="{ background: 'rgba(13,148,136,0.1)', color: 'var(--accent)' }">✓</div>
@@ -179,7 +188,7 @@ function errorTypeLabel(type: string): string {
             <div class="space-y-2">
               <div v-for="ep in errorPatterns" :key="ep.type"
                 class="flex items-center gap-4 px-5 py-3.5 rounded-xl border"
-                :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+                :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
                 <div class="w-2 h-2 rounded-full flex-shrink-0" :style="{ backgroundColor: 'var(--ink-muted)' }" />
                 <p class="text-sm font-semibold flex-1" :style="{ color: 'var(--ink)' }">{{ errorTypeLabel(ep.type) }}</p>
                 <span class="text-sm font-black tabular-nums" :style="{ color: 'var(--ink)' }">{{ ep.count }}</span>
@@ -195,9 +204,9 @@ function errorTypeLabel(type: string): string {
             <div class="space-y-2">
               <div v-for="tp in topicPatterns" :key="tp.topic_id"
                 class="flex items-center gap-4 px-5 py-3.5 rounded-xl border"
-                :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+                :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0"
-                  :style="{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">
+                  :style="{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid transparent' }">
                   {{ tp.pending }}
                 </div>
                 <div class="flex-1">
@@ -241,3 +250,5 @@ function errorTypeLabel(type: string): string {
 }
 .mistake-row:hover { background-color: var(--paper); }
 </style>
+
+

@@ -47,7 +47,7 @@ const bestGrade = computed(() => {
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Mock History</p>
@@ -59,7 +59,7 @@ const bestGrade = computed(() => {
     <!-- Stats strip -->
     <div
       class="flex-shrink-0 grid grid-cols-3 divide-x border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="stat-cell">
         <p class="stat-big" :style="{ color: 'var(--ink)' }">{{ totalCompleted }}</p>
@@ -93,7 +93,7 @@ const bestGrade = computed(() => {
         >Start Your First Mock</button>
       </div>
 
-      <div v-else class="divide-y" :style="{ borderColor: 'var(--border-soft)' }">
+        <div v-else class="divide-y divide-[var(--border-soft)]" :style="{ borderColor: 'transparent' }">
         <button
           v-for="s in sessions"
           :key="s.id"
@@ -151,7 +151,7 @@ const bestGrade = computed(() => {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
@@ -184,3 +184,5 @@ const bestGrade = computed(() => {
 .session-row:not(:disabled):hover { background-color: var(--surface); }
 .session-row:disabled { cursor: default; opacity: 0.7; }
 </style>
+
+

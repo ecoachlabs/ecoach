@@ -23,10 +23,9 @@ function toggleSpeed() {
   <Transition name="player">
     <div
       v-if="visible"
-      class="fixed bottom-0 left-0 right-0 px-4 py-3 border-t flex items-center gap-4"
+      class="fixed bottom-0 left-0 right-0 px-4 py-3 flex items-center gap-4"
       :style="{
         backgroundColor: 'var(--card-bg)',
-        borderColor: 'var(--card-border)',
         zIndex: 'var(--z-sticky)',
       }"
     >

@@ -51,7 +51,7 @@ const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? 
     <!-- Left: info panel -->
     <div
       class="w-80 flex-shrink-0 flex flex-col justify-between p-8 border-r"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow mb-4">Diagnostic</p>
@@ -66,7 +66,7 @@ const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? 
       <div class="space-y-4">
         <div class="flex items-start gap-3">
           <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
-            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">1</div>
+            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid transparent' }">1</div>
           <div>
             <p class="text-xs font-semibold" :style="{ color: 'var(--ink)' }">Choose subject & depth</p>
             <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">Pick what to test and how deep</p>
@@ -74,7 +74,7 @@ const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? 
         </div>
         <div class="flex items-start gap-3">
           <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
-            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">2</div>
+            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid transparent' }">2</div>
           <div>
             <p class="text-xs font-semibold" :style="{ color: 'var(--ink)' }">Answer honestly</p>
             <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">No guessing — accuracy matters</p>
@@ -82,7 +82,7 @@ const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? 
         </div>
         <div class="flex items-start gap-3">
           <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
-            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">3</div>
+            :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink)', border: '1px solid transparent' }">3</div>
           <div>
             <p class="text-xs font-semibold" :style="{ color: 'var(--ink)' }">Get your report</p>
             <p class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">Personalized gap analysis & plan</p>
@@ -135,7 +135,7 @@ const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? 
                 <p class="text-[11px] mt-0.5" :style="{ color: 'var(--ink-muted)' }">{{ mode.desc }}</p>
               </div>
               <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid var(--border-soft)' }">
+                :style="{ backgroundColor: 'var(--paper)', color: 'var(--ink-secondary)', border: '1px solid transparent' }">
                 {{ mode.time }}
               </span>
             </button>
@@ -145,7 +145,7 @@ const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? 
 
       <!-- Launch footer -->
       <div class="flex-shrink-0 px-10 py-6 border-t flex items-center justify-between"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
         <div>
           <p class="text-sm font-semibold" :style="{ color: 'var(--ink)' }">
             {{ selectedModeData().label }} · {{ selectedModeData().time }}
@@ -185,7 +185,7 @@ const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? 
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--surface);
   color: var(--ink-secondary);
   transition: all 120ms;
@@ -249,3 +249,5 @@ const selectedModeData = () => modes.find(m => m.key === selectedMode.value) ?? 
 .launch-btn:hover:not(:disabled) { opacity: 0.87; transform: translateY(-1px); }
 .launch-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 </style>
+
+

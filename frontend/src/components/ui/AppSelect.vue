@@ -10,7 +10,7 @@ const selectChevronBackground = `url("data:image/svg+xml,%3Csvg xmlns='http://ww
     <label v-if="label" class="block text-xs font-medium tracking-wide uppercase" :style="{ color: 'var(--text-3)' }">{{ label }}</label>
     <select :value="modelValue"
       class="w-full px-3.5 py-2.5 rounded-[var(--radius-md)] border text-sm appearance-none bg-no-repeat"
-      :style="{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)', color: 'var(--text)', backgroundImage: selectChevronBackground, backgroundPosition: 'right 12px center' }"
+      :style="{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--field-border)', color: 'var(--text)', backgroundImage: selectChevronBackground, backgroundPosition: 'right 12px center' }"
       @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)">
       <option v-if="placeholder" value="" disabled>{{ placeholder }}</option>
       <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>

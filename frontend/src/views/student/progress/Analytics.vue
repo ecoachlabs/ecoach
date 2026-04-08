@@ -48,7 +48,7 @@ const overallBandColor = computed(() => bandColor(readiness.value?.overall_readi
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Analytics</p>
@@ -66,7 +66,7 @@ const overallBandColor = computed(() => bandColor(readiness.value?.overall_readi
     <!-- Stat strip -->
     <div
       class="flex-shrink-0 grid grid-cols-4 divide-x border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="stat-cell">
         <p class="stat-big" :style="{ color: 'var(--accent)' }">{{ coveragePct }}%</p>
@@ -107,12 +107,12 @@ const overallBandColor = computed(() => bandColor(readiness.value?.overall_readi
               v-for="s in readiness.subjects"
               :key="s.subject_id"
               class="subject-card px-5 py-4 rounded-2xl border"
-              :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+              :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
             >
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black"
-                    :style="{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid var(--border-soft)' }">
+                    :style="{ background: 'var(--paper)', color: 'var(--ink)', border: '1px solid transparent' }">
                     {{ s.subject_name?.charAt(0) ?? '?' }}
                   </div>
                   <div>
@@ -149,7 +149,7 @@ const overallBandColor = computed(() => bandColor(readiness.value?.overall_readi
       <!-- Right panel: metrics -->
       <div
         class="w-60 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Key Metrics</p>
@@ -210,7 +210,7 @@ const overallBandColor = computed(() => bandColor(readiness.value?.overall_readi
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
@@ -256,6 +256,8 @@ const overallBandColor = computed(() => bandColor(readiness.value?.overall_readi
   justify-content: space-between;
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 </style>
+
+

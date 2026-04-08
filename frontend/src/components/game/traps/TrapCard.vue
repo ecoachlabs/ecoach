@@ -14,11 +14,11 @@ const dragging = ref(false)
 
 <template>
   <div
-    class="px-4 py-3 rounded-[var(--radius-lg)] border text-sm font-medium transition-all cursor-grab active:cursor-grabbing select-none"
+    class="px-4 py-3 rounded-[var(--radius-lg)] text-sm font-medium transition-all cursor-grab active:cursor-grabbing select-none"
     :class="[
       active ? 'shadow-md scale-[1.02]' : '',
       dragging ? 'opacity-70 rotate-1' : '',
-      type === 'trap' ? 'border-amber-300 bg-amber-50' : 'border-[var(--card-border)]',
+      type === 'trap' ? 'bg-amber-50' : '',
     ]"
     :style="{ backgroundColor: type !== 'trap' ? 'var(--card-bg)' : undefined, color: 'var(--text)' }"
     :draggable="active"

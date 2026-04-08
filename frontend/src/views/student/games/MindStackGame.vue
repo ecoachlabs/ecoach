@@ -175,7 +175,7 @@ const blocks = computed(() => {
   <div class="min-h-screen flex flex-col" data-mode="game" :style="{ backgroundColor: 'var(--paper)' }">
     <!-- Header -->
     <div class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
       <div class="flex items-center gap-2">
         <span class="font-display font-bold" :style="{ color: 'var(--accent)' }">▣ MindStack</span>
         <span v-if="phase === 'playing'" class="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -368,3 +368,4 @@ const blocks = computed(() => {
     </div>
   </div>
 </template>
+

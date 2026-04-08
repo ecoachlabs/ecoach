@@ -79,7 +79,7 @@ async function start() {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center gap-4">
         <button class="back-btn" @click="router.push('/student/practice')">← Back</button>
@@ -147,7 +147,7 @@ async function start() {
       <!-- Right: settings + launch -->
       <div
         class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Settings</p>
@@ -233,7 +233,7 @@ async function start() {
   cursor: pointer;
   background: transparent;
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .back-btn:hover { background: var(--border-soft); color: var(--ink); }
@@ -244,7 +244,7 @@ async function start() {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: transparent;
   color: var(--ink-secondary);
   transition: all 120ms;
@@ -263,7 +263,7 @@ async function start() {
   cursor: pointer;
   background: transparent;
   color: var(--ink-muted);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .text-pill:hover { color: var(--ink); border-color: var(--ink-muted); }
@@ -297,7 +297,7 @@ async function start() {
   border-radius: 999px;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 
 .count-btn {
@@ -307,7 +307,7 @@ async function start() {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: transparent;
   color: var(--ink-secondary);
   transition: all 120ms;
@@ -320,7 +320,7 @@ async function start() {
   align-items: center;
   padding: 10px 14px;
   border-radius: 12px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--paper);
   cursor: pointer;
   transition: all 120ms;
@@ -373,8 +373,10 @@ async function start() {
   cursor: pointer;
   background: transparent;
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .cancel-btn:hover { background: var(--paper); color: var(--ink); }
 </style>
+
+

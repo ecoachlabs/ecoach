@@ -135,7 +135,7 @@ function handleFlag() {
     <!-- Header -->
     <div
       class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center gap-3">
         <span class="session-badge">Session</span>
@@ -265,8 +265,10 @@ function handleFlag() {
   cursor: pointer;
   background: transparent;
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .end-btn:hover { background: rgba(194,65,12,0.08); color: var(--warm); border-color: rgba(194,65,12,0.3); }
 </style>
+
+

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppSearchInput from '@/components/ui/AppSearchInput.vue'
 
 const auth = useAuthStore()
+const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const searchQuery = ref('')
@@ -26,6 +27,21 @@ const recentItems = [
   { title: '2024 BECE Paper 1', type: 'exam', subject: 'All' },
   { title: 'Comprehension Errors', type: 'mistake', subject: 'English' },
 ]
+
+onMounted(() => {
+  if (route.hash) {
+    nextTick(() => {
+      document.getElementById(route.hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
+})
+
+watch(() => route.hash, (hash) => {
+  if (!hash) return
+  nextTick(() => {
+    document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+})
 </script>
 
 <template>
@@ -34,7 +50,7 @@ const recentItems = [
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center justify-between mb-4">
         <div>
@@ -62,6 +78,7 @@ const recentItems = [
             <button
               v-for="shelf in shelves"
               :key="shelf.key"
+              :id="shelf.key === 'revision' ? 'revision-box' : undefined"
               class="shelf-tile"
               @click="router.push('/student/library')"
             >
@@ -81,7 +98,7 @@ const recentItems = [
               v-for="item in recentItems"
               :key="item.title"
               class="recent-row flex items-center gap-4 px-4 py-3 rounded-xl border"
-              :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+              :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
             >
               <div class="item-type-box flex-shrink-0">{{ item.type.charAt(0).toUpperCase() }}</div>
               <div class="flex-1 min-w-0">
@@ -89,7 +106,7 @@ const recentItems = [
                 <p class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">{{ item.subject }}</p>
               </div>
               <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
-                :style="{ borderColor: 'var(--border-soft)', color: 'var(--ink-secondary)' }">
+                :style="{ borderColor: 'transparent', color: 'var(--ink-secondary)' }">
                 {{ item.type }}
               </span>
             </div>
@@ -100,7 +117,7 @@ const recentItems = [
       <!-- Right sidebar -->
       <div
         class="w-60 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Quick Access</p>
@@ -166,7 +183,7 @@ const recentItems = [
   text-align: center;
   cursor: pointer;
   background: var(--surface);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: border-color 130ms ease, transform 130ms ease;
 }
 .shelf-tile:hover {
@@ -185,7 +202,7 @@ const recentItems = [
   font-weight: 900;
   background: var(--paper);
   color: var(--ink);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   margin-bottom: 10px;
 }
 
@@ -196,7 +213,7 @@ const recentItems = [
   border-radius: 999px;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 
 .recent-row {
@@ -216,7 +233,7 @@ const recentItems = [
   font-weight: 800;
   background: var(--paper);
   color: var(--ink);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 
 .quick-link {
@@ -232,3 +249,5 @@ const recentItems = [
 }
 .quick-link:hover { background-color: var(--paper); color: var(--ink); }
 </style>
+
+

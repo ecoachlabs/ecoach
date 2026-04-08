@@ -121,7 +121,7 @@ function scoreColor(v: number): string {
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Rise Mode</p>
@@ -220,7 +220,7 @@ function scoreColor(v: number): string {
           <div class="space-y-2">
             <div v-for="topic in weakTopics" :key="topic.topic_id"
               class="weakness-row flex items-center gap-3 px-4 py-3 rounded-xl border"
-              :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+              :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
               <MasteryBadge :state="topic.mastery_state" size="sm" />
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-semibold truncate" :style="{ color: 'var(--ink)' }">{{ topic.topic_name }}</p>
@@ -247,7 +247,7 @@ function scoreColor(v: number): string {
       <!-- Right: 8 dimension scores -->
       <div
         class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">Transformation Scores</p>
@@ -300,7 +300,7 @@ function scoreColor(v: number): string {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: transparent;
   color: var(--ink-secondary);
   transition: all 120ms;
@@ -319,7 +319,7 @@ function scoreColor(v: number): string {
   align-items: center;
   text-align: center;
   background: var(--surface);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 
 .rise-cta {
@@ -341,7 +341,7 @@ function scoreColor(v: number): string {
 .dim-card {
   padding: 14px 10px;
   border-radius: 12px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   background: var(--paper);
 }
 
@@ -353,8 +353,10 @@ function scoreColor(v: number): string {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
 }
 .nav-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
 </style>
+
+

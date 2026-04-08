@@ -30,7 +30,7 @@ function toggle(id: number) {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <!-- Step indicator -->
       <div class="flex items-center gap-1.5 mb-4">
@@ -85,7 +85,7 @@ function toggle(id: number) {
 
     <!-- Footer -->
     <div class="flex-shrink-0 px-7 py-4 border-t flex items-center justify-between"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
       <button class="back-btn" @click="router.push('/student/onboarding/welcome')">← Back</button>
       <button
         class="continue-btn"
@@ -134,7 +134,7 @@ function toggle(id: number) {
   cursor: pointer;
   background: transparent;
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 100ms;
 }
 .back-btn:hover { background: var(--border-soft); color: var(--ink); }
@@ -153,3 +153,5 @@ function toggle(id: number) {
 .continue-btn:hover:not(:disabled) { opacity: 0.87; }
 .continue-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 </style>
+
+

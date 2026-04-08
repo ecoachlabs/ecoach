@@ -99,7 +99,7 @@ const currentPhase = computed(() => {
     <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div>
         <p class="eyebrow">Journey</p>
@@ -156,7 +156,7 @@ const currentPhase = computed(() => {
       <!-- Phase strip + progress -->
       <div
         class="flex-shrink-0 px-7 py-3 border-b flex items-center gap-6"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="flex gap-1">
           <span
@@ -176,7 +176,7 @@ const currentPhase = computed(() => {
       <div class="flex-1 overflow-hidden flex">
 
         <!-- Station list -->
-        <div class="flex-1 overflow-y-auto divide-y" :style="{ borderColor: 'var(--border-soft)' }">
+        <div class="flex-1 overflow-y-auto divide-y divide-[var(--border-soft)]" :style="{ borderColor: 'transparent' }">
           <div
             v-for="(station, idx) in currentStations"
             :key="station.id"
@@ -218,7 +218,7 @@ const currentPhase = computed(() => {
                 :style="{
                   background: station.status === 'completed' ? 'rgba(13,148,136,0.1)' : station.status === 'active' ? 'rgba(13,148,136,0.1)' : 'var(--paper)',
                   color: station.status === 'completed' ? 'var(--accent)' : station.status === 'active' ? 'var(--accent)' : 'var(--ink-muted)',
-                  border: '1px solid var(--border-soft)',
+                  border: '1px solid transparent',
                 }"
               >{{ station.status }}</span>
             </div>
@@ -229,7 +229,7 @@ const currentPhase = computed(() => {
         <div
           v-if="activeStation"
           class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
-          :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+          :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
         >
           <div class="px-5 pt-5 pb-4 border-b" :style="{ borderColor: 'var(--border-soft)' }">
             <p class="eyebrow mb-1">Active Station</p>
@@ -275,7 +275,7 @@ const currentPhase = computed(() => {
   transition: all 120ms;
   background: transparent;
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
 }
 .subj-tab.active,
 .subj-tab:hover {
@@ -292,7 +292,7 @@ const currentPhase = computed(() => {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: opacity 120ms;
 }
 .nav-pill:hover:not(:disabled) { opacity: 0.7; }
@@ -307,7 +307,7 @@ const currentPhase = computed(() => {
   color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
 }
 .phase-chip.active {
@@ -372,3 +372,5 @@ const currentPhase = computed(() => {
 }
 .go-btn:hover { background: var(--accent); color: white; }
 </style>
+
+

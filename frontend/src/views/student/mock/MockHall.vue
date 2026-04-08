@@ -149,7 +149,7 @@ function handleFlag() {
     <!-- Exam Header -->
     <div
       class="shrink-0 px-6 py-3 flex items-center justify-between border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center gap-3">
         <AppBadge color="danger" size="sm" dot>EXAM IN PROGRESS</AppBadge>
@@ -253,3 +253,4 @@ function handleFlag() {
     </div>
   </div>
 </template>
+

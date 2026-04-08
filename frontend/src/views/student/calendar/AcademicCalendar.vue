@@ -34,7 +34,7 @@ function urgencyColor(daysLeft: number): string {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <p class="eyebrow">Planning</p>
       <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
@@ -59,7 +59,7 @@ function urgencyColor(daysLeft: number): string {
               v-for="exam in examDates"
               :key="exam.id"
               class="exam-row flex items-center gap-4 px-5 py-4 rounded-2xl border"
-              :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+              :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
             >
               <div class="countdown-box flex-shrink-0"
                 :style="{ borderColor: urgencyColor(exam.daysLeft), color: urgencyColor(exam.daysLeft) }">
@@ -78,7 +78,7 @@ function urgencyColor(daysLeft: number): string {
         <!-- Preparation phase -->
         <div>
           <p class="section-label mb-4">Preparation Phase</p>
-          <div class="flex gap-1 rounded-2xl border p-1.5" :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }">
+          <div class="flex gap-1 rounded-2xl border p-1.5" :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
             <div
               v-for="phase in phases"
               :key="phase"
@@ -95,7 +95,7 @@ function urgencyColor(daysLeft: number): string {
       <!-- Right: weekly plan -->
       <div
         class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
-        :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
       >
         <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
           <p class="section-label">This Week</p>
@@ -106,7 +106,7 @@ function urgencyColor(daysLeft: number): string {
             :key="day.day"
             class="day-row flex items-center gap-3 px-4 py-3 rounded-xl border"
             :class="{ done: day.done }"
-            :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--paper)' }"
+            :style="{ borderColor: 'transparent', backgroundColor: 'var(--paper)' }"
           >
             <div class="day-badge flex-shrink-0">{{ day.day }}</div>
             <div class="flex-1 min-w-0">
@@ -167,7 +167,7 @@ function urgencyColor(daysLeft: number): string {
   letter-spacing: 0.06em;
   padding: 3px 8px;
   border-radius: 999px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   color: var(--ink-secondary);
   background: var(--paper);
 }
@@ -209,8 +209,10 @@ function urgencyColor(daysLeft: number): string {
   cursor: pointer;
   background: var(--paper);
   color: var(--ink-secondary);
-  border: 1px solid var(--border-soft);
+  border: 1px solid transparent;
   transition: all 120ms;
 }
 .plan-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
 </style>
+
+

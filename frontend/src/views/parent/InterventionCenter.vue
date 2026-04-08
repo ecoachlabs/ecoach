@@ -62,7 +62,7 @@ async function acknowledge(alertId: number) {
     <!-- Header -->
     <div
       class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'var(--border-soft)', backgroundColor: 'var(--surface)' }"
+      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <p class="eyebrow">Family</p>
       <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
@@ -141,7 +141,8 @@ async function acknowledge(alertId: number) {
 .alert-card {
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid var(--border-soft);
   background: var(--surface);
+  box-shadow: var(--shadow-xs);
 }
 </style>
+

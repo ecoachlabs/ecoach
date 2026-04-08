@@ -26,8 +26,8 @@ const speed = ref(1)
     </div>
 
     <!-- Prompt -->
-    <div class="p-6 rounded-[var(--radius-xl)] border mb-8 max-w-lg mx-auto"
-      :style="{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }">
+    <div class="p-6 rounded-[var(--radius-xl)] mb-8 max-w-lg mx-auto"
+      :style="{ backgroundColor: 'var(--card-bg)' }">
       <p class="text-lg font-medium leading-relaxed" :style="{ color: 'var(--text)' }">{{ prompt }}</p>
     </div>
 
