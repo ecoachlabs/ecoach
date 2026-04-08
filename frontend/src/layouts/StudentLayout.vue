@@ -408,8 +408,8 @@ watch(() => route.fullPath, updatePill)
     box-shadow 300ms ease;
 
   /* Glass surface — more transparent, colour just tints */
-  background: color-mix(in srgb, var(--pc, #3b82f6) 6%, rgba(255, 255, 255, 0.48));
-  border: 1px solid color-mix(in srgb, var(--pc, #3b82f6) 18%, rgba(255, 255, 255, 0.50));
+  background: color-mix(in srgb, var(--pc, #3b82f6) 9%, rgba(255, 255, 255, 0.68));
+  border: 1px solid color-mix(in srgb, var(--pc, #3b82f6) 22%, rgba(255, 255, 255, 0.55));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.88),
     inset 0 -1px 0 rgba(255, 255, 255, 0.22),
