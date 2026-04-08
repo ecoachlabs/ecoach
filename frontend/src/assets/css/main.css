@@ -13,6 +13,19 @@
   --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-display: 'Fraunces', Georgia, serif;
 
+  /* ── Glass system (light defaults) ── */
+  --glass-base: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-sheen-strong: rgba(255, 255, 255, 0.72);
+  --glass-sheen-mid: rgba(255, 255, 255, 0.18);
+  --glass-sheen-radial: rgba(255, 255, 255, 0.52);
+  --glass-highlight: rgba(255, 255, 255, 0.90);
+  --glass-shadow-inset: rgba(255, 255, 255, 0.22);
+
+  /* ── Surface inverse (always-dark card on light; elevated on dark) ── */
+  --surface-inverse: #1a1612;
+  --surface-raised: #ffffff;
+
   /* ── Core Palette ── */
   --ink: #1a1612;
   --ink-secondary: #5c5650;
@@ -217,20 +230,56 @@
 
 /* ── Dark Mode ── */
 [data-dark='true'] {
-  --bg: #0c0a09;
-  --paper: #0c0a09;
+  /* Backgrounds */
+  --bg: #0e0c0a;
+  --paper: #0e0c0a;
+  --paper-warm: #141210;
   --surface: #1c1917;
+  --surface-raised: #242019;
+  --surface-inverse: #2d2924;
   --card-bg: #1c1917;
-  --card-border: #292524;
+  --card-border: #2e2926;
+
+  /* Borders */
   --field-border: #44403c;
-  --border-soft: #292524;
+  --border-soft: #2e2926;
   --border-strong: #44403c;
-  --ink: #fafaf9;
-  --ink-secondary: #d6d3d1;
-  --ink-muted: #78716c;
-  --text: #fafaf9;
-  --text-2: #d6d3d1;
-  --text-3: #78716c;
+
+  /* Text */
+  --ink: #f5f3f0;
+  --ink-secondary: #c9c4bc;
+  --ink-muted: #6e6760;
+  --text: #f5f3f0;
+  --text-2: #c9c4bc;
+  --text-3: #6e6760;
+
+  /* Brand — slightly brighter for dark backgrounds */
+  --accent: #2dd4bf;
+  --accent-hover: #14b8a6;
+  --accent-light: rgba(45, 212, 191, 0.12);
+  --accent-glow: rgba(45, 212, 191, 0.10);
+
+  --warm: #fb923c;
+  --warm-light: rgba(251, 146, 60, 0.10);
+  --warm-glow: rgba(251, 146, 60, 0.07);
+
+  --gold: #fbbf24;
+  --gold-light: rgba(251, 191, 36, 0.10);
+  --gold-glow: rgba(251, 191, 36, 0.07);
+
+  --success: #22c55e;
+  --success-light: rgba(34, 197, 94, 0.10);
+  --danger: #f87171;
+  --danger-light: rgba(248, 113, 113, 0.10);
+
+  /* Glass system — dark sidebar glass */
+  --glass-base: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-sheen-strong: rgba(255, 255, 255, 0.10);
+  --glass-sheen-mid: rgba(255, 255, 255, 0.04);
+  --glass-sheen-radial: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.08);
+  --glass-shadow-inset: rgba(255, 255, 255, 0.05);
 }
 
 /* ════════════════════════════════════════════
@@ -239,6 +288,10 @@
 
 html {
   font-size: 16px;
+  /* Smooth dark/light transitions */
+  transition:
+    background-color 240ms ease,
+    color 240ms ease;
 }
 
 body {

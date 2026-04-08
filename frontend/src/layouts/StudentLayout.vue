@@ -32,6 +32,7 @@ import {
   PhMapTrifold,
   PhMagnifyingGlass,
   PhMedal,
+  PhMoon,
   PhNotePencil,
   PhPersonSimpleRun,
   PhRocketLaunch,
@@ -40,6 +41,7 @@ import {
   PhSquaresFour,
   PhStar,
   PhStudent,
+  PhSun,
   PhTarget,
   PhUploadSimple,
 } from '@phosphor-icons/vue'
@@ -290,6 +292,12 @@ watch(() => route.fullPath, updatePill)
             <span class="level-text">Scholar Lv.8</span>
           </div>
           <div class="top-sep" />
+          <button class="top-icon-btn dark-toggle" :title="ui.isDark ? 'Light mode' : 'Dark mode'" @click="ui.toggleDark()">
+            <Transition name="dark-icon" mode="out-in">
+              <PhSun v-if="ui.isDark" :key="'sun'" :size="17" weight="fill" style="color: #FBBF24;" />
+              <PhMoon v-else :key="'moon'" :size="17" weight="fill" style="color: #94a3b8;" />
+            </Transition>
+          </button>
           <button class="top-icon-btn" @click="router.push('/student/settings')">
             <PhGear :size="17" weight="fill" style="color: #94a3b8;" />
           </button>
@@ -311,7 +319,8 @@ watch(() => route.fullPath, updatePill)
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: #f6f7f4;
+  background: var(--paper);
+  transition: background-color 240ms ease;
 }
 
 .sidebar {
@@ -319,9 +328,10 @@ watch(() => route.fullPath, updatePill)
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: #f8f8f5;
+  background: var(--paper);
   border-right: none;
   overflow: hidden;
+  transition: background-color 240ms ease;
 }
 
 .profile-block {
@@ -354,7 +364,8 @@ watch(() => route.fullPath, updatePill)
   font-size: 12px;
   line-height: 1.1;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--ink);
+  transition: color 240ms ease;
 }
 
 .profile-stats {
@@ -363,12 +374,13 @@ watch(() => route.fullPath, updatePill)
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: #8a8f98;
+  color: var(--ink-muted);
   font-weight: 600;
+  transition: color 240ms ease;
 }
 
 .profile-goal {
-  color: #6b7280;
+  color: var(--ink-muted);
 }
 
 .sidebar-nav {
@@ -407,21 +419,21 @@ watch(() => route.fullPath, updatePill)
     border-color 300ms ease,
     box-shadow 300ms ease;
 
-  /* Glass surface — more transparent, colour just tints */
-  background: color-mix(in srgb, var(--pc, #3b82f6) 9%, rgba(255, 255, 255, 0.68));
-  border: 1px solid color-mix(in srgb, var(--pc, #3b82f6) 22%, rgba(255, 255, 255, 0.55));
+  /* Glass surface — uses CSS vars that flip in dark mode */
+  background: color-mix(in srgb, var(--pc, #3b82f6) 11%, var(--glass-base));
+  border: 1px solid color-mix(in srgb, var(--pc, #3b82f6) 22%, var(--glass-border));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 var(--glass-shadow-inset),
     0 4px 18px color-mix(in srgb, var(--pc, #3b82f6) 14%, transparent),
     0 1px 3px rgba(15, 23, 42, 0.06);
-  backdrop-filter: blur(20px) saturate(200%);
-  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 .glass-pill--visible { opacity: 1; }
 
-/* Top-left light catch — refracting white sheen */
+/* Top-left light catch — uses glass vars so it dims in dark mode */
 .glass-pill::before {
   content: '';
   position: absolute;
@@ -431,14 +443,14 @@ watch(() => route.fullPath, updatePill)
   background:
     linear-gradient(
       148deg,
-      rgba(255, 255, 255, 0.70) 0%,
-      rgba(255, 255, 255, 0.18) 30%,
-      rgba(255, 255, 255, 0.04) 62%,
+      var(--glass-sheen-strong) 0%,
+      var(--glass-sheen-mid) 30%,
+      rgba(255, 255, 255, 0.02) 62%,
       transparent 100%
     ),
     radial-gradient(
       82% 52% at 12% 18%,
-      rgba(255, 255, 255, 0.50) 0%,
+      var(--glass-sheen-radial) 0%,
       transparent 66%
     );
 }
@@ -474,7 +486,7 @@ watch(() => route.fullPath, updatePill)
   border-radius: 10px;
   border: 1px solid transparent;
   text-decoration: none;
-  color: #7b818b;
+  color: var(--ink-muted);
   overflow: hidden;
   isolation: isolate;
   transform: translateX(0);
@@ -545,7 +557,8 @@ watch(() => route.fullPath, updatePill)
 .nav-divider {
   margin: 8px 10px;
   height: 1px;
-  background: #e5e9e2;
+  background: var(--border-soft);
+  transition: background-color 240ms ease;
 }
 
 .sidebar-bottom {
@@ -561,7 +574,7 @@ watch(() => route.fullPath, updatePill)
   border-radius: 10px;
   border: 1px solid transparent;
   text-decoration: none;
-  color: #7b818b;
+  color: var(--ink-muted);
   font-size: 12px;
   font-weight: 600;
   position: relative;
@@ -641,9 +654,10 @@ watch(() => route.fullPath, updatePill)
   align-items: center;
   height: 52px;
   padding: 0 20px;
-  background: #ffffff;
-  border-bottom: none;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
   flex-shrink: 0;
+  transition: background-color 240ms ease, border-color 240ms ease;
 }
 
 .top-spacer { flex: 1; }
@@ -664,7 +678,16 @@ watch(() => route.fullPath, updatePill)
   font-size: 13px;
   font-weight: 700;
   color: var(--ink-secondary);
+  transition: color 240ms ease;
 }
+
+/* Dark mode toggle animation */
+.dark-icon-enter-active,
+.dark-icon-leave-active {
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.dark-icon-enter-from { opacity: 0; transform: rotate(-30deg) scale(0.7); }
+.dark-icon-leave-to   { opacity: 0; transform: rotate(30deg) scale(0.7); }
 
 .level-badge {
   display: flex;
@@ -720,9 +743,10 @@ watch(() => route.fullPath, updatePill)
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  background: #f6f7f4;
+  background: var(--paper);
   scrollbar-width: none;
   -ms-overflow-style: none;
+  transition: background-color 240ms ease;
 }
 
 .main-content::-webkit-scrollbar {

@@ -15,7 +15,9 @@ import {
   PhGraduationCap,
   PhChatCircleDots,
   PhGear,
+  PhMoon,
   PhSignOut,
+  PhSun,
 } from '@phosphor-icons/vue'
 
 const ui = useUiStore()
@@ -145,6 +147,17 @@ function isActive(target: string): boolean {
           </span>
         </div>
         <button
+          class="parent-dark-toggle flex items-center gap-2.5 w-full px-2.5 py-2 rounded-[9px] text-sm transition-colors"
+          :title="ui.isDark ? 'Light mode' : 'Dark mode'"
+          @click="ui.toggleDark()"
+        >
+          <Transition name="dark-icon" mode="out-in">
+            <PhSun v-if="ui.isDark" :key="'sun'" :size="17" weight="fill" style="color: #FBBF24; opacity: 0.8;" />
+            <PhMoon v-else :key="'moon'" :size="17" weight="fill" style="color: #94a3b8; opacity: 0.65;" />
+          </Transition>
+          <span class="text-[14px]" style="color: var(--text-3);">{{ ui.isDark ? 'Light Mode' : 'Dark Mode' }}</span>
+        </button>
+        <button
           class="sign-out flex items-center gap-2.5 w-full px-2.5 py-2 rounded-[9px] text-sm transition-colors"
           @click="logout"
         >
@@ -173,4 +186,8 @@ function isActive(target: string): boolean {
 }
 .sign-out:hover { background-color: rgba(244, 63, 94, 0.08); }
 .sign-out:hover :deep(svg) { opacity: 1 !important; }
+.parent-dark-toggle:hover { background-color: color-mix(in srgb, var(--text-3) 10%, transparent); }
+.dark-icon-enter-active, .dark-icon-leave-active { transition: opacity 140ms ease, transform 140ms ease; }
+.dark-icon-enter-from { opacity: 0; transform: rotate(-30deg) scale(0.7); }
+.dark-icon-leave-to   { opacity: 0; transform: rotate(30deg) scale(0.7); }
 </style>

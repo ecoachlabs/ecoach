@@ -716,7 +716,7 @@ function feedToneColor(tone: FeedTone): string {
 .rp-btn-ghost:hover { background: var(--border-soft); }
 .rp-btn-solid {
   padding: 5px 12px; border-radius: 8px;
-  background: var(--ink); color: #fff;
+  background: var(--surface-inverse); color: #fff;
   font-size: 10.5px; font-weight: 700; cursor: pointer;
   transition: opacity 130ms, transform 130ms;
 }
@@ -760,16 +760,16 @@ function feedToneColor(tone: FeedTone): string {
 }
 .rp-act-all:hover { opacity: 1; }
 
-/* Continue card */
+/* Continue card — uses --surface-inverse which is always dark (light: #1a1612, dark: #2d2924) */
 .rp-continue {
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 14px;
   flex-shrink: 0;
   cursor: pointer;
-  background: var(--ink);
-  box-shadow: 0 10px 28px rgba(26,22,18,0.20), 0 3px 8px rgba(26,22,18,0.10);
-  transition: transform 220ms ease, box-shadow 220ms ease;
+  background: var(--surface-inverse);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.16);
+  transition: transform 220ms ease, box-shadow 220ms ease, background-color 240ms ease;
 }
 .rp-continue:hover {
   transform: translateY(-3px);
