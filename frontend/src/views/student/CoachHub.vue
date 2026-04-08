@@ -404,479 +404,194 @@ function feedToneColor(tone: FeedTone): string {
         </div>
       </div>
 
-      <!-- Right panel -->
-      <div class="right-panel">
+      <!-- Right: quick test + live feed -->
+      <div class="w-[22rem] flex-shrink-0 flex flex-col gap-4 overflow-hidden px-4 py-5"
+        :style="{ backgroundColor: 'var(--surface)' }">
+        <div class="quick-test-card rounded-2xl p-4" :style="{ backgroundColor: 'var(--paper)' }">
+          <div class="flex items-center justify-between gap-2">
+            <p class="section-label">Quick Test</p>
+            <span class="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full"
+              :style="{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent)' }">
+              <PhClockCountdown :size="10" weight="bold" />
+              {{ quickStepLabel }}
+            </span>
+          </div>
 
-        <!-- ── TOP: Quick Test ── -->
-        <div class="qt-panel">
-          <!-- Progress dots + label -->
-          <div class="qt-header">
-            <span class="panel-label">Quick Test</span>
-            <div class="qt-dots">
-              <div
-                v-for="(_, i) in quickChecks"
-                :key="i"
-                class="qt-dot"
-                :class="{ 'qt-dot--active': i === quickCheckIndex }"
-              />
+          <div class="mt-3 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              :style="{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent)' }">
+              <PhTarget :size="15" weight="duotone" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-[10px] uppercase tracking-[0.14em] font-bold" :style="{ color: 'var(--ink-muted)' }">
+                {{ activeQuickCheck.topic }}
+              </p>
+              <p class="text-[13px] font-semibold leading-relaxed mt-1" :style="{ color: 'var(--ink)' }">
+                {{ activeQuickCheck.prompt }}
+              </p>
             </div>
           </div>
 
-          <!-- Topic pill -->
-          <div class="qt-topic-pill">
-            <PhTarget :size="11" weight="fill" />
-            {{ activeQuickCheck.topic }}
-          </div>
-
-          <!-- Question -->
-          <p class="qt-question">{{ activeQuickCheck.prompt }}</p>
-
-          <!-- Options -->
-          <div class="qt-options">
+          <div class="mt-3 space-y-2">
             <button
               v-for="option in activeQuickCheck.options"
               :key="option.id"
-              class="qt-option"
-              :class="{
-                'qt-option--correct': quickAnswered && option.correct,
-                'qt-option--wrong': quickAnswered && selectedQuickOptionId === option.id && !option.correct,
-                'qt-option--dim': quickAnswered && selectedQuickOptionId !== option.id && !option.correct,
+              class="quick-option w-full text-left px-3 py-2 rounded-xl text-[12px] font-semibold"
+              :style="{
+                backgroundColor:
+                  selectedQuickOptionId === option.id
+                    ? (option.correct ? 'rgba(22,163,74,0.11)' : 'rgba(194,65,12,0.11)')
+                    : (quickAnswered && option.correct ? 'rgba(22,163,74,0.08)' : 'var(--surface)'),
+                color: selectedQuickOptionId === option.id && !option.correct ? 'var(--warm)' : 'var(--ink)',
+                boxShadow:
+                  selectedQuickOptionId === option.id
+                    ? (option.correct ? 'inset 0 0 0 1px rgba(22,163,74,0.35)' : 'inset 0 0 0 1px rgba(194,65,12,0.35)')
+                    : (quickAnswered && option.correct ? 'inset 0 0 0 1px rgba(22,163,74,0.25)' : 'none'),
+                opacity: quickAnswered && selectedQuickOptionId !== option.id && !option.correct ? 0.8 : 1,
               }"
               :disabled="quickAnswered"
               @click="pickQuickOption(option.id)"
             >
-              <span class="qt-letter">{{ option.id.toUpperCase() }}</span>
-              <span class="qt-option-text">{{ option.label }}</span>
+              {{ option.label }}
             </button>
           </div>
 
-          <!-- Explanation -->
-          <Transition name="explain">
-            <div v-if="quickAnswered" class="qt-explain">
-              <div class="qt-explain-icon">
-                <PhBookOpen :size="13" weight="fill" :style="{ color: quickSelectionCorrect ? '#16a34a' : 'var(--warm)' }" />
-              </div>
-              <p class="qt-explain-text">{{ activeQuickCheck.explanation }}</p>
-              <div class="qt-explain-actions">
-                <button class="qt-btn qt-btn--secondary" @click="openQuickCheckTopic">Review Topic</button>
-                <button class="qt-btn qt-btn--primary" @click="nextQuickCheck">Next →</button>
-              </div>
+          <div v-if="quickAnswered" class="mt-3 p-3 rounded-xl" :style="{ backgroundColor: 'var(--surface)' }">
+            <div class="flex items-start gap-2">
+              <PhBookOpen :size="14" weight="duotone" :style="{ color: quickSelectionCorrect ? '#16a34a' : 'var(--warm)' }" />
+              <p class="text-[11px] leading-relaxed" :style="{ color: 'var(--ink-secondary)' }">
+                {{ activeQuickCheck.explanation }}
+              </p>
             </div>
-          </Transition>
-        </div>
-
-        <!-- ── BOTTOM: Recent Activity ── -->
-        <div class="activity-panel">
-          <div class="activity-header">
-            <span class="panel-label">Recent Activity</span>
-            <span class="activity-count">{{ liveFeed.length }}</span>
-          </div>
-
-          <!-- Hero 3D card — most recent -->
-          <div
-            v-if="liveFeed[0]"
-            class="hero-card"
-            :style="{ '--hc': feedToneColor(liveFeed[0].tone) }"
-            @click="router.push(liveFeed[0].to)"
-          >
-            <div class="hero-card-shine" />
-            <div class="hero-card-body">
-              <span class="hero-card-now">Just now</span>
-              <p class="hero-card-title">{{ liveFeed[0].title }}</p>
-              <p class="hero-card-detail">{{ liveFeed[0].detail }}</p>
-              <button class="hero-card-cta">
-                {{ liveFeed[0].action }}
-                <PhArrowRight :size="12" weight="bold" />
+            <div class="mt-3 flex items-center gap-2">
+              <button
+                class="mini-btn px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                :style="{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent)' }"
+                @click="openQuickCheckTopic"
+              >
+                Review Topic
+              </button>
+              <button
+                class="mini-btn px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                :style="{ backgroundColor: 'var(--ink)', color: 'white' }"
+                @click="nextQuickCheck"
+              >
+                Next Question
               </button>
             </div>
           </div>
+        </div>
 
-          <!-- Compact feed list -->
-          <div class="compact-feed">
+        <div class="feed-panel min-h-0 flex-1 rounded-2xl p-4 flex flex-col"
+          :style="{ backgroundColor: 'var(--paper)' }">
+          <div class="flex items-center justify-between">
+            <p class="section-label">Recent Activity</p>
+            <span class="text-[10px] font-semibold" :style="{ color: 'var(--ink-muted)' }">{{ liveFeed.length }} updates</span>
+          </div>
+
+          <div class="feed-list mt-3 flex-1 overflow-y-auto pr-1 space-y-2.5">
             <button
-              v-for="item in liveFeed.slice(1, 7)"
+              v-for="item in liveFeed"
               :key="item.id"
-              class="feed-row"
+              class="feed-item w-full text-left rounded-xl p-3 flex items-start gap-3"
+              :style="{ backgroundColor: 'var(--surface)' }"
               @click="router.push(item.to)"
             >
-              <span class="feed-row-dot" :style="{ background: feedToneColor(item.tone) }" />
-              <div class="feed-row-body">
-                <p class="feed-row-title">{{ item.title }}</p>
-                <p class="feed-row-time">{{ item.time }}</p>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                :style="{ backgroundColor: `${feedToneColor(item.tone)}1A`, color: feedToneColor(item.tone) }">
+                <PhTrendUp v-if="item.tone === 'accent'" :size="14" weight="duotone" />
+                <PhFlame v-else-if="item.tone === 'warm'" :size="14" weight="duotone" />
+                <PhLightning v-else-if="item.tone === 'gold'" :size="14" weight="duotone" />
+                <PhBookOpen v-else :size="14" weight="duotone" />
               </div>
-              <span class="feed-row-action" :style="{ color: feedToneColor(item.tone) }">
+              <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-semibold leading-tight" :style="{ color: 'var(--ink)' }">{{ item.title }}</p>
+                <p class="text-[10px] mt-1 leading-relaxed" :style="{ color: 'var(--ink-muted)' }">{{ item.detail }}</p>
+                <p class="text-[9px] mt-1.5 flex items-center gap-1" :style="{ color: 'var(--ink-muted)' }">
+                  <PhClockCountdown :size="10" weight="bold" />
+                  {{ item.time }}
+                </p>
+              </div>
+              <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md flex-shrink-0"
+                :style="{ backgroundColor: `${feedToneColor(item.tone)}14`, color: feedToneColor(item.tone) }">
                 {{ item.action }}
               </span>
             </button>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* ── Shared ────────────────────────────────────────────── */
-.section-label, .panel-label {
-  font-size: 9.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--ink-muted);
-}
-
-.directive-card { transition: box-shadow 140ms ease, transform 140ms ease; }
-.directive-card:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(15,23,42,0.07); }
-.cta-btn { transition: opacity 120ms ease, transform 120ms ease; }
-.cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-.topic-row { transition: background-color 100ms ease; }
-.topic-row:hover { background-color: var(--paper) !important; }
-
-/* ── Right panel ───────────────────────────────────────── */
-.right-panel {
-  width: 22rem;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--surface);
-  border-left: 1px solid var(--border-soft);
-}
-
-/* ── Quick Test ────────────────────────────────────────── */
-.qt-panel {
-  flex-shrink: 0;
-  padding: 18px 16px 16px;
-  border-bottom: 1px solid var(--border-soft);
-  background: var(--surface);
-}
-
-.qt-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.qt-dots {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-.qt-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 99px;
-  background: var(--border-strong);
-  transition: width 220ms ease, background 220ms ease;
-}
-.qt-dot--active {
-  width: 18px;
-  background: var(--accent);
-}
-
-.qt-topic-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: 99px;
-  font-size: 9.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  background: var(--accent-glow);
-  margin-bottom: 10px;
-}
-
-.qt-question {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.5;
-  margin-bottom: 12px;
-}
-
-.qt-options {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.qt-option {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 11px;
-  border-radius: 10px;
-  background: var(--paper);
-  border: 1px solid var(--border-soft);
-  cursor: pointer;
-  text-align: left;
-  transition: transform 100ms ease, background 120ms ease, border-color 120ms ease;
-}
-.qt-option:hover:not(:disabled) {
-  transform: translateX(3px);
-  background: var(--paper-warm);
-  border-color: var(--border-strong);
-}
-.qt-option:disabled { cursor: default; }
-.qt-option:active:not(:disabled) { transform: scale(0.98); }
-
-.qt-option--correct {
-  background: rgba(22,163,74,0.09) !important;
-  border-color: rgba(22,163,74,0.35) !important;
-}
-.qt-option--wrong {
-  background: rgba(194,65,12,0.09) !important;
-  border-color: rgba(194,65,12,0.35) !important;
-}
-.qt-option--dim { opacity: 0.45; }
-
-.qt-letter {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  background: var(--border-strong);
-  color: var(--ink-secondary);
+.section-label {
   font-size: 10px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background 120ms ease, color 120ms ease;
-}
-.qt-option--correct .qt-letter { background: rgba(22,163,74,0.2); color: #15803d; }
-.qt-option--wrong .qt-letter { background: rgba(194,65,12,0.2); color: var(--warm); }
-
-.qt-option-text {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink);
-  line-height: 1.3;
-}
-
-/* Explanation */
-.qt-explain {
-  margin-top: 10px;
-  padding: 11px 12px;
-  border-radius: 10px;
-  background: var(--paper);
-  border: 1px solid var(--border-soft);
-}
-.qt-explain-icon { margin-bottom: 5px; }
-.qt-explain-text {
-  font-size: 11px;
-  line-height: 1.55;
-  color: var(--ink-secondary);
-  margin-bottom: 10px;
-}
-.qt-explain-actions { display: flex; gap: 6px; }
-.qt-btn {
-  padding: 5px 11px;
-  border-radius: 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: transform 110ms ease, opacity 110ms ease;
-}
-.qt-btn:hover { transform: translateY(-1px); opacity: 0.88; }
-.qt-btn--primary { background: var(--ink); color: #fff; }
-.qt-btn--secondary { background: var(--accent-glow); color: var(--accent); }
-
-/* Explain transition */
-.explain-enter-active { transition: opacity 220ms ease, transform 220ms ease; }
-.explain-leave-active { transition: opacity 150ms ease; }
-.explain-enter-from { opacity: 0; transform: translateY(6px); }
-.explain-leave-to { opacity: 0; }
-
-/* ── Activity panel ─────────────────────────────────────── */
-.activity-panel {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 14px 16px 12px;
-  overflow: hidden;
-}
-
-.activity-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.activity-count {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--ink-muted);
-  background: var(--border-soft);
-  padding: 1px 7px;
-  border-radius: 99px;
-}
-
-/* Hero 3D card */
-.hero-card {
-  --hc: var(--accent);
-  position: relative;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  overflow: hidden;
-  flex-shrink: 0;
-
-  /* Gradient from the item's colour */
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--hc) 90%, #000),
-    color-mix(in srgb, var(--hc) 60%, #000)
-  );
-
-  /* 3D depth */
-  transform: perspective(700px) rotateX(1.8deg);
-  transform-origin: top center;
-  transition: transform 200ms ease, box-shadow 200ms ease;
-  box-shadow:
-    0 8px 0 -2px color-mix(in srgb, var(--hc) 40%, #000),
-    0 16px 0 -4px color-mix(in srgb, var(--hc) 22%, #000),
-    0 20px 32px color-mix(in srgb, var(--hc) 28%, transparent),
-    0 4px 12px rgba(0,0,0,0.18);
-}
-.hero-card:hover {
-  transform: perspective(700px) rotateX(0deg) translateY(-2px);
-  box-shadow:
-    0 12px 0 -2px color-mix(in srgb, var(--hc) 40%, #000),
-    0 22px 0 -4px color-mix(in srgb, var(--hc) 22%, #000),
-    0 28px 40px color-mix(in srgb, var(--hc) 32%, transparent),
-    0 6px 16px rgba(0,0,0,0.22);
-}
-.hero-card:active {
-  transform: perspective(700px) rotateX(3deg) translateY(1px);
-}
-
-/* Glass shine overlay */
-.hero-card-shine {
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      148deg,
-      rgba(255,255,255,0.22) 0%,
-      rgba(255,255,255,0.06) 38%,
-      transparent 65%
-    ),
-    radial-gradient(
-      80% 50% at 18% 14%,
-      rgba(255,255,255,0.18) 0%,
-      transparent 70%
-    );
-}
-/* Bottom edge highlight */
-.hero-card-shine::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 1px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 0 0 16px 16px;
-}
-
-.hero-card-body { position: relative; z-index: 1; }
-
-.hero-card-now {
-  display: inline-block;
-  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: rgba(255,255,255,0.65);
-  margin-bottom: 6px;
+  color: var(--ink-muted);
 }
-.hero-card-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.3;
-  margin-bottom: 4px;
-}
-.hero-card-detail {
-  font-size: 11px;
-  color: rgba(255,255,255,0.72);
-  line-height: 1.4;
-  margin-bottom: 12px;
-}
-.hero-card-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.28);
-  color: #fff;
-  font-size: 10.5px;
-  font-weight: 700;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  transition: background 130ms ease;
-}
-.hero-card-cta:hover { background: rgba(255,255,255,0.28); }
 
-/* Compact feed list */
-.compact-feed {
-  flex: 1;
-  overflow-y: auto;
+.directive-card {
+  transition: box-shadow 140ms ease, transform 140ms ease;
+}
+.directive-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.cta-btn {
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.topic-row {
+  transition: background-color 100ms ease;
+}
+.topic-row:hover {
+  background-color: var(--paper) !important;
+}
+
+.quick-test-card,
+.feed-panel {
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+}
+
+.quick-option {
+  cursor: pointer;
+  transition: transform 110ms ease, background-color 110ms ease, box-shadow 110ms ease, opacity 110ms ease;
+}
+.quick-option:hover:enabled {
+  transform: translateX(2px);
+}
+.quick-option:disabled {
+  cursor: default;
+}
+
+.mini-btn {
+  transition: transform 110ms ease, opacity 110ms ease;
+}
+.mini-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.feed-item {
+  transition: transform 110ms ease, background-color 110ms ease;
+}
+.feed-item:hover {
+  transform: translateX(2px);
+  background-color: var(--paper) !important;
+}
+
+.feed-list {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.compact-feed::-webkit-scrollbar { display: none; }
-
-.feed-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  padding: 8px 6px;
-  border-radius: 8px;
-  text-align: left;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border-soft);
-  transition: background 110ms ease, transform 110ms ease;
-}
-.feed-row:last-child { border-bottom: none; }
-.feed-row:hover { background: var(--paper); transform: translateX(2px); }
-
-.feed-row-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 99px;
-  flex-shrink: 0;
-}
-.feed-row-body { flex: 1; min-width: 0; }
-.feed-row-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.feed-row-time {
-  font-size: 10px;
-  color: var(--ink-muted);
-  margin-top: 1px;
-}
-.feed-row-action {
-  font-size: 9.5px;
-  font-weight: 700;
-  flex-shrink: 0;
+.feed-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 </style>
 
