@@ -162,6 +162,7 @@ const quickChecks: QuickCheck[] = [
 
 const quickCheckIndex = ref(0)
 const selectedQuickOptionId = ref<string | null>(null)
+const quickCheckKey = ref(0) // bumped on question change to re-trigger entrance animation
 
 const activeQuickCheck = computed(() => quickChecks[quickCheckIndex.value % quickChecks.length])
 const quickAnswered = computed(() => selectedQuickOptionId.value !== null)
@@ -466,52 +467,68 @@ function feedToneColor(tone: FeedTone): string {
 
         <!-- ── Recent Activity ── -->
         <div class="rp-activity">
-          <p class="rp-section-label" style="margin-bottom:14px">Recent Activity</p>
 
-          <!-- Most recent — elevated hero card -->
+          <!-- Section header -->
+          <div class="rp-act-header">
+            <div class="rp-act-header-left">
+              <span class="rp-pulse-ring" />
+              <p class="rp-section-label">Live Feed</p>
+            </div>
+            <button class="rp-act-all" @click="router.push('/student/progress')">All <PhArrowRight :size="9" weight="bold" /></button>
+          </div>
+
+          <!-- Continue card (hero) -->
           <div
             v-if="liveFeed[0]"
-            class="rp-hero"
-            :style="{ '--hc': feedToneColor(liveFeed[0].tone) }"
+            class="rp-continue"
             @click="router.push(liveFeed[0].to)"
           >
-            <div class="rp-hero-top">
-              <span class="rp-hero-icon-wrap">
-                <component :is="liveFeed[0].icon" :size="15" weight="fill" style="color:#fff" />
-              </span>
-              <span class="rp-hero-eyebrow">{{ liveFeed[0].time }}</span>
+            <div class="rp-continue-top">
+              <span class="rp-continue-label">Continue</span>
+              <span class="rp-continue-time">{{ liveFeed[0].time }}</span>
             </div>
-            <p class="rp-hero-title">{{ liveFeed[0].title }}</p>
-            <p class="rp-hero-sub">{{ liveFeed[0].detail }}</p>
-            <button class="rp-hero-cta">
-              {{ liveFeed[0].action }}
-              <PhArrowRight :size="11" weight="bold" />
+            <div class="rp-continue-body">
+              <span class="rp-continue-icon-wrap" :style="{ background: feedToneColor(liveFeed[0].tone) + '28' }">
+                <component :is="liveFeed[0].icon" :size="16" weight="fill" :style="{ color: feedToneColor(liveFeed[0].tone) }" />
+              </span>
+              <div class="rp-continue-text">
+                <p class="rp-continue-title">{{ liveFeed[0].title }}</p>
+                <p class="rp-continue-sub">{{ liveFeed[0].detail }}</p>
+              </div>
+            </div>
+            <button class="rp-continue-cta" :style="{ color: feedToneColor(liveFeed[0].tone) }">
+              {{ liveFeed[0].action }} <PhArrowRight :size="11" weight="bold" />
             </button>
           </div>
 
-          <!-- Rest of feed — rich rows -->
+          <!-- Timeline feed -->
           <div class="rp-feed">
-            <button
-              v-for="item in liveFeed.slice(1, 7)" :key="item.id"
-              class="rp-feed-row"
+            <div
+              v-for="item in liveFeed.slice(1, 8)" :key="item.id"
+              class="rp-feed-item"
               :style="{ '--fc': feedToneColor(item.tone) }"
               @click="router.push(item.to)"
             >
-              <!-- Icon badge -->
-              <span class="rp-feed-icon" :style="{ background: feedToneColor(item.tone) + '1a' }">
-                <component :is="item.icon" :size="13" weight="fill" :style="{ color: feedToneColor(item.tone) }" />
-              </span>
-              <!-- Text block -->
-              <div class="rp-feed-info">
-                <p class="rp-feed-title">{{ item.title }}</p>
+              <!-- Timeline dot -->
+              <div class="rp-feed-track">
+                <span class="rp-feed-dot" :style="{ background: feedToneColor(item.tone) }" />
+                <span class="rp-feed-line" />
+              </div>
+              <!-- Content -->
+              <div class="rp-feed-body">
+                <div class="rp-feed-title-row">
+                  <component :is="item.icon" :size="12" weight="fill" :style="{ color: feedToneColor(item.tone), flexShrink: 0 }" />
+                  <span class="rp-feed-title">{{ item.title }}</span>
+                </div>
                 <p class="rp-feed-detail">{{ item.detail }}</p>
+                <div class="rp-feed-footer">
+                  <span class="rp-feed-time">{{ item.time }}</span>
+                  <button class="rp-feed-cta" :style="{ color: feedToneColor(item.tone) }">
+                    {{ item.action }} →
+                  </button>
+                </div>
               </div>
-              <!-- Right side: time + action -->
-              <div class="rp-feed-meta">
-                <span class="rp-feed-time">{{ item.time }}</span>
-                <span class="rp-feed-action" :style="{ color: feedToneColor(item.tone) }">{{ item.action }}</span>
-              </div>
-            </button>
+            </div>
           </div>
         </div>
 
@@ -714,167 +731,148 @@ function feedToneColor(tone: FeedTone): string {
 .rp-activity {
   flex: 1; min-height: 0;
   display: flex; flex-direction: column;
-  padding: 16px 18px 14px;
+  padding: 14px 16px 12px;
   background: var(--paper);
   overflow: hidden;
 }
 
-/* Hero card — single elevation, genuine depth, no glow */
-.rp-hero {
-  --hc: var(--accent);
-  position: relative;
-  border-radius: 18px;
-  padding: 20px;
+/* Section header */
+.rp-act-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 13px;
+}
+.rp-act-header-left { display: flex; align-items: center; gap: 8px; }
+.rp-pulse-ring {
+  width: 8px; height: 8px; border-radius: 99px;
+  background: var(--accent);
+  position: relative; flex-shrink: 0;
+  animation: pulse-ring 2.4s ease infinite;
+}
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+  50%       { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+.rp-act-all {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9.5px; font-weight: 700;
+  color: var(--accent); cursor: pointer;
+  transition: opacity 130ms; opacity: 0.7;
+}
+.rp-act-all:hover { opacity: 1; }
+
+/* Continue card */
+.rp-continue {
+  border-radius: 14px;
+  padding: 14px;
   margin-bottom: 14px;
   flex-shrink: 0;
   cursor: pointer;
-  overflow: hidden;
-
-  background: linear-gradient(
-    138deg,
-    color-mix(in srgb, var(--hc) 82%, #fff),
-    color-mix(in srgb, var(--hc) 62%, #000)
-  );
-
-  /* One clean shadow — depth without glow */
-  box-shadow:
-    0 16px 40px rgba(26,22,18,0.18),
-    0  4px 12px rgba(26,22,18,0.10);
-
-  transition: transform 260ms ease, box-shadow 260ms ease;
+  background: var(--ink);
+  box-shadow: 0 10px 28px rgba(26,22,18,0.20), 0 3px 8px rgba(26,22,18,0.10);
+  transition: transform 220ms ease, box-shadow 220ms ease;
 }
-
-/* Top sheen — light catching the card face */
-.rp-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  pointer-events: none;
-  background: linear-gradient(
-    148deg,
-    rgba(255,255,255,0.22) 0%,
-    rgba(255,255,255,0.06) 38%,
-    transparent 65%
-  );
+.rp-continue:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(26,22,18,0.24), 0 5px 12px rgba(26,22,18,0.12);
 }
+.rp-continue:active { transform: translateY(0) scale(0.985); }
 
-.rp-hero:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 24px 52px rgba(26,22,18,0.22),
-    0  6px 16px rgba(26,22,18,0.12);
-}
-.rp-hero:active {
-  transform: translateY(0px) scale(0.99);
-  box-shadow:
-    0 10px 26px rgba(26,22,18,0.14),
-    0  3px  8px rgba(26,22,18,0.08);
-}
-
-.rp-hero-top {
-  display: flex; align-items: center; gap: 8px;
+.rp-continue-top {
+  display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 12px;
-  position: relative;
 }
-.rp-hero-icon-wrap {
-  width: 28px; height: 28px; border-radius: 9px;
-  background: rgba(255,255,255,0.18);
+.rp-continue-label {
+  font-size: 8.5px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.20em;
+  color: rgba(255,255,255,0.38);
+}
+.rp-continue-time {
+  font-size: 8.5px; font-weight: 600;
+  color: rgba(255,255,255,0.30);
+}
+
+.rp-continue-body { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+.rp-continue-icon-wrap {
+  width: 32px; height: 32px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.rp-hero-eyebrow {
-  font-size: 8.5px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.18em;
-  color: rgba(255,255,255,0.62);
-}
-.rp-hero-title {
+.rp-continue-text { flex: 1; min-width: 0; }
+.rp-continue-title {
   font-family: var(--font-display);
-  font-size: 15px; font-weight: 700;
-  color: #fff; line-height: 1.28;
-  margin-bottom: 5px;
-  position: relative;
+  font-size: 14px; font-weight: 700;
+  color: #fff; line-height: 1.25; margin-bottom: 3px;
 }
-.rp-hero-sub {
-  font-size: 11.5px;
-  color: rgba(255,255,255,0.70);
-  line-height: 1.48;
-  margin-bottom: 14px;
-  position: relative;
+.rp-continue-sub {
+  font-size: 11px; color: rgba(255,255,255,0.52); line-height: 1.45;
 }
-.rp-hero-cta {
-  display: inline-flex;
-  align-items: center; gap: 5px;
-  padding: 6px 14px; border-radius: 10px;
-  background: rgba(255,255,255,0.20);
-  color: #fff; font-size: 11px; font-weight: 700;
-  cursor: pointer;
-  position: relative;
-  transition: background 140ms, transform 140ms;
-}
-.rp-hero-cta:hover { background: rgba(255,255,255,0.30); transform: translateY(-1px); }
 
-/* Feed rows */
+.rp-continue-cta {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  width: 100%; padding: 8px 0; border-radius: 9px;
+  background: rgba(255,255,255,0.08);
+  font-size: 11.5px; font-weight: 700; cursor: pointer;
+  transition: background 130ms;
+}
+.rp-continue-cta:hover { background: rgba(255,255,255,0.14); }
+
+/* Timeline feed */
 .rp-feed { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .rp-feed::-webkit-scrollbar { display: none; }
 
-.rp-feed-row {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 8px 10px 8px 8px;
-  border-radius: 12px; text-align: left; cursor: pointer;
-  position: relative;
-  transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+.rp-feed-item {
+  display: flex; gap: 11px;
+  padding: 0 4px 0 2px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 130ms;
 }
-.rp-feed-row::before {
-  content: '';
-  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 0; border-radius: 99px;
-  background: var(--fc, var(--accent));
-  transition: height 200ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms;
-  opacity: 0;
-}
-.rp-feed-row:hover {
-  background: color-mix(in srgb, var(--fc, var(--accent)) 6%, var(--surface));
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(26,22,18,0.06);
-}
-.rp-feed-row:hover::before { height: 22px; opacity: 1; }
-.rp-feed-row:active { transform: translateX(2px) scale(0.99); }
+.rp-feed-item:hover { background: color-mix(in srgb, var(--fc, var(--accent)) 5%, var(--surface)); }
+.rp-feed-item:last-child .rp-feed-line { display: none; }
 
-/* Icon badge */
-.rp-feed-icon {
-  width: 30px; height: 30px; border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
+/* Left track: dot + vertical line */
+.rp-feed-track {
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 13px; flex-shrink: 0;
+}
+.rp-feed-dot {
+  width: 10px; height: 10px; border-radius: 99px;
   flex-shrink: 0;
-  transition: transform 140ms ease;
+  box-shadow: 0 0 0 3px var(--paper);
 }
-.rp-feed-row:hover .rp-feed-icon { transform: scale(1.10); }
+.rp-feed-line {
+  width: 1px; flex: 1; min-height: 14px;
+  background: var(--border-soft);
+  margin-top: 5px; margin-bottom: 0;
+}
 
-/* Text block */
-.rp-feed-info { flex: 1; min-width: 0; }
+/* Feed content */
+.rp-feed-body {
+  flex: 1; min-width: 0;
+  padding: 10px 0 14px;
+}
+.rp-feed-title-row {
+  display: flex; align-items: center; gap: 5px; margin-bottom: 3px;
+}
 .rp-feed-title {
-  font-size: 12px; font-weight: 600; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  line-height: 1.3;
+  font-size: 12.5px; font-weight: 700; color: var(--ink);
+  line-height: 1.3; flex: 1; min-width: 0;
 }
 .rp-feed-detail {
-  font-size: 10px; color: var(--ink-muted); margin-top: 1.5px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  line-height: 1.3;
+  font-size: 11px; color: var(--ink-muted);
+  line-height: 1.5; margin-bottom: 7px;
 }
-
-/* Right meta: time on top, action below */
-.rp-feed-meta {
-  display: flex; flex-direction: column; align-items: flex-end;
-  gap: 2px; flex-shrink: 0;
+.rp-feed-footer {
+  display: flex; align-items: center; justify-content: space-between;
 }
-.rp-feed-time { font-size: 9px; color: var(--ink-muted); font-weight: 500; white-space: nowrap; }
-.rp-feed-action {
-  font-size: 9.5px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  opacity: 0; transform: translateX(4px);
-  transition: opacity 140ms ease, transform 140ms ease;
+.rp-feed-time {
+  font-size: 9.5px; color: var(--ink-muted); font-weight: 500;
 }
-.rp-feed-row:hover .rp-feed-action { opacity: 1; transform: translateX(0); }
+.rp-feed-cta {
+  font-size: 10.5px; font-weight: 700;
+  cursor: pointer; transition: opacity 130ms;
+  opacity: 0.85;
+}
+.rp-feed-cta:hover { opacity: 1; }
 </style>
 
