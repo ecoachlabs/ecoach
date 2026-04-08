@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
@@ -189,6 +189,29 @@ function isActive(item: NavItem): boolean {
 
 const displayName = computed(() => auth.currentAccount?.display_name ?? 'Kofi')
 const initials = computed(() => auth.currentAccount?.display_name?.charAt(0).toUpperCase() ?? 'K')
+
+// ── Sliding glass pill ────────────────────────────────────────────
+const navRef = ref<HTMLElement | null>(null)
+const pillTop = ref(0)
+const pillHeight = ref(36)
+const pillColor = ref('#3b82f6')
+const pillVisible = ref(false)
+
+async function updatePill() {
+  await nextTick()
+  const nav = navRef.value
+  if (!nav) return
+  const active = nav.querySelector('.nav-link--active') as HTMLElement | null
+  if (!active) { pillVisible.value = false; return }
+  pillTop.value = active.offsetTop
+  pillHeight.value = active.offsetHeight
+  pillVisible.value = true
+  const found = navSections.flat().find(item => isActive(item))
+  if (found) pillColor.value = found.color
+}
+
+onMounted(updatePill)
+watch(() => route.fullPath, updatePill)
 </script>
 
 <template>
@@ -206,7 +229,13 @@ const initials = computed(() => auth.currentAccount?.display_name?.charAt(0).toU
         </div>
       </div>
 
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" ref="navRef">
+        <!-- Sliding liquid glass pill -->
+        <div
+          class="glass-pill"
+          :class="{ 'glass-pill--visible': pillVisible }"
+          :style="{ '--pc': pillColor, top: pillTop + 'px', height: pillHeight + 'px' }"
+        />
         <div v-for="(section, sectionIndex) in navSections" :key="`sec-${sectionIndex}`" class="nav-section">
           <RouterLink
             v-for="item in section"
@@ -350,12 +379,78 @@ const initials = computed(() => auth.currentAccount?.display_name?.charAt(0).toU
   padding: 4px 0 8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  position: relative; /* pill anchor */
 }
 
 .sidebar-nav::-webkit-scrollbar {
   width: 0;
   height: 0;
   display: none;
+}
+
+/* ── Liquid glass sliding pill ───────────────────────── */
+.glass-pill {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+
+  /* Spring movement — slides + tiny overshoot = liquid feel */
+  transition:
+    top    400ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    height 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 180ms ease,
+    background 300ms ease,
+    border-color 300ms ease,
+    box-shadow 300ms ease;
+
+  /* Glass surface */
+  background: color-mix(in srgb, var(--pc, #3b82f6) 11%, rgba(255, 255, 255, 0.88));
+  border: 1px solid color-mix(in srgb, var(--pc, #3b82f6) 24%, rgba(255, 255, 255, 0.60));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.28),
+    0 4px 16px color-mix(in srgb, var(--pc, #3b82f6) 20%, transparent),
+    0 1px 4px rgba(15, 23, 42, 0.07);
+  backdrop-filter: blur(18px) saturate(190%);
+  -webkit-backdrop-filter: blur(18px) saturate(190%);
+}
+
+.glass-pill--visible { opacity: 1; }
+
+/* Top-left light catch — the refracting white sheen */
+.glass-pill::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 9px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      148deg,
+      rgba(255, 255, 255, 0.78) 0%,
+      rgba(255, 255, 255, 0.22) 28%,
+      rgba(255, 255, 255, 0.05) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      85% 55% at 12% 18%,
+      rgba(255, 255, 255, 0.58) 0%,
+      transparent 68%
+    );
+}
+
+/* Colour wash layer */
+.glass-pill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--pc, #3b82f6) 12%, transparent);
 }
 
 .nav-section {
@@ -385,60 +480,38 @@ const initials = computed(() => auth.currentAccount?.display_name?.charAt(0).toU
   transform: translateX(1px);
 }
 
+/* Active item: pill handles the background, we just colour the text/icon */
 .nav-link--active {
-  background: color-mix(in srgb, var(--item-color, #3b82f6) 11%, rgba(255, 255, 255, 0.88));
-  color: color-mix(in srgb, var(--item-color, #1d4ed8) 85%, #1f2937);
-  border-color: color-mix(in srgb, var(--item-color, #3b82f6) 28%, rgba(255, 255, 255, 0.55));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.90),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.30),
-    0 4px 14px color-mix(in srgb, var(--item-color, #3b82f6) 18%, transparent),
-    0 1px 3px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  color: color-mix(in srgb, var(--item-color, #1d4ed8) 88%, #1f2937);
   transform: translateX(3px);
+  position: relative;
+  z-index: 1; /* sit above the pill */
 }
 
-/* Top-left light catch — the primary glass sheen */
-.nav-link--active::before {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 9px;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      148deg,
-      rgba(255, 255, 255, 0.72) 0%,
-      rgba(255, 255, 255, 0.18) 30%,
-      rgba(255, 255, 255, 0.04) 65%,
-      rgba(255, 255, 255, 0.00) 100%
-    ),
-    radial-gradient(
-      88% 60% at 14% 14%,
-      rgba(255, 255, 255, 0.52) 0%,
-      rgba(255, 255, 255, 0.00) 72%
-    );
-}
+.nav-link--active .nav-label { font-weight: 600; }
 
-/* Color wash layer */
-.nav-link--active::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  z-index: 1;
-  pointer-events: none;
-  background: color-mix(in srgb, var(--item-color, #3b82f6) 13%, transparent);
+/* Press animation — item briefly sinks on click */
+.nav-link:active {
+  transform: scale(0.96) translateX(1px);
+  transition: transform 60ms ease !important;
+}
+.nav-link--active:active {
+  transform: scale(0.97) translateX(3px);
+  transition: transform 60ms ease !important;
 }
 
 .nav-icon {
   flex-shrink: 0;
-  opacity: 0.92;
+  opacity: 0.60;
   position: relative;
   z-index: 2;
-  transition: opacity 150ms ease, transform 200ms ease;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.nav-link--active .nav-icon,
+.nav-link:hover .nav-icon {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 .nav-label {
