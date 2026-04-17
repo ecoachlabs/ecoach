@@ -1,0 +1,2310 @@
+{
+  "metadata": {
+    "name": "Mathematics CCP Interactive Curriculum Blueprint",
+    "version": "1.0.0",
+    "generated_at": "2026-04-10 13:02:50",
+    "targets": [
+      "parent_curriculum_page",
+      "future_student_curriculum_page"
+    ],
+    "stack_assumptions": [
+      "Vue 3",
+      "TypeScript",
+      "Vite",
+      "D3",
+      "Tauri"
+    ],
+    "source_files": [
+      "mathematics_ccp_seed_package.json",
+      "mathematics_ccp_structured_graph.json",
+      "mathematics_ccp_education_semantic_map.json"
+    ]
+  },
+  "curriculum_truth_contract": {
+    "subject_code": "MATH-CCP-B7-B9",
+    "subject_name": "Mathematics",
+    "truth_key": "topic_code + indicator_code + source_anchors",
+    "source_pdf": "C:/Users/victo/Downloads/MATHEMATICS.pdf",
+    "grade_boundaries": {
+      "B7": {
+        "pdf_page_start": 31,
+        "pdf_page_end": 118,
+        "anchor_start": "P031",
+        "anchor_end": "P118"
+      },
+      "B8": {
+        "pdf_page_start": 119,
+        "pdf_page_end": 193,
+        "anchor_start": "P119",
+        "anchor_end": "P193"
+      },
+      "B9": {
+        "pdf_page_start": 194,
+        "pdf_page_end": 250,
+        "anchor_start": "P194",
+        "anchor_end": "P250"
+      },
+      "Appendix": {
+        "pdf_page_start": 251,
+        "pdf_page_end": 259,
+        "anchor_start": "P251",
+        "anchor_end": "P259"
+      }
+    }
+  },
+  "scene_flow": [
+    {
+      "id": "subject_overview",
+      "purpose": "Show whole-curriculum landscape and readiness status at glance",
+      "entry_transition": "fade_scale_in_320ms",
+      "exit_transition": "depth_zoom_to_grade_380ms",
+      "visible_objects": [
+        "grade_cards",
+        "global_progress_ring",
+        "anomaly_badges"
+      ]
+    },
+    {
+      "id": "grade_focus",
+      "purpose": "Dive into one grade and reveal strand clusters with motion continuity",
+      "entry_transition": "radial_focus_360ms",
+      "exit_transition": "cluster_expand_to_strand_320ms",
+      "visible_objects": [
+        "strand_clusters",
+        "dependency_arcs",
+        "grade_timeline"
+      ]
+    },
+    {
+      "id": "strand_focus",
+      "purpose": "Navigate sub-strands and topic cards as interactive learning map",
+      "entry_transition": "lane_stagger_280ms",
+      "exit_transition": "topic_zoom_260ms",
+      "visible_objects": [
+        "substrand_lanes",
+        "topic_nodes",
+        "progress_overlays"
+      ]
+    },
+    {
+      "id": "topic_focus",
+      "purpose": "Inspect one content standard, prerequisites, and vertical progression chain",
+      "entry_transition": "focus_pulse_220ms",
+      "exit_transition": "drawer_slide_200ms",
+      "visible_objects": [
+        "topic_header",
+        "indicator_sparks",
+        "prereq_and_next_paths",
+        "vertical_chain"
+      ]
+    },
+    {
+      "id": "indicator_source_drawer",
+      "purpose": "Expose indicator-level details with direct source provenance anchors",
+      "entry_transition": "right_drawer_slide_180ms",
+      "exit_transition": "right_drawer_close_160ms",
+      "visible_objects": [
+        "indicator_cards",
+        "anchor_chips",
+        "qa_flags"
+      ]
+    }
+  ],
+  "overlay_layers": [
+    {
+      "id": "seed_readiness",
+      "description": "Shows extraction quality state before production seeding",
+      "states": [
+        "ready",
+        "warning",
+        "blocked"
+      ],
+      "source": "qa_anomalies"
+    },
+    {
+      "id": "grade_progress",
+      "description": "Learner-level progression percentages by grade/strand/topic",
+      "states": [
+        "not_started",
+        "entered",
+        "stable",
+        "exam_ready"
+      ],
+      "source": "learner_progress_store"
+    },
+    {
+      "id": "dependency_arcs",
+      "description": "Displays prerequisite and next-topic edges",
+      "source": "topic_dependency_edges"
+    },
+    {
+      "id": "source_provenance",
+      "description": "Displays clickable source page anchors for every node",
+      "source": "source_anchors"
+    },
+    {
+      "id": "progression_compare",
+      "description": "Compares aligned standards across B7-B9 vertical chains",
+      "source": "progression_chains"
+    }
+  ],
+  "interaction_contracts": [
+    {
+      "event": "click_grade_card",
+      "from_scene": "subject_overview",
+      "to_scene": "grade_focus",
+      "payload": [
+        "grade"
+      ]
+    },
+    {
+      "event": "click_strand_cluster",
+      "from_scene": "grade_focus",
+      "to_scene": "strand_focus",
+      "payload": [
+        "grade",
+        "strand_code"
+      ]
+    },
+    {
+      "event": "click_topic_node",
+      "from_scene": "strand_focus",
+      "to_scene": "topic_focus",
+      "payload": [
+        "topic_code"
+      ]
+    },
+    {
+      "event": "open_indicator_drawer",
+      "from_scene": "topic_focus",
+      "to_scene": "indicator_source_drawer",
+      "payload": [
+        "topic_code",
+        "indicator_code"
+      ]
+    }
+  ],
+  "animation_tokens": {
+    "durations_ms": {
+      "micro": 120,
+      "short": 180,
+      "medium": 280,
+      "long": 380
+    },
+    "easings": {
+      "enter": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "exit": "cubic-bezier(0.4, 0, 1, 1)",
+      "emphasis": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+    },
+    "stagger_ms": 36
+  },
+  "data_index": {
+    "grades": [
+      {
+        "grade": "B7",
+        "topic_count": 21,
+        "indicator_count": 69,
+        "anchor_start": "P031",
+        "anchor_end": "P118"
+      },
+      {
+        "grade": "B8",
+        "topic_count": 18,
+        "indicator_count": 58,
+        "anchor_start": "P119",
+        "anchor_end": "P193"
+      },
+      {
+        "grade": "B9",
+        "topic_count": 18,
+        "indicator_count": 51,
+        "anchor_start": "P194",
+        "anchor_end": "P250"
+      }
+    ],
+    "topic_nodes": [
+      {
+        "topic_code": "B7.1.1.1",
+        "topic_name": "Demonstrate understanding and the use of place value for expressing quantities recorded as base ten numerals as well as rounding these to given decimal places and significant figures",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 1,
+        "substrand_name": "Number and Numeration Systems",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P032",
+          "P033",
+          "P034",
+          "P035",
+          "P036"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B7.1.1.2",
+          "B8.1.1.1"
+        ]
+      },
+      {
+        "topic_code": "B7.1.1.2",
+        "topic_name": "Compare and order whole numbers more than1,000,000,000 and represent the comparison using \">, <, or=\"",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 1,
+        "substrand_name": "Number and Numeration Systems",
+        "indicator_count": 0,
+        "source_anchors": [
+          "P033"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.1.1"
+        ],
+        "next_topic_codes": [
+          "B8.1.1.2"
+        ]
+      },
+      {
+        "topic_code": "B7.1.2.1",
+        "topic_name": "Apply mental mathematics strategies and number properties used to solve problems",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P037",
+          "P038"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B7.1.2.2",
+          "B8.1.2.1"
+        ]
+      },
+      {
+        "topic_code": "B7.1.2.2",
+        "topic_name": "Demonstrate an understanding of addition, subtraction, multiplication and division of (i) whole numbers, and (ii) decimal numbers, to solve problems.",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P039",
+          "P040",
+          "P041",
+          "P042"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.2.1"
+        ],
+        "next_topic_codes": [
+          "B7.1.2.3",
+          "B8.1.2.2"
+        ]
+      },
+      {
+        "topic_code": "B7.1.2.3",
+        "topic_name": "Demonstrate understanding and the use of powers of natural numbers in solving problems",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 5,
+        "source_anchors": [
+          "P043",
+          "P044",
+          "P045",
+          "P046"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.2.2"
+        ],
+        "next_topic_codes": [
+          "B8.1.2.3"
+        ]
+      },
+      {
+        "topic_code": "B7.1.3.1",
+        "topic_name": "Simplify, compare and order a mixture of positive fractions (i.e.",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 3,
+        "substrand_name": "Fractions, Decimals and Percentages",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P047",
+          "P048",
+          "P049"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B7.1.3.2",
+          "B8.1.3.1"
+        ]
+      },
+      {
+        "topic_code": "B7.1.3.2",
+        "topic_name": "Demonstrate an understanding of the process of addition and/or subtraction of fractions and apply this in solving problems",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 3,
+        "substrand_name": "Fractions, Decimals and Percentages",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P049",
+          "P050"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.3.1"
+        ],
+        "next_topic_codes": [
+          "B7.1.3.3"
+        ]
+      },
+      {
+        "topic_code": "B7.1.3.3",
+        "topic_name": "Demonstrate an understanding of the process of multiplying and dividing positive fractions and apply this in solving problems",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 3,
+        "substrand_name": "Fractions, Decimals and Percentages",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P050",
+          "P051",
+          "P052",
+          "P053"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.3.2"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B7.1.4.1",
+        "topic_name": "Demonstrate an understanding of the concept of ratios and its relationship to fractions and use it to solve problems that involve rates, ratios, and proportional reasoning",
+        "grade": "B7",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 4,
+        "substrand_name": "Number: Ratios and Proportion",
+        "indicator_count": 5,
+        "source_anchors": [
+          "P054",
+          "P055",
+          "P056"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B8.1.4.1"
+        ]
+      },
+      {
+        "topic_code": "B7.2.1.1",
+        "topic_name": "Derive the rule for a set of points of a relation, draw a table of values to graph the relation in a number plane and make predictions about subsequent elements of the relation",
+        "grade": "B7",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 1,
+        "substrand_name": "Patterns and Relations",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P057",
+          "P058",
+          "P059",
+          "P060",
+          "P061",
+          "P062",
+          "P063",
+          "P064"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B8.2.1.1"
+        ]
+      },
+      {
+        "topic_code": "B7.2.2.1",
+        "topic_name": "Simplify algebraic expressions involving the four basic operations and substituting values to evaluate algebraic expressions.",
+        "grade": "B7",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 2,
+        "substrand_name": "Algebraic Expressions",
+        "indicator_count": 5,
+        "source_anchors": [
+          "P065",
+          "P066",
+          "P067",
+          "P068",
+          "P069",
+          "P070"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B8.2.2.1"
+        ]
+      },
+      {
+        "topic_code": "B7.2.3.1",
+        "topic_name": "Demonstrate an understanding of linear equations of the form x + a = b (where a and b are integers) by modelling problems as a linear equation and solving the problems concretely, pictorially, and symbolically",
+        "grade": "B7",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 3,
+        "substrand_name": "Variables and Equations",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P071",
+          "P072",
+          "P073",
+          "P074",
+          "P075",
+          "P076"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B8.2.3.1"
+        ]
+      },
+      {
+        "topic_code": "B7.3.1.1",
+        "topic_name": "Demonstrate understanding of angles including adjacent, vertically opposite, complementary, supplementary and use them to solve problems",
+        "grade": "B7",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 1,
+        "substrand_name": "Shapes and Space",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P077",
+          "P078",
+          "P079",
+          "P080"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B7.3.1.2",
+          "B8.3.1.1"
+        ]
+      },
+      {
+        "topic_code": "B7.3.1.2",
+        "topic_name": "Demonstrate how to construct a perpendicular to a line from a given point, bisect a line, bisect angles, and construct angles of the following sizes: 30˚, 45˚, 60˚, 75˚ and 90˚",
+        "grade": "B7",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 1,
+        "substrand_name": "Shapes and Space",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P081",
+          "P082",
+          "P083",
+          "P084",
+          "P085",
+          "P086",
+          "P087",
+          "P088"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.3.1.1"
+        ],
+        "next_topic_codes": [
+          "B8.3.1.2"
+        ]
+      },
+      {
+        "topic_code": "B7.3.2.1",
+        "topic_name": "Demonstrate the ability to find the perimeter of plane shapes including circles using the concept of pi (π) to find the circumference of a circle",
+        "grade": "B7",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 2,
+        "substrand_name": "Measurement",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P089",
+          "P090",
+          "P091",
+          "P092",
+          "P093"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B7.3.2.2",
+          "B8.3.2.1"
+        ]
+      },
+      {
+        "topic_code": "B7.3.2.2",
+        "topic_name": "Derive the formula for determining the area of a triangle and use it to solve problems",
+        "grade": "B7",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 2,
+        "substrand_name": "Measurement",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P094",
+          "P095",
+          "P096"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.3.2.1"
+        ],
+        "next_topic_codes": [
+          "B7.3.2.3",
+          "B8.3.2.2"
+        ]
+      },
+      {
+        "topic_code": "B7.3.2.3",
+        "topic_name": "Demonstrate understanding of bearings, vector and its components using real life cases",
+        "grade": "B7",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 2,
+        "substrand_name": "Measurement",
+        "indicator_count": 5,
+        "source_anchors": [
+          "P097",
+          "P098",
+          "P099",
+          "P100",
+          "P101"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.3.2.2"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B7.3.3.1",
+        "topic_name": "Perform a single transformation (i.e. reflection and translation) on a 2D shape using graph paper (including technology) and describe the properties of the image under the transformation (i.e. congruence, similarity, etc.)",
+        "grade": "B7",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 3,
+        "substrand_name": "Position and Transformation",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P102",
+          "P103",
+          "P104",
+          "P105",
+          "P106"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B8.3.3.1"
+        ]
+      },
+      {
+        "topic_code": "B7.4.1.1",
+        "topic_name": "Select, justify, and use appropriate methods to collect data (quantitative and qualitative), display and analyse the data (grouped/ungrouped) presented in frequency tables, line graphs, pie graphs, bar graphs or pictographs and use these to solve and/or pose problems",
+        "grade": "B7",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 1,
+        "substrand_name": "Data",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P107",
+          "P108",
+          "P109",
+          "P110",
+          "P111",
+          "P112"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B7.4.1.2",
+          "B8.4.1.1"
+        ]
+      },
+      {
+        "topic_code": "B7.4.1.2",
+        "topic_name": "Determine the measures of central tendency (mean, median, mode) for a given ungrouped data and use it to solve problems",
+        "grade": "B7",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 1,
+        "substrand_name": "Data",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P113",
+          "P114",
+          "P115"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.4.1.1"
+        ],
+        "next_topic_codes": [
+          "B8.4.1.2"
+        ]
+      },
+      {
+        "topic_code": "B7.4.2.1",
+        "topic_name": "Identify the sample space for a probability experiment involving single events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+        "grade": "B7",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 2,
+        "substrand_name": "Chance or Probability",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P116",
+          "P117",
+          "P118"
+        ],
+        "prerequisite_topic_codes": [],
+        "next_topic_codes": [
+          "B8.4.2.1"
+        ]
+      },
+      {
+        "topic_code": "B8.1.1.1",
+        "topic_name": "Demonstrate understanding and the use of place value for expressing quantities in standard form and rounding numbers and decimals to significant figures and a given number of decimal places",
+        "grade": "B8",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 1,
+        "substrand_name": "Number and Numeration Systems",
+        "indicator_count": 6,
+        "source_anchors": [
+          "P120",
+          "P121"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.1.1"
+        ],
+        "next_topic_codes": [
+          "B8.1.1.2",
+          "B9.1.1.1"
+        ]
+      },
+      {
+        "topic_code": "B8.1.1.2",
+        "topic_name": "Apply the concepts and vocabulary of sets on sets of factors of numbers to identify perfect squares, determine their square root and solve real life problems involving union and intersection of two sets",
+        "grade": "B8",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 1,
+        "substrand_name": "Number and Numeration Systems",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P122",
+          "P123"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.1.1.1",
+          "B7.1.1.2"
+        ],
+        "next_topic_codes": [
+          "B9.1.1.2"
+        ]
+      },
+      {
+        "topic_code": "B8.1.2.1",
+        "topic_name": "Apply mental mathematics strategies and number properties used to solve problems",
+        "grade": "B8",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P124"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.2.1"
+        ],
+        "next_topic_codes": [
+          "B8.1.2.2",
+          "B9.1.2.1"
+        ]
+      },
+      {
+        "topic_code": "B8.1.2.2",
+        "topic_name": "Apply the understanding of the addition, subtraction, multiplication and division of (i) whole numbers within 10,000, and (ii) decimals up to 1/1000, to solve problems and round answers to given decimal places",
+        "grade": "B8",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P125",
+          "P126",
+          "P127",
+          "P128",
+          "P129"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.1.2.1",
+          "B7.1.2.2"
+        ],
+        "next_topic_codes": [
+          "B8.1.2.3",
+          "B9.1.2.2"
+        ]
+      },
+      {
+        "topic_code": "B8.1.2.3",
+        "topic_name": "Demonstrate understanding and the use of the laws of indices in solving problems (including real life problems) involving powers of natural numbers",
+        "grade": "B8",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P130",
+          "P131"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.1.2.2",
+          "B7.1.2.3"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B8.1.3.1",
+        "topic_name": "Apply the understanding of operation on fractions to solve problems involving fractions of given quantities and round the results to given decimal and significant places.",
+        "grade": "B8",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 3,
+        "substrand_name": "Fractions, Decimals and Percentages",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P132",
+          "P133",
+          "P134"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.3.1"
+        ],
+        "next_topic_codes": [
+          "B9.1.3.1"
+        ]
+      },
+      {
+        "topic_code": "B8.1.4.1",
+        "topic_name": "Demonstrate an understanding of ratio, rate and proportions and use it these to solve real- world mathematical problems.",
+        "grade": "B8",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 4,
+        "substrand_name": "Number: Ratios and Proportion",
+        "indicator_count": 5,
+        "source_anchors": [
+          "P135",
+          "P136",
+          "P137",
+          "P138",
+          "P139",
+          "P140",
+          "P141"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.1.4.1"
+        ],
+        "next_topic_codes": [
+          "B9.1.4.1"
+        ]
+      },
+      {
+        "topic_code": "B8.2.1.1",
+        "topic_name": "Demonstrate the ability to draw table of values for a linear relation, graph the relation in a number plane, determine the gradient of the line and use it to write equation of a line of the form y = mx + c",
+        "grade": "B8",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 1,
+        "substrand_name": "Patterns and Relations",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P142",
+          "P143",
+          "P144",
+          "P145",
+          "P146",
+          "P147"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.2.1.1"
+        ],
+        "next_topic_codes": [
+          "B9.2.1.1"
+        ]
+      },
+      {
+        "topic_code": "B8.2.2.1",
+        "topic_name": "Solve problems involving algebraic expressions (including multiplication of binomial expressions) factorise given expressions and substitute values to evaluate algebraic expressions",
+        "grade": "B8",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 2,
+        "substrand_name": "Algebraic Expressions",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P148",
+          "P149",
+          "P150"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.2.2.1"
+        ],
+        "next_topic_codes": [
+          "B9.2.2.1"
+        ]
+      },
+      {
+        "topic_code": "B8.2.3.1",
+        "topic_name": "Demonstrate an understanding of linear inequalities of the form x + a ≥ b (where a and b are integers) by modelling problems as a linear inequalities and solving the problems concretely, pictorially, and symbolically",
+        "grade": "B8",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 3,
+        "substrand_name": "Variables and Equations",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P151",
+          "P152"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.2.3.1"
+        ],
+        "next_topic_codes": [
+          "B9.2.3.1"
+        ]
+      },
+      {
+        "topic_code": "B8.3.1.1",
+        "topic_name": "Demonstrate understanding and use of the relationship between parallel lines and alternate and corresponding angles and use the sum of angles in a triangle to deduce the angle sum in any polygon",
+        "grade": "B8",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 1,
+        "substrand_name": "Shapes and Space",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P153",
+          "P154"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.3.1.1"
+        ],
+        "next_topic_codes": [
+          "B8.3.1.2",
+          "B9.3.1.1"
+        ]
+      },
+      {
+        "topic_code": "B8.3.1.2",
+        "topic_name": "Demonstrate the ability to perform geometric constructions of the angles (75˚, 105˚, 60˚, 135˚ and 150˚), and construct triangles and find locus of points under given conditions",
+        "grade": "B8",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 1,
+        "substrand_name": "Shapes and Space",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P155",
+          "P156",
+          "P157",
+          "P158",
+          "P159",
+          "P160",
+          "P161",
+          "P162",
+          "P163",
+          "P164",
+          "P165",
+          "P166",
+          "P167",
+          "P168",
+          "P169",
+          "P170",
+          "P171"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.3.1.1",
+          "B7.3.1.2"
+        ],
+        "next_topic_codes": [
+          "B9.3.1.2"
+        ]
+      },
+      {
+        "topic_code": "B8.3.2.1",
+        "topic_name": "Apply the Pythagoras theorem, the primary trigonometric ratios and the formulas for determining the area of a circle to solve real problems.",
+        "grade": "B8",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 2,
+        "substrand_name": "Measurement",
+        "indicator_count": 5,
+        "source_anchors": [
+          "P172",
+          "P173",
+          "P174",
+          "P175",
+          "P176",
+          "P177",
+          "P178"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.3.2.1"
+        ],
+        "next_topic_codes": [
+          "B8.3.2.2",
+          "B9.3.2.1"
+        ]
+      },
+      {
+        "topic_code": "B8.3.2.2",
+        "topic_name": "Demonstrate understanding of addition and subtraction of vectors and their applications in solving basic problems",
+        "grade": "B8",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 2,
+        "substrand_name": "Measurement",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P179",
+          "P180"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.3.2.1",
+          "B7.3.2.2"
+        ],
+        "next_topic_codes": [
+          "B9.3.2.2"
+        ]
+      },
+      {
+        "topic_code": "B8.3.3.1",
+        "topic_name": "Perform a single transformation (i.e. rotation) on a 2D shape using graph paper (including technology) and describe the properties of the image under the transformation (i.e. congruence)",
+        "grade": "B8",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 3,
+        "substrand_name": "Position and Transformation",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P181",
+          "P182"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.3.3.1"
+        ],
+        "next_topic_codes": [
+          "B9.3.3.1"
+        ]
+      },
+      {
+        "topic_code": "B8.4.1.1",
+        "topic_name": "Select, justify, and use appropriate methods to collect data (quantitative and qualitative), use the data (grouped/ungrouped) to construct and interpret frequency tables, bar charts, pie charts, and pictograms to solve and/or pose problems",
+        "grade": "B8",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 1,
+        "substrand_name": "Data",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P183",
+          "P184",
+          "P185",
+          "P186",
+          "P187"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.4.1.1"
+        ],
+        "next_topic_codes": [
+          "B8.4.1.2",
+          "B9.4.1.1"
+        ]
+      },
+      {
+        "topic_code": "B8.4.1.2",
+        "topic_name": "Demonstrate an understanding of measures of central tendency (mean, median, mode) and range for grouped data and explain when it’s most appropriate to use the mean, median, or mode",
+        "grade": "B8",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 1,
+        "substrand_name": "Data",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P188",
+          "P189",
+          "P190"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.4.1.1",
+          "B7.4.1.2"
+        ],
+        "next_topic_codes": [
+          "B9.4.1.2"
+        ]
+      },
+      {
+        "topic_code": "B8.4.2.1",
+        "topic_name": "Identify the sample space for a probability experiment involving two independent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+        "grade": "B8",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 2,
+        "substrand_name": "Chance or Probability",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P191",
+          "P192",
+          "P193"
+        ],
+        "prerequisite_topic_codes": [
+          "B7.4.2.1"
+        ],
+        "next_topic_codes": [
+          "B9.4.2.1"
+        ]
+      },
+      {
+        "topic_code": "B9.1.1.1",
+        "topic_name": "Apply the understanding of place value in solving real life problems involving integers of any size, rounding this to given decimal places and significant figures",
+        "grade": "B9",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 1,
+        "substrand_name": "Number and Numeration Systems",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P195"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.1.1.1"
+        ],
+        "next_topic_codes": [
+          "B9.1.1.2"
+        ]
+      },
+      {
+        "topic_code": "B9.1.1.2",
+        "topic_name": "Demonstrate an understanding of the relationship between members of the rational number system and solve real life problems involving union and intersection of three sets",
+        "grade": "B9",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 1,
+        "substrand_name": "Number and Numeration Systems",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P196",
+          "P197"
+        ],
+        "prerequisite_topic_codes": [
+          "B9.1.1.1",
+          "B8.1.1.2"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.1.2.1",
+        "topic_name": "Apply mental mathematics and properties to determine answers for addition and subtraction of basic facts",
+        "grade": "B9",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P198"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.1.2.1"
+        ],
+        "next_topic_codes": [
+          "B9.1.2.2"
+        ]
+      },
+      {
+        "topic_code": "B9.1.2.2",
+        "topic_name": "Apply the understanding of addition, subtraction, multiplication and division of decimal numbers to solve problems, and round answers to given decimal places and significant figures",
+        "grade": "B9",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P199"
+        ],
+        "prerequisite_topic_codes": [
+          "B9.1.2.1",
+          "B8.1.2.2"
+        ],
+        "next_topic_codes": [
+          "B9.1.2.4"
+        ]
+      },
+      {
+        "topic_code": "B9.1.2.4",
+        "topic_name": "Demonstrate understanding of surds as real numbers, the process of adding and subtracting of surds as well as determining (using a calculator) the approximate square root of a number that is not a perfect square",
+        "grade": "B9",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 2,
+        "substrand_name": "Number Operations",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P200",
+          "P201"
+        ],
+        "prerequisite_topic_codes": [
+          "B9.1.2.2"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.1.3.1",
+        "topic_name": "Apply the understanding of operations on fractions to solve problems involving fractions of given quantities and round the results to given decimal and significant places",
+        "grade": "B9",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 3,
+        "substrand_name": "Fractions, Decimals and Percentages",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P202",
+          "P203",
+          "P204"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.1.3.1"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.1.4.1",
+        "topic_name": "Apply the understanding of ratio, rate and proportions to solve problems that involve rates, ratios, and proportional reasoning and use it to solve real- world mathematical problems",
+        "grade": "B9",
+        "strand_code": 1,
+        "strand_name": "Number",
+        "substrand_code": 4,
+        "substrand_name": "Number: Ratios and Proportion",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P205",
+          "P206",
+          "P207",
+          "P208"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.1.4.1"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.2.1.1",
+        "topic_name": "Demonstrate the ability to construct tables of values for pairs of linear relations, graph the relations in a number plane and determine the intersection of the lines to solve simultaneous linear equations",
+        "grade": "B9",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 1,
+        "substrand_name": "Patterns and Relations",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P210",
+          "P211",
+          "P212"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.2.1.1"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.2.2.1",
+        "topic_name": "Demonstrate an understanding of (i) change of subject (ii) substituting values to evaluate expressions, and (iii) factorize expressions that have simple binomial as a factor",
+        "grade": "B9",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 2,
+        "substrand_name": "Algebraic Expressions",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P213",
+          "P214",
+          "P215",
+          "P216",
+          "P217",
+          "P218",
+          "P219"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.2.2.1"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.2.3.1",
+        "topic_name": "Demonstrate understanding of single variable linear inequalities with rational coefficients including: • solving inequalities • verifying • comparing • graphing ii.",
+        "grade": "B9",
+        "strand_code": 2,
+        "strand_name": "Algebra",
+        "substrand_code": 3,
+        "substrand_name": "Variables and Equations",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P220",
+          "P221",
+          "P222",
+          "P223",
+          "P224",
+          "P225"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.2.3.1"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.3.1.1",
+        "topic_name": "Apply the properties of angles at a point, angles on a straight line, vertically opposite angles, corresponding, angles to solve problems",
+        "grade": "B9",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 1,
+        "substrand_name": "Shapes and Space",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P226",
+          "P227",
+          "P228"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.3.1.1"
+        ],
+        "next_topic_codes": [
+          "B9.3.1.2"
+        ]
+      },
+      {
+        "topic_code": "B9.3.1.2",
+        "topic_name": "Construct inscribed and circumscribed triangles and parallelograms with given dimensions",
+        "grade": "B9",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 1,
+        "substrand_name": "Shapes and Space",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P229",
+          "P230",
+          "P231",
+          "P232",
+          "P233",
+          "P234"
+        ],
+        "prerequisite_topic_codes": [
+          "B9.3.1.1",
+          "B8.3.1.2"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.3.2.1",
+        "topic_name": "Derive the formulas for determining the surface area of prisms (i.e.",
+        "grade": "B9",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 2,
+        "substrand_name": "Measurement",
+        "indicator_count": 4,
+        "source_anchors": [
+          "P235",
+          "P236",
+          "P237"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.3.2.1"
+        ],
+        "next_topic_codes": [
+          "B9.3.2.2"
+        ]
+      },
+      {
+        "topic_code": "B9.3.2.2",
+        "topic_name": "Solve problems involving bearings and addition/subtraction of vectors",
+        "grade": "B9",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 2,
+        "substrand_name": "Measurement",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P238"
+        ],
+        "prerequisite_topic_codes": [
+          "B9.3.2.1",
+          "B8.3.2.2"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.3.3.1",
+        "topic_name": "Demonstrate understanding of how to perform an enlargement on a geometrical shape given a scale factor and describe the properties of the image under the transformation (i.e.",
+        "grade": "B9",
+        "strand_code": 3,
+        "strand_name": "Geometry and Measurement",
+        "substrand_code": 3,
+        "substrand_name": "Position and Transformation",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P239",
+          "P240"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.3.3.1"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.4.1.1",
+        "topic_name": "Select, justify, and use appropriate methods of collecting data (grouped/ungrouped), use the data to construct and interpret frequency tables and histogram and use it to determine the mode and to solve and/or pose problems",
+        "grade": "B9",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 1,
+        "substrand_name": "Data",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P241",
+          "P242",
+          "P243",
+          "P244"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.4.1.1"
+        ],
+        "next_topic_codes": [
+          "B9.4.1.2"
+        ]
+      },
+      {
+        "topic_code": "B9.4.1.2",
+        "topic_name": "Select, justify, and use appropriate methods of collecting data (quantitative and qualitative), organise and analyse the data (grouped/ungrouped) to interpret the results using the descriptive statistics (measures of central tendency and range)",
+        "grade": "B9",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 1,
+        "substrand_name": "Data",
+        "indicator_count": 3,
+        "source_anchors": [
+          "P245",
+          "P246",
+          "P247",
+          "P248"
+        ],
+        "prerequisite_topic_codes": [
+          "B9.4.1.1",
+          "B8.4.1.2"
+        ],
+        "next_topic_codes": []
+      },
+      {
+        "topic_code": "B9.4.2.1",
+        "topic_name": "Identify the sample space for a probability experiment involving two dependent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+        "grade": "B9",
+        "strand_code": 4,
+        "strand_name": "Handling Data",
+        "substrand_code": 2,
+        "substrand_name": "Chance or Probability",
+        "indicator_count": 2,
+        "source_anchors": [
+          "P249"
+        ],
+        "prerequisite_topic_codes": [
+          "B8.4.2.1"
+        ],
+        "next_topic_codes": []
+      }
+    ],
+    "topic_dependency_edges": [
+      {
+        "type": "next",
+        "from": "B7.1.1.1",
+        "to": "B7.1.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.1.1",
+        "to": "B8.1.1.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.1.1",
+        "to": "B7.1.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.1.2",
+        "to": "B8.1.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.2.1",
+        "to": "B7.1.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.2.1",
+        "to": "B8.1.2.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.2.1",
+        "to": "B7.1.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.2.2",
+        "to": "B7.1.2.3"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.2.2",
+        "to": "B8.1.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.2.2",
+        "to": "B7.1.2.3"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.2.3",
+        "to": "B8.1.2.3"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.3.1",
+        "to": "B7.1.3.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.3.1",
+        "to": "B8.1.3.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.3.1",
+        "to": "B7.1.3.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.3.2",
+        "to": "B7.1.3.3"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.3.2",
+        "to": "B7.1.3.3"
+      },
+      {
+        "type": "next",
+        "from": "B7.1.4.1",
+        "to": "B8.1.4.1"
+      },
+      {
+        "type": "next",
+        "from": "B7.2.1.1",
+        "to": "B8.2.1.1"
+      },
+      {
+        "type": "next",
+        "from": "B7.2.2.1",
+        "to": "B8.2.2.1"
+      },
+      {
+        "type": "next",
+        "from": "B7.2.3.1",
+        "to": "B8.2.3.1"
+      },
+      {
+        "type": "next",
+        "from": "B7.3.1.1",
+        "to": "B7.3.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.3.1.1",
+        "to": "B8.3.1.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.3.1.1",
+        "to": "B7.3.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.3.1.2",
+        "to": "B8.3.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.3.2.1",
+        "to": "B7.3.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.3.2.1",
+        "to": "B8.3.2.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.3.2.1",
+        "to": "B7.3.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.3.2.2",
+        "to": "B7.3.2.3"
+      },
+      {
+        "type": "next",
+        "from": "B7.3.2.2",
+        "to": "B8.3.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.3.2.2",
+        "to": "B7.3.2.3"
+      },
+      {
+        "type": "next",
+        "from": "B7.3.3.1",
+        "to": "B8.3.3.1"
+      },
+      {
+        "type": "next",
+        "from": "B7.4.1.1",
+        "to": "B7.4.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.4.1.1",
+        "to": "B8.4.1.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.4.1.1",
+        "to": "B7.4.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.4.1.2",
+        "to": "B8.4.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B7.4.2.1",
+        "to": "B8.4.2.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.1.1",
+        "to": "B8.1.1.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.1.1",
+        "to": "B8.1.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.1.1",
+        "to": "B9.1.1.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.1.1",
+        "to": "B8.1.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.1.2",
+        "to": "B8.1.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.1.2",
+        "to": "B9.1.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.2.1",
+        "to": "B8.1.2.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.2.1",
+        "to": "B8.1.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.2.1",
+        "to": "B9.1.2.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.2.1",
+        "to": "B8.1.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.2.2",
+        "to": "B8.1.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.2.2",
+        "to": "B8.1.2.3"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.2.2",
+        "to": "B9.1.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.2.2",
+        "to": "B8.1.2.3"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.2.3",
+        "to": "B8.1.2.3"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.3.1",
+        "to": "B8.1.3.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.3.1",
+        "to": "B9.1.3.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.1.4.1",
+        "to": "B8.1.4.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.1.4.1",
+        "to": "B9.1.4.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.2.1.1",
+        "to": "B8.2.1.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.2.1.1",
+        "to": "B9.2.1.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.2.2.1",
+        "to": "B8.2.2.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.2.2.1",
+        "to": "B9.2.2.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.2.3.1",
+        "to": "B8.2.3.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.2.3.1",
+        "to": "B9.2.3.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.3.1.1",
+        "to": "B8.3.1.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.3.1.1",
+        "to": "B8.3.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.3.1.1",
+        "to": "B9.3.1.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.3.1.1",
+        "to": "B8.3.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.3.1.2",
+        "to": "B8.3.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.3.1.2",
+        "to": "B9.3.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.3.2.1",
+        "to": "B8.3.2.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.3.2.1",
+        "to": "B8.3.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.3.2.1",
+        "to": "B9.3.2.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.3.2.1",
+        "to": "B8.3.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.3.2.2",
+        "to": "B8.3.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.3.2.2",
+        "to": "B9.3.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.3.3.1",
+        "to": "B8.3.3.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.3.3.1",
+        "to": "B9.3.3.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.4.1.1",
+        "to": "B8.4.1.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.4.1.1",
+        "to": "B8.4.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.4.1.1",
+        "to": "B9.4.1.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.4.1.1",
+        "to": "B8.4.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.4.1.2",
+        "to": "B8.4.1.2"
+      },
+      {
+        "type": "next",
+        "from": "B8.4.1.2",
+        "to": "B9.4.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B7.4.2.1",
+        "to": "B8.4.2.1"
+      },
+      {
+        "type": "next",
+        "from": "B8.4.2.1",
+        "to": "B9.4.2.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.1.1",
+        "to": "B9.1.1.1"
+      },
+      {
+        "type": "next",
+        "from": "B9.1.1.1",
+        "to": "B9.1.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B9.1.1.1",
+        "to": "B9.1.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.1.2",
+        "to": "B9.1.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.2.1",
+        "to": "B9.1.2.1"
+      },
+      {
+        "type": "next",
+        "from": "B9.1.2.1",
+        "to": "B9.1.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B9.1.2.1",
+        "to": "B9.1.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.2.2",
+        "to": "B9.1.2.2"
+      },
+      {
+        "type": "next",
+        "from": "B9.1.2.2",
+        "to": "B9.1.2.4"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B9.1.2.2",
+        "to": "B9.1.2.4"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.3.1",
+        "to": "B9.1.3.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.1.4.1",
+        "to": "B9.1.4.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.2.1.1",
+        "to": "B9.2.1.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.2.2.1",
+        "to": "B9.2.2.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.2.3.1",
+        "to": "B9.2.3.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.3.1.1",
+        "to": "B9.3.1.1"
+      },
+      {
+        "type": "next",
+        "from": "B9.3.1.1",
+        "to": "B9.3.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B9.3.1.1",
+        "to": "B9.3.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.3.1.2",
+        "to": "B9.3.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.3.2.1",
+        "to": "B9.3.2.1"
+      },
+      {
+        "type": "next",
+        "from": "B9.3.2.1",
+        "to": "B9.3.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B9.3.2.1",
+        "to": "B9.3.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.3.2.2",
+        "to": "B9.3.2.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.3.3.1",
+        "to": "B9.3.3.1"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.4.1.1",
+        "to": "B9.4.1.1"
+      },
+      {
+        "type": "next",
+        "from": "B9.4.1.1",
+        "to": "B9.4.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B9.4.1.1",
+        "to": "B9.4.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.4.1.2",
+        "to": "B9.4.1.2"
+      },
+      {
+        "type": "prerequisite",
+        "from": "B8.4.2.1",
+        "to": "B9.4.2.1"
+      }
+    ],
+    "progression_chains": [
+      {
+        "root_topic_code": "B7.1.1.1",
+        "chain_code_sequence": [
+          "B7.1.1.1",
+          "B8.1.1.1",
+          "B9.1.1.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.1.1.2",
+        "chain_code_sequence": [
+          "B7.1.1.2",
+          "B8.1.1.2",
+          "B9.1.1.2"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.1.2.1",
+        "chain_code_sequence": [
+          "B7.1.2.1",
+          "B8.1.2.1",
+          "B9.1.2.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.1.2.2",
+        "chain_code_sequence": [
+          "B7.1.2.2",
+          "B8.1.2.2",
+          "B9.1.2.2"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.1.2.3",
+        "chain_code_sequence": [
+          "B7.1.2.3",
+          "B8.1.2.3"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8"
+        ]
+      },
+      {
+        "root_topic_code": "B7.1.3.1",
+        "chain_code_sequence": [
+          "B7.1.3.1",
+          "B8.1.3.1",
+          "B9.1.3.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.1.4.1",
+        "chain_code_sequence": [
+          "B7.1.4.1",
+          "B8.1.4.1",
+          "B9.1.4.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.2.1.1",
+        "chain_code_sequence": [
+          "B7.2.1.1",
+          "B8.2.1.1",
+          "B9.2.1.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.2.2.1",
+        "chain_code_sequence": [
+          "B7.2.2.1",
+          "B8.2.2.1",
+          "B9.2.2.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.2.3.1",
+        "chain_code_sequence": [
+          "B7.2.3.1",
+          "B8.2.3.1",
+          "B9.2.3.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.3.1.1",
+        "chain_code_sequence": [
+          "B7.3.1.1",
+          "B8.3.1.1",
+          "B9.3.1.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.3.1.2",
+        "chain_code_sequence": [
+          "B7.3.1.2",
+          "B8.3.1.2",
+          "B9.3.1.2"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.3.2.1",
+        "chain_code_sequence": [
+          "B7.3.2.1",
+          "B8.3.2.1",
+          "B9.3.2.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.3.2.2",
+        "chain_code_sequence": [
+          "B7.3.2.2",
+          "B8.3.2.2",
+          "B9.3.2.2"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.3.3.1",
+        "chain_code_sequence": [
+          "B7.3.3.1",
+          "B8.3.3.1",
+          "B9.3.3.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.4.1.1",
+        "chain_code_sequence": [
+          "B7.4.1.1",
+          "B8.4.1.1",
+          "B9.4.1.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.4.1.2",
+        "chain_code_sequence": [
+          "B7.4.1.2",
+          "B8.4.1.2",
+          "B9.4.1.2"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      },
+      {
+        "root_topic_code": "B7.4.2.1",
+        "chain_code_sequence": [
+          "B7.4.2.1",
+          "B8.4.2.1",
+          "B9.4.2.1"
+        ],
+        "chain_grades": [
+          "B7",
+          "B8",
+          "B9"
+        ]
+      }
+    ]
+  },
+  "qa_anomalies": [
+    {
+      "id": "count-mismatch-b7",
+      "type": "count_mismatch",
+      "severity": "high",
+      "message": "B7 official total 19 vs extracted 21",
+      "anchors": [
+        "P030"
+      ]
+    },
+    {
+      "id": "count-mismatch-b9",
+      "type": "count_mismatch",
+      "severity": "high",
+      "message": "B9 official total 17 vs extracted 18",
+      "anchors": [
+        "P030"
+      ]
+    },
+    {
+      "id": "orphan-indicators",
+      "type": "referential_integrity",
+      "severity": "critical",
+      "message": "1 indicator(s) reference missing parent topic codes",
+      "example_codes": [
+        "B9.1.2.3.4"
+      ],
+      "anchors": [
+        "P201"
+      ]
+    },
+    {
+      "id": "truncated-topic-names",
+      "type": "text_quality",
+      "severity": "medium",
+      "message": "5 topic statements appear truncated/noisy",
+      "example_topic_codes": [
+        "B7.1.1.2",
+        "B7.1.3.1",
+        "B9.3.1.1",
+        "B9.3.2.1",
+        "B9.3.3.1"
+      ]
+    },
+    {
+      "id": "encoding-issues",
+      "type": "encoding",
+      "severity": "medium",
+      "message": "2 records contain replacement characters",
+      "example_codes": [
+        "B7.3.2.3.4",
+        "B7.3.2.3.5"
+      ]
+    }
+  ],
+  "implementation_hooks": {
+    "route_candidates": [
+      "/parent/curriculum",
+      "/student/curriculum"
+    ],
+    "reuse_components": [
+      "frontend/src/components/viz/KnowledgeMap.vue",
+      "frontend/src/components/viz/CurriculumTerrain.vue",
+      "frontend/src/components/viz/TopicStatusCard.vue",
+      "frontend/src/composables/useAnimation.ts"
+    ],
+    "store_inputs": [
+      "frontend/src/stores/curriculum.ts",
+      "frontend/src/composables/useCurriculum.ts"
+    ]
+  }
+}

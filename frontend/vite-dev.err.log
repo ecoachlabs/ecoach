@@ -1,7 +1,104 @@
 [33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
-2582 |    }
-2583 |  }
-2584 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
      |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2585 |  :root {
-2586 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2474 |    }
+2475 |  }
+2476 |  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800...
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2477 |  :root {
+2478 |    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;[39m
+[2m3:02:05 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@/views/student/curriculum/CurriculumHome.vue" from "src/router/index.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/victo/OneDrive/ecoach/frontend/src/router/index.ts[39m:140:80
+[33m  275 |  				path: "curriculum",
+  276 |  				name: "student-curriculum",
+  277 |  				component: () => import("@/views/student/curriculum/CurriculumHome.vue")
+      |                              ^
+  278 |  			}),
+  279 |  			{[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/victo/OneDrive/ecoach/frontend/node_modules/.pnpm/vite@8.0.3_@emnapi+core@1.9_578a11ce420f654602f718a3807161b4/node_modules/vite/dist/node/chunks/node.js:30259:39)
+      at TransformPluginContext.error (file:///C:/Users/victo/OneDrive/ecoach/frontend/node_modules/.pnpm/vite@8.0.3_@emnapi+core@1.9_578a11ce420f654602f718a3807161b4/node_modules/vite/dist/node/chunks/node.js:30256:14)
+      at normalizeUrl (file:///C:/Users/victo/OneDrive/ecoach/frontend/node_modules/.pnpm/vite@8.0.3_@emnapi+core@1.9_578a11ce420f654602f718a3807161b4/node_modules/vite/dist/node/chunks/node.js:27544:18)
+      at async file:///C:/Users/victo/OneDrive/ecoach/frontend/node_modules/.pnpm/vite@8.0.3_@emnapi+core@1.9_578a11ce420f654602f718a3807161b4/node_modules/vite/dist/node/chunks/node.js:27607:30
+      at async Promise.all (index 42)
+      at async TransformPluginContext.transform (file:///C:/Users/victo/OneDrive/ecoach/frontend/node_modules/.pnpm/vite@8.0.3_@emnapi+core@1.9_578a11ce420f654602f718a3807161b4/node_modules/vite/dist/node/chunks/node.js:27575:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/victo/OneDrive/ecoach/frontend/node_modules/.pnpm/vite@8.0.3_@emnapi+core@1.9_578a11ce420f654602f718a3807161b4/node_modules/vite/dist/node/chunks/node.js:30048:14)
+      at async loadAndTransform (file:///C:/Users/victo/OneDrive/ecoach/frontend/node_modules/.pnpm/vite@8.0.3_@emnapi+core@1.9_578a11ce420f654602f718a3807161b4/node_modules/vite/dist/node/chunks/node.js:24177:26)
+[2m3:02:05 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "@/views/student/curriculum/CurriculumHome.vue" from "src/router/index.ts". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/victo/OneDrive/ecoach/frontend/src/router/index.ts[39m:140:80
+[33m  275 |  				path: "curriculum",
+  276 |  				name: "student-curriculum",
+  277 |  				component: () => import("@/views/student/curriculum/CurriculumHome.vue")
+      |                              ^
+  278 |  			}),
+  279 |  			{[39m
+[2m3:16:19 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] get_student_curriculum_home failed: {"code":"not_found","message":"no published curriculum version is available"}

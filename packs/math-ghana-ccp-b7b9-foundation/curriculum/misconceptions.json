@@ -1,0 +1,875 @@
+[
+  {
+    "topic_code": "B7.1.1.1",
+    "title": "Place Value And Precision Confusion (B7.1.1.1-1)",
+    "misconception_statement": "Learner may demonstrate place value and precision confusion while working on B7.1.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.2.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.1.2.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.1.2.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.2.2",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.1.2.2-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.1.2.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.2.3",
+    "title": "Indices And Exponent Rules Overgeneralisation (B7.1.2.3-1)",
+    "misconception_statement": "Learner may demonstrate indices and exponent rules overgeneralisation while working on B7.1.2.3 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.3.1",
+    "title": "Fraction Equivalence And Operation Confusion (B7.1.3.1-1)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B7.1.3.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.3.2",
+    "title": "Fraction Equivalence And Operation Confusion (B7.1.3.2-1)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B7.1.3.2 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.3.3",
+    "title": "Fraction Equivalence And Operation Confusion (B7.1.3.3-1)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B7.1.3.3 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.4.1",
+    "title": "Fraction Equivalence And Operation Confusion (B7.1.4.1-1)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B7.1.4.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.4.1",
+    "title": "Ratio Rate Proportion Confusion (B7.1.4.1-2)",
+    "misconception_statement": "Learner may demonstrate ratio rate proportion confusion while working on B7.1.4.1 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.4.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.1.4.1-3)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.1.4.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.2.1.1",
+    "title": "Graph Gradient Intersection Confusion (B7.2.1.1-1)",
+    "misconception_statement": "Learner may demonstrate graph gradient intersection confusion while working on B7.2.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.2.2.1",
+    "title": "Algebra Structure Confusion (B7.2.2.1-1)",
+    "misconception_statement": "Learner may demonstrate algebra structure confusion while working on B7.2.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.2.3.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.2.3.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.2.3.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.1.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.3.1.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.3.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.1.1",
+    "title": "Angle Relationship Confusion (B7.3.1.1-2)",
+    "misconception_statement": "Learner may demonstrate angle relationship confusion while working on B7.3.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.1.2",
+    "title": "Angle Relationship Confusion (B7.3.1.2-1)",
+    "misconception_statement": "Learner may demonstrate angle relationship confusion while working on B7.3.1.2 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.1.2",
+    "title": "Construction Constraint Confusion (B7.3.1.2-2)",
+    "misconception_statement": "Learner may demonstrate construction constraint confusion while working on B7.3.1.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.2.1",
+    "title": "Measurement Attribute Confusion (B7.3.2.1-1)",
+    "misconception_statement": "Learner may demonstrate measurement attribute confusion while working on B7.3.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.2.2",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.3.2.2-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.3.2.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.2.2",
+    "title": "Measurement Attribute Confusion (B7.3.2.2-2)",
+    "misconception_statement": "Learner may demonstrate measurement attribute confusion while working on B7.3.2.2 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.2.3",
+    "title": "Vector And Bearing Convention Confusion (B7.3.2.3-1)",
+    "misconception_statement": "Learner may demonstrate vector and bearing convention confusion while working on B7.3.2.3 tasks.",
+    "cause_type": "language_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.3.1",
+    "title": "Graph Gradient Intersection Confusion (B7.3.3.1-1)",
+    "misconception_statement": "Learner may demonstrate graph gradient intersection confusion while working on B7.3.3.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.3.1",
+    "title": "Transformation Invariance Confusion (B7.3.3.1-2)",
+    "misconception_statement": "Learner may demonstrate transformation invariance confusion while working on B7.3.3.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.3.3.1",
+    "title": "Similarity And Congruence Confusion (B7.3.3.1-3)",
+    "misconception_statement": "Learner may demonstrate similarity and congruence confusion while working on B7.3.3.1 tasks.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.4.1.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.4.1.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.4.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.4.1.1",
+    "title": "Graph Gradient Intersection Confusion (B7.4.1.1-2)",
+    "misconception_statement": "Learner may demonstrate graph gradient intersection confusion while working on B7.4.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.4.1.1",
+    "title": "Data Representation Interpretation Confusion (B7.4.1.1-3)",
+    "misconception_statement": "Learner may demonstrate data representation interpretation confusion while working on B7.4.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.4.1.2",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.4.1.2-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.4.1.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.4.1.2",
+    "title": "Central Tendency And Outlier Confusion (B7.4.1.2-2)",
+    "misconception_statement": "Learner may demonstrate central tendency and outlier confusion while working on B7.4.1.2 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.4.2.1",
+    "title": "Fraction Equivalence And Operation Confusion (B7.4.2.1-1)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B7.4.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.4.2.1",
+    "title": "Ratio Rate Proportion Confusion (B7.4.2.1-2)",
+    "misconception_statement": "Learner may demonstrate ratio rate proportion confusion while working on B7.4.2.1 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B7.4.2.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B7.4.2.1-3)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B7.4.2.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "title": "Place Value And Precision Confusion (B8.1.1.1-1)",
+    "misconception_statement": "Learner may demonstrate place value and precision confusion while working on B8.1.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.1.2",
+    "title": "Surd And Root Interpretation Confusion (B8.1.1.2-1)",
+    "misconception_statement": "Learner may demonstrate surd and root interpretation confusion while working on B8.1.1.2 tasks.",
+    "cause_type": "language_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.1.2",
+    "title": "Algebra Structure Confusion (B8.1.1.2-2)",
+    "misconception_statement": "Learner may demonstrate algebra structure confusion while working on B8.1.1.2 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.1.2",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.1.1.2-3)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.1.1.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.2.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.1.2.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.1.2.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.2.2",
+    "title": "Place Value And Precision Confusion (B8.1.2.2-1)",
+    "misconception_statement": "Learner may demonstrate place value and precision confusion while working on B8.1.2.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.2.2",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.1.2.2-2)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.1.2.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.2.3",
+    "title": "Indices And Exponent Rules Overgeneralisation (B8.1.2.3-1)",
+    "misconception_statement": "Learner may demonstrate indices and exponent rules overgeneralisation while working on B8.1.2.3 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.3.1",
+    "title": "Place Value And Precision Confusion (B8.1.3.1-1)",
+    "misconception_statement": "Learner may demonstrate place value and precision confusion while working on B8.1.3.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.3.1",
+    "title": "Fraction Equivalence And Operation Confusion (B8.1.3.1-2)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B8.1.3.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.3.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.1.3.1-3)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.1.3.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.4.1",
+    "title": "Ratio Rate Proportion Confusion (B8.1.4.1-1)",
+    "misconception_statement": "Learner may demonstrate ratio rate proportion confusion while working on B8.1.4.1 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.1.4.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.1.4.1-2)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.1.4.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.2.1.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.2.1.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.2.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.2.1.1",
+    "title": "Graph Gradient Intersection Confusion (B8.2.1.1-2)",
+    "misconception_statement": "Learner may demonstrate graph gradient intersection confusion while working on B8.2.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.2.2.1",
+    "title": "Algebra Structure Confusion (B8.2.2.1-1)",
+    "misconception_statement": "Learner may demonstrate algebra structure confusion while working on B8.2.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.2.2.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.2.2.1-2)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.2.2.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.2.3.1",
+    "title": "Inequality Direction Confusion (B8.2.3.1-1)",
+    "misconception_statement": "Learner may demonstrate inequality direction confusion while working on B8.2.3.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.1.1",
+    "title": "Angle Relationship Confusion (B8.3.1.1-1)",
+    "misconception_statement": "Learner may demonstrate angle relationship confusion while working on B8.3.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.1.1",
+    "title": "Construction Constraint Confusion (B8.3.1.1-2)",
+    "misconception_statement": "Learner may demonstrate construction constraint confusion while working on B8.3.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.1.2",
+    "title": "Angle Relationship Confusion (B8.3.1.2-1)",
+    "misconception_statement": "Learner may demonstrate angle relationship confusion while working on B8.3.1.2 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.1.2",
+    "title": "Construction Constraint Confusion (B8.3.1.2-2)",
+    "misconception_statement": "Learner may demonstrate construction constraint confusion while working on B8.3.1.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.2.1",
+    "title": "Ratio Rate Proportion Confusion (B8.3.2.1-1)",
+    "misconception_statement": "Learner may demonstrate ratio rate proportion confusion while working on B8.3.2.1 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.2.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.3.2.1-2)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.3.2.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.2.1",
+    "title": "Measurement Attribute Confusion (B8.3.2.1-3)",
+    "misconception_statement": "Learner may demonstrate measurement attribute confusion while working on B8.3.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.2.2",
+    "title": "Vector And Bearing Convention Confusion (B8.3.2.2-1)",
+    "misconception_statement": "Learner may demonstrate vector and bearing convention confusion while working on B8.3.2.2 tasks.",
+    "cause_type": "language_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.3.1",
+    "title": "Graph Gradient Intersection Confusion (B8.3.3.1-1)",
+    "misconception_statement": "Learner may demonstrate graph gradient intersection confusion while working on B8.3.3.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.3.1",
+    "title": "Transformation Invariance Confusion (B8.3.3.1-2)",
+    "misconception_statement": "Learner may demonstrate transformation invariance confusion while working on B8.3.3.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.3.3.1",
+    "title": "Similarity And Congruence Confusion (B8.3.3.1-3)",
+    "misconception_statement": "Learner may demonstrate similarity and congruence confusion while working on B8.3.3.1 tasks.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.4.1.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.4.1.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.4.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.4.1.1",
+    "title": "Construction Constraint Confusion (B8.4.1.1-2)",
+    "misconception_statement": "Learner may demonstrate construction constraint confusion while working on B8.4.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.4.1.1",
+    "title": "Data Representation Interpretation Confusion (B8.4.1.1-3)",
+    "misconception_statement": "Learner may demonstrate data representation interpretation confusion while working on B8.4.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.4.1.2",
+    "title": "Central Tendency And Outlier Confusion (B8.4.1.2-1)",
+    "misconception_statement": "Learner may demonstrate central tendency and outlier confusion while working on B8.4.1.2 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.4.2.1",
+    "title": "Fraction Equivalence And Operation Confusion (B8.4.2.1-1)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B8.4.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.4.2.1",
+    "title": "Ratio Rate Proportion Confusion (B8.4.2.1-2)",
+    "misconception_statement": "Learner may demonstrate ratio rate proportion confusion while working on B8.4.2.1 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B8.4.2.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B8.4.2.1-3)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B8.4.2.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.1.1",
+    "title": "Place Value And Precision Confusion (B9.1.1.1-1)",
+    "misconception_statement": "Learner may demonstrate place value and precision confusion while working on B9.1.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.1.2",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.1.1.2-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.1.1.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.2.2",
+    "title": "Place Value And Precision Confusion (B9.1.2.2-1)",
+    "misconception_statement": "Learner may demonstrate place value and precision confusion while working on B9.1.2.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.2.2",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.1.2.2-2)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.1.2.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.2.4",
+    "title": "Surd And Root Interpretation Confusion (B9.1.2.4-1)",
+    "misconception_statement": "Learner may demonstrate surd and root interpretation confusion while working on B9.1.2.4 tasks.",
+    "cause_type": "language_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.3.1",
+    "title": "Place Value And Precision Confusion (B9.1.3.1-1)",
+    "misconception_statement": "Learner may demonstrate place value and precision confusion while working on B9.1.3.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.3.1",
+    "title": "Fraction Equivalence And Operation Confusion (B9.1.3.1-2)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B9.1.3.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.3.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.1.3.1-3)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.1.3.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.4.1",
+    "title": "Ratio Rate Proportion Confusion (B9.1.4.1-1)",
+    "misconception_statement": "Learner may demonstrate ratio rate proportion confusion while working on B9.1.4.1 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.1.4.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.1.4.1-2)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.1.4.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.2.1.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.2.1.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.2.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.2.1.1",
+    "title": "Graph Gradient Intersection Confusion (B9.2.1.1-2)",
+    "misconception_statement": "Learner may demonstrate graph gradient intersection confusion while working on B9.2.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.2.1.1",
+    "title": "Construction Constraint Confusion (B9.2.1.1-3)",
+    "misconception_statement": "Learner may demonstrate construction constraint confusion while working on B9.2.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.2.2.1",
+    "title": "Algebra Structure Confusion (B9.2.2.1-1)",
+    "misconception_statement": "Learner may demonstrate algebra structure confusion while working on B9.2.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.2.3.1",
+    "title": "Inequality Direction Confusion (B9.2.3.1-1)",
+    "misconception_statement": "Learner may demonstrate inequality direction confusion while working on B9.2.3.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.3.1.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.3.1.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.3.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.3.1.1",
+    "title": "Angle Relationship Confusion (B9.3.1.1-2)",
+    "misconception_statement": "Learner may demonstrate angle relationship confusion while working on B9.3.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.3.1.2",
+    "title": "Construction Constraint Confusion (B9.3.1.2-1)",
+    "misconception_statement": "Learner may demonstrate construction constraint confusion while working on B9.3.1.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.3.2.1",
+    "title": "Measurement Attribute Confusion (B9.3.2.1-1)",
+    "misconception_statement": "Learner may demonstrate measurement attribute confusion while working on B9.3.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.3.2.2",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.3.2.2-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.3.2.2 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.3.2.2",
+    "title": "Vector And Bearing Convention Confusion (B9.3.2.2-2)",
+    "misconception_statement": "Learner may demonstrate vector and bearing convention confusion while working on B9.3.2.2 tasks.",
+    "cause_type": "language_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.3.3.1",
+    "title": "Algebra Structure Confusion (B9.3.3.1-1)",
+    "misconception_statement": "Learner may demonstrate algebra structure confusion while working on B9.3.3.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.3.3.1",
+    "title": "Transformation Invariance Confusion (B9.3.3.1-2)",
+    "misconception_statement": "Learner may demonstrate transformation invariance confusion while working on B9.3.3.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.4.1.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.4.1.1-1)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.4.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.4.1.1",
+    "title": "Construction Constraint Confusion (B9.4.1.1-2)",
+    "misconception_statement": "Learner may demonstrate construction constraint confusion while working on B9.4.1.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.4.1.1",
+    "title": "Data Representation Interpretation Confusion (B9.4.1.1-3)",
+    "misconception_statement": "Learner may demonstrate data representation interpretation confusion while working on B9.4.1.1 tasks.",
+    "cause_type": "visual_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.4.2.1",
+    "title": "Fraction Equivalence And Operation Confusion (B9.4.2.1-1)",
+    "misconception_statement": "Learner may demonstrate fraction equivalence and operation confusion while working on B9.4.2.1 tasks.",
+    "cause_type": "incomplete_rule",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.4.2.1",
+    "title": "Ratio Rate Proportion Confusion (B9.4.2.1-2)",
+    "misconception_statement": "Learner may demonstrate ratio rate proportion confusion while working on B9.4.2.1 tasks.",
+    "cause_type": "overgeneralization",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  },
+  {
+    "topic_code": "B9.4.2.1",
+    "title": "Equation Balance Or Inverse Operation Confusion (B9.4.2.1-3)",
+    "misconception_statement": "Learner may demonstrate equation balance or inverse operation confusion while working on B9.4.2.1 tasks.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": null,
+    "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
+    "severity": 5600
+  }
+]

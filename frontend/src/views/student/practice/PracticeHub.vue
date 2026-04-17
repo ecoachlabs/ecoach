@@ -1,51 +1,117 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { listSubjects, listTopics, getPriorityTopics, type SubjectDto, type TopicCaseDto } from '@/ipc/coach'
+import { useUiStore } from '@/stores/ui'
+import { listSubjects, listTopics, type SubjectDto } from '@/ipc/coach'
+import { getReadinessReport, type SubjectReadinessDto } from '@/ipc/readiness'
 import { startPracticeSession } from '@/ipc/sessions'
-import { PhArrowRight, PhTarget, PhFlame, PhClock, PhStar } from '@phosphor-icons/vue'
 
 const auth = useAuthStore()
+const ui = useUiStore()
 const router = useRouter()
 
 const subjects = ref<SubjectDto[]>([])
-const priorityTopics = ref<TopicCaseDto[]>([])
+const readiness = ref<SubjectReadinessDto[]>([])
 const loading = ref(true)
 const starting = ref<number | null>(null)
 const error = ref('')
+const searchQuery = ref('')
+const activeLevel = ref('JHS 1')
+
+const levels = [
+  { label: 'Junior High JHS 1', key: 'JHS 1', count: 11 },
+  { label: 'Junior High JHS 2', key: 'JHS 2', count: 10 },
+  { label: 'Junior High JHS 3', key: 'JHS 3', count: 9 },
+  { label: 'Primary 1', key: 'P1', count: 8 },
+  { label: 'Primary 2', key: 'P2', count: 9 },
+  { label: 'Primary 3', key: 'P3', count: 10 },
+  { label: 'Primary 4', key: 'P4', count: 11 },
+  { label: 'Primary 5', key: 'P5', count: 11 },
+  { label: 'Primary 6', key: 'P6', count: 11 },
+  { label: 'Senior High SHS 1', key: 'SHS 1', count: 9 },
+  { label: 'Senior High SHS 2', key: 'SHS 2', count: 8 },
+  { label: 'Senior High SHS 3', key: 'SHS 3', count: 7 },
+  { label: 'BECE', key: 'BECE', count: 24 },
+  { label: 'WASSCE SHS', key: 'WASSCE', count: 30 },
+  { label: 'BECE Mocks', key: 'BECE Mocks', count: 7 },
+]
+
+const subjectConfig: Record<string, { category: string; color: string; bg: string; symbolBig: string }> = {
+  MATH: { category: 'Mathematics', color: 'var(--gold)',         bg: 'rgba(180,83,9,0.07)',    symbolBig: 'Σ'  },
+  ENG:  { category: 'English',     color: 'var(--accent)',       bg: 'rgba(13,148,136,0.07)',  symbolBig: 'Aa' },
+  SCI:  { category: 'Science',     color: '#0891b2',             bg: 'rgba(8,145,178,0.07)',   symbolBig: '⚛'  },
+  SS:   { category: 'Social Stud.', color: 'var(--warm)',        bg: 'rgba(194,65,12,0.07)',   symbolBig: '⊕'  },
+  ICT:  { category: 'ICT',         color: '#7c3aed',             bg: 'rgba(124,58,237,0.07)', symbolBig: '⌘'  },
+  FR:   { category: 'French',      color: '#be185d',             bg: 'rgba(190,24,93,0.07)',   symbolBig: 'Fr' },
+  TWI:  { category: 'General',     color: 'var(--ink-secondary)', bg: 'rgba(92,86,80,0.07)',  symbolBig: 'Tw' },
+  RME:  { category: 'General',     color: 'var(--ink-secondary)', bg: 'rgba(92,86,80,0.07)',  symbolBig: 'Re' },
+  BDT:  { category: 'General',     color: 'var(--ink-secondary)', bg: 'rgba(92,86,80,0.07)',  symbolBig: 'Bd' },
+  GA:   { category: 'General',     color: 'var(--ink-secondary)', bg: 'rgba(92,86,80,0.07)',  symbolBig: 'Ga' },
+}
+
+function subjectCfg(code: string) {
+  return subjectConfig[code] ?? {
+    category: 'General',
+    color: 'var(--ink-secondary)',
+    bg: 'rgba(92,86,80,0.07)',
+    symbolBig: code.slice(0, 2),
+  }
+}
 
 onMounted(async () => {
   if (!auth.currentAccount) return
   try {
-    const [subs, topics] = await Promise.all([
+    const [subs, rdns] = await Promise.all([
       listSubjects(1),
-      getPriorityTopics(auth.currentAccount.id, 8),
+      getReadinessReport(auth.currentAccount.id),
     ])
     subjects.value = subs
-    priorityTopics.value = topics
+    readiness.value = rdns.subjects
   } catch {
-    error.value = 'Failed to load subjects'
+    error.value = 'Failed to load courses'
   }
   loading.value = false
 })
 
-async function startSubjectPractice(subjectId: number) {
+function readinessFor(subjectId: number): SubjectReadinessDto | undefined {
+  return readiness.value.find(r => r.subject_id === subjectId)
+}
+
+function completionPct(subjectId: number): number | null {
+  const r = readinessFor(subjectId)
+  if (!r || r.total_topic_count === 0) return null
+  return Math.round((r.mastered_topic_count / r.total_topic_count) * 100)
+}
+
+function topicCount(subjectId: number): number {
+  return readinessFor(subjectId)?.total_topic_count ?? 0
+}
+
+const filtered = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return subjects.value
+  return subjects.value.filter(s =>
+    s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)
+  )
+})
+
+const levelsPanelStyle = computed(() => {
+  return {
+    background: '#1e2130',
+    borderColor: 'rgba(255,255,255,0.06)',
+    boxShadow: '0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3)',
+  }
+})
+
+async function open(subjectId: number) {
   if (!auth.currentAccount || starting.value !== null) return
   starting.value = subjectId
   error.value = ''
   try {
-    const subjectTopics = priorityTopics.value
-      .filter((t) => t.subject_code === subjects.value.find(s => s.id === subjectId)?.code)
-      .slice(0, 3)
-      .map((t) => t.topic_id)
-
-    let topicIds = subjectTopics
-    if (topicIds.length === 0) {
-      const topics = await listTopics(subjectId)
-      topicIds = topics.slice(0, 3).map((t) => t.id)
-    }
-
+    const topics = await listTopics(subjectId)
+    const topicIds = topics.slice(0, 5).map(t => t.id)
+    if (topicIds.length === 0) throw new Error('No topics available')
     const session = await startPracticeSession({
       student_id: auth.currentAccount.id,
       subject_id: subjectId,
@@ -55,22 +121,9 @@ async function startSubjectPractice(subjectId: number) {
     })
     router.push(`/student/session/${session.session_id}`)
   } catch (e: any) {
-    error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to start session'
-  } finally {
+    error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to start'
     starting.value = null
   }
-}
-
-function formatBp(bp: number) {
-  return (bp / 100).toFixed(0) + '%'
-}
-
-const subjectIndex: Record<string, { symbol: string }> = {
-  MATH: { symbol: 'Σ' },
-  ENG:  { symbol: 'Aa' },
-  SCI:  { symbol: '⚛' },
-  SS:   { symbol: '⊕' },
-  ICT:  { symbol: '⌘' },
 }
 </script>
 
@@ -79,135 +132,133 @@ const subjectIndex: Record<string, { symbol: string }> = {
 
     <!-- Header -->
     <div
-      class="flex-shrink-0 px-7 pt-6 pb-5 border-b flex items-center justify-between"
+      class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
       :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
-      <div>
-        <p class="eyebrow">Practice Hub</p>
-        <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
-          Choose your subject
-        </h1>
-        <p class="text-xs mt-1" :style="{ color: 'var(--ink-muted)' }">Select a subject to start a smart practice session</p>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <p class="eyebrow">Explore</p>
+          <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
+            Courses
+          </h1>
+          <p class="text-xs mt-0.5" :style="{ color: 'var(--ink-muted)' }">
+            {{ subjects.length }} courses in Junior High JHS 1
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <button class="nav-pill" @click="router.push('/student/practice/custom-test')">Custom Test</button>
+          <button class="nav-pill" @click="router.push('/student/progress/mastery')">Mastery Map</button>
+        </div>
       </div>
-      <div class="flex gap-2">
-        <button class="header-link" @click="router.push('/student/practice/custom-test')">Custom Test</button>
-        <button class="header-link" @click="router.push('/student/knowledge-gap')">Gap Analysis</button>
-        <button class="header-link" @click="router.push('/student/mistakes')">Mistakes</button>
+
+      <!-- Search -->
+      <div class="relative">
+        <span class="search-icon">⌕</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search courses…"
+          class="search-input w-full"
+        />
       </div>
     </div>
 
     <div v-if="error" class="px-7 py-2 text-xs flex-shrink-0"
-      style="background: rgba(194,65,12,0.08); color: var(--warm);">{{ error }}</div>
+      :style="{ background: 'rgba(194,65,12,0.08)', color: 'var(--warm)' }">{{ error }}</div>
 
     <!-- Body -->
     <div class="flex-1 overflow-hidden flex">
 
-      <!-- Subject list -->
-      <div class="flex-1 overflow-y-auto p-7">
+      <!-- Course grid -->
+      <div class="flex-1 overflow-y-auto p-6">
 
-        <!-- Loading -->
-        <div v-if="loading" class="space-y-3">
-          <div v-for="i in 4" :key="i" class="h-24 rounded-2xl animate-pulse"
+        <!-- Skeleton -->
+        <div v-if="loading" class="grid grid-cols-2 gap-4">
+          <div v-for="i in 8" :key="i" class="h-32 rounded-2xl animate-pulse"
             :style="{ backgroundColor: 'var(--border-soft)' }" />
         </div>
 
-        <!-- Subjects -->
-        <div v-else class="space-y-3">
+        <!-- Cards -->
+        <div v-else class="grid grid-cols-2 gap-4">
           <button
-            v-for="subject in subjects"
+            v-for="subject in filtered"
             :key="subject.id"
-            class="subject-row w-full text-left"
+            class="course-card text-left"
             :disabled="starting !== null"
-            @click="startSubjectPractice(subject.id)"
+            @click="open(subject.id)"
           >
-            <div class="symbol-box">
-              {{ subjectIndex[subject.code]?.symbol ?? subject.name.charAt(0) }}
+            <!-- Left: text -->
+            <div class="card-text flex-1 flex flex-col justify-between py-5 pl-5 pr-3">
+              <div>
+                <p class="category-label mb-1.5"
+                  :style="{ color: subjectCfg(subject.code).color }">
+                  {{ subjectCfg(subject.code).category }}
+                </p>
+                <h3 class="text-[13px] font-bold leading-snug mb-3"
+                  :style="{ color: 'var(--ink)' }">
+                  {{ subject.name }}
+                </h3>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span v-if="topicCount(subject.id)" class="stat-chip">
+                  {{ topicCount(subject.id) }} topics
+                </span>
+                <span class="stat-chip">10 Q's</span>
+                <span v-if="starting === subject.id"
+                  class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">
+                  Starting…
+                </span>
+              </div>
             </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base font-bold" :style="{ color: 'var(--ink)' }">{{ subject.name }}</h3>
-              <p class="text-[11px] mt-0.5" :style="{ color: 'var(--ink-muted)' }">{{ subject.code }} · Smart selection</p>
-            </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
-              <span v-if="starting === subject.id" class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">Starting…</span>
-              <span v-else class="go-arrow">→</span>
+
+            <!-- Right: visual -->
+            <div class="card-visual" :style="{ background: subjectCfg(subject.code).bg }">
+              <span class="symbol-watermark"
+                :style="{ color: subjectCfg(subject.code).color }">
+                {{ subjectCfg(subject.code).symbolBig }}
+              </span>
+              <div v-if="completionPct(subject.id) !== null" class="completion-badge">
+                {{ completionPct(subject.id) }}%
+              </div>
             </div>
           </button>
         </div>
 
-        <!-- More options -->
-        <div class="mt-8">
-          <p class="section-label mb-3">More Options</p>
-          <div class="grid grid-cols-3 gap-3">
-            <button class="option-tile" @click="router.push('/student/practice/custom-test')">
-              <PhTarget :size="20" weight="duotone" :style="{ color: 'var(--ink-secondary)' }" />
-              <span class="text-[11px] font-semibold mt-2" :style="{ color: 'var(--ink)' }">Custom Test</span>
-              <span class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">Pick topics & length</span>
-            </button>
-            <button class="option-tile" @click="router.push('/student/mistakes')">
-              <PhFlame :size="20" weight="duotone" :style="{ color: 'var(--ink-secondary)' }" />
-              <span class="text-[11px] font-semibold mt-2" :style="{ color: 'var(--ink)' }">Mistake Lab</span>
-              <span class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">Revisit errors</span>
-            </button>
-            <button class="option-tile" @click="router.push('/student/spark')">
-              <PhStar :size="20" weight="duotone" :style="{ color: 'var(--ink-secondary)' }" />
-              <span class="text-[11px] font-semibold mt-2" :style="{ color: 'var(--ink)' }">Spark</span>
-              <span class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">Random challenge</span>
-            </button>
-          </div>
+        <div v-if="!loading && filtered.length === 0" class="py-16 text-center">
+          <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">No courses match your search.</p>
         </div>
       </div>
 
-      <!-- Priority topics sidebar -->
+      <!-- Right: dark Levels sidebar -->
       <div
-        class="w-72 flex-shrink-0 flex flex-col overflow-hidden border-l"
-        :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
+        class="levels-panel flex-shrink-0 w-52 flex flex-col overflow-hidden"
+        :style="levelsPanelStyle"
       >
-        <div class="px-5 py-4 border-b flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
-          <p class="section-label">Priority Topics</p>
-          <p class="text-[11px] mt-1" :style="{ color: 'var(--ink-muted)' }">Focus your next session here</p>
+        <div class="px-5 py-4 flex-shrink-0" style="border-bottom: 1px solid rgba(255,255,255,0.07)">
+          <p class="text-[10px] font-bold uppercase tracking-widest"
+            style="color: rgba(255,255,255,0.35)">Levels</p>
+          <p class="text-[11px] font-semibold mt-0.5"
+            style="color: rgba(255,255,255,0.5)">{{ levels.length }} available</p>
         </div>
-
-        <div class="flex-1 overflow-y-auto p-3 space-y-1">
-          <div v-if="loading">
-            <div v-for="i in 6" :key="i" class="h-14 rounded-xl animate-pulse mb-2"
-              :style="{ backgroundColor: 'var(--border-soft)' }" />
-          </div>
-          <div v-else-if="!priorityTopics.length" class="py-10 text-center px-4">
-            <p class="text-xs" :style="{ color: 'var(--ink-muted)' }">No priority topics yet.<br>Complete a diagnostic first.</p>
-          </div>
+        <div class="flex-1 overflow-y-auto py-1.5">
           <button
-            v-for="topic in priorityTopics"
-            :key="topic.topic_id"
-            class="topic-btn w-full text-left px-3 py-2.5 rounded-xl"
-            @click="router.push('/student/practice/custom-test')"
+            v-for="level in levels"
+            :key="level.key"
+            class="level-item w-full text-left"
+            :class="{ active: activeLevel === level.key }"
+            @click="activeLevel = level.key"
           >
-            <div class="flex items-center gap-3">
-              <div
-                class="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0"
-                :style="{
-                  backgroundColor: topic.mastery_score >= 6000 ? 'rgba(13,148,136,0.1)' : topic.mastery_score >= 3000 ? 'rgba(180,83,9,0.1)' : 'rgba(194,65,12,0.1)',
-                  color: topic.mastery_score >= 6000 ? 'var(--accent)' : topic.mastery_score >= 3000 ? 'var(--gold)' : 'var(--warm)',
-                }"
-              >
-                {{ formatBp(topic.mastery_score) }}
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-[11px] font-semibold truncate" :style="{ color: 'var(--ink)' }">{{ topic.topic_name }}</p>
-                <p class="text-[9px] truncate capitalize" :style="{ color: 'var(--ink-muted)' }">
-                  {{ topic.intervention_urgency }} · {{ topic.intervention_mode.replace(/_/g, ' ') }}
-                </p>
-              </div>
-            </div>
+            <span class="flex-1 truncate">{{ level.label }}</span>
+            <span class="level-count">{{ level.count }}</span>
           </button>
         </div>
-
-        <div class="p-3 border-t flex-shrink-0" :style="{ borderColor: 'var(--border-soft)' }">
+        <div class="px-4 py-4 flex-shrink-0" style="border-top: 1px solid rgba(255,255,255,0.07)">
           <button
             class="w-full py-2.5 rounded-xl text-[11px] font-bold"
-            :style="{ backgroundColor: 'var(--accent)', color: 'white' }"
+            style="background: var(--accent); color: white; border: none; cursor: pointer;"
             @click="router.push('/student/practice/custom-test')"
           >
-            Custom Practice →
+            Custom Test →
           </button>
         </div>
       </div>
@@ -221,12 +272,12 @@ const subjectIndex: Record<string, { symbol: string }> = {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  color: var(--accent);
+  color: var(--ink-muted);
   margin-bottom: 4px;
 }
 
-.header-link {
-  padding: 6px 14px;
+.nav-pill {
+  padding: 5px 12px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
@@ -234,75 +285,139 @@ const subjectIndex: Record<string, { symbol: string }> = {
   background: var(--paper);
   color: var(--ink-secondary);
   border: 1px solid transparent;
-  transition: all 100ms;
+  transition: all 120ms;
 }
-.header-link:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+.nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
 
-.section-label {
-  font-size: 10px;
-  font-weight: 700;
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  padding: 10px 16px 10px 38px;
+  border-radius: 12px;
+  font-size: 13px;
+  border: 1px solid transparent;
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 120ms;
+}
+.search-input::placeholder { color: var(--ink-muted); }
+.search-input:focus { border-color: var(--accent); }
+
+/* Course card: horizontal split */
+.course-card {
+  display: flex;
+  border-radius: 18px;
+  border: 1px solid transparent;
+  background: var(--surface);
+  cursor: pointer;
+  min-height: 120px;
+  overflow: hidden;
+  transition: border-color 130ms ease, transform 130ms ease, box-shadow 130ms ease;
+}
+.course-card:hover:not(:disabled) {
+  border-color: var(--ink-muted);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+.course-card:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.category-label {
+  font-size: 9px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--ink-muted);
 }
 
-.subject-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
-  border-radius: 16px;
+.stat-chip {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink-secondary);
   border: 1px solid transparent;
-  background-color: var(--surface);
-  cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
 }
-.subject-row:hover:not(:disabled) {
-  border-color: var(--ink);
-  transform: translateX(2px);
-}
-.subject-row:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.symbol-box {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background-color: var(--paper);
-  border: 1px solid transparent;
+/* Right visual panel of card */
+.card-visual {
+  width: 110px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.symbol-watermark {
+  font-size: 56px;
   font-weight: 900;
-  color: var(--ink);
+  opacity: 0.16;
+  user-select: none;
+  line-height: 1;
+}
+
+.completion-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gold);
+  background: rgba(180,83,9,0.12);
+  border-radius: 8px;
+  padding: 3px 8px;
+  border: 1px solid rgba(180,83,9,0.2);
+}
+
+/* Dark levels sidebar */
+.levels-panel {
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.level-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: all 100ms;
+  border: none;
+  background: transparent;
+}
+.level-item:hover {
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.8);
+}
+.level-item.active {
+  background: rgba(13,148,136,0.14);
+  color: var(--accent);
+}
+.level-item.active .level-count {
+  background: rgba(13,148,136,0.25);
+  color: var(--accent);
+}
+
+.level-count {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.35);
   flex-shrink: 0;
 }
-
-.go-arrow {
-  font-size: 16px;
-  color: var(--ink-muted);
-  transition: transform 120ms ease, color 120ms ease;
-}
-.subject-row:hover .go-arrow { transform: translateX(3px); color: var(--ink); }
-
-.option-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px 12px;
-  border-radius: 14px;
-  border: 1px solid transparent;
-  background-color: var(--surface);
-  cursor: pointer;
-  transition: border-color 100ms, background-color 100ms;
-  gap: 0;
-}
-.option-tile:hover { border-color: var(--ink); background-color: var(--paper); }
-
-.topic-btn {
-  transition: background-color 100ms;
-}
-.topic-btn:hover { background-color: var(--paper); }
 </style>
-
-

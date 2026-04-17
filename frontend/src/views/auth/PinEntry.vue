@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { PIN_LENGTH } from '@/utils/validation'
@@ -31,6 +31,34 @@ function removeDigit() {
   error.value = ''
 }
 
+function handleKeydown(event: KeyboardEvent) {
+  if (loading.value || event.metaKey || event.ctrlKey || event.altKey) return
+
+  let digit: string | null = null
+  if (/^\d$/.test(event.key)) {
+    digit = event.key
+  } else if (/^Numpad\d$/.test(event.code)) {
+    digit = event.code.slice('Numpad'.length)
+  }
+
+  if (digit !== null) {
+    event.preventDefault()
+    addDigit(digit)
+    return
+  }
+
+  if (event.key === 'Backspace' || event.key === 'Delete') {
+    event.preventDefault()
+    removeDigit()
+    return
+  }
+
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    attemptLogin()
+  }
+}
+
 async function attemptLogin() {
   if (loading.value) return
   if (pin.value.length !== pinLength.value) return
@@ -56,6 +84,13 @@ function goBack() {
 }
 
 const digits = ['1','2','3','4','5','6','7','8','9','','0','⌫']
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>

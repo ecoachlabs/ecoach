@@ -268,7 +268,7 @@ impl<'a> FoundryCoordinatorService<'a> {
                     input.education_level,
                     input.subject_code,
                     input.academic_year,
-                    input.language_code.unwrap_or_else(|| "en".to_string()),
+                    input.language_code.unwrap_or_else(|| "und".to_string()),
                     input.version_label,
                     metadata_json,
                 ],

@@ -1,0 +1,18 @@
+{
+  "pack_id": "math-ghana-ccp-b7b9-foundation-v1",
+  "pack_version": "1.0.0",
+  "subject_code": "MATH",
+  "curriculum_version": "Ghana NaCCA Mathematics CCP B7-B9 2020",
+  "exam_target": "BECE",
+  "grade_levels": [
+    "B7",
+    "B8",
+    "B9"
+  ],
+  "topic_count": 73,
+  "question_count": 0,
+  "min_app_version": "0.1.0",
+  "checksums": {},
+  "created_at": "2026-04-10T18:01:39.842169+00:00",
+  "author": "eCoach Curriculum Intelligence System"
+}

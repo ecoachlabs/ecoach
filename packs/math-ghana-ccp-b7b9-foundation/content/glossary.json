@@ -1,0 +1,146 @@
+[
+  {
+    "title": "Number and Numeration Systems",
+    "topic_code": "STR1_SUB1",
+    "entry_type": "definition",
+    "canonical_name": "number-and-numeration-systems",
+    "short_text": "Core vocabulary and meanings for Number and Numeration Systems.",
+    "full_text": "This glossary bundle supports the Number and Numeration Systems sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Number"
+    ]
+  },
+  {
+    "title": "Number Operations",
+    "topic_code": "STR1_SUB2",
+    "entry_type": "definition",
+    "canonical_name": "number-operations",
+    "short_text": "Core vocabulary and meanings for Number Operations.",
+    "full_text": "This glossary bundle supports the Number Operations sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Number"
+    ]
+  },
+  {
+    "title": "Fractions, Decimals and Percentages",
+    "topic_code": "STR1_SUB3",
+    "entry_type": "definition",
+    "canonical_name": "fractions-decimals-and-percentages",
+    "short_text": "Core vocabulary and meanings for Fractions, Decimals and Percentages.",
+    "full_text": "This glossary bundle supports the Fractions, Decimals and Percentages sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Number"
+    ]
+  },
+  {
+    "title": "Number: Ratios and Proportion",
+    "topic_code": "STR1_SUB4",
+    "entry_type": "definition",
+    "canonical_name": "number-ratios-and-proportion",
+    "short_text": "Core vocabulary and meanings for Number: Ratios and Proportion.",
+    "full_text": "This glossary bundle supports the Number: Ratios and Proportion sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Number"
+    ]
+  },
+  {
+    "title": "Patterns and Relations",
+    "topic_code": "STR2_SUB1",
+    "entry_type": "definition",
+    "canonical_name": "patterns-and-relations",
+    "short_text": "Core vocabulary and meanings for Patterns and Relations.",
+    "full_text": "This glossary bundle supports the Patterns and Relations sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Algebra"
+    ]
+  },
+  {
+    "title": "Algebraic Expressions",
+    "topic_code": "STR2_SUB2",
+    "entry_type": "definition",
+    "canonical_name": "algebraic-expressions",
+    "short_text": "Core vocabulary and meanings for Algebraic Expressions.",
+    "full_text": "This glossary bundle supports the Algebraic Expressions sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Algebra"
+    ]
+  },
+  {
+    "title": "Variables and Equations",
+    "topic_code": "STR2_SUB3",
+    "entry_type": "definition",
+    "canonical_name": "variables-and-equations",
+    "short_text": "Core vocabulary and meanings for Variables and Equations.",
+    "full_text": "This glossary bundle supports the Variables and Equations sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Algebra"
+    ]
+  },
+  {
+    "title": "Shapes and Space",
+    "topic_code": "STR3_SUB1",
+    "entry_type": "definition",
+    "canonical_name": "shapes-and-space",
+    "short_text": "Core vocabulary and meanings for Shapes and Space.",
+    "full_text": "This glossary bundle supports the Shapes and Space sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Geometry and Measurement"
+    ]
+  },
+  {
+    "title": "Measurement",
+    "topic_code": "STR3_SUB2",
+    "entry_type": "definition",
+    "canonical_name": "measurement",
+    "short_text": "Core vocabulary and meanings for Measurement.",
+    "full_text": "This glossary bundle supports the Measurement sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Geometry and Measurement"
+    ]
+  },
+  {
+    "title": "Position and Transformation",
+    "topic_code": "STR3_SUB3",
+    "entry_type": "definition",
+    "canonical_name": "position-and-transformation",
+    "short_text": "Core vocabulary and meanings for Position and Transformation.",
+    "full_text": "This glossary bundle supports the Position and Transformation sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Geometry and Measurement"
+    ]
+  },
+  {
+    "title": "Data",
+    "topic_code": "STR4_SUB1",
+    "entry_type": "definition",
+    "canonical_name": "data",
+    "short_text": "Core vocabulary and meanings for Data.",
+    "full_text": "This glossary bundle supports the Data sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Handling Data"
+    ]
+  },
+  {
+    "title": "Chance or Probability",
+    "topic_code": "STR4_SUB2",
+    "entry_type": "definition",
+    "canonical_name": "chance-or-probability",
+    "short_text": "Core vocabulary and meanings for Chance or Probability.",
+    "full_text": "This glossary bundle supports the Chance or Probability sub-strand in Mathematics CCP B7-B9.",
+    "importance_score": 5800,
+    "aliases": [
+      "Handling Data"
+    ]
+  }
+]

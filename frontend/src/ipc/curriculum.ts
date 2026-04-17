@@ -39,6 +39,84 @@ export interface CurriculumStudentSubjectCardDto {
   next_action: string | null
 }
 
+export interface CurriculumSubjectTrack {
+  id: number
+  curriculum_version_id: number
+  legacy_subject_id: number | null
+  subject_code: string
+  subject_name: string
+  subject_slug: string
+  public_title: string
+  description: string | null
+  display_order: number
+}
+
+export interface CurriculumNode {
+  id: number
+  curriculum_version_id: number
+  subject_track_id: number
+  level_id: number | null
+  term_id: number | null
+  parent_node_id: number | null
+  legacy_topic_id: number | null
+  node_type: string
+  canonical_title: string
+  public_title: string
+  slug: string
+  official_text: string | null
+  public_summary: string | null
+  sequence_no: number
+  depth: number
+  estimated_weight: number
+  exam_relevance_score: number
+  difficulty_hint: string
+  status: string
+  review_status: string
+  confidence_score: number
+}
+
+export interface CurriculumRecommendation {
+  node_id: number
+  slug: string
+  public_title: string
+  rationale: string
+  priority_score: number
+  blocked_by_prerequisites: string[]
+}
+
+export interface CurriculumStudentNodeState {
+  node: CurriculumNode
+  status_label: string
+  blocked: boolean
+  review_due: boolean
+  exam_ready: boolean
+  reason: string
+  downstream_titles: string[]
+}
+
+export interface CurriculumStudentHomeSnapshot {
+  student_id: number
+  curriculum_version: CurriculumVersionDto
+  subject_cards: CurriculumStudentSubjectCardDto[]
+  entered_percent: number
+  stable_percent: number
+  exam_readiness_percent: number
+  weak_topics_count: number
+  blocked_topics_count: number
+  review_due_count: number
+  position_statement: string
+  recent_movements: string[]
+  recommended_topics: CurriculumRecommendation[]
+}
+
+export interface CurriculumStudentSubjectMap {
+  student_id: number
+  subject: CurriculumSubjectTrack
+  overview: CurriculumStudentSubjectCardDto
+  nodes: CurriculumStudentNodeState[]
+  recommended_topics: CurriculumRecommendation[]
+}
+
 export interface CurriculumParentSummaryDto {
   parent_id: number
   learner_id: number
@@ -68,6 +146,26 @@ export function getParentCurriculumSummary(
     parentId,
     learnerId,
     curriculumVersionId,
+  })
+}
+
+export function getStudentCurriculumHome(
+  studentId: number,
+  curriculumVersionId: number | null = null,
+): Promise<CurriculumStudentHomeSnapshot> {
+  return ipc<CurriculumStudentHomeSnapshot>('get_student_curriculum_home', {
+    studentId,
+    curriculumVersionId,
+  })
+}
+
+export function getStudentSubjectCurriculumMap(
+  studentId: number,
+  subjectTrackId: number,
+): Promise<CurriculumStudentSubjectMap> {
+  return ipc<CurriculumStudentSubjectMap>('get_student_subject_curriculum_map', {
+    studentId,
+    subjectTrackId,
   })
 }
 

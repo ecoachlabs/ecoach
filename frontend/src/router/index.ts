@@ -137,6 +137,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'knowledge-gap/scan', name: 'gap-scan', component: () => import('@/views/student/knowledge-gap/GapScan.vue') },
       { path: 'memory', name: 'memory', component: () => import('@/views/student/memory/MemoryHome.vue') },
       // Content
+      { path: 'curriculum', name: 'student-curriculum', component: () => import('@/views/student/curriculum/CurriculumHome.vue') },
       { path: 'glossary', name: 'glossary', component: () => import('@/views/student/glossary/GlossaryHome.vue') },
       { path: 'glossary/entry/:id', name: 'glossary-entry', component: () => import('@/views/student/glossary/GlossaryEntry.vue'), props: true },
       { path: 'glossary/audio', name: 'glossary-audio', component: () => import('@/views/student/glossary/GlossaryAudio.vue') },

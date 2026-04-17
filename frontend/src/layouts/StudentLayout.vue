@@ -89,6 +89,7 @@ const navSections: NavItem[][] = [
   ],
   [
     { name: 'library', label: 'Library', to: '/student/library', icon: PhBooks, color: '#6366F1', match: 'prefix', excludeHashes: ['#revision-box'] },
+    { name: 'curriculum', label: 'Curriculum', to: '/student/curriculum', icon: PhBookOpenText, color: '#2563EB', match: 'exact' },
     { name: 'revision-box', label: 'Revision Box', to: '/student/library', hash: '#revision-box', activeHash: '#revision-box', icon: PhChartLineUp, color: '#6366F1', match: 'exact' },
     { name: 'glossary', label: 'Glossary', to: '/student/glossary', icon: PhBookOpenText, color: '#4F46E5', match: 'prefix', excludeBases: ['/student/glossary/compare'] },
     { name: 'audio-glossary', label: 'Audio Glossary', to: '/student/glossary/audio', icon: PhBookOpenText, color: '#0F766E', match: 'exact' },

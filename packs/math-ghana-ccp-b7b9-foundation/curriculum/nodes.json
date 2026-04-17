@@ -1,0 +1,6065 @@
+[
+  {
+    "topic_code": "B7.1.1.1",
+    "canonical_title": "B7.1.1.1.1",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.1.1.1.1",
+    "description_formal": "Model number quantities more than 1,000,000,000 using graph sheets, isometric papers and multi-base blocks",
+    "description_simple": "Model number quantities more than 1,000,000,000 using graph sheets, isometric papers and multi-base blocks",
+    "core_meaning": "Model number quantities more than 1,000,000,000 using graph sheets, isometric papers and multi-base blocks",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P032"
+    ],
+    "source_pages": [
+      32
+    ],
+    "learning_intent": {
+      "primary_verb": "model",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 2,
+        "application": 2
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.1.1",
+    "canonical_title": "B7.1.1.1.3",
+    "node_type": "concept",
+    "short_label": "B7.1.1.1.3",
+    "description_formal": "Round (off, up, down) whole numbers more than 1,000,000,000 to the nearest hundred-thousand, ten-thousands, thousands, hundreds and tens",
+    "description_simple": "Round (off, up, down) whole numbers more than 1,000,000,000 to the nearest hundred-thousand, ten-thousands, thousands, hundreds and tens",
+    "core_meaning": "Round (off, up, down) whole numbers more than 1,000,000,000 to the nearest hundred-thousand, ten-thousands, thousands, hundreds and tens",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P034"
+    ],
+    "source_pages": [
+      34
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.1.1",
+    "canonical_title": "B7.1.1.1.4",
+    "node_type": "concept",
+    "short_label": "B7.1.1.1.4",
+    "description_formal": "Round decimals to the nearest tenth, hundredth, thousandths, etc",
+    "description_simple": "Round decimals to the nearest tenth, hundredth, thousandths, etc",
+    "core_meaning": "Round decimals to the nearest tenth, hundredth, thousandths, etc",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P035"
+    ],
+    "source_pages": [
+      35
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.1.1",
+    "canonical_title": "B7.1.1.1.5",
+    "node_type": "concept",
+    "short_label": "B7.1.1.1.5",
+    "description_formal": "Express decimal numerals to given significant and decimal places",
+    "description_simple": "Express decimal numerals to given significant and decimal places",
+    "core_meaning": "Express decimal numerals to given significant and decimal places",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P036"
+    ],
+    "source_pages": [
+      36
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.1",
+    "canonical_title": "B7.1.2.1.1",
+    "node_type": "concept",
+    "short_label": "B7.1.2.1.1",
+    "description_formal": "Multiply and divide given numbers by powers of 10 including decimals and benchmark fractions",
+    "description_simple": "Multiply and divide given numbers by powers of 10 including decimals and benchmark fractions",
+    "core_meaning": "Multiply and divide given numbers by powers of 10 including decimals and benchmark fractions",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P037"
+    ],
+    "source_pages": [
+      37
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.1",
+    "canonical_title": "B7.1.2.1.2",
+    "node_type": "application",
+    "short_label": "B7.1.2.1.2",
+    "description_formal": "Apply mental mathematics strategies and number properties used to perform calculations.",
+    "description_simple": "Apply mental mathematics strategies and number properties used to perform calculations.",
+    "core_meaning": "Apply mental mathematics strategies and number properties used to perform calculations.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P037"
+    ],
+    "source_pages": [
+      37
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 2,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.1",
+    "canonical_title": "B7.1.2.1.3",
+    "node_type": "application",
+    "short_label": "B7.1.2.1.3",
+    "description_formal": "Apply mental mathematics strategies to solve word problems.",
+    "description_simple": "Apply mental mathematics strategies to solve word problems.",
+    "core_meaning": "Apply mental mathematics strategies to solve word problems.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P038"
+    ],
+    "source_pages": [
+      38
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.2",
+    "canonical_title": "B7.1.2.2.1",
+    "node_type": "concept",
+    "short_label": "B7.1.2.2.1",
+    "description_formal": "Add and subtract up to four-digit numbers. Critical thinking and problem solving (CP)",
+    "description_simple": "Add and subtract up to four-digit numbers. Critical thinking and problem solving (CP)",
+    "core_meaning": "Add and subtract up to four-digit numbers. Critical thinking and problem solving (CP)",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P039"
+    ],
+    "source_pages": [
+      39
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.2",
+    "canonical_title": "B7.1.2.2.3",
+    "node_type": "application",
+    "short_label": "B7.1.2.2.3",
+    "description_formal": "Create and solve story problems involving decimals on the four basic operations",
+    "description_simple": "Create and solve story problems involving decimals on the four basic operations",
+    "core_meaning": "Create and solve story problems involving decimals on the four basic operations",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P041"
+    ],
+    "source_pages": [
+      41
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.3",
+    "canonical_title": "B7.1.2.3.1",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.1.2.3.1",
+    "description_formal": "Illustrate with examples the meaning of repeated factors using counting objects such as bottle tops or bundle sticks.",
+    "description_simple": "Illustrate with examples the meaning of repeated factors using counting objects such as bottle tops or bundle sticks.",
+    "core_meaning": "Illustrate with examples the meaning of repeated factors using counting objects such as bottle tops or bundle sticks.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P043"
+    ],
+    "source_pages": [
+      43
+    ],
+    "learning_intent": {
+      "primary_verb": "illustrate",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 2,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.3",
+    "canonical_title": "B7.1.2.3.2",
+    "node_type": "concept",
+    "short_label": "B7.1.2.3.2",
+    "description_formal": "Express a given number as a product of a given number or numbers, as well as, in the form of a power or two such numbers as product of powers",
+    "description_simple": "Express a given number as a product of a given number or numbers, as well as, in the form of a power or two such numbers as product of powers",
+    "core_meaning": "Express a given number as a product of a given number or numbers, as well as, in the form of a power or two such numbers as product of powers",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P043"
+    ],
+    "source_pages": [
+      43
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.3",
+    "canonical_title": "B7.1.2.3.3",
+    "node_type": "application",
+    "short_label": "B7.1.2.3.3",
+    "description_formal": "Show that the value of any natural number with zero as its exponent or index is 1 and use it to solve problems",
+    "description_simple": "Show that the value of any natural number with zero as its exponent or index is 1 and use it to solve problems",
+    "core_meaning": "Show that the value of any natural number with zero as its exponent or index is 1 and use it to solve problems",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P044"
+    ],
+    "source_pages": [
+      44
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.3",
+    "canonical_title": "B7.1.2.3.4",
+    "node_type": "concept",
+    "short_label": "B7.1.2.3.4",
+    "description_formal": "Find the value of a number written in index form",
+    "description_simple": "Find the value of a number written in index form",
+    "core_meaning": "Find the value of a number written in index form",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P044"
+    ],
+    "source_pages": [
+      44
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.2.3",
+    "canonical_title": "B7.1.2.3.5",
+    "node_type": "application",
+    "short_label": "B7.1.2.3.5",
+    "description_formal": "Apply the concept of powers of numbers (product of prime) to find Highest Common Factor (HCF)",
+    "description_simple": "Apply the concept of powers of numbers (product of prime) to find Highest Common Factor (HCF)",
+    "core_meaning": "Apply the concept of powers of numbers (product of prime) to find Highest Common Factor (HCF)",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P045"
+    ],
+    "source_pages": [
+      45
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.3.1",
+    "canonical_title": "B7.1.3.1.1",
+    "node_type": "procedure",
+    "short_label": "B7.1.3.1.1",
+    "description_formal": "Determine and recall the percentages and decimals of given benchmark fractions (i.e.",
+    "description_simple": "Determine and recall the percentages and decimals of given benchmark fractions (i.e.",
+    "core_meaning": "Determine and recall the percentages and decimals of given benchmark fractions (i.e.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P047"
+    ],
+    "source_pages": [
+      47
+    ],
+    "learning_intent": {
+      "primary_verb": "determine",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.3.1",
+    "canonical_title": "B7.1.3.1.2",
+    "node_type": "concept",
+    "short_label": "B7.1.3.1.2",
+    "description_formal": "Compare and order fractions (i.e. common, percent and decimal fractions up to thousandths) limit to the benchmark fractions",
+    "description_simple": "Compare and order fractions (i.e. common, percent and decimal fractions up to thousandths) limit to the benchmark fractions",
+    "core_meaning": "Compare and order fractions (i.e. common, percent and decimal fractions up to thousandths) limit to the benchmark fractions",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P049"
+    ],
+    "source_pages": [
+      49
+    ],
+    "learning_intent": {
+      "primary_verb": "compare",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.3.2",
+    "canonical_title": "B7.1.3.2.1",
+    "node_type": "concept",
+    "short_label": "B7.1.3.2.1",
+    "description_formal": "Explain the process of addition and subtraction of two or three unlike and mixed fractions",
+    "description_simple": "Explain the process of addition and subtraction of two or three unlike and mixed fractions",
+    "core_meaning": "Explain the process of addition and subtraction of two or three unlike and mixed fractions",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P049"
+    ],
+    "source_pages": [
+      49
+    ],
+    "learning_intent": {
+      "primary_verb": "explain",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.3.2",
+    "canonical_title": "B7.1.3.2.2",
+    "node_type": "application",
+    "short_label": "B7.1.3.2.2",
+    "description_formal": "Solve problems involving addition or subtraction of fractions.",
+    "description_simple": "Solve problems involving addition or subtraction of fractions.",
+    "core_meaning": "Solve problems involving addition or subtraction of fractions.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P050"
+    ],
+    "source_pages": [
+      50
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.3.3",
+    "canonical_title": "B7.1.3.3.1",
+    "node_type": "concept",
+    "short_label": "B7.1.3.3.1",
+    "description_formal": "Explain the process of multiplying a fraction (i.e.",
+    "description_simple": "Explain the process of multiplying a fraction (i.e.",
+    "core_meaning": "Explain the process of multiplying a fraction (i.e.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P050"
+    ],
+    "source_pages": [
+      50
+    ],
+    "learning_intent": {
+      "primary_verb": "explain",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.3.3",
+    "canonical_title": "B7.1.3.3.2",
+    "node_type": "concept",
+    "short_label": "B7.1.3.3.2",
+    "description_formal": "Find a fraction of given quantity (i.e. money or given quantity of objects) Critical thinking and problem solving (CP)",
+    "description_simple": "Find a fraction of given quantity (i.e. money or given quantity of objects) Critical thinking and problem solving (CP)",
+    "core_meaning": "Find a fraction of given quantity (i.e. money or given quantity of objects) Critical thinking and problem solving (CP)",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P051"
+    ],
+    "source_pages": [
+      51
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.3.3",
+    "canonical_title": "B7.1.3.3.3",
+    "node_type": "concept",
+    "short_label": "B7.1.3.3.3",
+    "description_formal": "Explain the process of dividing a fraction (i.e.",
+    "description_simple": "Explain the process of dividing a fraction (i.e.",
+    "core_meaning": "Explain the process of dividing a fraction (i.e.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P052"
+    ],
+    "source_pages": [
+      52
+    ],
+    "learning_intent": {
+      "primary_verb": "explain",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.3.3",
+    "canonical_title": "B7.1.3.3.4",
+    "node_type": "procedure",
+    "short_label": "B7.1.3.3.4",
+    "description_formal": "Determine the result of dividing a quantity (i.e.",
+    "description_simple": "Determine the result of dividing a quantity (i.e.",
+    "core_meaning": "Determine the result of dividing a quantity (i.e.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P053"
+    ],
+    "source_pages": [
+      53
+    ],
+    "learning_intent": {
+      "primary_verb": "determine",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.4.1",
+    "canonical_title": "B7.1.4.1.1",
+    "node_type": "application",
+    "short_label": "B7.1.4.1.1",
+    "description_formal": "Find ratio and use ratio language to describe relationship between two quantities",
+    "description_simple": "Find ratio and use ratio language to describe relationship between two quantities",
+    "core_meaning": "Find ratio and use ratio language to describe relationship between two quantities",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P054"
+    ],
+    "source_pages": [
+      54
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.4.1",
+    "canonical_title": "B7.1.4.1.2",
+    "node_type": "application",
+    "short_label": "B7.1.4.1.2",
+    "description_formal": "Use the concept of a unit rate 𝒂𝒂 𝒃𝒃 associated with a ratio a:b with b ≠ 0, and use rate language in the context of a ratio relationship",
+    "description_simple": "Use the concept of a unit rate 𝒂𝒂 𝒃𝒃 associated with a ratio a:b with b ≠ 0, and use rate language in the context of a ratio relationship",
+    "core_meaning": "Use the concept of a unit rate 𝒂𝒂 𝒃𝒃 associated with a ratio a:b with b ≠ 0, and use rate language in the context of a ratio relationship",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P054"
+    ],
+    "source_pages": [
+      54
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.4.1",
+    "canonical_title": "B7.1.4.1.3",
+    "node_type": "concept",
+    "short_label": "B7.1.4.1.3",
+    "description_formal": "Make tables of equivalent ratios (written as common fractions) relating quantities that are proportional",
+    "description_simple": "Make tables of equivalent ratios (written as common fractions) relating quantities that are proportional",
+    "core_meaning": "Make tables of equivalent ratios (written as common fractions) relating quantities that are proportional",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P055"
+    ],
+    "source_pages": [
+      55
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.1.4.1",
+    "canonical_title": "B7.1.4.1.4",
+    "node_type": "application",
+    "short_label": "B7.1.4.1.4",
+    "description_formal": "Use the proportional reasoning to find missing values in the tables, and plot pairs of values on the coordinate plane",
+    "description_simple": "Use the proportional reasoning to find missing values in the tables, and plot pairs of values on the coordinate plane",
+    "core_meaning": "Use the proportional reasoning to find missing values in the tables, and plot pairs of values on the coordinate plane",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P056"
+    ],
+    "source_pages": [
+      56
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "represent_model": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.1.4.1",
+    "canonical_title": "B7.1.4.1.5",
+    "node_type": "concept",
+    "short_label": "B7.1.4.1.5",
+    "description_formal": "Find a percent of a quantity as a rate per 100 (e.g.",
+    "description_simple": "Find a percent of a quantity as a rate per 100 (e.g.",
+    "core_meaning": "Find a percent of a quantity as a rate per 100 (e.g.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P056"
+    ],
+    "source_pages": [
+      56
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.1.1",
+    "canonical_title": "B7.2.1.1.1",
+    "node_type": "concept",
+    "short_label": "B7.2.1.1.1",
+    "description_formal": "Extend a given relation presented with and without symbolic materials and explain how each element differs from the preceding one.",
+    "description_simple": "Extend a given relation presented with and without symbolic materials and explain how each element differs from the preceding one.",
+    "core_meaning": "Extend a given relation presented with and without symbolic materials and explain how each element differs from the preceding one.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P057"
+    ],
+    "source_pages": [
+      57
+    ],
+    "learning_intent": {
+      "primary_verb": "explain",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.1.1",
+    "canonical_title": "B7.2.1.1.2",
+    "node_type": "concept",
+    "short_label": "B7.2.1.1.2",
+    "description_formal": "Describe the rule for a given relation using mathematical language such as one more, one less, one more than twice, etc.",
+    "description_simple": "Describe the rule for a given relation using mathematical language such as one more, one less, one more than twice, etc.",
+    "core_meaning": "Describe the rule for a given relation using mathematical language such as one more, one less, one more than twice, etc.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P058"
+    ],
+    "source_pages": [
+      58
+    ],
+    "learning_intent": {
+      "primary_verb": "describe",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.1.1",
+    "canonical_title": "B7.2.1.1.3",
+    "node_type": "concept",
+    "short_label": "B7.2.1.1.3",
+    "description_formal": "Identify the relation or rule in a pattern/mapping presented numerically or symbolically and predict subsequent elements Creativity and Innovation (CI)",
+    "description_simple": "Identify the relation or rule in a pattern/mapping presented numerically or symbolically and predict subsequent elements Creativity and Innovation (CI)",
+    "core_meaning": "Identify the relation or rule in a pattern/mapping presented numerically or symbolically and predict subsequent elements Creativity and Innovation (CI)",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P060"
+    ],
+    "source_pages": [
+      60
+    ],
+    "learning_intent": {
+      "primary_verb": "identify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.1.1",
+    "canonical_title": "B7.2.1.1.4",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.2.1.1.4",
+    "description_formal": "Locate points on the number plane, draw a table of values of a given relation, draw graphs for given relations and use them to solve problems",
+    "description_simple": "Locate points on the number plane, draw a table of values of a given relation, draw graphs for given relations and use them to solve problems",
+    "core_meaning": "Locate points on the number plane, draw a table of values of a given relation, draw graphs for given relations and use them to solve problems",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P061"
+    ],
+    "source_pages": [
+      61
+    ],
+    "learning_intent": {
+      "primary_verb": "draw",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 2
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.2.1",
+    "canonical_title": "B7.2.2.1.1",
+    "node_type": "concept",
+    "short_label": "B7.2.2.1.1",
+    "description_formal": "Create simple algebraic expressions using simple logic to translate a set of instructions into an algebraic expression",
+    "description_simple": "Create simple algebraic expressions using simple logic to translate a set of instructions into an algebraic expression",
+    "core_meaning": "Create simple algebraic expressions using simple logic to translate a set of instructions into an algebraic expression",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P065"
+    ],
+    "source_pages": [
+      65
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.2.1",
+    "canonical_title": "B7.2.2.1.2",
+    "node_type": "procedure",
+    "short_label": "B7.2.2.1.2",
+    "description_formal": "Perform addition and subtraction of algebraic expressions with rational coefficients",
+    "description_simple": "Perform addition and subtraction of algebraic expressions with rational coefficients",
+    "core_meaning": "Perform addition and subtraction of algebraic expressions with rational coefficients",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P066"
+    ],
+    "source_pages": [
+      66
+    ],
+    "learning_intent": {
+      "primary_verb": "perform",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.2.1",
+    "canonical_title": "B7.2.2.1.3",
+    "node_type": "procedure",
+    "short_label": "B7.2.2.1.3",
+    "description_formal": "Perform multiplication and division of algebraic expressions with rational coefficients",
+    "description_simple": "Perform multiplication and division of algebraic expressions with rational coefficients",
+    "core_meaning": "Perform multiplication and division of algebraic expressions with rational coefficients",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P068"
+    ],
+    "source_pages": [
+      68
+    ],
+    "learning_intent": {
+      "primary_verb": "perform",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.2.1",
+    "canonical_title": "B7.2.2.1.4",
+    "node_type": "procedure",
+    "short_label": "B7.2.2.1.4",
+    "description_formal": "Substitute values to evaluate algebraic expressions",
+    "description_simple": "Substitute values to evaluate algebraic expressions",
+    "core_meaning": "Substitute values to evaluate algebraic expressions",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P069"
+    ],
+    "source_pages": [
+      69
+    ],
+    "learning_intent": {
+      "primary_verb": "evaluate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.2.2.1",
+    "canonical_title": "B7.2.2.1.5",
+    "node_type": "application",
+    "short_label": "B7.2.2.1.5",
+    "description_formal": "Use properties of the four operations to simplify algebraic expressions with rational coefficients",
+    "description_simple": "Use properties of the four operations to simplify algebraic expressions with rational coefficients",
+    "core_meaning": "Use properties of the four operations to simplify algebraic expressions with rational coefficients",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P070"
+    ],
+    "source_pages": [
+      70
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 2,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B7.2.3.1",
+    "canonical_title": "B7.2.3.1.1",
+    "node_type": "concept",
+    "short_label": "B7.2.3.1.1",
+    "description_formal": "Translate word problems to linear equations in one variable and vice versa",
+    "description_simple": "Translate word problems to linear equations in one variable and vice versa",
+    "core_meaning": "Translate word problems to linear equations in one variable and vice versa",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P071"
+    ],
+    "source_pages": [
+      71
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.2.3.1",
+    "canonical_title": "B7.2.3.1.2",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.2.3.1.2",
+    "description_formal": "Model and solve linear equations using concrete materials (e.g., counters and integer tiles) and describe the process orally and symbolically",
+    "description_simple": "Model and solve linear equations using concrete materials (e.g., counters and integer tiles) and describe the process orally and symbolically",
+    "core_meaning": "Model and solve linear equations using concrete materials (e.g., counters and integer tiles) and describe the process orally and symbolically",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P073"
+    ],
+    "source_pages": [
+      73
+    ],
+    "learning_intent": {
+      "primary_verb": "model",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "represent_model": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 2,
+        "application": 2
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.2.3.1",
+    "canonical_title": "B7.2.3.1.3",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.2.3.1.3",
+    "description_formal": "Model linear equations, then write mathematical expressions and describe the process of solving the equation using algebraic tiles",
+    "description_simple": "Model linear equations, then write mathematical expressions and describe the process of solving the equation using algebraic tiles",
+    "core_meaning": "Model linear equations, then write mathematical expressions and describe the process of solving the equation using algebraic tiles",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P075"
+    ],
+    "source_pages": [
+      75
+    ],
+    "learning_intent": {
+      "primary_verb": "model",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 2,
+        "application": 2
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.2.3.1",
+    "canonical_title": "B7.2.3.1.4",
+    "node_type": "application",
+    "short_label": "B7.2.3.1.4",
+    "description_formal": "Solve linear equations in one variable",
+    "description_simple": "Solve linear equations in one variable",
+    "core_meaning": "Solve linear equations in one variable",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P076"
+    ],
+    "source_pages": [
+      76
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.1.1",
+    "canonical_title": "B7.3.1.1.1",
+    "node_type": "concept",
+    "short_label": "B7.3.1.1.1",
+    "description_formal": "Measure and classify angles according to their measured sizes – right, acute, obtuse and reflex.",
+    "description_simple": "Measure and classify angles according to their measured sizes – right, acute, obtuse and reflex.",
+    "core_meaning": "Measure and classify angles according to their measured sizes – right, acute, obtuse and reflex.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P077"
+    ],
+    "source_pages": [
+      77
+    ],
+    "learning_intent": {
+      "primary_verb": "classify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.1.1",
+    "canonical_title": "B7.3.1.1.2",
+    "node_type": "application",
+    "short_label": "B7.3.1.1.2",
+    "description_formal": "Apply the fact that (i) complementary angles are two angles that have a sum of 90°, and (ii) supplementary angles are two angles that have a sum of 180° to solve problems.",
+    "description_simple": "Apply the fact that (i) complementary angles are two angles that have a sum of 90°, and (ii) supplementary angles are two angles that have a sum of 180° to solve problems.",
+    "core_meaning": "Apply the fact that (i) complementary angles are two angles that have a sum of 90°, and (ii) supplementary angles are two angles that have a sum of 180° to solve problems.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P078"
+    ],
+    "source_pages": [
+      78
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.1.1",
+    "canonical_title": "B7.3.1.1.3",
+    "node_type": "application",
+    "short_label": "B7.3.1.1.3",
+    "description_formal": "Use adjacent, supplementary and vertically opposite angles to solve problems Creativity and Innovation (CI)",
+    "description_simple": "Use adjacent, supplementary and vertically opposite angles to solve problems Creativity and Innovation (CI)",
+    "core_meaning": "Use adjacent, supplementary and vertically opposite angles to solve problems Creativity and Innovation (CI)",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P079"
+    ],
+    "source_pages": [
+      79
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.1.2",
+    "canonical_title": "B7.3.1.2.1",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.3.1.2.1",
+    "description_formal": "Construct a line segment perpendicular to another line segment",
+    "description_simple": "Construct a line segment perpendicular to another line segment",
+    "core_meaning": "Construct a line segment perpendicular to another line segment",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P081"
+    ],
+    "source_pages": [
+      81
+    ],
+    "learning_intent": {
+      "primary_verb": "construct",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.1.2",
+    "canonical_title": "B7.3.1.2.2",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.3.1.2.2",
+    "description_formal": "Construct the perpendicular bisector of a line segment",
+    "description_simple": "Construct the perpendicular bisector of a line segment",
+    "core_meaning": "Construct the perpendicular bisector of a line segment",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P082"
+    ],
+    "source_pages": [
+      82
+    ],
+    "learning_intent": {
+      "primary_verb": "construct",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.1.2",
+    "canonical_title": "B7.3.1.2.3",
+    "node_type": "concept",
+    "short_label": "B7.3.1.2.3",
+    "description_formal": "Copy and bisect angles",
+    "description_simple": "Copy and bisect angles",
+    "core_meaning": "Copy and bisect angles",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P083"
+    ],
+    "source_pages": [
+      83
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.1.2",
+    "canonical_title": "B7.3.1.2.7",
+    "node_type": "concept",
+    "short_label": "B7.3.1.2.7",
+    "description_formal": "Describe examples of perpendicular line segments, perpendicular bisectors and angle bisectors in the environment",
+    "description_simple": "Describe examples of perpendicular line segments, perpendicular bisectors and angle bisectors in the environment",
+    "core_meaning": "Describe examples of perpendicular line segments, perpendicular bisectors and angle bisectors in the environment",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P088"
+    ],
+    "source_pages": [
+      88
+    ],
+    "learning_intent": {
+      "primary_verb": "describe",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.1",
+    "canonical_title": "B7.3.2.1.1",
+    "node_type": "procedure",
+    "short_label": "B7.3.2.1.1",
+    "description_formal": "Calculate the perimeter of given shapes whose dimensions are in two units (i.e.",
+    "description_simple": "Calculate the perimeter of given shapes whose dimensions are in two units (i.e.",
+    "core_meaning": "Calculate the perimeter of given shapes whose dimensions are in two units (i.e.",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P089"
+    ],
+    "source_pages": [
+      89
+    ],
+    "learning_intent": {
+      "primary_verb": "calculate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.1",
+    "canonical_title": "B7.3.2.1.2",
+    "node_type": "application",
+    "short_label": "B7.3.2.1.2",
+    "description_formal": "Use the relationships between the diameter and the circumference to deduce the formula for finding the circumference of a circle and use it to solve problems",
+    "description_simple": "Use the relationships between the diameter and the circumference to deduce the formula for finding the circumference of a circle and use it to solve problems",
+    "core_meaning": "Use the relationships between the diameter and the circumference to deduce the formula for finding the circumference of a circle and use it to solve problems",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P090"
+    ],
+    "source_pages": [
+      90
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.1",
+    "canonical_title": "B7.3.2.1.3",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.3.2.1.3",
+    "description_formal": "Draw in a square grid rectangles and triangles with given dimensions",
+    "description_simple": "Draw in a square grid rectangles and triangles with given dimensions",
+    "core_meaning": "Draw in a square grid rectangles and triangles with given dimensions",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P093"
+    ],
+    "source_pages": [
+      93
+    ],
+    "learning_intent": {
+      "primary_verb": "draw",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.2",
+    "canonical_title": "B7.3.2.2.1",
+    "node_type": "application",
+    "short_label": "B7.3.2.2.1",
+    "description_formal": "Use the relationships between a triangle and a rectangle (or parallelogram) to deduce the formula for determining the area of a triangle",
+    "description_simple": "Use the relationships between a triangle and a rectangle (or parallelogram) to deduce the formula for determining the area of a triangle",
+    "core_meaning": "Use the relationships between a triangle and a rectangle (or parallelogram) to deduce the formula for determining the area of a triangle",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P094"
+    ],
+    "source_pages": [
+      94
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.2",
+    "canonical_title": "B7.3.2.2.2",
+    "node_type": "procedure",
+    "short_label": "B7.3.2.2.2",
+    "description_formal": "Determine the area of a triangle",
+    "description_simple": "Determine the area of a triangle",
+    "core_meaning": "Determine the area of a triangle",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P096"
+    ],
+    "source_pages": [
+      96
+    ],
+    "learning_intent": {
+      "primary_verb": "determine",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.3",
+    "canonical_title": "B7.3.2.3.1",
+    "node_type": "concept",
+    "short_label": "B7.3.2.3.1",
+    "description_formal": "Describe the bearing of a point from another point",
+    "description_simple": "Describe the bearing of a point from another point",
+    "core_meaning": "Describe the bearing of a point from another point",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P097"
+    ],
+    "source_pages": [
+      97
+    ],
+    "learning_intent": {
+      "primary_verb": "describe",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.3",
+    "canonical_title": "B7.3.2.3.2",
+    "node_type": "concept",
+    "short_label": "B7.3.2.3.2",
+    "description_formal": "Explain how to find the back bearing when the direction of travel has a bearing which is less than 180˚ and/ or greater than 180˚",
+    "description_simple": "Explain how to find the back bearing when the direction of travel has a bearing which is less than 180˚ and/ or greater than 180˚",
+    "core_meaning": "Explain how to find the back bearing when the direction of travel has a bearing which is less than 180˚ and/ or greater than 180˚",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P099"
+    ],
+    "source_pages": [
+      99
+    ],
+    "learning_intent": {
+      "primary_verb": "explain",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.3",
+    "canonical_title": "B7.3.2.3.3",
+    "node_type": "concept",
+    "short_label": "B7.3.2.3.3",
+    "description_formal": "Distinguish between scalar and vector quantities",
+    "description_simple": "Distinguish between scalar and vector quantities",
+    "core_meaning": "Distinguish between scalar and vector quantities",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P100"
+    ],
+    "source_pages": [
+      100
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.3",
+    "canonical_title": "B7.3.2.3.4",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.3.2.3.4",
+    "description_formal": "Represent vector in the column (component) form 𝒙𝒙 𝒚𝒚 and determine its magnitude and direction",
+    "description_simple": "Represent vector in the column (component) form 𝒙𝒙 𝒚𝒚 and determine its magnitude and direction",
+    "core_meaning": "Represent vector in the column (component) form 𝒙𝒙 𝒚𝒚 and determine its magnitude and direction",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P100"
+    ],
+    "source_pages": [
+      100
+    ],
+    "learning_intent": {
+      "primary_verb": "represent",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.2.3",
+    "canonical_title": "B7.3.2.3.5",
+    "node_type": "concept",
+    "short_label": "B7.3.2.3.5",
+    "description_formal": "Convert vectors in the column (component) form 𝒙𝒙 𝒚𝒚 to the Magnitude–Bearing form (𝒌𝒌, 𝜽𝜽) and vice versa",
+    "description_simple": "Convert vectors in the column (component) form 𝒙𝒙 𝒚𝒚 to the Magnitude–Bearing form (𝒌𝒌, 𝜽𝜽) and vice versa",
+    "core_meaning": "Convert vectors in the column (component) form 𝒙𝒙 𝒚𝒚 to the Magnitude–Bearing form (𝒌𝒌, 𝜽𝜽) and vice versa",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P101"
+    ],
+    "source_pages": [
+      101
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.3.1",
+    "canonical_title": "B7.3.3.1.1",
+    "node_type": "procedure",
+    "short_label": "B7.3.3.1.1",
+    "description_formal": "Determine shapes in real life that have reflectional (or fold) symmetries",
+    "description_simple": "Determine shapes in real life that have reflectional (or fold) symmetries",
+    "core_meaning": "Determine shapes in real life that have reflectional (or fold) symmetries",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P102"
+    ],
+    "source_pages": [
+      102
+    ],
+    "learning_intent": {
+      "primary_verb": "determine",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 2
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.3.3.1",
+    "canonical_title": "B7.3.3.1.2",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.3.3.1.2",
+    "description_formal": "Plot points and shapes (i.e. plane figures) on a coordinate plane and draw their images under reflection in given lines Creativity and Innovation (CI)",
+    "description_simple": "Plot points and shapes (i.e. plane figures) on a coordinate plane and draw their images under reflection in given lines Creativity and Innovation (CI)",
+    "core_meaning": "Plot points and shapes (i.e. plane figures) on a coordinate plane and draw their images under reflection in given lines Creativity and Innovation (CI)",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P103"
+    ],
+    "source_pages": [
+      103
+    ],
+    "learning_intent": {
+      "primary_verb": "plot",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.3.1",
+    "canonical_title": "B7.3.3.1.3",
+    "node_type": "diagram_spatial",
+    "short_label": "B7.3.3.1.3",
+    "description_formal": "Plot points and shapes (i.e. plane figures) on a coordinate plane and draw their images under translation by a given vector",
+    "description_simple": "Plot points and shapes (i.e. plane figures) on a coordinate plane and draw their images under translation by a given vector",
+    "core_meaning": "Plot points and shapes (i.e. plane figures) on a coordinate plane and draw their images under translation by a given vector",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P105"
+    ],
+    "source_pages": [
+      105
+    ],
+    "learning_intent": {
+      "primary_verb": "plot",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.3.3.1",
+    "canonical_title": "B7.3.3.1.4",
+    "node_type": "concept",
+    "short_label": "B7.3.3.1.4",
+    "description_formal": "Verify the concept of congruent and similar shapes in coordinate plane using properties of both the object(s) and image(s); and in real life situations (carpet designs, fabric pattern)",
+    "description_simple": "Verify the concept of congruent and similar shapes in coordinate plane using properties of both the object(s) and image(s); and in real life situations (carpet designs, fabric pattern)",
+    "core_meaning": "Verify the concept of congruent and similar shapes in coordinate plane using properties of both the object(s) and image(s); and in real life situations (carpet designs, fabric pattern)",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P106"
+    ],
+    "source_pages": [
+      106
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.4.1.1",
+    "canonical_title": "B7.4.1.1.1",
+    "node_type": "interpretation",
+    "short_label": "B7.4.1.1.1",
+    "description_formal": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question",
+    "description_simple": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question",
+    "core_meaning": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P107",
+      "P184"
+    ],
+    "source_pages": [
+      107,
+      184
+    ],
+    "learning_intent": {
+      "primary_verb": "select",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.4.1.1",
+    "canonical_title": "B7.4.1.1.2",
+    "node_type": "application",
+    "short_label": "B7.4.1.1.2",
+    "description_formal": "Design and administer a questionnaire for collecting data to answer questions and record the results",
+    "description_simple": "Design and administer a questionnaire for collecting data to answer questions and record the results",
+    "core_meaning": "Design and administer a questionnaire for collecting data to answer questions and record the results",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P108"
+    ],
+    "source_pages": [
+      108
+    ],
+    "learning_intent": {
+      "primary_verb": "design",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.4.1.1",
+    "canonical_title": "B7.4.1.1.3",
+    "node_type": "interpretation",
+    "short_label": "B7.4.1.1.3",
+    "description_formal": "Organise and present data from a survey into a table and/or chart, and analyse it to solve and/or pose problems",
+    "description_simple": "Organise and present data from a survey into a table and/or chart, and analyse it to solve and/or pose problems",
+    "core_meaning": "Organise and present data from a survey into a table and/or chart, and analyse it to solve and/or pose problems",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P109"
+    ],
+    "source_pages": [
+      109
+    ],
+    "learning_intent": {
+      "primary_verb": "analyse",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B7.4.1.2",
+    "canonical_title": "B7.4.1.2.1",
+    "node_type": "procedure",
+    "short_label": "B7.4.1.2.1",
+    "description_formal": "Calculate the mean for a given ungrouped data and use it to solve problems",
+    "description_simple": "Calculate the mean for a given ungrouped data and use it to solve problems",
+    "core_meaning": "Calculate the mean for a given ungrouped data and use it to solve problems",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P113"
+    ],
+    "source_pages": [
+      113
+    ],
+    "learning_intent": {
+      "primary_verb": "calculate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 3
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.4.1.2",
+    "canonical_title": "B7.4.1.2.2",
+    "node_type": "procedure",
+    "short_label": "B7.4.1.2.2",
+    "description_formal": "Calculate the median for a given ungrouped data and use it to solve problems",
+    "description_simple": "Calculate the median for a given ungrouped data and use it to solve problems",
+    "core_meaning": "Calculate the median for a given ungrouped data and use it to solve problems",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P114"
+    ],
+    "source_pages": [
+      114
+    ],
+    "learning_intent": {
+      "primary_verb": "calculate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 3
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.4.2.1",
+    "canonical_title": "B7.4.2.1.1",
+    "node_type": "concept",
+    "short_label": "B7.4.2.1.1",
+    "description_formal": "Demonstrate understanding of likelihood of a single outcome occurring by providing examples of events that are impossible, possible, or certain from personal contexts",
+    "description_simple": "Demonstrate understanding of likelihood of a single outcome occurring by providing examples of events that are impossible, possible, or certain from personal contexts",
+    "core_meaning": "Demonstrate understanding of likelihood of a single outcome occurring by providing examples of events that are impossible, possible, or certain from personal contexts",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P116"
+    ],
+    "source_pages": [
+      116
+    ],
+    "learning_intent": {
+      "primary_verb": "demonstrate",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.4.2.1",
+    "canonical_title": "B7.4.2.1.2",
+    "node_type": "concept",
+    "short_label": "B7.4.2.1.2",
+    "description_formal": "Classify the likelihood of a single outcome occurring in a probability experiment as impossible, possible, or certain",
+    "description_simple": "Classify the likelihood of a single outcome occurring in a probability experiment as impossible, possible, or certain",
+    "core_meaning": "Classify the likelihood of a single outcome occurring in a probability experiment as impossible, possible, or certain",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P117"
+    ],
+    "source_pages": [
+      117
+    ],
+    "learning_intent": {
+      "primary_verb": "classify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B7.4.2.1",
+    "canonical_title": "B7.4.2.1.3",
+    "node_type": "procedure",
+    "short_label": "B7.4.2.1.3",
+    "description_formal": "Calculate the probability of the event and express the probability as fractions, decimals, percentages and/or ratios",
+    "description_simple": "Calculate the probability of the event and express the probability as fractions, decimals, percentages and/or ratios",
+    "core_meaning": "Calculate the probability of the event and express the probability as fractions, decimals, percentages and/or ratios",
+    "difficulty_band": "easy",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P118"
+    ],
+    "source_pages": [
+      118
+    ],
+    "learning_intent": {
+      "primary_verb": "calculate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "canonical_title": "B8.1.1.1.1",
+    "node_type": "application",
+    "short_label": "B8.1.1.1.1",
+    "description_formal": "Apply the understanding of place value to read and write in number quantities over 1,000,000,000",
+    "description_simple": "Apply the understanding of place value to read and write in number quantities over 1,000,000,000",
+    "core_meaning": "Apply the understanding of place value to read and write in number quantities over 1,000,000,000",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P120"
+    ],
+    "source_pages": [
+      120
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "canonical_title": "B8.1.1.1.2",
+    "node_type": "concept",
+    "short_label": "B8.1.1.1.2",
+    "description_formal": "Skip count forwards and backwards in 10,000s, 100,000s, 500,000s, etc",
+    "description_simple": "Skip count forwards and backwards in 10,000s, 100,000s, 500,000s, etc",
+    "core_meaning": "Skip count forwards and backwards in 10,000s, 100,000s, 500,000s, etc",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P120"
+    ],
+    "source_pages": [
+      120
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "canonical_title": "B8.1.1.1.3",
+    "node_type": "concept",
+    "short_label": "B8.1.1.1.3",
+    "description_formal": "Compare and order whole numbers using “>, <, and =”",
+    "description_simple": "Compare and order whole numbers using “>, <, and =”",
+    "core_meaning": "Compare and order whole numbers using “>, <, and =”",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P120"
+    ],
+    "source_pages": [
+      120
+    ],
+    "learning_intent": {
+      "primary_verb": "compare",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "canonical_title": "B8.1.1.1.4",
+    "node_type": "concept",
+    "short_label": "B8.1.1.1.4",
+    "description_formal": "Express integers of any size into standard form",
+    "description_simple": "Express integers of any size into standard form",
+    "core_meaning": "Express integers of any size into standard form",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P121"
+    ],
+    "source_pages": [
+      121
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "canonical_title": "B8.1.1.1.5",
+    "node_type": "concept",
+    "short_label": "B8.1.1.1.5",
+    "description_formal": "Express integers in a given number of significant and decimal places",
+    "description_simple": "Express integers in a given number of significant and decimal places",
+    "core_meaning": "Express integers in a given number of significant and decimal places",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P121"
+    ],
+    "source_pages": [
+      121
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "canonical_title": "B8.1.1.1.6",
+    "node_type": "application",
+    "short_label": "B8.1.1.1.6",
+    "description_formal": "Create and solve word or real-life problems on place values Creativity and Innovation (CI)",
+    "description_simple": "Create and solve word or real-life problems on place values Creativity and Innovation (CI)",
+    "core_meaning": "Create and solve word or real-life problems on place values Creativity and Innovation (CI)",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P122"
+    ],
+    "source_pages": [
+      122
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.1.2",
+    "canonical_title": "B8.1.1.2.1",
+    "node_type": "application",
+    "short_label": "B8.1.1.2.1",
+    "description_formal": "Use the concept of sets to identify perfect squares and determine the square roots.",
+    "description_simple": "Use the concept of sets to identify perfect squares and determine the square roots.",
+    "core_meaning": "Use the concept of sets to identify perfect squares and determine the square roots.",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P122"
+    ],
+    "source_pages": [
+      122
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "calculate_execute": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 2,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.1.2",
+    "canonical_title": "B8.1.1.2.2",
+    "node_type": "application",
+    "short_label": "B8.1.1.2.2",
+    "description_formal": "Use the knowledge on sets and sets of factors of numbers to solve real life problems involving union and intersection",
+    "description_simple": "Use the knowledge on sets and sets of factors of numbers to solve real life problems involving union and intersection",
+    "core_meaning": "Use the knowledge on sets and sets of factors of numbers to solve real life problems involving union and intersection",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P123"
+    ],
+    "source_pages": [
+      123
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.1",
+    "canonical_title": "B8.1.2.1.1",
+    "node_type": "concept",
+    "short_label": "B8.1.2.1.1",
+    "description_formal": "Multiply and divide by power of 10 including decimals and the benchmark fractions",
+    "description_simple": "Multiply and divide by power of 10 including decimals and the benchmark fractions",
+    "core_meaning": "Multiply and divide by power of 10 including decimals and the benchmark fractions",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P124"
+    ],
+    "source_pages": [
+      124
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.1",
+    "canonical_title": "B8.1.2.1.2",
+    "node_type": "application",
+    "short_label": "B8.1.2.1.2",
+    "description_formal": "Apply mental mathematics strategies and number properties to do calculation",
+    "description_simple": "Apply mental mathematics strategies and number properties to do calculation",
+    "core_meaning": "Apply mental mathematics strategies and number properties to do calculation",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P124"
+    ],
+    "source_pages": [
+      124
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.1",
+    "canonical_title": "B8.1.2.1.3",
+    "node_type": "application",
+    "short_label": "B8.1.2.1.3",
+    "description_formal": "Apply mental mathematics strategies to solve word problems",
+    "description_simple": "Apply mental mathematics strategies to solve word problems",
+    "core_meaning": "Apply mental mathematics strategies to solve word problems",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P124"
+    ],
+    "source_pages": [
+      124
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.2",
+    "canonical_title": "B8.1.2.2.1",
+    "node_type": "concept",
+    "short_label": "B8.1.2.2.1",
+    "description_formal": "Add and subtract more than four-digit numbers",
+    "description_simple": "Add and subtract more than four-digit numbers",
+    "core_meaning": "Add and subtract more than four-digit numbers",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P125"
+    ],
+    "source_pages": [
+      125
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.2",
+    "canonical_title": "B8.1.2.2.2",
+    "node_type": "concept",
+    "short_label": "B8.1.2.2.2",
+    "description_formal": "Multiply or divide multi-digit numbers by 2- and 3-digit numbers",
+    "description_simple": "Multiply or divide multi-digit numbers by 2- and 3-digit numbers",
+    "core_meaning": "Multiply or divide multi-digit numbers by 2- and 3-digit numbers",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P126"
+    ],
+    "source_pages": [
+      126
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.2",
+    "canonical_title": "B8.1.2.2.3",
+    "node_type": "application",
+    "short_label": "B8.1.2.2.3",
+    "description_formal": "Create and solve story problems involving decimals on the four basic operations",
+    "description_simple": "Create and solve story problems involving decimals on the four basic operations",
+    "core_meaning": "Create and solve story problems involving decimals on the four basic operations",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P128"
+    ],
+    "source_pages": [
+      128
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.3",
+    "canonical_title": "B8.1.2.3.1",
+    "node_type": "concept",
+    "short_label": "B8.1.2.3.1",
+    "description_formal": "Identify and explain the laws of indices",
+    "description_simple": "Identify and explain the laws of indices",
+    "core_meaning": "Identify and explain the laws of indices",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P130"
+    ],
+    "source_pages": [
+      130
+    ],
+    "learning_intent": {
+      "primary_verb": "identify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.3",
+    "canonical_title": "B8.1.2.3.2",
+    "node_type": "application",
+    "short_label": "B8.1.2.3.2",
+    "description_formal": "Apply the laws of indices to simplify and evaluate numbers involving powers of numbers.",
+    "description_simple": "Apply the laws of indices to simplify and evaluate numbers involving powers of numbers.",
+    "core_meaning": "Apply the laws of indices to simplify and evaluate numbers involving powers of numbers.",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P130"
+    ],
+    "source_pages": [
+      130
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 2,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 3,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.3",
+    "canonical_title": "B8.1.2.3.3",
+    "node_type": "application",
+    "short_label": "B8.1.2.3.3",
+    "description_formal": "Solve exponential equations",
+    "description_simple": "Solve exponential equations",
+    "core_meaning": "Solve exponential equations",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P131"
+    ],
+    "source_pages": [
+      131
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.2.3",
+    "canonical_title": "B8.1.2.3.4",
+    "node_type": "application",
+    "short_label": "B8.1.2.3.4",
+    "description_formal": "Solve real life problems involving powers of natural numbers",
+    "description_simple": "Solve real life problems involving powers of natural numbers",
+    "core_meaning": "Solve real life problems involving powers of natural numbers",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P131"
+    ],
+    "source_pages": [
+      131
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.3.1",
+    "canonical_title": "B8.1.3.1.1",
+    "node_type": "application",
+    "short_label": "B8.1.3.1.1",
+    "description_formal": "Review fractions and solve problems involving basic operations on fractions",
+    "description_simple": "Review fractions and solve problems involving basic operations on fractions",
+    "core_meaning": "Review fractions and solve problems involving basic operations on fractions",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P132"
+    ],
+    "source_pages": [
+      132
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.3.1",
+    "canonical_title": "B8.1.3.1.2",
+    "node_type": "application",
+    "short_label": "B8.1.3.1.2",
+    "description_formal": "Add and/or subtract, multiply and/or divide given fractions, by using the principle of the order of operations (the rule of BODMAS or PEMDAS), and apply the understanding to solve problems",
+    "description_simple": "Add and/or subtract, multiply and/or divide given fractions, by using the principle of the order of operations (the rule of BODMAS or PEMDAS), and apply the understanding to solve problems",
+    "core_meaning": "Add and/or subtract, multiply and/or divide given fractions, by using the principle of the order of operations (the rule of BODMAS or PEMDAS), and apply the understanding to solve problems",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P133"
+    ],
+    "source_pages": [
+      133
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.3.1",
+    "canonical_title": "B8.1.3.1.3",
+    "node_type": "concept",
+    "short_label": "B8.1.3.1.3",
+    "description_formal": "Review word problems involving basic operations on fractions and related concepts",
+    "description_simple": "Review word problems involving basic operations on fractions and related concepts",
+    "core_meaning": "Review word problems involving basic operations on fractions and related concepts",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P133"
+    ],
+    "source_pages": [
+      133
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.4.1",
+    "canonical_title": "B8.1.4.1.1",
+    "node_type": "application",
+    "short_label": "B8.1.4.1.1",
+    "description_formal": "Use ratio reasoning to convert measurement units; manipulate and transform units appropriately when multiplying or dividing quantities",
+    "description_simple": "Use ratio reasoning to convert measurement units; manipulate and transform units appropriately when multiplying or dividing quantities",
+    "core_meaning": "Use ratio reasoning to convert measurement units; manipulate and transform units appropriately when multiplying or dividing quantities",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P135"
+    ],
+    "source_pages": [
+      135
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 2,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.4.1",
+    "canonical_title": "B8.1.4.1.2",
+    "node_type": "application",
+    "short_label": "B8.1.4.1.2",
+    "description_formal": "Solve unit rate problems including those involving unit pricing and constant speed; and speed translation",
+    "description_simple": "Solve unit rate problems including those involving unit pricing and constant speed; and speed translation",
+    "core_meaning": "Solve unit rate problems including those involving unit pricing and constant speed; and speed translation",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P135"
+    ],
+    "source_pages": [
+      135
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.4.1",
+    "canonical_title": "B8.1.4.1.3",
+    "node_type": "application",
+    "short_label": "B8.1.4.1.3",
+    "description_formal": "Apply the knowledge of speed to draw and interpret travel graphs or distance-time graphs",
+    "description_simple": "Apply the knowledge of speed to draw and interpret travel graphs or distance-time graphs",
+    "core_meaning": "Apply the knowledge of speed to draw and interpret travel graphs or distance-time graphs",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P137"
+    ],
+    "source_pages": [
+      137
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "represent_model": 1,
+        "analyze_interpret": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 2,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.1.4.1",
+    "canonical_title": "B8.1.4.1.4",
+    "node_type": "concept",
+    "short_label": "B8.1.4.1.4",
+    "description_formal": "Recognise and represent proportional relationships between quantities by deciding whether two quantities are in a proportional relationship.",
+    "description_simple": "Recognise and represent proportional relationships between quantities by deciding whether two quantities are in a proportional relationship.",
+    "core_meaning": "Recognise and represent proportional relationships between quantities by deciding whether two quantities are in a proportional relationship.",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P139"
+    ],
+    "source_pages": [
+      139
+    ],
+    "learning_intent": {
+      "primary_verb": "recognise",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.1.4.1",
+    "canonical_title": "B8.1.4.1.5",
+    "node_type": "concept",
+    "short_label": "B8.1.4.1.5",
+    "description_formal": "Identify the constant of proportionality (unit rate) in tables, graphs, equations, diagrams, and verbal descriptions of proportional relationships",
+    "description_simple": "Identify the constant of proportionality (unit rate) in tables, graphs, equations, diagrams, and verbal descriptions of proportional relationships",
+    "core_meaning": "Identify the constant of proportionality (unit rate) in tables, graphs, equations, diagrams, and verbal descriptions of proportional relationships",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P140"
+    ],
+    "source_pages": [
+      140
+    ],
+    "learning_intent": {
+      "primary_verb": "identify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.2.1.1",
+    "canonical_title": "B8.2.1.1.1",
+    "node_type": "procedure",
+    "short_label": "B8.2.1.1.1",
+    "description_formal": "Calculate the gradient of a line and use it to write equation of a line of the form y = mx + c",
+    "description_simple": "Calculate the gradient of a line and use it to write equation of a line of the form y = mx + c",
+    "core_meaning": "Calculate the gradient of a line and use it to write equation of a line of the form y = mx + c",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P142"
+    ],
+    "source_pages": [
+      142
+    ],
+    "learning_intent": {
+      "primary_verb": "calculate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.2.1.1",
+    "canonical_title": "B8.2.1.1.2",
+    "node_type": "application",
+    "short_label": "B8.2.1.1.2",
+    "description_formal": "Use graph of a linear relation to determine subsequent missing elements in the ordered pairs of the relation",
+    "description_simple": "Use graph of a linear relation to determine subsequent missing elements in the ordered pairs of the relation",
+    "core_meaning": "Use graph of a linear relation to determine subsequent missing elements in the ordered pairs of the relation",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P145"
+    ],
+    "source_pages": [
+      145
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "represent_model": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 2,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B8.2.1.1",
+    "canonical_title": "B8.2.1.1.3",
+    "node_type": "application",
+    "short_label": "B8.2.1.1.3",
+    "description_formal": "Use graphs of linear relations to solve real life problems",
+    "description_simple": "Use graphs of linear relations to solve real life problems",
+    "core_meaning": "Use graphs of linear relations to solve real life problems",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P146"
+    ],
+    "source_pages": [
+      146
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.2.2.1",
+    "canonical_title": "B8.2.2.1.1",
+    "node_type": "application",
+    "short_label": "B8.2.2.1.1",
+    "description_formal": "Use the distributive property to remove brackets and solve multiplication of binomial expression",
+    "description_simple": "Use the distributive property to remove brackets and solve multiplication of binomial expression",
+    "core_meaning": "Use the distributive property to remove brackets and solve multiplication of binomial expression",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P148"
+    ],
+    "source_pages": [
+      148
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.2.2.1",
+    "canonical_title": "B8.2.2.1.2",
+    "node_type": "procedure",
+    "short_label": "B8.2.2.1.2",
+    "description_formal": "Perform addition, subtraction, multiplication and division of algebraic expressions including fractions",
+    "description_simple": "Perform addition, subtraction, multiplication and division of algebraic expressions including fractions",
+    "core_meaning": "Perform addition, subtraction, multiplication and division of algebraic expressions including fractions",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P148"
+    ],
+    "source_pages": [
+      148
+    ],
+    "learning_intent": {
+      "primary_verb": "perform",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.2.2.1",
+    "canonical_title": "B8.2.2.1.3",
+    "node_type": "procedure",
+    "short_label": "B8.2.2.1.3",
+    "description_formal": "Substitute values to evaluate algebraic expressions including fractions and use these to solve problems.",
+    "description_simple": "Substitute values to evaluate algebraic expressions including fractions and use these to solve problems.",
+    "core_meaning": "Substitute values to evaluate algebraic expressions including fractions and use these to solve problems.",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P149"
+    ],
+    "source_pages": [
+      149
+    ],
+    "learning_intent": {
+      "primary_verb": "evaluate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 2
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.2.2.1",
+    "canonical_title": "B8.2.2.1.4",
+    "node_type": "application",
+    "short_label": "B8.2.2.1.4",
+    "description_formal": "Factorise given expressions involving the four operations and use the experiences gained to solve problems",
+    "description_simple": "Factorise given expressions involving the four operations and use the experiences gained to solve problems",
+    "core_meaning": "Factorise given expressions involving the four operations and use the experiences gained to solve problems",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P150"
+    ],
+    "source_pages": [
+      150
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.2.3.1",
+    "canonical_title": "B8.2.3.1.1",
+    "node_type": "concept",
+    "short_label": "B8.2.3.1.1",
+    "description_formal": "Translate word problems into linear inequalities in one variable and vice versa",
+    "description_simple": "Translate word problems into linear inequalities in one variable and vice versa",
+    "core_meaning": "Translate word problems into linear inequalities in one variable and vice versa",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P151"
+    ],
+    "source_pages": [
+      151
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.2.3.1",
+    "canonical_title": "B8.2.3.1.2",
+    "node_type": "application",
+    "short_label": "B8.2.3.1.2",
+    "description_formal": "Solve simple linear inequalities",
+    "description_simple": "Solve simple linear inequalities",
+    "core_meaning": "Solve simple linear inequalities",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P151"
+    ],
+    "source_pages": [
+      151
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.2.3.1",
+    "canonical_title": "B8.2.3.1.3",
+    "node_type": "procedure",
+    "short_label": "B8.2.3.1.3",
+    "description_formal": "Determine solution sets of simple linear inequalities in given domains",
+    "description_simple": "Determine solution sets of simple linear inequalities in given domains",
+    "core_meaning": "Determine solution sets of simple linear inequalities in given domains",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P152"
+    ],
+    "source_pages": [
+      152
+    ],
+    "learning_intent": {
+      "primary_verb": "determine",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.3.1.1",
+    "canonical_title": "B8.3.1.1.1",
+    "node_type": "diagram_spatial",
+    "short_label": "B8.3.1.1.1",
+    "description_formal": "Draw and determine the values of alternate and corresponding angles",
+    "description_simple": "Draw and determine the values of alternate and corresponding angles",
+    "core_meaning": "Draw and determine the values of alternate and corresponding angles",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P153"
+    ],
+    "source_pages": [
+      153
+    ],
+    "learning_intent": {
+      "primary_verb": "draw",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.3.1.1",
+    "canonical_title": "B8.3.1.1.2",
+    "node_type": "procedure",
+    "short_label": "B8.3.1.1.2",
+    "description_formal": "Determine the values of angles in a triangle using knowledge of the sum of interior angles in a triangle and other properties",
+    "description_simple": "Determine the values of angles in a triangle using knowledge of the sum of interior angles in a triangle and other properties",
+    "core_meaning": "Determine the values of angles in a triangle using knowledge of the sum of interior angles in a triangle and other properties",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P154"
+    ],
+    "source_pages": [
+      154
+    ],
+    "learning_intent": {
+      "primary_verb": "determine",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.3.1.2",
+    "canonical_title": "B8.3.1.2.1",
+    "node_type": "diagram_spatial",
+    "short_label": "B8.3.1.2.1",
+    "description_formal": "Construct and bisect angles of 120˚, 105˚, 135˚ and 150˚",
+    "description_simple": "Construct and bisect angles of 120˚, 105˚, 135˚ and 150˚",
+    "core_meaning": "Construct and bisect angles of 120˚, 105˚, 135˚ and 150˚",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P155"
+    ],
+    "source_pages": [
+      155
+    ],
+    "learning_intent": {
+      "primary_verb": "construct",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.3.1.2",
+    "canonical_title": "B8.3.1.2.2",
+    "node_type": "diagram_spatial",
+    "short_label": "B8.3.1.2.2",
+    "description_formal": "Construct scalene triangles, isosceles triangles, equilateral triangles, obtuse-angled triangle, and acute-angled triangles in different orientations under given conditions.",
+    "description_simple": "Construct scalene triangles, isosceles triangles, equilateral triangles, obtuse-angled triangle, and acute-angled triangles in different orientations under given conditions.",
+    "core_meaning": "Construct scalene triangles, isosceles triangles, equilateral triangles, obtuse-angled triangle, and acute-angled triangles in different orientations under given conditions.",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P157"
+    ],
+    "source_pages": [
+      157
+    ],
+    "learning_intent": {
+      "primary_verb": "construct",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.3.1.2",
+    "canonical_title": "B8.3.1.2.3",
+    "node_type": "diagram_spatial",
+    "short_label": "B8.3.1.2.3",
+    "description_formal": "Construct loci under given conditions including: (i) the locus of sets of points from a fixed point; (ii) the locus of points equidistant from two fixed points; (iii) the locus of points equidistant from two intersecting straight lines, and (iv) the locus of...",
+    "description_simple": "Construct loci under given conditions including: (i) the locus of sets of points from a fixed point; (ii) the locus of points equidistant from two fixed points; (iii) the locus of points equidistant from two intersecting straight lines, and (iv) the locus of...",
+    "core_meaning": "Construct loci under given conditions including: (i) the locus of sets of points from a fixed point; (ii) the locus of points equidistant from two fixed points; (iii) the locus of points equidistant from two intersecting straight lines, and (iv) the locus of...",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P163"
+    ],
+    "source_pages": [
+      163
+    ],
+    "learning_intent": {
+      "primary_verb": "construct",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.3.2.1",
+    "canonical_title": "B8.3.2.1.1",
+    "node_type": "application",
+    "short_label": "B8.3.2.1.1",
+    "description_formal": "Use the relationship between the diameter and circumference of a circle to deduce the formula for finding its area, and use this to solve problems",
+    "description_simple": "Use the relationship between the diameter and circumference of a circle to deduce the formula for finding its area, and use this to solve problems",
+    "core_meaning": "Use the relationship between the diameter and circumference of a circle to deduce the formula for finding its area, and use this to solve problems",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P172"
+    ],
+    "source_pages": [
+      172
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.3.2.1",
+    "canonical_title": "B8.3.2.1.2",
+    "node_type": "concept",
+    "short_label": "B8.3.2.1.2",
+    "description_formal": "Establish the relationship between the hypotenuse ‘c’ and the two other sides ‘a’ and ‘b’ of a right-angled triangle (i.e.",
+    "description_simple": "Establish the relationship between the hypotenuse ‘c’ and the two other sides ‘a’ and ‘b’ of a right-angled triangle (i.e.",
+    "core_meaning": "Establish the relationship between the hypotenuse ‘c’ and the two other sides ‘a’ and ‘b’ of a right-angled triangle (i.e.",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P173"
+    ],
+    "source_pages": [
+      173
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.3.2.1",
+    "canonical_title": "B8.3.2.1.3",
+    "node_type": "application",
+    "short_label": "B8.3.2.1.3",
+    "description_formal": "Use the Pythagorean theorem to solve problems on right- angled triangle",
+    "description_simple": "Use the Pythagorean theorem to solve problems on right- angled triangle",
+    "core_meaning": "Use the Pythagorean theorem to solve problems on right- angled triangle",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P174"
+    ],
+    "source_pages": [
+      174
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.3.2.1",
+    "canonical_title": "B8.3.2.1.4",
+    "node_type": "application",
+    "short_label": "B8.3.2.1.4",
+    "description_formal": "Use the Pythagoras theorem to calculate the area of a triangle in real life problems",
+    "description_simple": "Use the Pythagoras theorem to calculate the area of a triangle in real life problems",
+    "core_meaning": "Use the Pythagoras theorem to calculate the area of a triangle in real life problems",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P175"
+    ],
+    "source_pages": [
+      175
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 2,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B8.3.2.1",
+    "canonical_title": "B8.3.2.1.5",
+    "node_type": "application",
+    "short_label": "B8.3.2.1.5",
+    "description_formal": "Establish the relationship between the basic trigonometric ratios and solve problems involving right-angled triangles",
+    "description_simple": "Establish the relationship between the basic trigonometric ratios and solve problems involving right-angled triangles",
+    "core_meaning": "Establish the relationship between the basic trigonometric ratios and solve problems involving right-angled triangles",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P175"
+    ],
+    "source_pages": [
+      175
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.3.2.2",
+    "canonical_title": "B8.3.2.2.1",
+    "node_type": "concept",
+    "short_label": "B8.3.2.2.1",
+    "description_formal": "Add, subtract and find the scalar multiplication of vectors in the component form",
+    "description_simple": "Add, subtract and find the scalar multiplication of vectors in the component form",
+    "core_meaning": "Add, subtract and find the scalar multiplication of vectors in the component form",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P179"
+    ],
+    "source_pages": [
+      179
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.3.2.2",
+    "canonical_title": "B8.3.2.2.2",
+    "node_type": "concept",
+    "short_label": "B8.3.2.2.2",
+    "description_formal": "Demonstrate understanding of vector equality",
+    "description_simple": "Demonstrate understanding of vector equality",
+    "core_meaning": "Demonstrate understanding of vector equality",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P180"
+    ],
+    "source_pages": [
+      180
+    ],
+    "learning_intent": {
+      "primary_verb": "demonstrate",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.3.3.1",
+    "canonical_title": "B8.3.3.1.1",
+    "node_type": "concept",
+    "short_label": "B8.3.3.1.1",
+    "description_formal": "Understand rotation and identify real-life situations involving rotation",
+    "description_simple": "Understand rotation and identify real-life situations involving rotation",
+    "core_meaning": "Understand rotation and identify real-life situations involving rotation",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P181"
+    ],
+    "source_pages": [
+      181
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.3.3.1",
+    "canonical_title": "B8.3.3.1.2",
+    "node_type": "diagram_spatial",
+    "short_label": "B8.3.3.1.2",
+    "description_formal": "Draw rotation image in a coordinate plane and determine the angle of rotation",
+    "description_simple": "Draw rotation image in a coordinate plane and determine the angle of rotation",
+    "core_meaning": "Draw rotation image in a coordinate plane and determine the angle of rotation",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P182"
+    ],
+    "source_pages": [
+      182
+    ],
+    "learning_intent": {
+      "primary_verb": "draw",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.3.3.1",
+    "canonical_title": "B8.3.3.1.3",
+    "node_type": "interpretation",
+    "short_label": "B8.3.3.1.3",
+    "description_formal": "Investigate the concept of congruent shapes",
+    "description_simple": "Investigate the concept of congruent shapes",
+    "core_meaning": "Investigate the concept of congruent shapes",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P182"
+    ],
+    "source_pages": [
+      182
+    ],
+    "learning_intent": {
+      "primary_verb": "investigate",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.4.1.1",
+    "canonical_title": "B8.4.1.1.1",
+    "node_type": "concept",
+    "short_label": "B8.4.1.1.1",
+    "description_formal": "Identify types of given data including numerical, categorical, ungrouped and grouped data",
+    "description_simple": "Identify types of given data including numerical, categorical, ungrouped and grouped data",
+    "core_meaning": "Identify types of given data including numerical, categorical, ungrouped and grouped data",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P183"
+    ],
+    "source_pages": [
+      183
+    ],
+    "learning_intent": {
+      "primary_verb": "identify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.4.1.1",
+    "canonical_title": "B8.4.1.1.2",
+    "node_type": "interpretation",
+    "short_label": "B8.4.1.1.2",
+    "description_formal": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question",
+    "description_simple": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question",
+    "core_meaning": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P184"
+    ],
+    "source_pages": [
+      184
+    ],
+    "learning_intent": {
+      "primary_verb": "select",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.4.1.1",
+    "canonical_title": "B8.4.1.1.3",
+    "node_type": "interpretation",
+    "short_label": "B8.4.1.1.3",
+    "description_formal": "Organise data (grouped/ungrouped), present it in frequency tables, line graphs, pie graphs, bar graphs and/or pictographs (representations include info graphics, waffle diagrams, box and whisker plots and stem and leaf plots) and analyse it to solve and/or...",
+    "description_simple": "Organise data (grouped/ungrouped), present it in frequency tables, line graphs, pie graphs, bar graphs and/or pictographs (representations include info graphics, waffle diagrams, box and whisker plots and stem and leaf plots) and analyse it to solve and/or...",
+    "core_meaning": "Organise data (grouped/ungrouped), present it in frequency tables, line graphs, pie graphs, bar graphs and/or pictographs (representations include info graphics, waffle diagrams, box and whisker plots and stem and leaf plots) and analyse it to solve and/or...",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P185"
+    ],
+    "source_pages": [
+      185
+    ],
+    "learning_intent": {
+      "primary_verb": "analyse",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.4.1.2",
+    "canonical_title": "B8.4.1.2.1",
+    "node_type": "procedure",
+    "short_label": "B8.4.1.2.1",
+    "description_formal": "Calculate the mean, median and mode for a given set of ungrouped data, and explain why these values may be the same or different",
+    "description_simple": "Calculate the mean, median and mode for a given set of ungrouped data, and explain why these values may be the same or different",
+    "core_meaning": "Calculate the mean, median and mode for a given set of ungrouped data, and explain why these values may be the same or different",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P188"
+    ],
+    "source_pages": [
+      188
+    ],
+    "learning_intent": {
+      "primary_verb": "calculate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 4,
+        "application": 2
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.4.1.2",
+    "canonical_title": "B8.4.1.2.2",
+    "node_type": "interpretation",
+    "short_label": "B8.4.1.2.2",
+    "description_formal": "Justify a context in which the mean, median or mode is the most appropriate measure of central tendency to use when reporting findings",
+    "description_simple": "Justify a context in which the mean, median or mode is the most appropriate measure of central tendency to use when reporting findings",
+    "core_meaning": "Justify a context in which the mean, median or mode is the most appropriate measure of central tendency to use when reporting findings",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P190"
+    ],
+    "source_pages": [
+      190
+    ],
+    "learning_intent": {
+      "primary_verb": "justify",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B8.4.2.1",
+    "canonical_title": "B8.4.2.1.1",
+    "node_type": "procedure",
+    "short_label": "B8.4.2.1.1",
+    "description_formal": "Perform a probability experiment involving two independent events such as drawing coloured bottle tops from a bag with replacement and list the elements of the sample space",
+    "description_simple": "Perform a probability experiment involving two independent events such as drawing coloured bottle tops from a bag with replacement and list the elements of the sample space",
+    "core_meaning": "Perform a probability experiment involving two independent events such as drawing coloured bottle tops from a bag with replacement and list the elements of the sample space",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P191"
+    ],
+    "source_pages": [
+      191
+    ],
+    "learning_intent": {
+      "primary_verb": "perform",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 2
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B8.4.2.1",
+    "canonical_title": "B8.4.2.1.2",
+    "node_type": "concept",
+    "short_label": "B8.4.2.1.2",
+    "description_formal": "Express the probabilities of the events as fractions, decimals, percentages and/or ratios.",
+    "description_simple": "Express the probabilities of the events as fractions, decimals, percentages and/or ratios.",
+    "core_meaning": "Express the probabilities of the events as fractions, decimals, percentages and/or ratios.",
+    "difficulty_band": "medium",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P192"
+    ],
+    "source_pages": [
+      192
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.1.1.1",
+    "canonical_title": "B9.1.1.1.1",
+    "node_type": "concept",
+    "short_label": "B9.1.1.1.1",
+    "description_formal": "Express integers to a given number of significant and decimal places",
+    "description_simple": "Express integers to a given number of significant and decimal places",
+    "core_meaning": "Express integers to a given number of significant and decimal places",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P195"
+    ],
+    "source_pages": [
+      195
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.1.1.1",
+    "canonical_title": "B9.1.1.1.2",
+    "node_type": "application",
+    "short_label": "B9.1.1.1.2",
+    "description_formal": "Use knowledge and understanding of place value to solve real life problems",
+    "description_simple": "Use knowledge and understanding of place value to solve real life problems",
+    "core_meaning": "Use knowledge and understanding of place value to solve real life problems",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P195"
+    ],
+    "source_pages": [
+      195
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.1.2",
+    "canonical_title": "B9.1.1.2.1",
+    "node_type": "application",
+    "short_label": "B9.1.1.2.1",
+    "description_formal": "Solve problems on relationship between members of the rational number system using knowledge and understanding of the concept of union and intersection of two sets",
+    "description_simple": "Solve problems on relationship between members of the rational number system using knowledge and understanding of the concept of union and intersection of two sets",
+    "core_meaning": "Solve problems on relationship between members of the rational number system using knowledge and understanding of the concept of union and intersection of two sets",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P196"
+    ],
+    "source_pages": [
+      196
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.1.2",
+    "canonical_title": "B9.1.1.2.2",
+    "node_type": "application",
+    "short_label": "B9.1.1.2.2",
+    "description_formal": "Apply the concept of sets to solve problems on relationship between members of rational number system and solve real life problems involving union and intersection of two sets",
+    "description_simple": "Apply the concept of sets to solve problems on relationship between members of rational number system and solve real life problems involving union and intersection of two sets",
+    "core_meaning": "Apply the concept of sets to solve problems on relationship between members of rational number system and solve real life problems involving union and intersection of two sets",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P197"
+    ],
+    "source_pages": [
+      197
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.1",
+    "canonical_title": "B9.1.2.1.1",
+    "node_type": "concept",
+    "short_label": "B9.1.2.1.1",
+    "description_formal": "Multiply and divide given numbers by powers of 10 including decimals and benchmark fractions Creativity and Innovation (CI)",
+    "description_simple": "Multiply and divide given numbers by powers of 10 including decimals and benchmark fractions Creativity and Innovation (CI)",
+    "core_meaning": "Multiply and divide given numbers by powers of 10 including decimals and benchmark fractions Creativity and Innovation (CI)",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P198"
+    ],
+    "source_pages": [
+      198
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.1",
+    "canonical_title": "B9.1.2.1.2",
+    "node_type": "concept",
+    "short_label": "B9.1.2.1.2",
+    "description_formal": "Demonstrate the ability to determine commutative properties of addition and multiplication",
+    "description_simple": "Demonstrate the ability to determine commutative properties of addition and multiplication",
+    "core_meaning": "Demonstrate the ability to determine commutative properties of addition and multiplication",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P198"
+    ],
+    "source_pages": [
+      198
+    ],
+    "learning_intent": {
+      "primary_verb": "demonstrate",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 2,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.1",
+    "canonical_title": "B9.1.2.1.3",
+    "node_type": "application",
+    "short_label": "B9.1.2.1.3",
+    "description_formal": "Use the associative property of addition and multiplication",
+    "description_simple": "Use the associative property of addition and multiplication",
+    "core_meaning": "Use the associative property of addition and multiplication",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P198"
+    ],
+    "source_pages": [
+      198
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.1",
+    "canonical_title": "B9.1.2.1.4",
+    "node_type": "application",
+    "short_label": "B9.1.2.1.4",
+    "description_formal": "Use the distributive property in solving problems",
+    "description_simple": "Use the distributive property in solving problems",
+    "core_meaning": "Use the distributive property in solving problems",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P199"
+    ],
+    "source_pages": [
+      199
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.2",
+    "canonical_title": "B9.1.2.2.1",
+    "node_type": "application",
+    "short_label": "B9.1.2.2.1",
+    "description_formal": "Solve operations involving addition, subtraction, multiplication and division using word problems",
+    "description_simple": "Solve operations involving addition, subtraction, multiplication and division using word problems",
+    "core_meaning": "Solve operations involving addition, subtraction, multiplication and division using word problems",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P199"
+    ],
+    "source_pages": [
+      199
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.2",
+    "canonical_title": "B9.1.2.2.2",
+    "node_type": "application",
+    "short_label": "B9.1.2.2.2",
+    "description_formal": "Solve word problems involving the four basic operations and round the answers to the nearest two decimal figures or to some significant figures.",
+    "description_simple": "Solve word problems involving the four basic operations and round the answers to the nearest two decimal figures or to some significant figures.",
+    "core_meaning": "Solve word problems involving the four basic operations and round the answers to the nearest two decimal figures or to some significant figures.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P199"
+    ],
+    "source_pages": [
+      199
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.4",
+    "canonical_title": "B9.1.2.3.4",
+    "node_type": "application",
+    "short_label": "B9.1.2.3.4",
+    "description_formal": "Approximate the square roots of non-perfect squares with calculators/tables",
+    "description_simple": "Approximate the square roots of non-perfect squares with calculators/tables",
+    "core_meaning": "Approximate the square roots of non-perfect squares with calculators/tables",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P201"
+    ],
+    "source_pages": [
+      201
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.4",
+    "canonical_title": "B9.1.2.4.1",
+    "node_type": "concept",
+    "short_label": "B9.1.2.4.1",
+    "description_formal": "Identify simple and compound surds",
+    "description_simple": "Identify simple and compound surds",
+    "core_meaning": "Identify simple and compound surds",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P200"
+    ],
+    "source_pages": [
+      200
+    ],
+    "learning_intent": {
+      "primary_verb": "identify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.4",
+    "canonical_title": "B9.1.2.4.2",
+    "node_type": "concept",
+    "short_label": "B9.1.2.4.2",
+    "description_formal": "Explain the identities/rules of surds Rule 1 √𝑎𝑎× 𝑎𝑎 = √𝑎𝑎× √𝑎𝑎 Rule 2 √𝑎𝑎 𝑎𝑎 = √𝑎𝑎 √𝑎𝑎 Rule 3 𝑎𝑎 √𝑎𝑎 = 𝑎𝑎 √𝑎𝑎× √𝑎𝑎 √𝑎𝑎= 𝑎𝑎√𝑎𝑎 𝑎𝑎 Rule 4 𝑎𝑎√𝑎𝑎± 𝑎𝑎√𝑎𝑎= (𝑎𝑎± 𝑎𝑎)√𝑎𝑎 Rule 5 𝑎𝑎 𝑎𝑎+ 𝑎𝑎√𝑚𝑚= 𝑎𝑎 𝑎𝑎+ 𝑎𝑎√𝑚𝑚× 𝑎𝑎− 𝑎𝑎√𝑚𝑚 𝑎𝑎− 𝑎𝑎√𝑚𝑚 Rule 6 𝑎𝑎 𝑎𝑎− 𝑎𝑎√𝑚𝑚 = 𝑎𝑎 𝑎𝑎− 𝑎𝑎√𝑚𝑚× 𝑎𝑎+...",
+    "description_simple": "Explain the identities/rules of surds Rule 1 √𝑎𝑎× 𝑎𝑎 = √𝑎𝑎× √𝑎𝑎 Rule 2 √𝑎𝑎 𝑎𝑎 = √𝑎𝑎 √𝑎𝑎 Rule 3 𝑎𝑎 √𝑎𝑎 = 𝑎𝑎 √𝑎𝑎× √𝑎𝑎 √𝑎𝑎= 𝑎𝑎√𝑎𝑎 𝑎𝑎 Rule 4 𝑎𝑎√𝑎𝑎± 𝑎𝑎√𝑎𝑎= (𝑎𝑎± 𝑎𝑎)√𝑎𝑎 Rule 5 𝑎𝑎 𝑎𝑎+ 𝑎𝑎√𝑚𝑚= 𝑎𝑎 𝑎𝑎+ 𝑎𝑎√𝑚𝑚× 𝑎𝑎− 𝑎𝑎√𝑚𝑚 𝑎𝑎− 𝑎𝑎√𝑚𝑚 Rule 6 𝑎𝑎 𝑎𝑎− 𝑎𝑎√𝑚𝑚 = 𝑎𝑎 𝑎𝑎− 𝑎𝑎√𝑚𝑚× 𝑎𝑎+...",
+    "core_meaning": "Explain the identities/rules of surds Rule 1 √𝑎𝑎× 𝑎𝑎 = √𝑎𝑎× √𝑎𝑎 Rule 2 √𝑎𝑎 𝑎𝑎 = √𝑎𝑎 √𝑎𝑎 Rule 3 𝑎𝑎 √𝑎𝑎 = 𝑎𝑎 √𝑎𝑎× √𝑎𝑎 √𝑎𝑎= 𝑎𝑎√𝑎𝑎 𝑎𝑎 Rule 4 𝑎𝑎√𝑎𝑎± 𝑎𝑎√𝑎𝑎= (𝑎𝑎± 𝑎𝑎)√𝑎𝑎 Rule 5 𝑎𝑎 𝑎𝑎+ 𝑎𝑎√𝑚𝑚= 𝑎𝑎 𝑎𝑎+ 𝑎𝑎√𝑚𝑚× 𝑎𝑎− 𝑎𝑎√𝑚𝑚 𝑎𝑎− 𝑎𝑎√𝑚𝑚 Rule 6 𝑎𝑎 𝑎𝑎− 𝑎𝑎√𝑚𝑚 = 𝑎𝑎 𝑎𝑎− 𝑎𝑎√𝑚𝑚× 𝑎𝑎+...",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P200"
+    ],
+    "source_pages": [
+      200
+    ],
+    "learning_intent": {
+      "primary_verb": "explain",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.1.2.4",
+    "canonical_title": "B9.1.2.4.3",
+    "node_type": "procedure",
+    "short_label": "B9.1.2.4.3",
+    "description_formal": "Simplify given surds )",
+    "description_simple": "Simplify given surds )",
+    "core_meaning": "Simplify given surds )",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P200"
+    ],
+    "source_pages": [
+      200
+    ],
+    "learning_intent": {
+      "primary_verb": "simplify",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.1.3.1",
+    "canonical_title": "B9.1.3.1.1",
+    "node_type": "application",
+    "short_label": "B9.1.3.1.1",
+    "description_formal": "Review fractions and solve problems involving basic operations on fractions",
+    "description_simple": "Review fractions and solve problems involving basic operations on fractions",
+    "core_meaning": "Review fractions and solve problems involving basic operations on fractions",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P202"
+    ],
+    "source_pages": [
+      202
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.3.1",
+    "canonical_title": "B9.1.3.1.2",
+    "node_type": "application",
+    "short_label": "B9.1.3.1.2",
+    "description_formal": "Add and/or subtract, multiply and/or divide given fractions, using the principle of order of operations including the use of the BODMAS or PEMDAS rule, and apply the understanding of these to solve problems",
+    "description_simple": "Add and/or subtract, multiply and/or divide given fractions, using the principle of order of operations including the use of the BODMAS or PEMDAS rule, and apply the understanding of these to solve problems",
+    "core_meaning": "Add and/or subtract, multiply and/or divide given fractions, using the principle of order of operations including the use of the BODMAS or PEMDAS rule, and apply the understanding of these to solve problems",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P203"
+    ],
+    "source_pages": [
+      203
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 3
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.3.1",
+    "canonical_title": "B9.1.3.1.3",
+    "node_type": "concept",
+    "short_label": "B9.1.3.1.3",
+    "description_formal": "Review word problems involving basic operations on fractions.",
+    "description_simple": "Review word problems involving basic operations on fractions.",
+    "core_meaning": "Review word problems involving basic operations on fractions.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P204"
+    ],
+    "source_pages": [
+      204
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.4.1",
+    "canonical_title": "B9.1.4.1.1",
+    "node_type": "diagram_spatial",
+    "short_label": "B9.1.4.1.1",
+    "description_formal": "Represent proportional relationships by equations",
+    "description_simple": "Represent proportional relationships by equations",
+    "core_meaning": "Represent proportional relationships by equations",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P205"
+    ],
+    "source_pages": [
+      205
+    ],
+    "learning_intent": {
+      "primary_verb": "represent",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 2,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B9.1.4.1",
+    "canonical_title": "B9.1.4.1.2",
+    "node_type": "application",
+    "short_label": "B9.1.4.1.2",
+    "description_formal": "Use proportional relationships to solve multistep ratio and percent problems, examples: simple interest, tax, discount and commissions, NHIL, depreciation, insurance, etc",
+    "description_simple": "Use proportional relationships to solve multistep ratio and percent problems, examples: simple interest, tax, discount and commissions, NHIL, depreciation, insurance, etc",
+    "core_meaning": "Use proportional relationships to solve multistep ratio and percent problems, examples: simple interest, tax, discount and commissions, NHIL, depreciation, insurance, etc",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P205"
+    ],
+    "source_pages": [
+      205
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.4.1",
+    "canonical_title": "B9.1.4.1.3",
+    "node_type": "application",
+    "short_label": "B9.1.4.1.3",
+    "description_formal": "Use knowledge of rates and proportional reasoning to solve problems involving SSNIT benefits and contributions",
+    "description_simple": "Use knowledge of rates and proportional reasoning to solve problems involving SSNIT benefits and contributions",
+    "core_meaning": "Use knowledge of rates and proportional reasoning to solve problems involving SSNIT benefits and contributions",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P206"
+    ],
+    "source_pages": [
+      206
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.1.4.1",
+    "canonical_title": "B9.1.4.1.4",
+    "node_type": "concept",
+    "short_label": "B9.1.4.1.4",
+    "description_formal": "Recognise and graph proportional relationships, interpreting the unit rate as the slope of the graph and use these to solve problems",
+    "description_simple": "Recognise and graph proportional relationships, interpreting the unit rate as the slope of the graph and use these to solve problems",
+    "core_meaning": "Recognise and graph proportional relationships, interpreting the unit rate as the slope of the graph and use these to solve problems",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P209"
+    ],
+    "source_pages": [
+      209
+    ],
+    "learning_intent": {
+      "primary_verb": "recognise",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "represent_model": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.2.1.1",
+    "canonical_title": "B9.2.1.1.1",
+    "node_type": "diagram_spatial",
+    "short_label": "B9.2.1.1.1",
+    "description_formal": "Construct a table of values for two linear relations and graph the relation",
+    "description_simple": "Construct a table of values for two linear relations and graph the relation",
+    "core_meaning": "Construct a table of values for two linear relations and graph the relation",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P210"
+    ],
+    "source_pages": [
+      210
+    ],
+    "learning_intent": {
+      "primary_verb": "construct",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.2.1.1",
+    "canonical_title": "B9.2.1.1.2",
+    "node_type": "application",
+    "short_label": "B9.2.1.1.2",
+    "description_formal": "Use graphs of two linear relations to determine subsequent missing elements in ordered pairs of the relation",
+    "description_simple": "Use graphs of two linear relations to determine subsequent missing elements in ordered pairs of the relation",
+    "core_meaning": "Use graphs of two linear relations to determine subsequent missing elements in ordered pairs of the relation",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P211"
+    ],
+    "source_pages": [
+      211
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 2,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B9.2.1.1",
+    "canonical_title": "B9.2.1.1.3",
+    "node_type": "application",
+    "short_label": "B9.2.1.1.3",
+    "description_formal": "Use graphs to solve equations involving two linear relations.",
+    "description_simple": "Use graphs to solve equations involving two linear relations.",
+    "core_meaning": "Use graphs to solve equations involving two linear relations.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P212"
+    ],
+    "source_pages": [
+      212
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.2.2.1",
+    "canonical_title": "B9.2.2.1.1",
+    "node_type": "procedure",
+    "short_label": "B9.2.2.1.1",
+    "description_formal": "Perform change of subject of a given formula and use it to solve problems",
+    "description_simple": "Perform change of subject of a given formula and use it to solve problems",
+    "core_meaning": "Perform change of subject of a given formula and use it to solve problems",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P213"
+    ],
+    "source_pages": [
+      213
+    ],
+    "learning_intent": {
+      "primary_verb": "perform",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 2
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.2.2.1",
+    "canonical_title": "B9.2.2.1.2",
+    "node_type": "procedure",
+    "short_label": "B9.2.2.1.2",
+    "description_formal": "Substitute values into given formulae to evaluate it and use it to solve problems.",
+    "description_simple": "Substitute values into given formulae to evaluate it and use it to solve problems.",
+    "core_meaning": "Substitute values into given formulae to evaluate it and use it to solve problems.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P215"
+    ],
+    "source_pages": [
+      215
+    ],
+    "learning_intent": {
+      "primary_verb": "evaluate",
+      "verb_family": "calculate_execute",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 4,
+        "application": 2
+      },
+      "primary": "procedural",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.2.2.1",
+    "canonical_title": "B9.2.2.1.3",
+    "node_type": "concept",
+    "short_label": "B9.2.2.1.3",
+    "description_formal": "Factorise expressions that have simple binomial",
+    "description_simple": "Factorise expressions that have simple binomial",
+    "core_meaning": "Factorise expressions that have simple binomial",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P216"
+    ],
+    "source_pages": [
+      216
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.2.2.1",
+    "canonical_title": "B9.2.2.1.4",
+    "node_type": "application",
+    "short_label": "B9.2.2.1.4",
+    "description_formal": "Use the knowledge of simplifying and factorising expressions to solve real world problems.",
+    "description_simple": "Use the knowledge of simplifying and factorising expressions to solve real world problems.",
+    "core_meaning": "Use the knowledge of simplifying and factorising expressions to solve real world problems.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P217"
+    ],
+    "source_pages": [
+      217
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.2.3.1",
+    "canonical_title": "B9.2.3.1.1",
+    "node_type": "application",
+    "short_label": "B9.2.3.1.1",
+    "description_formal": "Solve single variable linear inequalities with rational coefficients",
+    "description_simple": "Solve single variable linear inequalities with rational coefficients",
+    "core_meaning": "Solve single variable linear inequalities with rational coefficients",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P220"
+    ],
+    "source_pages": [
+      220
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.2.3.1",
+    "canonical_title": "B9.2.3.1.2",
+    "node_type": "diagram_spatial",
+    "short_label": "B9.2.3.1.2",
+    "description_formal": "Illustrate solution sets of linear inequalities on the number line",
+    "description_simple": "Illustrate solution sets of linear inequalities on the number line",
+    "core_meaning": "Illustrate solution sets of linear inequalities on the number line",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P220"
+    ],
+    "source_pages": [
+      220
+    ],
+    "learning_intent": {
+      "primary_verb": "illustrate",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 2,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B9.2.3.1",
+    "canonical_title": "B9.2.3.1.3",
+    "node_type": "application",
+    "short_label": "B9.2.3.1.3",
+    "description_formal": "Solve real-life problems involving linear equations and inequalities",
+    "description_simple": "Solve real-life problems involving linear equations and inequalities",
+    "core_meaning": "Solve real-life problems involving linear equations and inequalities",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P223"
+    ],
+    "source_pages": [
+      223
+    ],
+    "learning_intent": {
+      "primary_verb": "solve",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 4
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.3.1.1",
+    "canonical_title": "B9.3.1.1.1",
+    "node_type": "interpretation",
+    "short_label": "B9.3.1.1.1",
+    "description_formal": "Derive the formula for calculating the sum of angles in any polygon and use this to calculate the value of missing angles in polygons",
+    "description_simple": "Derive the formula for calculating the sum of angles in any polygon and use this to calculate the value of missing angles in polygons",
+    "core_meaning": "Derive the formula for calculating the sum of angles in any polygon and use this to calculate the value of missing angles in polygons",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P226"
+    ],
+    "source_pages": [
+      226
+    ],
+    "learning_intent": {
+      "primary_verb": "derive",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "analyze_interpret": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 2,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.3.1.1",
+    "canonical_title": "B9.3.1.1.2",
+    "node_type": "concept",
+    "short_label": "B9.3.1.1.2",
+    "description_formal": "Identify similar and congruent triangles and use the knowledge to solve related problems",
+    "description_simple": "Identify similar and congruent triangles and use the knowledge to solve related problems",
+    "core_meaning": "Identify similar and congruent triangles and use the knowledge to solve related problems",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P228"
+    ],
+    "source_pages": [
+      228
+    ],
+    "learning_intent": {
+      "primary_verb": "identify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "apply_solve": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.3.1.2",
+    "canonical_title": "B9.3.1.2.1",
+    "node_type": "diagram_spatial",
+    "short_label": "B9.3.1.2.1",
+    "description_formal": "Draw inscribed and circumscribed circles for triangles under given conditions",
+    "description_simple": "Draw inscribed and circumscribed circles for triangles under given conditions",
+    "core_meaning": "Draw inscribed and circumscribed circles for triangles under given conditions",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P229"
+    ],
+    "source_pages": [
+      229
+    ],
+    "learning_intent": {
+      "primary_verb": "draw",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.3.1.2",
+    "canonical_title": "B9.3.1.2.2",
+    "node_type": "diagram_spatial",
+    "short_label": "B9.3.1.2.2",
+    "description_formal": "Construct parallelograms (i.e. square, rectangle, rhombus) under given conditions",
+    "description_simple": "Construct parallelograms (i.e. square, rectangle, rhombus) under given conditions",
+    "core_meaning": "Construct parallelograms (i.e. square, rectangle, rhombus) under given conditions",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P231"
+    ],
+    "source_pages": [
+      231
+    ],
+    "learning_intent": {
+      "primary_verb": "construct",
+      "verb_family": "represent_model",
+      "verb_family_counts": {
+        "represent_model": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 3,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.3.2.1",
+    "canonical_title": "B9.3.2.1.1",
+    "node_type": "concept",
+    "short_label": "B9.3.2.1.1",
+    "description_formal": "Identify cuboids and triangular prisms; draw their nets to construct the 3-D shapes and use it to determine the surface area",
+    "description_simple": "Identify cuboids and triangular prisms; draw their nets to construct the 3-D shapes and use it to determine the surface area",
+    "core_meaning": "Identify cuboids and triangular prisms; draw their nets to construct the 3-D shapes and use it to determine the surface area",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P235"
+    ],
+    "source_pages": [
+      235
+    ],
+    "learning_intent": {
+      "primary_verb": "identify",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1,
+        "calculate_execute": 1,
+        "represent_model": 2,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 4,
+        "application": 1
+      },
+      "primary": "procedural",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.3.2.1",
+    "canonical_title": "B9.3.2.1.2",
+    "node_type": "application",
+    "short_label": "B9.3.2.1.2",
+    "description_formal": "Use the net of a cuboid to determine its surface area",
+    "description_simple": "Use the net of a cuboid to determine its surface area",
+    "core_meaning": "Use the net of a cuboid to determine its surface area",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P236"
+    ],
+    "source_pages": [
+      236
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 2,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B9.3.2.1",
+    "canonical_title": "B9.3.2.1.3",
+    "node_type": "application",
+    "short_label": "B9.3.2.1.3",
+    "description_formal": "Use the net of a triangular prism to determine its surface area",
+    "description_simple": "Use the net of a triangular prism to determine its surface area",
+    "core_meaning": "Use the net of a triangular prism to determine its surface area",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P236"
+    ],
+    "source_pages": [
+      236
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 2,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B9.3.2.1",
+    "canonical_title": "B9.3.2.1.4",
+    "node_type": "concept",
+    "short_label": "B9.3.2.1.4",
+    "description_formal": "Express points in the Cartesian plane as position vectors Creativity and Innovation (CI)",
+    "description_simple": "Express points in the Cartesian plane as position vectors Creativity and Innovation (CI)",
+    "core_meaning": "Express points in the Cartesian plane as position vectors Creativity and Innovation (CI)",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P237"
+    ],
+    "source_pages": [
+      237
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.3.2.2",
+    "canonical_title": "B9.3.2.2.1",
+    "node_type": "concept",
+    "short_label": "B9.3.2.2.1",
+    "description_formal": "Show an understanding of parallel vectors and perpendicular vectors",
+    "description_simple": "Show an understanding of parallel vectors and perpendicular vectors",
+    "core_meaning": "Show an understanding of parallel vectors and perpendicular vectors",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P238"
+    ],
+    "source_pages": [
+      238
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.3.2.2",
+    "canonical_title": "B9.3.2.2.2",
+    "node_type": "application",
+    "short_label": "B9.3.2.2.2",
+    "description_formal": "Apply the triangular and parallelogram laws of addition to resolve vectors",
+    "description_simple": "Apply the triangular and parallelogram laws of addition to resolve vectors",
+    "core_meaning": "Apply the triangular and parallelogram laws of addition to resolve vectors",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P238"
+    ],
+    "source_pages": [
+      238
+    ],
+    "learning_intent": {
+      "primary_verb": "apply",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.3.3.1",
+    "canonical_title": "B9.3.3.1.1",
+    "node_type": "concept",
+    "short_label": "B9.3.3.1.1",
+    "description_formal": "Know examples of situations in everyday life that depict enlargement situations in everyday life",
+    "description_simple": "Know examples of situations in everyday life that depict enlargement situations in everyday life",
+    "core_meaning": "Know examples of situations in everyday life that depict enlargement situations in everyday life",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P239"
+    ],
+    "source_pages": [
+      239
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.3.3.1",
+    "canonical_title": "B9.3.3.1.2",
+    "node_type": "concept",
+    "short_label": "B9.3.3.1.2",
+    "description_formal": "Understand enlargement and identify real-life situations involving enlargement.",
+    "description_simple": "Understand enlargement and identify real-life situations involving enlargement.",
+    "core_meaning": "Understand enlargement and identify real-life situations involving enlargement.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P240"
+    ],
+    "source_pages": [
+      240
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 4,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.3.3.1",
+    "canonical_title": "B9.3.3.1.3",
+    "node_type": "interpretation",
+    "short_label": "B9.3.3.1.3",
+    "description_formal": "Investigate the concept of congruent and similar shapes",
+    "description_simple": "Investigate the concept of congruent and similar shapes",
+    "core_meaning": "Investigate the concept of congruent and similar shapes",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P240"
+    ],
+    "source_pages": [
+      240
+    ],
+    "learning_intent": {
+      "primary_verb": "investigate",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.4.1.1",
+    "canonical_title": "B9.4.1.1.1",
+    "node_type": "interpretation",
+    "short_label": "B9.4.1.1.1",
+    "description_formal": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question.",
+    "description_simple": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question.",
+    "core_meaning": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P241"
+    ],
+    "source_pages": [
+      241
+    ],
+    "learning_intent": {
+      "primary_verb": "select",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.4.1.1",
+    "canonical_title": "B9.4.1.1.2",
+    "node_type": "concept",
+    "short_label": "B9.4.1.1.2",
+    "description_formal": "and find (minimum, maximum, measures of central tendency and range) i.",
+    "description_simple": "and find (minimum, maximum, measures of central tendency and range) i.",
+    "core_meaning": "and find (minimum, maximum, measures of central tendency and range) i.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P241",
+      "P247",
+      "P248"
+    ],
+    "source_pages": [
+      241,
+      247,
+      248
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.4.1.1",
+    "canonical_title": "B9.4.1.1.3",
+    "node_type": "application",
+    "short_label": "B9.4.1.1.3",
+    "description_formal": "Use a histogram to determine the mode of a given data to solve and/or pose real life cases",
+    "description_simple": "Use a histogram to determine the mode of a given data to solve and/or pose real life cases",
+    "core_meaning": "Use a histogram to determine the mode of a given data to solve and/or pose real life cases",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P244"
+    ],
+    "source_pages": [
+      244
+    ],
+    "learning_intent": {
+      "primary_verb": "use",
+      "verb_family": "apply_solve",
+      "verb_family_counts": {
+        "calculate_execute": 1,
+        "apply_solve": 3
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 1,
+        "procedural": 2,
+        "application": 5
+      },
+      "primary": "application",
+      "secondary": "procedural"
+    }
+  },
+  {
+    "topic_code": "B9.4.1.2",
+    "canonical_title": "B9.4.1.2.1",
+    "node_type": "interpretation",
+    "short_label": "B9.4.1.2.1",
+    "description_formal": "Select a method for collecting data (quantitative and qualitative), taking into consideration how bias (use of language, ethics, cost, time and timing, privacy or cultural sensitivity) may influence data.",
+    "description_simple": "Select a method for collecting data (quantitative and qualitative), taking into consideration how bias (use of language, ethics, cost, time and timing, privacy or cultural sensitivity) may influence data.",
+    "core_meaning": "Select a method for collecting data (quantitative and qualitative), taking into consideration how bias (use of language, ethics, cost, time and timing, privacy or cultural sensitivity) may influence data.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P245"
+    ],
+    "source_pages": [
+      245
+    ],
+    "learning_intent": {
+      "primary_verb": "select",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 1,
+        "apply_solve": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 2,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.4.1.2",
+    "canonical_title": "B9.4.1.2.2",
+    "node_type": "interpretation",
+    "short_label": "B9.4.1.2.2",
+    "description_formal": "Organise and analyse data and interpret the results using the descriptive statistics (i.e.",
+    "description_simple": "Organise and analyse data and interpret the results using the descriptive statistics (i.e.",
+    "core_meaning": "Organise and analyse data and interpret the results using the descriptive statistics (i.e.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P247"
+    ],
+    "source_pages": [
+      247
+    ],
+    "learning_intent": {
+      "primary_verb": "analyse",
+      "verb_family": "analyze_interpret",
+      "verb_family_counts": {
+        "analyze_interpret": 2
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 3
+      },
+      "primary": "application",
+      "secondary": "conceptual"
+    }
+  },
+  {
+    "topic_code": "B9.4.1.2",
+    "canonical_title": "B9.4.1.2.3",
+    "node_type": "concept",
+    "short_label": "B9.4.1.2.3",
+    "description_formal": "Demonstrate the effect on the mean, median, and mode when extreme data is included in a data set",
+    "description_simple": "Demonstrate the effect on the mean, median, and mode when extreme data is included in a data set",
+    "core_meaning": "Demonstrate the effect on the mean, median, and mode when extreme data is included in a data set",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P248"
+    ],
+    "source_pages": [
+      248
+    ],
+    "learning_intent": {
+      "primary_verb": "demonstrate",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {
+        "understand_explain": 1
+      }
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 2
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.4.2.1",
+    "canonical_title": "B9.4.2.1.1",
+    "node_type": "concept",
+    "short_label": "B9.4.2.1.1",
+    "description_formal": "E.g. 1. Express the probabilities of the events (on their respective branches) as decimals, percentages and ratios",
+    "description_simple": "E.g. 1. Express the probabilities of the events (on their respective branches) as decimals, percentages and ratios",
+    "core_meaning": "E.g. 1. Express the probabilities of the events (on their respective branches) as decimals, percentages and ratios",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P249"
+    ],
+    "source_pages": [
+      249
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  },
+  {
+    "topic_code": "B9.4.2.1",
+    "canonical_title": "B9.4.2.1.2",
+    "node_type": "concept",
+    "short_label": "B9.4.2.1.2",
+    "description_formal": "Express the probabilities of the events as fractions, decimals, percentages and/or ratios; e.g.",
+    "description_simple": "Express the probabilities of the events as fractions, decimals, percentages and/or ratios; e.g.",
+    "core_meaning": "Express the probabilities of the events as fractions, decimals, percentages and/or ratios; e.g.",
+    "difficulty_band": "hard",
+    "exam_relevance_score": 6200,
+    "foundation_weight": 5500,
+    "source_anchors": [
+      "P249"
+    ],
+    "source_pages": [
+      249
+    ],
+    "learning_intent": {
+      "primary_verb": "understand",
+      "verb_family": "understand_explain",
+      "verb_family_counts": {}
+    },
+    "balance": {
+      "scores": {
+        "conceptual": 3,
+        "procedural": 1,
+        "application": 1
+      },
+      "primary": "conceptual",
+      "secondary": "application"
+    }
+  }
+]

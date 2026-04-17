@@ -65,6 +65,20 @@ struct ScoredKnowledgeLink {
     same_topic: bool,
 }
 
+#[derive(Debug, Clone)]
+struct TopicSeedRow {
+    id: i64,
+    parent_topic_id: Option<i64>,
+    code: Option<String>,
+    name: String,
+    description: Option<String>,
+    node_type: String,
+    display_order: i64,
+    exam_weight: i64,
+    difficulty_band: Option<String>,
+    importance_weight: i64,
+}
+
 #[derive(Debug, Deserialize)]
 struct TopicRecord {
     code: String,
@@ -484,6 +498,7 @@ impl<'a> PackService<'a> {
 
             let import_counts = self.import_pack_data(pack_path, subject_id, &manifest)?;
             self.validate_manifest_counts(&manifest, import_counts)?;
+            self.sync_public_curriculum_slice(curriculum_version_id, subject_id, &manifest)?;
             self.mark_pack_active(&manifest, &manifest_json, &install_path, import_counts)?;
 
             Ok(PackInstallResult {
@@ -553,27 +568,27 @@ impl<'a> PackService<'a> {
         let topics: Vec<TopicRecord> =
             self.read_json_file(&pack_path.join("curriculum/topics.json"))?;
         let nodes: Vec<AcademicNodeRecord> =
-            self.read_json_file(&pack_path.join("curriculum/nodes.json"))?;
+            self.read_optional_json_file(&pack_path.join("curriculum/nodes.json"))?;
         let edges: Vec<NodeEdgeRecord> =
-            self.read_json_file(&pack_path.join("curriculum/edges.json"))?;
+            self.read_optional_json_file(&pack_path.join("curriculum/edges.json"))?;
         let misconceptions: Vec<MisconceptionRecord> =
-            self.read_json_file(&pack_path.join("curriculum/misconceptions.json"))?;
+            self.read_optional_json_file(&pack_path.join("curriculum/misconceptions.json"))?;
         let objectives: Vec<ObjectiveRecord> =
-            self.read_json_file(&pack_path.join("curriculum/objectives.json"))?;
+            self.read_optional_json_file(&pack_path.join("curriculum/objectives.json"))?;
         let families: Vec<QuestionFamilyRecord> =
-            self.read_json_file(&pack_path.join("questions/families.json"))?;
+            self.read_optional_json_file(&pack_path.join("questions/families.json"))?;
         let questions: Vec<QuestionRecord> =
-            self.read_json_file(&pack_path.join("questions/questions.json"))?;
+            self.read_optional_json_file(&pack_path.join("questions/questions.json"))?;
         let intelligence: Vec<QuestionIntelligenceRecord> =
-            self.read_json_file(&pack_path.join("questions/intelligence.json"))?;
+            self.read_optional_json_file(&pack_path.join("questions/intelligence.json"))?;
         let explanations: Vec<KnowledgeEntryRecord> =
-            self.read_json_file(&pack_path.join("content/explanations.json"))?;
+            self.read_optional_json_file(&pack_path.join("content/explanations.json"))?;
         let glossary: Vec<KnowledgeEntryRecord> =
-            self.read_json_file(&pack_path.join("content/glossary.json"))?;
+            self.read_optional_json_file(&pack_path.join("content/glossary.json"))?;
         let formulas: Vec<KnowledgeEntryRecord> =
-            self.read_json_file(&pack_path.join("content/formulas.json"))?;
+            self.read_optional_json_file(&pack_path.join("content/formulas.json"))?;
         let worked_examples: Vec<KnowledgeEntryRecord> =
-            self.read_json_file(&pack_path.join("content/worked_examples.json"))?;
+            self.read_optional_json_file(&pack_path.join("content/worked_examples.json"))?;
         let contrast_pairs: Vec<ContrastPairRecord> =
             self.read_optional_json_file(&pack_path.join("content/contrast_pairs.json"))?;
 
@@ -1858,6 +1873,8 @@ impl<'a> PackService<'a> {
     }
 
     fn clear_subject_data(&self, subject_id: i64) -> EcoachResult<()> {
+        self.clear_public_curriculum_slice(subject_id)?;
+
         let topic_ids =
             self.collect_ids("SELECT id FROM topics WHERE subject_id = ?1", [subject_id])?;
         let node_ids = self.collect_ids(
@@ -1936,8 +1953,507 @@ impl<'a> PackService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         self.conn
+            .execute(
+                "DELETE FROM curriculum_coverage_ledger
+                 WHERE topic_id IN (SELECT id FROM topics WHERE subject_id = ?1)",
+                [subject_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
             .execute("DELETE FROM topics WHERE subject_id = ?1", [subject_id])
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        Ok(())
+    }
+
+    fn clear_public_curriculum_slice(&self, subject_id: i64) -> EcoachResult<()> {
+        let subject_track_id = self
+            .conn
+            .query_row(
+                "SELECT id FROM curriculum_subject_tracks WHERE legacy_subject_id = ?1 LIMIT 1",
+                [subject_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        if let Some(subject_track_id) = subject_track_id {
+            self.conn
+                .execute(
+                    "DELETE FROM curriculum_relationships
+                     WHERE (from_entity_type = 'node' AND from_entity_id IN (
+                            SELECT id FROM curriculum_nodes WHERE subject_track_id = ?1
+                        ))
+                        OR (to_entity_type = 'node' AND to_entity_id IN (
+                            SELECT id FROM curriculum_nodes WHERE subject_track_id = ?2
+                        ))",
+                    params![subject_track_id, subject_track_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.conn
+                .execute(
+                    "DELETE FROM curriculum_node_objectives
+                     WHERE curriculum_node_id IN (
+                        SELECT id FROM curriculum_nodes WHERE subject_track_id = ?1
+                     )",
+                    [subject_track_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.conn
+                .execute(
+                    "DELETE FROM curriculum_nodes WHERE subject_track_id = ?1",
+                    [subject_track_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            self.conn
+                .execute(
+                    "DELETE FROM curriculum_subject_tracks WHERE id = ?1",
+                    [subject_track_id],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        Ok(())
+    }
+
+    fn sync_public_curriculum_slice(
+        &self,
+        curriculum_version_id: i64,
+        subject_id: i64,
+        manifest: &PackManifest,
+    ) -> EcoachResult<()> {
+        let subject_track_id =
+            self.upsert_curriculum_subject_track(curriculum_version_id, subject_id, manifest)?;
+        let level_ids = self.upsert_curriculum_levels(curriculum_version_id, manifest)?;
+
+        self.conn
+            .execute(
+                "DELETE FROM curriculum_relationships
+                 WHERE (from_entity_type = 'node' AND from_entity_id IN (
+                        SELECT id FROM curriculum_nodes WHERE subject_track_id = ?1
+                    ))
+                    OR (to_entity_type = 'node' AND to_entity_id IN (
+                        SELECT id FROM curriculum_nodes WHERE subject_track_id = ?2
+                    ))",
+                params![subject_track_id, subject_track_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .execute(
+                "DELETE FROM curriculum_node_objectives
+                 WHERE curriculum_node_id IN (
+                    SELECT id FROM curriculum_nodes WHERE subject_track_id = ?1
+                 )",
+                [subject_track_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.conn
+            .execute(
+                "DELETE FROM curriculum_nodes WHERE subject_track_id = ?1",
+                [subject_track_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let topics = self.list_topics_for_subject(subject_id)?;
+        let mut topics_by_id = BTreeMap::new();
+        for topic in &topics {
+            topics_by_id.insert(topic.id, topic.clone());
+        }
+
+        let mut depth_cache = BTreeMap::<i64, i64>::new();
+        let mut topic_node_ids = BTreeMap::<i64, i64>::new();
+
+        for topic in &topics {
+            let depth = topic_depth(topic.id, &topics_by_id, &mut depth_cache);
+            let level_id = resolve_topic_level_id(topic, &topics_by_id, &level_ids);
+            let node_type = map_topic_node_type(&topic.node_type);
+            let slug_seed = topic
+                .code
+                .as_deref()
+                .unwrap_or(topic.name.as_str())
+                .to_string();
+            let generated_slug = slugify(&format!("{}-{}", slug_seed, topic.id));
+            let slug = if generated_slug.is_empty() {
+                format!("topic-{}", topic.id)
+            } else {
+                generated_slug
+            };
+
+            self.conn
+                .execute(
+                    "INSERT INTO curriculum_nodes (
+                        curriculum_version_id, subject_track_id, level_id, term_id, parent_node_id,
+                        legacy_topic_id, node_type, canonical_title, public_title, slug,
+                        official_text, public_summary, sequence_no, depth, estimated_weight,
+                        exam_relevance_score, difficulty_hint, status, review_status, confidence_score
+                     ) VALUES (
+                        ?1, ?2, ?3, NULL, NULL,
+                        ?4, ?5, ?6, ?7, ?8,
+                        ?9, ?10, ?11, ?12, ?13,
+                        ?14, ?15, 'published', 'approved', 9000
+                     )",
+                    params![
+                        curriculum_version_id,
+                        subject_track_id,
+                        level_id,
+                        topic.id,
+                        node_type,
+                        topic.name.as_str(),
+                        topic.name.as_str(),
+                        slug,
+                        topic.description.as_deref(),
+                        topic.description.as_deref(),
+                        topic.display_order,
+                        depth,
+                        topic.importance_weight.clamp(0, 10_000),
+                        topic.exam_weight.clamp(0, 10_000),
+                        topic.difficulty_band.as_deref().unwrap_or("medium"),
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            topic_node_ids.insert(topic.id, self.conn.last_insert_rowid());
+        }
+
+        for topic in &topics {
+            if let Some(parent_topic_id) = topic.parent_topic_id {
+                if let (Some(node_id), Some(parent_node_id)) = (
+                    topic_node_ids.get(&topic.id).copied(),
+                    topic_node_ids.get(&parent_topic_id).copied(),
+                ) {
+                    self.conn
+                        .execute(
+                            "UPDATE curriculum_nodes
+                             SET parent_node_id = ?1,
+                                 updated_at = datetime('now')
+                             WHERE id = ?2",
+                            params![parent_node_id, node_id],
+                        )
+                        .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                }
+            }
+        }
+
+        self.sync_curriculum_relationships_from_edges(subject_id, &topic_node_ids)?;
+        self.ensure_default_student_curriculum_assignments(curriculum_version_id)?;
+
+        Ok(())
+    }
+
+    fn upsert_curriculum_subject_track(
+        &self,
+        curriculum_version_id: i64,
+        subject_id: i64,
+        manifest: &PackManifest,
+    ) -> EcoachResult<i64> {
+        let subject_name = subject_name_from_manifest(manifest);
+        let mut subject_slug = slugify(&subject_name);
+        if subject_slug.is_empty() {
+            subject_slug = slugify(&manifest.subject_code);
+        }
+        if subject_slug.is_empty() {
+            subject_slug = "subject-track".to_string();
+        }
+        let description = Some(format!(
+            "{} track sourced from content pack {}",
+            subject_name, manifest.pack_id
+        ));
+
+        let existing_id = self
+            .conn
+            .query_row(
+                "SELECT id FROM curriculum_subject_tracks WHERE legacy_subject_id = ?1 LIMIT 1",
+                [subject_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        if let Some(id) = existing_id {
+            self.conn
+                .execute(
+                    "UPDATE curriculum_subject_tracks
+                     SET curriculum_version_id = ?1,
+                         subject_code = ?2,
+                         subject_name = ?3,
+                         subject_slug = ?4,
+                         public_title = ?5,
+                         description = ?6,
+                         display_order = 0,
+                         updated_at = datetime('now')
+                     WHERE id = ?7",
+                    params![
+                        curriculum_version_id,
+                        manifest.subject_code.as_str(),
+                        subject_name.as_str(),
+                        subject_slug.as_str(),
+                        subject_name.as_str(),
+                        description.as_deref(),
+                        id
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            Ok(id)
+        } else {
+            self.conn
+                .execute(
+                    "INSERT INTO curriculum_subject_tracks (
+                        curriculum_version_id, legacy_subject_id, subject_code, subject_name,
+                        subject_slug, public_title, description, display_order
+                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 0)",
+                    params![
+                        curriculum_version_id,
+                        subject_id,
+                        manifest.subject_code.as_str(),
+                        subject_name.as_str(),
+                        subject_slug.as_str(),
+                        subject_name.as_str(),
+                        description.as_deref()
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            Ok(self.conn.last_insert_rowid())
+        }
+    }
+
+    fn upsert_curriculum_levels(
+        &self,
+        curriculum_version_id: i64,
+        manifest: &PackManifest,
+    ) -> EcoachResult<BTreeMap<String, i64>> {
+        let mut level_ids = BTreeMap::new();
+        for (index, raw_code) in manifest.grade_levels.iter().enumerate() {
+            let level_code = raw_code.trim().to_ascii_uppercase();
+            if level_code.is_empty() {
+                continue;
+            }
+            let level_name = level_name_from_code(&level_code);
+            let stage_order = (index as i64) + 1;
+
+            self.conn
+                .execute(
+                    "INSERT INTO curriculum_levels (
+                        curriculum_version_id, level_code, level_name, stage_order, public_title
+                     ) VALUES (?1, ?2, ?3, ?4, ?5)
+                     ON CONFLICT(curriculum_version_id, level_code) DO UPDATE SET
+                        level_name = excluded.level_name,
+                        stage_order = excluded.stage_order,
+                        public_title = excluded.public_title,
+                        updated_at = datetime('now')",
+                    params![
+                        curriculum_version_id,
+                        level_code,
+                        level_name,
+                        stage_order,
+                        raw_code
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            let level_id = self
+                .conn
+                .query_row(
+                    "SELECT id
+                     FROM curriculum_levels
+                     WHERE curriculum_version_id = ?1 AND level_code = ?2
+                     LIMIT 1",
+                    params![curriculum_version_id, level_code],
+                    |row| row.get::<_, i64>(0),
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            level_ids.insert(level_code, level_id);
+        }
+        Ok(level_ids)
+    }
+
+    fn list_topics_for_subject(&self, subject_id: i64) -> EcoachResult<Vec<TopicSeedRow>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id, parent_topic_id, code, name, description, node_type, display_order,
+                        exam_weight, difficulty_band, importance_weight
+                 FROM topics
+                 WHERE subject_id = ?1
+                 ORDER BY display_order ASC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([subject_id], |row| {
+                Ok(TopicSeedRow {
+                    id: row.get(0)?,
+                    parent_topic_id: row.get(1)?,
+                    code: row.get(2)?,
+                    name: row.get(3)?,
+                    description: row.get(4)?,
+                    node_type: row.get(5)?,
+                    display_order: row.get(6)?,
+                    exam_weight: row.get(7)?,
+                    difficulty_band: row.get(8)?,
+                    importance_weight: row.get(9)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut topics = Vec::new();
+        for row in rows {
+            topics.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(topics)
+    }
+
+    fn sync_curriculum_relationships_from_edges(
+        &self,
+        subject_id: i64,
+        topic_node_ids: &BTreeMap<i64, i64>,
+    ) -> EcoachResult<()> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT from_node_id, to_node_id, edge_type, strength_score
+                 FROM node_edges
+                 WHERE from_node_type = 'topic'
+                   AND to_node_type = 'topic'
+                   AND from_node_id IN (SELECT id FROM topics WHERE subject_id = ?1)
+                   AND to_node_id IN (SELECT id FROM topics WHERE subject_id = ?1)",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([subject_id], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, i64>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, i64>(3)?,
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        for row in rows {
+            let (from_topic_id, to_topic_id, edge_type, strength_score) =
+                row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let Some(from_node_id) = topic_node_ids.get(&from_topic_id).copied() else {
+                continue;
+            };
+            let Some(to_node_id) = topic_node_ids.get(&to_topic_id).copied() else {
+                continue;
+            };
+            let relationship_type = map_edge_type_to_relationship_type(&edge_type);
+
+            self.conn
+                .execute(
+                    "INSERT OR IGNORE INTO curriculum_relationships (
+                        from_entity_type, from_entity_id, to_entity_type, to_entity_id,
+                        relationship_type, strength_score
+                    ) VALUES ('node', ?1, 'node', ?2, ?3, ?4)",
+                    params![
+                        from_node_id,
+                        to_node_id,
+                        relationship_type,
+                        strength_score.clamp(0, 10_000)
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        }
+
+        Ok(())
+    }
+
+    fn ensure_default_student_curriculum_assignments(
+        &self,
+        curriculum_version_id: i64,
+    ) -> EcoachResult<()> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id
+                 FROM accounts
+                 WHERE account_type = 'student'
+                 ORDER BY id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map([], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        for row in rows {
+            let student_id = row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let active_assignment = self
+                .conn
+                .query_row(
+                    "SELECT id, curriculum_version_id
+                     FROM student_curriculum_assignments
+                     WHERE student_id = ?1 AND status = 'active'
+                     ORDER BY assigned_at DESC, id DESC
+                     LIMIT 1",
+                    [student_id],
+                    |record| Ok((record.get::<_, i64>(0)?, record.get::<_, i64>(1)?)),
+                )
+                .optional()
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            if active_assignment.is_none() {
+                self.conn
+                    .execute(
+                        "INSERT INTO student_curriculum_assignments (
+                            student_id, curriculum_version_id, assignment_source, status, notes
+                        ) VALUES (?1, ?2, 'default', 'active', ?3)",
+                        params![
+                            student_id,
+                            curriculum_version_id,
+                            "Auto-assigned during content pack installation"
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+                continue;
+            }
+
+            let (assignment_id, assigned_version_id) = active_assignment.unwrap();
+            if assigned_version_id == curriculum_version_id {
+                continue;
+            }
+
+            let assigned_track_count = self
+                .conn
+                .query_row(
+                    "SELECT COUNT(*)
+                     FROM curriculum_subject_tracks
+                     WHERE curriculum_version_id = ?1",
+                    [assigned_version_id],
+                    |record| record.get::<_, i64>(0),
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            if assigned_track_count == 0 {
+                self.conn
+                    .execute(
+                        "UPDATE student_curriculum_assignments
+                         SET status = 'superseded',
+                             notes = ?1,
+                             updated_at = datetime('now')
+                         WHERE id = ?2",
+                        params![
+                            "Superseded automatically during content pack installation because the assigned curriculum version had no subject tracks.",
+                            assignment_id
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+                self.conn
+                    .execute(
+                        "INSERT INTO student_curriculum_assignments (
+                            student_id, curriculum_version_id, assignment_source, status, notes
+                        ) VALUES (?1, ?2, 'default', 'active', ?3)",
+                        params![
+                            student_id,
+                            curriculum_version_id,
+                            format!(
+                                "Auto-reassigned during content pack installation from empty curriculum version {}",
+                                assigned_version_id
+                            )
+                        ],
+                    )
+                    .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            }
+        }
 
         Ok(())
     }
@@ -1962,33 +2478,67 @@ impl<'a> PackService<'a> {
     }
 
     fn upsert_curriculum_version(&self, manifest: &PackManifest) -> EcoachResult<i64> {
+        let curriculum_family_id = self.ensure_curriculum_family(manifest)?;
+        let exam_target = manifest
+            .exam_board
+            .clone()
+            .or_else(|| manifest.exam_target.clone());
         let existing_id = self
             .conn
             .query_row(
-                "SELECT id FROM curriculum_versions WHERE version_label = ?1 LIMIT 1",
-                [manifest.curriculum_version.as_str()],
+                "SELECT id FROM curriculum_versions
+                 WHERE version_label = ?1 AND curriculum_family_id = ?2
+                 LIMIT 1",
+                params![manifest.curriculum_version.as_str(), curriculum_family_id],
                 |row| row.get::<_, i64>(0),
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        let education_stage = if manifest.grade_levels.is_empty() {
+        let education_stage = if let Some(label) = manifest.education_stage_label.clone() {
+            Some(label)
+        } else if manifest.grade_levels.is_empty() {
             manifest.exam_target.clone()
         } else {
             Some(manifest.grade_levels.join(","))
         };
+        let country_code = normalize_country_code(manifest.country_code.as_deref());
+        let country_name = country_name_from_manifest(manifest, &country_code);
+        let source_summary_json = serde_json::to_string(&json!({
+            "pack_id": manifest.pack_id.clone(),
+            "pack_version": manifest.pack_version.clone(),
+            "subject_code": manifest.subject_code.clone(),
+            "subject_name": subject_name_from_manifest(manifest),
+            "country_code": country_code.clone(),
+            "country_name": country_name.clone(),
+            "exam_target": exam_target.clone(),
+            "grade_levels": manifest.grade_levels.clone(),
+        }))
+        .map_err(|err| EcoachError::Serialization(err.to_string()))?;
 
         if let Some(id) = existing_id {
             self.conn
                 .execute(
                     "UPDATE curriculum_versions
-                     SET name = ?1,
-                         education_stage = ?2,
+                    SET name = ?1,
+                         country = ?2,
+                         education_stage = ?3,
+                         exam_board = ?4,
+                         curriculum_family_id = ?5,
+                         source_summary_json = ?6,
                          status = 'published',
                          published_at = COALESCE(published_at, datetime('now')),
                          updated_at = datetime('now')
-                     WHERE id = ?3",
-                    params![manifest.curriculum_version, education_stage, id],
+                     WHERE id = ?7",
+                    params![
+                        manifest.curriculum_version.as_str(),
+                        country_name.as_str(),
+                        education_stage,
+                        exam_target.as_deref(),
+                        curriculum_family_id,
+                        source_summary_json,
+                        id
+                    ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             Ok(id)
@@ -1996,9 +2546,118 @@ impl<'a> PackService<'a> {
             self.conn
                 .execute(
                     "INSERT INTO curriculum_versions (
-                        name, country, exam_board, education_stage, version_label, status, published_at
-                    ) VALUES (?1, 'GH', NULL, ?2, ?3, 'published', datetime('now'))",
-                    params![manifest.curriculum_version, education_stage, manifest.curriculum_version],
+                        curriculum_family_id, name, country, exam_board, education_stage, version_label,
+                        source_summary_json, status, published_at
+                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'published', datetime('now'))",
+                    params![
+                        curriculum_family_id,
+                        manifest.curriculum_version.as_str(),
+                        country_name.as_str(),
+                        exam_target.as_deref(),
+                        education_stage,
+                        manifest.curriculum_version.as_str(),
+                        source_summary_json
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            Ok(self.conn.last_insert_rowid())
+        }
+    }
+
+    fn ensure_curriculum_family(&self, manifest: &PackManifest) -> EcoachResult<i64> {
+        let exam_target = manifest
+            .exam_board
+            .clone()
+            .or_else(|| manifest.exam_target.clone());
+        let subject_name = subject_name_from_manifest(manifest);
+        let exam_label = exam_target
+            .clone()
+            .unwrap_or_else(|| "Curriculum".to_string());
+        let country_code = normalize_country_code(manifest.country_code.as_deref());
+        let country_name = country_name_from_manifest(manifest, &country_code);
+        let mut slug = manifest
+            .curriculum_family_slug
+            .as_deref()
+            .map(slugify)
+            .unwrap_or_default();
+        if slug.is_empty() {
+            slug = slugify(&format!(
+                "{}-{}-{}",
+                country_code.to_ascii_lowercase(),
+                manifest.subject_code.to_ascii_lowercase(),
+                exam_label.to_ascii_lowercase()
+            ));
+        }
+        if slug.is_empty() {
+            slug = format!(
+                "{}-{}",
+                country_code.to_ascii_lowercase(),
+                manifest.subject_code.to_ascii_lowercase()
+            );
+        }
+        let family_name = manifest
+            .curriculum_family_name
+            .clone()
+            .unwrap_or_else(|| format!("{} {} {}", country_name, subject_name, exam_label));
+        let education_stage = if let Some(label) = manifest.education_stage_label.clone() {
+            Some(label)
+        } else if manifest.grade_levels.is_empty() {
+            manifest.exam_target.clone()
+        } else {
+            Some(manifest.grade_levels.join(","))
+        };
+        let description = Some(format!(
+            "Auto-generated curriculum family for {} ({}) via content pack {}.",
+            subject_name, manifest.curriculum_version, manifest.pack_id
+        ));
+
+        let existing_id = self
+            .conn
+            .query_row(
+                "SELECT id FROM curriculum_families WHERE slug = ?1 LIMIT 1",
+                [slug.as_str()],
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        if let Some(id) = existing_id {
+            self.conn
+                .execute(
+                    "UPDATE curriculum_families
+                     SET name = ?1,
+                         country_code = ?2,
+                         exam_board = ?3,
+                         education_stage = ?4,
+                         description = ?5,
+                         is_public = 1,
+                         updated_at = datetime('now')
+                     WHERE id = ?6",
+                    params![
+                        family_name,
+                        country_code.as_str(),
+                        exam_target.as_deref(),
+                        education_stage,
+                        description,
+                        id
+                    ],
+                )
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            Ok(id)
+        } else {
+            self.conn
+                .execute(
+                    "INSERT INTO curriculum_families (
+                        slug, name, country_code, exam_board, education_stage, description, is_public
+                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1)",
+                    params![
+                        slug,
+                        family_name,
+                        country_code.as_str(),
+                        exam_target.as_deref(),
+                        education_stage,
+                        description
+                    ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             Ok(self.conn.last_insert_rowid())
@@ -2014,13 +2673,13 @@ impl<'a> PackService<'a> {
             .conn
             .query_row(
                 "SELECT id FROM subjects WHERE curriculum_version_id = ?1 AND code = ?2 LIMIT 1",
-                params![curriculum_version_id, manifest.subject_code],
+                params![curriculum_version_id, manifest.subject_code.as_str()],
                 |row| row.get::<_, i64>(0),
             )
             .optional()
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
 
-        let subject_name = subject_name_from_code(&manifest.subject_code);
+        let subject_name = subject_name_from_manifest(manifest);
 
         if let Some(id) = existing_id {
             self.conn
@@ -2037,7 +2696,7 @@ impl<'a> PackService<'a> {
                 .execute(
                     "INSERT INTO subjects (curriculum_version_id, code, name, display_order, is_active)
                      VALUES (?1, ?2, ?3, 0, 1)",
-                    params![curriculum_version_id, manifest.subject_code, subject_name],
+                    params![curriculum_version_id, manifest.subject_code.as_str(), subject_name],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
             Ok(self.conn.last_insert_rowid())
@@ -2194,19 +2853,6 @@ impl<'a> PackService<'a> {
             "manifest.json",
             "curriculum",
             "curriculum/topics.json",
-            "curriculum/nodes.json",
-            "curriculum/edges.json",
-            "curriculum/misconceptions.json",
-            "curriculum/objectives.json",
-            "questions",
-            "questions/families.json",
-            "questions/questions.json",
-            "questions/intelligence.json",
-            "content",
-            "content/explanations.json",
-            "content/glossary.json",
-            "content/formulas.json",
-            "content/worked_examples.json",
         ];
 
         for required in required_paths {
@@ -2438,15 +3084,166 @@ pub(crate) fn slugify(value: &str) -> String {
     slug.trim_matches('-').to_string()
 }
 
-fn subject_name_from_code(code: &str) -> String {
-    match code {
-        "MATH" => "Mathematics".to_string(),
-        "ENG" => "English Language".to_string(),
-        "SCI" => "Integrated Science".to_string(),
-        "SOC" => "Social Studies".to_string(),
-        "ICT" => "Information and Communication Technology".to_string(),
-        _ => code.to_string(),
+fn subject_name_from_manifest(manifest: &PackManifest) -> String {
+    if let Some(name) = manifest.subject_name.as_deref() {
+        let trimmed = name.trim();
+        if !trimmed.is_empty() {
+            return trimmed.to_string();
+        }
     }
+    humanize_code_or_phrase(&manifest.subject_code)
+}
+
+fn normalize_country_code(code: Option<&str>) -> String {
+    let normalized = code
+        .unwrap_or("XX")
+        .trim()
+        .to_ascii_uppercase()
+        .chars()
+        .filter(|ch| ch.is_ascii_alphanumeric())
+        .take(3)
+        .collect::<String>();
+    if normalized.is_empty() {
+        "XX".to_string()
+    } else {
+        normalized
+    }
+}
+
+fn country_name_from_manifest(manifest: &PackManifest, country_code: &str) -> String {
+    if let Some(country_name) = manifest.country_name.as_deref() {
+        let trimmed = country_name.trim();
+        if !trimmed.is_empty() {
+            return trimmed.to_string();
+        }
+    }
+    if country_code == "XX" {
+        "Global".to_string()
+    } else {
+        country_code.to_string()
+    }
+}
+
+fn humanize_code_or_phrase(value: &str) -> String {
+    let normalized_value = value
+        .trim()
+        .replace(['_', '-'], " ");
+    let normalized = normalized_value
+        .split_whitespace()
+        .map(|segment| segment.to_string())
+        .collect::<Vec<_>>();
+    if normalized.is_empty() {
+        return "Subject".to_string();
+    }
+
+    normalized
+        .iter()
+        .map(|segment| titleize_token(segment))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn titleize_token(token: &str) -> String {
+    match token.to_ascii_uppercase().as_str() {
+        "MATH" => "Mathematics".to_string(),
+        "ENG" => "English".to_string(),
+        "SCI" => "Science".to_string(),
+        "SOC" => "Social".to_string(),
+        "ICT" => "ICT".to_string(),
+        "STEM" => "STEM".to_string(),
+        _ => {
+            let mut chars = token.chars();
+            let Some(first) = chars.next() else {
+                return String::new();
+            };
+            format!("{}{}", first.to_ascii_uppercase(), chars.as_str().to_ascii_lowercase())
+        }
+    }
+}
+
+fn level_name_from_code(code: &str) -> String {
+    if let Some(number) = code
+        .trim()
+        .strip_prefix('B')
+        .or_else(|| code.trim().strip_prefix('b'))
+    {
+        return format!("Basic {}", number);
+    }
+    humanize_code_or_phrase(code)
+}
+
+fn map_topic_node_type(node_type: &str) -> String {
+    let normalized = normalize_key(node_type);
+    if normalized.is_empty() {
+        "topic".to_string()
+    } else {
+        normalized
+    }
+}
+
+fn map_edge_type_to_relationship_type(edge_type: &str) -> &'static str {
+    match normalize_key(edge_type).as_str() {
+        "prerequisite" => "prerequisite",
+        "depends_on" => "depends_on",
+        "part_of" => "part_of",
+        "confused_with" => "confused_with",
+        "related" => "related",
+        _ => "related",
+    }
+}
+
+fn resolve_topic_level_id(
+    topic: &TopicSeedRow,
+    topics_by_id: &BTreeMap<i64, TopicSeedRow>,
+    level_ids: &BTreeMap<String, i64>,
+) -> Option<i64> {
+    let mut cursor = Some(topic.id);
+    while let Some(topic_id) = cursor {
+        let current = topics_by_id.get(&topic_id)?;
+        if let Some(level_code) = level_code_from_topic_code(current.code.as_deref(), level_ids) {
+            return level_ids.get(&level_code).copied();
+        }
+        cursor = current.parent_topic_id;
+    }
+    None
+}
+
+fn level_code_from_topic_code(
+    code: Option<&str>,
+    level_ids: &BTreeMap<String, i64>,
+) -> Option<String> {
+    let head = code?
+        .trim()
+        .split('.')
+        .next()
+        .map(|segment| segment.trim().to_ascii_uppercase())?;
+    if head.is_empty() {
+        return None;
+    }
+    if level_ids.contains_key(&head) {
+        Some(head)
+    } else {
+        None
+    }
+}
+
+fn topic_depth(
+    topic_id: i64,
+    topics_by_id: &BTreeMap<i64, TopicSeedRow>,
+    depth_cache: &mut BTreeMap<i64, i64>,
+) -> i64 {
+    if let Some(depth) = depth_cache.get(&topic_id).copied() {
+        return depth;
+    }
+    let Some(topic) = topics_by_id.get(&topic_id) else {
+        return 0;
+    };
+    let depth = match topic.parent_topic_id {
+        Some(parent_topic_id) => topic_depth(parent_topic_id, topics_by_id, depth_cache) + 1,
+        None => 0,
+    };
+    depth_cache.insert(topic_id, depth);
+    depth
 }
 
 fn default_option_label(index: usize) -> String {
@@ -2792,6 +3589,167 @@ mod tests {
         assert_eq!(family_count, 1);
     }
 
+    #[test]
+    fn installs_math_ghana_ccp_foundation_pack_into_runtime_tables() {
+        let conn = open_test_database();
+        let service = PackService::new(&conn);
+        let pack_path = math_ghana_foundation_pack_path();
+
+        service
+            .install_pack(&pack_path)
+            .expect("math ghana foundation pack should install");
+
+        let status: String = conn
+            .query_row(
+                "SELECT status FROM content_packs WHERE pack_id = 'math-ghana-ccp-b7b9-foundation-v1'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("pack status should exist");
+        let topic_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM topics", [], |row| row.get(0))
+            .expect("topic count should be queryable");
+        let question_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM questions", [], |row| row.get(0))
+            .expect("question count should be queryable");
+        let objective_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM learning_objectives", [], |row| {
+                row.get(0)
+            })
+            .expect("objective count should be queryable");
+        let node_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM academic_nodes", [], |row| row.get(0))
+            .expect("academic node count should be queryable");
+        let misconception_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM misconception_patterns", [], |row| {
+                row.get(0)
+            })
+            .expect("misconception count should be queryable");
+        let knowledge_entry_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM knowledge_entries", [], |row| {
+                row.get(0)
+            })
+            .expect("knowledge entry count should be queryable");
+        let strand_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM topics WHERE node_type = 'strand'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("strand count should be queryable");
+        let sub_strand_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM topics WHERE node_type = 'sub_strand'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("sub-strand count should be queryable");
+        let curriculum_version_label: String = conn
+            .query_row(
+                "SELECT version_label FROM curriculum_versions ORDER BY id DESC LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("curriculum version should exist");
+        let curriculum_family_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM curriculum_families", [], |row| row.get(0))
+            .expect("curriculum family count should be queryable");
+        let curriculum_subject_track_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM curriculum_subject_tracks",
+                [],
+                |row| row.get(0),
+            )
+            .expect("curriculum subject track count should be queryable");
+        let curriculum_level_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM curriculum_levels", [], |row| row.get(0))
+            .expect("curriculum level count should be queryable");
+        let curriculum_node_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM curriculum_nodes", [], |row| row.get(0))
+            .expect("curriculum node count should be queryable");
+        let curriculum_prerequisite_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM curriculum_relationships WHERE relationship_type = 'prerequisite'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("curriculum prerequisite relationship count should be queryable");
+        let has_anchor_text: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM topics WHERE code = 'B7.1.1.1' AND description LIKE '%source anchors%'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("topic description should be queryable");
+
+        assert_eq!(status, "active");
+        assert_eq!(topic_count, 73);
+        assert_eq!(question_count, 0);
+        assert_eq!(objective_count, 180);
+        assert_eq!(node_count, 179);
+        assert_eq!(misconception_count, 97);
+        assert_eq!(knowledge_entry_count, 140);
+        assert_eq!(strand_count, 4);
+        assert_eq!(sub_strand_count, 12);
+        assert_eq!(curriculum_version_label, "Ghana NaCCA Mathematics CCP B7-B9 2020");
+        assert_eq!(curriculum_family_count, 1);
+        assert_eq!(curriculum_subject_track_count, 1);
+        assert_eq!(curriculum_level_count, 3);
+        assert_eq!(curriculum_node_count, 73);
+        assert_eq!(curriculum_prerequisite_count, 56);
+        assert_eq!(has_anchor_text, 1);
+    }
+
+    #[test]
+    fn reinstalling_math_ghana_foundation_pack_is_idempotent_for_subject_slice() {
+        let conn = open_test_database();
+        let service = PackService::new(&conn);
+        let pack_path = math_ghana_foundation_pack_path();
+
+        service
+            .install_pack(&pack_path)
+            .expect("first install should succeed");
+        service
+            .install_pack(&pack_path)
+            .expect("reinstall should also succeed");
+
+        let topic_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM topics", [], |row| row.get(0))
+            .expect("topic count should be queryable");
+        let objective_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM learning_objectives", [], |row| {
+                row.get(0)
+            })
+            .expect("objective count should be queryable");
+        let node_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM academic_nodes", [], |row| row.get(0))
+            .expect("node count should be queryable");
+        let curriculum_subject_track_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM curriculum_subject_tracks",
+                [],
+                |row| row.get(0),
+            )
+            .expect("curriculum subject track count should be queryable");
+        let curriculum_node_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM curriculum_nodes", [], |row| row.get(0))
+            .expect("curriculum node count should be queryable");
+        let curriculum_prerequisite_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM curriculum_relationships WHERE relationship_type = 'prerequisite'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("curriculum prerequisite count should be queryable");
+
+        assert_eq!(topic_count, 73);
+        assert_eq!(objective_count, 180);
+        assert_eq!(node_count, 179);
+        assert_eq!(curriculum_subject_track_count, 1);
+        assert_eq!(curriculum_node_count, 73);
+        assert_eq!(curriculum_prerequisite_count, 56);
+    }
+
     fn open_test_database() -> Connection {
         let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
         run_runtime_migrations(&mut conn).expect("migrations should apply");
@@ -2806,5 +3764,15 @@ mod tests {
             .expect("workspace root should exist")
             .join("packs")
             .join("math-bece-sample")
+    }
+
+    fn math_ghana_foundation_pack_path() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("crate directory should have workspace parent")
+            .parent()
+            .expect("workspace root should exist")
+            .join("packs")
+            .join("math-ghana-ccp-b7b9-foundation")
     }
 }

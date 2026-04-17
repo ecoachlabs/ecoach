@@ -1,0 +1,10564 @@
+# Mathematics CCP Curriculum Full Text (Anchored)
+
+Source: `C:/Users/victo/Downloads/MATHEMATICS.pdf`
+
+Each section below is a page anchor for deterministic retrieval.
+
+## P001 (PDF page 1)
+
+```text
+NATIONAL COUNCIL FOR  
+CURRICULUM & ASSESSMENT 
+(MINISTRY OF EDUCATION) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+MATHEMATICS  
+COMMON CORE PROGRAMME (CCP) 
+CURRICULUM FOR JHS1 (B7) - JHS3 (B9)  
+ 
+ 
+SEPTEMBER, 2020 
+ 
+ 
+ 
+ 
+ 
+MINISTRY OF EDUCATION 
+REPUBLIC OF GHANA
+```
+
+## P002 (PDF page 2)
+
+```text
+ ii 
+ 
+ 
+Enquiries and comments on this Curriculum should be addressed to: 
+The Director-General 
+National Council for Curriculum and Assessment (NaCCA) 
+Ministry of Education 
+P. O. Box CT PMB 77 
+Cantonments 
+Accra 
+Telephone: 0302909071, 0302909862 
+Email:        info@nacca.gov.gh  
+Website:   www.nacca.gov.gh
+```
+
+## P003 (PDF page 3)
+
+```text
+ iii 
+FOREWORD 
+The Ministry of Education, acting through the National Council for Curriculum  and Assessment (NaCCA) has, in recent times, been working on curriculum  and 
+assessment reforms to improve the quality and relevance of learning experiences in pre -tertiary schools in Ghana. This curriculum, known as the Common Core 
+Programme (CCP), is a sequel to the Kindergarten-Primary standards-based school curriculum, the implementation of which commenced with the 2019/2020 academic 
+year. The CCP is carefully designed for learners   in Basic 7 to Basic 9 (JHS 1 – SHS 3) as part of a holistic learning experience  that prepares them for post -secondary 
+education, the world of work or both. The curriculum focuses on building character and nurturing values, in addition  to ensuring a seamless progression for all learners 
+from JHS to SHS and creates clear pathways for academic and career-related programmes from     Basic 10 to Basic 12 (SHS1 - SHS3). 
+In the twenty-first century, memorisation of facts and figures is no longer a sufficient learner attribute. Therefore, the CCP focuses on the acquisition of the 4Rs (Reading, 
+wRiting, aRithmetic and cReativity) and core competencies  to afford learners the ability to apply knowledge innovatively to solve everyday  problems. Personal projects, 
+community projects and community service have been integrated into the CCP as part of a comprehensive assessment  programme, including assessment of 
+knowledge, skills, attitudes and values  that mainly emphasise what learners can do. It is hoped that the content  of this curriculum will promote better high 
+school education that meets  the varied learning needs of the young people in the country and addresses  the shortfalls in the current school curriculum in relation 
+to learning and assessment. 
+The Ministry of Education is committed to ensuring t hat our schools develop globally competitive high school graduates who have the requisite employable skills and 
+workplace ethos. The CCP curriculum will, therefore, play an important role in this regard. The Ministry will support the eff ective implementation of the CCP to include 
+capacity development of all teachers to ensure improved learning experiences and outcomes for our young people.  
+Dr  Matthew Opoku Prempeh (MP) 
+The Honourable Minister of Education
+```
+
+## P004 (PDF page 4)
+
+```text
+ iv 
+ACKNOWLEDGEMENTS 
+This Common Core Programme (CCP) curriculum was developed together  with the National Pre-tertiary Learning Assessment Framework (NPLAF) and  Teacher’s 
+and Learner’s Resource Packs. All these documents were developed by the National Council for Curriculum and Assessment (NaCCA), under  the oversight and 
+strategic direction of the Ministry of Education (MoE) with  support from some agencies of the MoE and other relevant stakeholders. 
+NaCCA, acting on behalf of the Ministry of Education (MoE), would like  to express its sincere gratitude to all its partners who participated in the 
+professional conversations and discussions during the course of the development of the CCP curriculum. 
+NaCCA also extends special commendations to the leadership of the Ghana Education Service (GES), National  School Inspectorate Authority  (NaSIA), National 
+Teaching Council (NTC), Commission for Technical and Vocational  Education and Training (Commission for TVET) and other agencies of the  MoE. 
+Additionally, NaCCA acknowledges the contributions of staff from various  Universities and Colleges of Education as well as teachers and learners within     the Ghana 
+Education Service. 
+Special thanks go to those who also contributed to shaping this curriculum  content through the consultation process, including the national stakeholder engagement 
+conducted in Accra in February, 2020.
+```
+
+## P005 (PDF page 5)
+
+```text
+ v 
+CONTENTS 
+FOREWORD .................................................................................................................................................................................................................................................................................................................. iii 
+ACKNOWLEDGEMENTS .......................................................................................................................................................................................................................................................................................... iv 
+CONTENTS ..................................................................................................................................................................................................................................................................................................................... v 
+INTRODUCTION ....................................................................................................................................................................................................................................................................................................... viii 
+RATIONALE ................................................................................................................................................................................................................................................................................................................... xi 
+PHILOSOPHY ................................................................................................................................................................................................................................................................................................................ xii 
+AIMS ................................................................................................................................................................................................................................................................................................................................ xiii 
+PROFILE OF EXPECTED LEARNING BEHAVIOURS....................................................................................................................................................................................................................................... xiv 
+ATTITUDES, VALUES AND PROCESS SKILLS.................................................................................................................................................................................................................................................. xvii 
+ASSESSMENT IN THE CCP .................................................................................................................................................................................................................................................................................... xviii 
+CREATIVE PEDAGOGICAL APPROACHES ...................................................................................................................................................................................................................................................... xxii 
+CORE COMPETENCIES .......................................................................................................................................................................................................................................................................................... xxvi 
+INSTRUCTIONAL EXPECTATIONS ................................................................................................................................................................................................................................................................ xxviii 
+STRUCTURE AND ORGANISATION OF THE CURRICULUM ............................................................................................................................................................................................................... xxix 
+BASIC 7 ............................................................................................................................................................................................................................................................................................................................. 1 
+STRAND 1: NUMBER .............................................................................................................................................................................................................................................................................................. 2 
+Sub-strand 1: Number and Numeration Systems ......................................................................................................................................................................................................................................... 2 
+Sub-strand 2: Number Operations ................................................................................................................................................................................................................................................................... 7 
+Sub-strand 3: Fractions, Decimals and Percentages ................................................................................................................................................................................................................................... 17 
+Sub-strand 4: Number: Ratios and Proportion ........................................................................................................................................................................................................................................... 24 
+STRAND 2: ALGEBRA ........................................................................................................................................................................................................................................................................................... 27 
+Sub-strand 1: Patterns and Relations ............................................................................................................................................................................................................................................................. 27 
+Sub-strand 2: Algebraic Expressions .............................................................................................................................................................................................................................................................. 35 
+Sub-strand 3: Variables and Equations ........................................................................................................................................................................................................................................................... 41 
+STRAND 3: GEOMETRY AND MEASUREMENT .......................................................................................................................................................................................................................................... 47 
+Sub-strand 1: Shape and Space ........................................................................................................................................................................................................................................................................ 47 
+Sub-strand 2: Measurement .............................................................................................................................................................................................................................................................................. 59
+```
+
+## P006 (PDF page 6)
+
+```text
+ vi 
+Sub-strand 3: Position and Transformation .................................................................................................................................................................................................................................................. 72 
+STRAND 4: HANDLING DATA ......................................................................................................................................................................................................................................................................... 77 
+Sub-strand 1: Data .............................................................................................................................................................................................................................................................................................. 77 
+Sub-strand 2: Chance or Probability .............................................................................................................................................................................................................................................................. 86 
+BASIC 8 ........................................................................................................................................................................................................................................................................................................................... 89 
+STRAND 1: NUMBER ............................................................................................................................................................................................................................................................................................ 90 
+Sub-strand 1: Number and Numeration Systems ....................................................................................................................................................................................................................................... 90 
+Sub-strand 2: Number Operations ................................................................................................................................................................................................................................................................. 94 
+Sub-strand 3: Fractions, Decimals and Percentages ................................................................................................................................................................................................................................ 102 
+Sub-strand 4:  Number: Ratios and Proportion ....................................................................................................................................................................................................................................... 105 
+STRAND 2: ALGEBRA ........................................................................................................................................................................................................................................................................................ 112 
+Sub-strand 1: Patterns and Relations .......................................................................................................................................................................................................................................................... 112 
+Sub-strand 2 Algebraic Expressions ............................................................................................................................................................................................................................................................ 118 
+Sub-strand 3 Variables and Equations ......................................................................................................................................................................................................................................................... 121 
+STRAND 3: GEOMETRY AND MEASUREMENT ....................................................................................................................................................................................................................................... 123 
+Sub-strand 1: Shapes and Space .................................................................................................................................................................................................................................................................... 123 
+Sub-strand 2: Measurement ........................................................................................................................................................................................................................................................................... 142 
+Sub-strand 3: Position and Transformation ............................................................................................................................................................................................................................................... 151 
+STRAND 4: HANDLING DATA ...................................................................................................................................................................................................................................................................... 153 
+Sub-strand 1: Data ........................................................................................................................................................................................................................................................................................... 153 
+Sub-strand 2: Chance or Probability ........................................................................................................................................................................................................................................................... 161 
+BASIC 9 ........................................................................................................................................................................................................................................................................................................................ 164 
+STRAND 1: NUMBER ......................................................................................................................................................................................................................................................................................... 165 
+Sub-strand 1: Number and Numeration System ...................................................................................................................................................................................................................................... 165 
+Sub-strand 2: Number Operations .............................................................................................................................................................................................................................................................. 168 
+Sub-strand 3:  Fractions, Decimals and Percentages ............................................................................................................................................................................................................................... 172 
+Sub-strand 4:  Number: Ratios and Proportion ....................................................................................................................................................................................................................................... 175 
+STRAND 2: ALGEBRA ........................................................................................................................................................................................................................................................................................ 180
+```
+
+## P007 (PDF page 7)
+
+```text
+ vii 
+Sub-strand 1 Patterns and Relations ........................................................................................................................................................................................................................................................... 180 
+Sub-strand 2 Algebraic Expressions ............................................................................................................................................................................................................................................................ 183 
+Sub-strand 3 Variables and Equations ......................................................................................................................................................................................................................................................... 190 
+STRAND 3: GEOMETRY AND MEASUREMENT ....................................................................................................................................................................................................................................... 196 
+Sub-strand 1 Shapes and Space ..................................................................................................................................................................................................................................................................... 196 
+Sub-strand 2 Measurement ............................................................................................................................................................................................................................................................................ 205 
+Sub-strand 3 Position and Transformation ................................................................................................................................................................................................................................................ 209 
+STRAND 4: HANDLING DATA ...................................................................................................................................................................................................................................................................... 211 
+Sub-strand 1: Data ........................................................................................................................................................................................................................................................................................... 211 
+Sub-strand 2: Chance or Probability ........................................................................................................................................................................................................................................................... 219 
+APPENDIX: UNPACKING THE CORE COMPETENCES OF THE STANDARDS- BASE CURRICULUM ........................................................................................................................ 221 
+BIBLIOGRAPHY  .................................................................................................................................................................................................................................................................................................. 226 
+MATHEMATICS SUBJECT PANEL MEMBERS AND REVIEWERS  ................................................................................................................................................................................................... 228 
+SUPERVISORS AND COORDINATING TEAM .................................................................................................................................................................................................................................. 229
+```
+
+## P008 (PDF page 8)
+
+```text
+ viii 
+INTRODUCTION 
+In the first three years of high school education, learners are expected to take a Common Core Programme (CCP) that emphasises a set of high, 
+internationally-benchmarked career and tertiary education ready standards. Learners need to acquire these for post -secondary educati on, the 
+workplace or both. The standards articulate what learners are expected to know, understand and be able to do by focusing on t heir social, emotional, 
+cognitive and physical development. The (CCP) runs from Basic 7 through Basic 9.  
+The common core attributes of the learner, which describe the essential outcomes in the three domains of learning (i.e. cognitive, psychomotor  and 
+affective), are at the centre of the CCP (see Figure 1). Inspired by the values which are important to the Ghanaian society, the CCP provides an 
+education of the heart, mind and hands in relation to the learner’s lifetime values, well-being, physical development, metacognition and problem-solving 
+abilities. Ultimately, this will produce character-minded learners who can play active roles in dealing with the increasing challenges facing Ghana and 
+the global society. 
+The features that shape the common core programme are:  
+• learning and teaching approaches – the core competencies, 4Rs and pedagogical approaches  
+• learning context – engagement service and project 
+• learning areas – mathematics, science, computing, languages (English, Ghanaian Language, French and Arabic), career technology, social 
+studies, physical and health education, creative arts and design and religious and moral education.  
+ Figure 1 CCP Learner Attributes
+```
+
+## P009 (PDF page 9)
+
+```text
+ ix 
+These are elaborated subsequently:  
+LEARNING AND TEACHING APPROACHES 
+• The core competences: Describe the relevant global skills for learning that the CCP helps learners to develop in addition to the 4Rs. The 
+global skills for learning allow learners to become critical thinkers, problem-solvers, creators, innovators, good communicators, collaborators, 
+digitally literate, and culturally and globally sensitive citizens who are life-long learners with a keen interest in their personal development.  
+• Pedagogical approaches: The CCP emphasises creative and inclusive pedagogies that are anchored on authentic and enquiry-based 
+learning, collaborative and cooperative learning, differentiated learning, and holistic learning as well as cross disciplinary learning.   
+• The 4Rs across the Curriculum: The 4Rs refer to Reading, wRiting, aRithmetic and cReativity, which all learners must become fluent in. 
+Learning context 
+The CCP places emphasis on engagement of learners in the classroom activities, projects (in and outside classroom). These pro jects can involve 
+individual or group tasks which all learners are required to  complete by the end of Basic 9. The CCP pro ject provides learners with contexts to 
+demonstrate creativity and inventiveness in various areas of human endeavour.  Community service offers opportunity for learners to nurture, love and 
+care for, and solve problems in their community. 
+Learning Areas 
+The CCP comprises the following subjects:  
+1. Languages (English, Ghanaian Languages, French, Arabic)  
+2. Mathematics  
+3. Science   
+4. Creative Arts and Design  
+5. Career Technology  
+6. Social Studies   
+7. Computing  
+8. Religious and Moral Education (RME)  
+9. Physical and Health Education  
+This document sets out the standards for learning mathematics in the Common Core Programme (CCP). The standards in the document are posited 
+in the expectation that the CCP (B7 – B9) will offer quality education for all types of learners. The design of this curriculum is based on the features of 
+the CCP as shown in Figure 1. It emphasises a set of high internationally-benchmarked career and tertiary education ready standards. Learners need 
+to acquire these competencies in mathematics for post-secondary education, workplace training or both. The curriculum has been designed to be user
+```
+
+## P010 (PDF page 10)
+
+```text
+ x 
+friendly because it provides a detailed preamble that covers the rationale, philosophy, aims, profile of expected learning be haviours (i.e. knowledge, 
+skills, attitudes and values), pedagogical approaches, core competencies and the 4Rs, assessment practices and instructional expectations.
+```
+
+## P011 (PDF page 11)
+
+```text
+ xi 
+RATIONALE 
+Mathematics forms an integral part of our everyday lives and it is a universal truth that development is hinged on mathematic s.  Mathematics is the 
+backbone of social, economic, political, and physical development of a country. It is a never-ending creative ideology, which seeks to promote discovery 
+and understanding. It consists of a body of knowledge which attempts to explain and interpret phenomena and experiences.  Mathematics has changed 
+our lives and it is thus vital to Ghana’s future development.   
+To provide quality mathem atics education, teachers must facilitate learning in the mathematics classroom. This will provide the foundations for 
+discovering and understanding the world around us and lay the grounds for mathematics and mathematics-related studies at higher levels of education.  
+Learners should be encouraged to understand how mathematics can be used to explain what is occurring, predict how things will behave and analyse 
+causes and origin of phenomena in our environment. The mathematics curriculum has considered the desired outcomes of education for learners at 
+the basic level. Mathematics is also concerned with the development of attitudes and it is therefore important for all citizens to be mathematically and 
+technologically literate for sustainable development. Mathematics therefore ought to be taught using hands-on and minds-on approaches which learners 
+will find as fun and adopt mathematics as a culture.
+```
+
+## P012 (PDF page 12)
+
+```text
+ xii 
+PHILOSOPHY 
+Teaching Philosophy 
+Ghana believes that an effective mathematics education needed for sustainable development should be inquiry -based. Thus, mathematics education 
+must provide learners with opportunities to expand, change, enhance and modify the ways in which they view the world. It should be pivoted on learner-
+centred teaching and learning approaches that engage learners physically and cognitively in the knowledge- acquiring process, in a rich and rigorous 
+inquiry-driven environment. 
+ 
+Learning Philosophy 
+Mathematics learning is an active contextuali sed process of constructing knowledge based on learners’ experiences rather than they acquiring new 
+ones.  Learners are information constructors who operate as researchers.  Teachers serve as facilitators by providing the enabling environment that 
+promotes the construction of learners’ own knowledge, based on t heir previous experiences. This makes learning more relevant to the learner and 
+leads to the development of critical thinkers and problem solvers.
+```
+
+## P013 (PDF page 13)
+
+```text
+ xiii 
+AIMS 
+General Aim 
+The curriculum is aimed at developing individuals to become mathematically literate, good  problem solvers, have the ability to think creatively and 
+possess the confidence and competence to participate fully in the affairs of the Ghanaian society as responsible local and global citizens.  
+Subject Aims 
+The mathematics curriculum is designed to help learners to:  
+1. recognise that mathematics permeates the world around us  
+2. appreciate the usefulness, power and beauty of mathematics  
+3. enjoy mathematics and develop patience and persistence when solving problems  
+4. understand and be able to use the language, symbols and notations of mathematics  
+5. develop mathematical curiosity and use inductive and deductive reasoning when solving problems  
+6.  become confident in using mathematics to analyse and solve problems both in school and in real-life situations  
+7.  develop the knowledge, skills and attitudes necessary to pursue further studies in mathematics  
+8.  develop abstract, logical and critical thinking abilities to reflect critically upon their work and the works of others.
+```
+
+## P014 (PDF page 14)
+
+```text
+ xiv 
+PROFILE OF EXPECTED LEARNING BEHAVIOURS 
+A central aspect of this curriculum is the profile of learning behaviour dimensions that should be the basis for instruction and assessment.  
+A learner may acquire knowledge through some learning experience. They may also show understanding of concepts by comparing, summarising, re-
+writing in their own words and constructing meaning from instructions.   
+ 
+Profile of learning behaviour dimensions 
+The learner may also learn to apply the knowledge acquired in some new context.  At a higher level of learning behaviour, the learner may be required 
+to analyse an issue or problem.  At a much higher level, the pupil may be required to synthesise knowledge by integrating a number of ideas to formulate 
+a plan, solve a problem, pose a problem or compose a story problem. Further, the learner may be required to evaluate, estimate and interpret a concept. 
+At the last level, which is the highest, learners may be required to create, invent, compose, construct and design.  These si x learning behavi ours 
+(“knowing”, “understanding”, “analysis”, “synthesis”, “evaluation” and “creation”) described are referred to as dimensions of learning. “Knowing” is a 
+dimension, “applying knowledge” is also a dimension.  More than one dimension forms a profile of learning behaviour dimensions.  
+In this curriculum, learning indicators are stated with action verbs to show what the learner should know and be able to do (e.g. “describe the numbers 
+1-5 in multiple ways, using objects …” etc. ). The learner being able to “describe” the activity after obtaining several experiences in it means that they 
+have acquired “knowledge”. Being able to explain, summarise, and give examples, etc., means that the learner has understood the concepts taught.   
+Similarly, being able to develop, defend, etc., means that the learner can “apply” the knowledge acquired in some new context.  Each of the indicators 
+in the curriculum contains an “action verb” that describes behaviour the learners are expected to demonstrate after a period of teaching and learning.  
+“Knowing”, “applying knowledge” etc., are dimensions that should be the prime focus of teaching and learning in schools. Teaching,  in most cases 
+tends to stress on knowledge acquisition to the detriment of other higher-level behaviours such as application of knowledge.  
+Each action verb in any indicator shows  the underlying learning outcome or standard. It is therefore necessary for teachers to carefully read and 
+comprehend1 the standards they plan developing in their learners each week , and identify the group of indicators learners have to demonstrate in 
+achieving these standards. Teachers must ensure the group of indicators selected for the week reflect the whole range of the profile of learning 
+behaviour dimensions, that is, from the low level (knowing”, “understanding, etc.) to the high level (solve or pose a problem, create a pattern, etc.). The 
+focus is to move learning from the didactic acquisition of “knowledge, where there is fact memorisation, heavy reliance on formulae, remembering facts 
+without critiquing them or relating them to the real world (surface learning) to a new position called deep learning. Learners are expected to deepen 
+their learning through knowledge application to develop critical thinking skills, explain reasoning, and generate creative ideas that solve real life problems 
+in their school lives, and later in their adult lives.  This is the point at which learning becomes beneficial to the learner.   
+Weighting of profile of learning behaviour dimensions  
+ 
+1 This can only happen if teachers learn to work together, in school-based in-service education (INSET), as colleagues within and across disciplines and grade levels to develop communities of STEM 
+learners. STEM Education is an approach to teaching and learning that integrates the content and skills of the STEM disciplines (i.e. Science, Technology, Engineering and Mathematics) and other 
+disciplines, to answer complex questions, investigate global issues, solve real-world problems and challenges, and in the process, address the development of a set of personal attributes and transversal 
+competencies needed for success in the 21st century. in addition to working scientifically, STEM involves learners working mathematically, digitally (or technologically), and working like an engineers.
+```
+
+## P015 (PDF page 15)
+
+```text
+ xv 
+As already stated, it is important to consider the underlying behaviours for teaching, learning and assessment.  In basic level school mathematics, the 
+three profiles of learning behaviour dimensions that have been specified for teaching, learning and assessment are:    
+• Knowledge and Understanding   30%  
+• Application of Knowledge   40%  
+• Attitudes, Values and Process Skills 30%  
+Each of the learning behaviour dimensions has been given a percentage weight that should be considered in teaching, learning and assessment.  The 
+weights indicated on the right of the dimensions show the relative emphasis that the  teacher should give in the teaching, learning and assessment 
+processes.  
+Emphasising the three domains of learning (cognitive, affective and psychomotor) in your teaching will ensure that mathematics will not only be taught 
+and studied at the cognitive level, but will also lead learners to the acquisition of positive attitudes and skills that will enable them to deal effectively with 
+life in general.   
+The explanation of the keywords involved in each profile of learning behaviour dimensions are as follows:   
+Knowledge and Understanding (KU) 
+Knowing refers to the ability to remember, recall, identify, define, describe, list, name, match, state principles, facts and concepts. Knowledge i s the 
+ability to remember or recall material already learnt and this constitutes the lowest level of learning.  
+Understanding is the ability to explain, outline, summarise, translate, rewrite, paraphrase, give examples, generalise, estimate or predict consequences 
+based upon a trend.  Understanding is generally the ability to grasp the meaning of some material or concept that may be verbal, pictorial, or symbolic.  
+ 
+Applying Knowledge (AK) 
+This dimension is also referred to as “Use of Knowledge”.  It refers to the ability to use knowledge or apply knowledge, apply rules, methods, principles, 
+theories, etc. to situations that are new and unfamiliar.  It also involves the ability to produce, solve, plan, demonstrate, discover, etc.   
+Applying knowledge as used in this curriculum has a number of learning behaviour levels.  These include analysis, synthesis, evaluation and creation.  
+These may be considered and taught separately, paying attention to each of them equally in your teaching.  The dimension “Applying Knowledge”, is 
+a summary dimension for all four learning sub-levels.   
+Details of each of the four sub-levels are as follows:  
+Analysing: The ability to break down material into its component parts; to differentiate, compare, distinguish, outline, separate, ident ify significant 
+points etc.; the ability to recognise unstated assumptions and logical fallacies; ability to recognise inferences from facts etc.  
+Synthesising: The ability to put parts together to form a new whole.  It involves the ability to combine, compile, compose, devise, plan, revise, organise, 
+create, generate new ideas and solutions, etc.
+```
+
+## P016 (PDF page 16)
+
+```text
+ xvi 
+Evaluating: The ability to appraise, compare features of different things and make comments or judgement, compare, contrast, criticise, justify, argue, 
+support, discuss, prove, conclude, prioritise, theorise, make recommendations, etc.  Evaluation refers to the ability to judge the worth or value of some 
+material, based on some criteria.  
+Creating: The ability to use information or materials , combine ideas or elements to create, form, produce, manufacture, invent, discover, design, or 
+construct, formulate other (new) products. C reation is the highest form of thinking and learning skill and is therefore a very critical behaviour.  This , 
+unfortunately, is the area where most learners perform poorly. It is therefore necessary to help learners develop a high level of thinking right from the 
+Basic level. To be effective, competent and reflective citizens, who will be willing and capable of solving personal and societal problems, learners should 
+be exposed to situations that challenge them to raise questions and attempt to solve problems.
+```
+
+## P017 (PDF page 17)
+
+```text
+ xvii 
+ATTITUDES, VALUES AND PROCESS SKILLS 
+At the heart of the curriculum is the belief in nurturing honest, creative and responsible citizens with the  requisite skills for n ational development. 
+Learners therefore need to acquire positive attitudes, values and psychosocial skills that will enable them participate activ ely in lessons and take a 
+stand on issues affecting them and others. The Mathematics curriculum thus focuses on the development of attitudes, values and skills.  
+Values: As such, every part of this curriculum, including the related pedagogy is consistent with the following set of values: 
+Respect: This includes respect for Ghana, its institutions and laws, and the culture and respect among its citizens and friends. 
+Diversity: Ghana is a multicultural society in which every citizen enjoys fundamental rights and responsibilities. Learners must be taught to respect the 
+views of all persons and to see national diversity as a powerful force for national development. The curriculum promotes social cohesion.  
+Equity: Socio-economic development across the country is uneven. Consequently, it is necessary to ensure an equitable distribution of resources 
+based on the unique needs of learners and schools. Learners are from diverse backgrounds, which require the provision of equal opportuniti es to all, 
+and that all strive to care for each other both personally and professionally. 
+Commitment to achieving excellence: Learners must be taught to appreciate the opportunities provided through the curriculum and persist in doing 
+their best in whatever fields of endeavour as global citizens. The curriculum encourages innovativeness through creative and critical thinking, and the 
+use of contemporary technology. Ghana will instil the value of excellent service above self. 
+Teamwork/Collaboration: Schools are to be dedicated to a constructive and team-oriented working and learning environment. This also means that 
+learners should live peacefully with all persons with an attitude of tolerance and collaboration. 
+Truth and Integrity: The curriculum aims to develop learners into individuals who will consistently tell the truth irrespective of the consequences, be 
+morally upright and have the attitude of doing the right thing even when no one is watching, be true to themselves and lawful beliefs, and be willing to 
+live the values of honesty and compassion. Equally important, the ethos of the workplace, including integrity and grit, must unde rpin the learning 
+processes to allow learners see and apply academic skills and competencies in the world of work.
+```
+
+## P018 (PDF page 18)
+
+```text
+ xviii 
+ASSESSMENT IN THE CCP 
+Assessment is a process of collecting and evaluating information about learners and using the information to make decisions to improve their learning. 
+Assessment may be formative, summative, diagnostic, or evaluative depending on its purpose. It is integral to the teaching-learning process, promotes 
+student learning and improves instruction. In CCP, it is suggested that assessment involves assessment for learning, assessment of learning and 
+assessment as learning, which are described in the subsequent paragraphs.  
+Assessment for Learning (AfL) 
+Assessment for Learning (AfL) is the process of seeking and interpreting evidence for use by learners and their teachers to decide where the learner 
+is in their learning, where they need to be (the desired goal), and how best to get them there. AfL is one of the most suitable methods for improving 
+learning and raising standards (Black and William, 1998)2. Assessment for Learning also refers to all the  activities undertaken by teachers and/or by 
+their learners, which provide information to be used as feedback to modify teaching and learning activities in which they are engaged. AfL can be 
+achieved through processes such as sharing criteria with learners, effective questioning, and feedback.   
+AfL, therefore, provides timely feedback to ensure individual learners are assisted during the teaching and learning process u sing various strategies 
+and questioning to measure the learning that has actually taken place. It is a continuous process that happens at all stages of the instructional process 
+to monitor the progress of a learner and to offer feedback or change teaching strategies to achieve [performance standards of a lesson.  
+Assessment of Learning (AoL) 
+Assessment of learning provides a picture of the achieved standards of the teacher and performance of students at the terminal stage of the learning 
+process. This infor mation provides data for accountability and educational decisions such as grading, selection and placement, promotion and 
+certification. Through AoL, stakeholders such as parents and guardians are informed about the extent students have attained expected l earning 
+outcomes at the end of their grade or programme.  
+Assessment as Learning (AaL) 
+Assessment as Learning develops and supports students’ sense of ownership and efficacy about their learning through reflective practices. This form 
+of self-assessment helps in building the competencies of learners to achieve a deeper understanding of what their own learning and what they are 
+taught. 
+ 
+2Paul Black & Dylan William (1998) Assessment and Classroom Learning, Assessment in Education: Principles, Policy & Practice, 5:1, 7-74, DOI: 10.1080/0969595980050102
+```
+
+## P019 (PDF page 19)
+
+```text
+ xix 
+What do we assess? 
+Emphasis in assessment in the CCP is on the Common Core Learner Attributes, which are essential outcomes  in the three domains of learning (i.e., 
+cognitive, psychomotor and affective).  
+Knowledge and skills with emphasis on the 4Rs in the learning areas. 
+Core competencies with emphasis on attitudes and values developed through the learning and its context as well as the pedagogical approaches. The 
+process is illustrated diagrammatically in Figure 2.  
+ 
+ 
+How do we monitor progress? 
+School Based Assessments (SBA) covers all forms/modes of assessment including AfL, AaL and AoL (see Table 1), that can be undertaken by any 
+school-level actor (learner, teacher, head teacher) to monitor the learner’s achievement over a period of time. Data collection and keeping records of 
+the data are central to the conduct of SBA.
+```
+
+## P020 (PDF page 20)
+
+```text
+ xx 
+ 
+The following are samples of relevant records that can be kept on the student’s learning: 
+• Student’s Progress Record (Cumulative Record)  
+• Student’s Report Card  
+• School Based Assessment Termly Recording Register 
+Details of guidelines on SBA can be found in the National Pre-tertiary Learning Assessment Framework (NPLAF) document (Ministry of Education, 
+2020a)3 and the School-Based Assessment Guidelines (Ministry of Education, 2020b)4. 
+Reporting School-Based Assessment (SBA) in the CCP  
+The CCP uses a criterion-referenced model of presenting and reporting school-based assessment data. School-based assessment throughout the four-
+year duration of CCP, is done against criteria linked to performance standards and not against the work of other learners. The CCP provides levels of 
+proficiency to be attained,  and descriptors for all grade levels of the programme (see Table 2). These levels and descriptors cannot be changed by 
+individual schools and are, therefore, common to all learners as well as learning areas nationwide. For each assessment criterion or (benchmark for 
+the level of proficiency), a number of descriptors are defined as shown in Table 2.  
+ 
+3Ministry of Education (2020a). National Pre-tertiary Learning Assessment Framework (NPLAF). Accra: Ministry of Education.  
+4Ministry of Education (2020b). School-Based Assessment Guidelines. Accra: Ministry of Education. 
+Table 1   Modes of Assessment 
+Assessment for Learning Assessment of Learning Assessment as Learning 
+Class exercises Class Assessment Task (CAT) Portfolio 
+Quizzes End of term examination Journal entries 
+Class tests (written, oral, aural 
+and/or practical) 
+End of year examination Project work 
+Class Assessment Task (CAT)  Checklist 
+  Questionnaire
+```
+
+## P021 (PDF page 21)
+
+```text
+ xxi 
+ 
+The grading system presented, shows the letter grade system and equivalent grade boundaries. In assigning grades to learners’ test results, or 
+any form of evaluation, the above grade boundaries and the descriptors may be applied. The descriptors (Highly Proficient [HP], Proficient [P], 
+Approaching Proficiency [AP], Developing [D], Emerging [E]), indicate the meaning of each grade. 
+In addition to the school-based assessment (SBA), a national standards assessment test is conducted in Basic 8 to provide national level indicators 
+on learners’ achievement.  
+Table 2 Benchmarks, levels of proficiency and the grade level descriptors  
+Level of Proficiency Benchmark  Grade Level Descriptor 
+1: Highly proficient (HP) 80% + Learner shows a high level of proficiency in knowledge, skills and values and 
+can transfer them automatically and flexibly through authentic performance 
+tasks. 
+2: Proficient (P) 68-79% Learner demonstrates sufficient level of proficient knowledge, skills and core 
+understanding and can transfer them independently through authentic 
+performance tasks 
+3: Approaching Proficiency 
+(AP) 
+54-67% Learner is approaching proficiency in terms of knowledge, skills and values 
+with little guidance and can transfer understanding through authentic 
+performance tasks. 
+4: Developing (D) 40-53% Learner demonstrates a developing level of knowledge, skills and values 
+but needs help throughout the performance of authentic tasks  
+5: Emerging (E) 39% and 
+below 
+Learner is emerging with minimal understanding in terms of knowledge, 
+skills, and values but needs a lot of help.
+```
+
+## P022 (PDF page 22)
+
+```text
+ xxii 
+CREATIVE PEDAGOGICAL APPROACHES 
+The CCP emphasises creative and inclusive pedagogies that are anchored on authentic and enquiry -based learning, collaborative and cooperative 
+learning, differentiated learning, holistic learning, cross disciplinary learning (i.e. the  4Rs across the Curriculum) as well as developing the core 
+competencies. This section describes some of the creative pedagogical approaches required for the CCP.  
+The creative pedagogical approaches include approaches, methods and strategies for ensuring that every learner benefits from appropriate and relevant 
+teaching and learning episodes which are timely assessed, and feedback provided to the learner and other stakeholders such as parents and education 
+authorities. This includes the type and use of appropriate and relevant teaching and learning resources to ensure that all learners achieve the expected 
+level of learning outcomes.  
+The curriculum emphasises: 
+• the creation of learning-centred classrooms through the use of creative approaches to teaching and learning as strategies to ensuring learner 
+empowerment and independent learning.   
+• the positioning of inclusion and equity at the centre of quality teaching and learning.   
+• the use of differentiation and scaffolding as teaching and learning strategies for ensuring that no learner is left behind. 
+• the use of Information Communications Technology (ICT) as a pedagogical tool.  
+• the identification of subject specific instructional expectations needed for making learning in the subject relevant to learners  
+• the integration of assessment for learning, as learning and of learning into the teaching and learning process and as an accountability strategy 
+• use questioning techniques that promote deeper learning 
+ 
+Learning-Centred Pedagogy 
+The learner is at the centre of learning. At the heart of the curriculum is learning progression and improvement of learning outcomes for Ghana’s young 
+people with a focus on the 4Rs – Reading, wRiting, aRithmetic and cReativity. It is expected that at each curriculum phase, learners would be offered 
+the essential learning experiences to progress seamlessly to the next phase. Where there are indications that a learner is not sufficiently ready for the 
+next phase, a compensatory provision through differentiation should be provided to ensure that such a learner is ready to progress with their peers. At 
+the high school, the progression phases are B7 - B9, and B10 – B12.  
+The curriculum encourages the creation of a learning-centred classroom with the opportunity for learners to engage in meaningful “hands-on” activities 
+that bring home what they are learning in school and what they know from outside of school. The learning centred classroom is a place for learners to 
+discuss ideas and through the inspiration of the teacher actively engage in looking for answers working in groups to solve problems. This also includes 
+researching for information and analysing and evaluating the information obtained. The aim of the learning-centred classroom approach is to develop 
+learner autonomy so that learners can take ownership of their learning. It provides the opportunity for deep and profound learning to take place.   
+The teacher should create a learning atmosphere that ensures: 
+• Learners feel safe and accepted.
+```
+
+## P023 (PDF page 23)
+
+```text
+ xxiii 
+• Learners are given frequent opportunities to interact with varied sources of information, teaching and learning materials and ideas in a variety 
+of ways. 
+• The teacher assumes the position of a facilitator or coach who helps learners to identify a problem suitable for investigation via project work.  
+• Problems are connected to the context of the learners’ world to offer authentic opportunities for learning.  
+• Subject matter discussed focuses on the problem, not the discipline 
+• Learners responsibly define their learning experience and draw up a plan to solve the problem in question.  
+• Learners collaborate whilst learning.  
+• Demonstrate the results of their learning through a product or performance.  
+It is more productive for learners to find answers to their own questions rather than for teachers to provide the answers and their opinions in a learning-
+centred classroom. 
+Inclusion 
+Inclusion entails access and learning for all learners especially those disadvantaged. All learners are entitled to a broad a nd balanced curriculum in 
+every school in Ghana. The daily learning activities to which learners are exposed should ensure that the learners’ right to equal access to quality 
+education is being met.  The curriculum suggests a variety of approaches that address learners’ diversity and their special needs in the learning process. 
+These approaches when used in lessons, will contribute to the full development of the learning potential of every learner. Learners have individual 
+needs and different learning styles, learning experiences and different levels of motivation for learning. Planning, delivery and reflection on daily learning 
+episodes should take these differences into consideration.  
+The curriculum therefore promotes: 
+• learning that is linked to the learners’ backgrounds and to their prior experiences, interests, potential and capacities;   
+• learning that is meaningful because it aligns with learners’ abilities (e.g. learning that is oriented towards developing general capabilities and 
+solving the practical problems of everyday life); and  
+• the active involvement of the learners in the selection and organisation of learning experiences,  making them aware of their importance in the 
+process and also enabling them to assess their own learning outcomes. 
+Differentiation 
+This curriculum is to be delivered through the use of creative approaches. Differentiation and Scaffolding are pedagogical approaches to be used within 
+the context of the creative approaches.   
+Differentiation is a process by which differences among learners (learning styles, interest and readiness to learn etc.) are accommodated so that all 
+learners in a group have  the best possible chance of learning.  Differentiation could be by task, support and outcome.  Differentiation as a way of 
+ensuring each learner benefits adequately from the delivery of the curriculum can be achieved in the classroom through: 
+• Task 
+• One-on-one support  
+• Outcome
+```
+
+## P024 (PDF page 24)
+
+```text
+ xxiv 
+Differentiation by task involves teachers setting different tasks for learners of different ability e.g. in sketching the plan and shape of their classroom 
+some leaners could be made to sketch with free hand while others would be made to trace the outline of the plan of the classroom.  
+Differentiation by support involves the teacher providing a targeted support to learners who are seen as performing below expected standards or at risk 
+of not reaching the expected level of learning outcome. This support may include a referral to a Guidance and Counselling Officer for academic support.  
+Differentiation by outcome involves the teacher allowing learners to respond at different levels. In this case, identified learners are allowed more tim e 
+to complete a given task. 
+ 
+Scaffolding 
+Scaffolding in education refers to the use of a variety of instructional techniques aimed at moving learners progressively towards a deeper understanding 
+and ultimately greater independence in the learning process. 
+It involves breaking up the learning episode, experience or concepts into smaller parts and then providing learners with the support they need to learn 
+each part.  The process may require a teacher assigning an excerpt of a longer text to learners to read, engaging them to discuss the excerpt to improve 
+comprehension of its rationale, and guiding them through the keywords/vocabulary to ensure learners have developed a thorough understanding of the 
+text before engaging them to read the full text.  Common scaffolding strategies available to the teacher include: 
+• giving learners a simplified version of a lesson, assignment, or reading, and then gradually increasing the complexity, difficulty, or sophistication 
+over time.  
+• describing or illustrating a concept, problem, or process in multiple ways to ensure understanding.  
+• giving learners an exemplar or model of an assignment, they will be asked to complete. 
+• giving learners a vocabulary lesson before they read a difficult text.  
+• clearly describing the purpose of a learning activity, the directions learners need to follow, and the learning goals they are expected to achieve.  
+• explicitly describing how the new lesson builds on the knowledge and skills learners were taught in a previous lesson. 
+Information Communications Technology 
+ICT has been integrated into this curriculum as a teaching and learning tool to enhance deep and independent learning.  Some of the expected outcomes 
+that this curriculum aims to achieve through ICT use for teaching and learning are:  
+• Improved teaching and learning processes.   
+• Improved consistency and quality of teaching and learning.   
+• Increased opportunities for more learner-centred pedagogical approaches 
+• Improved inclusive education practices by addressing inequalities in gender, language, ability.   
+• Improved collaboration, creativity, higher order thinking skills.   
+• Enhanced flexibility and differentiated approach of delivery.
+```
+
+## P025 (PDF page 25)
+
+```text
+ xxv 
+The use of ICT as a teaching and learning tool helps to provide learners access to a wide variety large quantities of information online. It also provides 
+the framework for analysing data to investigate patterns and relationships in a geographical context. Once learners have made their findings, ICT can 
+then help them organise, edit and present information in many different ways.  
+Learners need to be exposed to the var ious ICT tools around them including calculators, radios, cameras, phones, television sets and computer and 
+related software like Microsoft Office packages –  Word, PowerPoint and Excel , as teaching and learning tools. Thus  exposure ICT use in exploring 
+learning will build their confidence and increase their levels of motivation to apply ICT in later years, both within and outside of education. ICT use for 
+teaching and learning is expected to enhance the quality and learners’ level of competency in the 4Rs.
+```
+
+## P026 (PDF page 26)
+
+```text
+ xxvi 
+CORE COMPETENCIES 
+The competencies for mathematics describe a body of skills that educators in mathematics at all levels should seek to develop in their lear ners. They 
+are ways in which practitioners and learners in the mathematics discipline engage with the subject matter as they learn the subject throughout the 
+various phases in their education. The competenc ies presented here describe a connected body of core skills that are acquired throughout the 
+processes (explore, explain, extend/elaborate, and evaluate) of teaching and learning. 
+Critical Thinking and Problem Solving (CP) 
+Developing learners’ cognitive and reasoning abilities to enable them analyse issues and situations leading to the resolution of problems. This skill 
+enables learners to draw on and demonstrate what they have learned , and from their own experiences analyse situations and choose the most 
+appropriate out of a number of possible solutions. It requires that learners embrace the problem at hand, persevere and take responsibility for their own 
+learning. In studying mathematics, assessing evidence and interpreting these sources are particularly important in developing critical thinking and 
+problem-solving skills. 
+Creativity and Innovation (CI) 
+This competency promotes in learners, entrepreneurial skills through their ability to think of new ways of solving problems and developing technologies 
+for addressing problems at hand.  It requires ingenuity of ideas, arts, technology and enterprise. Learners who possess this competency are able to 
+think independently and creatively as well.  
+Communication and Collaboration (CC) 
+This competency promotes in learners, skills in making use of language, symbols and texts to exchange information about themselves and their life 
+experiences. Learners actively participate in sharing their ideas, engage in dialogue with others by listening to and learning from  them in ways that 
+respect and value the multiple perspectives of all persons involved. 
+Cultural Identity and Global Citizenship (CG) 
+Developing learners who put country and service foremost through an understanding of what it means to be active citizens by i nculcating in them, a 
+strong sense of social and economic awareness. Learners make use of the knowledge, skills, and attitudes acquired to contribute effectively towards 
+the socio-economic development of the country and on the global stage. They build skills to critically analyse cultural and global trends, identify and 
+contribute to the global community. 
+Personal Development and Leadership (PL) 
+Improving self -awareness, self -knowledge, skills, building and renewing self -esteem, identifying and developing talents, fulfilling dreams and 
+aspirations, learning from the mistakes and failures of the past and developing other people or meeting other people’s needs. It involves recognising 
+the importance of values such as honesty and empathy , seeking the well -being of others , distinguishing between right and wrong , fostering 
+perseverance, resilience and self-confidence; exploring leadership, self-regulation and responsibility and developing a love for lifelong learning.
+```
+
+## P027 (PDF page 27)
+
+```text
+ xxvii 
+Digital Literacy (DL) 
+Developing learners to discover, acquire and communicate through ICT to support their learning and to make use of digital media responsibly.
+```
+
+## P028 (PDF page 28)
+
+```text
+ xxviii 
+INSTRUCTIONAL EXPECTATIONS 
+The following are the major roles the teacher is expected to play in the implementation of the curriculum: 
+1. Guide and facilitate learning by generating discourse among learners and challenging them to accept and share responsibility for their own 
+learning, based on their unique individual differences. 
+2. Select mathematics content, adapt and plan lessons to meet the interests, knowledge, understanding, abilities, and experiences of learners. It 
+should be noted that in the standards-based curriculum, lessons are not expected to be limited to only specific objective(s) but should broadly 
+cover the processes of learning for the learners to cumulatively engage in activities/experiences to demonstrate what they know and can do (i.e. 
+the indicators) as well as develop such core competences. 
+3. Work together as colleagues within and across disciplines and grade levels to develop communities of STEM learners who exhibit the STEM 
+skills including mathematical inquiry, attitudes and social values conducive to mathematics learning.  
+4. Use multiple methods and systematically gather data about learners’ understanding and abilities to guide mathematics teaching and learning, 
+with arrangements to provide feedback to both learners and parents.  
+5. Design and manage learning environments that provide learners with the time, space, and resources needed for learning mathematics.  
+6. Aid learners to make sense of problems and persevere in solving them, including using higher order reasoning and problem-solving skills.  
+7. Get learners to think critically about tasks and their solutions by aski ng questions and challenging each other’s views until a consensus is 
+reached.   
+8. Encourage learners to present their own ideas in ways that make sense to others and critique each other’s reasoning.   
+9. Enable learners to work together to represent real -life situations mathematics in multiple ways (e.g. oral, text, pictures, diagrams, equations, 
+etc.).   
+10. Support learners to use appropriate technologies to solve problems embedded in their culture and the larger society.   
+11. Provide opportunities for learners to reali se that it is necessary to be precise when sharing mathematical ideas. Also, allow them to support 
+each other to improve on their precision.  
+12. Guide learners to look for and express patterns or regularity in repeated reasoning.   
+13. The remaining part of the document presents the details of the standards and indicators for each grade level.
+```
+
+## P029 (PDF page 29)
+
+```text
+ xxix 
+STRUCTURE AND ORGANISATION OF THE CURRICULUM 
+The curriculum is organised under key headings and annotations. 
+Strands are the broad areas/sections of the mathematics content to be studied. 
+Sub-strands are the topics within each strand under which the content is organised.   
+Content standard refers to the pre-determined level of knowledge, skill and/or attitude that a learner attains by a set stage of education. 
+Indicator is a clear outcome or milestone that learners have to exhibit in each year to meet the content standard expectation. The indicators 
+represent the minimum expected standard in a year. 
+ 
+Exemplar – support and guidance which clearly explains the expected outcomes of an indicator and suggests what teaching and learning activities 
+could take to support the facilitators/teachers in the delivery of the curriculum. 
+A unique annotation is used to label the class, strands, sub -strands, content standards, learning indicators and exemplars in the curriculum for the 
+purpose of easy referencing . The annotation is illustrated in Figure 3 and the coverage of the curriculum in terms of strands, sub -strands and total 
+number of content standards from B7 – B9 is shown in Table 3.:
+```
+
+## P030 (PDF page 30)
+
+```text
+ xxx 
+ 
+The Standards in mathematics are organised under the following four strands: 
+1. Number   
+2. Algebra  
+3. Geometry and Measurement  
+4. Data. 
+Table 3 shows the coverage of the curriculum in terms of strands, sub-strands and total number of content standards from B7 – B9. 
+ 
+Table 3 Coverage of the curriculum in terms of strands, sub-strands and total number of content 
+standards 
+S/N STRAND SUB-STRAND 
+CONTENT STANDARDS 
+B7 B8 B9 
+1.  Number Number and Numeration Systems 1 2 2 
+2.   Number Operations 3 3 3 
+3.   Fractions, Decimals and Percentages  3 1 1 
+4.   Ratios and Proportion 1 1 1 
+5.  Algebra Pattern and Relationships 1 1 1 
+6.   Algebraic Expressions 1 1 1 
+7.   Variables and Equations 1 1 1 
+8.  Geometry and Measurement Shapes and Space 2 2 1 
+9.   Measurement  2 2 2 
+10.   Position and Transformation 1 1 1 
+11.  Handling Data Data 2 2 2 
+12.   Chance or Probability 1 1 1 
+  Total 19 18 17
+```
+
+## P031 (PDF page 31)
+
+```text
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+BASIC 7
+```
+
+## P032 (PDF page 32)
+
+```text
+ 2 
+STRAND 1: NUMBER 
+Sub-strand 1: Number and Numeration Systems 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.1.1 Demonstrate 
+understanding and the 
+use of place value for 
+expressing quantities 
+recorded as base ten 
+numerals as well as 
+rounding these to given 
+decimal places and 
+significant figures. 
+B7.1.1.1.1 Model number quantities more than 1,000,000,000 using 
+graph sheets, isometric papers and multi-base blocks 
+Critical Thinking and 
+Problem Solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+E.g.,1. Model number quantities up to 1,000,000,000 (one billion) using 
+graph sheets or multi-base ten materials. For instance, with multi-base 
+blocks one cube = 100,000, one rod = ten of the cubes (1,000,000) and 
+a flat =10,000,000, and a block =100,000,000 as shown below.   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+i. Determine how many blocks will make a billion. 
+ E.g.2. Use multiples of 10s, 50s, 100s and 200s to represent numbers in 
+multiples of ways (make sure each figure is used) 
+i. 5,560 = 20×200 + 10×100 +11×50 + 1×10; or  
+        = 15×200 + 20×100 +10×50 + 6×10; etc.
+```
+
+## P033 (PDF page 33)
+
+```text
+ 3 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.1.1 Demonstrate 
+understanding and the 
+use of place value for 
+expressing quantities 
+recorded as base ten 
+numerals as well as 
+rounding these to given 
+decimal places and 
+significant figures. 
+E.g.3. Use tokens (or paper-made currency notes) such as GH₵20, 
+GH₵50, GH₵100 and GH₵200 to work out how many of each 
+denomination would be required to model given amount up to one 
+billion. 
+i. Workout how many GH₵200 will make GH₵185, 000,000, 
+GH₵1,890,750,000, etc. 
+ii. Determine combinations of GH₵50, GH₵100 or GH₵200 notes 
+that make GH₵1,000,000 (make sure each denomination is 
+used); 
+Critical Thinking and 
+Problem Solving (CP) 
+ 
+ 
+B7.1.1.2   Compare and order whole numbers more than1,000,000,000 
+and represent the comparison using ">, <, or=" Critical Thinking and 
+Problem Solving (CP) 
+Communication and 
+Collaboration (CC) 
+ 
+ 
+E.g.1.Skip count forwards and backwards in 25s, 50s and 250s beginning from 
+1000. 
+E.g.2. Identify numbers which are for instance, 500,000 more than or less 
+than a given 8-digit or 9-digit number.  
+i. 1,295,800,000 is 500,000 more than 1,295,300,000 and 
+1,295,300,000 is 500,000 less than 1,295,800,000  
+E.g.3. Use phrases such as “is equal to”, “is greater than” and “is less than' 
+as well as their symbols such as “>”, “<” and “=” to compare any two 
+numbers. 
+   i        1,300,850,700 …. 1,300,850,700  
+        ii.         5,223,487,637 …. 5,113,487,637 etc.
+```
+
+## P034 (PDF page 34)
+
+```text
+ 4 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g.4. Identify, read and write numbers in given positions in a number chart. 
+187,500 687,500 1,187,500 1,687,500 
+2,187,500 2,687,500 3,187,500 3,687,500 
+4,187,500 4,687,500 5,187,500 5,687,500 
+For instance, which number is on the right of 3,187,500? Write the 
+number in words. 
+ 
+B7.1.1.1 Demonstrate 
+understanding and the 
+use of place value for 
+expressing quantities 
+recorded as base ten 
+numerals as well as 
+rounding these to given 
+decimal places and 
+significant figures. 
+B7.1.1.1.3 Round (off, up, down) whole numbers more than 
+1,000,000,000 to the nearest hundred-thousand, ten-thousands, 
+thousands, hundreds and tens 
+Personal Development 
+and Leadership (PL) 
+ 
+Creativity and Innovation 
+(CI)  
+E.g. 1. Round off whole numbers up to over 1,000,000,000 to the nearest 
+hundred-thousands, ten-thousands, thousands, hundreds, etc. 
+i. 1,879,653 is 1,900,000 to the nearest hundred thousand and 
+1,880,000 to the nearest ten thousand 
+E.g. 2. Explain the differences between the “round up” and “round down” 
+concepts.  
+When rounding up, we consider the larger number, while when 
+rounding down, we consider the smaller of the two. The table below 
+may bring out the meaning of the concept. 
+2,846,655 Round up Round down Round off 
+To the nearest thousand 2,847,000 2,846,000 2,847,000 
+To the nearest ten thousand 2,850,000 2,840,000 2,850,000 
+To the nearest hundred 
+thousand 
+2,900,000 2,800,000 2,800,000 
+E.g.3. Express whole numbers to significant figures (i) 857386321 
+ five significant figures  
+ four significant figures 
+ three significant figures, etc.
+```
+
+## P035 (PDF page 35)
+
+```text
+ 5 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.1.1 Demonstrate 
+understanding and the 
+use of place value for 
+expressing quantities 
+recorded as base ten 
+numerals as well as 
+rounding these to given 
+decimal places and 
+significant figures. 
+B7.1.1.1.4 Round decimals to the nearest tenth, hundredth, 
+thousandths, etc. 
+Critical Thinking and 
+Problem Solving (CP) 
+E.g.1 Round (off, up and down) decimals to the nearest tenths, hundredths, 
+thousandths…….  
+i. Round 486.3685 as indicated in the table below 
+Number 
+Round to the 
+nearest 
+tenths 
+Round to the 
+nearest 
+hundredths 
+Round to the 
+nearest 
+thousandths 
+486.3685 486.4 486.37 486.369 
+0.0605368 0.1 0.06 0.061 
+ 
+ii. Round 78.4604783 as indicated in the table below 
+ Round up  Round off Round down 
+nearest tenths 78.5 78.5 78.4 
+nearest hundredths 78.47  78.46 78.46 
+nearest thousandths 78.461 78.460 78.460
+```
+
+## P036 (PDF page 36)
+
+```text
+ 6 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.1.1 Demonstrate 
+understanding and the 
+use of place value for 
+expressing quantities 
+recorded as base ten 
+numerals as well as 
+rounding these to given 
+decimal places and 
+significant figures. 
+B7.1.1.1.5 Express decimal numerals to given significant and decimal 
+places 
+E.g.1 Explain when zero (0) is significant in a decimal numeral 
+         i. 0.360 (3sf)    ii. 7.021 (4sf) 
+E.g.2. Round the following numbers to   
+0.00234567  and 84.40995000 
+i. 3sf 
+ii. 4sf 
+iii. 6sf 
+Critical Thinking and 
+Problem Solving (CP) 
+Communication and 
+Collaboration (CC) 
+Creativity and Innovation 
+(CI) 
+ E.g.3. Express decimal numbers to a given number of decimal places 
+(i) 745.9674 correct to 
+-three decimal places 
+-two decimal places 
+one decimal place 
+ iii. Musa measured the length of his teacher’s table and corrected his 
+measurement to 2 decimal places as 0.76m. State the possible 
+actual readings Musa might have obtained.  
+iv. Investigate similar problems on significant figures.
+```
+
+## P037 (PDF page 37)
+
+```text
+ 7 
+STRAND 1: NUMBER 
+Sub-strand 2: Number Operations 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.2.1 Apply mental 
+mathematics strategies 
+and number properties 
+used to solve problems  
+B7.1.2.1.1 Multiply and divide given numbers by powers of 10 
+including decimals and benchmark fractions  
+Communication and 
+Collaboration (CC) 
+Creativity and Innovation 
+(CI) E.g.1. Recall multiplication facts up to 144 and related division facts. 
+ E.g.2. Recall decimal names of given benchmark fractions converted to 
+decimals or percentages (and vice versa)  
+ E.g. 3.   Find the product of a given decimal number when it is multiplied 
+by 10, 100, 1000, 
+1
+10 ,
+1
+100,  
+1
+1000, etc.  
+i. 105.25 × 1000 
+ii. 105.25 ×
+1
+100 
+ B7.1.2.1.2 Apply mental mathematics strategies and number 
+properties used to perform calculations. 
+Creativity and Innovation 
+(CI) 
+ 
+Critical Thinking and 
+Problem Solving (CP) 
+ 
+ E.g. 1.  Apply the halving and doubling techniques to determine the 
+product of two given numbers.  
+i.  28 x 5, think 14 x 10=140 
+ii. 125 x 4, think (125 x 2) x 2 = 250 x 2 = 500  
+ E.g. 2.  Apply the distributive property to determine  the product of two 
+given numbers  
+i. 7 x 15, think 7 × (10 + 5) = 70 + 35 = 105  
+ii. 18 × 6, think (20 − 2) × 6 = (20 × 6)–(6 × 2) = 120 −12 = 108
+```
+
+## P038 (PDF page 38)
+
+```text
+ 8 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.2.1 Apply mental 
+mathematics strategies 
+and number properties 
+used to solve problems 
+B7.1.2.1.3 Apply mental mathematics strategies to solve word 
+problems.  
+Creativity and Innovation 
+(CI)  
+Critical thinking and 
+problem solving (CP) 
+ 
+E.g. 1. Play mental mathematics games: - learners use mental strategies 
+to perform the following; 
+i. addition using words like plus, add, calculate the sum, increase 
+a number by, and find the total; 
+ii. subtraction using words like minus, from a number take, , find 
+the difference, and what must be added to make;   
+iii. multiplication using words like times, multiply, find the product, 
+square, and what must be divided by …  to give …;  
+iv. division using words like divide, share, how many times does it 
+go into? and what must be multiplied by … to give …  
+ E.g.2. Play mental mathematics games: 
+Find the cost of three 5 kg bags of rice at ₵2 per kg.  
+i. What is the cost of 1 dozen of eggs at 80 pesewas each?  
+ii. 8 x 99.  
+iii. 28 x 25.  
+iv. How many 21cm pieces can I cut off a string one metre long?  
+v. What fraction of a litre is 250ml?  
+vi. The area of a square board is 81 cm2. What is its perimeter?  
+vii. Two angles of a triangle add up to 98o. What is the size of the 
+third angle?  
+viii. How many minutes are there from 10.15 a.m. to noon?  
+ix. What is 60 pesewas as a decimal of ₵2.40?
+```
+
+## P039 (PDF page 39)
+
+```text
+ 9 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.1.2.2 Demonstrate an 
+understanding of addition, 
+subtraction, multiplication 
+and division of (i) whole 
+numbers, and (ii) decimal 
+numbers, to solve problems. 
+B7.1.2.2.1 Add and subtract up to four-digit numbers. Critical thinking and 
+problem solving (CP) 
+E.g.1. Use partitioning (or expanded form) and place value system to 
+add and subtract whole and decimal numbers. 
+i) Add 785 and 9,342 
+ 785 = 700+80+5 
+  + 
+9,342 
+= 9000+300+40+2 
+ 10,127 = 9000+1000+120+7 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+iii) Subtract 7.85 from 93.6 
+  93.60 = 90 + 3+
+6
+10 +
+0
+100- --- 
+ −  7.85 =  7+ 
+8
+10+
+5
+100 
+ 85.75 = 80 + 5 +
+75
+100---- 
+ 
+ii) Add 327.6 and 54.13 
+ 327.60 = 300 + 20 + 7 +
+6
+10 +
+0
+100---
+- 
+ + 54.13 =  50 + 4 +
+1
+10+
+3
+100 
+ 381.73 = 300+ 70+ 11+
+7
+10+
+3
+100
+```
+
+## P040 (PDF page 40)
+
+```text
+ 10 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.1.2.2 Demonstrate 
+an understanding of 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers, and (ii) 
+decimal numbers, to 
+solve problems. 
+B71.2.2.2 Multiply or divide multi-digit numbers by 1- and 2- digit 
+numbers  
+Critical thinking and 
+problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ E.g.1   Use partitioning/expanded form to multiply and divide efficiently 
+ 
+i) Multiply 584 by 8 
+ 584 = (500+ 80+4) 
+ × 8   = x8 
+4,000+640+32 
+ 4,672 = 4,672 
+ 
+  
+E.g.2.   Multiply whole numbers using the vertical place value method or 
+lattice method:  
+ 
+i. Place value method: 
+345 x 27   =  
+ 
+345 
+x27 
+2,415                 
+              +   6,900 
+9,315 
+ 
+Lattice method:   
+Draw a 2 by 3 lattice for solving 345 × 
+27.
+```
+
+## P041 (PDF page 41)
+
+```text
+ 11 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.1.2.2 Demonstrate 
+an understanding of 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers, and (ii) 
+decimal numbers, to 
+solve problems. 
+E.g.3   Use the distributive property to multiply 325 by 15. 
+=325 x (10 + 5) = (325 x 10) + (325 x 5) 
+=3,250 + 1,625 
+=4,875 
+Critical thinking and 
+problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ E.g.4   Investigate and determine basic division facts including divisibility 
+test. 
+(i) determine how a given number is divisible by 2,3, 4, 5, 6, 7 8, 
+9,10, etc. 
+For example, a number is divisible by 3 if the sum of its digits is 
+divisible by 3.  
+So, 72 is divisible by 3 because 7+2 = 9. Hence since 9 is divisible 
+by 3, then 72 is divisible by 3. 
+Also, to find out if a number is divisible by 7, take the last digit in 
+the number then double it and subtract from the rest of the 
+number. If the answer is 0 or a multiple of 7, then the number is 
+divisible by 7.  
+So, 595 is divisible by 7 because 5 x 2 =10. 59 – 10 = 49. 
+Therefore, 595 is divisible by 7.  
+B.7.1.2.2 Demonstrate 
+an understanding of 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers, and (ii) 
+decimal numbers, to 
+solve problems. 
+B7.1.2.2.3. Create and solve story problems involving decimals on 
+the four basic operations. 
+E.g. 1.  Solve word problems. 
+(i) A group of two hundred and fifteen men and seven hundred 
+and eighty-four women went to watch a musical concert.  An 
+amount of GH₵25 was collected at the gate from each person. 
+How much money was collected all together?  
+Critical thinking and 
+problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL)
+```
+
+## P042 (PDF page 42)
+
+```text
+ 12 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.1.2.2 Demonstrate 
+an understanding of 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers, and (ii) 
+decimal numbers, to 
+solve problems. 
+(ii) Mrs Adamu bought 13.6kg of meat. Mrs Anderson bought 
+2.4kg of meat less than Mrs Adamu. How many kilograms of 
+meat did they buy all together? 
+Critical thinking and 
+problem solving (CP) 
+ 
+(iii) Ebo weighs 28.6kg. His father weighs four times as heavy. 
+What is the total weight of Ebo and his father?  
+(iv) Mrs Armah bought 45.75 metres of linen for her five children. If 
+they share the material equally, how many metres of linen did 
+each receive?  
+Personal Development 
+and Leadership (PL) 
+ 
+ E.g.2 Solve word problems on data presented in a table 
+(i)  In preparation towards an open day anniversary, a school’s 
+Management Committee approved the following budget on some 
+projects.  
+Activity Cost 
+(GH₵) 
+Painting school building 4,580 
+Mending cracks on the basketball pitch 3,050 
+Restock the library with new books 2,690 
+Buying of choir robes 5,340 
+Buying prizes for awards 4,270 
+(a)   How much was approved for painting the school building and 
+buying choir robes? 
+(b)   How much more was to be spent on mending the cracks on 
+the basketball pitch than restocking the library with new 
+books? 
+(c)   How much was spent on buying prizes for awards if twice the 
+amount approved was spent on this activity?
+```
+
+## P043 (PDF page 43)
+
+```text
+ 13 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.2.3 Demonstrate 
+understanding and the 
+use of powers of natural 
+numbers in solving 
+problems. 
+B7.1.2.3.1 Illustrate with examples the meaning of repeated factors 
+using counting objects such as bottle tops or bundle 
+sticks. 
+Creativity and Innovation 
+(CI) 
+E.g.1:   Model repeated factors using counters or bottle tops.  
+i. 3×3×3, is repeated factors, and each factor is 3. 
+Critical thinking and 
+Problem Solving (CP) 
+` E.g.2 Explain what is meant by a power of a number.  
+ 
+i. 2×2×2×2x2 = 25=32 
+ E.g.3 Explain the features of the power 23 
+The 2 in 23 is the base, while the 3 in 23 is the exponent or index 
+ B7.1.2.3.2 Express a given number as a product of a given number or 
+numbers, as well as, in the form of a power or two such numbers as 
+product of powers 
+ 
+ E.g. 1 i. 32 = 2×2×2×2×2 . = 25 
+ii.  81 = 3×3×3×3 = 34  
+iii.  49 = 7×7 = 72    
+iv.  16 × 27 = 2×2×2×2 × 3×3×3 = 24 × 33
+```
+
+## P044 (PDF page 44)
+
+```text
+ 14 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.2.3 Demonstrate 
+understanding and the 
+use of powers of natural 
+numbers in solving 
+problems. 
+B7.1.2.3.3 Show that the value of any natural number with zero as its 
+exponent or index is 1 and use it to solve problems. 
+E.g.1 Verify why the value of any natural number with exponent zero is 1. 
+Verification:.  
+𝑥𝑥
+𝑥𝑥= 1, but from indices,
+𝑥𝑥
+𝑥𝑥
+= 𝑥𝑥0 , hence 𝑥𝑥0 = 1  for any natural number 
+Thus: if we have 
+4
+4
+, the result is 1. This can also be done using 
+powers of numbers. That is, 
+4
+4
+= 22 ÷ 22  =  22−2 =  20 =
+1. Therefore, any natural number with an exponent of 0 is 1.  
+Also, if we have 
+27
+27
+, the result is 1. This can also be done using 
+powers of numbers. That is, 
+27
+27
+= 33 ÷ 33  =  33−3 =  30 =
+1. Therefore, any natural number with an exponent of 0 is 1.  
+ 
+Creativity and Innovation 
+(CI) 
+ B7.1.2.3.4 Find the value of a number written in index form. 
+E.g.1i. 53 = 5×5×5 = 25 × 5 = 125 
+ii.  34  = 3×3×3×3 = 9 × 9 = 81 
+iii.  63  =  6×6×6 = 36 × 6 = 216 
+ 𝐢𝐢𝐢𝐢.
+𝟏𝟏
+𝟐𝟐𝟓𝟓  = 
+𝟏𝟏
+𝟐𝟐×𝟐𝟐×𝟐𝟐×𝟐𝟐×𝟐𝟐 = 
+𝟏𝟏
+𝟑𝟑𝟐𝟐 
+Creativity and Innovation 
+(CI)
+```
+
+## P045 (PDF page 45)
+
+```text
+ 15 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.2.3 Demonstrate 
+understanding and the 
+use of powers of natural 
+numbers in solving 
+problems. 
+ 
+ 
+ 
+B7.1.2.3.5 Apply the concept of powers of numbers (product of 
+prime) to find Highest Common Factor (HCF). 
+E.g.1 Expand a given number using product of prime concept. 
+ 
+E.g. 2   HCF Real life example:  
+Akweley has two pieces of paper. One piece is 24 cm wide and the other 
+piece is 30 cm wide. She wants to cut both pieces into strips of equal 
+width that are as wide as possible. How wide should she cut the strips?  
+ 
+Answer:  
+This problem can be solved using H.C.F. because we are cutting or 
+“dividing” the strips of cloth into smaller pieces (Factor) of 24 and 30 
+(Common) and we are looking for the widest possible strips (Highest).  
+So, 
+H.C.F. of 24 and 30 is 6  
+So we can say that Akweley should cut each piece to be 18 cm wide.  
+Creativity and Innovation 
+(CI) 
+Critical Thinking and 
+Problem Solving (CP)
+```
+
+## P046 (PDF page 46)
+
+```text
+ 16 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.2.3 Demonstrate 
+understanding and the 
+use of powers of natural 
+numbers in solving 
+problems. 
+ 
+E.g. 3. LCM Real life example  
+Baba exercises every 12 days and Serwa every 8 days. Baba and 
+Serwa both exercised today. How many days will it be until they 
+exercise together again? 
+ 
+Answer:  
+This problem can be solved using Least Common Multiple 
+because we are trying to figure out when the soonest (Least) time 
+will be that as the event of exercising continues (Multiple), it will 
+occur at the same time (Common). 
+So, L.C.M. of 12 and 8 is 24. 
+So, they will exercise together again in 24 day 
+ 
+Creativity and Innovation 
+(CI) 
+Critical Thinking and 
+Problem Solving (CP)
+```
+
+## P047 (PDF page 47)
+
+```text
+ 17 
+ 
+STRAND 1: NUMBER 
+Sub-strand 3: Fractions, Decimals and Percentages 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.3.1 Simplify, 
+compare and order a 
+mixture of positive 
+fractions (i.e. 
+common, percent and 
+decimal) by changing 
+all to equivalent (i) 
+fractions (ii) decimals, 
+or (iii) percentages. 
+B7.1.3.1.1 Determine and recall the percentages and decimals of given 
+benchmark fractions (i.e. tenths, fifths, fourths, thirds and 
+halves) and use these to compare quantities.  
+Critical thinking and 
+Problem Solving (CP) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+E.g. 1.  Review the concept of fractions. 
+i. Shade given fraction of squares in given shapes: 
+i.e. shade  
+5
+6 of the rectangle. 
+ii. Write down 3 fractions equivalent to 
+2
+3
+ 
+iii. Express the fraction 
+6
+10in its simplest form: 
+6
+10 =
+3
+5
+ 
+iv. Convert to mixed numbers: 
+12
+5  
+v. Convert to improper fractions: 2
+5
+9 
+      
+      
+      
+E.g. 2.   Work out common, and decimal fractions and percent equivalences 
+of given benchmark fractions to complete a table. 
+ 
+ 
+ 
+  
+ 
+ 
+Common 1
+10 A 1
+4 1
+3
+ B C 2
+3
+ 
+Percent 10% 20% D E 50% F G 
+Decimal 0.1 H I J K 0.4 L
+```
+
+## P048 (PDF page 48)
+
+```text
+ 18 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.3.1 Simplify, 
+compare and order a 
+mixture of positive 
+fractions (i.e. 
+common, percent and 
+decimal) by changing 
+all to equivalent (i) 
+fractions (ii) decimals, 
+or (iii) percentages. 
+E.g. 3.  Identifying fractions which are (i) closer to half; (ii) closer to one; and 
+(iii) closer to zero in games with fraction cards and fraction wheel. 
+Spin the fraction wheel and pick the right fraction to win a fraction 
+card. [Note cards picked should not be replaced].  
+Critical thinking and 
+Problem Solving (CP) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ E.g. 4.  Simplify, compare and order common fractions.  
+i. Determine the fraction which is the simplest form of a given set of 
+fractions. Example, what is the simplest form of the fraction 
+represented by the diagram below? 
+4
+10, 
+4
+12, 
+7
+8 ,
+1
+3
+and 
+1
+4
+. 
+ 
+ 
+ii. Which symbol (<, = or >) makes the sentence “
+3
+5
+…
+2
+3
+” true? 
+iii. Find which fraction is greater: 
+7
+12  and 
+8
+10.
+```
+
+## P049 (PDF page 49)
+
+```text
+ 19 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.3.1 Simplify, 
+compare and order a 
+mixture of positive 
+fractions (i.e. 
+common, percent and 
+decimal) by changing 
+all to equivalent (i) 
+fractions (ii) decimals, 
+or (iii) percentages. 
+B7.1.3.1.2 Compare and order fractions (i.e. common, percent and 
+decimal fractions up to thousandths) limit to the benchmark 
+fractions.  
+E.g. 1.  Arrange in descending order, the following fractions 
+5
+6 ,
+3
+4
+ and  
+7
+8
+ . 
+E.g. 2.  Find which decimal fractions is greater: 0.99 is greater than 0.977 
+E.g. 3.  Order the decimal numbers 0.098, 0.985 and0.123 from least to 
+greatest. 
+Communication and 
+Collaboration (CC) 
+ 
+Critical thinking and 
+problem solving (CP) 
+ E.g. 4.  Compare and order common and decimal fractions and percent, and 
+express them in one form (i.e. either common, decimal or percent). 
+For instance, to order 0.832,  
+3
+8and 38% from least to largest; we 
+have  
+0.832 =
+832
+1000 = 83.2%,  
+→
+3
+8 =
+375
+1000 = 37.5%, 
+   38% =
+38
+100 = 0.38%,  
+Hence the order from least to the largest is   
+3
+8
+ , 38% and 0.832.   
+B7.1.3.2 Demonstrate 
+an understanding of 
+the process of 
+addition and/or 
+subtraction of 
+fractions and apply 
+this in solving 
+problems 
+B7.1.3.2.1 Explain the process of addition and subtraction of two or 
+three unlike and mixed fractions. 
+Communication and 
+Collaboration (CC) 
+ 
+ Critical thinking and 
+problem solving (CP) 
+E.g. 1.  To add mixed fractions, i.e. 2
+2
+5 and 1
+2
+3
+, we first add the whole 
+numbers and then add the fractions; i.e. 2 + 1 + 
+2
+5
+ + 
+2
+3
+   = 3 + 
+6
+15 + 
+10
+15
+  
+= 3
+6+10
+15  = 3
+16
+15
+ = 4
+1
+15
+```
+
+## P050 (PDF page 50)
+
+```text
+ 20 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+E.g. 2.  To subtract mixed fractions, i.e. 2
+4
+5-1
+2
+3, we first subtract the whole 
+numbers and then subtract the fractions; i.e. (2 – 1) + 
+4
+5  −  
+2
+3
+ = 1
+12 −10
+15  
+= 1
+2
+15.   
+Alternatively, we may change the mixed fractions to improper fractions first. 
+B7.1.3.2 Demonstrate 
+an understanding of 
+the process of 
+addition and/or 
+subtraction of 
+fractions and apply 
+this in solving 
+problems 
+B7.1.3.2.2 Solve problems involving addition or subtraction of 
+fractions. 
+Critical thinking and 
+problem solving (CP) 
+ 
+Digital Literacy (DL) 
+ 
+ 
+E.g. 1.   Solve word problems involving addition or subtraction of fractions. 
+i. 3
+1
+3 feet are cut off a board that is  12
+1
+4
+ feet long. How long is the 
+remaining part of the board? 
+ii. The Musa family decided to hike to a waterfall, approximately 8⅝ 
+kilometres away.  After an hour the lake was still 5⅓ kilometres 
+away.  How far did the group hike so far? 
+iii. If you add 2 fractions and the sum is greater than ½, what can 
+you say about the fractions. 
+B7.1.3.3 Demonstrate 
+an understanding of 
+the process of 
+multiplying and 
+dividing positive 
+fractions and apply 
+this in solving 
+problems 
+B7.1.3.3.1 Explain the process of multiplying a fraction (i.e. common, 
+percent and decimal fractions up to thousandths) by a whole 
+number and by a fraction. 
+Critical thinking and 
+problem solving (CP) 
+E.g. 1.  To multiply a whole number by a fraction, the multiplication is read 
+as ‘times’. For instance, 3 × 2
+2
+3 means 3 times 2
+2
+3
+ or 3 groups of 2
+2
+3
+; 
+i.e. 3 × (2 + 
+2
+3
+) or 3 × 
+8
+3
+. The product can be obtained by (i) changing 
+all into common fraction; (ii) multiplying all numerators and 
+denominators; (iii) simplifying the results. 
+Find    1.  15 × 
+2
+3
+           2.   12 ×
+3
+8
+.
+```
+
+## P051 (PDF page 51)
+
+```text
+ 21 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g. 2.   To multiply a fraction by a whole number, the multiplication is read 
+as ‘of’.  for instance, 
+2
+3× 5 means 
+2
+3
+ of 5 or  i.e. 
+2
+3
+ ×  
+5
+1
+=  
+2 ×5
+3 ×1 =
+10
+3  = 
+3
+1
+3
+. The product can be obtained by (i) changing all into common 
+fraction; (ii) multiplying all numerators and denominators; (iii) 
+simplifying the results. [Note: (ii) and (iii) can be alternated] 
+Find    (i)  
+2
+3× 240         (ii). 
+3
+8
+× 480 
+ E.g. 3.   Calculate the following (when necessary, round your answer to the 
+nearest tenth): a. 28% of 40   b. 234% of 8   c. 3½ % of 50   d. 0.2% of 
+15000   e. 8.25% of 62 
+E.g. 4.   To multiply a fraction by a fraction, the multiplication is read as ‘of’.  
+For instance, 
+2
+3×
+1
+2
+ means 
+2
+3
+ of 
+1
+2
+ or i.e. 
+2
+3
+ ×  
+1
+2
+=  
+2 ×1
+3 ×2 =
+2
+6
+ = 
+1
+3
+. The 
+product can be obtained by (i) changing all into common fraction; (ii) 
+multiplying all numerators and denominators; (iii) simplifying the 
+results. [Note:  (ii) and (iii) can be alternated] 
+Find    (i)
+2
+3×
+3
+5
+(ii)
+3
+8
+× 
+5
+6
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B7.1.3.3 Demonstrate 
+an understanding of 
+the process of 
+multiplying and 
+dividing positive 
+fractions and apply 
+this in solving 
+problems 
+B7.1.3.3.2 Find a fraction of given quantity (i.e. money or given 
+quantity of objects) 
+Critical thinking and 
+problem solving (CP) 
+ E.g. 1.  To multiply a given quantity by a fraction is just like multiplying by a 
+whole number, so the multiplication is read as ‘of’. For instance, 
+2
+3×GH₵60 means 
+2
+3
+ of GH₵60,  i.e. 
+2
+3
+ × 
+60
+1 =  
+2 ×60
+3 ×1 =GH₵40. 
+E.g. 2.   There are 132 learners in a class.  If  
+2
+3 of the learners are girls, how 
+many boys are in the class?
+```
+
+## P052 (PDF page 52)
+
+```text
+ 22 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g. 3.  The graph shows the ages of 
+learners in a Primary 5 class.  
+(i) Approximately, what fraction of 
+the learners are 10 years old?  
+(ii) How many learners are 11 
+years old if there are 32 
+learners in the class?  
+ 
+ 
+ 
+ 
+B7.1.3.3 Demonstrate 
+an understanding of 
+the process of 
+multiplying and 
+dividing positive 
+fractions and apply 
+this in solving 
+problems 
+B7.1.3.3.3 Explain the process of dividing a fraction (i.e. common, 
+percent and decimal fractions up to thousandths) by a 1-digit 
+whole number and by a fraction. 
+Critical thinking and 
+problem solving (CP) 
+E.g. 1.  To divide a whole number by a fraction, the division means ‘how 
+many times the fraction goes into the whole number’ or the product of 
+the fraction and which number makes 3? For instance, 3 ÷
+1
+4means 
+how many 
+1
+4
+s  can be obtained in 3, or  
+3 = 
+1
+4
+× 𝑤𝑤ℎ𝑎𝑎𝑎𝑎? 
+The quotient can be obtained by multiplying both dividend by divisor 
+the reciprocal of the divisor. For 3 ÷
+1
+4 , the reciprocal of the divisor is 
+4
+1
+ ,  
+hence 3 ÷
+1
+4
+→(3 ×
+4
+1
+) ÷ (
+1
+4
+×
+4
+1
+) = 12, and for 
+1
+4
+÷ 3, the reciprocal of the 
+divisor is 
+1
+3
+, hence  
+1
+4
+÷ 3→(
+1
+3
+×
+1
+4
+) ÷ (3 ×
+1
+3
+) = 
+1
+12 
+Divide:      1.   5 ÷1
+2
+3
+ 
+2.     
+5
+8
+ ÷  
+1
+2
+```
+
+## P053 (PDF page 53)
+
+```text
+ 23 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.3.3 Demonstrate 
+an understanding of 
+the process of 
+multiplying and 
+dividing positive 
+fractions and apply 
+this in solving 
+problems 
+B7.1.3.3.4 Determine the result of dividing a quantity (i.e. money or 
+objects) or a fraction by a fraction 
+E.g. 1.  A set of stacked plates for serving snacks at a party weighs 10 kg. If 
+each plate in the stack weighs 
+1
+4kg, how many plates are in the 
+stack? 
+To divide by a fraction, multiply both dividend by divisor the 
+reciprocal of the divisor, hence 
+10 ÷
+1
+4
+→(10 ×
+4
+1
+) ÷ (
+1
+4
+×
+4
+1
+) = 40 
+(10×
+4
+1
+) ÷ (1) = (10 ×
+4
+1
+ )  = 40 
+Critical thinking and 
+problem solving (CP)  
+ E.g. 2. A class was given 9
+1
+2litres 
+of fruit juice to share 
+equally.  If there are 38 
+learners in the class, how 
+many millilitres of fruit juice 
+will each student get? 
+ 
+E.g. 3.   The graph shows the 
+ages of learners in a 
+Primary 5 class. How 
+many learners are in the 
+class if there are twelve 
+10-year-old learners in the 
+class?
+```
+
+## P054 (PDF page 54)
+
+```text
+ 24 
+STRAND 1: NUMBER 
+Sub-strand 4: Number: Ratios and Proportion 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.4.1 Demonstrate 
+an understanding of 
+the concept of ratios 
+and its relationship to 
+fractions and use it to 
+solve problems that 
+involve rates, ratios, 
+and proportional 
+reasoning 
+B7.1.4.1.1 Find ratio and use ratio language to describe relationship 
+between two quantities. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+E.g. 1Determine ratio of given quantities.  
+i. There are 60 boys and 120 girls in a school. So the ratio of boys to girls in 
+the school is 
+60
+120 =
+1
+2= 1:2) 
+E.g.2 Express two quantities as a ratio.  
+i. The ratio of wings to beaks in the bird house at the Kumasi Zoo is 2:1, 
+because for every 2 wings there is 1 beak. 
+E.g.3 Describe quantities with ratio language. 
+i. The ratio of Musa to Alhasan’s age is 1:2. If Alhasan is 50 years old and 
+his son, Musa is 25 years old, we can say that 
+• Alhasan is twice as old as his son. 
+• Musa is half the age of his father. 
+ B7.1.4.1.2 Use the concept of a unit rate 
+𝒂𝒂
+𝒃𝒃
+associated with a ratio a:b 
+with b ≠ 0, and use rate language in the context of a ratio 
+relationship. 
+Critical Thinking and 
+Problem solving (CP) 
+ E.g.1 Write given ratios as unit rate
+𝒂𝒂
+𝒃𝒃.  
+i. This recipe has a ratio of 3 cups of flour to 4 cups of sugar, so there is 
+3
+4
+ 
+cups of flour for each cup of sugar.  
+   ii. Aisha polishes 8 square yards of floor tiles every 7 minutes, so there are 
+8
+7
+ square yards per minute.
+```
+
+## P055 (PDF page 55)
+
+```text
+ 25 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g.2 Work out rates and use them in solving problems.  
+i. If 2 litres of coca cola cost GH₵18, find the cost of (a) 1. 5 litres (b) 3 
+litres (c) 7 litres 
+E.g.3 Use tables/diagrams to explain the concept of rate that compares two 
+different quantities measured in different units. 
+i.  The table shows the weight and cost of meat at Salaga Market. If 3kg 
+of meat costs GH₵ 60, use the information to complete the table. 
+Meat (kg) 2 3 5 12 
+Cost (GH₵)  60   
+ 
+ 
+B7.1.4.1 Demonstrate 
+an understanding of 
+the concept of ratios 
+and its relationship to 
+fractions and use it to 
+solve problems that 
+involve rates, ratios, 
+and proportional 
+reasoning 
+B7.1.4.1.3 Make tables of equivalent ratios (written as common 
+fractions) relating quantities that are proportional.  
+Critical Thinking and 
+Problem solving (CP) 
+ E.g.1  Kafui, Adoley and Jantuah shared an amount of money in the ratio of 
+their ages. Kafui is 36 years old, Adoley is 48years and Jantuah is 
+24years old. If Jantuah received GH₵24000, how much money did they 
+share? 
+Solution 
+Names Equivalent Ratios 
+Kafui 36 18 9 3 
+Adoley 48 24 12 4 
+Jantuah 24 12 6 2 
+Hint: Any of these ratios can be used for the calculation.  
+2 → 24000 
+9  →𝑥𝑥 
+9 × 24000 = 2𝑥𝑥 
+9 × 12000 = 𝑥𝑥 
+𝑥𝑥 = 108,000,  Hence, the amount of money shared = GH₵108,000
+```
+
+## P056 (PDF page 56)
+
+```text
+ 26 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.1.4.1 Demonstrate 
+an understanding of 
+the concept of ratios 
+and its relationship to 
+fractions and use it to 
+solve problems that 
+involve rates, ratios, 
+and proportional 
+reasoning 
+B7.1.4.1.4 Use the proportional reasoning to find missing values in the 
+tables, and plot pairs of values on the coordinate plane.  
+Critical Thinking and 
+Problem solving (CP) 
+E.g. 2 Find the missing value marked x in a table of equivalent ratios. 
+ 
+3 10 
+6 x 
+9 30 
+y 40 
+𝑥𝑥
+6 =  10
+3 𝑚𝑚𝑚𝑚𝑎𝑎𝑚𝑚𝑚𝑚 𝑎𝑎ℎ𝑚𝑚 𝑣𝑣𝑎𝑎𝑣𝑣𝑣𝑣𝑚𝑚 𝑜𝑜𝑜𝑜  𝑥𝑥= 10
+3  × 6 = 60
+3 = 20 
+ B7.1.4.1.5Find a percent of a quantity as a rate per 100 (e.g. 30% of a 
+quantity means 
+𝟑𝟑𝟑𝟑
+𝟏𝟏𝟑𝟑𝟑𝟑times the quantity). 
+Critical Thinking and 
+Problem solving (CP) 
+ i. A salesman gets paid 35% commissions. How much commission 
+does he make on sales of GH₵700?  
+ii. Yaw paid GH₵80 for a shirt that was on sale at a discount of 20%. 
+What was the original price?  
+iii. A cell phone which regularly sells for GH₵450 is on sale for 40% off. 
+How much would you pay for the phone? 
+iv. A woman put GH₵520 into a savings account for one year. The rate 
+of interest on the account was 6%. How much was the interest for the 
+year?
+```
+
+## P057 (PDF page 57)
+
+```text
+ 27 
+STRAND 2: ALGEBRA 
+Sub-strand 1: Patterns and Relations 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.1.1 Derive the rule 
+for a set of points of a 
+relation, draw a table of 
+values to graph the 
+relation in a number 
+plane and make 
+predictions about 
+subsequent elements 
+of the relation. 
+B7.2.1.1.1 Extend a given relation presented with and without symbolic 
+materials and explain how each element differs from the 
+preceding one. 
+Creativity and Innovation 
+(CI) 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+E.g.1 Extend a given symbolic relation. 
+i. Study the pattern made with match sticks below and draw the fifth 
+pattern. 
+ii. How does each pattern differ from the pattern that comes before it? 
+iii. Copy and complete the table for the number of sticks in each 
+pattern. 
+Pattern No. 1 2 3 4 5 6 7 
+Number of sticks 8 15      
+ 
+E.g.2   Study the pattern of numbers below and complete table. 
+ 
+ 
+ 
+i. What are the missing numbers in the co-domain? 
+ 
+Domain 1 2 3 4 5 6 7 
+Co-domain 4 7 10  16
+```
+
+## P058 (PDF page 58)
+
+```text
+ 28 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.1.1 Derive the rule 
+for a set of points of a 
+relation, draw a table of 
+values to graph the 
+relation in a number 
+plane and make 
+predictions about 
+subsequent elements 
+of the relation. 
+E.g.3 Extend a given number relation. 
+ 
+i. If the next number in the 
+domain is 9, what will be 
+the corresponding number 
+in the co-domain?  
+Creativity and Innovation 
+(CI) 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+B7.2.1.1.2 Describe the rule for a given relation using mathematical 
+language such as one more, one less, one more than twice, etc. 
+Creativity and Innovation 
+(CI) 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+E.g.1  Describe given relations
+```
+
+## P059 (PDF page 59)
+
+```text
+ 29 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.1.1 Derive the rule 
+for a set of points of a 
+relation, draw a table of 
+values to graph the 
+relation in a number 
+plane and make 
+predictions about 
+subsequent elements 
+of the relation. 
+E.g.2 Describe the rule for a relation using mathematics language. 
+This table shows the pattern of cost of packed breakfast for workers on 
+a field trip. 
+ 
+ 
+ 
+ 
+(i) Explain the pattern of how the cost of breakfast changes as more 
+workers go on the trip(describe the rule);  
+(ii) Use the pattern to determine how many workers went on the trip 
+if the cost of breakfasts is GH₵120.   
+Number of workers 1 2 3 4 5 6 ? 
+Cost of breakfast 3 6 9 12 15 18 120 
+Creativity and Innovation 
+(CI) 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ E.g.3 State the rules in words to represent a given relation. 
+Term/Input (x) 1 2 3 4 5 x Rule for n in words 
+Result/Output A 5 10 15 20   x→5 times x 
+Result/Output B 0 4 8 12   x→4 times one less x 
+Result/Output C 4 7 10 13   x→1 more than thrice x 
+Result/Output D 2 6 8 10   x→ twice 1more than x 
+Result/Output E 5 11 17    x→ 
+ 
+Communication and 
+Collaboration (CC)
+```
+
+## P060 (PDF page 60)
+
+```text
+ 30 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.1.1 Derive the rule 
+for a set of points of a 
+relation, draw a table of 
+values to graph the 
+relation in a number 
+plane and make 
+predictions about 
+subsequent elements 
+of the relation. 
+B7.2.1.1.3 Identify the relation or rule in a pattern/mapping presented 
+numerically or symbolically and predict subsequent elements 
+Creativity and Innovation 
+(CI) 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+E.g.1 Determine the rule for a given symbolic pattern. 
+ 
+ E.g.2 Determine the rule for a given numerical pattern.  
+ 
+i. Find the rule  ii.  Find the rule and 
+determine the value of n
+```
+
+## P061 (PDF page 61)
+
+```text
+ 31 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g.3Determine an element when given the rule 
+i. The result of x in the mapping 𝑥𝑥→ 2𝑥𝑥+ 3 𝑖𝑖𝑚𝑚 3. Find the value of x. 
+ii. The result of x in the mapping 𝑥𝑥→ −2𝑥𝑥+ 5 is 45. Find the value of x. 
+iii. Copy the table and use the rule to find the missing values of n. 
+Communication and 
+Collaboration (CC) 
+ 
+B7.2.1.1 Derive the rule 
+for a set of points of a 
+relation, draw a table of 
+values to graph the 
+relation in a number 
+plane and make 
+predictions about 
+subsequent elements 
+of the relation. 
+B7.2.1.1.4 Locate points on the number plane, draw a table of values of 
+a given relation, draw graphs for given relations and use them to 
+solve problems. 
+E.g.1 Make a table of values for a given rule: 
+I. Draw a table for the mapping defined by the rule on the domain  
+{-2, -1, 0, 1, 2, 3}   
+Rule: 𝒙𝒙→ 𝟐𝟐𝒙𝒙+ 𝟏𝟏 
+ 
+ii. Draw a table for the mapping defined by the rule on the domain  
+{-2, -1, 0, 1, 2, 3} 
+Rule: 𝒙𝒙→ 𝒙𝒙𝟐𝟐+ 𝟐𝟐 
+x -2 -1 0 1 2 3 
+y 6   3   
+ 
+x -2 -1 0 1 2 3 
+y -3    5  
+Creativity and Innovation 
+(CI) 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P062 (PDF page 62)
+
+```text
+ 32 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.1.1 Derive the rule 
+for a set of points of a 
+relation, draw a table of 
+values to graph the 
+relation in a number 
+plane and make 
+predictions about 
+subsequent elements 
+of the relation. 
+E.g.2Locate points on the number plane – (1, 2) and (-3, 2) Creativity and Innovation 
+(CI) 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P063 (PDF page 63)
+
+```text
+ 33 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.1.1 Derive the rule 
+for a set of points of a 
+relation, draw a table of 
+values to graph the 
+relation in a number 
+plane and make 
+predictions about 
+subsequent elements 
+of the relation. 
+E.g.3    Draw graphs for given relations 
+i. Plot the table of values on a number plane 
+Creativity and Innovation 
+(CI) 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+x y 
+0 5 
+1 3 
+2 1 
+3 -1 
+4 -3
+```
+
+## P064 (PDF page 64)
+
+```text
+ 34 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.1.1 Derive the rule 
+for a set of points of a 
+relation, draw a table of 
+values to graph the 
+relation in a number 
+plane and make 
+predictions about 
+subsequent elements 
+of the relation. 
+E.g.4 Use knowledge of identifying and plotting points in a number plane to 
+solve problems. The number plane shows the location of animals. 
+ 
+ Use the plane to answer the questions that follow. 
+i. If Faako walks 7 units west and 8 units south, which animal 
+does he see? 
+ii. Which animal is closest to Faako? 
+iii. Which animal is located at the point (2, 7)?  
+iv. What is point at which the giraffe is located? 
+Creativity and Innovation 
+(CI) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P065 (PDF page 65)
+
+```text
+ 35 
+ 
+STRAND 2: ALGEBRA 
+Sub-strand 2: Algebraic Expressions 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.2.1 Simplify 
+algebraic expressions 
+involving the four basic 
+operations and 
+substituting values to 
+evaluate algebraic 
+expressions. 
+B7.2.2.1.1 Create simple algebraic expressions using simple logic to 
+translate a set of instructions into an algebraic expression.  
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) E.g.1 Form algebraic expressions for given mathematical statements. 
+If x represents an unknown number, then 
+i. 10 more than a number x→ 𝑥𝑥+ 10 
+ii. 5 less than a certain number x → 𝑥𝑥− 5 
+iii. 3 times a number x → 3𝑥𝑥 
+iv. Half of a certain number x →  
+1
+2 𝑥𝑥 𝑜𝑜𝑜𝑜
+𝑥𝑥
+2 
+v. 2 more than 5 times a certain number x → 5𝑥𝑥+ 2 
+vi. When 8 times a certain number x is subtracted from 5 
+and the result is multiplied by 2→ 2(5 − 8𝑥𝑥) 
+ E.g.2 Form algebraic expressions from real life situations. 
+i. Afrako is 3 years older than Maako. If Maako is now 𝑥𝑥 years 
+old, what is Afrako’s age?  
+ii. Agbolosu and Tetteh were given GH₵400.00 to share. Tetteh 
+had GH₵35.00 more than Agbolosu. If Agbolosu’s share is 𝑥𝑥, 
+write an expression for Tetteh’s share.  
+iii. Find the profit a woman makes if she buys a basket of oranges 
+for x cedi sand sells it for y cedes. 
+iv. Find the area of a rectangle which is t metres long and q 
+metres wide. 
+v. Find the perimeter of a rectangle which is x metres long and y 
+metres wide.
+```
+
+## P066 (PDF page 66)
+
+```text
+ 36 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.2.1 Simplify 
+algebraic expressions 
+involving the four basic 
+operations and 
+substituting values to 
+evaluate algebraic 
+expressions. 
+B7.2.2.1.2 Perform addition and subtraction of algebraic expressions 
+with rational coefficients. 
+Critical Thinking and 
+Problem solving (CP) 
+E.g.1 Add algebraic expressions 
+i. Write each of these expressions in its simplest form: 
+1. 𝑥𝑥+ 𝑥𝑥 
+2. 𝑦𝑦+ 𝑦𝑦+ 𝑦𝑦+ 𝑦𝑦 
+3. 𝑚𝑚+ 𝑚𝑚+ 𝑚𝑚+ 𝑎𝑎+ 𝑎𝑎+ 𝑘𝑘+ 𝑘𝑘+ 𝑘𝑘 
+ii. Simplify the following expressions: 
+1. 4𝑥𝑥+ 3𝑥𝑥+ 𝑥𝑥 
+2. 5𝑥𝑥+ 4𝑥𝑥+ 2𝑥𝑥+ 3𝑥𝑥 
+3. 3𝑎𝑎𝑎𝑎𝑎𝑎+ 4𝑎𝑎𝑎𝑎𝑎𝑎+ 2𝑎𝑎𝑎𝑎𝑎𝑎 
+iii. Write an expression for the perimeter of the following shapes: 
+ E.g.2 Subtract algebraic expressions. 
+i. Write each of these expressions in its simplest form. 
+1. 5𝑥𝑥− 2𝑥𝑥 
+2. 3𝑥𝑥− 4𝑥𝑥− 2𝑥𝑥 
+3. 7𝑥𝑥− 4𝑥𝑥− 𝑥𝑥
+```
+
+## P067 (PDF page 67)
+
+```text
+ 37 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.2.1 Simplify 
+algebraic expressions 
+involving the four basic 
+operations and 
+substituting values to 
+evaluate algebraic 
+expressions. 
+E.g.3 Adding and subtracting algebraic expressions. 
+i. Simplify the following expressions: 
+1. 5𝑥𝑥+ 4 − 9𝑦𝑦+ 3𝑥𝑥+ 2𝑦𝑦− 7 
+2. 2𝑝𝑝− 3𝑞𝑞+ 3𝑝𝑝+ 5𝑞𝑞 
+3. 4𝑥𝑥+ 7 − 2𝑥𝑥− 4 
+4. 7𝑥𝑥𝑦𝑦+ 5𝑥𝑥− 4𝑥𝑥+ 2𝑥𝑥𝑦𝑦− 3 
+ 
+ii. Write an expression for the perimeter of the shaded region 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P068 (PDF page 68)
+
+```text
+ 38 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.2.1 Simplify 
+algebraic expressions 
+involving the four basic 
+operations and 
+substituting values to 
+evaluate algebraic 
+expressions. 
+B7.2.2.1.3 Perform multiplication and division of algebraic expressions 
+with rational coefficients. 
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) 
+E.g.1 Solve multiplication of algebraic expressions. 
+i. Simplify the following expressions 
+1. 4𝑝𝑝× 8𝑝𝑝2 
+2. 5𝑥𝑥𝑦𝑦2 × 4𝑥𝑥4𝑦𝑦3 
+3. −2𝑎𝑎× 4𝑎𝑎× 5𝑎𝑎 
+4. −3𝑥𝑥𝑦𝑦× 5𝑦𝑦 
+ii. Write an expression for the area of the following shapes: 
+ E.g.1 Solve division of algebraic expressions. 
+Simplify the following expression: 
+I. 
+12𝑥𝑥3𝑦𝑦2
+16𝑥𝑥𝑦𝑦4  
+II. 
+−30𝑎𝑎𝑎𝑎𝑎𝑎
+6𝑎𝑎𝑎𝑎3𝑎𝑎−2 
+III. 
+18𝑥𝑥5𝑦𝑦2
+24𝑥𝑥7𝑦𝑦2
+```
+
+## P069 (PDF page 69)
+
+```text
+ 39 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.2.1 Simplify 
+algebraic expressions 
+involving the four basic 
+operations and 
+substituting values to 
+evaluate algebraic 
+expressions. 
+B7.2.2.1.4 Substitute values to evaluate algebraic expressions.  Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) 
+E.g.1   Simplify the following expressions and substitute the values to 
+evaluate them, if 
+𝑥𝑥= 2, 𝑦𝑦= 4, 𝑝𝑝= 3 𝑎𝑎𝑚𝑚𝑎𝑎 𝑧𝑧= −1,.  
+I. 3𝑥𝑥𝑦𝑦× 5𝑦𝑦 
+II. 7𝑥𝑥𝑦𝑦+ 5𝑥𝑥− 4𝑥𝑥+ 2𝑥𝑥𝑦𝑦− 3 
+III. 4𝑝𝑝× 8𝑧𝑧2 
+IV. 5𝑥𝑥+ 4 − 9𝑦𝑦+ 3𝑥𝑥+ 2𝑦𝑦− 7 
+E.g.2 Simplify the following expressions and substitute the values to 
+evaluate them, if 
+𝑥𝑥= 2, 𝑦𝑦= 4, 𝑎𝑎= 3, 𝑎𝑎= 2, 𝑧𝑧= 1 𝑎𝑎𝑚𝑚𝑎𝑎 𝑎𝑎= −1, 
+i. 
+12𝑥𝑥3𝑦𝑦2
+16𝑥𝑥𝑦𝑦4  
+ii. 
+−30𝑎𝑎𝑎𝑎𝑎𝑎
+6𝑎𝑎𝑎𝑎3𝑎𝑎2  
+iii. 
+18𝑥𝑥5𝑦𝑦2
+24𝑥𝑥3𝑦𝑦2 
+iv. 
+8xyz
+16xy 
+v. 
+5ab2
+ab  
+vi. 
+21x7
+3x4
+```
+
+## P070 (PDF page 70)
+
+```text
+ 40 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.2.1 Simplify 
+algebraic expressions 
+involving the four basic 
+operations and 
+substituting values to 
+evaluate algebraic 
+expressions. 
+i. 𝐼𝐼𝑜𝑜𝑥𝑥= 5, 𝑎𝑎= 8, 𝑎𝑎= 3, h = 6, find the perimeter and area of the 
+following: 
+ii. shapes. 
+ 
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP)  B7.2.2.1.5   Use properties of the four operations to simplify algebraic 
+expressions with rational coefficients. 
+ 
+ E.g.1   Simplify algebraic expressions involving the four operations. 
+ i. 3𝑥𝑥𝑦𝑦× 2 + 
+6𝑥𝑥2𝑦𝑦3
+2𝑦𝑦2  
+ii. 
+7𝑥𝑥+4𝑥𝑥−2𝑥𝑥
+3𝑥𝑥  
+iii. 3x2y + 2xy2 − 4x2y − 6xy2 
+iv. (15𝑝𝑝3𝑞𝑞2 ×
+12𝑥𝑥5𝑦𝑦3) ÷ (36𝑝𝑝𝑞𝑞×
+45𝑥𝑥𝑦𝑦) 
+v. 
+7𝑥𝑥2+2𝑥𝑥2
+3𝑥𝑥2  
+vi. 7𝑎𝑎− 7𝑎𝑎3 + 14𝑎𝑎4
+```
+
+## P071 (PDF page 71)
+
+```text
+ 41 
+STRAND 2: ALGEBRA 
+Sub-strand 3: Variables and Equations 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.3.1 Demonstrate an 
+understanding of linear 
+equations of the form x + 
+a = b (where a and b are 
+integers) by modelling 
+problems as a linear 
+equation and solving the 
+problems concretely, 
+pictorially, and 
+symbolically. 
+B7.2.3.1.1 Translate word problems to linear equations in one variable 
+and vice versa 
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) 
+E.g.1: Use a flag diagram for equations and their inverses to solve 
+equations. 
+i. Think of a number, double it and subtract 7.  The result is 41.  What 
+was the original number? 
+The flag diagram is: 
+i.e. 2x− 7 = 41    
+To solve the equation, move in the opposite direction and do the inverse 
+of the operations.  
+ 2𝑥𝑥− 7 = 41 
++7      + 7 
+        2𝑥𝑥=   48 
+÷2           ÷ 2 
+          𝑥𝑥= 24
+```
+
+## P072 (PDF page 72)
+
+```text
+ 42 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.3.1 Demonstrate an 
+understanding of linear 
+equations of the form x + 
+a = b (where a and b are 
+integers) by modelling 
+problems as a linear 
+equation and solving the 
+problems concretely, 
+pictorially, and 
+symbolically. 
+E.g.2: Translate word problems to linear equations. 
+i. The sum of the ages of two friends is 25, and the older one is 4 
+times that of the younger one.  Write this as a mathematical 
+sentence? 
+          i.e. let the age of the younger one be x ∴the age of older one = 4x       
+4x + x = 25 
+ii. Adaako and Afrakoma shared 40 oranges. Afrakoma had 6 more 
+than Adaako. Write a mathematical sentence for this word problem.  
+i.e. let x represent Adaako’s share. ∴ Afrakoma’s share is 𝑥𝑥+ 6 
+and their share put together gives 40.  
+∴ 𝑥𝑥+ (6 + 𝑥𝑥) = 40 
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) 
+ E.g. 3 Write word problems for given linear equations 
+i.  x + x = 15  
+i.e. the sum of two equal numbers is 15 
+ii. 2𝑥𝑥 − 4 = 12 
+i.e. when 4 is taken away from 2times a certain number, the result is 12. 
+iii. 
+2
+3 𝑥𝑥= 4 
+i. e. two-thirds of a certain number is 4.
+```
+
+## P073 (PDF page 73)
+
+```text
+ 43 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.3.1 Demonstrate an 
+understanding of linear 
+equations of the form x + 
+a = b (where a and b are 
+integers) by modelling 
+problems as a linear 
+equation and solving the 
+problems concretely, 
+pictorially, and 
+symbolically. 
+B7.2.3.1.2 Model and solve linear equations using concrete materials 
+(e.g., counters and integer tiles) and describe the process orally 
+and symbolically. 
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) E.g. 1 Model and solve linear equations set with objects on a balance 
+i. Solution: 
+ 
+𝑥𝑥+ 3 = 7 
+−3            − 3 
+𝑥𝑥= 4 
+ 
+ii. Solution: 
+ 3𝑥𝑥+ 1 = 3𝑥𝑥+ 5 
+−3𝑥𝑥            − 3𝑥𝑥 
+2𝑥𝑥+ 1 = 5 
+−1           − 1 
+        2𝑥𝑥= 4 
+𝑥𝑥= 2 
+iii. Solution: 
+ 
+ 3𝑦𝑦+ 4 = 2𝑦𝑦+ 8 
+−2𝑦𝑦            − 2𝑦𝑦 
+𝑦𝑦+ 4 = 4 + 4 
+−4           − 4 
+        𝑦𝑦= 4
+```
+
+## P074 (PDF page 74)
+
+```text
+ 44 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.3.1 Demonstrate an 
+understanding of linear 
+equations of the form x + 
+a = b (where a and b are 
+integers) by modelling 
+problems as a linear 
+equation and solving the 
+problems concretely, 
+pictorially, and 
+symbolically. 
+E.g. 2. Model and solve linear equations set with shapes on a balance 
+i. In each balance the mass of one shape is given in grams. Find 
+the mass of the other shape. 
+ 
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) 
+ ii. In each balance the mass of one rhombus is 12 grams. Find 
+the mass of the pentagon.
+```
+
+## P075 (PDF page 75)
+
+```text
+ 45 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.3.1 Demonstrate an 
+understanding of linear 
+equations of the form x + 
+a = b (where a and b are 
+integers) by modelling 
+problems as a linear 
+equation and solving the 
+problems concretely, 
+pictorially, and 
+symbolically. 
+ 
+ 
+ 
+ 
+ 
+iii. Use the three equations below to find the value of  
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) 
+B7.2.3.1.3 Model linear equations, then write mathematical expressions 
+and describe the process of solving the equation using 
+algebraic tiles. 
+E.g.1
+```
+
+## P076 (PDF page 76)
+
+```text
+ 46 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.2.3.1 Demonstrate an 
+understanding of linear 
+equations of the form x + 
+a = b (where a and b are 
+integers) by modelling 
+problems as a linear 
+equation and solving the 
+problems concretely, 
+pictorially, and 
+symbolically. 
+E.g.2 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) 
+ B7.2.3.1.4 Solve linear equations in one variable  
+ E.g. 1 Using the idea of balance 
+solve simple linear equations.  
+3x + 5 = 20  
+3x + 5 - 5 = 20 - 5      
+3x =15        
+x = 5 
+Solve the following simple linear 
+equations  
+i. 4𝑥𝑥+ 1 = 3𝑥𝑥+ 7 
+ii. 7𝑤𝑤+ 3 = 2𝑤𝑤+ 18 
+iii. 5𝑜𝑜− 3 = 𝑜𝑜− 1 
+iv. 20 − 3𝑘𝑘= 𝑘𝑘+ 12 
+v. 6𝑧𝑧+ 4 = 28
+```
+
+## P077 (PDF page 77)
+
+```text
+ 47 
+ 
+STRAND 3: GEOMETRY AND MEASUREMENT 
+Sub-strand 1: Shape and Space 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.1 Demonstrate 
+understanding of angles 
+including adjacent, 
+vertically opposite, 
+complementary, 
+supplementary and use 
+them to solve problems. 
+ 
+ 
+B7.3.1.1.1 Measure and classify angles according to their measured 
+sizes – right, acute, obtuse and reflex. 
+Creativity and Innovation 
+(CI) 
+E.g. 1   Sort angles into those which are right, acute, obtuse or reflex angles 
+from photocopied worksheets with several angles to measure. (Note: 
+angles are not drawn to scale)  
+ 
+E.g. 2   Use a protractor to draw angles such as 30o, 45o, 60o, 75o, 90o, 
+120o, 150o, 270o, 300o, etc.
+```
+
+## P078 (PDF page 78)
+
+```text
+ 48 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.1 Demonstrate 
+understanding of angles 
+including adjacent, 
+vertically opposite, 
+complementary, 
+supplementary and use 
+them to solve problems. 
+ 
+B7.3.1.1.2 Apply the fact that (i) complementary angles are two angles 
+that have a sum of 90°, and (ii) supplementary angles are two 
+angles that have a sum of 180° to solve problems.  
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ 
+ 
+ E.g.1 Determine the missing angle 
+marked x. 
+ 
+ 
+ 
+E.g.2 Determine the missing angle 
+marked x.
+```
+
+## P079 (PDF page 79)
+
+```text
+ 49 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.1 Demonstrate 
+understanding of angles 
+including adjacent, 
+vertically opposite, 
+complementary, 
+supplementary and use 
+them to solve problems. 
+ 
+B7.3.1.1.3 Use adjacent, supplementary and vertically opposite angles 
+to solve problems 
+Creativity and Innovation 
+(CI) 
+ 
+ 
+ 
+ 
+ 
+E.g. 1   Determine the angle(s) marked with letters in the adjacent and/or 
+supplementary 
+angles below. 
+ 
+E.g.2   Identify each pair of angles as adjacent, vertically opposite, 
+complementary or supplementary.
+```
+
+## P080 (PDF page 80)
+
+```text
+ 50 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.1 Demonstrate 
+understanding of angles 
+including adjacent, 
+vertically opposite, 
+complementary, 
+supplementary and use 
+them to solve problems. 
+ 
+E.g.3 Use the figure at the right to identify and label the following angles 
+i.   two acute vertical angles. 
+ii.   two obtuse vertical angles. 
+iii.   a pair of adjacent angles 
+iv.   a pair of complementary      
+angles. 
+v.   an angle supplementary to 
+FGE∠  
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ E.g. 4 Use adjacent, vertically opposite, complementary or supplementary to 
+solve problems. Determine the angle(s) marked with letters.
+```
+
+## P081 (PDF page 81)
+
+```text
+ 51 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.2 Demonstrate 
+how to construct a 
+perpendicular to a line 
+from a given point, 
+bisect a line, bisect 
+angles, and construct 
+angles of the following 
+sizes: 30˚, 45˚, 60˚, 75˚ 
+and 90˚ 
+B7.3.1.2.1 Construct a line segment perpendicular to another line 
+segment. 
+Critical Thinking and 
+Problem solving (CP) 
+E.g.1: Use a pair of compasses and a ruler to construct a copy of a given 
+line segment. For instance, Line segment RS is a copy of PQ. 
+ 
+ 
+ 
+ E.g.2:  Use a pair of compasses and ruler to construct a perpendicular at a 
+point on a line segment, and drop a perpendicular from a given point 
+outside a line segment. 
+ (i) A perpendicular at a point on a 
+line segment: 
+(ii) A perpendicular from a given point 
+outside a line segment:
+```
+
+## P082 (PDF page 82)
+
+```text
+ 52 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.2 Demonstrate 
+how to construct a 
+perpendicular to a line 
+from a given point, 
+bisect a line, bisect 
+angles, and construct 
+angles of the following 
+sizes: 30˚, 45˚, 60˚, 75˚ 
+and 90˚  
+B7.3.1.2.2: Construct the perpendicular bisector of a line segment  
+E.g.1:  Use a pair of compasses and a ruler to construct a perpendicular 
+bisector of a given line segment. (The line segment 𝐶𝐶𝐶𝐶 is a 
+perpendicular bisector of 𝐴𝐴𝐴𝐴) 
+ 
+E.g. 2: Draw and bisect the following lines  
+(i)  AB�����⃗= 8cm   
+(ii)  AB�����⃗=5.5cm    
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P083 (PDF page 83)
+
+```text
+ 53 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.2 Demonstrate 
+how to construct a 
+perpendicular to a line 
+from a given point, 
+bisect a line, bisect 
+angles, and construct 
+angles of the following 
+sizes: 30˚, 45˚, 60˚, 75˚ 
+and 90˚ 
+B7.3.1.2.3: Copy and bisect angles 
+E.g.1:   Use a pair of compasses and a ruler to copy a given angle 𝐴𝐴, (i.e. 
+draw a line and locate point B; copy the arc 𝑆𝑆𝑆𝑆 and transfer using B  
+as the centre to obtain 𝑉𝑉𝑉𝑉;join 𝐴𝐴 𝑎𝑎𝑚𝑚𝑎𝑎 𝑉𝑉 to obtain the copied angle. 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P084 (PDF page 84)
+
+```text
+ 54 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.2 Demonstrate 
+how to construct a 
+perpendicular to a line 
+from a given point, 
+bisect a line, bisect 
+angles, and construct 
+angles of the following 
+sizes: 30˚, 45˚, 60˚, 75˚ 
+and 90˚ 
+E.g.2 Perform geometric construction to bisect a given angle (∠𝐴𝐴𝐵𝐵𝐴𝐴) to 
+obtain the two equal angles∠𝐴𝐴𝐵𝐵𝐶𝐶 and 𝐶𝐶𝐵𝐵𝐴𝐴. 
+ 
+ 
+(i) Sketch any acute angle and label it 𝐴𝐴𝐴𝐴𝐶𝐶. 
+(ii) Copy the angle, measure and record its value. 
+(iii) Sketch any angle and ask a colleague to copy the angle. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ E.g. 3 Which of the angles has a correct angle bisector? 
+ 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P085 (PDF page 85)
+
+```text
+ 55 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.2 Demonstrate 
+how to construct a 
+perpendicular to a line 
+from a given point, 
+bisect a line, bisect 
+angles, and construct 
+angles of the following 
+sizes: 30˚, 45˚, 60˚, 75˚ 
+and 90˚ 
+7.3.1.2.4: Construct angles of 90
+0 and 
+450 
+E.g.1: Use a pair of compasses and a 
+ruler to construct an angle of 
+90˚ (raise a perpendicular at a 
+point) on a given line segment 
+and verify using the protractor. 
+(The line segment 𝑃𝑃𝑆𝑆 is 
+perpendicular to 𝑃𝑃𝐴𝐴 therefore 
+∠𝐴𝐴𝑃𝑃𝑆𝑆 = 90˚) 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+ 
+ 
+ 
+  
+E.g.2:   Construct an angle of 45˚ by bisecting an angle of 90˚ (i.e. bisect 
+∠𝐴𝐴𝐴𝐴𝐶𝐶= 90˚ to obtain ∠𝐴𝐴𝐴𝐴𝐶𝐶= 45˚: line ⃒𝐴𝐴𝐶𝐶⃒ is the angle bisector of 
+the right angle). 
+(i) Construct ∠𝐴𝐴𝐴𝐴𝐶𝐶 = 45˚ such that ⃒𝐴𝐴𝐴𝐴⃒ =  5𝑎𝑎𝑚𝑚 and ⃒𝐴𝐴𝐶𝐶⃒= 6𝑎𝑎𝑚𝑚: 
+bisect ∠𝐴𝐴𝐴𝐴𝐶𝐶= 45˚ 
+(ii) Construct ∠𝐴𝐴𝐴𝐴𝐶𝐶 = 90˚ and bisect it.
+```
+
+## P086 (PDF page 86)
+
+```text
+ 56 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.2 Demonstrate 
+how to construct a 
+perpendicular to a line 
+from a given point, 
+bisect a line, bisect 
+angles, and construct 
+angles of the following 
+sizes: 30˚, 45˚, 60˚, 75˚ 
+and 90˚ 
+7.3.1.2.5: Construct angles of 60˚ and 30˚ 
+E.g.1: Use a pair of compasses and a ruler to: 
+a) Construct an angle of 60˚ at a point on a given line segment (∠𝐴𝐴𝐵𝐵𝐶𝐶= 60˚) 
+and verify with the protractor: 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+ 
+ 
+ 
+ 
+ E.g.2  Construct an angle of 30˚ by bisecting an angle whose measure is 
+60˚(i.e. bisect ∠𝐴𝐴𝐵𝐵𝐴𝐴=  60˚ to obtain ∠𝐴𝐴𝐵𝐵𝐶𝐶=  ∠𝐶𝐶𝐵𝐵𝐴𝐴 = 30˚: line ⃒𝐵𝐵𝐶𝐶⃒ is the 
+angle bisector)
+```
+
+## P087 (PDF page 87)
+
+```text
+ 57 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.2 Demonstrate 
+how to construct a 
+perpendicular to a line 
+from a given point, 
+bisect a line, bisect 
+angles, and construct 
+angles of the following 
+sizes: 30˚, 45˚, 60˚, 75˚ 
+and 90˚ 
+7.3.1.2.6: Construct angles whose measures are15˚ and 75˚. 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+E.g.1: Construct an angle of 15˚ by bisecting an angle of30˚ (i.e. bisect 
+∠𝐴𝐴𝐵𝐵𝐶𝐶=  60˚ to obtain ∠𝐴𝐴𝐵𝐵𝐶𝐶=  30˚ and then bisect ∠𝐴𝐴𝐵𝐵𝐶𝐶=  30˚ to obtain 
+∠𝐴𝐴𝐵𝐵𝐴𝐴=  15˚) 
+ 
+  
+E.g..2 Construct the following:  
+(i) ∠𝑃𝑃𝑃𝑃𝑃𝑃=  7
+1
+2 ˚ 
+(ii) ∠𝐴𝐴𝐴𝐴𝐶𝐶=  60˚ 
+(iii) ∠𝐾𝐾𝐾𝐾𝐾𝐾 =  30˚ 
+(iv) ∠𝑃𝑃𝑆𝑆𝑆𝑆 =  15˚
+```
+
+## P088 (PDF page 88)
+
+```text
+ 58 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.1.2 Demonstrate 
+how to construct a 
+perpendicular to a line 
+from a given point, 
+bisect a line, bisect 
+angles, and construct 
+angles of the following 
+sizes: 30˚, 45˚, 60˚, 75˚ 
+and 90˚ 
+E.g.3: Use  a pair of compasses and a ruler to construct an angle of 75˚ at a 
+point on a given line segment [i.e. construct a right angle ∠𝐴𝐴𝐵𝐵𝐴𝐴=  90˚);  
+bisect the arc 𝐾𝐾𝑀𝑀 and join 𝐵𝐵 through 𝑃𝑃to obtain ∠𝐴𝐴𝐵𝐵𝑃𝑃 75˚] 
+Communication and 
+Collaboration (CC) 
+ 
+  
+E.g.4: Construct and bisect ∠𝑃𝑃𝑃𝑃𝑃𝑃 =  75˚ 
+B7.3.1.2.7: Describe examples of perpendicular line segments, 
+perpendicular bisectors and angle bisectors in the environment. 
+E.g.1: Identify angle bisectors and perpendicular bisectors in structures and 
+artefacts such as buildings, water tanks, boxes, etc. in the 
+environment 
+E.g.2 Estimate the measure of the size of angles in artefacts, tools, and 
+structures.
+```
+
+## P089 (PDF page 89)
+
+```text
+ 59 
+STRAND 3: GEOMETRY AND MEASUREMENT 
+Sub-strand 2: Measurement 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.3.2.1 Demonstrate 
+the ability to find the 
+perimeter of plane 
+shapes including circles 
+using the concept of pi 
+(π) to find the 
+circumference of a 
+circle.  
+B.7.3.2.1.1 Calculate the perimeter of given shapes whose dimensions 
+are in two units (i.e. cm and mm, m and cm, or km and m) 
+Communication and 
+Collaboration (CC) 
+Critical Thinking and 
+Problem solving (CP) 
+E.g. 1. Calculate the perimeter of a shape 
+with dimensions given in km and m 
+by converting to the smaller unit 
+and adding the distance around 
+the shapes. 
+  
+ 
+ 
+ E.g. 2 Calculate the perimeter of a shape 
+with dimensions given in cm and 
+mm by converting to decimal 
+fractions in the larger unit (i.e. 7cm 
+5mm = 7.5cm).
+```
+
+## P090 (PDF page 90)
+
+```text
+ 60 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.3.2.1 Demonstrate 
+the ability to find the 
+perimeter of plane 
+shapes including circles 
+using the concept of pi 
+(π) to find the 
+circumference of a 
+circle. 
+E.g. 3 Calculate the perimeter of a shape with dimensions given in m and 
+cm by converting to decimal fractions in the larger unit (i.e. 1m 75cm 
+= 1.75m).  
+ 
+Creativity and Innovation 
+(CI) 
+Critical Thinking and 
+Problem solving (CP) 
+ B7.3.2.1.2 Use the relationships between the diameter and the 
+circumference to deduce the formula for finding the 
+circumference of a circle and use it to solve problems. 
+ 
+E.g.1:   Identify the name the parts 
+of a circle – radius, diameter, 
+circumference, arc, sector, 
+etc.
+```
+
+## P091 (PDF page 91)
+
+```text
+ 61 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.3.2.1 Demonstrate 
+the ability to find the 
+perimeter of plane 
+shapes including circles 
+using the concept of pi 
+(π) to find the 
+circumference of a 
+circle. 
+E.g.2:  Measure the radius, diameter and circumference of circular objects 
+like base or cross section of cylindrical objects like cans, tyres, bowls, 
+etc., roundabouts, etc. 
+and describe the measuring tools 
+used.  
+ 
+ 
+Creativity and Innovation 
+(CI) 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P092 (PDF page 92)
+
+```text
+ 62 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.3.2.1 Demonstrate 
+the ability to find the 
+perimeter of plane 
+shapes including circles 
+using the concept of pi 
+(π) to find the 
+circumference of a 
+circle. 
+E.g.3:  Explain the relationship between the diameter and circumference of a 
+circle by: 
+i. Recording the measured diameter and circumference of various 
+circles; 
+ii. Completing the table for the measured values; and 
+iii. Observing the results of c ÷ d. 
+ 
+Circle  Circumference(c) Diameter(d) c ÷ d 
+Tin A 13 4 13 ÷ 4 =  
+Tin B 38 12 38 ÷ 12 =  
+    
+    
+    
+    
+iv. Conclude that the result of c ÷ d or the ratio of the circumference of 
+a circle to its diameter is named π (and pronounced pi). The ratio 
+itself is approximately 
+22
+7   or 3.141592+.  [Read more on the 
+internet about the pi – who discovered it, and its value]. 
+Creativity and Innovation 
+(CI) 
+Critical Thinking and 
+Problem solving (CP) 
+ E.g.4:  Use the relationship between the diameter and circumference of a 
+circle (i.e. π =
+𝐶𝐶
+𝐷𝐷=  
+𝐶𝐶
+2𝑟𝑟) to solve problems.  
+i. The radius of a circle is 140 cm. What is the (a) diameter (b) 
+circumference? [Take π = 
+22
+7 ] 
+ii. Find the circumference of the circles below whose radii are given 
+and round your answer to the nearest tenth [take π = 3.142]:
+```
+
+## P093 (PDF page 93)
+
+```text
+ 63 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.3.2.1 Demonstrate 
+the ability to find the 
+perimeter of plane 
+shapes including circles 
+using the concept of pi 
+(π) to find the 
+circumference of a 
+circle. 
+B7.3.2.1.3 Draw in a square grid rectangles and 
+triangles with given dimensions.  
+E.g. 1. (i)  Draw a rectangle whose area is twice as large 
+as the one drawn on the grid. 
+        (ii)  Draw a rectangle which is twice as wide as and 
+one and a half times as long as the one in the 
+grid. 
+Creativity and Innovation 
+(CI) 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+  
+ E.g. 2.  (i)  Draw in the dot square grid another triangle whose area is 3 
+square units. 
+E.g. 3. (i)  What is the area of the triangle in the square grid? 
+         (ii)  How many different triangles which have the same 
+area as the one in the grid can you 
+draw?
+```
+
+## P094 (PDF page 94)
+
+```text
+ 64 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.3.2.2 Derive the 
+formula for determining 
+the area of a triangle 
+and use it to solve 
+problems 
+B7.3.2.2.1 Use the relationships between a triangle and a rectangle (or 
+parallelogram) to deduce the formula for determining the area of 
+a triangle.  
+E.g.1:    Determine the number of unit squares enclosed by the triangles 
+below. 
+i. What is the perpendicular height of each triangle?  
+ii. What is the area of each of the triangles?  
+iii. How does the perpendicular heights of each triangle help you in 
+calculating its area? 
+Creativity and Innovation 
+(CI) 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.2:     Spot the RECTANGLE enclosing the triangles to find the unit 
+squares in each triangle. Notice the base and height of the triangle.  
+Area of a triangle = 
+𝟏𝟏
+𝟐𝟐(Areaof the rectangle = 
+𝟏𝟏
+𝟐𝟐
+ base × perpendicular 
+height
+```
+
+## P095 (PDF page 95)
+
+```text
+ 65 
+   
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.3.2.2 Derive the 
+formula for determining 
+the area of a triangle 
+and use it to solve 
+problems 
+E.g.3:    Spot the Parallelogram from which the triangle was formed.  
+Area of the triangle = 
+𝟏𝟏
+𝟐𝟐(Area of the parallelogram)= 
+𝟏𝟏
+𝟐𝟐
+ (base of 
+parallelogram) × height = 
+𝟏𝟏
+𝟐𝟐
+b × h 
+Creativity and Innovation 
+(CI) 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC)
+```
+
+## P096 (PDF page 96)
+
+```text
+ 66 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.7.3.2.2 Derive the 
+formula for determining 
+the area of a triangle 
+and use it to solve 
+problems. 
+B7.3.2.2.2   Determine the area of a triangle.  
+Communication and 
+Collaboration (CC) 
+E.g. 1. Calculate the area of the triangles:  
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P097 (PDF page 97)
+
+```text
+ 67 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.2.3 Demonstrate 
+understanding of 
+bearings, vector and its 
+components using real 
+life cases. 
+B7.3.2.3.1 Describe the bearing of a point from another point 
+E.g.1 use protractor to find the marked angles. For each diagram write the 
+three-digit bearing. 
+ 
+  
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P098 (PDF page 98)
+
+```text
+ 68 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.2.3 Demonstrate 
+understanding of 
+bearings, vector and its 
+components using real 
+life cases. 
+E.g.2 Recognise true bearings as the angle measured in the clockwise 
+direction from the North. 
+E.g.3 Express the following vectors graphically (i) 𝑃𝑃𝑃𝑃�����⃗=�−3
+4 �      (ii) 𝐴𝐴𝐶𝐶�����⃗ =�2
+3� 
+and measure each angle. 
+E.g.4   Draw the following vectors (i) 𝐴𝐴𝐴𝐴������⃗=(3km,060)        (ii) 𝑃𝑃𝑃𝑃 �������⃗=(5km,120) 
+and measure each angle. 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P099 (PDF page 99)
+
+```text
+ 69 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.2.3 Demonstrate 
+understanding of 
+bearings, vector and its 
+components using real 
+life cases. 
+B7.3.2.3.2 Explain how to find the back bearing when the direction of 
+travel has a bearing which is less than 180˚ and/ or greater than 
+180˚. 
+E.g.1 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P100 (PDF page 100)
+
+```text
+ 70 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g.2 The bearing of P from Q is 060˚.What is the bearing of Q from P 
+E.g.3 The bearing of P from Q is 145˚.What is the bearing of Q from P 
+ 
+ 
+B7.3.2.3 Demonstrate 
+understanding of 
+bearings, vector and its 
+components using real 
+life cases. 
+B7.3.2.3.3 Distinguish between scalar and vector quantities   
+E.g.1 Read on scalar quantity and vector quantity on the internet.   
+E.g.2 Group these examples under scalar quantity and vector quantity, 
+weight, force, velocity time, speed, distance, mass, volume, energy, 
+work momentum etc…  
+E.g.3   Identify a vector as a movement (distance) along a given bearing 
+E.g.4 Draw a vector given its length and bearing E.g.  𝑆𝑆𝑆𝑆����⃗ =. (6km,245˚). 
+E.g.5 Identify the distance along a vector as its magnitude and the 3 – digit 
+clockwise angle from the north as its bearing 
+E.g.6  Identify a zero vector as a point with no magnitude and direction. 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+  
+ B7.3.2.3.4Represent vector in the column (component) form �𝒙𝒙
+𝒚𝒚� and 
+determine its magnitude and direction. 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+ E.g.1Write each of the following as column vectors using graph. (i) 𝐴𝐴𝐴𝐴�����⃗ 
+=(5km,030˚), 𝐶𝐶𝐶𝐶�����⃗=(25km,150˚) 
+E.g.2 Use any other method apart from graph to write the following as 
+column vectors  
+(i) 𝑋𝑋𝑋𝑋�����⃗ = ( 10km, 270˚)    (ii) 𝑆𝑆𝑆𝑆����⃗= (70km, 090˚) and find it magnitude and 
+direction.
+```
+
+## P101 (PDF page 101)
+
+```text
+ 71 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.2.3 Demonstrate 
+understanding of 
+bearings, vector and its 
+components using real 
+life cases. 
+B7.3.2.3.5 Convert vectors in the column (component) form �
+𝒙𝒙
+𝒚𝒚� to the 
+Magnitude–Bearing form (𝒌𝒌, 𝜽𝜽) and vice versa 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+ E.g.1 Use the Pythagorean theorem to find the length or the magnitude of 
+a vector. 
+ 
+ 
+ 
+ 
+ 
+Eg.2 Find the magnitude and the direction of the following vectors 
+(i) 𝐴𝐴𝐴𝐴������⃗=�12
+15�         (ii) 𝑃𝑃𝑃𝑃������⃗=�15
+9 �
+```
+
+## P102 (PDF page 102)
+
+```text
+ 72 
+STRAND 3: GEOMETRY AND MEASUREMENT 
+Sub-strand 3: Position and Transformation 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.3.1 Perform a 
+single transformation 
+(i.e. reflection and 
+translation) on a 2D 
+shape using graph 
+paper (including 
+technology) and 
+describe the properties 
+of the image under the 
+transformation (i.e. 
+congruence, similarity, 
+etc.)   
+ 
+B7.3.3.1.1 Determine shapes in real life that have reflectional (or fold) 
+symmetries. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and Innovation 
+(CI) 
+E.g. 1: Identify examples of designs (or objects) in everyday life that have 
+reflectional (or fold) symmetries (e.g. adinkra symbols).  
+ E.g. 2: In how many different ways can one more 
+square be shaded in this shape so that it 
+can have a line of symmetry?
+```
+
+## P103 (PDF page 103)
+
+```text
+ 73 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.3.1 Perform a 
+single transformation 
+(i.e. reflection and 
+translation) on a 2D 
+shape using graph 
+paper (including 
+technology) and 
+describe the properties 
+of the image under the 
+transformation (i.e. 
+congruence, similarity, 
+etc.)   
+ 
+B7.3.3.1.2 Plot points and shapes (i.e. plane figures) on a coordinate 
+plane and draw their images under reflection in given lines  
+Creativity and Innovation 
+(CI) 
+Digital Literacy (DL) 
+E.g. 1: Plot points and shapes (i.e. 
+plane figures) with given 
+coordinates in the number 
+plane. 
+i. Plot the points A (3, 1), B (3, 
+3), C (4, 3), D (4, 2), E (5, 2), 
+F (5, 3), H (6, 3), and I (6, 1).  
+ 
+ 
+ 
+ E.g. 2:  Identify points with given 
+coordinates and lines (i.e. 
+constant lines parallel to 
+the x-axis or y-axis) in the 
+number plane. 
+Draw and label the axes of 
+the coordinate plane and 
+label the lines such as Line 
+1 is y-axis or x=0; Line 2 is 
+x-axis or y=0; Line 3 is y=x; 
+Line 5 is 𝑦𝑦= −1, etc.
+```
+
+## P104 (PDF page 104)
+
+```text
+ 74 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.3.1 Perform a 
+single transformation 
+(i.e. reflection and 
+translation) on a 2D 
+shape using graph 
+paper (including 
+technology) and 
+describe the properties 
+of the image under the 
+transformation (i.e. 
+congruence, similarity, 
+etc.)   
+E.g. 3:   Plot given points (or shape) the number plane and draw its 
+images under reflection in (i) the x-axis, (ii) y-axis and (iii) y=x 
+i. (a) Draw point A2 (-1, 1) as the image of point A (1, 1) under a 
+reflection in the y axis (or line x=0) 
+(b) Draw point P (1, -1) as the image of point A (1, 1) under a 
+reflection in the x axis (or line y=0) and  
+(c) Draw point A2 (-1, 1) as the image of point P (1, -1) under a 
+reflection in the line y=x. 
+ii. Draw triangle A’B’C’ as the image of triangle ABC under the 
+reflection x=0, y=0, y=x and any other line. 
+Compare the images 
+Digital Literacy (DL) 
+ E.g. 4: Derive the coordinate rules  
+i. If (a, b) is reflected on the x-axis, its image is the point (a, -b) 
+ii. If (a, b) is reflected on the y-axis, its image is the point (-a, b) 
+iii. If (a, b) is reflected on the line y = x, its image is the point (b, a) 
+iv. If (a, b) is reflected on the line y = -x, its image is the point (-b, -
+a) 
+NB: Reflection can occur over a line and/ or in a point. 
+Digital Literacy (DL)
+```
+
+## P105 (PDF page 105)
+
+```text
+ 75 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.3.1 Perform a 
+single transformation 
+(i.e. reflection and 
+translation) on a 2D 
+shape using graph 
+paper (including 
+technology) and 
+describe the properties 
+of the image under the 
+transformation (i.e. 
+congruence, similarity, 
+etc.)   
+B7.3.3.1.3 Plot points and shapes (i.e. plane figures) on a coordinate 
+plane and draw their images under translation by a given 
+vector. 
+Digital Literacy (DL) 
+Creativity and Innovation 
+(CI) 
+ 
+ 
+ 
+ E.g. 1: As people go down a slide, they 
+undergo a translation. 
+E.g. 2:  Plot point(s) and shapes (i.e. plane 
+figures) in a coordinate plane using a 
+translating vector and describe the 
+changes in the vertices as well as the 
+direction of the movement. 
+ 
+ 
+ii. Draw a shape and its image under a translation by a given vector. 
+iii. Describe a single movement or transformation that takes the 
+shape PART to the image P’A’R’T
+```
+
+## P106 (PDF page 106)
+
+```text
+ 76 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.3.3.1 Perform a 
+single transformation 
+(i.e. reflection and 
+translation) on a 2D 
+shape using graph 
+paper (including 
+technology) and 
+describe the properties 
+of the image under the 
+transformation (i.e. 
+congruence, similarity, 
+etc.)   
+B7.3.3.1.4 Verify the concept of congruent and similar shapes in 
+coordinate plane using properties of both the object(s) and 
+image(s); and in real life situations (carpet designs, fabric 
+pattern) 
+E.g. 1:  Verify which shapes are similar and which are congruent. 
+E.g. 2. Which of the following shapes are congruent? 
+Creativity and Innovation 
+(CI)
+```
+
+## P107 (PDF page 107)
+
+```text
+ 77 
+STRAND 4: HANDLING DATA 
+Sub-strand 1: Data  
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.1.1 Select, justify, 
+and use appropriate 
+methods to collect data 
+(quantitative and 
+qualitative), display and 
+analyse the data 
+(grouped/ungrouped) 
+presented in frequency 
+tables, line graphs, pie 
+graphs, bar graphs or 
+pictographs and use 
+these to solve and/or 
+pose problems. 
+B7.4.1.1.1- Select and justify a method to collect data (quantitative and 
+qualitative) to answer a given question. 
+E.g. 1. In small groups, learners discuss and write down how they would make 
+decisions in the following situations, what facts they would take into account 
+and how they would collect these ‘facts: 
+(a) The type of drinks to buy for a class party. 
+(b) The make of football boots to buy for the school team. 
+(c) Do people who eat more fufu develop pot belly? 
+(d) The number of desks in each classroom. 
+(e) The amount of money B6 students spend on bus fare to school 
+every month. 
+(g) Buy a mobile phone from an online shop. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Digital Literacy (DL) 
+ 
+E.g. 2.  Lead a discussion on the methods of data collection below and ask them to 
+identify which method they will use to gather the facts for each situation (i.e. 
+in E.g. 1. above) 
+ questionnaires,  
+ interview,  
+ observation, 
+ experiments,  
+ survey 
+ databases,  
+ electronic media or internet
+```
+
+## P108 (PDF page 108)
+
+```text
+ 78 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.1.1 Select, justify, 
+and use appropriate 
+methods to collect data 
+(quantitative and 
+qualitative), display 
+and analyse the data 
+(grouped/ungrouped) 
+presented in frequency 
+tables, line graphs, pie 
+graphs, bar graphs or 
+pictographs and use 
+these to solve and/or 
+pose problems. 
+B7.4.1.1.2- Design and administer a questionnaire for collecting data to answer 
+questions and record the results. 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+E.g. 1. Conduct a survey (within a small group of learners) by producing a question form 
+(such as the one below) and collecting real information.  
+Class Survey Question Form 
+1)  Hello, What’s your name?  _________________ 
+2)  How old are you?  _________________ 
+3)  What’s your favourite school subject?  _________________    
+4)  What’s your worst subject?  _________________  
+5)  What’s the most important school subject?   
+_________________ 
+6)  What is your favourite hobby _________________ 
+7)  What’s your favourite day of the week? ________________ 
+8)  How much do you spend on bus fare to school every day?  
+_____ 
+ 
+ 
+ E.g. 2.   Use a table (like the one below) to organise the data obtained with the question 
+form (or questionnaire). 
+Name Age 
+Favourite 
+subject 
+Worst 
+subject 
+Important 
+subject 
+Favourit
+e hobby 
+Favourite 
+weekday 
+Daily bus 
+fare (cedes)
+```
+
+## P109 (PDF page 109)
+
+```text
+ 79 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.1.1 Select, justify, 
+and use appropriate 
+methods to collect data 
+(quantitative and 
+qualitative), display 
+and analyse the data 
+(grouped/ungrouped) 
+presented in frequency 
+tables, line graphs, pie 
+graphs, bar graphs or 
+pictographs and use 
+these to solve and/or 
+pose problems. 
+B7.4.1.1.3- Organise and present data from a survey into a table and/or 
+chart, and analyse it to solve and/or pose problems. 
+Critical Thinking and Problem 
+solving (CP); 
+Personal Development and 
+Leadership (PL); 
+Digital Literacy (DL); Creativity 
+and Innovation (CI) 
+E.g. 1.  Use tallies to organise into a frequency table marks obtained in a 
+mathematics test by students in a class. 
+i. Complete the frequency table below for the data recorded in the 
+mathematics test. 
+10 7 4 5 6 8 7 6 7 5 3 4 6 
+5 4 5 4 6 5 6 7 6 3 4 5 8 
+6 7 5 9 4 6 6 1 7 7 9 5 1 
+5 2 7 10 8 6 7 4 1 6 6
+```
+
+## P110 (PDF page 110)
+
+```text
+ 80 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CONTENT STANDARD 
+B7.4.1.1 Select, justify, 
+and use appropriate 
+methods to collect data 
+(quantitative and 
+qualitative), display 
+and analyse the data 
+(grouped/ungrouped) 
+presented in frequency 
+tables, line graphs, pie 
+graphs, bar graphs or 
+pictographs and use 
+these to solve and/or 
+pose problems. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Marks Tally Frequency 
+1 /// 3 
+2 / 1 
+3   
+4   
+   
+   
+   
+Total  
+i. Draw a bar graph to 
+illustrate the data in the 
+frequency table. 
+ii. Write your conclusion about 
+the students’ scores in the 
+test and/or pose questions 
+on the graph. 
+Critical Thinking and 
+Problem solving (CP); 
+Personal 
+Development and 
+Leadership (PL); 
+Digital Literacy (DL); 
+Creativity and 
+Innovation (CI)
+```
+
+## P111 (PDF page 111)
+
+```text
+ 81 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.1.1 Select, justify, 
+and use appropriate 
+methods to collect data 
+(quantitative and 
+qualitative), display and 
+analyse the data 
+(grouped/ungrouped) 
+presented in frequency 
+tables, line graphs, pie 
+graphs, bar graphs or 
+pictographs and use 
+these to solve and/or 
+pose problems. 
+ 
+E.g. 2 Use tallies to organise into a frequency table, the data below which was 
+obtained by a group of learners for the number of people living in 
+households around their houses. 
+3 4 2 4 3 2 2 5 4 3 2 6 3 5 
+4 1 2 6 3 5 5 2 4 1 5 4 2  
+4 3 4 2 4 4 6 2 4 3 4 2 4  
+ 
+i. Complete the frequency table below for the data recorded from the 
+survey of people living in households around their houses. 
+No./ 
+Household 
+Tally Frequency Angle of sector 
+1 // 2 2
+40 × 360 = 18° 
+2 //// //// 10  
+3 //// // 7  
+4 //// //// 
+/// 
+13  
+5 //// 5  
+6 /// 3  
+ 
+ii. Draw a pie chart to illustrate the data in the frequency table (i.e. in 
+E.g. 1 above).  
+iii. Write your conclusion about the number of people living in the 
+households and/or pose questions on the pie chart. 
+Critical Thinking and Problem 
+solving (CP) 
+ 
+Personal Development and 
+Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+Creativity and Innovation (CI)
+```
+
+## P112 (PDF page 112)
+
+```text
+ 82 
+ 
+ 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.1.1 Select, justify, 
+and use appropriate 
+methods to collect data 
+(quantitative and 
+qualitative), display 
+and analyse the data 
+(grouped/ungrouped) 
+presented in frequency 
+tables, line graphs, pie 
+graphs, bar graphs or 
+pictographs and use 
+these to solve and/or 
+pose problems. 
+E.g. 3.   Draw a graph or chart for data organised in a frequency table and use it to 
+answer and/or pose questions. For instance,  
+i. The table below shows how Fakor spends his day. Complete the blanks 
+in the table with information on how you spend your day. Draw a double 
+bar graph to compare how you spend your day with Fakor. 
+ 
+ii. The table below shows the amount of rainfall recorded in millimetres per 
+month in the two towns in Ghana. Draw a double bar chart to represent 
+the data, write your conclusion and/or pose questions based on the chart. 
+ 
+Activity  School  Sleeping  Homework  Eating  Other  
+No. of hours  8 8 3 1 4 
+No. of hours       
+ Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec 
+Kumasi 5 10 15 20 50 45 55 35 40 50 35 10 
+Oda 3 10 13 25 40 50 60 50 40 45 35 8 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P113 (PDF page 113)
+
+```text
+ 83 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.1.2 Determine the 
+measures of central 
+tendency (mean, 
+median, mode) for a 
+given ungrouped data 
+and use it to solve 
+problems 
+B7.4.1.2.1 Calculate the mean for a given ungrouped data and use it to solve 
+problems 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+E.g. 1    Find the mean for a data set by dividing the sum of all the items in the 
+data set by the by the number of items. 
+i. The mean for the data set {8, 9, 7, 6, 8,10} is 
+8+9+7+6+8+10
+6  = 8 
+ii.  Find the mean for the data set below which is the marks obtained out of 
+a total of 5 in a mathematics class test.  
+ 
+ 
+ 
+E.g. Find the mean for a data set (in a frequency table) by dividing the sum of all 
+the items in the data set by the by the number of items. 
+i. Find the mean for the marks obtained out of a total of 5 in a 
+mathematics class test presented in the frequency table:  
+ 
+ii. Find the mean of the ages of children at a party presented in the 
+frequency table:  
+Ages (x): 1 3 5 6 7 8 9 10 
+Frequency (f): 2 5 6 10 8 5 3 1 
+ 
+3 4 2 4 3 2 2 5 4 3 
+4 1 2 6 3 5 5 2 4 1 
+Score 1 2 3 4 5 
+Frequency 2 6 4 5 3
+```
+
+## P114 (PDF page 114)
+
+```text
+ 84 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g. 3   Solve problems involving calculating the mean or average.  
+i. A shop keeper sold the following loaves of bread over the last 6 days:  
+25, 48, 25, 33, 57, 50. What was the average number of loaves sold 
+each day? 
+ii. Sena has had the following scores in five of the common core subjects 
+this term: 75, 87, 90, 88, 79. If she wishes to have an average score of 
+85, what must she score on the sixth test? i.e. Set up the problem like 
+this: (75 + 87 + 90 + 88 + 79 + ) ÷ 6 = 85 
+Critical Thinking and Problem 
+solving (CP) 
+ 
+B7.4.1.2 Determine the 
+measures of central 
+tendency (mean, 
+median, mode) for a 
+given ungrouped data 
+and use it to solve 
+problems 
+B7.4.1.2.2 Calculate the median for a given ungrouped data and use it to 
+solve problems 
+Critical Thinking and 
+Problem solving (CP) 
+E.g. 1    Find the median for a data set by arranging the items in the set in an 
+array and identifying the middle item. 
+i. Find the median of 19, 29, 36, 15, and 20. (i.e. the middle item in the 
+array 15, 19, 20, 29, 36 is 20). NB. since there are 5 values (odd 
+number), 20 is the median (middle number) 
+ii. Find the median for the data set 8, 9, 7, 6, 8, and 10. (i.e. the middle 
+item in the array 6, 7, 8, 8, 9, and 10 is 8). NB. since there are 6 
+values (even number), we must average those two middle numbers to 
+get the median value
+```
+
+## P115 (PDF page 115)
+
+```text
+ 85 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.1.2 Determine the 
+measures of central 
+tendency (mean, 
+median, mode) for a 
+given ungrouped data 
+and use it to solve 
+problems 
+E.g. 2    Find the median for a data set (in a frequency table). 
+iii. Find the median mark obtained in a mathematics class test presented 
+in the frequency table:  
+ 
+ 
+NB. Since there are 20 values, the 10th and 11th scores are the 
+middle numbers and they are both 3, so the median value is 3.  
+iv. Find the median ages of children at a party presented in the 
+frequency table:  
+ 
+ 
+ 
+ 
+NB. Since there are 39 values, the 20
+thage is 6, so the median value 
+is 6.  
+Score 1 2 3 4 5 
+Frequency 2 6 4 5 3 
+Ages (x): 1 3 5 6 7 8 9 
+Frequency (f): 2 5 6 10 8 5 3 
+Critical Thinking and Problem 
+solving (CP)
+```
+
+## P116 (PDF page 116)
+
+```text
+ 86 
+STRAND: HANDLING DATA 
+Sub-strand 2: Chance or Probability   
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.2.1   Identify the 
+sample space for a 
+probability experiment 
+involving single events 
+and express the 
+probabilities of given 
+events as fractions, 
+decimals, percentages 
+and/or ratios to solve 
+problems 
+B7.4.2.1.1Demonstrate understanding of likelihood of a single outcome 
+occurring by providing examples of events that are impossible, 
+possible, or certain from personal contexts. 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+Personal Development 
+and Leadership (PL) 
+E.g. 1.  Describe each outcome using words like: impossible, possible, or certain.  
+i. The dog will fly tomorrow (impossible). 
+ii. Someone in the class would be a teacher in the future (possible). 
+iii. Ghana will still be an African country tomorrow (certain). 
+ 
+E.g. 2.  Ask learners to work in groups to discuss the outcome of the following 
+events using words like: impossible, possible, or certain 
+A. A coin lands heads side up. 
+B. The day after Monday will be Tuesday. 
+C. A new-born baby will be a girl. 
+D. It will rain in Winneba in the first week of January.
+```
+
+## P117 (PDF page 117)
+
+```text
+ 87 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.2.1   Identify the 
+sample space for a 
+probability experiment 
+involving single events 
+and express the 
+probabilities of given 
+events as fractions, 
+decimals, percentages 
+and/or ratios to solve 
+problems 
+B7.4.2.1.2Classify the likelihood of a single outcome 
+occurring in a probability experiment as impossible, 
+possible, or certain 
+ 
+E.g. 1 Discuss the following outcomes of throwing a die using words like 
+impossible, possible, or certain. 
+A. Obtaining the number 1 
+B. Obtaining the number 7 
+C. Obtaining the number 4 
+ 
+E.g. 2 Discuss the following outcomes of throwing two 
+dice using words like impossible, possible, or 
+certain. 
+A. Obtaining a total of 12 
+B. Obtaining a total of 2 
+C. Obtaining a total of 13 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC)
+```
+
+## P118 (PDF page 118)
+
+```text
+ 88 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B7.4.2.1   Identify the 
+sample space for a 
+probability experiment 
+involving single events 
+and express the 
+probabilities of given 
+events as fractions, 
+decimals, percentages 
+and/or ratios to solve 
+problems 
+B7.4.2.1.3Calculate the probability of the event and express the 
+probability as fractions, decimals, percentages and/or ratios. 
+Critical Thinking and 
+Problem solving (CP) 
+E.g. 1 Calculate the probabilities and complete the table. 
+Name: Score: 
+Probability with a single die 
+The probability of rolling: Fractio
+ns 
+Decim
+als 
+Percenta
+ges 
+Ratios 
+1. factors of 60 1    
+2. a multiple of 3 1
+3    
+3. factors of 2 1
+3    
+4. divisors of 12  0.83   
+5. a 3 or greater 2
+3    
+6. factors of 8    1:2 
+7. factors of 6 2
+3    
+8. divisors of 30 5
+6    
+9. a 3 or smaller.   50
+```
+
+## P119 (PDF page 119)
+
+```text
+ 89 
+ 
+ 
+ 
+ 
+BASIC 8
+```
+
+## P120 (PDF page 120)
+
+```text
+ 90 
+STRAND 1: NUMBER 
+Sub-strand 1: Number and Numeration Systems 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.1.1 Demonstrate 
+understanding and the use of 
+place value for expressing 
+quantities in standard form and 
+rounding numbers and 
+decimals to significant figures 
+and a given number of decimal 
+places  
+B8.1.1.1.1 Apply the understanding of place value to read and 
+write in number quantities over 1,000,000,000. 
+Communication and 
+Collaboration (CC) 
+ 
+E.g.1.  Read and write numbers in words and vice versa. 
+(i) 2408321: Two million, four hundred and eight thousand, three 
+hundred and twenty-one. 
+(ii) the numeral part of the serial number on a currency note 
+TD1567451, i.e., 1567451: One million, five hundred and sixty-
+seven thousand, four hundred and fifty-one. 
+ 
+B8.1.1.1.2. Skip count forwards and backwards in 10,000s, 
+100,000s, 500,000s, etc. 
+E.g.1 Count forward in 500000s up to the fifth number. 
+(i) 200,000, 700,000, ... 
+E.g. 2. Count backwards in 100,500s up to the fifth number. 
+(I) 1,800,000, 1699500, 1599000, ...  
+ 
+B8.1.1.1.3. Compare and order whole numbers using “>, <, and 
+=”  
+Critical Thinking and 
+Problem solving (CP) 
+E.g. 1 Identify numbers which are 100,000, 1500,000, etc. more or 
+less than given 8 to 9-digit number.
+```
+
+## P121 (PDF page 121)
+
+```text
+ 91 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.1.1 Demonstrate 
+understanding and the use of 
+place value for expressing 
+quantities in standard form and 
+rounding numbers and 
+decimals to significant figures 
+and a given number of decimal 
+places 
+B8.1.1.1.4 Express integers of any size into standard form Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+E.g.1 Write integers as a power of 10: 
+(i) 1 = 100 
+10 = 101 
+100 =102 
+1000 = 103  
+ E.g. 2. Write multiples of 10 in standard form: 
+(I) 10 = 1 x 10 
+100 = 1x 101 
+1000 = 1x 103     etc. 
+ 
+E.g.3. Write integers in standard form: 
+(i) 26 = 2.6 x 10 
+(ii) 375 = 3.75 x 102 
+(iii) 8,765,049 = 8.765049 x 106 
+ 
+ 
+ 
+ 
+ B8.1.1.1.5 Express integers in a given number of significant and 
+decimal places   
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ E.g.1. Express any given integer to a given number of significant 
+figures. 
+(i) Express 56734 correct to two significant figures as 57000. 
+E.g. 2. Express 975.8674, correct to  
+(i) two decimal places; 
+(ii) three decimal places.
+```
+
+## P122 (PDF page 122)
+
+```text
+ 92 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ B8.1.1.1.6 Create and solve word or real-life problems on place 
+values  
+Creativity and Innovation 
+(CI) 
+E.g. 1 Solve word or story problems. 
+(i) Adom earns Gh₵2500 a month after tax and his elder brother Arko 
+earns three times as much. How much is their total income after five 
+years if there are no increases in their earnings?  
+ 
+B8.1.1.2 Apply the concepts and 
+vocabulary of sets on sets of 
+factors of numbers to identify 
+perfect squares, determine their 
+square root and solve real life 
+problems involving union and 
+intersection of two sets 
+B8.1.1.2.1. Use the concept of sets to identify perfect squares 
+and determine the square roots. Use the knowledge on 
+sets and sets of factors of numbers to solve problems 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+E.g. 1. Identify perfect squares or perfect numbers. 
+(i) List sets of multiples of numbers and identify a set of perfect 
+numbers among them 
+5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, …  
+2, 4, 6, 9, 12, 16, 18, …  
+4, 8, 12, 16, 20, 24, …  
+Perfect squares 
+4, 9, 16, 25, 36, …...  
+ 
+E.g. 2. Use the knowledge on odd numbers to determine the square 
+root of perfect numbers. 
+(i) Determine the square root of 49. 
+Think subtract the consecutive odd numbers starting from 1 from 49 
+until the remainder is zero. Then count the number of odd numbers 
+subtracted as the square root of the given number.
+```
+
+## P123 (PDF page 123)
+
+```text
+ 93 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.1.2 Apply the concepts 
+and vocabulary of sets on sets 
+of factors of numbers to 
+identify perfect squares, 
+determine their square root and 
+solve real life problems 
+involving union and 
+intersection of two sets 
+B8.1.1.2.2. Use the knowledge on sets and sets of factors of 
+numbers to solve real life problems involving union and 
+intersection  
+Critical Thinking and 
+Problem solving (CP) 
+E.g. 1. Identify the set of factors of given numbers. 
+(i) List the factors of 42 and 36 and determine their common factors: 
+42: 1, 2, 3, 6, 7, 14, 21 and 42 
+36: 1, 2, 3, 4, 6, 9,12,18 and 36 
+The common factors: 1, 2, 3 and 6.  
+ 
+ E.g. 2. Solve story and real-life problems involving union and 
+intersection of sets 
+(i) There are 80 farmers in a certain village who grow maize and rice 
+or both. Out of the 80 farmers, 50 grow maize and 60 grow rice. 
+(a) Represent the information on a Venn diagram. 
+(b) If x of them grows both crops, write an equation in x and solve for 
+it.
+```
+
+## P124 (PDF page 124)
+
+```text
+ 94 
+STRAND 1: NUMBER 
+Sub-strand 2: Number Operations 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.2.1 Apply mental 
+mathematics strategies and 
+number properties used to solve 
+problems  
+B8.1.2.1.1 Multiply and divide by power of 10 including decimals and 
+the benchmark fractions  
+E.g.1. Recall multiplication facts up to 144 and related division facts. 
+E.g.2. Recall decimal names of the benchmark fractions converted to 
+decimals or percentages (and vice versa). 
+E.g. 3.   Determine a product when a decimal number is a multiple of 10, 
+100, 1000, 
+1
+10 ,
+1
+100,  
+1
+1000, etc. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+ 
+ 
+ B8.1.2.1.2 Apply mental mathematics strategies and number 
+properties to do calculation 
+E.g. 1.  Apply halving and doubling to determine the product given product 
+of two given numbers.  
+B8.1.2.1.3 Apply mental mathematics strategies to solve word 
+problems.  
+E.g. 1. Play mental maths word games. 
+E.g.2. Play mental maths word games: - should provide opportunities for 
+learners to use mental strategies, short methods and sundry tables to 
+develop fluency in solving problems.
+```
+
+## P125 (PDF page 125)
+
+```text
+ 95 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.2.2 Apply the 
+understanding of the 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers within 
+10,000, and (ii) 
+decimals up to 1/1000, 
+to solve problems and 
+round answers to 
+given decimal places. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B8.1.2.2.1 Add and subtract more than four-digit numbers. Critical Thinking and 
+Problem solving (CP) 
+E.g.1. Use partitioning (or expanded form) and place value system to add and 
+subtract whole and decimal numbers. 
+ 
+ 
+ 
+(i) Add 896854 and 76329 
+ 896854 = 800,000+90000+6000+800+50+4 
+ +76329 =              70000+6000+300+20+9 
+ 973183 = 900000+70000+3000+100+80+3 
+ 
+ 
+(ii) Add 3627.6 and 854.13 
+ 
+  
+3627.60 
++ 
+854.13 
+= 
+     3000+600 + 20 + 
+7 +
+60
+100 
++            800+50 +4 
++
+1
+10+
+3
+100---- 
+   
+3000+800 +600+ 
+20+ 50 + 7+ 4 
++
+60
+100+
+1
+10+
+3
+100---- 
+  = 
+3000+1400+ 70+ 
+11+
+7
+10+
+3
+100 
+   
+3000+(1000+400) + 
+70+ (10+1) +
+70
+100+
+3
+100 
+ 4481.73  4000+400+80+1+
+73
+100 
+ 
+(iii) Subtract 37.85 from 193.6 
+ 
+ 193.60 
+−  
+37.85 
+= 
+100 + 90 + 
+3+
+6
+10+ 
+0
+100 
+        - (30 + 7+ 
+85
+100) 
+  = 
+100 + 90 + 
+3+
+60
+100−30-7−
+85
+100 
+  = 
+100+ 90 – 30 + 
+3−7 +
+60
+100−
+85
+100 
+  = 
+100+ 60 −7 
++3+ 
+60
+100−
+85
+100 
+  = 
+100 + 53 + 2 + 
+160
+100−
+85
+100 
+ 155.75 = 155 + 
+75
+100
+```
+
+## P126 (PDF page 126)
+
+```text
+ 96 
+ 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.2.2 Apply the 
+understanding of the 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers within 
+10,000, and (ii) 
+decimals up to 1/1000, 
+to solve problems and 
+round answers to 
+given decimal places 
+B8.1.2.2.2 Multiply or divide multi-digit numbers by 2- and 3-digit numbers. Critical Thinking and Problem 
+solving (CP) 
+E.g.1   Use the area model (Expand and Box method) to multiply and divide 
+efficiently. 
+526 × 54 = 
+ 
+∴ 𝟓𝟓𝟐𝟐𝟓𝟓× 𝟓𝟓𝟓𝟓= 𝟐𝟐𝟓𝟓,𝟑𝟑𝟑𝟑𝟑𝟑+ 𝟐𝟐,𝟑𝟑𝟑𝟑𝟑𝟑+ 𝟏𝟏,𝟑𝟑𝟑𝟑𝟑𝟑+ 𝟑𝟑𝟑𝟑𝟑𝟑+ 𝟖𝟖𝟑𝟑+ 𝟐𝟐𝟓𝟓 
+= 𝟐𝟐𝟖𝟖,𝟓𝟓𝟑𝟑𝟓𝟓 
+ E.g.2. Multiply whole numbers using the vertical place value method: (i.e.   
+657 × 27 =) 
+657 
+x27 
+                                                                     4599 
+                                                                + 1314 
+                                                                   17739
+```
+
+## P127 (PDF page 127)
+
+```text
+ 97 
+ 
+ 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.2.2 Apply the 
+understanding of the 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers within 
+10,000, and (ii) 
+decimals up to 1/1000, 
+to solve problems and 
+round answers to 
+given decimal places 
+E.g.3 Multiply whole numbers using the lattice method: 
+That is to solve 382 × 856:      
+ 
+Make a 3 by 3 lattice and set up the solution as follows: 
+ 
+ 
+                382 × 856 = 326,992 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+  
+E.g.3   Use the distributive property to multiply 325x 15 
+=325 x (10 + 5) = (325 x 10) + (325 x 5) 
+=3,250 + 1,625 
+=4,875 
+ 
+ 
+ 
+ 
+ 
+ 
+ E.g.4 Investigate and determine basic division facts including divisibility test 
+(i) Determine how a given number is divisible by 3,4,5, 6, 7, 8,9,10, etc.
+```
+
+## P128 (PDF page 128)
+
+```text
+ 98 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.2.2 Apply the 
+understanding of the 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers within 
+10,000, and (ii) 
+decimals up to 1/1000, 
+to solve problems and 
+round answers to 
+given decimal places 
+B8.1.2.2.3. Create and solve story problems involving decimals on the four 
+basic operations. 
+E.g. 1.  Solve word problems  
+(i) Kofi bought 8 notebooks at GHȻ 12.00 each. Ama   bought 12 pens at 
+GHȻ 5.00 each. How much altogether they spend on the items. 
+(ii) A man gave an amount of GHȻ 2477.25 to be shared equally among his 
+three children. How much did each receive? 
+(iii) On Adwoa’s   birthday, the father bought her a pack of chocolate 
+containing 250 bars. If Adwoa took 90 bars of the chocolates and gave 
+the rest to her four friends to share equally, how many bars of 
+chocolates did each receive?    
+(iv) Mrs Yaboi bought 25.25 metres of cloth for her five children. If they 
+share the material equally, how many metres of cloth did each receive?   
+ 
+Communication and 
+Collaboration (CC) 
+Creativity and Innovation 
+(CI)
+```
+
+## P129 (PDF page 129)
+
+```text
+ 99 
+ 
+CONTENT STANDARD INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.2.2 Apply the 
+understanding of the 
+addition, subtraction, 
+multiplication and 
+division of (i) whole 
+numbers within 
+10,000, and (ii) 
+decimals up to 1/1000, 
+to solve problems and 
+round answers to 
+given decimal places 
+E.g.2 Solve word problems on data presented in a table. 
+(i)  In preparation towards a speech day celebration, a school’s Management 
+Committee approved the following budget on some projects: 
+Activity Cost 
+(GH₵) 
+Painting school building 2,940 
+Mending cracks on the netball pitch 4,250 
+Restock the computer laboratory 
+with new computers 
+9,990 
+Buying of a new cadet uniform 8,740 
+Buying prizes for awards 5,270 
+(a)   How much was approved for painting the school building and buying of 
+new cadet uniforms? 
+(b)   How much less was to be spent on mending the cracks on the netball 
+pitch than restocking the computer lab with new computers? 
+(c)How much was spent on buying prizes for awards if twice the amount 
+approved was spent on this activity? 
+Communication and 
+Collaboration (CC) 
+Creativity and Innovation 
+(CI)
+```
+
+## P130 (PDF page 130)
+
+```text
+ 100 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.2.3 Demonstrate 
+understanding and the 
+use of the laws of 
+indices in solving 
+problems (including 
+real life problems) 
+involving powers of 
+natural numbers 
+B8.1.2.3.1 Identify and explain the laws of indices  
+E.g.1 State the Laws of Indices. 
+For real numbers m, n and valid bases a, b, the following basic laws hold 
+i. Law1: 𝑎𝑎𝑚𝑚 × 𝑎𝑎𝑛𝑛  =  𝑎𝑎(𝑚𝑚+𝑛𝑛) 
+ii. Law 2: 
+𝑎𝑎𝑚𝑚
+𝑎𝑎𝑛𝑛 =  𝑎𝑎(𝑚𝑚−𝑛𝑛) 
+For applying the above Law, if we choose both m = 1 and n = 1, then we get: 
+𝑎𝑎1
+𝑎𝑎1 = 𝑎𝑎(1−1) = 𝑎𝑎0 = 1 
+iii. Law 3: (𝑎𝑎𝑚𝑚 )n = 𝑎𝑎𝑚𝑚×𝑛𝑛 = 𝑎𝑎𝑚𝑚𝑛𝑛 
+iv. Law 4: (𝑎𝑎𝑎𝑎)𝑛𝑛= 𝑎𝑎𝑛𝑛𝑎𝑎𝑛𝑛 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+Creativity and Innovation 
+(CI) 
+ 
+B8.1.2.3.2 Apply the laws of indices to simplify and evaluate numbers 
+involving powers of numbers. (PEDMAS) 
+ E.g.1 Use the laws of indices to solve problems involving powers of number.  
+i) Simplify 25 × 162 
+ii) Simplify  
+27
+32 
+iii) Simplify  𝑦𝑦= 𝑥𝑥𝑎𝑎−𝑎𝑎× 𝑥𝑥𝑎𝑎−𝑎𝑎× 𝑥𝑥𝑎𝑎−𝑎𝑎× 𝑥𝑥−𝑎𝑎−𝑎𝑎 
+iv) Simplify and evaluate (
+16
+81)−3
+4 
+        v) Evaluate (52)3
+```
+
+## P131 (PDF page 131)
+
+```text
+ 101 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.2.3 Demonstrate 
+understanding and the 
+use of the laws of 
+indices in solving 
+problems (including 
+real life problems) 
+involving powers of 
+natural numbers 
+B8.1.2.3.3 Solve exponential equations  
+E.g.1 Solve these equations 
+i. 25 = 5
+2𝑥𝑥 
+ii. 2𝑥𝑥+2 = 16 
+iii. 
+25
+23 = 22𝑥𝑥 
+iv. 
+1
+27 = 3𝑥𝑥 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC) 
+Creativity and Innovation 
+(CI) 
+ 
+B8.1.2.3.4 Solve real life problems involving powers of natural numbers.  
+E.g.1: Solve real-life problems on populations. 
+ 
+While studying her family’s history, Saratu discovers records of ancestors 
+12 generations back. She wonders how many ancestors she has had in the 
+past 12 generations. She starts to make a diagram to help her figure this 
+out. The diagram soon becomes very complex. 
+ 
+ 
+ 
+ 
+ 
+i. Make a table and a graph showing the number of ancestors in each of the 
+12 generations. 
+ii. Write an equation for the number of ancestors in a given generation n. 
+  
+ 
+Saratu 
+1st Generation 
+2ndGeneration 
+3rd Generation
+```
+
+## P132 (PDF page 132)
+
+```text
+ 102 
+STRAND 1: NUMBER 
+Sub-strand 3: Fractions, Decimals and Percentages 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.3.1 Apply the 
+understanding of operation 
+on fractions to solve 
+problems involving fractions 
+of given quantities and round 
+the results to given decimal 
+and significant places 
+B8.1.3.1.1 Review fractions and solve problems involving basic 
+operations on fractions  
+Critical Thinking and 
+Problem solving (CP) 
+E.g. 1.  Review the concept of fractions.     
+    
+    
+ 
+ 
+i. Shade given fraction of squares in a shape or find the fraction shaded 
+in the shape: i.e. shade  
+3
+4 of the rectangle. 
+ii. Write down 3 fractions equivalent to 
+2
+3
+. 
+iii. Express the fraction 
+6
+10 in its simplest form. 
+iv. Express 
+12
+5  as a mixed number. 
+v. Express 2
+5
+9t as an improper fraction. 
+ E.g. 2.  Review the basic operations on fractions.  
+ i. Adding and subtracting fractions. Work out answers to the following: 
+a) 
+3
+4
++  
+7
+8
+ b) 
+4
+5
+−
+1
+6
+ 
+ii. Multiplying and dividing fractions. Work out answers to the following: 
+a) 
+2
+3
+×
+3
+4
+ b) 
+5
+8
+÷2
+1
+2
+```
+
+## P133 (PDF page 133)
+
+```text
+ 103 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.3.1 Apply the 
+understanding of operation 
+on fractions to solve 
+problems involving fractions 
+of given quantities and round 
+the results to given decimal 
+and significant places. 
+B8.1.3.1.2 Add and/or subtract, multiply and/or divide given fractions, 
+by using the principle of the order of operations (the rule of 
+BODMAS or PEMDAS), and apply the understanding to solve 
+problems. 
+Critical Thinking and 
+Problem solving (CP) 
+E.g. 1.  Use the order of operations (BODMAS or PEDMAS) to simplify whole 
+number expressions with more than two operations. PEDMAS is 
+Parenthesis, Exponents, Multiply/Divide (going from left to right), 
+Add/Subtract (going from left to right). 
+i. 21 ÷ 3 + (3 × 9) × 9 + 5  
+ii. 18 ÷ 6 × (4 - 3) + 6  
+iii. 34 ÷ 9 + 40 – 23 × 32 ÷ 9 
+ E.g. 2.  Use the order of operations (BODMAS or PEDMAS) to simplify whole 
+number expressions with more than two operations. 
+a) 
+3
+4 +  
+5
+8
+ ×
+4
+5
+−
+1
+6
+ 
+b) 
+3
+4
+ ÷  
+3
+8
++ (
+4
+5
+−
+1
+2
+) 
+c) (
+3
+4 +  
+5
+8
+) ×
+4
+11−
+1
+2
+ 
+ 
+ B8.1.3.1.3. Review word problems involving basic operations on 
+fractions and related concepts. 
+ 
+ E.g. 1.  Solve word problems involving fractions. 
+i. Determine the (i) perimeter and (ii) area of a rectangle whose 
+sides measure 1
+1
+3 cm by 3
+3
+4
+cm.
+```
+
+## P134 (PDF page 134)
+
+```text
+ 104 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.3.1 Apply the 
+understanding of operation 
+on fractions to solve 
+problems involving fractions 
+of given quantities and round 
+the results to given decimal 
+and significant places. 
+ii. Faako answers 42 out of 60 questions correctly. What percentage 
+of her answers are correct? 
+iii. In a school 
+2
+3 of the students eat from the school feeding 
+programme, 
+1
+4
+ bring their packed lunch, and the rest go home to 
+eat. What fraction of the students go home for lunch? 
+iv. Esi and Fusena prepared an orange drink by mixing orange 
+squash and water. Esi’s drink was made of 
+2
+7
+ orange squash and 
+Fusena’s was made up of  
+1
+4
+ orange squash. Whose drink tastes 
+stronger of orange? 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P135 (PDF page 135)
+
+```text
+ 105 
+STRAND 1: NUMBER 
+Sub-strand 4:  Number: Ratios and Proportion 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.4.1Demonstrate an 
+understanding of ratio, rate and 
+proportions and use it these to 
+solve real-world mathematical 
+problems 
+B8.1.4.1.1 Use ratio reasoning to convert measurement units; 
+manipulate and transform units appropriately when 
+multiplying or dividing quantities. 
+Critical Thinking and Problem 
+solving (CP) 
+ 
+Creativity and Innovation (CI) 
+ 
+Personal Development and 
+Leadership (PL) 
+ 
+E.g.1 Convert (cm to m; km to m; ml to cm; etc.) one unit of measure to 
+another using ratio reasoning.  
+• 1m = 100cm is a conversion factor, and we can write from it the 
+ratios 
+1 𝑚𝑚
+100 𝑎𝑎𝑚𝑚and 
+100 𝑎𝑎𝑚𝑚
+1 𝑚𝑚, with each being equivalent to 1. Then, to 
+convert a meas urement in metres into centimetres, we can 
+multiply it by the ratio 1m/100cm.  
+ 
+E.g.2 Manipulate and use units appropriately to solve problems. 
+• Agbo walks 4km to school every day. He uses 60minutes. Rukiya 
+uses 45minutes to cover 4200m. Which of the two learners is 
+faster?  
+ 
+ B8.1.4.1.2 Solve unit rate problems including those involving unit 
+pricing and constant speed; and speed translation.  
+ 
+E.g.1 If it took 7 hours to mow 4 lawns, then at that rate, how many lawns 
+could be mowed in 35 hours? At what rate were lawns being mowed?
+```
+
+## P136 (PDF page 136)
+
+```text
+ 106 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.4.1Demonstrate an 
+understanding of ratio, 
+rate and proportions and 
+use it these to solve real-
+world mathematical 
+problems. 
+• E.g.2Salamatu is a drummer for a band. She burns 756 calories while drumming 
+for 3 hours. She burns the same number of calories each hour. How many calories 
+does Salamatu burn per hour? 
+ 
+Solution 
+• The ratio of calories burned to hours drumming is 756:3. 
+• Let's find an equivalent ratio that shows how many calories are burned in1hour. 
+• A ratio where one of the terms is 1 is called a unit rate. We can divide the number 
+of hours by 3 to get to 1 hour. 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+Personal Development and 
+Leadership (PL) 
+ 
+   
+                        756                            3 
+÷3                                                    ÷ 3 
+                       ?                                 1 
+ 
+                             756 ÷ 3 = 252 
+ 
+              Calories burned            hours 
+ 
+                   756                         3 
+        ÷3                                             ÷ 3 
+                    252                        1 
+Salamatu burns 252 calories per hour of drumming.
+```
+
+## P137 (PDF page 137)
+
+```text
+ 107 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.4.1Demonstrate an 
+understanding of ratio, 
+rate and proportions and 
+use it these to solve 
+real-world mathematical 
+problems. 
+ 
+B8.1.4.1.3 Apply the knowledge of speed to draw and interpret travel graphs or 
+distance-time graphs. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+Personal Development and 
+Leadership (PL) 
+ 
+E.g.1 Draw a graph for a passage on a distance time graph.  
+i)  A trader travels in a car from Buduata to Adawso. The distance between the two 
+towns is 20miles. After 60 minutes, the trader makes a stop at Assin which is 8 miles 
+from Buduata. 36 minutes later, he continues his journey to Adawso in 24 minutes. 
+After resting for 12 minutes, he makes a return journey to Buduata in 48 minutes. 
+ 
+Notes: put a passage for 
+the graph
+```
+
+## P138 (PDF page 138)
+
+```text
+ 108 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.4.1Demonstrate an 
+understanding of ratio, 
+rate and proportions and 
+use it these to solve 
+real-world mathematical 
+problems. 
+ 
+E.g.2 Interpret a given travel graph 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+Personal Development and 
+Leadership (PL)
+```
+
+## P139 (PDF page 139)
+
+```text
+ 109 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.4.1Demonstrate an 
+understanding of ratio, 
+rate and proportions and 
+use it these to solve 
+real-world mathematical 
+problems. 
+ 
+ B8.1.4.1.4 Recognise and represent proportional relationships between quantities by 
+deciding whether two quantities are in a proportional relationship.  
+(e.g. by testing for equivalent ratios in a table or graphing on a coordinate 
+plane and observing whether the graph is a straight line through the origin). 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ 
+E.g.1 Use given tables to check proportional 
+relationships. 
+ 
+E.g.2 Use graphs to check proportional 
+and non-proportional relationship  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+The graph shows a non-proportional 
+relationship because the straight line does 
+not go through the origin.
+```
+
+## P140 (PDF page 140)
+
+```text
+ 110 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.4.1Demonstrate an 
+understanding of ratio, 
+rate and proportions and 
+use it these to solve 
+real-world mathematical 
+problems. 
+ 
+B8.1.4.1.5 Identify the constant of proportionality (unit rate) in tables, graphs, 
+equations, diagrams, and verbal descriptions of proportional 
+relationships. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+E.g.1 
+ 
+ 
+ 
+ 
+ E.g.2 An ant travels 
+9
+8inches in 45 seconds and 
+27
+8  inches in 2 minutes and 15 seconds. 
+What is the constant of proportionality?  
+ 
+ E.g.3
+```
+
+## P141 (PDF page 141)
+
+```text
+ 111 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.1.4.1Demonstrate an 
+understanding of ratio, 
+rate and proportions and 
+use it these to solve 
+real-world mathematical 
+problems. 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI)
+```
+
+## P142 (PDF page 142)
+
+```text
+ 112 
+STRAND 2: ALGEBRA 
+Sub-strand 1: Patterns and Relations 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.1.1 Demonstrate 
+the ability to draw table 
+of values for a linear 
+relation, graph the 
+relation in a number 
+plane, determine the 
+gradient of the line and 
+use it to write equation 
+of a line of the form y = 
+mx + c. 
+B8.2.1.1.1 Calculate the gradient of a line and use it to write equation of a line of 
+the form y = mx + c. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.1 Explain the concept of gradient using real life examples and to discover the 
+practical meaning of gradient. 
+  
+ 
+ 
+ 
+ 
+ 
+The gradient is the measure of how steep the hill the rider is climbing is.  
+The gradient is the slope (or steepness) of the roofing of the building.  
+E.g.2 Determine the formula for calculating the gradient of a line. 
+ 
+ 
+ The formula for calculating the gradient of a straight 
+line is given as:  
+ 
+ 
+∆𝑦𝑦
+∆𝑥𝑥=
+𝑦𝑦2−𝑦𝑦1
+𝑥𝑥2−𝑥𝑥1
+```
+
+## P143 (PDF page 143)
+
+```text
+ 113 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.1.1 Demonstrate 
+the ability to draw table 
+of values for a linear 
+relation, graph the 
+relation in a number 
+plane, determine the 
+gradient of the line and 
+use it to write equation 
+of a line of the form y = 
+mx + c. 
+E.g.3 Determine the gradient when given two coordinates. 
+      Find the gradient of a line which passes through the point; 
+i. A(1,1) and B(7,2) 
+ii. P(-2,4) and Q(3,5) 
+iii. C(3,-2) and D(-3,4) 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.4 Determine the gradient of a straight line when its equation is given.  
+      Find the gradient from the equation of the straight line below 
+i. 𝑦𝑦= 5𝑥𝑥+ 13 
+ii. 2𝑥𝑥− 8𝑦𝑦+ 3 = 0 
+iii. 𝑦𝑦= −3𝑥𝑥+ 12 
+E.g.5 Determine the gradient from a graph. 
+  
+Determine the gradient of the line in 
+the graph.  
+ 
+From the graph, the coordinates are 
+A (-8,-2), B (2,3). 
+𝑚𝑚=
+−2−3
+−8−2 = 
+−5
+−10 = 
+1
+2 
+          The gradient of the line is 
+1
+2
+```
+
+## P144 (PDF page 144)
+
+```text
+ 114 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.1.1 Demonstrate the 
+ability to draw table of 
+values for a linear relation, 
+graph the relation in a 
+number plane, determine 
+the gradient of the line 
+and use it to write 
+equation of a line of the 
+form y = mx + c. 
+E.g.6 Determine the slope-intercept form of the equation of a straight line  
+Hint: The equation of a straight line in slope-intercept form is 𝒚𝒚= 𝒎𝒎𝒙𝒙+ 𝒄𝒄 
+i. Find the equation of a line with slope 2 and y-intercept -3. Hence find the 
+value of y when x is 4. 
+ii. Find the equation of a line in slope-intercept form having y-intercept 
+7
+2 and 
+slope −
+5
+2
+. 
+iii. Find the equation of a line with slope 
+1
+2
+ and y-intercept 4. 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+E.g.7 Determine the point-slope form of the equation of a straight line 
+Hint: The point-slope form of the equation of a straight line is 𝒚𝒚− 𝒚𝒚𝟏𝟏= 𝒎𝒎(𝒙𝒙− 𝒙𝒙𝟏𝟏) 
+i. Find the equation of a line with slope 
+2
+3 that passes through the point (3, -1). 
+ii. Find the equation of a line that passes through the point (3, -7) and has the 
+slope 𝑚𝑚=
+5
+4
+. 
+iii. Find the equation of a line which passes through the points (5, 4) and (-10,-
+2).  
+iv. Write the equation 5𝑥𝑥+ 4𝑦𝑦− 3 = 0 in the form𝑦𝑦= 𝑚𝑚𝑥𝑥+ 𝑎𝑎. Hence state the 
+gradient and the intercept.
+```
+
+## P145 (PDF page 145)
+
+```text
+ 115 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.1.1 Demonstrate the 
+ability to draw table of 
+values for a linear 
+relation, graph the 
+relation in a number 
+plane, determine the 
+gradient of the line and 
+use it to write equation of 
+a line of the form y = mx + 
+c. 
+B8.2.1.1.2 Use graph of a linear relation to determine subsequent missing 
+elements in the ordered pairs of the relation.  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+E.g.1 Use information from a graph to find missing elements 
+ 
+  The graph represents the relation 𝑦𝑦=
+20𝑥𝑥, where y is the cost (in Ghana cedis) of 
+the weight (in kilograms) of meat sold in a 
+market.  
+ 
+Use the graph to find: 
+i. the cost of 3.5kg of meat  
+ii. the weight of meat that can be 
+bought with GH₵80. 
+iii. Using the relation from the 
+graph, how many kilograms of 
+meat can be bought at a cost of 
+GH₵240.
+```
+
+## P146 (PDF page 146)
+
+```text
+ 116 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.1.1 Demonstrate 
+the ability to draw table 
+of values for a linear 
+relation, graph the 
+relation in a number 
+plane, determine the 
+gradient of the line and 
+use it to write equation 
+of a line of the form y = 
+mx + c. 
+E.g.2 Use information from a graph to 
+find missing elements: 
+ 
+ 
+The diameter of a Wawa tree is currently 10 
+inches when it is measured at chest height. 
+After 50 years, the diameter is expected to 
+increase by an average growth rate of 
+2
+5 inch 
+per year. The equation 𝑦𝑦= �
+2
+5
+� 𝑥𝑥+ 10 gives you 
+y, the diameter of the tree in inches, after 𝑥𝑥 
+years.  
+ 
+i. Use the graph to complete the table below. 
+ 
+X (years) 0 1
+0 
+2
+0 
+3
+0 
+5
+0 
+Y(diameter in 
+inches) 
+     
+ 
+ii. What will be the diameter of the tree in 100 
+years?  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+ B8.2.1.1.3 Use graphs of linear relations to solve real life problems.  
+ 
+E.g.1 Draw graphs for real life problems. 
+ 
+i. Every morning, you go for a walk. The distance you walk can be modelled by the 
+equation 𝑎𝑎=
+1
+3 ℎ,where d is the distance walked in kilometers and h is the number 
+of hours you’ve walked. Make a table for the relation and draw a graph with the 
+values to see how far you’ve walked after 6hours.
+```
+
+## P147 (PDF page 147)
+
+```text
+ 117 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.1.1 Demonstrate 
+the ability to draw table 
+of values for a linear 
+relation, graph the 
+relation in a number 
+plane, determine the 
+gradient of the line and 
+use it to write equation 
+of a line of the form y = 
+mx + c. 
+Copy and complete the table for the 
+relation: 
+ 
+Distanc
+e 
+1 2 3 4 5 
+Time       
+ 
+  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+ 
+E.g.2 Nhyira paints portraits of people for a living. The graph below shows how much she 
+charges based on how long it takes her to paint the portrait.  Use the graph to answer the 
+questions that follow. 
+ 
+ 
+i. How much does she charge for a 
+portrait that takes 3 hours to paint? 
+ii. Is she charges GH₵175, how many 
+hours did she use to paint the 
+portrait? 
+iii. How many hours will she require to 
+paint a portrait that cost GH₵300?
+```
+
+## P148 (PDF page 148)
+
+```text
+ 118 
+STRAND 2: ALGEBRA 
+Sub-strand 2 Algebraic Expressions 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.2.1 Solve problems 
+involving algebraic 
+expressions (including 
+multiplication of 
+binomial expressions) 
+factorise given 
+expressions and 
+substitute values to 
+evaluate algebraic 
+expressions. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B8.2.2.1.1 Use the distributive property to remove brackets and solve 
+multiplication of binomial expression.  
+E.g.1 Expand these expressions: 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+• 6(𝑥𝑥+ 3) 
+ 
+• −5𝑥𝑥(3𝑥𝑥+ 4) 
+ 
+• 3(𝑥𝑥+ 4) − 2(𝑥𝑥− 5) 
+• 2(6 − 5𝑥𝑥) − 3(2 + 2𝑥𝑥) −
+4(3𝑥𝑥− 1) 
+ 
+• 8 − (4 − 𝑎𝑎) − (6 − 𝑎𝑎) 
+ 
+• (𝑚𝑚+ 𝑜𝑜− 𝑔𝑔) − (𝑚𝑚− 𝑜𝑜+ 𝑔𝑔) 
+E.g.2 Multiply binomial expressions  
+ 
+Simplify  
+i. (𝑎𝑎+ 2)(𝑎𝑎+ 3) 
+ii. (2𝑥𝑥+ 𝑦𝑦)(2𝑥𝑥− 𝑦𝑦) 
+iii. 𝑚𝑚𝑣𝑣𝑣𝑣𝑎𝑎𝑖𝑖𝑝𝑝𝑣𝑣𝑦𝑦 (3𝑥𝑥− 2𝑦𝑦) 𝑎𝑎𝑦𝑦 (3𝑥𝑥+ 2𝑦𝑦) 
+ 
+ 
+ 
+iv. (2𝑥𝑥+ 3)
+2 
+v. (𝑥𝑥− 2𝑥𝑥)2 
+vi. (𝑎𝑎+ 2)2 
+B8.2.2.1.2 Perform addition, subtraction, multiplication and division of algebraic 
+expressions including fractions. 
+E.g.1 Solve problems based on multiplication and division of algebraic fractions.
+```
+
+## P149 (PDF page 149)
+
+```text
+ 119 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.2.1 Solve problems 
+involving algebraic 
+expressions (including 
+multiplication of 
+binomial expressions) 
+factorise given 
+expressions and 
+substitute values to 
+evaluate algebraic 
+expressions. 
+ 
+Simplify: Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ 
+E.g.2 Solve problems based on addition and subtraction of algebraic fractions 
+Simplify the following: 
+i. 
+𝒂𝒂−𝒃𝒃
+3 +
+3𝒂𝒂
+2  
+ 
+ii. 
+2𝒂𝒂
+3 −
+𝒂𝒂−𝒃𝒃
+2  
+ 
+iii. 
+5
+6𝒓𝒓−
+3
+4𝒓𝒓 
+iv. 
+2𝒙𝒙−1
+3 −
+𝒙𝒙+3
+2  
+ 
+v. 
+3𝒂𝒂+5𝒃𝒃
+4 +
+𝒂𝒂+𝒃𝒃
+8  
+ 
+vi. 
+2𝒙𝒙
+6 +
+2𝒙𝒙−3𝒚𝒚
+3 −
+𝒙𝒙+𝒚𝒚
+2  
+B8.2.2.1.3 Substitute values to evaluate algebraic expressions including 
+fractions and use these to solve problems. 
+ 𝑖𝑖𝑜𝑜 𝑥𝑥= 2, 𝑦𝑦= −2, 𝑧𝑧= 3, 𝑎𝑎= 1 𝑎𝑎𝑚𝑚𝑎𝑎 𝑎𝑎= −1,  
+simplify, then substitute in the value to evaluate the following expressions: 
+ 
+i. 
+3
+𝑥𝑥+1 −
+2
+𝑥𝑥−1 𝑖𝑖𝑣𝑣.
+3𝑎𝑎𝑎𝑎
+15𝑎𝑎2𝑑𝑑2 ×
+10𝑑𝑑
+9𝑎𝑎2 
+ 
+ii. 
+1
+𝑥𝑥−1 +
+2
+𝑥𝑥+1 𝑣𝑣.  
+6𝑥𝑥2+2𝑥𝑥𝑦𝑦
+5𝑧𝑧 ×
+15𝑧𝑧2
+3𝑥𝑥+𝑦𝑦 
+ 
+iii. 
+12𝑥𝑥𝑦𝑦
+7 ×
+14𝑥𝑥
+20 𝑣𝑣𝑖𝑖. 5𝑥𝑥+ 7𝑧𝑧2 − 4𝑎𝑎+ 3𝑦𝑦2
+```
+
+## P150 (PDF page 150)
+
+```text
+ 120 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.2.1 Solve problems 
+involving algebraic 
+expressions (including 
+multiplication of 
+binomial expressions) 
+factorise given 
+expressions and 
+substitute values to 
+evaluate algebraic 
+expressions. 
+ 
+B8.2.2.1.4 Factorise given expressions involving the four operations and use the 
+experiences gained to solve problems. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+E.g.1 Factorise the following expressions  
+i. Common factors 
+ 
+• 3𝑎𝑎𝑥𝑥+ 6𝑎𝑎𝑦𝑦 
+• 54 − 81𝑥𝑥 
+• 100𝑥𝑥− 25𝑥𝑥2 
+ 
+ii. Method of grouping  
+ 
+• 2𝑎𝑎𝑝𝑝+ 𝑎𝑎𝑞𝑞− 𝑎𝑎𝑞𝑞− 2𝑎𝑎𝑝𝑝 
+ 
+• 𝑎𝑎𝑎𝑎− 𝑎𝑎𝑦𝑦− 𝑎𝑎𝑦𝑦+ 𝑦𝑦2 
+ 
+• 3𝑥𝑥2 + 2𝑥𝑥𝑦𝑦− 12𝑥𝑥𝑦𝑦− 8𝑦𝑦𝑧𝑧
+```
+
+## P151 (PDF page 151)
+
+```text
+ 121 
+STRAND 2: ALGEBRA 
+Sub-strand 3 Variables and Equations 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.3.1 Demonstrate an 
+understanding of linear 
+inequalities of the form x + 
+a ≥ b (where a and b are 
+integers) by modelling 
+problems as a linear 
+inequalities and solving the 
+problems concretely, 
+pictorially, and 
+symbolically. 
+B8.2.3.1.1 Translate word problems into linear inequalities in one 
+variable and vice versa 
+E.g.1 Make mathematical sentences involving linear inequalities from word 
+problems. 
+i. Think of a whole number less than 17   
+i.e. x < 17 
+ ii. Eight less than the product of -3 and a number is greater than -26. Write 
+and solve an inequality to represent this relationship.  
+i.e.-3x-8>-26 
+iii. Kwaakye’s profit for March of GH₵ 32 was at least GH₵ 12 less than his 
+February profit. What was his February profit?  
+I.e. March profit was at least GH₵12 less than February’s profit. 
+      GH₵23            ≥                 _12    +            p 
+Critical Thinking and 
+Problem solving (CP) 
+Creativity and Innovation 
+(CI) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B8.2.3.1.2 Solve simple linear inequalities 
+E.g.1 Use the idea of balancing to solve simple linear inequalities. 
+i. 𝟐𝟐𝒙𝒙− 𝟏𝟏𝟑𝟑> 29 
+ii. 𝟓𝟓𝒙𝒙− 𝟗𝟗> −5 
+iii. 𝟏𝟏𝟓𝟓< 8 − 2𝒙𝒙 
+iv. 𝟑𝟑𝒙𝒙≤ 𝟖𝟖+ 𝒙𝒙 
+v. 𝒙𝒙− 𝟓𝟓> 1 
+vi. 𝟏𝟏𝟑𝟑− 𝒙𝒙< 12 
+vii. 𝒙𝒙− 𝟑𝟑≥ 𝟐𝟐 
+viii. 𝟐𝟐𝒙𝒙− 𝟓𝟓≤ 𝟑𝟑𝟓𝟓− 𝒙𝒙
+```
+
+## P152 (PDF page 152)
+
+```text
+ 122 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.2.3.1 Demonstrate an 
+understanding of linear 
+inequalities of the form x + 
+a ≥ b (where a and b are 
+integers) by modelling 
+problems as a linear 
+inequalities and solving the 
+problems concretely, 
+pictorially, and 
+symbolically. 
+B8.2.3.1.3 Determine solution sets of simple linear inequalities in given 
+domains 
+Critical Thinking and 
+Problem solving (CP) 
+Creativity and Innovation 
+(CI) 
+ 
+E.g.1 Find solution sets for the following linear inequalities  
+i. If x < 4 for whole numbers, then the domain is whole numbers and the 
+solution set  
+= {0, 1, 2, 3} 
+ii. 2𝑥𝑥> 24 
+iii. 𝑥𝑥+ 4 ≤ 3𝑥𝑥− 16 
+iv. 9 − 5𝑥𝑥< 6
+```
+
+## P153 (PDF page 153)
+
+```text
+ 123 
+STRAND 3: GEOMETRY AND MEASUREMENT 
+Sub-strand 1: Shapes and Space 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.1 Demonstrate 
+understanding and use of 
+the relationship between 
+parallel lines and alternate 
+and corresponding angles 
+and use the sum of angles 
+in a triangle to deduce the 
+angle sum in any polygon. 
+B8.3.1.1.1 Draw and determine the values of alternate and corresponding 
+angles 
+E.g.1. Draw the diagram and calculate the values of the angles marked 1, 
+3,4,5,6,7,8 
+ 
+E.g. 2 Calculate the value of the angles a, b, c, and d   
+ 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P154 (PDF page 154)
+
+```text
+ 124 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.1 Demonstrate 
+understanding and use of 
+the relationship between 
+parallel lines and alternate 
+and corresponding angles 
+and use the sum of angles 
+in a triangle to deduce the 
+angle sum in any polygon. 
+B8.3.1.1.2 Determine the values of angles in a triangle using knowledge of 
+the sum of interior angles in a triangle and other properties. 
+E.g. 1 Calculate the values of y and the angles in the triangle 
+ 
+ 
+E.g. 2    Deduce the formula for the sum of interior angles in a polygon and 
+determine the value of an angle in a regular hexagon. 
+ 
+E.g. 3 Use the formula for finding the sum of interior angles in a polygon (n-
+2)180 to determine the value of x in the hexagon. 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P155 (PDF page 155)
+
+```text
+ 125 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform 
+geometric constructions of 
+the angles (75˚, 105˚, 60˚, 
+135˚ and 150˚), and 
+construct triangles and 
+find locus of points under 
+given conditions. 
+B8.3.1.2.1 Construct and bisect angles of 120˚, 105˚, 135˚ and 150˚ 
+E.g.1: Use  a pair of compasses and a ruler to perform geometric 
+construction of an angle (∠𝐶𝐶𝐴𝐴𝐴𝐴) =120˚ [Draw a semi-circle over the point B to 
+meet ⃒BC⃒ in Q and using the same radius and Q as centre to make the 
+arcs R and P respectively) and 
+confirm the value using a 
+protractor.
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ 
+ E.g.2: Use a pair of compasses and a ruler to perform geometric construction 
+of an angle of (∠SQC) 150˚ and measure with aprotractor to confirm.
+```
+
+## P156 (PDF page 156)
+
+```text
+ 126 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform 
+geometric constructions of 
+the angles (75˚, 105˚, 60˚, 
+135˚ and 150˚), and 
+construct triangles and 
+find locus of points under 
+given conditions. 
+E.g.3: Use a pair of compasses and a ruler to perform the geometric 
+construction of an angle(∠𝐴𝐴𝐵𝐵𝐴𝐴) 135˚ and measure with a protractor to 
+confirm. 
+  
+Creativity and Innovation 
+(CI) 
+ 
+ E.g.4: Use a pair of compasses and a ruler to perform geometric 
+construction of an angle of 105˚ and measure with a protractor to verify. 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P157 (PDF page 157)
+
+```text
+ 127 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform geometric 
+constructions of the angles 
+(75˚, 105˚, 60˚, 135˚ and 150˚), 
+and construct triangles and 
+find locus of points under 
+given conditions. 
+B8.3.1.2.2: Construct scalene triangles, isosceles triangles, 
+equilateral triangles, obtuse-angled triangle, and acute-angled 
+triangles in different orientations under given conditions. 
+Creativity and Innovation 
+(CI) 
+ 
+E.g.1: Use a pair of compasses and a ruler to construct an equilateral 
+triangle when a side is given and justify why it is an equilateral triangle (i.e. 
+draw the line segment 𝑉𝑉𝑉𝑉 =  6.2𝑎𝑎𝑚𝑚 and use this radius at V and J 
+respectively to strike arcs to intersect in N. Verify the measure of the size of 
+the angle with a protractor)
+```
+
+## P158 (PDF page 158)
+
+```text
+ 128 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate 
+the ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points 
+under given conditions. 
+E.g.2 : Use a pair of compasses and a ruler to construct an equilateral triangle by 
+using point A as a centre and constructing  an arc to meet 𝐴𝐴𝑋𝑋�����⃗ in B, and then using 
+the same radius to inscribe an arc (construct 600angle) at point C and joining A to 
+C and B to C. 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.3: Use a pair of compasses and a ruler to perform geometric construction of 
+an isosceles right-angled triangle when the base line is given.
+```
+
+## P159 (PDF page 159)
+
+```text
+ 129 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate 
+the ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points 
+under given conditions. 
+E.g.4: Use a pair of compasses and a ruler to perform geometric construction of 
+an isosceles triangle when all the sides are given. 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P160 (PDF page 160)
+
+```text
+ 130 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate 
+the ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points 
+under given conditions. 
+E.g.5: Use a pair of compasses and a ruler to perform geometric construction of 
+an isosceles triangle when the base angles and base side are known. 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.6: Use a pair of compasses and a ruler to construct acute-angled triangles, 
+obtuse-angled triangles and right-angled triangles when a side and two angles are 
+given.
+```
+
+## P161 (PDF page 161)
+
+```text
+ 131 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate 
+the ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points 
+under given conditions. 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ E.g.7: Use a pair of compasses 
+and a ruler to construct 
+triangles when all the sides are 
+given. 
+ 
+ 
+i. Draw the line segment LM = 6cm. 
+ii. Taking a radius of 8cm, draw an arc of 
+circle with centre L. 
+iii. Draw another arc of circle with centre M 
+and radius 7cm to intersect the first arc. 
+Name the point of intersection N. 
+iv. Join the point L and N. Join the points M 
+and N. hence triangle MNL is the required 
+triangle.
+```
+
+## P162 (PDF page 162)
+
+```text
+ 132 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points under 
+given conditions. 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.8: Use a pair of compasses and a ruler to construct triangles when two 
+sides and one angle are given 
+In triangle ABC, ∠𝐶𝐶𝐴𝐴𝐴𝐴= 450 , AC =3cm and AB=5cm
+```
+
+## P163 (PDF page 163)
+
+```text
+ 133 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate 
+the ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points 
+under given conditions. 
+B8.3.1.2.3: Construct loci under given conditions including: 
+(i) the locus of sets of points from a fixed point; 
+(ii) the locus of points equidistant from two fixed points;  
+(iii) the locus of points equidistant from two intersecting straight lines, 
+and  
+(iv) the locus of points equidistant from two parallel lines. 
+Creativity and Innovation 
+(CI) 
+ 
+E.g.1: Describe the locus of a circle by tracing the path of a point P which moves 
+in such a way that its distance from a fixed point, say O, is always the same to 
+construct circles.
+```
+
+## P164 (PDF page 164)
+
+```text
+ 134 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate 
+the ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points 
+under given conditions. 
+E.g.2: Perform geometric construction to locate the centre of a circle by locating 
+the intersection of the perpendicular bisectors of any two chords on the circle. 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P165 (PDF page 165)
+
+```text
+ 135 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate 
+the ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points 
+under given conditions. 
+E.g.3: Draw circles of given radii at the points as centre and chord. 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P166 (PDF page 166)
+
+```text
+ 136 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform 
+geometric constructions of 
+the angles (75˚, 105˚, 60˚, 
+135˚ and 150˚), and 
+construct triangles and find 
+locus of points under given 
+conditions. 
+E.g.4: Construct a regular hexagon within a circle given the length of a 
+side 
+Use a pair of compasses and a ruler to construct 
+a hexagon ABCDEF such that |AB| = 6cm. Find 
+the measure of the angles AOB and compare to 
+its value to ∠𝐴𝐴𝐴𝐴𝐴𝐴, ∠𝐶𝐶𝐵𝐵𝐴𝐴, ∠𝐶𝐶𝐵𝐵𝐶𝐶, ∠𝐴𝐴𝐵𝐵𝐴𝐴 𝑎𝑎𝑚𝑚𝑎𝑎 ∠𝐴𝐴𝐵𝐵𝐶𝐶. 
+What is your observation? 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P167 (PDF page 167)
+
+```text
+ 137 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform 
+geometric constructions of 
+the angles (75˚, 105˚, 60˚, 
+135˚ and 150˚), and 
+construct triangles and find 
+locus of points under given 
+conditions. 
+E.g.5 Use intersecting circles to construct a regular hexagon and measure 
+it sides. 
+Perform geometric construction of hexagon ABCDEF using the 
+method of intersecting circles. Take |OA| = 5cm. Measure and 
+compare the sides of the hexagon. Find the measure of the 
+angles AOB and compare to its value to 
+∠𝐴𝐴𝐴𝐴𝐴𝐴, ∠𝐶𝐶𝐵𝐵𝐴𝐴, ∠𝐶𝐶𝐵𝐵𝐶𝐶, 𝐴𝐴𝐵𝐵𝐴𝐴 𝑎𝑎𝑚𝑚𝑎𝑎 ∠𝐴𝐴𝐵𝐵𝐶𝐶. What is your observation?  
+ 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P168 (PDF page 168)
+
+```text
+ 138 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points under 
+given conditions. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.6: Construct a perpendicular bisector (mediator) as a locus and explain 
+why the perpendicular bisector is a locus. 
+The line segment AB is a perpendicular bisector of PQ since line 
+segments AP, AQ, PB, QB are all congruent.  
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P169 (PDF page 169)
+
+```text
+ 139 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform 
+geometric constructions 
+of the angles (75˚, 105˚, 
+60˚, 135˚ and 150˚), and 
+construct triangles and 
+find locus of points under 
+given conditions. 
+Any point on line CD is of equal distance from the two fixed points A and B. 
+ 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P170 (PDF page 170)
+
+```text
+ 140 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform geometric 
+constructions of the angles 
+(75˚, 105˚, 60˚, 135˚ and 150˚), 
+and construct triangles and 
+find locus of points under 
+given conditions. 
+E.g. 7 Construct an angle bisector as a locus of points equidistant from 
+two lines that meet and explain why the angle bisector is a locus. 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P171 (PDF page 171)
+
+```text
+ 141 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.1.2 Demonstrate the 
+ability to perform 
+geometric constructions of 
+the angles (75˚, 105˚, 60˚, 
+135˚ and 150˚), and 
+construct triangles and 
+find locus of points under 
+given conditions. 
+ 
+ 
+ 
+ 
+E.g.8: Construct parallel lines as a locus (i.e. tracing the path of a point 
+say P which moves in such a way that its distance from line BC is always 
+the same).  
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ E.g.9: Perform geometric constructions to prove that two given lines are 
+parallel. 
+Show that two given lines AB and CD are parallel (i.e. locate three points 
+P, Q and R) draw perpendicular to AB at PQ and R to intersect CD at E, F 
+and G respectively.  
+ 
+Measure the lengths of PE, QF, and RG. The perpendicular distance 
+between two parallel lines is the same everywhere.
+```
+
+## P172 (PDF page 172)
+
+```text
+ 142 
+STRAND 3 GEOMETRY AND MEASUREMENT 
+Sub-strand 2: Measurement 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.8.3.2.1 Apply the 
+Pythagoras theorem, the 
+primary trigonometric 
+ratios and the formulas for 
+determining the area of a 
+circle to solve real 
+problems. 
+ 
+B8.3.2.1.1 Use the relationship between the diameter and 
+circumference of a circle to deduce the formula for finding its 
+area, and use this to solve problems. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+E.g.1:  Divide a circle into sectors (minimum of 16) then cut the sectors and 
+arrange to form a rectangle to deduce the area of the circle.  
+Thus, length of the rectangle =  𝜋𝜋𝑜𝑜  width = 𝑜𝑜 
+∴ 𝐴𝐴= 𝜋𝜋𝑜𝑜 × 𝑜𝑜= 𝜋𝜋𝑜𝑜2 
+ 
+ E.g. 2 Solve problems on area of a circle. 
+(i) Find the area of a circle whose radius is 14cm (Take π = 22/7). 
+(ii) Find the area of a semi-circle whose radius is 7cm (Take π = 22/7) 
+(iii) Two circles have a common centre; the small circle has radius 7cm, the 
+big circle has radius 14cm.Find the shaded area. (Take π = 22/7).
+```
+
+## P173 (PDF page 173)
+
+```text
+ 143 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.8.3.2.1 Apply the 
+Pythagoras theorem, the 
+primary trigonometric 
+ratios and the formulas for 
+determining the area of a 
+circle to solve real 
+problems. 
+ 
+B8.3.2.1.2Establish the relationship between the hypotenuse ‘c’ and 
+the two other sides ‘a’ and ‘b’ of a right-angled triangle (i.e. a2 + 
+b2 = c2) and use it to solve problems. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) E.g.1Construct squares on the three sides  
+of a right -angled triangle in a square 
+grid and compare the area of the 
+square on the hypotenuse to the 
+squares on the other two sides to state 
+the relationship between the 
+hypotenuse ‘c’ and the two other sides 
+‘a’ and ‘b’ of a right-angled triangle i.e. 
+a
+2 + b2 = c2 
+ 
+ E.g. 2   Using a pair of compasses and ruler, 
+construct squares on the three sides  of a 
+right-angled triangle and measure the area of 
+the square on the hypotenuse and compare 
+to the squares on the other two sides to state 
+the relationship between the hypotenuse ‘ c’ 
+and the two other sides ‘a’ and ‘b’ of a right-
+angled triangle i.e. a
+2 + b2 = c2.
+```
+
+## P174 (PDF page 174)
+
+```text
+ 144 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.8.3.2.1 Apply the 
+Pythagoras theorem, the 
+primary trigonometric 
+ratios and the formulas for 
+determining the area of a 
+circle to solve real 
+problems. 
+ 
+E.g. 3   Solve problems involving the Pythagoras 
+theorem. 
+i. Determine the missing side marked h in the 
+figure. 
+ii. Find the height AB.  
+ 
+ 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ B8.3.2.1.3 Use the Pythagorean theorem to solve problems on right-
+angled triangle. 
+ 
+E.g.1 An isosceles triangle has equal sides, 6cm long and a base of 4cm 
+long. Find the altitude of the triangle. 
+E.g.2 Find the length of each of the diagrams indicated below: 
+ 
+(i) the length x 
+(ii) the length CB 
+(iii) the longer length
+```
+
+## P175 (PDF page 175)
+
+```text
+ 145 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.8.3.2.1 Apply the 
+Pythagoras theorem, the 
+primary trigonometric 
+ratios and the formulas 
+for determining the area 
+of a circle to solve real 
+problems. 
+ 
+B8.3.2.1.4 Use the Pythagoras theorem to calculate the area of a triangle 
+in real life problems. 
+E.g.1 A boat travels 2m South and then 9m East. How far is the boat from its 
+starting point? 
+E.g.2 Yeboah hangs a picture frame of width 15cm on the wall. The distance 
+from the nail to the edge of the picture frame is 10cm. 
+(i) Find the length of the wire used to hang the picture frame.  
+(ii) Find the area of the triangle. 
+E.g.3   A ladder leans against a vertical wall of height 13m. If the foot of the 
+ladder is 6m away from the wall, calculate the length of the ladder. 
+E.g.4 The length of a side of an equilateral triangle is 12cm. Find 
+i. the height of the triangle 
+ii. the area of the triangle 
+iii. the perimeter of the triangle 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ B8.3.2.1.5 Establish the relationship between the basic trigonometric 
+ratios and solve problems involving right-angled triangles. 
+ E.g.1 Identify and recognise the three primary trigonometric ratios. 
+i. Establish the sine, cosine and tangent of an angle in a right-angled 
+triangle
+```
+
+## P176 (PDF page 176)
+
+```text
+ 146 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.8.3.2.1 Apply the 
+Pythagoras theorem, the 
+primary trigonometric 
+ratios and the formulas 
+for determining the area 
+of a circle to solve real 
+problems. 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ i. Find sin X, cos X  and tan X in the diagram
+```
+
+## P177 (PDF page 177)
+
+```text
+ 147 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.8.3.2.1 Apply the 
+Pythagoras theorem, the 
+primary trigonometric 
+ratios and the formulas 
+for determining the area 
+of a circle to solve real 
+problems. 
+ 
+ii. Write two trig ratios of the angle marked θ in the diagram below: 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ E.g. 2 Explain the angles of elevation and depression in real life situations.
+```
+
+## P178 (PDF page 178)
+
+```text
+ 148 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.8.3.2.1 Apply the 
+Pythagoras theorem, the 
+primary trigonometric 
+ratios and the formulas 
+for determining the area 
+of a circle to solve real 
+problems. 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ E.g.3 Use trig ratios and the Pythagoras theorem to solve problems involving 
+angles of elevation and depression. 
+i. A hunter, on top of a tower, sees a fire at an angle of depression of 30˚. 
+The height of the tower is 18m. What is the distance between the fire 
+and the hunter?  Round off your answer to 2 significant figures.
+```
+
+## P179 (PDF page 179)
+
+```text
+ 149 
+ 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.2.2 Demonstrate 
+understanding of 
+addition and subtraction 
+of vectors and their 
+applications in solving 
+basic problems 
+B8.3.2.2.1 Add, subtract and find the scalar multiplication of vectors in 
+the component form. 
+E.g1 Add vectors using the graphical method. 
+E.g.2 Add and subtract vectors in their corresponding components.   
+If AB  = 
+
+
+
+
+
+
+b
+a
+  and BC  = 
+
+
+
+
+
+
+d
+c
+ 
+then AC  = AB  + BC  
+          = 
+
+
+
+
+
+
+b
+a
+ + 
+
+
+
+
+
+
+d
+c
+ = 
+
+
+
+
+
+
++
++
+db
+ca
+ 
+ 
+If AB  = 
+
+
+
+
+
+
+b
+a
+  and BC  = 
+
+
+
+
+
+
+d
+c
+ 
+then AC  = AB  - BC  
+              = 
+
+
+
+
+
+
+b
+a
+ - 
+
+
+
+
+
+
+d
+c
+ = �𝑎𝑎− 𝑎𝑎
+𝑎𝑎− 𝑎𝑎� 
+E.g3 Multiply a vector by a scalar      k�𝑥𝑥
+𝑦𝑦�=k�𝑘𝑘𝑥𝑥
+𝑘𝑘𝑦𝑦� 
+E.g.4 If p=�−1
+2 � , q=�4
+3� , and r=� 3
+−2�, find (i) 3q-2p    (ii) r-3p  (ii) q-p+2r 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P180 (PDF page 180)
+
+```text
+ 150 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.2.2 Demonstrate 
+understanding of 
+addition and subtraction 
+of vectors and their 
+applications in solving 
+basic problems 
+B8.3.2.2.2 Demonstrate understanding of vector equality. 
+E.g.1 Investigate the properties of equal vectors. 
+i. If a=�3
+5� ,b=�7
+2
+� and c=�−3
+−4�, Caculate |𝑝𝑝|, if p=a+ ½(b-c) 
+ii. If M = N, find the value of x and y given that  M=�𝑥𝑥−2
+𝑥𝑥−𝑦𝑦�  and  N=� 1
+2𝑥𝑥−1� 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P181 (PDF page 181)
+
+```text
+ 151 
+STRAND 3: GEOMETRY AND MEASUREMENT 
+Sub-strand 3: Position and Transformation 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.3.1 Perform a 
+single transformation 
+(i.e. rotation) on a 2D 
+shape using graph 
+paper (including 
+technology) and 
+describe the properties 
+of the image under the 
+transformation (i.e. 
+congruence) 
+B8.3.3.1.1 Understand rotation and identify real-life situations involving 
+rotation. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Digital Literacy (DL) 
+ 
+ 
+ 
+ 
+E.g.1. Identify examples of rotation situations in everyday life and the nature of 
+rotational movements as clockwise and anti-clockwise.
+```
+
+## P182 (PDF page 182)
+
+```text
+ 152 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.3.3.1 Perform a 
+single transformation 
+(i.e. rotation) on a 2D 
+shape using graph 
+paper (including 
+technology) and 
+describe the properties 
+of the image under the 
+transformation (i.e. 
+congruence) 
+B8.3.3.1.2 Draw rotation image in a coordinate plane and determine the angle 
+of rotation. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Digital Literacy (DL) 
+ 
+E.g. 1. Rotate a shape through a given centre of rotation and angle of rotation using 
+rotation rules. 
+E.g. 2. Determine the angle of rotation using the points of an object, its images and 
+centre. 
+ 
+ B8.3.3.1.3 Investigate the concept of congruent shapes. 
+E.g. 1. Use multiple and varied examples of rotation on coordinate planes to verify 
+congruent shapes based on their properties. 
+ 
+  
+i. State the object points and its corresponding image points under a given rotation. 
+ii. Draw points of shapes under a clockwise or anti-clockwise rotation through a given angle 
+about the origin (90º, 180º, 270º).
+```
+
+## P183 (PDF page 183)
+
+```text
+ 153 
+STRAND 4: HANDLING DATA 
+Sub-strand 1: Data  
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.1.1 Select, justify, and 
+use appropriate methods 
+to collect data 
+(quantitative and 
+qualitative), use the data 
+(grouped/ungrouped) to 
+construct and interpret 
+frequency tables, bar 
+charts, pie charts, and 
+pictograms to solve and/or 
+pose problems. 
+B8.4.1.1.1 Identify types of given data including numerical, categorical, 
+ungrouped and grouped data 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+ 
+E.g. 1 Discuss, in small groups, information collected in the process of 
+investigation which may be numeric. 
+i. Numeric (and discrete): the number of Nissan cars sold by Japan 
+Motors, Ghana in a year; the number of children in a family; the 
+number of learners in B8 class. 
+ii. Numeric (and continuous): the weights of babies in a crèche (e.g. 
+4.5kg) which contains fractional values. 
+E.g. 2 Discuss (in groups)information collected in the process of investigation 
+which may be non-numeric. 
+i. Non-numeric (cannot be quantified): sex (male or female); income 
+group, movie type, age group, marital status, boxers’ weight class, etc. 
+ii. Sort out the examples of the non-numeric information in (i) with values 
+that can be put on ordinal scale (boxers’ weight class; age group) 
+iii. Sort out the examples of the non-numeric information in (i) that can be 
+put into categories (Categorical data):  sex (male or female); marital 
+status; income group, etc. 
+ E.g. 3 
+i. The scores for 11 learners in a class test are 25, 30, 35, 40, 45, 26, 29, 
+50, 45, 37 and 47(these individual scores are not grouped in any 
+way). 
+ii. Find out those in the group 25 to 35 (i.e. 5) and those in the group 36 
+to 50 (i.e. 6)Data is now grouped.
+```
+
+## P184 (PDF page 184)
+
+```text
+ 154 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.1.1 Select, justify, and 
+use appropriate methods 
+to collect data 
+(quantitative and 
+qualitative), use the data 
+(grouped/ungrouped) to 
+construct and interpret 
+frequency tables, bar 
+charts, pie charts, and 
+pictograms to solve and/or 
+pose problems. 
+B8.4.1.1.2 - Select and justify a method to collect data (quantitative and 
+qualitative) to answer a given question. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+E.g. 1- To study how eating cream crackers affects one’s output of work 
+(productivity), identify which method can be used to gather the facts 
+for each of the following situations. (i.e. refer to methods stated in 
+E.g. 2 of B7.4.1.1.1) 
+i. Will eating twice a person's normal number of cream crackers 
+increase their productivity?  
+ii. Are people who eat more cream crackers more productive? 
+iii. Does a group of students study better when cream crackers are 
+present or absent? 
+ E.g. 2 -Select any study to be undertaken and design an appropriate form to 
+be used in collecting data.
+```
+
+## P185 (PDF page 185)
+
+```text
+ 155 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.1.1 Select, justify, and 
+use appropriate methods 
+to collect data 
+(quantitative and 
+qualitative), use the data 
+(grouped/ungrouped) to 
+construct and interpret 
+frequency tables, bar 
+charts, pie charts, and 
+pictograms to solve and/or 
+pose problems. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B8.4.1.1.3 - Organise data (grouped/ungrouped), present it in frequency 
+tables, line graphs, pie graphs, bar graphs and/or pictographs 
+(representations include info graphics, waffle diagrams, box and 
+whisker plots and stem and leaf plots) and analyse it to solve 
+and/or pose problems. 
+ 
+E.g. 1The following set of raw data shows the lengths, in millimetres, 
+measured to the nearest mm, of 40 leaves taken from plants of a 
+certain species.  
+40 54 25 50 58 45 47 49 30 28 
+52 31 52 41 47 44 46 39 51 59 
+49 38 43 48 43 43 40 51 40 56 
+31 53 44 37 35 37 33 38 46 36 
+(i) Copy and complete the frequency distribution table below, using the data 
+set above. 
+Lengths 
+(mm) Tally Frequency 
+25 – 29   
+30 – 34   
+35 - 39   
+40 – 44   
+45 – 49   
+50 – 54   
+55 - 59   
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL)
+```
+
+## P186 (PDF page 186)
+
+```text
+ 156 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.1.1 Select, justify, and 
+use appropriate methods 
+to collect data 
+(quantitative and 
+qualitative), use the data 
+(grouped/ungrouped) to 
+construct and interpret 
+frequency tables, bar 
+charts, pie charts, and 
+pictograms to solve and/or 
+pose problems. 
+ 
+E.g. -2 A cleaner of a small office spent GH₵120 of his salary on food; 
+GH₵80 on rent; GH₵40 on clothing, GH₵110 on transport and saved 
+GH₵50. Organise the data and draw (i) a bar chart and (b) a pie 
+chart to represent the data. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+E.g. -3 – The waffle chart (i.e. a 10 X 10 cell grid in which each cell 
+represents a percentage point summing up to total 100%) shows that 
+the average score obtained by B7 learners in a mathematics test 
+conducted, is 64%. 
+i. Read and record the average scores obtained by B8, B9 and B10. 
+ 
+ii. In a mathematics quiz Cordei scored 75%, Kofi scored 80%, Maama 
+scored 35%, Kpakpo scored 70% and Adjoa scored 50%. 
+Draw a waffle chart to represent the data.
+```
+
+## P187 (PDF page 187)
+
+```text
+ 157 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.1.1 Select, justify, and 
+use appropriate methods 
+to collect data 
+(quantitative and 
+qualitative), use the data 
+(grouped/ungrouped) to 
+construct and interpret 
+frequency tables, bar 
+charts, pie charts, and 
+pictograms to solve and/or 
+pose problems. 
+ 
+E.g. 4 Make a stem and leaf plot (a stem-and-leaf display or stem-and-leaf 
+plot is a method for presenting quantitative data in a graphical format 
+to assist in visualizing the shape of a distribution and giving a great 
+idea about the distribution of the data.) 
+i. The data below are scores for 14 B8 
+learners in a test graded out of a 
+maximum of 100. Make a stem and leaf 
+plot to represent the data. 
+ 
+(Note that though there are no scores 
+for 30s and 40s, 0s should not be put 
+against stem 3 and stem 4.those spaces 
+must be left blank. However, 0 should 
+be put against 8 for 80) 
+ii. From the plot, what can we say 
+about the performance of the 14 B8 
+learners? 
+Where: 
+ 
+ 
+stem leaf  
+2 3  23 
+7 112  71, 71,72 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL)
+```
+
+## P188 (PDF page 188)
+
+```text
+ 158 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g. 5 – The stem and leaf plot shows the scores 
+obtained by learners in a test. Use it to 
+answer the following questions: 
+i. What are the scores? Write them in 
+ascending order. 
+ii. What is the mode of the scores? 
+iii. What is the median of the scores? 
+ 
+ 
+B8.4.1.2 Demonstrate an 
+understanding of 
+measures of central 
+tendency (mean, 
+median, mode) and 
+range for grouped data 
+and explain when it’s 
+most appropriate to use 
+the mean, median, or 
+mode. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B8.4.1.2.1 Calculate the mean, median and mode for a given set of 
+ungrouped data, and explain why these values may be the same or 
+different. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+E.g. 1 The bar graph on the right shows the sales of a small business from 
+Monday to Friday. Calculate the mean, median and mode for amounts 
+collected during the period and explain your findings (i.e. why the values 
+are the same). 
+  
+1
+0
+50
+100
+150
+200
+250
+300
+350
+Sales Collected (GH₵)
+Mon
+Tue
+Wed
+Thu
+Fri
+```
+
+## P189 (PDF page 189)
+
+```text
+ 159 
+ONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.1.2 Demonstrate an 
+understanding of 
+measures of central 
+tendency (mean, 
+median, mode) and 
+range for grouped data 
+and explain when it’s 
+most appropriate to use 
+the mean, median, or 
+mode. 
+ 
+E. g. 2 The table below shows the area of the sitting room floors of each of 7 real-
+estate houses (A, B C, …) in Kwashi man 
+Houses A B C D E F G 
+Area 
+(m2) 22 24 26 30 48 30 30 
+i. In small groups, work out the mean, median, mode.  
+ii. Draw a bar chart to represent the data collected, and 
+iii. Explain why the values are the same.  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+ E.g. 3. The table below shows the occurrence of the data values from 1 to 7 and 
+is represented by the corresponding bar graph. 
+ 
+ 
+i. Calculate the mean, median, mode. 
+ii. Locate them on the corresponding graph. 
+iii. Explain why the values are different. 
+ 
+ 
+Data Value Frequency 
+1 1 
+2 11 
+3 5 
+4 4 
+5 2 
+6 1 
+7 1 
+ 
+1 2 3 4 5 6 7
+0
+5
+10
+15
+DATA VALUE
+FREQUENCY
+```
+
+## P190 (PDF page 190)
+
+```text
+ 160 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.1.2 Demonstrate an 
+understanding of 
+measures of central 
+tendency (mean, 
+median, mode) and 
+range for grouped data 
+and explain when it’s 
+most appropriate to use 
+the mean, median, or 
+mode. 
+ 
+B8.4.1.2.2Justify a context in which the mean, median or mode is the most 
+appropriate measure of central tendency to use when reporting 
+findings. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+E.g.1 Kojo’s says his taxi makes a number of trips each day as shown in the table 
+below: 
+Monday Tuesday Wednesday Thursday Friday Saturday Sunday 
+8 6 10 10 9 10 3 
+i. Calculate the mean, median and mode for Kojo’s trips for the week 
+ii. Which measure of central tendency best represents or describes the number 
+of trips that Kojo makes each day? 
+iii. Justify the choice of central tendency in (ii).
+```
+
+## P191 (PDF page 191)
+
+```text
+ 161 
+STRAND 4: HANDLING DATA 
+Sub-strand 2: Chance or Probability 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.2.1 Identify the sample 
+space for a probability 
+experiment involving two 
+independent events and 
+express the probabilities of 
+given events as fractions, 
+decimals, percentages 
+and/or ratios to solve 
+problems. 
+B8.4.2.1.1.Perform a probability experiment involving two independent 
+events such as drawing coloured bottle tops from a bag with 
+replacement and list the elements of the sample space 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Cultural Identity and 
+Global Citizenship (CG) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ 
+E.g. 1In an experiment, Emmanuel was asked to pick one bottle top from a 
+bag, three times, which contains 3 red, 2 green and 1 pink bottle tops. 
+i. List the elements of the sample space of the events. 
+ii. The sample space of the event of picking a red bottle top, R, with 
+replacement is? 
+iii. The probability of picking a red bottle top is ………….  
+ E.g. 2 Consider the following two events: (a) throwing of a fair six-sided die 
+and (b) tossing a fair coin  
+i. What is the sample space for (a) and for (b)? 
+ii. Does the occurrence of event (a) affect the occurrence of event (b)? 
+iii. What is the probability of an even number showing up in (a)? What is 
+the probability of a head showing up in (b)? 
+iv. What is the relationship between the two events? 
+ E.g. 3 Ampofo and Serwa are two learners from a school. Ampofo walks to 
+school daily and Serwa travels to school on a bus daily. 
+i. Does the event of Ampofo affect that of Serwa? 
+ii. Can the two events occur together?
+```
+
+## P192 (PDF page 192)
+
+```text
+ 162 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.2.1 Identify the sample 
+space for a probability 
+experiment involving two 
+independent events and 
+express the probabilities of 
+given events as fractions, 
+decimals, percentages 
+and/or ratios to solve 
+problems. 
+B8.4.2.1.2. Express the probabilities of the events as fractions, 
+decimals, percentages and/or ratios. e.g.by using a tree diagram, 
+table or other graphic organiser.  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+E.g. 1The arrow on the spinner if spun twice and the 
+number of wins recorded; 
+i. identify the sample space. 
+ii. calculate the probability of a win P(W) and the 
+probability of a lose, P(L). 
+iii. copy and complete the probability tree diagram 
+below that represents the events, i.e. the 
+1
+st and 2nd spins. 
+iv. express the probabilities stated on the 
+branches in decimals, percentages and 
+ratios. 
+ 
+ E.g. 2-A box contains 3 blue pens and 4 pink pens. A pen is taken from the 
+box, its colour noted, and then replaced. Another pen is taken and its colour 
+noted.  
+i. What is the sample space of the 1
+st and the 2nd trials? 
+ii. Draw a probability tree diagram to represent the event.
+```
+
+## P193 (PDF page 193)
+
+```text
+ 163 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B8.4.2.1 Identify the sample 
+space for a probability 
+experiment involving two 
+independent events and 
+express the probabilities of 
+given events as fractions, 
+decimals, percentages 
+and/or ratios to solve 
+problems. 
+E.g. 2 A die is thrown at most three times. If 6 is scored the game stops.  
+i.  Copy and complete the probability tree diagram. 
+ii. Explain why some of the branches of the tree diagram have 
+disappeared.  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+Cultural Identity and 
+Global Citizenship (CG)
+```
+
+## P194 (PDF page 194)
+
+```text
+ 164 
+ 
+ 
+ 
+BASIC 9
+```
+
+## P195 (PDF page 195)
+
+```text
+ 165 
+STRAND 1: NUMBER 
+Sub-strand 1: Number and Numeration System 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.1.1 Apply the 
+understanding of place 
+value in solving real life 
+problems involving 
+integers of any size, 
+rounding this to given 
+decimal places and 
+significant figures  
+B9.1.1.1.1 Express integers to a given number of significant and decimal 
+places  
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ 
+E.g.1. Express integers to a number of significant figures. 
+(i) 857,386,321 
+-five significant figures  
+-four significant figures 
+-three significant figures. 
+E.g.2. Express decimal numbers to a given number of decimal places. 
+(i) Write 98745.9674 correct to 
+-three decimal places 
+-two decimal places 
+-one decimal place 
+B9.1.1.1.2. Use knowledge and understanding of place value to solve 
+real life problems  
+E.g.1. Create and solve a real-life problem or a story problem and write the 
+answer in standard form. 
+ 
+(I) I am a 6-digit number. My first digit is 5 more than the last digit, but 2 less 
+than my second digit. My second digit is the third multiple of 3, while my 
+fourth digit is the second multiple of 3. My third digit is the quotient when the 
+fourth digit is divided by my last digit. However, my fourth and fifth digits are 
+consecutive numbers. What number am I?
+```
+
+## P196 (PDF page 196)
+
+```text
+ 166 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ Think second digit:   3x3=9 
+fourth digit:    2x3=6 
+first digit:        9-2=7 
+last digit:        7-5=2 
+fifth digit:        6-1=5 
+third digit:      6 
+So, the number is 793652 = 7.93652 x 105 
+ 
+E.g.2 Create similar real story problems and solve  
+B9.1.1.2 Demonstrate an 
+understanding of the 
+relationship between 
+members of the rational 
+number system and solve 
+real life problems involving 
+union and intersection of 
+three sets 
+B9.1.1.2.1 Solve problems on relationship between members of the 
+rational number system using knowledge and understanding 
+of the concept of union and intersection of two sets. 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+ 
+E.g. 1 Use sets diagrams to show the relationship among the Real 
+numbers namely 
+-Irrational numbers (QI) 
+-Rational numbers (Q) 
+- Integers (Z) 
+-Whole numbers (W) 
+-Natural or Counting numbers 
+(N)
+```
+
+## P197 (PDF page 197)
+
+```text
+ 167 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.1.2 Demonstrate an 
+understanding of the 
+relationship between 
+members of the rational 
+number system and solve 
+real life problems involving 
+union and intersection of 
+three sets 
+E.g. 2 Write the factors of 12 and 15 and represent them on a Venn diagram.  
+12={1, 2, 3, 4, 6, 12}  
+15={1, 3, 5, 15} 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+ B9.1.1.2.2 Apply the concept of sets to solve problems on relationship 
+between members of rational number system and solve real life 
+problems involving union and intersection of two sets 
+ 
+ E.g.1 Create and solve real life problems to show the union and intersection of 
+two sets.  
+ 
+i. There are 80 farmers in a certain village who grow either maize or beans. 
+Fifty of them grow beans while sixty grow maize. If each farmer grows at 
+least one of the two crops, represent the information on a Venn diagram and 
+hence find the number of farmers who grow: 
+a. both crops. 
+b. only one crop.
+```
+
+## P198 (PDF page 198)
+
+```text
+ 168 
+STRAND 1: NUMBER 
+Sub-strand 2: Number Operations 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.9.1.2.1 Apply mental 
+mathematics and 
+properties to determine 
+answers for addition and 
+subtraction of basic 
+facts. 
+B9.1.2.1.1 Multiply and divide given numbers by powers of 10 including 
+decimals and benchmark fractions  
+Creativity and Innovation 
+(CI) 
+ 
+E.g.1. Recall multiplication facts up to 144 and related division facts. 
+E.g.2. Recall decimal names of given benchmark fractions converted to decimals 
+or percentages (and vice versa)  
+E.g. 3.   Find the product of a given decimal number when it is multiplied by 10, 
+100, 1000, 
+1
+10 ,
+1
+100,  
+1
+1000, etc.  
+ B.9.1.2.1.2 Demonstrate the ability to determine commutative properties of 
+addition and multiplication.  
+E.g1. Recognise that for any two numbers a and b; 
+ 
+i. a + b = b + a  
+              i.e. 25 + 32 = 32 + 25 = 57 
+ii. a × b = b × a  
+i.e.  17 × 8 = 8 × 17 = 136 
+B9.1.2.1.3 Use the associative property of addition and multiplication. 
+ E.g1. Recognise that for any three numbers a, b and c; 
+ 
+i. a + (b + c) = (a + b) + c 
+or a + (b + c) = (a + c) + b 
+  i.e. 15 + (6 + 9) = (15 + 6) + 9 = 30 
+ii. (a × b) × c = a × (b × c) 
+i.e. (12 × 5) × 4 = 12 × (5 × 4) = 240
+```
+
+## P199 (PDF page 199)
+
+```text
+ 169 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ 
+ 
+B9.1.2.1.4 Use the distributive property in solving problems.  
+E.g1. Recognise that for any three numbers a, b and c; 
+i. a × (b + c) = (a × b) + (a × c) 
+i.e. 5 × (10 + 7) = (5 × 10) + (5 × 7) = 85 
+ 
+ii. a × (b - c) = (a × b) - (a × c) 
+i.e. 5 × (10 - 7) = (5 × 10) - (5 × 7) = 15 
+ 
+B9.1.2.2 Apply the 
+understanding of 
+addition, subtraction, 
+multiplication and 
+division of decimal 
+numbers to solve 
+problems, and round 
+answers to given decimal 
+places and significant 
+figures 
+B9.1.2.2.1 Solve operations involving addition, subtraction, multiplication 
+and division using word problems. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+E.g. Create and solve story problems involving a combination of two or more of the 
+basic operations. 
+(×, ÷, ─,+). 
+i)  A trader sells oranges from two baskets, A and B. Basket A contained 85 
+oranges and she sold 48. She sold 59 oranges from basket B and was left with the 
+same number of oranges as in Basket A. How many oranges were originally in 
+Basket B? 
+ B9.1.2.2.2 Solve word problems involving the four basic operations and 
+round the answers to the nearest two decimal figures or to some 
+significant figures. 
+ 
+ii) The price of a jacket is three times that of a shirt. The price of a jacket is 
+GH₵560.65. Mr Mensa bought two of the jackets and four shirts for his twin sons. 
+Calculate the total amount Mr Mensa paid for the items, correct your answer to: 
+ 𝛼𝛼) two decimal places 
+ 𝛽𝛽)three significant figures
+```
+
+## P200 (PDF page 200)
+
+```text
+ 170 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.2.4 Demonstrate 
+understanding of surds as 
+real numbers, the process of 
+adding and subtracting of 
+surds as well as determining 
+(using a calculator) the 
+approximate square root of a 
+number that is not a perfect 
+square. 
+B9.1.2.4.1 Identify simple and compound surds. Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+E.g.  
+i. √2, ii. 7√3,     iii.  2√5 
+ 
+iv. (√3 + √7 − √5) 
+B9.1.2.4.2 Explain the identities/rules of surds  
+Rule 1 
+√𝑎𝑎× 𝑎𝑎 = √𝑎𝑎× √𝑎𝑎 
+ 
+Rule 2 
+√𝑎𝑎
+𝑎𝑎  = √𝑎𝑎
+√𝑎𝑎
+ 
+ 
+Rule 3 
+𝑎𝑎
+√𝑎𝑎 = 𝑎𝑎
+√𝑎𝑎× √𝑎𝑎
+√𝑎𝑎= 𝑎𝑎√𝑎𝑎
+𝑎𝑎 
+ 
+ 
+Rule 4 
+𝑎𝑎√𝑎𝑎± 𝑎𝑎√𝑎𝑎= (𝑎𝑎± 𝑎𝑎)√𝑎𝑎 
+ 
+Rule 5 
+𝑎𝑎
+𝑎𝑎+ 𝑎𝑎√𝑚𝑚= 𝑎𝑎
+𝑎𝑎+ 𝑎𝑎√𝑚𝑚× 𝑎𝑎− 𝑎𝑎√𝑚𝑚
+𝑎𝑎− 𝑎𝑎√𝑚𝑚 
+ 
+Rule 6 
+𝑎𝑎
+𝑎𝑎− 𝑎𝑎√𝑚𝑚
+= 𝑎𝑎
+𝑎𝑎− 𝑎𝑎√𝑚𝑚× 𝑎𝑎+ 𝑎𝑎√𝑚𝑚
+𝑎𝑎+ 𝑎𝑎√𝑚𝑚 
+ 
+ 
+ B9.1.2.4.3 Simplify given surds ) 
+ E.g.1 Simplify: 
+i.           √27 
+ 
+i. √72 
+ 
+ii. √8
+16 
+ 
+iii. √12
+121 
+ 
+iv. (√2)2
+```
+
+## P201 (PDF page 201)
+
+```text
+ 171 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.2.4 Demonstrate 
+understanding of surds as 
+real numbers, the process 
+of adding and subtracting 
+of surds as well as 
+determining (using a 
+calculator) the approximate 
+square root of a number 
+that is not a perfect square. 
+B9.1.2.3.4 Approximate the square roots of non-perfect squares with 
+calculators/tables. 
+E.g.1 Square roots of non-perfect squares 
+i. √2 
+ii. √5 
+iii. √12 
+iv. √30 
+Personal Development 
+and Leadership (PL) 
+ 
+Cultural Identity and 
+Global Citizenship (CG)
+```
+
+## P202 (PDF page 202)
+
+```text
+ 172 
+STRAND 1: NUMBER 
+Sub-strand 3:  Fractions, Decimals and Percentages 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.3.1 Apply the 
+understanding of 
+operations on fractions to 
+solve problems involving 
+fractions of given 
+quantities and round the 
+results to given decimal 
+and significant places 
+B9.1.3.1.1 Review fractions and solve problems involving basic operations 
+on fractions  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC)  
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+E.g. 1.  Review the concept of fraction. 
+     
+     
+     
+i. Shade the fraction of squares in the rectangle that is equal to the shaded 
+portion of the circle.  
+ii. Write down 3 fractions equivalent to 
+2
+5 
+iii. Express the fraction 
+15
+10
+ in its simplest form: 
+15
+10
+ 
+iv. Express  
+12
+5 as a mixed number: 
+12
+5  
+v. Express 2
+5
+9as an improper fraction: 2
+5
+9 
+ E.g. 2.  Review the basic operations on fractions. 
+i. Adding and subtracting fractions: Work out answers to the following: 
+a) 
+3
+4
++  
+7
+8
+ b) 1
+1
+2
++
+4
+5
+−
+5
+6
+ 
+ii. Multiplying and dividing fractions. Work out answers to the following: 
+a) 
+2
+3
+ × 
+3
+4
+−
+3
+8
+ b) 
+5
+8
+ ÷ 2
+1
+2
++
+2
+3
+```
+
+## P203 (PDF page 203)
+
+```text
+ 173 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.3.1 Apply the 
+understanding of 
+operations on fractions 
+to solve problems 
+involving fractions of 
+given quantities and 
+round the results to 
+given decimal and 
+significant places 
+B9.1.3.1.2 Add and/or subtract, multiply and/or divide given fractions, using 
+the principle of order of operations including the use of the BODMAS 
+or PEMDAS rule, and apply the understanding of these to solve 
+problems. 
+E.g. 1.  Use the order of operations (BODMAS or PEDMAS) to simplify whole 
+number expressions with more than two operations. PEDMAS is 
+Parenthesis, Exponents, Multiply/Divide (going from left to right)and 
+Add/subtract (going from left to right). 
+i. 34 ÷ 32 + 40 – 23 × 32 ÷ 9 
+ii. 18 ÷ 6 × (4 - 3) + 6  
+iii. 18 ÷ 32 × (4 - 3) × 10  
+Creativity and 
+Innovation (CI) 
+ 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ 
+ E.g. 2.  Use the order of operations (BODMAS or PEDMAS) to simplify fractions 
+with more than two operations. 
+a) 
+2
+3 × 
+3
+4
+−
+5
+8
+÷ 2
+1
+2
+ 
+b) 
+3
+4
+ ÷  
+3
+8
++ (
+4
+5
+−
+1
+2
+) 
+c) (
+3
+4
++  
+5
+8
+) ×
+4
+11−
+1
+2
+```
+
+## P204 (PDF page 204)
+
+```text
+ 174 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.3.1 Apply the 
+understanding of 
+operations on fractions 
+to solve problems 
+involving fractions of 
+given quantities and 
+round the results to 
+given decimal and 
+significant places 
+B9.1.3.1.3.  Review word problems involving basic operations on fractions. Creativity and 
+Innovation (CI) 
+ 
+ 
+Cultural Identity and 
+Global Citizenship (CG) 
+ 
+E.g. 1.  Solve word problems based on fractions. 
+i. A test is made up of 20 questions, how many questions must you 
+answer correctly to get a score of 80%?  
+ii. By what percentage was a television set reduced if it was marked 
+GH₵2,250 and sold for GH₵2,025? 
+iii. In an election involving two contestants, one candidate claimed 52% of 
+the votes, while the other candidate claimed 2,681 votes. If 5000 
+people voted, how do you know the election results are invalid? 
+iv. Esi and Fusena prepared orange drink by mixing orange squash and 
+water. Esi’s drink was made of 
+3
+8 orange squash and Fusena’s was 
+made up of  
+2
+5
+ orange squash. Whose drink tasted stronger of orange?
+```
+
+## P205 (PDF page 205)
+
+```text
+ 175 
+STRAND 1: NUMBER 
+Sub-strand 4:  Number: Ratios and Proportion 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.4.1 Apply the 
+understanding of ratio, 
+rate and proportions to 
+solve problems that 
+involve rates, ratios, and 
+proportional reasoning 
+and use it to solve real-
+world mathematical 
+problems. 
+B9.1.4.1.1 Represent proportional relationships by equations. Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+E.g.1 If total cost (t) is proportional to the number of items (n) purchased at a 
+constant price (p), the relationship between the total cost and the number of items 
+can be expressed as t = pn. 
+B9.1.4.1.2 Use proportional relationships to solve multistep ratio and percent 
+problems, examples: simple interest, tax, discount and commissions, NHIL, 
+depreciation, insurance, etc. 
+E.g.1 Solve problems on simple interest. 
+ 
+i. A girl deposited GH₵ 4500 at the bank at a rate of 3% per annum for three 
+years. Find the simple interest. What is the amount at the end of the fifth 
+year? 
+ 
+ 
+E.g.2 Solve problems on tax (VAT). 
+ 
+i. The VAT rate of Ghana is 12.5%. A man bought an item at GH₵ 4500.00, 
+VAT inclusive. Calculate: 
+b) the basic cost of the item. 
+c) the VAT paid by the man. 
+ 
+ E.g.3 Solve problems on discount. 
+i. If a car costs GH₵ 80,500.00,what is its new value if there is a discount of 
+10%? 
+ 
+E.g.4 Solve problems on commission. 
+ii. A car agent’s commission on the sale of a car is 3
+1
+2%. Calculate the 
+commission on a car sold for GH₵68,000.00.
+```
+
+## P206 (PDF page 206)
+
+```text
+ 176 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.4.1 Apply the 
+understanding of ratio, 
+rate and proportions to 
+solve problems that 
+involve rates, ratios, and 
+proportional reasoning 
+and use it to solve real-
+world mathematical 
+problems. 
+E.g.5 solve problems involving depreciation. 
+The value of a mobile phone depreciates at the following rate: 
+ 
+Year of 
+manufacture 
+Depreciation on 
+the original value 
+In the first year  5% 
+In the second year 10% 
+In the third year 15% 
+In the fourth year  22% 
+ 
+The original value of the mobile phone is GH₵ 1800.00. Find the value of the mobile 
+phone at the end of each of the first four years.  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ E.g.6 Solve problems involving NHIL. 
+ 
+i. The NHIL inclusive price of a television set is GH₵1200.00. If the NHIL is charged at a 
+rate of 2.5%, find  
+b) the cost of the television set (NHIL exclusive). 
+c) the NHIL charged. 
+ 
+ E.g.7 Solve problems involving insurance. 
+ 
+i. Kofi Mereku insured his house and paid a premium of GH₵ 30,000.00. If the insurance 
+company fixed the rate at 5% of the value of the house, calculate the insured value of 
+the house. 
+ 
+ B9.1.4.1.3 Use knowledge of rates and proportional reasoning to solve problems 
+involving SSNIT benefits and contributions. 
+ 
+E.g.1 Describe the obligations of the employer/employee and the contribution rates. 
+ Act 766 PNDC Law 247 
+Employer 13.0% of basic salary 12.5 of basic salary 
+Worker 5.5% of basic salary 5.0% of basic 
+salary 
+Total 18.5% of basic salary 17.5% of basic 
+salary
+```
+
+## P207 (PDF page 207)
+
+```text
+ 177 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.4.1 Apply the 
+understanding of ratio, 
+rate and proportions to 
+solve problems that 
+involve rates, ratios, and 
+proportional reasoning 
+and use it to solve real-
+world mathematical 
+problems. 
+E.g.2 Calculate employee/employer contributions to SSNIT under Act 766. 
+ 
+               A worker’s basic monthly salary is GH₵3,256.50. 
+ 
+b. Calculate the SSNIT contributions under Act 766; 
+ 
+i) by the employer 
+ii) by the employee 
+ 
+What is the total SSNIT contributions at the end of every month? 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ E.g.3 Calculate employee/employer contributions to SSNIT under PNDCL 247. 
+ 
+Mr Bediako’s monthly SSNIT contribution under PNDCL 247 is GH₵440.54. How much 
+does his employer contribute to SSNIT on his salary? Hence, calculate his basic salary per 
+month.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.4 Calculate employee benefits from SSNIT under Act 766. 
+ 
+The table shows the pension rights for SSNIT contributors under Act 766 
+ 
+Years of 
+contributions 15 16 17 18 …  30 31 32 …  35 
+Pension 
+Rights (%) 37.500 38.625 39.750 40.875 … 54.375 55.500 56.625 … 60.000 
+ 
+a. Mr Addai retired at age 60 last year after working and contributing for 20years. If the 
+average of his best salary for 3 years (36 months) over the 20-year period was 
+GH₵15,000.00, calculate his full pension under the National Pension Act 2008, (Act 
+766).  
+ 
+Calculation for full pension 
+Qualifying age = 60years 
+Average best 3years’ salary = GH₵15,000 
+Pension right for 20years = 43.13% (refer to the table on Pension Rights above) 
+ 
+Annual pension to Mr. Addai = 43.13/100 × 15,000
+```
+
+## P208 (PDF page 208)
+
+```text
+ 178 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.1.4.1 Apply the 
+understanding of ratio, 
+rate and proportions to 
+solve problems that 
+involve rates, ratios, and 
+proportional reasoning 
+and use it to solve real-
+world mathematical 
+problems. 
+ 
+                                           = GH₵6,469.50 
+ 
+Monthly pension to Mr Addai = 
+GH₵6,469.5
+12  
+ 
+=GH₵ 539.13 
+b. A worker contributed for 7
+1
+2years before being rendered incapacitated. If the best 
+salary for over the 3-year (36 months) period was GH₵ 8,450.40, calculate the 
+invalidity benefit for the worker. 
+ 
+c. Mr Mensah’s total SSNIT contribution stood at GH₵ 112,426.29 at the time of his 
+demise. Calculate his survivor’s benefit if the current interest rate is 15%. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ E.g.5 Calculate employee benefits from SSNIT under PNDCL 247.  
+ 
+The table shows the pension rights for SSNIT contributors under PNDCL 247. 
+Years of 
+contributio
+ns 
+20 21 22 23 24 25 26 27 28 29 30 …  40 & 
+abov
+e 
+Pension 
+Rights (%) 
+50.
+0 
+51.
+5 
+53.
+0 
+54.
+5 
+56.
+0 
+57.
+5 
+59.
+0 
+60.
+5 
+62.
+0 
+63.
+5 
+65.
+0 
+ 80.0 
+ 
+Mr Bema, a history teacher at Academicals Senior High School, retired in 2009 after 25 
+years of service. Throughout this 25-year period he had been an active contributor to the 
+SSNIT Pension Scheme. As the student who has learnt about social security, you are to 
+help Mr Bema to calculate his annual pension using his best three years’ salary of 
+GH₵19,500.  
+ 
+Calculation for full pension 
+Qualifying age = 60years 
+Average best 3years’ salary = GH₵19,500 
+Pension right for 25years = 57.5% (refer to the table on Pension Rights above) 
+ 
+Annual pension to Mr. Bema = 
+57.5
+100  ×  GH₵19,500 =
+GH₵11,212.5
+12  = 𝐆𝐆𝐆𝐆₵𝟗𝟗𝟑𝟑𝟓𝟓. 𝟑𝟑𝟖𝟖
+```
+
+## P209 (PDF page 209)
+
+```text
+ 179 
+ 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ B9.1.4.1.4 Recognise and graph proportional relationships, interpreting the 
+unit rate as the slope of the graph and use these to solve problems.  
+Digital Literacy (DL) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+ 
+ 
+ 
+E.g.1The graph below shows the cost of avocados. 
+ 
+The unit rate, from the data, is ₵1.50 per avocado, which is the same as the slope 
+of the line connecting the data points (
+3
+2). 
+i. From the graph, how much does eight avocados cost? 
+ii. Also, using the graph how much does 15 avocados cost?
+```
+
+## P210 (PDF page 210)
+
+```text
+ 180 
+STRAND 2: ALGEBRA 
+Sub-strand 1 Patterns and Relations 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.1.1 Demonstrate 
+the ability to construct 
+tables of values for 
+pairs of linear relations, 
+graph the relations in a 
+number plane and 
+determine the 
+intersection of the lines 
+to solve simultaneous 
+linear equations.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B9.2.1.1.1 Construct a table of values for two linear relations and graph the 
+relation 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Cultural Identity and 
+Global Citizenship (CG) 
+ 
+ 
+ 
+ 
+E.g.1Construct a table of values for two linear 
+relations and draw the graphs of the 
+relations  
+Copy and complete the table of values for the 
+relations 𝑦𝑦1 = −𝑥𝑥+ 5; and 𝑦𝑦2 =
+1
+2 𝑥𝑥− 3 for 𝑥𝑥 from -
+4 to 3.  
+𝑥𝑥 -3 -2 -1 0 1 2 3 
+𝑦𝑦1 = −𝑥𝑥+ 5 8    4   
+𝑦𝑦2 = 1
+2 𝑥𝑥− 3  -4     -
+1.5 
+ 
+E.g.2 Draw graph for two linear 
+relations. 
+ 
+E.g.3Construct a table of values for two linear 
+relations. 
+(i) Copy and complete the table of values for the 
+relations 𝑥𝑥− 2𝑦𝑦= −2 and 𝑥𝑥− 2𝑦𝑦= 2 for 𝑥𝑥 from -2 
+to 2.  
+𝑥𝑥 x -2 -1 0 1 2 
+𝑥𝑥− 2𝑦𝑦
+= −2 
+y= (𝑥𝑥+ 2)/
+2 
+0    2 
+𝑥𝑥− 2𝑦𝑦= 2 = (𝑥𝑥− 2)/2  -1
+1
+2   0 
+ 
+E.g.4 Draw a graph for two linear 
+relations.
+```
+
+## P211 (PDF page 211)
+
+```text
+ 181 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.1.1 Demonstrate 
+the ability to construct 
+tables of values for 
+pairs of linear relations, 
+graph the relations in a 
+number plane and 
+determine the 
+intersection of the lines 
+to solve simultaneous 
+linear equations.  
+ 
+B9.2.1.1.2 Use graphs of two linear relations to determine subsequent missing 
+elements in ordered pairs of the relation. 
+ 
+E.g.1 Find the missing elements of ordered 
+pairs on graphs of two linear relations.  
+The graph below is drawn from two linear 
+relations: 
+𝑦𝑦= −𝑥𝑥+ 4 
+𝑦𝑦= 𝑥𝑥− 2 
+i. Determine the coordinates for the 
+intersection of the two lines.  
+ii. Determine the corresponding values for y for 
+both straight lines if x = -1. 
+iii. Use the graph to find the values for y for the 
+two relations. 
+𝑥𝑥 6-3 7-2 8-1 90 1 2 
+𝑦𝑦
+= −𝑥𝑥+ 4 
+      
+𝑦𝑦= 𝑥𝑥− 2       
+ 
+ 
+Creativity and 
+Innovation (CI)
+```
+
+## P212 (PDF page 212)
+
+```text
+ 182 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.1.1 Demonstrate 
+the ability to construct 
+tables of values for 
+pairs of linear relations, 
+graph the relations in a 
+number plane and 
+determine the 
+intersection of the lines 
+to solve simultaneous 
+linear equations.  
+ 
+B9.2.1.1.3 Use graphs to solve equations involving two linear relations.  Creativity and 
+Innovation (CI) 
+ 
+E.g.1 Solve two linear equations simultaneously 
+using the graph shown. 
+i. Solve the following equations simultaneously 
+using a graph. 
+𝑦𝑦= −𝑥𝑥+ 7 
+𝑦𝑦= 2𝑥𝑥+ 1 
+Hint: Draw the graph and find the coordinates for 
+the intersection of the two lines. 
+In the graph shown the values of (x, y) = (2, 5)  
+   
+ 
+E.g.2 Solve two linear equations simultaneously 
+using the graph. 
+ 
+From the graph, determine the values of x and y 
+that makes the linear equations true. 
+𝑦𝑦= 𝑥𝑥+ 4 
+𝑦𝑦= 6 − 𝑥𝑥
+```
+
+## P213 (PDF page 213)
+
+```text
+ 183 
+STRAND 2: ALGEBRA 
+Sub-strand 2 Algebraic Expressions 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.2.1Demonstrate an 
+understanding of (i) change 
+of subject (ii) substituting 
+values to evaluate 
+expressions, and (iii) 
+factorize expressions that 
+have simple binomial as a 
+factor. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B9.2.2.1.1 Perform change of subject of a given formula and use it to solve 
+problems. 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC)  
+Creativity and 
+Innovation (CI)  
+Digital Literacy (DL) 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.1 Perform change of subject for given formulae 
+      (i) Make 𝑥𝑥 the subject of the following formulae
+```
+
+## P214 (PDF page 214)
+
+```text
+ 184 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.2.1Demonstrate an 
+understanding of (i) change 
+of subject (ii) substituting 
+values to evaluate 
+expressions, and (iii) 
+factorize expressions that 
+have simple binomial as a 
+factor. 
+ 
+E.g.2 Use the concept of change of subject to solve problems involving formulae 
+i. The area of a rectangle is 24cm
+2. If the length is 8cm, find the value of 
+the width.  
+ii. The formula for calculating the area of a circle is given as 𝜋𝜋𝑜𝑜2. If a circle 
+has an area of 154𝑎𝑎𝑚𝑚2, what is its radius?[𝑎𝑎𝑎𝑎𝑘𝑘𝑚𝑚 𝜋𝜋=
+22
+7 ] 
+iii. The triangle below has an area of 54cm2. Find the value of the height of 
+the triangle.  
+iv. The cylinder below has a volume of 330cm3. Find the value of the height 
+of the cylinder. [𝑎𝑎𝑎𝑎𝑘𝑘𝑚𝑚 𝜋𝜋=
+22
+7 ] 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Creativity and 
+Innovation (CI)
+```
+
+## P215 (PDF page 215)
+
+```text
+ 185 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.2.1Demonstrate an 
+understanding of (i) change 
+of subject (ii) substituting 
+values to evaluate 
+expressions, and (iii) 
+factorize expressions that 
+have simple binomial as a 
+factor. 
+ 
+B9.2.2.1.2 Substitute values into given formulae to evaluate it and use it to 
+solve problems. 
+Creativity and 
+Innovation (CI)  
+ 
+E.g.1 
+i. Find the value of (𝒙𝒙− 𝒃𝒃)𝟐𝟐 – 𝟑𝟑(𝒙𝒙− 𝒃𝒃) 𝒊𝒊𝒊𝒊𝒙𝒙= 𝟐𝟐 𝒂𝒂𝒂𝒂𝒂𝒂 𝒃𝒃= −𝟓𝟓 
+ 
+ii. Make 𝒌𝒌 the subject of the formula: 
+𝟏𝟏
+𝒂𝒂= √(𝒌𝒌𝟐𝟐+ 𝒂𝒂𝟐𝟐
+𝒉𝒉𝒉𝒉) 
+ 
+If 𝒂𝒂=
+8
+5 , 𝑎𝑎= 3, ℎ = 2, 𝑔𝑔= 32, find the value of k. 
+ 
+iii. The formula for finding the volume of the shape below is given as 
+1
+3
+𝜋𝜋𝑜𝑜2ℎ . Find the volume if r = 7, h = 21, and π =
+22
+7
+```
+
+## P216 (PDF page 216)
+
+```text
+ 186 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.2.1Demonstrate an 
+understanding of (i) change 
+of subject (ii) substituting 
+values to evaluate 
+expressions, and (iii) 
+factorize expressions that 
+have simple binomial as a 
+factor. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B9.2.2.1.3 Factorise expressions that have simple binomial. 
+ 
+E.g. Factorise the following expressions. 
+i. 3x + 4xy = x (3 +4y) 
+ 
+ii. 12ab + 16b = 4b (3a + 4) 
+ 
+iii. -13xy + 39x= -13x(y-3) 
+ 
+iv. 5y-2y
+2+3y=-3y+3y  
+v. 8y-2y2= 2y(4-y)  
+ 
+vi. -6x+12=-3(2x-4) 
+Critical Thinking and 
+Problem solving (CP) 
+Communication and 
+Collaboration (CC)  
+Creativity and 
+Innovation (CI)  
+Digital Literacy (DL)
+```
+
+## P217 (PDF page 217)
+
+```text
+ 187 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.2.1Demonstrate an 
+understanding of (i) change 
+of subject (ii) substituting 
+values to evaluate 
+expressions, and (iii) 
+factorize expressions that 
+have simple binomial as a 
+factor. 
+ 
+B9.2.2.1.4 Use the knowledge of simplifying and factorising expressions to 
+solve real world problems. 
+ 
+Creativity and 
+Innovation (CI)  
+Digital Literacy (DL) 
+ 
+E.g.1 You purchased 10 items from a shopping plaza, and now you need plastic 
+bags to carry them home. If each bag can hold only 3 items, how many 
+plastic bags will you need to accommodate the10 items? 
+ 
+Solution: We use simple algebraic formula 
+𝑥𝑥
+𝑦𝑦 to calculate the number of bags. 
+x = Number of items purchased = 10 
+y = Capacity of 1 bag = 3 
+ 
+Hence, 
+10
+3  = 3.333 bags 
+ = 4 bags 
+So, we need 4  
+shopping bags  
+to carry 10 items.
+```
+
+## P218 (PDF page 218)
+
+```text
+ 188 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.2.1Demonstrate an 
+understanding of (i) change 
+of subject (ii) substituting 
+values to evaluate 
+expressions, and (iii) 
+factorize expressions that 
+have simple binomial as a 
+factor. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.2 You have to buy two dozen of eggs priced at GH₵10, three loaves breads 
+(each bread is GH₵5), and five bottles of juice (each bottle is GH₵8). How 
+much money you will need to take to the grocery store? 
+The prices are 
+a = Price of two dozen eggs = GH₵10 
+b = Price of one bread = GH₵5 
+c = Price of one bottle of juice = GH₵8 
+=> Money needed = a + 3b + 5c 
+=> Money needed = GH₵10 + 3(GH₵5) + 5(GH₵8) = GH₵10 + GH₵15 + 
+GH₵40 = GH₵65 
+ 
+Communication and 
+Collaboration (CC)
+```
+
+## P219 (PDF page 219)
+
+```text
+ 189 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.2.1Demonstrate an 
+understanding of (i) change 
+of subject (ii) substituting 
+values to evaluate 
+expressions, and (iii) 
+factorize expressions that 
+have simple binomial as a 
+factor. 
+ 
+E.g.3 The area of a rectangle is 72 cm
+2. The length is twice its width. What is 
+the length and width of the rectangle? 
+Let “x” be the width and “2x” be the length. 
+Length × Width = Area 
+ 
+𝑥𝑥 × (2𝑥𝑥) = 2𝑥𝑥2 = Area 
+ 
+2𝑥𝑥2 = Area 
+2𝑥𝑥2  = 72 
+2𝑥𝑥2
+2 = 72
+2  
+ 
+𝑥𝑥2 = 36 
+𝑥𝑥 = 6 
+width = 6cm 
+2x = 2 x 6 = 12 
+So, the length is 12 cm 
+Critical Thinking and 
+Problem solving (CP)
+```
+
+## P220 (PDF page 220)
+
+```text
+ 190 
+STRAND 2: ALGEBRA  
+Sub-strand 3 Variables and Equations 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.3.1 Demonstrate 
+understanding of single 
+variable linear inequalities 
+with rational coefficients 
+including: 
+• solving inequalities 
+• verifying 
+• comparing 
+• graphing 
+ 
+B9.2.3.1.1 Solve single variable linear inequalities with rational coefficients. 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+Personal Development 
+and Leadership (PL) 
+Digital Literacy (DL) 
+ 
+ 
+ 
+ 
+i. 𝟐𝟐𝒙𝒙+ 𝟕𝟕>
+𝟓𝟓
+𝟐𝟐 
+ii. 
+𝟓𝟓
+𝟓𝟓−
+𝟏𝟏
+𝟓𝟓
+𝒙𝒙>
+𝟐𝟐
+𝟕𝟕
+ 
+iii. 
+𝟑𝟑
+𝟐𝟐
+𝒚𝒚−
+𝟐𝟐
+𝟓𝟓
+<
+𝟓𝟓
+𝟓𝟓
+ 
+iv. 
+𝟏𝟏
+𝟐𝟐
+(𝟓𝟓𝒙𝒙− 𝟓𝟓) < 𝑥𝑥+
+𝟏𝟏𝟏𝟏
+𝟐𝟐𝟓𝟓
+ 
+v. 
+𝟏𝟏
+𝟑𝟑> 𝑥𝑥−
+𝟓𝟓
+𝟓𝟓 
+vi. 
+𝟏𝟏
+𝟐𝟐
+(𝟐𝟐𝒙𝒙+ 𝟑𝟑) ≤ 𝒙𝒙+ 𝟏𝟏 
+vii. 𝒙𝒙+
+𝟏𝟏
+𝟐𝟐
+≥ −
+𝟑𝟑
+𝟐𝟐
+ 
+viii. −
+𝟐𝟐
+𝟑𝟑
+𝒙𝒙+ 𝟑𝟑≥ 𝟑𝟑 
+B9.2.3.1.2 Illustrate solution sets of linear inequalities on the number line  
+E.g.1 Illustrate and explain the inequality signs
+```
+
+## P221 (PDF page 221)
+
+```text
+ 191 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.3.1 Demonstrate 
+understanding of single 
+variable linear inequalities 
+with rational coefficients 
+including: 
+• solving inequalities 
+• verifying 
+• comparing 
+• graphing 
+ 
+E.g.2 Graph linear inequalities in one variable on a number line. Digital Literacy (DL) 
+ 
+E.g.3 Solve and graph linear inequalities on a number line. 
+  
+i. −3𝑥𝑥− 8 > −26 ii. 2𝑥𝑥− 3 ≤ 19 
+2𝑥𝑥≤ 22 
+2𝑥𝑥
+2 ≤ 22
+2  
+𝑥𝑥≤ 11
+```
+
+## P222 (PDF page 222)
+
+```text
+ 192 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.3.1 Demonstrate 
+understanding of single 
+variable linear inequalities 
+with rational coefficients 
+including: 
+• solving inequalities 
+• verifying 
+• comparing 
+• graphing 
+ 
+E.g.4 Solve and graph linear inequalities on a cartesian plane. Digital Literacy (DL) 
+ i. 2𝑥𝑥≥ 8 
+2𝑥𝑥
+2 ≥ 8
+2 
+𝑥𝑥≥ 4 
+ 
+ii. 5𝑦𝑦+ 3 < 6 +
+2𝑦𝑦 
+5𝑦𝑦− 2𝑦𝑦< 6 − 3 
+3𝑦𝑦< 3 
+∴ 𝑦𝑦< 1 
+ 
+iii. 
+7𝑥𝑥
+3 < 7   → 3 ×
+7𝑥𝑥
+3 <
+7 × 3 
+7𝑥𝑥
+7 < 21
+7  
+𝑥𝑥< 3
+```
+
+## P223 (PDF page 223)
+
+```text
+ 193 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.3.1 Demonstrate 
+understanding of single 
+variable linear inequalities 
+with rational coefficients 
+including: 
+• solving inequalities 
+• verifying 
+• comparing 
+• graphing 
+ 
+B9.2.3.1.3 Solve real-life problems involving linear equations and 
+inequalities. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+E.g.1 Solve real-life problems involving linear equations. 
+ 
+i. A man has 260metres of fencing which he is going to put around a 
+rectangular field which is 50metres wide. How long is the field? 
+Solution: Since we need to find the length of the field, let x metresbe 
+the length.  
+𝑥𝑥+ 50 + 𝑥𝑥+ 50 𝑜𝑜𝑜𝑜 2(𝑥𝑥+ 50) 
+ 
+But this expression is given as 260m 
+∴ 2(𝑥𝑥+ 50) = 260 
+ 𝑥𝑥+ 50 = 130 
+ 𝑥𝑥= 80m
+```
+
+## P224 (PDF page 224)
+
+```text
+ 194 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.3.1 Demonstrate 
+understanding of single 
+variable linear inequalities 
+with rational coefficients 
+including: 
+• solving inequalities 
+• verifying 
+• comparing 
+• graphing 
+ 
+ii. A man paid GH₵ 290 for 11 books. Some of the books were geography 
+books, and the rest were history books. If each geography book cost GH₵ 30 
+and each history book cost GH₵20, how many geography books did he buy? 
+ 
+Solution:  
+i. Total cost of the books is GH₵290; total number of books is 11. 
+ii. 1 geography book costs GH₵30; 1 history book costs GH₵20,  
+ 
+Total cost of all the books is 30𝑥𝑥+ 20(11 − 𝑥𝑥) = 290 
+∴ 𝟑𝟑𝟑𝟑𝒙𝒙+ 𝟐𝟐𝟑𝟑(𝟏𝟏𝟏𝟏− 𝒙𝒙) = 𝟐𝟐𝟗𝟗𝟑𝟑 
+𝟑𝟑𝟑𝟑𝒙𝒙+ 𝟐𝟐𝟐𝟐𝟑𝟑− 𝟐𝟐𝟑𝟑𝒙𝒙= 𝟐𝟐𝟗𝟗𝟑𝟑 
+𝟏𝟏𝟑𝟑𝒙𝒙+ 𝟐𝟐𝟐𝟐𝟑𝟑= 𝟐𝟐𝟗𝟗𝟑𝟑 
+𝒙𝒙= 𝟕𝟕 
+Hence the number of geography books bought is 7.  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.2 Solve real-life problems involving linear inequalities. 
+i. Two sides of a triangle have lengths 6 cm and 8 cm. What is the length 
+of the third side? 
+Note: The sum of the lengths of the two sides of a triangle is greater than the 
+length of the third side.
+```
+
+## P225 (PDF page 225)
+
+```text
+ 195 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.2.3.1 Demonstrate 
+understanding of single 
+variable linear inequalities 
+with rational coefficients 
+including: 
+• solving inequalities 
+• verifying 
+• comparing 
+• graphing 
+ 
+If the third side is 𝑥𝑥cm long then, 
+6 + 8 > 𝑥𝑥 giving 𝑥𝑥< 14.  
+Also, 6 + 𝑥𝑥< 8 𝑔𝑔𝑖𝑖𝑣𝑣𝑖𝑖𝑚𝑚𝑔𝑔 𝑥𝑥> 2. 
+[Also, 8 + 𝑥𝑥> 6 whichgivesx > −2.  
+Hence, 2 < 𝑥𝑥< 14. that is, the third side 
+has length between 2cm and 14cm. 
+ii. A student scores 70 and 76 marks in 
+two tests. How many marks must she 
+score in the third test to be put in Grade 
+A if all students scoring an average of 
+80 or higher in three tests are put in 
+grade A? 
+ Critical Thinking and 
+Problem solving (CP)
+```
+
+## P226 (PDF page 226)
+
+```text
+ 196 
+STRAND 3: GEOMETRY AND MEASUREMENT 
+Sub-strand 1 Shapes and Space 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.1 Apply the properties 
+of angles at a point, angles on 
+a straight line, vertically 
+opposite angles, 
+corresponding, angles to` 
+solve problems. 
+B9.3.1.1.1Derive the formula for calculating the sum of angles in any 
+polygon and use this to calculate the value of missing angles in 
+polygons 
+Communication and 
+Collaboration (CC) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+E.g.1. Identify and name the various polygons such as a triangle, 
+quadrilaterals, pentagons, and hexagons, etc.
+```
+
+## P227 (PDF page 227)
+
+```text
+ 197 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.1 Apply the properties 
+of angles at a point, angles on 
+a straight line, vertically 
+opposite angles, 
+corresponding, angles to` 
+solve problems. 
+E.g.2. Derive and use the 
+formula (n - 2) × 180 ° and 
+calculate the value of x 
+(interior and angles of a 
+triangle). 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+  
+E.g.3. Derive and use the 
+formula (n - 2) × 180 ° and 
+calculate the interior angles of 
+a quadrilateral. 
+ 
+E.g.4. Derive and use the 
+formula (n - 2) × 180 ° and 
+calculate the interior angles of 
+polygons, pentagons, 
+hexagons, etc.  
+ 
+(i) Find the value of x and 
+the various angles in the 
+hexagon.
+```
+
+## P228 (PDF page 228)
+
+```text
+ 198 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.1 Apply the properties 
+of angles at a point, angles on 
+a straight line, vertically 
+opposite angles, 
+corresponding, angles to` 
+solve problems. 
+B9.3.1.1.2 Identify similar and congruent triangles and use the 
+knowledge to solve related problems 
+E.g.1.  Recognise similar triangles and solve for the values of the indicated 
+angles in the diagram below: 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and Innovation 
+(CI)  
+ 
+ 
+ E.g.2.  Recognise congruent triangles and solve for the values of the 
+indicated angles in the diagram below: 
+ 
+ E.g. 3. Determine the value of x (using knowledge in similarity and 
+congruency).
+```
+
+## P229 (PDF page 229)
+
+```text
+ 199 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.2 Construct inscribed 
+and circumscribed triangles 
+and parallelograms with 
+given dimensions.  
+B9.3.1.2.1 Draw inscribed and circumscribed circles for triangles under 
+given conditions  
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+Personal Development and 
+Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+ 
+ 
+ 
+E.g.1: Use a pair of compasses and a ruler to construct a triangle (say 
+∆ABC) under a given condition and locate the incentre of the triangle (the 
+incentre is the point of concurrency of the three angle bisectors of a 
+triangle); measure the shortest distance from the incentre to the line 
+segments AB, AC and BC. What do you observe about the lengths?
+```
+
+## P230 (PDF page 230)
+
+```text
+ 200 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.2 Construct 
+inscribed and 
+circumscribed triangles 
+and parallelograms with 
+given dimensions. 
+E.g..2: Use a pair of compasses and a ruler to construct a triangle (say ABC) 
+under a given condition, bisect at least any two angles (∆BAC and ∆BCA); 
+locate the intersection of the two angle bisectors (L)  and draw a locus of 
+points equidistant from the fixed point (L) to touch the edges of the triangle. 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+Digital Literacy (DL) 
+ 
+ E.g.3: Construct a triangle (say 𝐴𝐴𝐴𝐴𝐶𝐶); bisect all three sides (i.e. line segments 
+𝐴𝐴𝐴𝐴, 𝐴𝐴𝐶𝐶 𝑎𝑎𝑚𝑚𝑎𝑎 𝐴𝐴𝐶𝐶); locate the intersection (circumcentre) of the three 
+perpendicular bisectors (𝑆𝑆); Measure the distance from the intersecting centre 
+(S) to points A, B and C. What do you observe about the lengths? 
+ 
+Personal Development and 
+Leadership (PL)
+```
+
+## P231 (PDF page 231)
+
+```text
+ 201 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.2 Construct 
+inscribed and 
+circumscribed triangles 
+and parallelograms with 
+given dimensions. 
+E.g.4: Perform a geometric construction of a triangle (say 𝐴𝐴𝐴𝐴𝐶𝐶) under a given 
+condition; bisect at least any two sides (𝐴𝐴𝐴𝐴 and 𝐴𝐴𝐶𝐶); locate the intersection of 
+the two perpendicular bisectors (𝐵𝐵) and draw a locus of points equidistant 
+from the fixed point (𝐵𝐵) to circumscribe the triangle. 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+ B9.3.1.2.2 Construct parallelograms (i.e. square, rectangle, rhombus) 
+under given conditions. 
+Communication and 
+Collaboration (CC) 
+ 
+E.g.1: Perform geometric construction of a square with a given side.
+```
+
+## P232 (PDF page 232)
+
+```text
+ 202 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.2 Construct 
+inscribed and 
+circumscribed triangles 
+and parallelograms with 
+given dimensions. 
+E.g.2: Construct a square ABCD with AB�����⃗=6.5cm. Measure and record the 
+diagonal of the square. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+E.g.3: Perform geometric construction of a square with a given diagonal. 
+ 
+ E.g.4: Perform geometric construction of a rectangle with given side.
+```
+
+## P233 (PDF page 233)
+
+```text
+ 203 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.2 Construct 
+inscribed and 
+circumscribed triangles 
+and parallelograms with 
+given dimensions. 
+E.g.5: Perform geometric construction of a rectangle with a given side and 
+diagonal. 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+ E.g.6: Perform geometric construction of a parallelogram with given sides and 
+given angle(s). 
+ 
+Creativity and Innovation 
+(CI)
+```
+
+## P234 (PDF page 234)
+
+```text
+ 204 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.1.2 Construct 
+inscribed and 
+circumscribed triangles 
+and parallelograms with 
+given dimensions. 
+E.g.7: Perform geometric construction of regular compound plane shapes with 
+given sides and angles. 
+Digital Literacy (DL)
+```
+
+## P235 (PDF page 235)
+
+```text
+ 205 
+STRAND 3: GEOMETRY AND MEASUREMENT 
+Sub-strand 2 Measurement  
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.9.3.2.1 Derive the 
+formulas for determining 
+the surface area of prisms 
+(i.e. cuboid and triangular 
+prism) and use to solve 
+problems. 
+B9.3.2.1.1 Identify cuboids and triangular prisms; draw their nets to 
+construct the 3-D shapes and use it to determine the surface area. 
+E.g.1 Sort out shapes that are triangular prisms and cuboids. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+  
+E.g.2 Identify each of the nets below:  
+  
+A net of……………..  A net of……………..
+```
+
+## P236 (PDF page 236)
+
+```text
+ 206 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.9.3.2.1 Derive the formulas 
+for determining the surface 
+area of prisms (i.e. cuboid 
+and triangular prism) and 
+use to solve problems. 
+ E.g.3 Measure and find the area of each of the sections in the net and 
+adding all together to give the surface area. 
+Critical Thinking and 
+Problem solving (CP) 
+ B9.3.2.1.2 Use the net of a cuboid to determine its surface area. 
+E.g.1 Find the surface area of each of the cuboids 
+ 
+ 
+ B9.3.2.1.3   Use the net of a triangular prism to determine its surface 
+area. 
+E.g.1Find the surface area of each of the triangular prims.
+ Z
+```
+
+## P237 (PDF page 237)
+
+```text
+ 207 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B.9.3.2.1 Derive the 
+formulas for determining 
+the surface area of prisms 
+(i.e. cuboid and triangular 
+prism) and use to solve 
+problems. 
+B9.3.2.1.4 Express points in the Cartesian plane as position vectors Creativity and Innovation 
+(CI) 
+ 
+E.g.1 Identity the following using the diagram below: 
+(i)   the origin 
+ (ii)  the position vector 
+ 
+ E.g.2 Draw and write the 
+position vectors of the 
+following with 0 as the 
+origin: 
+ (i)  M(2,3)   (ii)  N(-1,2)
+```
+
+## P238 (PDF page 238)
+
+```text
+ 208 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.2.2 Solve problems 
+involving bearings and 
+addition/subtraction of 
+vectors 
+B9.3.2.2.1 Show an understanding of parallel vectors and 
+perpendicular vectors   
+E.g.1 Investigate conditions for parallel vectors and perpendicular vectors. 
+E.g.2 Use the result from the investigation to solve the following questions: 
+(i) Find the value(s) of x, if the vectors �
+3𝑥𝑥
+2 � and �6
+𝑥𝑥�  are parallel. 
+ (ii) Which of the vectors is perpendicular to �3
+4� 
+(a) �−3
+4 �     (b)  �−3
+−4�     (c)    �−4
+3 �        (d)  �−4
+−3� 
+Digital Literacy (DL) 
+ 
+ 
+  
+ B9.3.2.2.2 Apply the triangular and parallelogram laws of addition to 
+resolve vectors  
+E.g.1 Deduce the triangle law of vector addition. 
+𝐴𝐴𝐴𝐴�����⃗ +𝐴𝐴𝐶𝐶�����⃗ = 𝐴𝐴𝐶𝐶�����⃗     Where ABC are points in the 0xy plane. 
+E.g.2 The vertices of a triangle are P(1,-3),   Q(7,5) and R(-3,5) 
+(i) Express 𝑃𝑃𝑃𝑃,������⃗ 𝑃𝑃𝑃𝑃�����⃗, and 𝑃𝑃𝑃𝑃�����⃗ as column vectors. 
+(ii) Show that triangle PQR is an isosceles. 
+(iii) Find the equation of the line𝑃𝑃𝑃𝑃�����⃗. 
+Eg3 Investigate the parallelogram law of vector addition. 
+Eg.4P,Q,R,S is a parallelogram whose vertices are P (x ,y), Q (5,7), R(2,4) 
+and S(1,3) 
+(i) Find 𝑃𝑃𝑃𝑃,������⃗ and𝑆𝑆𝑃𝑃�����⃗ hence find the values of x and y. 
+Creativity and Innovation 
+(CI)
+```
+
+## P239 (PDF page 239)
+
+```text
+ 209 
+STRAND 3:GEOMETRY AND MEASUREMENT 
+Sub-strand 3 Position and Transformation 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.3.1 Demonstrate 
+understanding of how to 
+perform an enlargement on 
+a geometrical shape given a 
+scale factor and describe 
+the properties of the image 
+under the transformation 
+(i.e. congruence, similarity, 
+etc.)   
+B9.3.3.1.1 Know examples of situations in everyday life that depict 
+enlargement situations in everyday life. 
+E.g. 1. Know examples of situations that relate to enlargement 
+situations in everyday life and the nature of movements – vertical 
+and horizontal. 
+Creativity and Innovation (CI) 
+ 
+Digital Literacy (DL)
+```
+
+## P240 (PDF page 240)
+
+```text
+ 210 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.3.3.1 Demonstrate 
+understanding of how to 
+perform an enlargement on 
+a geometrical shape given a 
+scale factor and describe 
+the properties of the image 
+under the transformation 
+(i.e. congruence, similarity, 
+etc.)   
+B9.3.3.1.2 Understand enlargement and identify real-life situations 
+involving enlargement. 
+Creativity and Innovation 
+(CI) 
+ E.g. 1. Draw an enlargement of shapes using a given scale factor. 
+i. State the single transformation that maps triangle P onto Q. 
+ii. State the single transformation that maps triangle P onto R. 
+ 
+iii. Investigate the characteristics of enlargements under the 
+following conditions of scale factor: 
+• if the scale factor (K) is negative 
+• if the scale factor (K) is greater than 1 or less than –1  
+• if the scale factor (K) is between –1 and 1 (i.e., fraction) 
+E.g. 2. Using an object, and its image, determine the scale factor in a 
+transformation? 
+ B9.3.3.1.3 Investigate the concept of congruent and similar 
+shapes 
+E.g. 1. Using multiple and varied examples of enlargement on a 
+coordinate plane, verify congruent and similar shapes using their 
+properties.
+```
+
+## P241 (PDF page 241)
+
+```text
+ 211 
+STRAND 4: HANDLING DATA 
+Sub-strand 1: Data 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.1.1Select, justify, and 
+use appropriate methods of 
+collecting data 
+(grouped/ungrouped), use 
+the data to construct and 
+interpret frequency tables 
+and histogram and use it to 
+determine the mode and to 
+solve and/or pose problems. 
+ 
+B9.4.1.1.1Select and justify a method to collect data (quantitative and 
+qualitative) to answer a given question. 
+E. g. 1 Discuss and decide  
+(i) from where/whom to collect data for the studies presented below; 
+(ii) which data collection methods to use; and  
+(iii) justify the choices for (i) and (ii) above 
+Areas of study are described as follows: 
+a. Musa has started a book club for Ayisha and her friends. He wants 
+Ayisha to find out books that are most popular among her friends. 
+b. Find the most common mode of travel by learners in Oyoko Junior and 
+Senior High Schools. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+B9.4.1.1.2.Organise data (grouped/ungrouped) present it in frequency 
+tables, line graphs, pie graphs, bar graphs and/or pictographs 
+(representations include infographics, waffle diagrams, box and whisker 
+plots and stem and leaf plots) and analyse it to solve and/or pose 
+problems. 
+E.g. 1 -Thirty bulbs were life-tested and their lifespan to the nearest hour are as 
+follows:
+```
+
+## P242 (PDF page 242)
+
+```text
+ 212 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.1.1Select, justify, and 
+use appropriate methods of 
+collecting data 
+(grouped/ungrouped), use 
+the data to construct and 
+interpret frequency tables 
+and histogram and use it to 
+determine the mode and to 
+solve and/or pose problems. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+i. Present the raw data in a frequency table by completing the table below: 
+Lifespan of Bulbs 
+(hours) 
+Tally Frequency 
+164 - 167   
+168 – 171   
+172 - 175   
+176 – 179   
+ii. What is the modal group? Justify your decision for that choice.  
+ 
+iii. Complete the stem and leaf plots below to 
+display the raw data. 
+Use the plot to solve the following problems. 
+a. Find the range of the lifespan of bulbs 
+b. What is the mode lifespan? 
+c. What is the median lifespan? 
+d. What other problems can you pose? 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Creativity and 
+Innovation (CI)
+```
+
+## P243 (PDF page 243)
+
+```text
+ 213 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.1.1Select, justify, and 
+use appropriate methods 
+of collecting data 
+(grouped/ungrouped), use 
+the data to construct and 
+interpret frequency tables 
+and histogram and use it 
+to determine the mode and 
+to solve and/or pose 
+problems. 
+ 
+E.g. 2 The pictograph below describes the number of boys and girls in each 
+class in Kojokrom Junior High School 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+ 
+i. What is the percentage of boys and of girls in the school?  
+ii. Use your answers in (i) to represent the data by copying and completing 
+the following infographic
+```
+
+## P244 (PDF page 244)
+
+```text
+ 214 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.1.1Select, justify, 
+and use appropriate 
+methods of collecting 
+data 
+(grouped/ungrouped), 
+use the data to 
+construct and interpret 
+frequency tables and 
+histogram and use it to 
+determine the mode and 
+to solve and/or pose 
+problems. 
+ 
+B9.4.1.1.3 Use a histogram to determine the mode of a given data to solve 
+and/or pose real life cases. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+E.g. 1- The waiting times, x 
+minutes, for 60 patients at a certain 
+clinic are as follows 
+ 
+i. Construct a frequency table using class intervals 0 – 10.5; 10.5 – 20.5; 
+20.5– 30.5, and so on. 
+ii. Construct a frequency table using class intervals 0 <×≤ 10; 10 <×≤ 20;  
+20 <×≤ 30, and so on. 
+iv. Draw a histogram and find the modal class.
+```
+
+## P245 (PDF page 245)
+
+```text
+ 215 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.1.2 Select, justify, 
+and use appropriate 
+methods of collecting 
+data (quantitative and 
+qualitative), organise 
+and analyse the data 
+(grouped/ungrouped) to 
+interpret the results 
+using the descriptive 
+statistics (measures of 
+central tendency and 
+range). 
+B9.4.1.2.1 - Select a method for collecting data (quantitative and qualitative), 
+taking into consideration how bias (use of language, ethics, cost, time and 
+timing, privacy or cultural sensitivity) may influence data. 
+E. g. 1 Suppose in a school survey form the following question was asked: 
+ 
+The designer of the survey form has a bias for the methodology used in math 
+lessons and the bias influences how the question was written. 
+The language used in writing the question may lead people to just answer yes or 
+no. 
+A better question would be:  
+Overall, how will you rate the teaching of mathematics? 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+ 
+ 
+ E.g. 2 Ama Mereku in B9 wants to write an article for their school magazine on 
+sport-related injuries. The responses for the survey question stated below 
+were collected from only the schools’ football team.  
+The influencing factors in this survey question are: time and bias.  
+Football is a contact sport. The chances are that the answers from her targeted 
+respondents will be high in favour of injuries and thus negatively affect the 
+conclusion/report. 
+In order to report accurately on sport-related injuries Ama needs to ask more 
+people (time needed) who participate in a variety of sports, including contact 
+and non-contact sports (e.g. athletics tennis, volleyball, and so on). 
+   
+Overall, don’t you think the teaching of mathematics is very good? 
+Very poor 
+ Poor 
+ Fair 
+ Good 
+ Very Good
+```
+
+## P246 (PDF page 246)
+
+```text
+ 216 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.1.2 Select, justify, 
+and use appropriate 
+methods of collecting 
+data (quantitative and 
+qualitative), organise 
+and analyse the data 
+(grouped/ungrouped) to 
+interpret the results 
+using the descriptive 
+statistics (measures of 
+central tendency and 
+range). 
+E.g. 3Learners in B9 are asked by their physical education teacher to complete a 
+survey related to “Overall Physical Health”. One question on the survey form is; 
+ 
+ 
+Identify the influencing factor in the survey and provide a solution. 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and 
+Innovation (CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+E.g. 4 - Suppose you tell your classmates that the response to the question in the 
+Class Survey Question Form is to help you plan remedial classes.  
+ 
+If you then use the information collected to write an article for the school 
+magazine how would your actions be described and how would that influence 
+future surveys you conduct? 
+ E.g. 5 -Suppose in a survey questionnaire you wanted to know the favourite 
+method of cooking pork and you asked: 
+ 
+ 
+ 
+ 
+ 
+This question does not apply to everyone because some people do not eat pork 
+(i.e. the question is not culturally sensitive.) 
+A better question would be 
+ 
+ 
+  
+Please tick the box against your favourite method of cooking pork 
+Grilling 
+ Frying 
+Boiling 
+Please tick the box against your favourite method of cooking pork (Optional) 
+Grilling 
+ Frying 
+Boiling 
+If you eat pork please name the favourite method you cook it. 
+Grilling 
+ Frying 
+Boiling 
+What is your current body weight? 
+What is your worst subject?
+```
+
+## P247 (PDF page 247)
+
+```text
+ 217 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.1.2 Select, justify, 
+and use appropriate 
+methods of collecting 
+data (quantitative and 
+qualitative), organise 
+and analyse the data 
+(grouped/ungrouped) to 
+interpret the results 
+using the descriptive 
+statistics (measures of 
+central tendency and 
+range). 
+OR Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL) 
+ 
+ 
+B9.4.1.2.2 Organise and analyse data and interpret the results using the 
+descriptive statistics (i.e. minimum, maximum, measures of central 
+tendency and range) to answer a given question. 
+Refer to E.g. 1 of B9.4.1.1.2 and find (minimum, maximum, measures of central 
+tendency and range) 
+i. The minimum lifespan, to the nearest hour, of the bulbs tested. 
+ii. The maximum lifespan, to the nearest hour, of the bulbs tested. 
+iii. The range of the data collected from the life-testing. 
+iv. What is the mean lifespan of the bulbs? 
+v. What is the median of the lifespan of the bulbs? 
+vi. What is the mode of the lifespan of the bulbs? 
+vii. When placing an order for the bulbs tested to sell in your shop, which of 
+them will you consider buying? 
+  
+If you eat pork please name the favourite method you cook it. 
+Grilling 
+ Frying 
+Boiling
+```
+
+## P248 (PDF page 248)
+
+```text
+ 218 
+ 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.1.2 Select, justify, 
+and use appropriate 
+methods of collecting 
+data (quantitative and 
+qualitative), organise 
+and analyse the data 
+(grouped/ungrouped) to 
+interpret the results 
+using the descriptive 
+statistics (measures of 
+central tendency and 
+range). 
+B9.4.1.2.3Demonstrate the effect on the mean, median, and mode when 
+extreme data is included in a data set 
+E.g.1 Refer to E.g. 1 of B9.4.1.1.2.  
+i. Find the mean of the data, if one of the bulbs is replaced with a new bulb 
+with lifespan of 300 hours, find the new mean of the bulbs and compare it 
+to the original mean 
+ii. In small groups, find the mean of the data, if the lifespan of one of the 
+bulbs tested was 70 hours, and compare it to the original mean. 
+iii. Continue to replace the values of the lifespan in the data with extreme 
+values (small and large), calculate the mean, median, and mode and 
+discuss the findings. 
+ 
+ 
+ 
+ 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Communication and 
+Collaboration (CC) 
+ 
+Creativity and Innovation 
+(CI) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+Digital Literacy (DL)
+```
+
+## P249 (PDF page 249)
+
+```text
+ 219 
+STRAND 4: HANDLING DATA 
+Sub-strand 2: Chance or Probability 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+B9.4.2.1Identify the 
+sample space for a 
+probability experiment 
+involving two dependent 
+events and express the 
+probabilities of given 
+events as fractions, 
+decimals, percentages 
+and/or ratios to solve 
+problems.  
+B9.4.2.1.1.Perform a probability experiment involving two dependent 
+events e.g.  drawing coloured bottle tops from a bag without 
+replacement 
+ 
+E.g. 1In an experiment, Anita was asked to pick one bottle top, in three trials, 
+from a bag which contains 3 red, 2 green and 1 pink bottle tops without 
+replacement. 
+i. List the elements of the sample space of the events. 
+ii. Does the occurrence of the one trial affect the occurrence of the other 
+trials? 
+ 
+Critical Thinking and 
+Problem solving (CP) 
+ 
+Personal Development 
+and Leadership (PL) 
+ 
+ 
+ 
+ B9.4.2.1.2. Express the probabilities of the events as fractions, decimals, 
+percentages and/or ratios; e.g.  using a tree diagram, table or 
+another graphic organiser 
+ 
+ E.g. 1 Draw a probability tree diagram for the experiment in B9.4.2.1.1,  
+E.g. 1. Express the probabilities of the events (on their respective branches) as 
+decimals, percentages and ratios. 
+ E.g. 2: 
+i. Consider the experiment of drawing two Aces (in two trials) in a standard 
+deck of cards without replacement. 
+ii. Calculate the probability of each trial and express the probabilities of the 
+events as decimals, percentages and ratios.
+```
+
+## P250 (PDF page 250)
+
+```text
+ 220 
+CONTENT STANDARDS INDICATORS AND EXEMPLARS CORE COMPETENCIES 
+ E.g. 3: 
+i. Consider the experiment of drawing an Ace and a  Jack (in two trials) in a 
+standard deck of cards without replacement. 
+ii. Calculate the probability of each trial and express the probabilities of the 
+events as decimals, percentages and ratios.
+```
+
+## P251 (PDF page 251)
+
+```text
+ 221 
+APPENDIX: UNPACKING THE CORE COMPETENCES OF THE STANDARDS -BASE CURRICULUM 
+NATIONAL COUNCIL FOR CURRICULUM AND ASSESSMENT (NaCCA) 
+CORE COMPETENCIES AND SUBSKILLS OF THE COMMON CORE PROGRAM (CCP) 
+ 
+1. COMMUNICATION AND COLLABORATION (CC) 
+B7-B10 
+CC7: LISTENING CC8: PRESENTING CC9: TEAMWORK 
+CC7.1: Identify words or sentences in 
+context appropriately 
+ CC8.1: Speak clearly and explain ideas. 
+Share a narrative or extended 
+answer while speaking to a group 
+CC9.1: Demonstrate behaviour and skills of 
+working towards group goals 
+CC7.2: Interpret correctly and respond to 
+non- verbal communication such as 
+facial expressions, cues and 
+gestures 
+CC8.2: Explain ideas in a clear order with 
+relevant detail, using correct 
+construction and structure of 
+speech 
+CC9.2: Understand and use interpersonal 
+skills 
+CC7.3: Provide feedback in areas of ideas, 
+organisation, voice, word choice and 
+sentence fluency in communication 
+  
+CC8.3: Apply appropriate diction, and 
+structure sentences correctly for 
+narrative, persuasive, imaginative 
+and expository purposes 
+CC9.3: Understand roles during group 
+activities 
+CC7.4: Identify underlying themes, 
+implications and issues when 
+listening 
+CC8.4: Anticipate different responses from 
+the audience and plan for them CC9.4: Help group work on relevant activities 
+CC7.5: Identify and analyse different points 
+of views of speaker 
+CC8.5: Vary the level of detail and the 
+language used when presenting to 
+make it appropriate to the audience 
+CC9.5: Appreciate the importance of including 
+all team members in discussions and 
+actively encourage contributions from 
+them 
+  
+  
+  
+  
+CC9.6: Ability to work with all group members 
+to complete a task successfully 
+  
+  
+  
+  
+CC9.7: Effectively perform multiple roles within 
+the group 
+  
+  
+  
+  
+CC9.8: Demonstrate an awareness of the 
+wider team dynamics and work to 
+minimise conflicts in the team
+```
+
+## P252 (PDF page 252)
+
+```text
+ 222 
+2. CRITICAL THINKING AND PROBLEM SOLVING (CP) 
+B7-B10 
+CP5: CRITICAL THINKING CP6: PROBLEM SOLVING 
+CP 5.1: Ability to combine Information and ideas from several sources to 
+reach a conclusion 
+CP 6.1: Ability to effectively define goals towards solving a 
+problem 
+CP 5.2: Analyse and make distinct judgement about viewpoints expressed 
+in an argument 
+CP 6.2: Ability to explain plans for attaining goals 
+CP 5.3: Create simple logic trees to think through problems CP 6.3: Identify important and appropriate alternatives 
+CP 5.4: Generate hypothesis to help answer complex problems CP 6.4: Ability to identify important and appropriate criteria and 
+use them to evaluate available alternatives 
+CP 5.5: Effectively evaluate the success of solutions used in an attempt to 
+solve a complex problem 
+CP 6.5: Ability to select alternative(s) that adequately meet 
+selected criteria 
+CP 5.6: Demonstrate a thorough understanding of a generalised concept 
+and facts specific to task or situation 
+CP 6.6: Preparedness to recognise and explain results after 
+implementation of plans 
+CP 5.7: Provide new insight into controversial situation or task CP 6.7: Implement strategies with accuracy 
+  
+  
+  
+  
+  
+  
+  
+CP 5.8: Identify and prove misconceptions about a generalised concept or 
+fact specific to a task or situation 
+CP 5.9: Identify and explain a confusion, uncertainty, or a contradiction 
+surrounding an event 
+CP 5.10: Develop and defend a logical plausible resolution to a confusion, 
+uncertainty or contradiction surrounding an event 
+ 
+ 
+ 
+3. PERSONAL DEVELOPMENT AND LEADERSHIP (PL) 
+B7-B10 
+PL5: PERSONAL DEVELOPMENT PL6: LEADERSHIP 
+PL5.1:Understandingoneself (strengths, weaknesses, goals and 
+aspirations),in reacting and adjusting to novel situations 
+PL6.1: Ability to serve group members effectively 
+PL5.2: Demonstrate a sense of belongingness to a group PL6.2: Division of tasks into solvable units and assigning group 
+members to task units 
+PL5.3: Recognise one's emotional state and their preparedness to 
+apply emotional intelligence 
+PL6.3: Ability to manage time effectively
+```
+
+## P253 (PDF page 253)
+
+```text
+ 223 
+PL5.4: Ability to understand one's personality traits PL6.4: Ability to manage and resolve conflicts 
+PL5.5: Desire to accept one's true self and overcome weaknesses PL6.5: Ability to monitor team members to ascertain progress 
+PL5.6: Ability to set and maintain personal standards and values  
+  
+  
+  
+  
+  
+  
+PL6.6: Ability to mentor peers 
+PL6.7: Actively promote effective group interaction and the 
+expression of ideas and opinions in a way that is sensitive to 
+the feelings and background of others 
+PL6.8: Actively assist group identify changes or modifications 
+necessary in the group activities and work towards carrying 
+out those changes 
+ 
+ 
+4. CULTURAL IDENTITY AND GLOBAL CITIZENSHIP (CG) 
+B7-B10 
+CG5: CULTURAL IDENTITY CG6: GLOBAL CITIZENSHIP 
+CG5.1:Show a strong sense of belongingness to one’s culture 
+CG6.1:Understanding of influences of globalisation on traditions, 
+languages and cultures 
+CG5.2:Develop and exhibit ability to defend one's cultural beliefs, 
+practices and norms 
+CG6.2:Recognise resistance to global practices that are inimical to 
+our culture  
+CG5.3:Develop and express respect, recognition and appreciation of 
+others' cultures 
+CG6.3:Know the global discourse about the roles of males and 
+females 
+CG5.4:Develop and exhibit a sense of cultural identity CG6.4:Exhibit a sense of nationality and global identity 
+CG5.5:Adjust to the demands of customs, traditions, values and 
+attitudes of society
+```
+
+## P254 (PDF page 254)
+
+```text
+ 224 
+ 
+ 
+ 
+5. CREATIVITY AND INNOVATION (CI) 
+B7-B10 
+CI5: KNOWLEDGE, UNDERSTANDING, SKILLS AND 
+STRATEGIES CI6: REFLECTION AND EVALUATION 
+CI 5.1:Examine alternatives in creating new things CI 6.1: Exhibit strong memory, intuitive thinking, and respond 
+appropriately 
+CI 5.2: Ability to merge simple/complex ideas to create novel 
+situations or things 
+CI 6.2: Ability to reflect on approaches to creative tasks and evaluate 
+the effectiveness of tools used 
+CI 5.3: Identification of requirements of a given situation and 
+justification of more than one creative tool that will be 
+suitable 
+CI 6.3: Ability to select the most effective creative tools for work, and 
+give reasons for the choice  
+CI 5.4: Ability to visualise alternatives, see possibilities, and identify 
+problems and challenges 
+CI 6.4: Imagining and seeing things in a different way 
+CI 5.5: Ability to try new alternatives and different approaches CI 6.5: Anticipate and overcome difficulties relating to taking 
+initiatives 
+CI 5.6: Understand and use analogies and metaphors CI 6.6: Being open-minded, adapting and modifying ideas to achieve 
+creative results 
+CI 5.7: Putting forward constructive comments, ideas, explanations 
+and new ways of doing things 
+CI 6.7: Look and think about things differently and from different 
+perspectives 
+  
+  
+  
+CI 6.8: Recognise and generalise information and experience; 
+search for trends and patterns 
+  
+  
+  CI 6.9: Interpret and apply learning in new contexts 
+  
+  
+  
+CI 6.10: Reflect on work and explore the thinking behind thoughts 
+and processes
+```
+
+## P255 (PDF page 255)
+
+```text
+ 225 
+ 
+6. DIGITAL LITERACY (DL) 
+B7-B10 
+DL5: PHOTO-VISUAL AND INFORMATION LITERACY DL6: SOCIO-EMOTIONAL AND REPRODUCTION LITERACY  
+DL5.1: Ability to ascertain when information is needed and be able to 
+identify, locate, evaluate and effectively use it to solve a 
+problem 
+DL 6.1: Understand the sociological and emotional aspects of 
+cyberspace  
+DL5.2: Ability to recognise and avoid traps in cyberspace 
+DL 6.2: Create a meaningful and original piece of work, or its 
+interpretation by integrating existing information  
+DL5.3: Ability to find and utilise digital content DL6.3: Use digital tools to create novel things  
+DL5.4: Ability to construct knowledge from a non-linear hyper-textual 
+navigation 
+DL6.4: Adhere to behavioural protocols that prevail in 
+cyberspace  
+DL5.5: Evaluate the quality and validity of information 
+DL6.5: Recognition of societal issues emanating from the use of 
+digital technologies  
+DL5.6: Preparedness to make better decisions using available 
+information DL6.6: Knowledge and recognition of ethical use of information     
+ 
+Please note these inclusivity issues 
+The core competencies outlined in this document must be assessed taking into consideration 
+people with special needs (physical disabilities, learning disabilities, etc.). Consider the use of 
+realia for visual and visually challenged learners. 
+A system of creating alternatives for tasks must also be adopted.
+```
+
+## P256 (PDF page 256)
+
+```text
+ 226 
+BIBLIOGRAPHY 
+ 
+1. Abbiw, M. K. et al (1991). Ghana Senior Secondary School Mathematics Books 1, 2 & 3 Oxford: International Education Unit of 
+Oxford University Press. 
+2. Anamuah-Mensah, J., Mereku, D. K., Ghartey-Ampiah, Aheto, C., et. al., (2014). Inspiring Science and Mathematics in 
+Basic Schools. Accra: Ministry of 
+Education. Available at https://www.academia.edu/33123477/ 
+INSPIRING_SCIENCE_AND_MATHEMATICS_IN_BASIC_SCHOOLS.  
+3. Armah, Prince H (2017). Overview and challenges of Ghana’s education system: How to fix it. A paper delivered at a retreat on ‘Reforming Ghana’s 
+Educational System’ organised by The Institute of Economics Affairs. Available at https://www.academia.edu/34610399/OVERVIEW_ 
+AND_CHALLENGES_OF_GHANA_S_EDUCATION_SYSTEM_ HOW_TO_FIX_IT?email_work_card=reading-history 
+4. Department of Education (2013). Mathematics programmes of study: Key stage 3 National curriculum in England. London: 
+Department of Education 
+5. Dogbe B., Mereku, D. K. & Quarcoo, 2004). Junior Secondary Mathematics, Pupil’s & Teacher’s Books 1 – 3. Accra: Unimax 
+MacMillan Publishers. 
+6. Gordor, B. K., Naandam, S. M., & Nkansah, B. K. (2012). Core Mathematics for Senior High Schools. Accra: Sam-Woode Ltd 
+7. Martin, J. et. al. (1994). Mathematics for Teacher Training in Ghana: Tutor Notes & Students Activities, Accra: Unimax Publishers. 
+8. Mereku, D. K. (2010). Five Decades of School Mathematics in Ghana. Mathematics Connection, Vol. 9, 2010. Pp. 73-88. Available at http:// 
+www.ajol.info/index.php/mc/issue/view/7765 
+9. Ministry of Education (2006). The Common Curriculum Framework K–9 Mathematics. Alberta, British Columbia: Ministry of Education
+```
+
+## P257 (PDF page 257)
+
+```text
+ 227 
+10. Ministry of Education (2008). Principles of Mathematics 10 to 12 Integrated Resource Package. Alberta, British Columbia: 
+Ministry of Education 
+11. Ministry of Education (2010). Teaching Syllabus for Core Mathematics: Senior High School 1 – 3. Accra: Ministry of 
+Education, Science and Sports. https://mingycomputersgh.files. wordpress.com/2015/03/core-maths-syllabus2.pdf 
+12. Ministry of Education (2012). Teaching Syllabus for Mathematics: Junior High School 1 – 3. Accra: Ministry of Education, 
+Science and Sports. Available at https://mingycomputersgh.files.wordpress. com/2013/01/ghana-mathematics-syllabus-jhs-1-3.pdf 
+13. Ministry of Education (2015). Inclusive Education Policy. Accra: Ministry of Education 
+14. Ministry of Education (2018). National-Pre-tertiary-Education- Curriculum-Framework- Accra: NACCA. Available at 
+https://nacca. gov.gh/wp-content/uploads/2019/04/National-Pre-tertiary-Education- Curriculum-Framework-final.pdf. 
+15. Ministry of Education (2019). Primary 4 to 6 Mathematics Curriculum. Accra: Ministry of Education. Available at https://nacca. 
+gov.gh/wp-content/uploads/2019/04/MATHS-UPPER-PRIMARY-B4-B6. pdf 
+16. National Council of Teachers of Mathematics. (2005). Computation, Calculators, and Common Sense: A Position of the 
+National Council of Teachers of Mathematics. http://www.sdctm.org/ documents/newsletter/NCTM%20%20computation.pdf 
+(Accessed September 20, 2019).
+```
+
+## P258 (PDF page 258)
+
+```text
+ 
+MATHEMATICS SUBJECT PANEL MEMBERS AND REVIEWERS 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ NAME INSTITUTION 
+ 
+ 
+ 
+ 
+ 
+ 
+WRITING PANEL 
+Prof. Damian Kofi Mereku UEW,Winneba 
+Mr. Emmanuel Acquaye NEWAGE Strategies, Koforidua 
+Mr. Charles B. Ampofo Kibi Presbyterian College of Education 
+Mr. Edward Dadson Mills Methodist B Junior High School,Winneba 
+Mr. Nicholas Quartey Greenfield Education, Accra 
+Ms. Anita Cordei Collison NaCCA 
+Mr. Reginald Quartey NaCCA 
+Mr. Alfred Yeboah Ghana Secondary Technical School (GSTS),Takoradi 
+Mr. Gladstone Faakor Agbake SRIM, MOE 
+V.G. Obeng UCC/PUCG 
+ 
+ 
+ 
+REVIEWERS 
+Cambridge International 
+Prof. Jonathan Fletcher University of Ghana, Legon 
+Mr. Ahmed Amihere University of Education,Winneba 
+Mr. John Afrim Al-Rayan International School
+```
+
+## P259 (PDF page 259)
+
+```text
+ 229 
+SUPERVISORS AND COORDINATING TEAM 
+ 
+ NAME INSTITUTION 
+SUPERVISORS 
+Dr. Prince H. Armah Director-General (Ag.), NaCCA 
+Prof. Kwame Osei Kwarteng Council Chairman, NaCCA 
+ 
+ 
+ 
+COORDINATING 
+TEAM 
+Mr. Johnson Boakye Yiadom NaCCA/EDT 
+Mr. John Mensah Anang NaCCA 
+Mr. Cosmos Eminah NaCCA 
+Mrs.Wilma S.Titus-Glover NaCCA 
+ 
+GRAPHIC DESIGNER Eugene Offei Tettey
+```
+

@@ -1,0 +1,4461 @@
+{
+  "source": {
+    "pdf_path": "C:/Users/victo/Downloads/MATHEMATICS.pdf",
+    "title": "Mathematics Common Core Programme Curriculum for JHS1 (B7) - JHS3 (B9)",
+    "publisher": "NaCCA, Ministry of Education, Republic of Ghana",
+    "publication_date": "September 2020",
+    "generated_at": "2026-04-10 12:45:04"
+  },
+  "subject": {
+    "code": "MATH-CCP-B7-B9",
+    "name": "Mathematics",
+    "curriculum_family": "Ghana Common Core Programme (JHS B7-B9)",
+    "notes": "Seed package extracted from official curriculum PDF with page anchors for provenance."
+  },
+  "grade_summaries": {
+    "B7": {
+      "content_standard_count": 21,
+      "indicator_count": 69,
+      "strand_breakdown": [
+        {
+          "strand_num": 1,
+          "strand_name": "Number",
+          "content_standards": 9,
+          "indicators": 27
+        },
+        {
+          "strand_num": 2,
+          "strand_name": "Algebra",
+          "content_standards": 3,
+          "indicators": 13
+        },
+        {
+          "strand_num": 3,
+          "strand_name": "Geometry and Measurement",
+          "content_standards": 6,
+          "indicators": 21
+        },
+        {
+          "strand_num": 4,
+          "strand_name": "Handling Data",
+          "content_standards": 3,
+          "indicators": 8
+        }
+      ]
+    },
+    "B8": {
+      "content_standard_count": 18,
+      "indicator_count": 58,
+      "strand_breakdown": [
+        {
+          "strand_num": 1,
+          "strand_name": "Number",
+          "content_standards": 7,
+          "indicators": 26
+        },
+        {
+          "strand_num": 2,
+          "strand_name": "Algebra",
+          "content_standards": 3,
+          "indicators": 10
+        },
+        {
+          "strand_num": 3,
+          "strand_name": "Geometry and Measurement",
+          "content_standards": 5,
+          "indicators": 15
+        },
+        {
+          "strand_num": 4,
+          "strand_name": "Handling Data",
+          "content_standards": 3,
+          "indicators": 7
+        }
+      ]
+    },
+    "B9": {
+      "content_standard_count": 18,
+      "indicator_count": 52,
+      "strand_breakdown": [
+        {
+          "strand_num": 1,
+          "strand_name": "Number",
+          "content_standards": 7,
+          "indicators": 21
+        },
+        {
+          "strand_num": 2,
+          "strand_name": "Algebra",
+          "content_standards": 3,
+          "indicators": 10
+        },
+        {
+          "strand_num": 3,
+          "strand_name": "Geometry and Measurement",
+          "content_standards": 5,
+          "indicators": 13
+        },
+        {
+          "strand_num": 4,
+          "strand_name": "Handling Data",
+          "content_standards": 3,
+          "indicators": 8
+        }
+      ]
+    }
+  },
+  "topics": [
+    {
+      "topic_code": "B7.1.1.1",
+      "topic_name": "Demonstrate understanding and the use of place value for expressing quantities recorded as base ten numerals as well as rounding these to given decimal places and significant figures",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 1,
+      "substrand_name": "Number and Numeration Systems",
+      "source_anchors": [
+        "P032",
+        "P033",
+        "P034",
+        "P035",
+        "P036"
+      ],
+      "source_pages": [
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "indicator_codes": [
+        "B7.1.1.1.1",
+        "B7.1.1.1.3",
+        "B7.1.1.1.4",
+        "B7.1.1.1.5"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B7.1.1.2",
+        "B8.1.1.1"
+      ]
+    },
+    {
+      "topic_code": "B7.1.1.2",
+      "topic_name": "Compare and order whole numbers more than1,000,000,000 and represent the comparison using \">, <, or=\"",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 1,
+      "substrand_name": "Number and Numeration Systems",
+      "source_anchors": [
+        "P033"
+      ],
+      "source_pages": [
+        33
+      ],
+      "indicator_codes": [],
+      "indicator_count": 0,
+      "prerequisite_topic_codes": [
+        "B7.1.1.1"
+      ],
+      "next_topic_codes": [
+        "B8.1.1.2"
+      ]
+    },
+    {
+      "topic_code": "B7.1.2.1",
+      "topic_name": "Apply mental mathematics strategies and number properties used to solve problems",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P037",
+        "P038"
+      ],
+      "source_pages": [
+        37,
+        38
+      ],
+      "indicator_codes": [
+        "B7.1.2.1.1",
+        "B7.1.2.1.2",
+        "B7.1.2.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B7.1.2.2",
+        "B8.1.2.1"
+      ]
+    },
+    {
+      "topic_code": "B7.1.2.2",
+      "topic_name": "Demonstrate an understanding of addition, subtraction, multiplication and division of (i) whole numbers, and (ii) decimal numbers, to solve problems.",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P039",
+        "P040",
+        "P041",
+        "P042"
+      ],
+      "source_pages": [
+        39,
+        40,
+        41,
+        42
+      ],
+      "indicator_codes": [
+        "B7.1.2.2.1",
+        "B7.1.2.2.3"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B7.1.2.1"
+      ],
+      "next_topic_codes": [
+        "B7.1.2.3",
+        "B8.1.2.2"
+      ]
+    },
+    {
+      "topic_code": "B7.1.2.3",
+      "topic_name": "Demonstrate understanding and the use of powers of natural numbers in solving problems",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P043",
+        "P044",
+        "P045",
+        "P046"
+      ],
+      "source_pages": [
+        43,
+        44,
+        45,
+        46
+      ],
+      "indicator_codes": [
+        "B7.1.2.3.1",
+        "B7.1.2.3.2",
+        "B7.1.2.3.3",
+        "B7.1.2.3.4",
+        "B7.1.2.3.5"
+      ],
+      "indicator_count": 5,
+      "prerequisite_topic_codes": [
+        "B7.1.2.2"
+      ],
+      "next_topic_codes": [
+        "B8.1.2.3"
+      ]
+    },
+    {
+      "topic_code": "B7.1.3.1",
+      "topic_name": "Simplify, compare and order a mixture of positive fractions (i.e.",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 3,
+      "substrand_name": "Fractions, Decimals and Percentages",
+      "source_anchors": [
+        "P047",
+        "P048",
+        "P049"
+      ],
+      "source_pages": [
+        47,
+        48,
+        49
+      ],
+      "indicator_codes": [
+        "B7.1.3.1.1",
+        "B7.1.3.1.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B7.1.3.2",
+        "B8.1.3.1"
+      ]
+    },
+    {
+      "topic_code": "B7.1.3.2",
+      "topic_name": "Demonstrate an understanding of the process of addition and/or subtraction of fractions and apply this in solving problems",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 3,
+      "substrand_name": "Fractions, Decimals and Percentages",
+      "source_anchors": [
+        "P049",
+        "P050"
+      ],
+      "source_pages": [
+        49,
+        50
+      ],
+      "indicator_codes": [
+        "B7.1.3.2.1",
+        "B7.1.3.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B7.1.3.1"
+      ],
+      "next_topic_codes": [
+        "B7.1.3.3"
+      ]
+    },
+    {
+      "topic_code": "B7.1.3.3",
+      "topic_name": "Demonstrate an understanding of the process of multiplying and dividing positive fractions and apply this in solving problems",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 3,
+      "substrand_name": "Fractions, Decimals and Percentages",
+      "source_anchors": [
+        "P050",
+        "P051",
+        "P052",
+        "P053"
+      ],
+      "source_pages": [
+        50,
+        51,
+        52,
+        53
+      ],
+      "indicator_codes": [
+        "B7.1.3.3.1",
+        "B7.1.3.3.2",
+        "B7.1.3.3.3",
+        "B7.1.3.3.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [
+        "B7.1.3.2"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B7.1.4.1",
+      "topic_name": "Demonstrate an understanding of the concept of ratios and its relationship to fractions and use it to solve problems that involve rates, ratios, and proportional reasoning",
+      "grade": "B7",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 4,
+      "substrand_name": "Number: Ratios and Proportion",
+      "source_anchors": [
+        "P054",
+        "P055",
+        "P056"
+      ],
+      "source_pages": [
+        54,
+        55,
+        56
+      ],
+      "indicator_codes": [
+        "B7.1.4.1.1",
+        "B7.1.4.1.2",
+        "B7.1.4.1.3",
+        "B7.1.4.1.4",
+        "B7.1.4.1.5"
+      ],
+      "indicator_count": 5,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B8.1.4.1"
+      ]
+    },
+    {
+      "topic_code": "B7.2.1.1",
+      "topic_name": "Derive the rule for a set of points of a relation, draw a table of values to graph the relation in a number plane and make predictions about subsequent elements of the relation",
+      "grade": "B7",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 1,
+      "substrand_name": "Patterns and Relations",
+      "source_anchors": [
+        "P057",
+        "P058",
+        "P059",
+        "P060",
+        "P061",
+        "P062",
+        "P063",
+        "P064"
+      ],
+      "source_pages": [
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64
+      ],
+      "indicator_codes": [
+        "B7.2.1.1.1",
+        "B7.2.1.1.2",
+        "B7.2.1.1.3",
+        "B7.2.1.1.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B8.2.1.1"
+      ]
+    },
+    {
+      "topic_code": "B7.2.2.1",
+      "topic_name": "Simplify algebraic expressions involving the four basic operations and substituting values to evaluate algebraic expressions.",
+      "grade": "B7",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 2,
+      "substrand_name": "Algebraic Expressions",
+      "source_anchors": [
+        "P065",
+        "P066",
+        "P067",
+        "P068",
+        "P069",
+        "P070"
+      ],
+      "source_pages": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70
+      ],
+      "indicator_codes": [
+        "B7.2.2.1.1",
+        "B7.2.2.1.2",
+        "B7.2.2.1.3",
+        "B7.2.2.1.4",
+        "B7.2.2.1.5"
+      ],
+      "indicator_count": 5,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B8.2.2.1"
+      ]
+    },
+    {
+      "topic_code": "B7.2.3.1",
+      "topic_name": "Demonstrate an understanding of linear equations of the form x + a = b (where a and b are integers) by modelling problems as a linear equation and solving the problems concretely, pictorially, and symbolically",
+      "grade": "B7",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 3,
+      "substrand_name": "Variables and Equations",
+      "source_anchors": [
+        "P071",
+        "P072",
+        "P073",
+        "P074",
+        "P075",
+        "P076"
+      ],
+      "source_pages": [
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ],
+      "indicator_codes": [
+        "B7.2.3.1.1",
+        "B7.2.3.1.2",
+        "B7.2.3.1.3",
+        "B7.2.3.1.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B8.2.3.1"
+      ]
+    },
+    {
+      "topic_code": "B7.3.1.1",
+      "topic_name": "Demonstrate understanding of angles including adjacent, vertically opposite, complementary, supplementary and use them to solve problems",
+      "grade": "B7",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 1,
+      "substrand_name": "Shapes and Space",
+      "source_anchors": [
+        "P077",
+        "P078",
+        "P079",
+        "P080"
+      ],
+      "source_pages": [
+        77,
+        78,
+        79,
+        80
+      ],
+      "indicator_codes": [
+        "B7.3.1.1.1",
+        "B7.3.1.1.2",
+        "B7.3.1.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B7.3.1.2",
+        "B8.3.1.1"
+      ]
+    },
+    {
+      "topic_code": "B7.3.1.2",
+      "topic_name": "Demonstrate how to construct a perpendicular to a line from a given point, bisect a line, bisect angles, and construct angles of the following sizes: 30˚, 45˚, 60˚, 75˚ and 90˚",
+      "grade": "B7",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 1,
+      "substrand_name": "Shapes and Space",
+      "source_anchors": [
+        "P081",
+        "P082",
+        "P083",
+        "P084",
+        "P085",
+        "P086",
+        "P087",
+        "P088"
+      ],
+      "source_pages": [
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88
+      ],
+      "indicator_codes": [
+        "B7.3.1.2.1",
+        "B7.3.1.2.2",
+        "B7.3.1.2.3",
+        "B7.3.1.2.7"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [
+        "B7.3.1.1"
+      ],
+      "next_topic_codes": [
+        "B8.3.1.2"
+      ]
+    },
+    {
+      "topic_code": "B7.3.2.1",
+      "topic_name": "Demonstrate the ability to find the perimeter of plane shapes including circles using the concept of pi (π) to find the circumference of a circle",
+      "grade": "B7",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 2,
+      "substrand_name": "Measurement",
+      "source_anchors": [
+        "P089",
+        "P090",
+        "P091",
+        "P092",
+        "P093"
+      ],
+      "source_pages": [
+        89,
+        90,
+        91,
+        92,
+        93
+      ],
+      "indicator_codes": [
+        "B7.3.2.1.1",
+        "B7.3.2.1.2",
+        "B7.3.2.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B7.3.2.2",
+        "B8.3.2.1"
+      ]
+    },
+    {
+      "topic_code": "B7.3.2.2",
+      "topic_name": "Derive the formula for determining the area of a triangle and use it to solve problems",
+      "grade": "B7",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 2,
+      "substrand_name": "Measurement",
+      "source_anchors": [
+        "P094",
+        "P095",
+        "P096"
+      ],
+      "source_pages": [
+        94,
+        95,
+        96
+      ],
+      "indicator_codes": [
+        "B7.3.2.2.1",
+        "B7.3.2.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B7.3.2.1"
+      ],
+      "next_topic_codes": [
+        "B7.3.2.3",
+        "B8.3.2.2"
+      ]
+    },
+    {
+      "topic_code": "B7.3.2.3",
+      "topic_name": "Demonstrate understanding of bearings, vector and its components using real life cases",
+      "grade": "B7",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 2,
+      "substrand_name": "Measurement",
+      "source_anchors": [
+        "P097",
+        "P098",
+        "P099",
+        "P100",
+        "P101"
+      ],
+      "source_pages": [
+        97,
+        98,
+        99,
+        100,
+        101
+      ],
+      "indicator_codes": [
+        "B7.3.2.3.1",
+        "B7.3.2.3.2",
+        "B7.3.2.3.3",
+        "B7.3.2.3.4",
+        "B7.3.2.3.5"
+      ],
+      "indicator_count": 5,
+      "prerequisite_topic_codes": [
+        "B7.3.2.2"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B7.3.3.1",
+      "topic_name": "Perform a single transformation (i.e. reflection and translation) on a 2D shape using graph paper (including technology) and describe the properties of the image under the transformation (i.e. congruence, similarity, etc.)",
+      "grade": "B7",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 3,
+      "substrand_name": "Position and Transformation",
+      "source_anchors": [
+        "P102",
+        "P103",
+        "P104",
+        "P105",
+        "P106"
+      ],
+      "source_pages": [
+        102,
+        103,
+        104,
+        105,
+        106
+      ],
+      "indicator_codes": [
+        "B7.3.3.1.1",
+        "B7.3.3.1.2",
+        "B7.3.3.1.3",
+        "B7.3.3.1.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B8.3.3.1"
+      ]
+    },
+    {
+      "topic_code": "B7.4.1.1",
+      "topic_name": "Select, justify, and use appropriate methods to collect data (quantitative and qualitative), display and analyse the data (grouped/ungrouped) presented in frequency tables, line graphs, pie graphs, bar graphs or pictographs and use these to solve and/or pose problems",
+      "grade": "B7",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 1,
+      "substrand_name": "Data",
+      "source_anchors": [
+        "P107",
+        "P108",
+        "P109",
+        "P110",
+        "P111",
+        "P112"
+      ],
+      "source_pages": [
+        107,
+        108,
+        109,
+        110,
+        111,
+        112
+      ],
+      "indicator_codes": [
+        "B7.4.1.1.1",
+        "B7.4.1.1.2",
+        "B7.4.1.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B7.4.1.2",
+        "B8.4.1.1"
+      ]
+    },
+    {
+      "topic_code": "B7.4.1.2",
+      "topic_name": "Determine the measures of central tendency (mean, median, mode) for a given ungrouped data and use it to solve problems",
+      "grade": "B7",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 1,
+      "substrand_name": "Data",
+      "source_anchors": [
+        "P113",
+        "P114",
+        "P115"
+      ],
+      "source_pages": [
+        113,
+        114,
+        115
+      ],
+      "indicator_codes": [
+        "B7.4.1.2.1",
+        "B7.4.1.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B7.4.1.1"
+      ],
+      "next_topic_codes": [
+        "B8.4.1.2"
+      ]
+    },
+    {
+      "topic_code": "B7.4.2.1",
+      "topic_name": "Identify the sample space for a probability experiment involving single events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+      "grade": "B7",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 2,
+      "substrand_name": "Chance or Probability",
+      "source_anchors": [
+        "P116",
+        "P117",
+        "P118"
+      ],
+      "source_pages": [
+        116,
+        117,
+        118
+      ],
+      "indicator_codes": [
+        "B7.4.2.1.1",
+        "B7.4.2.1.2",
+        "B7.4.2.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [],
+      "next_topic_codes": [
+        "B8.4.2.1"
+      ]
+    },
+    {
+      "topic_code": "B8.1.1.1",
+      "topic_name": "Demonstrate understanding and the use of place value for expressing quantities in standard form and rounding numbers and decimals to significant figures and a given number of decimal places",
+      "grade": "B8",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 1,
+      "substrand_name": "Number and Numeration Systems",
+      "source_anchors": [
+        "P120",
+        "P121"
+      ],
+      "source_pages": [
+        120,
+        121
+      ],
+      "indicator_codes": [
+        "B8.1.1.1.1",
+        "B8.1.1.1.2",
+        "B8.1.1.1.3",
+        "B8.1.1.1.4",
+        "B8.1.1.1.5",
+        "B8.1.1.1.6"
+      ],
+      "indicator_count": 6,
+      "prerequisite_topic_codes": [
+        "B7.1.1.1"
+      ],
+      "next_topic_codes": [
+        "B8.1.1.2",
+        "B9.1.1.1"
+      ]
+    },
+    {
+      "topic_code": "B8.1.1.2",
+      "topic_name": "Apply the concepts and vocabulary of sets on sets of factors of numbers to identify perfect squares, determine their square root and solve real life problems involving union and intersection of two sets",
+      "grade": "B8",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 1,
+      "substrand_name": "Number and Numeration Systems",
+      "source_anchors": [
+        "P122",
+        "P123"
+      ],
+      "source_pages": [
+        122,
+        123
+      ],
+      "indicator_codes": [
+        "B8.1.1.2.1",
+        "B8.1.1.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B8.1.1.1",
+        "B7.1.1.2"
+      ],
+      "next_topic_codes": [
+        "B9.1.1.2"
+      ]
+    },
+    {
+      "topic_code": "B8.1.2.1",
+      "topic_name": "Apply mental mathematics strategies and number properties used to solve problems",
+      "grade": "B8",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P124"
+      ],
+      "source_pages": [
+        124
+      ],
+      "indicator_codes": [
+        "B8.1.2.1.1",
+        "B8.1.2.1.2",
+        "B8.1.2.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B7.1.2.1"
+      ],
+      "next_topic_codes": [
+        "B8.1.2.2",
+        "B9.1.2.1"
+      ]
+    },
+    {
+      "topic_code": "B8.1.2.2",
+      "topic_name": "Apply the understanding of the addition, subtraction, multiplication and division of (i) whole numbers within 10,000, and (ii) decimals up to 1/1000, to solve problems and round answers to given decimal places",
+      "grade": "B8",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P125",
+        "P126",
+        "P127",
+        "P128",
+        "P129"
+      ],
+      "source_pages": [
+        125,
+        126,
+        127,
+        128,
+        129
+      ],
+      "indicator_codes": [
+        "B8.1.2.2.1",
+        "B8.1.2.2.2",
+        "B8.1.2.2.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B8.1.2.1",
+        "B7.1.2.2"
+      ],
+      "next_topic_codes": [
+        "B8.1.2.3",
+        "B9.1.2.2"
+      ]
+    },
+    {
+      "topic_code": "B8.1.2.3",
+      "topic_name": "Demonstrate understanding and the use of the laws of indices in solving problems (including real life problems) involving powers of natural numbers",
+      "grade": "B8",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P130",
+        "P131"
+      ],
+      "source_pages": [
+        130,
+        131
+      ],
+      "indicator_codes": [
+        "B8.1.2.3.1",
+        "B8.1.2.3.2",
+        "B8.1.2.3.3",
+        "B8.1.2.3.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [
+        "B8.1.2.2",
+        "B7.1.2.3"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B8.1.3.1",
+      "topic_name": "Apply the understanding of operation on fractions to solve problems involving fractions of given quantities and round the results to given decimal and significant places.",
+      "grade": "B8",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 3,
+      "substrand_name": "Fractions, Decimals and Percentages",
+      "source_anchors": [
+        "P132",
+        "P133",
+        "P134"
+      ],
+      "source_pages": [
+        132,
+        133,
+        134
+      ],
+      "indicator_codes": [
+        "B8.1.3.1.1",
+        "B8.1.3.1.2",
+        "B8.1.3.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B7.1.3.1"
+      ],
+      "next_topic_codes": [
+        "B9.1.3.1"
+      ]
+    },
+    {
+      "topic_code": "B8.1.4.1",
+      "topic_name": "Demonstrate an understanding of ratio, rate and proportions and use it these to solve real- world mathematical problems.",
+      "grade": "B8",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 4,
+      "substrand_name": "Number: Ratios and Proportion",
+      "source_anchors": [
+        "P135",
+        "P136",
+        "P137",
+        "P138",
+        "P139",
+        "P140",
+        "P141"
+      ],
+      "source_pages": [
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141
+      ],
+      "indicator_codes": [
+        "B8.1.4.1.1",
+        "B8.1.4.1.2",
+        "B8.1.4.1.3",
+        "B8.1.4.1.4",
+        "B8.1.4.1.5"
+      ],
+      "indicator_count": 5,
+      "prerequisite_topic_codes": [
+        "B7.1.4.1"
+      ],
+      "next_topic_codes": [
+        "B9.1.4.1"
+      ]
+    },
+    {
+      "topic_code": "B8.2.1.1",
+      "topic_name": "Demonstrate the ability to draw table of values for a linear relation, graph the relation in a number plane, determine the gradient of the line and use it to write equation of a line of the form y = mx + c",
+      "grade": "B8",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 1,
+      "substrand_name": "Patterns and Relations",
+      "source_anchors": [
+        "P142",
+        "P143",
+        "P144",
+        "P145",
+        "P146",
+        "P147"
+      ],
+      "source_pages": [
+        142,
+        143,
+        144,
+        145,
+        146,
+        147
+      ],
+      "indicator_codes": [
+        "B8.2.1.1.1",
+        "B8.2.1.1.2",
+        "B8.2.1.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B7.2.1.1"
+      ],
+      "next_topic_codes": [
+        "B9.2.1.1"
+      ]
+    },
+    {
+      "topic_code": "B8.2.2.1",
+      "topic_name": "Solve problems involving algebraic expressions (including multiplication of binomial expressions) factorise given expressions and substitute values to evaluate algebraic expressions",
+      "grade": "B8",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 2,
+      "substrand_name": "Algebraic Expressions",
+      "source_anchors": [
+        "P148",
+        "P149",
+        "P150"
+      ],
+      "source_pages": [
+        148,
+        149,
+        150
+      ],
+      "indicator_codes": [
+        "B8.2.2.1.1",
+        "B8.2.2.1.2",
+        "B8.2.2.1.3",
+        "B8.2.2.1.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [
+        "B7.2.2.1"
+      ],
+      "next_topic_codes": [
+        "B9.2.2.1"
+      ]
+    },
+    {
+      "topic_code": "B8.2.3.1",
+      "topic_name": "Demonstrate an understanding of linear inequalities of the form x + a ≥ b (where a and b are integers) by modelling problems as a linear inequalities and solving the problems concretely, pictorially, and symbolically",
+      "grade": "B8",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 3,
+      "substrand_name": "Variables and Equations",
+      "source_anchors": [
+        "P151",
+        "P152"
+      ],
+      "source_pages": [
+        151,
+        152
+      ],
+      "indicator_codes": [
+        "B8.2.3.1.1",
+        "B8.2.3.1.2",
+        "B8.2.3.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B7.2.3.1"
+      ],
+      "next_topic_codes": [
+        "B9.2.3.1"
+      ]
+    },
+    {
+      "topic_code": "B8.3.1.1",
+      "topic_name": "Demonstrate understanding and use of the relationship between parallel lines and alternate and corresponding angles and use the sum of angles in a triangle to deduce the angle sum in any polygon",
+      "grade": "B8",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 1,
+      "substrand_name": "Shapes and Space",
+      "source_anchors": [
+        "P153",
+        "P154"
+      ],
+      "source_pages": [
+        153,
+        154
+      ],
+      "indicator_codes": [
+        "B8.3.1.1.1",
+        "B8.3.1.1.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B7.3.1.1"
+      ],
+      "next_topic_codes": [
+        "B8.3.1.2",
+        "B9.3.1.1"
+      ]
+    },
+    {
+      "topic_code": "B8.3.1.2",
+      "topic_name": "Demonstrate the ability to perform geometric constructions of the angles (75˚, 105˚, 60˚, 135˚ and 150˚), and construct triangles and find locus of points under given conditions",
+      "grade": "B8",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 1,
+      "substrand_name": "Shapes and Space",
+      "source_anchors": [
+        "P155",
+        "P156",
+        "P157",
+        "P158",
+        "P159",
+        "P160",
+        "P161",
+        "P162",
+        "P163",
+        "P164",
+        "P165",
+        "P166",
+        "P167",
+        "P168",
+        "P169",
+        "P170",
+        "P171"
+      ],
+      "source_pages": [
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171
+      ],
+      "indicator_codes": [
+        "B8.3.1.2.1",
+        "B8.3.1.2.2",
+        "B8.3.1.2.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B8.3.1.1",
+        "B7.3.1.2"
+      ],
+      "next_topic_codes": [
+        "B9.3.1.2"
+      ]
+    },
+    {
+      "topic_code": "B8.3.2.1",
+      "topic_name": "Apply the Pythagoras theorem, the primary trigonometric ratios and the formulas for determining the area of a circle to solve real problems.",
+      "grade": "B8",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 2,
+      "substrand_name": "Measurement",
+      "source_anchors": [
+        "P172",
+        "P173",
+        "P174",
+        "P175",
+        "P176",
+        "P177",
+        "P178"
+      ],
+      "source_pages": [
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178
+      ],
+      "indicator_codes": [
+        "B8.3.2.1.1",
+        "B8.3.2.1.2",
+        "B8.3.2.1.3",
+        "B8.3.2.1.4",
+        "B8.3.2.1.5"
+      ],
+      "indicator_count": 5,
+      "prerequisite_topic_codes": [
+        "B7.3.2.1"
+      ],
+      "next_topic_codes": [
+        "B8.3.2.2",
+        "B9.3.2.1"
+      ]
+    },
+    {
+      "topic_code": "B8.3.2.2",
+      "topic_name": "Demonstrate understanding of addition and subtraction of vectors and their applications in solving basic problems",
+      "grade": "B8",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 2,
+      "substrand_name": "Measurement",
+      "source_anchors": [
+        "P179",
+        "P180"
+      ],
+      "source_pages": [
+        179,
+        180
+      ],
+      "indicator_codes": [
+        "B8.3.2.2.1",
+        "B8.3.2.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B8.3.2.1",
+        "B7.3.2.2"
+      ],
+      "next_topic_codes": [
+        "B9.3.2.2"
+      ]
+    },
+    {
+      "topic_code": "B8.3.3.1",
+      "topic_name": "Perform a single transformation (i.e. rotation) on a 2D shape using graph paper (including technology) and describe the properties of the image under the transformation (i.e. congruence)",
+      "grade": "B8",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 3,
+      "substrand_name": "Position and Transformation",
+      "source_anchors": [
+        "P181",
+        "P182"
+      ],
+      "source_pages": [
+        181,
+        182
+      ],
+      "indicator_codes": [
+        "B8.3.3.1.1",
+        "B8.3.3.1.2",
+        "B8.3.3.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B7.3.3.1"
+      ],
+      "next_topic_codes": [
+        "B9.3.3.1"
+      ]
+    },
+    {
+      "topic_code": "B8.4.1.1",
+      "topic_name": "Select, justify, and use appropriate methods to collect data (quantitative and qualitative), use the data (grouped/ungrouped) to construct and interpret frequency tables, bar charts, pie charts, and pictograms to solve and/or pose problems",
+      "grade": "B8",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 1,
+      "substrand_name": "Data",
+      "source_anchors": [
+        "P183",
+        "P184",
+        "P185",
+        "P186",
+        "P187"
+      ],
+      "source_pages": [
+        183,
+        184,
+        185,
+        186,
+        187
+      ],
+      "indicator_codes": [
+        "B8.4.1.1.1",
+        "B8.4.1.1.2",
+        "B8.4.1.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B7.4.1.1"
+      ],
+      "next_topic_codes": [
+        "B8.4.1.2",
+        "B9.4.1.1"
+      ]
+    },
+    {
+      "topic_code": "B8.4.1.2",
+      "topic_name": "Demonstrate an understanding of measures of central tendency (mean, median, mode) and range for grouped data and explain when it’s most appropriate to use the mean, median, or mode",
+      "grade": "B8",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 1,
+      "substrand_name": "Data",
+      "source_anchors": [
+        "P188",
+        "P189",
+        "P190"
+      ],
+      "source_pages": [
+        188,
+        189,
+        190
+      ],
+      "indicator_codes": [
+        "B8.4.1.2.1",
+        "B8.4.1.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B8.4.1.1",
+        "B7.4.1.2"
+      ],
+      "next_topic_codes": [
+        "B9.4.1.2"
+      ]
+    },
+    {
+      "topic_code": "B8.4.2.1",
+      "topic_name": "Identify the sample space for a probability experiment involving two independent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+      "grade": "B8",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 2,
+      "substrand_name": "Chance or Probability",
+      "source_anchors": [
+        "P191",
+        "P192",
+        "P193"
+      ],
+      "source_pages": [
+        191,
+        192,
+        193
+      ],
+      "indicator_codes": [
+        "B8.4.2.1.1",
+        "B8.4.2.1.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B7.4.2.1"
+      ],
+      "next_topic_codes": [
+        "B9.4.2.1"
+      ]
+    },
+    {
+      "topic_code": "B9.1.1.1",
+      "topic_name": "Apply the understanding of place value in solving real life problems involving integers of any size, rounding this to given decimal places and significant figures",
+      "grade": "B9",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 1,
+      "substrand_name": "Number and Numeration Systems",
+      "source_anchors": [
+        "P195"
+      ],
+      "source_pages": [
+        195
+      ],
+      "indicator_codes": [
+        "B9.1.1.1.1",
+        "B9.1.1.1.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B8.1.1.1"
+      ],
+      "next_topic_codes": [
+        "B9.1.1.2"
+      ]
+    },
+    {
+      "topic_code": "B9.1.1.2",
+      "topic_name": "Demonstrate an understanding of the relationship between members of the rational number system and solve real life problems involving union and intersection of three sets",
+      "grade": "B9",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 1,
+      "substrand_name": "Number and Numeration Systems",
+      "source_anchors": [
+        "P196",
+        "P197"
+      ],
+      "source_pages": [
+        196,
+        197
+      ],
+      "indicator_codes": [
+        "B9.1.1.2.1",
+        "B9.1.1.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B9.1.1.1",
+        "B8.1.1.2"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.1.2.1",
+      "topic_name": "Apply mental mathematics and properties to determine answers for addition and subtraction of basic facts",
+      "grade": "B9",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P198"
+      ],
+      "source_pages": [
+        198
+      ],
+      "indicator_codes": [
+        "B9.1.2.1.1",
+        "B9.1.2.1.2",
+        "B9.1.2.1.3",
+        "B9.1.2.1.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [
+        "B8.1.2.1"
+      ],
+      "next_topic_codes": [
+        "B9.1.2.2"
+      ]
+    },
+    {
+      "topic_code": "B9.1.2.2",
+      "topic_name": "Apply the understanding of addition, subtraction, multiplication and division of decimal numbers to solve problems, and round answers to given decimal places and significant figures",
+      "grade": "B9",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P199"
+      ],
+      "source_pages": [
+        199
+      ],
+      "indicator_codes": [
+        "B9.1.2.2.1",
+        "B9.1.2.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B9.1.2.1",
+        "B8.1.2.2"
+      ],
+      "next_topic_codes": [
+        "B9.1.2.4"
+      ]
+    },
+    {
+      "topic_code": "B9.1.2.4",
+      "topic_name": "Demonstrate understanding of surds as real numbers, the process of adding and subtracting of surds as well as determining (using a calculator) the approximate square root of a number that is not a perfect square",
+      "grade": "B9",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 2,
+      "substrand_name": "Number Operations",
+      "source_anchors": [
+        "P200",
+        "P201"
+      ],
+      "source_pages": [
+        200,
+        201
+      ],
+      "indicator_codes": [
+        "B9.1.2.4.1",
+        "B9.1.2.4.2",
+        "B9.1.2.4.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B9.1.2.2"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.1.3.1",
+      "topic_name": "Apply the understanding of operations on fractions to solve problems involving fractions of given quantities and round the results to given decimal and significant places",
+      "grade": "B9",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 3,
+      "substrand_name": "Fractions, Decimals and Percentages",
+      "source_anchors": [
+        "P202",
+        "P203",
+        "P204"
+      ],
+      "source_pages": [
+        202,
+        203,
+        204
+      ],
+      "indicator_codes": [
+        "B9.1.3.1.1",
+        "B9.1.3.1.2",
+        "B9.1.3.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B8.1.3.1"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.1.4.1",
+      "topic_name": "Apply the understanding of ratio, rate and proportions to solve problems that involve rates, ratios, and proportional reasoning and use it to solve real- world mathematical problems",
+      "grade": "B9",
+      "strand_code": 1,
+      "strand_name": "Number",
+      "substrand_code": 4,
+      "substrand_name": "Number: Ratios and Proportion",
+      "source_anchors": [
+        "P205",
+        "P206",
+        "P207",
+        "P208"
+      ],
+      "source_pages": [
+        205,
+        206,
+        207,
+        208
+      ],
+      "indicator_codes": [
+        "B9.1.4.1.1",
+        "B9.1.4.1.2",
+        "B9.1.4.1.3",
+        "B9.1.4.1.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [
+        "B8.1.4.1"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.2.1.1",
+      "topic_name": "Demonstrate the ability to construct tables of values for pairs of linear relations, graph the relations in a number plane and determine the intersection of the lines to solve simultaneous linear equations",
+      "grade": "B9",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 1,
+      "substrand_name": "Patterns and Relations",
+      "source_anchors": [
+        "P210",
+        "P211",
+        "P212"
+      ],
+      "source_pages": [
+        210,
+        211,
+        212
+      ],
+      "indicator_codes": [
+        "B9.2.1.1.1",
+        "B9.2.1.1.2",
+        "B9.2.1.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B8.2.1.1"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.2.2.1",
+      "topic_name": "Demonstrate an understanding of (i) change of subject (ii) substituting values to evaluate expressions, and (iii) factorize expressions that have simple binomial as a factor",
+      "grade": "B9",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 2,
+      "substrand_name": "Algebraic Expressions",
+      "source_anchors": [
+        "P213",
+        "P214",
+        "P215",
+        "P216",
+        "P217",
+        "P218",
+        "P219"
+      ],
+      "source_pages": [
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219
+      ],
+      "indicator_codes": [
+        "B9.2.2.1.1",
+        "B9.2.2.1.2",
+        "B9.2.2.1.3",
+        "B9.2.2.1.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [
+        "B8.2.2.1"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.2.3.1",
+      "topic_name": "Demonstrate understanding of single variable linear inequalities with rational coefficients including: • solving inequalities • verifying • comparing • graphing ii.",
+      "grade": "B9",
+      "strand_code": 2,
+      "strand_name": "Algebra",
+      "substrand_code": 3,
+      "substrand_name": "Variables and Equations",
+      "source_anchors": [
+        "P220",
+        "P221",
+        "P222",
+        "P223",
+        "P224",
+        "P225"
+      ],
+      "source_pages": [
+        220,
+        221,
+        222,
+        223,
+        224,
+        225
+      ],
+      "indicator_codes": [
+        "B9.2.3.1.1",
+        "B9.2.3.1.2",
+        "B9.2.3.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B8.2.3.1"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.3.1.1",
+      "topic_name": "Apply the properties of angles at a point, angles on a straight line, vertically opposite angles, corresponding, angles to` solve problems",
+      "grade": "B9",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 1,
+      "substrand_name": "Shapes and Space",
+      "source_anchors": [
+        "P226",
+        "P227",
+        "P228"
+      ],
+      "source_pages": [
+        226,
+        227,
+        228
+      ],
+      "indicator_codes": [
+        "B9.3.1.1.1",
+        "B9.3.1.1.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B8.3.1.1"
+      ],
+      "next_topic_codes": [
+        "B9.3.1.2"
+      ]
+    },
+    {
+      "topic_code": "B9.3.1.2",
+      "topic_name": "Construct inscribed and circumscribed triangles and parallelograms with given dimensions",
+      "grade": "B9",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 1,
+      "substrand_name": "Shapes and Space",
+      "source_anchors": [
+        "P229",
+        "P230",
+        "P231",
+        "P232",
+        "P233",
+        "P234"
+      ],
+      "source_pages": [
+        229,
+        230,
+        231,
+        232,
+        233,
+        234
+      ],
+      "indicator_codes": [
+        "B9.3.1.2.1",
+        "B9.3.1.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B9.3.1.1",
+        "B8.3.1.2"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.3.2.1",
+      "topic_name": "Derive the formulas for determining the surface area of prisms (i.e.",
+      "grade": "B9",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 2,
+      "substrand_name": "Measurement",
+      "source_anchors": [
+        "P235",
+        "P236",
+        "P237"
+      ],
+      "source_pages": [
+        235,
+        236,
+        237
+      ],
+      "indicator_codes": [
+        "B9.3.2.1.1",
+        "B9.3.2.1.2",
+        "B9.3.2.1.3",
+        "B9.3.2.1.4"
+      ],
+      "indicator_count": 4,
+      "prerequisite_topic_codes": [
+        "B8.3.2.1"
+      ],
+      "next_topic_codes": [
+        "B9.3.2.2"
+      ]
+    },
+    {
+      "topic_code": "B9.3.2.2",
+      "topic_name": "Solve problems involving bearings and addition/subtraction of vectors",
+      "grade": "B9",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 2,
+      "substrand_name": "Measurement",
+      "source_anchors": [
+        "P238"
+      ],
+      "source_pages": [
+        238
+      ],
+      "indicator_codes": [
+        "B9.3.2.2.1",
+        "B9.3.2.2.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B9.3.2.1",
+        "B8.3.2.2"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.3.3.1",
+      "topic_name": "Demonstrate understanding of how to perform an enlargement on a geometrical shape given a scale factor and describe the properties of the image under the transformation (i.e.",
+      "grade": "B9",
+      "strand_code": 3,
+      "strand_name": "Geometry and Measurement",
+      "substrand_code": 3,
+      "substrand_name": "Position and Transformation",
+      "source_anchors": [
+        "P239",
+        "P240"
+      ],
+      "source_pages": [
+        239,
+        240
+      ],
+      "indicator_codes": [
+        "B9.3.3.1.1",
+        "B9.3.3.1.2",
+        "B9.3.3.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B8.3.3.1"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.4.1.1",
+      "topic_name": "Select, justify, and use appropriate methods of collecting data (grouped/ungrouped), use the data to construct and interpret frequency tables and histogram and use it to determine the mode and to solve and/or pose problems",
+      "grade": "B9",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 1,
+      "substrand_name": "Data",
+      "source_anchors": [
+        "P241",
+        "P242",
+        "P243",
+        "P244"
+      ],
+      "source_pages": [
+        241,
+        242,
+        243,
+        244
+      ],
+      "indicator_codes": [
+        "B9.4.1.1.1",
+        "B9.4.1.1.2",
+        "B9.4.1.1.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B8.4.1.1"
+      ],
+      "next_topic_codes": [
+        "B9.4.1.2"
+      ]
+    },
+    {
+      "topic_code": "B9.4.1.2",
+      "topic_name": "Select, justify, and use appropriate methods of collecting data (quantitative and qualitative), organise and analyse the data (grouped/ungrouped) to interpret the results using the descriptive statistics (measures of central tendency and range)",
+      "grade": "B9",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 1,
+      "substrand_name": "Data",
+      "source_anchors": [
+        "P245",
+        "P246",
+        "P247",
+        "P248"
+      ],
+      "source_pages": [
+        245,
+        246,
+        247,
+        248
+      ],
+      "indicator_codes": [
+        "B9.4.1.2.1",
+        "B9.4.1.2.2",
+        "B9.4.1.2.3"
+      ],
+      "indicator_count": 3,
+      "prerequisite_topic_codes": [
+        "B9.4.1.1",
+        "B8.4.1.2"
+      ],
+      "next_topic_codes": []
+    },
+    {
+      "topic_code": "B9.4.2.1",
+      "topic_name": "Identify the sample space for a probability experiment involving two dependent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+      "grade": "B9",
+      "strand_code": 4,
+      "strand_name": "Handling Data",
+      "substrand_code": 2,
+      "substrand_name": "Chance or Probability",
+      "source_anchors": [
+        "P249"
+      ],
+      "source_pages": [
+        249
+      ],
+      "indicator_codes": [
+        "B9.4.2.1.1",
+        "B9.4.2.1.2"
+      ],
+      "indicator_count": 2,
+      "prerequisite_topic_codes": [
+        "B8.4.2.1"
+      ],
+      "next_topic_codes": []
+    }
+  ],
+  "indicators": [
+    {
+      "indicator_code": "B7.1.1.1.1",
+      "parent_topic_code": "B7.1.1.1",
+      "indicator_text": "Model number quantities more than 1,000,000,000 using graph sheets, isometric papers and multi-base blocks",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P032"
+      ],
+      "source_pages": [
+        32
+      ]
+    },
+    {
+      "indicator_code": "B7.1.1.1.3",
+      "parent_topic_code": "B7.1.1.1",
+      "indicator_text": "Round (off, up, down) whole numbers more than 1,000,000,000 to the nearest hundred-thousand, ten-thousands, thousands, hundreds and tens",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P034"
+      ],
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "indicator_code": "B7.1.1.1.4",
+      "parent_topic_code": "B7.1.1.1",
+      "indicator_text": "Round decimals to the nearest tenth, hundredth, thousandths, etc",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P035"
+      ],
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "indicator_code": "B7.1.1.1.5",
+      "parent_topic_code": "B7.1.1.1",
+      "indicator_text": "Express decimal numerals to given significant and decimal places",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P036"
+      ],
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.1.1",
+      "parent_topic_code": "B7.1.2.1",
+      "indicator_text": "Multiply and divide given numbers by powers of 10 including decimals and benchmark fractions",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P037"
+      ],
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.1.2",
+      "parent_topic_code": "B7.1.2.1",
+      "indicator_text": "Apply mental mathematics strategies and number properties used to perform calculations.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P037"
+      ],
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.1.3",
+      "parent_topic_code": "B7.1.2.1",
+      "indicator_text": "Apply mental mathematics strategies to solve word problems.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P038"
+      ],
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.2.1",
+      "parent_topic_code": "B7.1.2.2",
+      "indicator_text": "Add and subtract up to four-digit numbers. Critical thinking and problem solving (CP)",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P039"
+      ],
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.2.3",
+      "parent_topic_code": "B7.1.2.2",
+      "indicator_text": "Create and solve story problems involving decimals on the four basic operations",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P041"
+      ],
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.3.1",
+      "parent_topic_code": "B7.1.2.3",
+      "indicator_text": "Illustrate with examples the meaning of repeated factors using counting objects such as bottle tops or bundle sticks.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P043"
+      ],
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.3.2",
+      "parent_topic_code": "B7.1.2.3",
+      "indicator_text": "Express a given number as a product of a given number or numbers, as well as, in the form of a power or two such numbers as product of powers",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P043"
+      ],
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.3.3",
+      "parent_topic_code": "B7.1.2.3",
+      "indicator_text": "Show that the value of any natural number with zero as its exponent or index is 1 and use it to solve problems",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P044"
+      ],
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.3.4",
+      "parent_topic_code": "B7.1.2.3",
+      "indicator_text": "Find the value of a number written in index form",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P044"
+      ],
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "indicator_code": "B7.1.2.3.5",
+      "parent_topic_code": "B7.1.2.3",
+      "indicator_text": "Apply the concept of powers of numbers (product of prime) to find Highest Common Factor (HCF)",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P045"
+      ],
+      "source_pages": [
+        45
+      ]
+    },
+    {
+      "indicator_code": "B7.1.3.1.1",
+      "parent_topic_code": "B7.1.3.1",
+      "indicator_text": "Determine and recall the percentages and decimals of given benchmark fractions (i.e.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P047"
+      ],
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "indicator_code": "B7.1.3.1.2",
+      "parent_topic_code": "B7.1.3.1",
+      "indicator_text": "Compare and order fractions (i.e. common, percent and decimal fractions up to thousandths) limit to the benchmark fractions",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P049"
+      ],
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "indicator_code": "B7.1.3.2.1",
+      "parent_topic_code": "B7.1.3.2",
+      "indicator_text": "Explain the process of addition and subtraction of two or three unlike and mixed fractions",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P049"
+      ],
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "indicator_code": "B7.1.3.2.2",
+      "parent_topic_code": "B7.1.3.2",
+      "indicator_text": "Solve problems involving addition or subtraction of fractions.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P050"
+      ],
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "indicator_code": "B7.1.3.3.1",
+      "parent_topic_code": "B7.1.3.3",
+      "indicator_text": "Explain the process of multiplying a fraction (i.e.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P050"
+      ],
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "indicator_code": "B7.1.3.3.2",
+      "parent_topic_code": "B7.1.3.3",
+      "indicator_text": "Find a fraction of given quantity (i.e. money or given quantity of objects) Critical thinking and problem solving (CP)",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P051"
+      ],
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "indicator_code": "B7.1.3.3.3",
+      "parent_topic_code": "B7.1.3.3",
+      "indicator_text": "Explain the process of dividing a fraction (i.e.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P052"
+      ],
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "indicator_code": "B7.1.3.3.4",
+      "parent_topic_code": "B7.1.3.3",
+      "indicator_text": "Determine the result of dividing a quantity (i.e.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P053"
+      ],
+      "source_pages": [
+        53
+      ]
+    },
+    {
+      "indicator_code": "B7.1.4.1.1",
+      "parent_topic_code": "B7.1.4.1",
+      "indicator_text": "Find ratio and use ratio language to describe relationship between two quantities",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P054"
+      ],
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "indicator_code": "B7.1.4.1.2",
+      "parent_topic_code": "B7.1.4.1",
+      "indicator_text": "Use the concept of a unit rate 𝒂𝒂 𝒃𝒃 associated with a ratio a:b with b ≠ 0, and use rate language in the context of a ratio relationship",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P054"
+      ],
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "indicator_code": "B7.1.4.1.3",
+      "parent_topic_code": "B7.1.4.1",
+      "indicator_text": "Make tables of equivalent ratios (written as common fractions) relating quantities that are proportional",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P055"
+      ],
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "indicator_code": "B7.1.4.1.4",
+      "parent_topic_code": "B7.1.4.1",
+      "indicator_text": "Use the proportional reasoning to find missing values in the tables, and plot pairs of values on the coordinate plane",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P056"
+      ],
+      "source_pages": [
+        56
+      ]
+    },
+    {
+      "indicator_code": "B7.1.4.1.5",
+      "parent_topic_code": "B7.1.4.1",
+      "indicator_text": "Find a percent of a quantity as a rate per 100 (e.g.",
+      "grade": "B7",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P056"
+      ],
+      "source_pages": [
+        56
+      ]
+    },
+    {
+      "indicator_code": "B7.2.1.1.1",
+      "parent_topic_code": "B7.2.1.1",
+      "indicator_text": "Extend a given relation presented with and without symbolic materials and explain how each element differs from the preceding one.",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P057"
+      ],
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "indicator_code": "B7.2.1.1.2",
+      "parent_topic_code": "B7.2.1.1",
+      "indicator_text": "Describe the rule for a given relation using mathematical language such as one more, one less, one more than twice, etc.",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P058"
+      ],
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "indicator_code": "B7.2.1.1.3",
+      "parent_topic_code": "B7.2.1.1",
+      "indicator_text": "Identify the relation or rule in a pattern/mapping presented numerically or symbolically and predict subsequent elements Creativity and Innovation (CI)",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P060"
+      ],
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "indicator_code": "B7.2.1.1.4",
+      "parent_topic_code": "B7.2.1.1",
+      "indicator_text": "Locate points on the number plane, draw a table of values of a given relation, draw graphs for given relations and use them to solve problems",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P061"
+      ],
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "indicator_code": "B7.2.2.1.1",
+      "parent_topic_code": "B7.2.2.1",
+      "indicator_text": "Create simple algebraic expressions using simple logic to translate a set of instructions into an algebraic expression",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P065"
+      ],
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "indicator_code": "B7.2.2.1.2",
+      "parent_topic_code": "B7.2.2.1",
+      "indicator_text": "Perform addition and subtraction of algebraic expressions with rational coefficients",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P066"
+      ],
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "indicator_code": "B7.2.2.1.3",
+      "parent_topic_code": "B7.2.2.1",
+      "indicator_text": "Perform multiplication and division of algebraic expressions with rational coefficients",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P068"
+      ],
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "indicator_code": "B7.2.2.1.4",
+      "parent_topic_code": "B7.2.2.1",
+      "indicator_text": "Substitute values to evaluate algebraic expressions",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P069"
+      ],
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "indicator_code": "B7.2.2.1.5",
+      "parent_topic_code": "B7.2.2.1",
+      "indicator_text": "Use properties of the four operations to simplify algebraic expressions with rational coefficients",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P070"
+      ],
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "indicator_code": "B7.2.3.1.1",
+      "parent_topic_code": "B7.2.3.1",
+      "indicator_text": "Translate word problems to linear equations in one variable and vice versa",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P071"
+      ],
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "indicator_code": "B7.2.3.1.2",
+      "parent_topic_code": "B7.2.3.1",
+      "indicator_text": "Model and solve linear equations using concrete materials (e.g., counters and integer tiles) and describe the process orally and symbolically",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P073"
+      ],
+      "source_pages": [
+        73
+      ]
+    },
+    {
+      "indicator_code": "B7.2.3.1.3",
+      "parent_topic_code": "B7.2.3.1",
+      "indicator_text": "Model linear equations, then write mathematical expressions and describe the process of solving the equation using algebraic tiles",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P075"
+      ],
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "indicator_code": "B7.2.3.1.4",
+      "parent_topic_code": "B7.2.3.1",
+      "indicator_text": "Solve linear equations in one variable",
+      "grade": "B7",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P076"
+      ],
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "indicator_code": "B7.3.1.1.1",
+      "parent_topic_code": "B7.3.1.1",
+      "indicator_text": "Measure and classify angles according to their measured sizes – right, acute, obtuse and reflex.",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P077"
+      ],
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "indicator_code": "B7.3.1.1.2",
+      "parent_topic_code": "B7.3.1.1",
+      "indicator_text": "Apply the fact that (i) complementary angles are two angles that have a sum of 90°, and (ii) supplementary angles are two angles that have a sum of 180° to solve problems.",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P078"
+      ],
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "indicator_code": "B7.3.1.1.3",
+      "parent_topic_code": "B7.3.1.1",
+      "indicator_text": "Use adjacent, supplementary and vertically opposite angles to solve problems Creativity and Innovation (CI)",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P079"
+      ],
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "indicator_code": "B7.3.1.2.1",
+      "parent_topic_code": "B7.3.1.2",
+      "indicator_text": "Construct a line segment perpendicular to another line segment",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P081"
+      ],
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "indicator_code": "B7.3.1.2.2",
+      "parent_topic_code": "B7.3.1.2",
+      "indicator_text": "Construct the perpendicular bisector of a line segment",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P082"
+      ],
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "indicator_code": "B7.3.1.2.3",
+      "parent_topic_code": "B7.3.1.2",
+      "indicator_text": "Copy and bisect angles",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P083"
+      ],
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "indicator_code": "B7.3.1.2.7",
+      "parent_topic_code": "B7.3.1.2",
+      "indicator_text": "Describe examples of perpendicular line segments, perpendicular bisectors and angle bisectors in the environment",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P088"
+      ],
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.1.1",
+      "parent_topic_code": "B7.3.2.1",
+      "indicator_text": "Calculate the perimeter of given shapes whose dimensions are in two units (i.e.",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P089"
+      ],
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.1.2",
+      "parent_topic_code": "B7.3.2.1",
+      "indicator_text": "Use the relationships between the diameter and the circumference to deduce the formula for finding the circumference of a circle and use it to solve problems",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P090"
+      ],
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.1.3",
+      "parent_topic_code": "B7.3.2.1",
+      "indicator_text": "Draw in a square grid rectangles and triangles with given dimensions",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P093"
+      ],
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.2.1",
+      "parent_topic_code": "B7.3.2.2",
+      "indicator_text": "Use the relationships between a triangle and a rectangle (or parallelogram) to deduce the formula for determining the area of a triangle",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P094"
+      ],
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.2.2",
+      "parent_topic_code": "B7.3.2.2",
+      "indicator_text": "Determine the area of a triangle",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P096"
+      ],
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.3.1",
+      "parent_topic_code": "B7.3.2.3",
+      "indicator_text": "Describe the bearing of a point from another point",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P097"
+      ],
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.3.2",
+      "parent_topic_code": "B7.3.2.3",
+      "indicator_text": "Explain how to find the back bearing when the direction of travel has a bearing which is less than 180˚ and/ or greater than 180˚",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P099"
+      ],
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.3.3",
+      "parent_topic_code": "B7.3.2.3",
+      "indicator_text": "Distinguish between scalar and vector quantities",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P100"
+      ],
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.3.4",
+      "parent_topic_code": "B7.3.2.3",
+      "indicator_text": "Represent vector in the column (component) form �𝒙𝒙 𝒚𝒚� and determine its magnitude and direction",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P100"
+      ],
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "indicator_code": "B7.3.2.3.5",
+      "parent_topic_code": "B7.3.2.3",
+      "indicator_text": "Convert vectors in the column (component) form � 𝒙𝒙 𝒚𝒚� to the Magnitude–Bearing form (𝒌𝒌, 𝜽𝜽) and vice versa",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P101"
+      ],
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "indicator_code": "B7.3.3.1.1",
+      "parent_topic_code": "B7.3.3.1",
+      "indicator_text": "Determine shapes in real life that have reflectional (or fold) symmetries",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P102"
+      ],
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "indicator_code": "B7.3.3.1.2",
+      "parent_topic_code": "B7.3.3.1",
+      "indicator_text": "Plot points and shapes (i.e. plane figures) on a coordinate plane and draw their images under reflection in given lines Creativity and Innovation (CI)",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P103"
+      ],
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "indicator_code": "B7.3.3.1.3",
+      "parent_topic_code": "B7.3.3.1",
+      "indicator_text": "Plot points and shapes (i.e. plane figures) on a coordinate plane and draw their images under translation by a given vector",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P105"
+      ],
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "indicator_code": "B7.3.3.1.4",
+      "parent_topic_code": "B7.3.3.1",
+      "indicator_text": "Verify the concept of congruent and similar shapes in coordinate plane using properties of both the object(s) and image(s); and in real life situations (carpet designs, fabric pattern)",
+      "grade": "B7",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P106"
+      ],
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "indicator_code": "B7.4.1.1.1",
+      "parent_topic_code": "B7.4.1.1",
+      "indicator_text": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question",
+      "grade": "B7",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P107",
+        "P184"
+      ],
+      "source_pages": [
+        107,
+        184
+      ]
+    },
+    {
+      "indicator_code": "B7.4.1.1.2",
+      "parent_topic_code": "B7.4.1.1",
+      "indicator_text": "Design and administer a questionnaire for collecting data to answer questions and record the results",
+      "grade": "B7",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P108"
+      ],
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "indicator_code": "B7.4.1.1.3",
+      "parent_topic_code": "B7.4.1.1",
+      "indicator_text": "Organise and present data from a survey into a table and/or chart, and analyse it to solve and/or pose problems",
+      "grade": "B7",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P109"
+      ],
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "indicator_code": "B7.4.1.2.1",
+      "parent_topic_code": "B7.4.1.2",
+      "indicator_text": "Calculate the mean for a given ungrouped data and use it to solve problems",
+      "grade": "B7",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P113"
+      ],
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "indicator_code": "B7.4.1.2.2",
+      "parent_topic_code": "B7.4.1.2",
+      "indicator_text": "Calculate the median for a given ungrouped data and use it to solve problems",
+      "grade": "B7",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P114"
+      ],
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "indicator_code": "B7.4.2.1.1",
+      "parent_topic_code": "B7.4.2.1",
+      "indicator_text": "Demonstrate understanding of likelihood of a single outcome occurring by providing examples of events that are impossible, possible, or certain from personal contexts",
+      "grade": "B7",
+      "strand_code": 4,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P116"
+      ],
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "indicator_code": "B7.4.2.1.2",
+      "parent_topic_code": "B7.4.2.1",
+      "indicator_text": "Classify the likelihood of a single outcome occurring in a probability experiment as impossible, possible, or certain",
+      "grade": "B7",
+      "strand_code": 4,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P117"
+      ],
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "indicator_code": "B7.4.2.1.3",
+      "parent_topic_code": "B7.4.2.1",
+      "indicator_text": "Calculate the probability of the event and express the probability as fractions, decimals, percentages and/or ratios",
+      "grade": "B7",
+      "strand_code": 4,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P118"
+      ],
+      "source_pages": [
+        118
+      ]
+    },
+    {
+      "indicator_code": "B8.1.1.1.1",
+      "parent_topic_code": "B8.1.1.1",
+      "indicator_text": "Apply the understanding of place value to read and write in number quantities over 1,000,000,000",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P120"
+      ],
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "indicator_code": "B8.1.1.1.2",
+      "parent_topic_code": "B8.1.1.1",
+      "indicator_text": "Skip count forwards and backwards in 10,000s, 100,000s, 500,000s, etc",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P120"
+      ],
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "indicator_code": "B8.1.1.1.3",
+      "parent_topic_code": "B8.1.1.1",
+      "indicator_text": "Compare and order whole numbers using “>, <, and =”",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P120"
+      ],
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "indicator_code": "B8.1.1.1.4",
+      "parent_topic_code": "B8.1.1.1",
+      "indicator_text": "Express integers of any size into standard form",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P121"
+      ],
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "indicator_code": "B8.1.1.1.5",
+      "parent_topic_code": "B8.1.1.1",
+      "indicator_text": "Express integers in a given number of significant and decimal places",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P121"
+      ],
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "indicator_code": "B8.1.1.1.6",
+      "parent_topic_code": "B8.1.1.1",
+      "indicator_text": "Create and solve word or real-life problems on place values Creativity and Innovation (CI)",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P122"
+      ],
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "indicator_code": "B8.1.1.2.1",
+      "parent_topic_code": "B8.1.1.2",
+      "indicator_text": "Use the concept of sets to identify perfect squares and determine the square roots.",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P122"
+      ],
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "indicator_code": "B8.1.1.2.2",
+      "parent_topic_code": "B8.1.1.2",
+      "indicator_text": "Use the knowledge on sets and sets of factors of numbers to solve real life problems involving union and intersection",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P123"
+      ],
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.1.1",
+      "parent_topic_code": "B8.1.2.1",
+      "indicator_text": "Multiply and divide by power of 10 including decimals and the benchmark fractions",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P124"
+      ],
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.1.2",
+      "parent_topic_code": "B8.1.2.1",
+      "indicator_text": "Apply mental mathematics strategies and number properties to do calculation",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P124"
+      ],
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.1.3",
+      "parent_topic_code": "B8.1.2.1",
+      "indicator_text": "Apply mental mathematics strategies to solve word problems",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P124"
+      ],
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.2.1",
+      "parent_topic_code": "B8.1.2.2",
+      "indicator_text": "Add and subtract more than four-digit numbers",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P125"
+      ],
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.2.2",
+      "parent_topic_code": "B8.1.2.2",
+      "indicator_text": "Multiply or divide multi-digit numbers by 2- and 3-digit numbers",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P126"
+      ],
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.2.3",
+      "parent_topic_code": "B8.1.2.2",
+      "indicator_text": "Create and solve story problems involving decimals on the four basic operations",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P128"
+      ],
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.3.1",
+      "parent_topic_code": "B8.1.2.3",
+      "indicator_text": "Identify and explain the laws of indices",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P130"
+      ],
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.3.2",
+      "parent_topic_code": "B8.1.2.3",
+      "indicator_text": "Apply the laws of indices to simplify and evaluate numbers involving powers of numbers.",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P130"
+      ],
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.3.3",
+      "parent_topic_code": "B8.1.2.3",
+      "indicator_text": "Solve exponential equations",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P131"
+      ],
+      "source_pages": [
+        131
+      ]
+    },
+    {
+      "indicator_code": "B8.1.2.3.4",
+      "parent_topic_code": "B8.1.2.3",
+      "indicator_text": "Solve real life problems involving powers of natural numbers",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P131"
+      ],
+      "source_pages": [
+        131
+      ]
+    },
+    {
+      "indicator_code": "B8.1.3.1.1",
+      "parent_topic_code": "B8.1.3.1",
+      "indicator_text": "Review fractions and solve problems involving basic operations on fractions",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P132"
+      ],
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "indicator_code": "B8.1.3.1.2",
+      "parent_topic_code": "B8.1.3.1",
+      "indicator_text": "Add and/or subtract, multiply and/or divide given fractions, by using the principle of the order of operations (the rule of BODMAS or PEMDAS), and apply the understanding to solve problems",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P133"
+      ],
+      "source_pages": [
+        133
+      ]
+    },
+    {
+      "indicator_code": "B8.1.3.1.3",
+      "parent_topic_code": "B8.1.3.1",
+      "indicator_text": "Review word problems involving basic operations on fractions and related concepts",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P133"
+      ],
+      "source_pages": [
+        133
+      ]
+    },
+    {
+      "indicator_code": "B8.1.4.1.1",
+      "parent_topic_code": "B8.1.4.1",
+      "indicator_text": "Use ratio reasoning to convert measurement units; manipulate and transform units appropriately when multiplying or dividing quantities",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P135"
+      ],
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "indicator_code": "B8.1.4.1.2",
+      "parent_topic_code": "B8.1.4.1",
+      "indicator_text": "Solve unit rate problems including those involving unit pricing and constant speed; and speed translation",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P135"
+      ],
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "indicator_code": "B8.1.4.1.3",
+      "parent_topic_code": "B8.1.4.1",
+      "indicator_text": "Apply the knowledge of speed to draw and interpret travel graphs or distance-time graphs",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P137"
+      ],
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "indicator_code": "B8.1.4.1.4",
+      "parent_topic_code": "B8.1.4.1",
+      "indicator_text": "Recognise and represent proportional relationships between quantities by deciding whether two quantities are in a proportional relationship.",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P139"
+      ],
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "indicator_code": "B8.1.4.1.5",
+      "parent_topic_code": "B8.1.4.1",
+      "indicator_text": "Identify the constant of proportionality (unit rate) in tables, graphs, equations, diagrams, and verbal descriptions of proportional relationships",
+      "grade": "B8",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P140"
+      ],
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "indicator_code": "B8.2.1.1.1",
+      "parent_topic_code": "B8.2.1.1",
+      "indicator_text": "Calculate the gradient of a line and use it to write equation of a line of the form y = mx + c",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P142"
+      ],
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "indicator_code": "B8.2.1.1.2",
+      "parent_topic_code": "B8.2.1.1",
+      "indicator_text": "Use graph of a linear relation to determine subsequent missing elements in the ordered pairs of the relation",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P145"
+      ],
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "indicator_code": "B8.2.1.1.3",
+      "parent_topic_code": "B8.2.1.1",
+      "indicator_text": "Use graphs of linear relations to solve real life problems",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P146"
+      ],
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "indicator_code": "B8.2.2.1.1",
+      "parent_topic_code": "B8.2.2.1",
+      "indicator_text": "Use the distributive property to remove brackets and solve multiplication of binomial expression",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P148"
+      ],
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "indicator_code": "B8.2.2.1.2",
+      "parent_topic_code": "B8.2.2.1",
+      "indicator_text": "Perform addition, subtraction, multiplication and division of algebraic expressions including fractions",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P148"
+      ],
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "indicator_code": "B8.2.2.1.3",
+      "parent_topic_code": "B8.2.2.1",
+      "indicator_text": "Substitute values to evaluate algebraic expressions including fractions and use these to solve problems.",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P149"
+      ],
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "indicator_code": "B8.2.2.1.4",
+      "parent_topic_code": "B8.2.2.1",
+      "indicator_text": "Factorise given expressions involving the four operations and use the experiences gained to solve problems",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P150"
+      ],
+      "source_pages": [
+        150
+      ]
+    },
+    {
+      "indicator_code": "B8.2.3.1.1",
+      "parent_topic_code": "B8.2.3.1",
+      "indicator_text": "Translate word problems into linear inequalities in one variable and vice versa",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P151"
+      ],
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "indicator_code": "B8.2.3.1.2",
+      "parent_topic_code": "B8.2.3.1",
+      "indicator_text": "Solve simple linear inequalities",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P151"
+      ],
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "indicator_code": "B8.2.3.1.3",
+      "parent_topic_code": "B8.2.3.1",
+      "indicator_text": "Determine solution sets of simple linear inequalities in given domains",
+      "grade": "B8",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P152"
+      ],
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "indicator_code": "B8.3.1.1.1",
+      "parent_topic_code": "B8.3.1.1",
+      "indicator_text": "Draw and determine the values of alternate and corresponding angles",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P153"
+      ],
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "indicator_code": "B8.3.1.1.2",
+      "parent_topic_code": "B8.3.1.1",
+      "indicator_text": "Determine the values of angles in a triangle using knowledge of the sum of interior angles in a triangle and other properties",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P154"
+      ],
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "indicator_code": "B8.3.1.2.1",
+      "parent_topic_code": "B8.3.1.2",
+      "indicator_text": "Construct and bisect angles of 120˚, 105˚, 135˚ and 150˚",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P155"
+      ],
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "indicator_code": "B8.3.1.2.2",
+      "parent_topic_code": "B8.3.1.2",
+      "indicator_text": "Construct scalene triangles, isosceles triangles, equilateral triangles, obtuse-angled triangle, and acute-angled triangles in different orientations under given conditions.",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P157"
+      ],
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "indicator_code": "B8.3.1.2.3",
+      "parent_topic_code": "B8.3.1.2",
+      "indicator_text": "Construct loci under given conditions including: (i) the locus of sets of points from a fixed point; (ii) the locus of points equidistant from two fixed points; (iii) the locus of points equidistant from two intersecting straight lines, and (iv) the locus of...",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P163"
+      ],
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "indicator_code": "B8.3.2.1.1",
+      "parent_topic_code": "B8.3.2.1",
+      "indicator_text": "Use the relationship between the diameter and circumference of a circle to deduce the formula for finding its area, and use this to solve problems",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P172"
+      ],
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "indicator_code": "B8.3.2.1.2",
+      "parent_topic_code": "B8.3.2.1",
+      "indicator_text": "Establish the relationship between the hypotenuse ‘c’ and the two other sides ‘a’ and ‘b’ of a right-angled triangle (i.e.",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P173"
+      ],
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "indicator_code": "B8.3.2.1.3",
+      "parent_topic_code": "B8.3.2.1",
+      "indicator_text": "Use the Pythagorean theorem to solve problems on right- angled triangle",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P174"
+      ],
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "indicator_code": "B8.3.2.1.4",
+      "parent_topic_code": "B8.3.2.1",
+      "indicator_text": "Use the Pythagoras theorem to calculate the area of a triangle in real life problems",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P175"
+      ],
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "indicator_code": "B8.3.2.1.5",
+      "parent_topic_code": "B8.3.2.1",
+      "indicator_text": "Establish the relationship between the basic trigonometric ratios and solve problems involving right-angled triangles",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P175"
+      ],
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "indicator_code": "B8.3.2.2.1",
+      "parent_topic_code": "B8.3.2.2",
+      "indicator_text": "Add, subtract and find the scalar multiplication of vectors in the component form",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P179"
+      ],
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "indicator_code": "B8.3.2.2.2",
+      "parent_topic_code": "B8.3.2.2",
+      "indicator_text": "Demonstrate understanding of vector equality",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P180"
+      ],
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "indicator_code": "B8.3.3.1.1",
+      "parent_topic_code": "B8.3.3.1",
+      "indicator_text": "Understand rotation and identify real-life situations involving rotation",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P181"
+      ],
+      "source_pages": [
+        181
+      ]
+    },
+    {
+      "indicator_code": "B8.3.3.1.2",
+      "parent_topic_code": "B8.3.3.1",
+      "indicator_text": "Draw rotation image in a coordinate plane and determine the angle of rotation",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P182"
+      ],
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "indicator_code": "B8.3.3.1.3",
+      "parent_topic_code": "B8.3.3.1",
+      "indicator_text": "Investigate the concept of congruent shapes",
+      "grade": "B8",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P182"
+      ],
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "indicator_code": "B8.4.1.1.1",
+      "parent_topic_code": "B8.4.1.1",
+      "indicator_text": "Identify types of given data including numerical, categorical, ungrouped and grouped data",
+      "grade": "B8",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P183"
+      ],
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "indicator_code": "B8.4.1.1.2",
+      "parent_topic_code": "B8.4.1.1",
+      "indicator_text": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question",
+      "grade": "B8",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P184"
+      ],
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "indicator_code": "B8.4.1.1.3",
+      "parent_topic_code": "B8.4.1.1",
+      "indicator_text": "Organise data (grouped/ungrouped), present it in frequency tables, line graphs, pie graphs, bar graphs and/or pictographs (representations include info graphics, waffle diagrams, box and whisker plots and stem and leaf plots) and analyse it to solve and/or...",
+      "grade": "B8",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P185"
+      ],
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "indicator_code": "B8.4.1.2.1",
+      "parent_topic_code": "B8.4.1.2",
+      "indicator_text": "Calculate the mean, median and mode for a given set of ungrouped data, and explain why these values may be the same or different",
+      "grade": "B8",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P188"
+      ],
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "indicator_code": "B8.4.1.2.2",
+      "parent_topic_code": "B8.4.1.2",
+      "indicator_text": "Justify a context in which the mean, median or mode is the most appropriate measure of central tendency to use when reporting findings",
+      "grade": "B8",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P190"
+      ],
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "indicator_code": "B8.4.2.1.1",
+      "parent_topic_code": "B8.4.2.1",
+      "indicator_text": "Perform a probability experiment involving two independent events such as drawing coloured bottle tops from a bag with replacement and list the elements of the sample space",
+      "grade": "B8",
+      "strand_code": 4,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P191"
+      ],
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "indicator_code": "B8.4.2.1.2",
+      "parent_topic_code": "B8.4.2.1",
+      "indicator_text": "Express the probabilities of the events as fractions, decimals, percentages and/or ratios.",
+      "grade": "B8",
+      "strand_code": 4,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P192"
+      ],
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "indicator_code": "B9.1.1.1.1",
+      "parent_topic_code": "B9.1.1.1",
+      "indicator_text": "Express integers to a given number of significant and decimal places",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P195"
+      ],
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "indicator_code": "B9.1.1.1.2",
+      "parent_topic_code": "B9.1.1.1",
+      "indicator_text": "Use knowledge and understanding of place value to solve real life problems",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P195"
+      ],
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "indicator_code": "B9.1.1.2.1",
+      "parent_topic_code": "B9.1.1.2",
+      "indicator_text": "Solve problems on relationship between members of the rational number system using knowledge and understanding of the concept of union and intersection of two sets",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P196"
+      ],
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "indicator_code": "B9.1.1.2.2",
+      "parent_topic_code": "B9.1.1.2",
+      "indicator_text": "Apply the concept of sets to solve problems on relationship between members of rational number system and solve real life problems involving union and intersection of two sets",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P197"
+      ],
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.1.1",
+      "parent_topic_code": "B9.1.2.1",
+      "indicator_text": "Multiply and divide given numbers by powers of 10 including decimals and benchmark fractions Creativity and Innovation (CI)",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P198"
+      ],
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.1.2",
+      "parent_topic_code": "B9.1.2.1",
+      "indicator_text": "Demonstrate the ability to determine commutative properties of addition and multiplication",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P198"
+      ],
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.1.3",
+      "parent_topic_code": "B9.1.2.1",
+      "indicator_text": "Use the associative property of addition and multiplication",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P198"
+      ],
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.1.4",
+      "parent_topic_code": "B9.1.2.1",
+      "indicator_text": "Use the distributive property in solving problems",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P199"
+      ],
+      "source_pages": [
+        199
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.2.1",
+      "parent_topic_code": "B9.1.2.2",
+      "indicator_text": "Solve operations involving addition, subtraction, multiplication and division using word problems",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P199"
+      ],
+      "source_pages": [
+        199
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.2.2",
+      "parent_topic_code": "B9.1.2.2",
+      "indicator_text": "Solve word problems involving the four basic operations and round the answers to the nearest two decimal figures or to some significant figures.",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P199"
+      ],
+      "source_pages": [
+        199
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.3.4",
+      "parent_topic_code": "B9.1.2.3",
+      "indicator_text": "Approximate the square roots of non-perfect squares with calculators/tables",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P201"
+      ],
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.4.1",
+      "parent_topic_code": "B9.1.2.4",
+      "indicator_text": "Identify simple and compound surds",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P200"
+      ],
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.4.2",
+      "parent_topic_code": "B9.1.2.4",
+      "indicator_text": "Explain the identities/rules of surds Rule 1 √𝑎𝑎× 𝑎𝑎 = √𝑎𝑎× √𝑎𝑎 Rule 2 √𝑎𝑎 𝑎𝑎 = √𝑎𝑎 √𝑎𝑎 Rule 3 𝑎𝑎 √𝑎𝑎 = 𝑎𝑎 √𝑎𝑎× √𝑎𝑎 √𝑎𝑎= 𝑎𝑎√𝑎𝑎 𝑎𝑎 Rule 4 𝑎𝑎√𝑎𝑎± 𝑎𝑎√𝑎𝑎= (𝑎𝑎± 𝑎𝑎)√𝑎𝑎 Rule 5 𝑎𝑎 𝑎𝑎+ 𝑎𝑎√𝑚𝑚= 𝑎𝑎 𝑎𝑎+ 𝑎𝑎√𝑚𝑚× 𝑎𝑎− 𝑎𝑎√𝑚𝑚 𝑎𝑎− 𝑎𝑎√𝑚𝑚 Rule 6 𝑎𝑎 𝑎𝑎− 𝑎𝑎√𝑚𝑚 = 𝑎𝑎 𝑎𝑎− 𝑎𝑎√𝑚𝑚× 𝑎𝑎+...",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P200"
+      ],
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "indicator_code": "B9.1.2.4.3",
+      "parent_topic_code": "B9.1.2.4",
+      "indicator_text": "Simplify given surds )",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P200"
+      ],
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "indicator_code": "B9.1.3.1.1",
+      "parent_topic_code": "B9.1.3.1",
+      "indicator_text": "Review fractions and solve problems involving basic operations on fractions",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P202"
+      ],
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "indicator_code": "B9.1.3.1.2",
+      "parent_topic_code": "B9.1.3.1",
+      "indicator_text": "Add and/or subtract, multiply and/or divide given fractions, using the principle of order of operations including the use of the BODMAS or PEMDAS rule, and apply the understanding of these to solve problems",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P203"
+      ],
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "indicator_code": "B9.1.3.1.3",
+      "parent_topic_code": "B9.1.3.1",
+      "indicator_text": "Review word problems involving basic operations on fractions.",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P204"
+      ],
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "indicator_code": "B9.1.4.1.1",
+      "parent_topic_code": "B9.1.4.1",
+      "indicator_text": "Represent proportional relationships by equations",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P205"
+      ],
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "indicator_code": "B9.1.4.1.2",
+      "parent_topic_code": "B9.1.4.1",
+      "indicator_text": "Use proportional relationships to solve multistep ratio and percent problems, examples: simple interest, tax, discount and commissions, NHIL, depreciation, insurance, etc",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P205"
+      ],
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "indicator_code": "B9.1.4.1.3",
+      "parent_topic_code": "B9.1.4.1",
+      "indicator_text": "Use knowledge of rates and proportional reasoning to solve problems involving SSNIT benefits and contributions",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P206"
+      ],
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "indicator_code": "B9.1.4.1.4",
+      "parent_topic_code": "B9.1.4.1",
+      "indicator_text": "Recognise and graph proportional relationships, interpreting the unit rate as the slope of the graph and use these to solve problems",
+      "grade": "B9",
+      "strand_code": 1,
+      "substrand_code": 4,
+      "source_anchors": [
+        "P209"
+      ],
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "indicator_code": "B9.2.1.1.1",
+      "parent_topic_code": "B9.2.1.1",
+      "indicator_text": "Construct a table of values for two linear relations and graph the relation",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P210"
+      ],
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "indicator_code": "B9.2.1.1.2",
+      "parent_topic_code": "B9.2.1.1",
+      "indicator_text": "Use graphs of two linear relations to determine subsequent missing elements in ordered pairs of the relation",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P211"
+      ],
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "indicator_code": "B9.2.1.1.3",
+      "parent_topic_code": "B9.2.1.1",
+      "indicator_text": "Use graphs to solve equations involving two linear relations.",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P212"
+      ],
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "indicator_code": "B9.2.2.1.1",
+      "parent_topic_code": "B9.2.2.1",
+      "indicator_text": "Perform change of subject of a given formula and use it to solve problems",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P213"
+      ],
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "indicator_code": "B9.2.2.1.2",
+      "parent_topic_code": "B9.2.2.1",
+      "indicator_text": "Substitute values into given formulae to evaluate it and use it to solve problems.",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P215"
+      ],
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "indicator_code": "B9.2.2.1.3",
+      "parent_topic_code": "B9.2.2.1",
+      "indicator_text": "Factorise expressions that have simple binomial",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P216"
+      ],
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "indicator_code": "B9.2.2.1.4",
+      "parent_topic_code": "B9.2.2.1",
+      "indicator_text": "Use the knowledge of simplifying and factorising expressions to solve real world problems.",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P217"
+      ],
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "indicator_code": "B9.2.3.1.1",
+      "parent_topic_code": "B9.2.3.1",
+      "indicator_text": "Solve single variable linear inequalities with rational coefficients",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P220"
+      ],
+      "source_pages": [
+        220
+      ]
+    },
+    {
+      "indicator_code": "B9.2.3.1.2",
+      "parent_topic_code": "B9.2.3.1",
+      "indicator_text": "Illustrate solution sets of linear inequalities on the number line",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P220"
+      ],
+      "source_pages": [
+        220
+      ]
+    },
+    {
+      "indicator_code": "B9.2.3.1.3",
+      "parent_topic_code": "B9.2.3.1",
+      "indicator_text": "Solve real-life problems involving linear equations and inequalities",
+      "grade": "B9",
+      "strand_code": 2,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P223"
+      ],
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "indicator_code": "B9.3.1.1.1",
+      "parent_topic_code": "B9.3.1.1",
+      "indicator_text": "Derive the formula for calculating the sum of angles in any polygon and use this to calculate the value of missing angles in polygons",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P226"
+      ],
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "indicator_code": "B9.3.1.1.2",
+      "parent_topic_code": "B9.3.1.1",
+      "indicator_text": "Identify similar and congruent triangles and use the knowledge to solve related problems",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P228"
+      ],
+      "source_pages": [
+        228
+      ]
+    },
+    {
+      "indicator_code": "B9.3.1.2.1",
+      "parent_topic_code": "B9.3.1.2",
+      "indicator_text": "Draw inscribed and circumscribed circles for triangles under given conditions",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P229"
+      ],
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "indicator_code": "B9.3.1.2.2",
+      "parent_topic_code": "B9.3.1.2",
+      "indicator_text": "Construct parallelograms (i.e. square, rectangle, rhombus) under given conditions",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P231"
+      ],
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "indicator_code": "B9.3.2.1.1",
+      "parent_topic_code": "B9.3.2.1",
+      "indicator_text": "Identify cuboids and triangular prisms; draw their nets to construct the 3-D shapes and use it to determine the surface area",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P235"
+      ],
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "indicator_code": "B9.3.2.1.2",
+      "parent_topic_code": "B9.3.2.1",
+      "indicator_text": "Use the net of a cuboid to determine its surface area",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P236"
+      ],
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "indicator_code": "B9.3.2.1.3",
+      "parent_topic_code": "B9.3.2.1",
+      "indicator_text": "Use the net of a triangular prism to determine its surface area",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P236"
+      ],
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "indicator_code": "B9.3.2.1.4",
+      "parent_topic_code": "B9.3.2.1",
+      "indicator_text": "Express points in the Cartesian plane as position vectors Creativity and Innovation (CI)",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P237"
+      ],
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "indicator_code": "B9.3.2.2.1",
+      "parent_topic_code": "B9.3.2.2",
+      "indicator_text": "Show an understanding of parallel vectors and perpendicular vectors",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P238"
+      ],
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "indicator_code": "B9.3.2.2.2",
+      "parent_topic_code": "B9.3.2.2",
+      "indicator_text": "Apply the triangular and parallelogram laws of addition to resolve vectors",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P238"
+      ],
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "indicator_code": "B9.3.3.1.1",
+      "parent_topic_code": "B9.3.3.1",
+      "indicator_text": "Know examples of situations in everyday life that depict enlargement situations in everyday life",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P239"
+      ],
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "indicator_code": "B9.3.3.1.2",
+      "parent_topic_code": "B9.3.3.1",
+      "indicator_text": "Understand enlargement and identify real-life situations involving enlargement.",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P240"
+      ],
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "indicator_code": "B9.3.3.1.3",
+      "parent_topic_code": "B9.3.3.1",
+      "indicator_text": "Investigate the concept of congruent and similar shapes",
+      "grade": "B9",
+      "strand_code": 3,
+      "substrand_code": 3,
+      "source_anchors": [
+        "P240"
+      ],
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "indicator_code": "B9.4.1.1.1",
+      "parent_topic_code": "B9.4.1.1",
+      "indicator_text": "Select and justify a method to collect data (quantitative and qualitative) to answer a given question.",
+      "grade": "B9",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P241"
+      ],
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "indicator_code": "B9.4.1.1.2",
+      "parent_topic_code": "B9.4.1.1",
+      "indicator_text": "and find (minimum, maximum, measures of central tendency and range) i.",
+      "grade": "B9",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P241",
+        "P247",
+        "P248"
+      ],
+      "source_pages": [
+        241,
+        247,
+        248
+      ]
+    },
+    {
+      "indicator_code": "B9.4.1.1.3",
+      "parent_topic_code": "B9.4.1.1",
+      "indicator_text": "Use a histogram to determine the mode of a given data to solve and/or pose real life cases",
+      "grade": "B9",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P244"
+      ],
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "indicator_code": "B9.4.1.2.1",
+      "parent_topic_code": "B9.4.1.2",
+      "indicator_text": "Select a method for collecting data (quantitative and qualitative), taking into consideration how bias (use of language, ethics, cost, time and timing, privacy or cultural sensitivity) may influence data.",
+      "grade": "B9",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P245"
+      ],
+      "source_pages": [
+        245
+      ]
+    },
+    {
+      "indicator_code": "B9.4.1.2.2",
+      "parent_topic_code": "B9.4.1.2",
+      "indicator_text": "Organise and analyse data and interpret the results using the descriptive statistics (i.e.",
+      "grade": "B9",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P247"
+      ],
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "indicator_code": "B9.4.1.2.3",
+      "parent_topic_code": "B9.4.1.2",
+      "indicator_text": "Demonstrate the effect on the mean, median, and mode when extreme data is included in a data set",
+      "grade": "B9",
+      "strand_code": 4,
+      "substrand_code": 1,
+      "source_anchors": [
+        "P248"
+      ],
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "indicator_code": "B9.4.2.1.1",
+      "parent_topic_code": "B9.4.2.1",
+      "indicator_text": "E.g. 1. Express the probabilities of the events (on their respective branches) as decimals, percentages and ratios",
+      "grade": "B9",
+      "strand_code": 4,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P249"
+      ],
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "indicator_code": "B9.4.2.1.2",
+      "parent_topic_code": "B9.4.2.1",
+      "indicator_text": "Express the probabilities of the events as fractions, decimals, percentages and/or ratios; e.g.",
+      "grade": "B9",
+      "strand_code": 4,
+      "substrand_code": 2,
+      "source_anchors": [
+        "P249"
+      ],
+      "source_pages": [
+        249
+      ]
+    }
+  ]
+}

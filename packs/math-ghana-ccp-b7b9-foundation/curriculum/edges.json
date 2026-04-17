@@ -1,0 +1,338 @@
+[
+  {
+    "from_topic_code": "B7.1.1.1",
+    "to_topic_code": "B7.1.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.2.1",
+    "to_topic_code": "B7.1.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.2.2",
+    "to_topic_code": "B7.1.2.3",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.3.1",
+    "to_topic_code": "B7.1.3.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.3.2",
+    "to_topic_code": "B7.1.3.3",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.3.1.1",
+    "to_topic_code": "B7.3.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.3.2.1",
+    "to_topic_code": "B7.3.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.3.2.2",
+    "to_topic_code": "B7.3.2.3",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.4.1.1",
+    "to_topic_code": "B7.4.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.1.1",
+    "to_topic_code": "B8.1.1.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.1.1",
+    "to_topic_code": "B8.1.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.1.2",
+    "to_topic_code": "B8.1.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.2.1",
+    "to_topic_code": "B8.1.2.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.2.1",
+    "to_topic_code": "B8.1.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.2.2",
+    "to_topic_code": "B8.1.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.2.2",
+    "to_topic_code": "B8.1.2.3",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.2.3",
+    "to_topic_code": "B8.1.2.3",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.3.1",
+    "to_topic_code": "B8.1.3.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.1.4.1",
+    "to_topic_code": "B8.1.4.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.2.1.1",
+    "to_topic_code": "B8.2.1.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.2.2.1",
+    "to_topic_code": "B8.2.2.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.2.3.1",
+    "to_topic_code": "B8.2.3.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.3.1.1",
+    "to_topic_code": "B8.3.1.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.3.1.1",
+    "to_topic_code": "B8.3.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.3.1.2",
+    "to_topic_code": "B8.3.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.3.2.1",
+    "to_topic_code": "B8.3.2.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.3.2.1",
+    "to_topic_code": "B8.3.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.3.2.2",
+    "to_topic_code": "B8.3.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.3.3.1",
+    "to_topic_code": "B8.3.3.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.4.1.1",
+    "to_topic_code": "B8.4.1.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.4.1.1",
+    "to_topic_code": "B8.4.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.4.1.2",
+    "to_topic_code": "B8.4.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B7.4.2.1",
+    "to_topic_code": "B8.4.2.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.1.1",
+    "to_topic_code": "B9.1.1.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B9.1.1.1",
+    "to_topic_code": "B9.1.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.1.2",
+    "to_topic_code": "B9.1.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.2.1",
+    "to_topic_code": "B9.1.2.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B9.1.2.1",
+    "to_topic_code": "B9.1.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.2.2",
+    "to_topic_code": "B9.1.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B9.1.2.2",
+    "to_topic_code": "B9.1.2.4",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.3.1",
+    "to_topic_code": "B9.1.3.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.1.4.1",
+    "to_topic_code": "B9.1.4.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.2.1.1",
+    "to_topic_code": "B9.2.1.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.2.2.1",
+    "to_topic_code": "B9.2.2.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.2.3.1",
+    "to_topic_code": "B9.2.3.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.3.1.1",
+    "to_topic_code": "B9.3.1.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B9.3.1.1",
+    "to_topic_code": "B9.3.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.3.1.2",
+    "to_topic_code": "B9.3.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.3.2.1",
+    "to_topic_code": "B9.3.2.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B9.3.2.1",
+    "to_topic_code": "B9.3.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.3.2.2",
+    "to_topic_code": "B9.3.2.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.3.3.1",
+    "to_topic_code": "B9.3.3.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.4.1.1",
+    "to_topic_code": "B9.4.1.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B9.4.1.1",
+    "to_topic_code": "B9.4.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.4.1.2",
+    "to_topic_code": "B9.4.1.2",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  },
+  {
+    "from_topic_code": "B8.4.2.1",
+    "to_topic_code": "B9.4.2.1",
+    "edge_type": "prerequisite",
+    "strength_score": 7200
+  }
+]
