@@ -74,6 +74,11 @@ impl<'a> EliteService<'a> {
             to_bp(items.iter().map(trap_resistance_component).sum::<f64>() / answered_count);
         let composure_score = compute_composure_score(&items);
         let consistency_score = compute_consistency_score(&items);
+        let average_response_time_ms = if items.is_empty() {
+            0
+        } else {
+            items.iter().map(|item| item.response_time_ms.max(0)).sum::<i64>() / items.len() as i64
+        };
 
         let eps_score = compute_eps_score(
             session_class,
@@ -146,6 +151,35 @@ impl<'a> EliteService<'a> {
             composure_score,
         )?;
         self.update_topic_domination(student_id, subject_id, &items)?;
+        self.update_personal_best(student_id, subject_id, "highest_eps", eps_score as i64)?;
+        self.update_personal_best(
+            student_id,
+            subject_id,
+            "highest_precision",
+            precision_score as i64,
+        )?;
+        self.update_personal_best(student_id, subject_id, "highest_speed", speed_score as i64)?;
+        self.update_personal_best(student_id, subject_id, "highest_depth", depth_score as i64)?;
+        self.update_personal_best(
+            student_id,
+            subject_id,
+            "highest_composure",
+            composure_score as i64,
+        )?;
+        self.update_personal_best(
+            student_id,
+            subject_id,
+            "highest_trap_resistance",
+            trap_resistance_score as i64,
+        )?;
+        if session_class == "elite_sprint" && accuracy_score == 10_000 {
+            self.update_personal_best(
+                student_id,
+                subject_id,
+                "fastest_clean_sprint",
+                (1_000_000 - average_response_time_ms).max(1),
+            )?;
+        }
 
         Ok(EliteSessionScore {
             session_id,

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { listMockQuestions, submitMockAnswer, pauseMock, abandonMock, type MockSessionDto } from '@/ipc/mock'
+import { listMockQuestions, getMockSession, submitMockAnswer, pauseMock, abandonMock, flagMockQuestion, resumeMock } from '@/ipc/mock'
 import type { SessionQuestionDto } from '@/ipc/questions'
+import { recordSessionPresenceEvent } from '@/ipc/sessions'
 import QuestionCard from '@/components/question/QuestionCard.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -19,6 +20,9 @@ const loading = ref(true)
 const submitting = ref(false)
 const error = ref('')
 const answeredCount = ref(0)
+const questionStartedAt = ref(Date.now())
+const underlyingSessionId = ref<number | null>(null)
+const presentedItemIds = new Set<number>()
 
 // Timer
 const timeRemainingSeconds = ref(0)
@@ -43,12 +47,28 @@ const timerUrgent = computed(() => timeRemainingSeconds.value > 0 && timeRemaini
 
 onMounted(async () => {
   try {
+    let mockSession = await getMockSession(mockSessionId.value)
+    if (mockSession.status === 'paused') {
+      mockSession = await resumeMock(mockSessionId.value)
+    }
+    underlyingSessionId.value = mockSession.session_id
     questions.value = await listMockQuestions(mockSessionId.value)
     answeredCount.value = questions.value.filter(q => q.is_answered).length
+    timeRemainingSeconds.value = Math.max(0, mockSession.time_remaining_seconds ?? 0)
 
     // Find first unanswered
     const firstUnanswered = questions.value.findIndex(q => !q.is_answered)
     currentIndex.value = firstUnanswered >= 0 ? firstUnanswered : 0
+    questionStartedAt.value = Date.now()
+    presentedItemIds.clear()
+    if (mockSession.status === 'active') {
+      if (timeRemainingSeconds.value > 0) {
+        startTimer(timeRemainingSeconds.value)
+      } else {
+        await expireMockSession()
+        return
+      }
+    }
   } catch (e: any) {
     error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to load exam'
   }
@@ -57,21 +77,46 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
+  timerInterval = null
 })
 
+watch(
+  currentQuestion,
+  (question) => {
+    if (!question || !underlyingSessionId.value || presentedItemIds.has(question.item_id)) return
+    presentedItemIds.add(question.item_id)
+    void recordSessionPresenceEvent(underlyingSessionId.value, {
+      event_type: 'question_presented',
+      occurred_at: new Date().toISOString(),
+      metadata_json: {
+        item_id: question.item_id,
+        question_id: question.question_id,
+        source: 'mock_hall',
+      },
+    }).catch(() => {
+      presentedItemIds.delete(question.item_id)
+    })
+  },
+  { immediate: true },
+)
+
 function startTimer(seconds: number) {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+  }
   timeRemainingSeconds.value = seconds
   timerInterval = setInterval(() => {
     if (timeRemainingSeconds.value <= 0) {
       clearInterval(timerInterval!)
-      finishExam()
+      timerInterval = null
+      void expireMockSession()
     } else {
       timeRemainingSeconds.value--
     }
   }, 1000)
 }
 
-async function handleAnswer(optionId: number, confidence: string, _responseTimeMs: number) {
+async function handleAnswer(optionId: number, confidence: string, responseTimeMs: number) {
   const q = currentQuestion.value
   if (!q || submitting.value) return
   submitting.value = true
@@ -82,14 +127,20 @@ async function handleAnswer(optionId: number, confidence: string, _responseTimeM
       question_id: q.question_id,
       selected_option_id: optionId,
       confidence_level: confidence || null,
+      response_time_ms: responseTimeMs,
+      skipped: false,
+      timed_out: false,
     })
 
     // Mark answered in local state
     questions.value[currentIndex.value] = { ...q, is_answered: true }
     answeredCount.value = result.answered_count
 
-    if (result.time_remaining_seconds != null && timerInterval === null) {
-      startTimer(result.time_remaining_seconds)
+    if (result.time_remaining_seconds != null) {
+      timeRemainingSeconds.value = Math.max(0, result.time_remaining_seconds)
+      if (timerInterval === null && timeRemainingSeconds.value > 0) {
+        startTimer(timeRemainingSeconds.value)
+      }
     }
 
     if (result.remaining_count === 0) {
@@ -105,6 +156,45 @@ async function handleAnswer(optionId: number, confidence: string, _responseTimeM
   }
 }
 
+async function handleSkip() {
+  const q = currentQuestion.value
+  if (!q || submitting.value) return
+  submitting.value = true
+
+  try {
+    const result = await submitMockAnswer({
+      mock_session_id: mockSessionId.value,
+      question_id: q.question_id,
+      selected_option_id: null,
+      confidence_level: null,
+      response_time_ms: Math.max(0, Date.now() - questionStartedAt.value),
+      skipped: true,
+      timed_out: false,
+    })
+
+    questions.value[currentIndex.value] = { ...q, is_answered: true }
+    answeredCount.value = result.answered_count
+
+    if (result.time_remaining_seconds != null) {
+      timeRemainingSeconds.value = Math.max(0, result.time_remaining_seconds)
+      if (timerInterval === null && timeRemainingSeconds.value > 0) {
+        startTimer(timeRemainingSeconds.value)
+      }
+    }
+
+    if (result.remaining_count === 0) {
+      finishExam()
+      return
+    }
+
+    moveNext()
+  } catch (e: any) {
+    error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to skip question'
+  } finally {
+    submitting.value = false
+  }
+}
+
 function moveNext() {
   questionCardRef.value?.reset()
   let next = currentIndex.value + 1
@@ -113,6 +203,7 @@ function moveNext() {
   }
   if (next < questions.value.length) {
     currentIndex.value = next
+    questionStartedAt.value = Date.now()
   } else {
     finishExam()
   }
@@ -120,7 +211,28 @@ function moveNext() {
 
 async function finishExam() {
   if (timerInterval) clearInterval(timerInterval)
+  timerInterval = null
   router.push(`/student/mock/review/${mockSessionId.value}`)
+}
+
+async function expireMockSession() {
+  const q = currentQuestion.value
+  if (q && !q.is_answered) {
+    try {
+      await submitMockAnswer({
+        mock_session_id: mockSessionId.value,
+        question_id: q.question_id,
+        selected_option_id: null,
+        confidence_level: null,
+        response_time_ms: Math.max(0, Date.now() - questionStartedAt.value),
+        skipped: false,
+        timed_out: true,
+      })
+    } catch {
+      // The backend force-completes expired mocks on timed answer attempts.
+    }
+  }
+  await finishExam()
 }
 
 async function handlePause() {
@@ -138,8 +250,22 @@ async function handleAbandon() {
   router.push('/student/mock')
 }
 
-function handleFlag() {
-  // Flag handled inside QuestionCard via flagMockQuestion
+async function handleFlag(flagged: boolean) {
+  const q = currentQuestion.value
+  if (!q) return
+  if (!flagged) {
+    questionCardRef.value?.setFlagged(true)
+    error.value = 'Mock review flags can be added right now, but not removed yet.'
+    return
+  }
+
+  try {
+    await flagMockQuestion(mockSessionId.value, q.question_id)
+    questions.value[currentIndex.value] = { ...q, flagged: true }
+  } catch (e: any) {
+    questionCardRef.value?.setFlagged(q.flagged)
+    error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to flag question'
+  }
 }
 </script>
 
@@ -228,6 +354,7 @@ function handleFlag() {
           :format="currentQuestion.question_format"
           :difficulty="currentQuestion.difficulty"
           :estimated-seconds="currentQuestion.estimated_time_seconds ?? undefined"
+          :initial-flagged="currentQuestion.flagged"
           :options="currentQuestion.options.map(o => ({
             id: o.id,
             label: o.label,
@@ -240,7 +367,7 @@ function handleFlag() {
           :total-questions="totalQuestions"
           @answer="handleAnswer"
           @flag="handleFlag"
-          @skip="moveNext"
+          @skip="handleSkip"
         />
       </div>
 

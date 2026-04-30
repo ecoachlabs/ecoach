@@ -7,11 +7,11 @@ use ecoach_coach_brain::{
 };
 use ecoach_identity::IdentityService;
 use ecoach_intake::IntakeService;
+use ecoach_reporting::strategy::load_strategy_summary;
 use ecoach_reporting::{
     AdminOversightService, AdminOversightSnapshot, DashboardService, ParentDashboardSnapshot,
     ParentInsightService, ParentStudentSummary,
 };
-use ecoach_reporting::strategy::load_strategy_summary;
 use ecoach_student_model::{LearnerTruthSnapshot, StudentModelService};
 use ecoach_substrate::{EcoachError, LearnerEvidenceFabric, ThresholdRegistry};
 use rusqlite::{Connection, params};
@@ -481,7 +481,8 @@ pub fn get_admin_product_surface(
     admin_id: i64,
 ) -> Result<AdminProductSurfaceDto, CommandError> {
     state.with_connection(|conn| {
-        let oversight = AdminOversightService::new(conn).build_admin_oversight_snapshot(admin_id)?;
+        let oversight =
+            AdminOversightService::new(conn).build_admin_oversight_snapshot(admin_id)?;
         let content_health = build_content_health_read_model(conn)?;
         Ok(AdminProductSurfaceDto {
             admin_id: oversight.admin_id,
@@ -489,14 +490,8 @@ pub fn get_admin_product_surface(
             generated_at: oversight.generated_at.clone(),
             directives: build_admin_directives(&oversight, &content_health),
             insight_cards: build_admin_insight_cards(&oversight, &content_health),
-            action_recommendations: build_admin_action_recommendations(
-                &oversight,
-                &content_health,
-            ),
-            audience_explanations: build_admin_audience_explanations(
-                &oversight,
-                &content_health,
-            ),
+            action_recommendations: build_admin_action_recommendations(&oversight, &content_health),
+            audience_explanations: build_admin_audience_explanations(&oversight, &content_health),
             oversight,
             content_health,
         })
@@ -756,7 +751,9 @@ fn build_student_action_recommendations(
             recommendation_key: "memory_rescue".to_string(),
             audience: "student".to_string(),
             label: "Run a short recall rescue".to_string(),
-            summary: "Use retrieval before more exposure so the coach does not build on forgetting.".to_string(),
+            summary:
+                "Use retrieval before more exposure so the coach does not build on forgetting."
+                    .to_string(),
             route_key: "memory_dashboard".to_string(),
             urgency: "high".to_string(),
             rationale: "Due memory evidence is already active.".to_string(),
@@ -767,7 +764,9 @@ fn build_student_action_recommendations(
             recommendation_key: "review_recent_evidence".to_string(),
             audience: "student".to_string(),
             label: "Close the review loop".to_string(),
-            summary: "Review recent marked evidence so the model can update with cleaner confidence.".to_string(),
+            summary:
+                "Review recent marked evidence so the model can update with cleaner confidence."
+                    .to_string(),
             route_key: "evidence_inbox".to_string(),
             urgency: "high".to_string(),
             rationale: "Pending review items are blocking clearer planning.".to_string(),
@@ -803,10 +802,13 @@ fn build_student_audience_explanations(
     vec![
         AudienceExplanationDto {
             audience: "student".to_string(),
-            headline: "The coach is trying to protect real progress, not just activity.".to_string(),
+            headline: "The coach is trying to protect real progress, not just activity."
+                .to_string(),
             summary: format!(
                 "Your current state is `{}`, with {} pending reviews and {} due memory checks, so the system is prioritizing stability over speed.",
-                dashboard.overall_readiness_band, truth.pending_review_count, truth.due_memory_count
+                dashboard.overall_readiness_band,
+                truth.pending_review_count,
+                truth.due_memory_count
             ),
             supporting_points: vec![
                 judgment.biggest_risk.clone(),
@@ -815,19 +817,25 @@ fn build_student_audience_explanations(
         },
         AudienceExplanationDto {
             audience: "parent".to_string(),
-            headline: "The system is translating learner evidence into a safer next step.".to_string(),
+            headline: "The system is translating learner evidence into a safer next step."
+                .to_string(),
             summary: format!(
                 "The learner model currently has {} evidence records and is using that to avoid pushing fragile understanding too early.",
                 evidence_fabric.evidence_records.len()
             ),
             supporting_points: vec![
-                "Parent outputs should stay translated rather than exposing raw diagnostics.".to_string(),
-                format!("Current readiness band: {}", dashboard.overall_readiness_band),
+                "Parent outputs should stay translated rather than exposing raw diagnostics."
+                    .to_string(),
+                format!(
+                    "Current readiness band: {}",
+                    dashboard.overall_readiness_band
+                ),
             ],
         },
         AudienceExplanationDto {
             audience: "admin".to_string(),
-            headline: "This surface is composed from the learner truth graph plus coach policy.".to_string(),
+            headline: "This surface is composed from the learner truth graph plus coach policy."
+                .to_string(),
             summary: format!(
                 "Judgment confidence is {} bp and the active explanation is `{}`.",
                 judgment.judgment_confidence_score, judgment.next_best_move
@@ -844,7 +852,10 @@ fn build_parent_directives(student_summary: &ParentStudentSummary) -> Vec<CoachD
     let mut directives = vec![CoachDirectiveDto {
         directive_type: "parent_attention_summary".to_string(),
         audience: "parent".to_string(),
-        title: format!("{} needs translated oversight", student_summary.student_name),
+        title: format!(
+            "{} needs translated oversight",
+            student_summary.student_name
+        ),
         summary: student_summary.weekly_memo.clone(),
         priority: if matches!(
             student_summary.overall_readiness_band.as_str(),
@@ -936,7 +947,9 @@ fn build_parent_action_recommendations(
             } else {
                 "medium".to_string()
             },
-            rationale: "The parent layer only surfaces translated actions that can improve follow-through.".to_string(),
+            rationale:
+                "The parent layer only surfaces translated actions that can improve follow-through."
+                    .to_string(),
         })
         .collect::<Vec<_>>();
     if actions.is_empty() {
@@ -988,7 +1001,9 @@ fn build_parent_audience_explanations(
     ]
 }
 
-fn build_content_health_read_model(conn: &Connection) -> Result<ContentHealthReadModelDto, EcoachError> {
+fn build_content_health_read_model(
+    conn: &Connection,
+) -> Result<ContentHealthReadModelDto, EcoachError> {
     let (source_count, stale_source_count, overdue_source_review_count, average_source_quality): (
         i64,
         i64,
@@ -1713,19 +1728,24 @@ fn build_personal_academic_vault(
         let review_priority = inbox_item
             .map(|item| item.review_priority.clone())
             .unwrap_or_else(|| report.review_priority.clone());
-        let summary_points = inbox_item.map(|item| item.summary_points.clone()).unwrap_or_else(|| {
-            report
-                .recommended_actions
-                .iter()
-                .take(3)
-                .cloned()
-                .collect::<Vec<_>>()
-        });
+        let summary_points = inbox_item
+            .map(|item| item.summary_points.clone())
+            .unwrap_or_else(|| {
+                report
+                    .recommended_actions
+                    .iter()
+                    .take(3)
+                    .cloned()
+                    .collect::<Vec<_>>()
+            });
 
         if review_priority == "high" || report.needs_confirmation {
             urgent_review_bundle_count += 1;
         }
-        if matches!(row.shared_promotion_status.as_deref(), Some("queued" | "approved")) {
+        if matches!(
+            row.shared_promotion_status.as_deref(),
+            Some("queued" | "approved")
+        ) {
             pending_shared_promotion_count += 1;
         }
 
@@ -1869,7 +1889,8 @@ fn build_areal_surface(conn: &Connection, student_id: i64) -> Result<ARealSurfac
     let mut recommended_actions = dedup_strings(
         std::iter::once(coach_output.next_action.route.clone())
             .chain(
-                vault.bundles
+                vault
+                    .bundles
                     .first()
                     .into_iter()
                     .flat_map(|bundle| bundle.recommended_actions.iter().cloned().take(3)),
@@ -1913,7 +1934,10 @@ fn build_super_admin_control_tower(
     let recent_areal_guidance = load_recent_areal_guidance(conn, None, limit)?;
 
     let mut action_recommendations = content_health.action_recommendations.clone();
-    if source_objects.iter().any(|item| item.unresolved_review_count > 0) {
+    if source_objects
+        .iter()
+        .any(|item| item.unresolved_review_count > 0)
+    {
         push_action_recommendation(
             &mut action_recommendations,
             ActionRecommendationDto {
@@ -2110,7 +2134,10 @@ fn ocr_object_needs_attention(item: &AcademicVaultFileDto) -> bool {
     })
 }
 
-fn ensure_areal_profile(conn: &Connection, student_id: i64) -> Result<ARealProfileRow, EcoachError> {
+fn ensure_areal_profile(
+    conn: &Connection,
+    student_id: i64,
+) -> Result<ARealProfileRow, EcoachError> {
     conn.execute(
         "INSERT INTO areal_profiles (student_id) VALUES (?1)
          ON CONFLICT(student_id) DO NOTHING",
@@ -2155,7 +2182,9 @@ fn upsert_areal_profile(
             input.tone_style.unwrap_or(existing.tone_style),
             input.motivation_style.unwrap_or(existing.motivation_style),
             input.urgency_style.unwrap_or(existing.urgency_style),
-            input.explanation_style.unwrap_or(existing.explanation_style),
+            input
+                .explanation_style
+                .unwrap_or(existing.explanation_style),
             if input
                 .narrative_enabled
                 .unwrap_or(existing.narrative_enabled)
@@ -2639,7 +2668,11 @@ mod tests {
         assert!(registry.iter().any(|item| {
             item.signal_key == "conceptual_confusion" && item.tool_key == "contrast_mode"
         }));
-        assert!(registry.iter().any(|item| item.signal_key == "content_governance"));
+        assert!(
+            registry
+                .iter()
+                .any(|item| item.signal_key == "content_governance")
+        );
     }
 
     #[test]

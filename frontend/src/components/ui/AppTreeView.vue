@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { defineComponent, h, ref, type Component } from 'vue'
 
 export interface TreeItem {
   id: string | number
@@ -11,20 +11,8 @@ export interface TreeItem {
 
 defineProps<{ items: TreeItem[]; depth?: number }>()
 defineEmits<{ select: [item: TreeItem] }>()
-</script>
 
-<template>
-  <div :style="{ paddingLeft: (depth || 0) > 0 ? '16px' : '0' }">
-    <div v-for="item in items" :key="item.id">
-      <TreeNode :item="item" :depth="depth || 0" @select="$emit('select', $event)" />
-    </div>
-  </div>
-</template>
-
-<script lang="ts">
-import { defineComponent, ref, h } from 'vue'
-
-const TreeNode = defineComponent({
+const TreeNode: Component = defineComponent({
   name: 'TreeNode',
   props: { item: { type: Object as () => TreeItem, required: true }, depth: { type: Number, default: 0 } },
   emits: ['select'],
@@ -51,3 +39,11 @@ const TreeNode = defineComponent({
   },
 })
 </script>
+
+<template>
+  <div :style="{ paddingLeft: (depth || 0) > 0 ? '16px' : '0' }">
+    <div v-for="item in items" :key="item.id">
+      <TreeNode :item="item" :depth="depth || 0" @select="$emit('select', $event)" />
+    </div>
+  </div>
+</template>

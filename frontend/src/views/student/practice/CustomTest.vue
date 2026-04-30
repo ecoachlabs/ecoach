@@ -1,15 +1,22 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { listSubjects, listTopics, type SubjectDto, type TopicDto } from '@/ipc/coach'
-import { startPracticeSession } from '@/ipc/sessions'
+import { listSubjects, listTopics, type SubjectDto } from '@/ipc/coach'
+import {
+  buildLearnerTopicTree,
+  expandLearnerTopicIds,
+  flattenLearnerTopics,
+  type LearnerTopic,
+} from '@/utils/learnerTopics'
+import { startPracticeSessionWithQuestions } from '@/utils/sessionQuestions'
 
 const auth = useAuthStore()
+const route = useRoute()
 const router = useRouter()
 
 const subjects = ref<SubjectDto[]>([])
-const topics = ref<TopicDto[]>([])
+const topics = ref<LearnerTopic[]>([])
 const selectedSubject = ref<number | null>(null)
 const selectedTopics = ref<number[]>([])
 const questionCount = ref(10)
@@ -20,10 +27,20 @@ const error = ref('')
 
 onMounted(async () => {
   try {
-    subjects.value = await listSubjects(1)
+    subjects.value = await listSubjects()
     if (subjects.value.length > 0) {
-      selectedSubject.value = subjects.value[0].id
-      topics.value = await listTopics(subjects.value[0].id)
+      const requestedSubjectId = parseNumberQuery(route.query.subjectId)
+      const requestedTopicId = parseNumberQuery(route.query.topicId)
+      const requestedQuestionCount = parseNumberQuery(route.query.questionCount)
+      const initialSubjectId = (
+        subjects.value.find(subject => subject.id === requestedSubjectId) ?? subjects.value[0]
+      ).id
+
+      if (requestedQuestionCount != null && requestedQuestionCount > 0) {
+        questionCount.value = requestedQuestionCount
+      }
+
+      await loadTopicsForSubject(initialSubjectId, requestedTopicId)
     }
   } catch (e) {
     console.error('Failed to load:', e)
@@ -32,11 +49,7 @@ onMounted(async () => {
 })
 
 async function selectSubject(id: number) {
-  selectedSubject.value = id
-  selectedTopics.value = []
-  try {
-    topics.value = await listTopics(id)
-  } catch {}
+  await loadTopicsForSubject(id)
 }
 
 function toggleTopic(id: number) {
@@ -58,18 +71,43 @@ async function start() {
   starting.value = true
   error.value = ''
   try {
-    const snapshot = await startPracticeSession({
+    const topicIds = expandLearnerTopicIds(selectedTopics.value, topics.value)
+    const snapshot = await startPracticeSessionWithQuestions({
       student_id: auth.currentAccount.id,
       subject_id: selectedSubject.value,
-      topic_ids: selectedTopics.value,
+      topic_ids: topicIds,
       question_count: questionCount.value,
       is_timed: isTimed.value,
     })
-    router.push(`/student/session/${snapshot.session_id}`)
+    router.push({
+      path: `/student/session/${snapshot.sessionId}`,
+      query: isTimed.value ? { timed: '1' } : {},
+    })
   } catch (e: any) {
     error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to start session'
     starting.value = false
   }
+}
+
+async function loadTopicsForSubject(id: number, preselectedTopicId: number | null = null) {
+  selectedSubject.value = id
+  selectedTopics.value = []
+  try {
+    const rawTopics = await listTopics(id)
+    topics.value = flattenLearnerTopics(buildLearnerTopicTree(rawTopics))
+    if (preselectedTopicId != null && topics.value.some(topic => topic.id === preselectedTopicId)) {
+      selectedTopics.value = [preselectedTopicId]
+    }
+  } catch {
+    topics.value = []
+  }
+}
+
+function parseNumberQuery(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value !== 'string' || value.trim().length === 0) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 </script>
 
@@ -82,7 +120,7 @@ async function start() {
       :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
     >
       <div class="flex items-center gap-4">
-        <button class="back-btn" @click="router.push('/student/practice')">← Back</button>
+        <button class="back-btn" @click="router.push('/student/practice')">Back</button>
         <div>
           <p class="eyebrow">Practice</p>
           <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">Custom Test</h1>
@@ -134,10 +172,16 @@ async function start() {
             @click="toggleTopic(t.id)"
           >
             <div class="check-circle flex-shrink-0" :class="{ checked: selectedTopics.includes(t.id) }">
-              <span v-if="selectedTopics.includes(t.id)" class="text-[10px]">✓</span>
+              <span v-if="selectedTopics.includes(t.id)" class="text-[10px]">*</span>
             </div>
-            <span class="text-sm font-semibold flex-1" :style="{ color: 'var(--ink)' }">{{ t.name }}</span>
-            <span v-if="(t as any).node_type" class="type-badge">{{ (t as any).node_type }}</span>
+            <div class="flex-1 min-w-0">
+              <span class="text-sm font-semibold block truncate" :style="{ color: 'var(--ink)' }">{{ t.name }}</span>
+              <span
+                v-if="t.goalDescriptions.length"
+                class="text-[11px] block truncate mt-0.5"
+                :style="{ color: 'var(--ink-muted)' }"
+              >{{ t.goalDescriptions[0] }}</span>
+            </div>
           </button>
         </div>
 
@@ -188,7 +232,7 @@ async function start() {
             <div class="text-center py-4">
               <p class="text-4xl font-black tabular-nums" :style="{ color: 'var(--ink)' }">{{ questionCount }}</p>
               <p class="text-[10px] uppercase font-semibold mt-1" :style="{ color: 'var(--ink-muted)' }">
-                questions · {{ selectedTopics.length }} topics
+                questions - {{ selectedTopics.length }} topics
               </p>
             </div>
           </div>
@@ -199,7 +243,7 @@ async function start() {
             class="start-btn w-full"
             :disabled="selectedTopics.length === 0 || starting"
             @click="start"
-          >{{ starting ? 'Starting…' : 'Start Practice →' }}</button>
+          >{{ starting ? 'Starting...' : 'Start Practice ->' }}</button>
           <button class="cancel-btn w-full" @click="router.push('/student/practice')">Cancel</button>
         </div>
       </div>
@@ -378,5 +422,6 @@ async function start() {
 }
 .cancel-btn:hover { background: var(--paper); color: var(--ink); }
 </style>
+
 
 

@@ -44,8 +44,12 @@ function handleAnswer(optionId: number, confidence: string, responseTimeMs: numb
 
   feedbackResult.value = {
     isCorrect: selectedOpt?.is_correct ?? false,
+    questionStem: currentQuestion.value.stem,
     selectedOptionText: selectedOpt?.text ?? '',
     correctOptionText: correctOpt?.text,
+    selectedOptionId: selectedOpt?.id ?? null,
+    correctOptionId: correctOpt?.id ?? null,
+    options: currentQuestion.value.options,
     explanation: null,
     errorType: selectedOpt?.is_correct ? null : 'knowledge_gap',
     diagnosisSummary: selectedOpt?.is_correct ? null : 'Review this concept to strengthen your understanding.',
@@ -106,6 +110,9 @@ function nextQuestion() {
       <div v-else-if="showFeedback && feedbackResult" class="max-w-2xl mx-auto">
         <QuestionFeedback
           v-bind="feedbackResult"
+          :show-review-action="false"
+          :auto-advance-on-correct="true"
+          :auto-advance-delay-ms="2400"
           @next="nextQuestion"
         />
       </div>

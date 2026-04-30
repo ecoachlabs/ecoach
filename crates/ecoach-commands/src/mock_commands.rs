@@ -1,7 +1,13 @@
+use chrono::Utc;
+use ecoach_coach_brain::{
+    CoachBrainTrigger, EvidenceInterpretationEngine, PedagogicalAttemptSignal,
+    PedagogicalRuntimeService, evaluate_coach_brain,
+};
 use ecoach_forecast::ForecastEngine;
 use ecoach_mock_centre::{
     CompileMockInput, MockCentreService, MockDiagnosisEngine, SubmitMockAnswerInput,
 };
+use ecoach_student_model::{AnswerSubmission, StudentModelService};
 
 use crate::{error::CommandError, state::AppState};
 use serde::{Deserialize, Serialize};
@@ -9,7 +15,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MockSessionDto {
     pub id: i64,
+    pub student_id: i64,
     pub subject_id: i64,
+    pub session_id: i64,
     pub mock_type: String,
     pub status: String,
     pub duration_minutes: i64,
@@ -55,6 +63,23 @@ pub struct MockSessionSummaryDto {
     pub paper_year: Option<String>,
 }
 
+fn map_mock_session(session: ecoach_mock_centre::MockSession) -> MockSessionDto {
+    MockSessionDto {
+        id: session.id,
+        student_id: session.student_id,
+        subject_id: session.subject_id,
+        session_id: session.session_id,
+        mock_type: session.mock_type,
+        status: session.status,
+        duration_minutes: session.duration_minutes,
+        question_count: session.question_count,
+        answered_count: session.answered_count,
+        time_remaining_seconds: session.time_remaining_seconds,
+        paper_year: session.paper_year,
+        blueprint_id: session.blueprint_id,
+    }
+}
+
 pub fn compile_mock(
     state: &AppState,
     input: CompileMockInput,
@@ -62,18 +87,7 @@ pub fn compile_mock(
     state.with_connection(|conn| {
         let service = MockCentreService::new(conn);
         let session = service.compile_mock(&input)?;
-        Ok(MockSessionDto {
-            id: session.id,
-            subject_id: session.subject_id,
-            mock_type: session.mock_type,
-            status: session.status,
-            duration_minutes: session.duration_minutes,
-            question_count: session.question_count,
-            answered_count: session.answered_count,
-            time_remaining_seconds: session.time_remaining_seconds,
-            paper_year: session.paper_year,
-            blueprint_id: session.blueprint_id,
-        })
+        Ok(map_mock_session(session))
     })
 }
 
@@ -81,18 +95,18 @@ pub fn start_mock(state: &AppState, mock_session_id: i64) -> Result<MockSessionD
     state.with_connection(|conn| {
         let service = MockCentreService::new(conn);
         let session = service.start_mock(mock_session_id)?;
-        Ok(MockSessionDto {
-            id: session.id,
-            subject_id: session.subject_id,
-            mock_type: session.mock_type,
-            status: session.status,
-            duration_minutes: session.duration_minutes,
-            question_count: session.question_count,
-            answered_count: session.answered_count,
-            time_remaining_seconds: session.time_remaining_seconds,
-            paper_year: session.paper_year,
-            blueprint_id: session.blueprint_id,
-        })
+        Ok(map_mock_session(session))
+    })
+}
+
+pub fn get_mock_session(
+    state: &AppState,
+    mock_session_id: i64,
+) -> Result<MockSessionDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = MockCentreService::new(conn);
+        let session = service.get_mock_session(mock_session_id)?;
+        Ok(map_mock_session(session))
     })
 }
 
@@ -102,7 +116,62 @@ pub fn submit_mock_answer(
 ) -> Result<MockAnswerResultDto, CommandError> {
     state.with_connection(|conn| {
         let service = MockCentreService::new(conn);
+        let mock_session = service.get_mock_session(input.mock_session_id)?;
         let result = service.submit_answer(&input)?;
+        let now = Utc::now();
+        let response_time_ms = input.response_time_ms.map(|value| value.max(0));
+        let confidence_level = input.confidence_level.clone();
+
+        let student_model = StudentModelService::new(conn);
+        let learner_result = student_model.process_answer(
+            mock_session.student_id,
+            &AnswerSubmission {
+                question_id: input.question_id,
+                selected_option_id: input.selected_option_id,
+                answer_text: None,
+                session_id: Some(mock_session.session_id),
+                session_type: Some("mock".to_string()),
+                started_at: now,
+                submitted_at: now,
+                response_time_ms,
+                confidence_level: confidence_level.clone(),
+                hint_count: 0,
+                changed_answer_count: 0,
+                skipped: input.skipped,
+                timed_out: input.timed_out,
+                support_level: None,
+                was_timed: true,
+                was_transfer_variant: false,
+                was_retention_check: false,
+                was_mixed_context: false,
+                precomputed_is_correct: None,
+            },
+        )?;
+        EvidenceInterpretationEngine::new(conn).interpret_attempt(learner_result.attempt_id)?;
+        PedagogicalRuntimeService::new(conn).record_attempt_feedback(PedagogicalAttemptSignal {
+            student_id: mock_session.student_id,
+            session_id: mock_session.session_id,
+            question_id: input.question_id,
+            response_time_ms,
+            confidence_level,
+            hint_count: 0,
+            was_timed: true,
+            was_transfer_variant: false,
+            was_retention_check: false,
+            was_mixed_context: false,
+            is_correct: learner_result.is_correct,
+            error_type: learner_result
+                .error_type
+                .as_ref()
+                .map(|error| error.as_str().to_string()),
+            recommended_action: learner_result.recommended_action.clone(),
+        })?;
+        let _ = evaluate_coach_brain(
+            conn,
+            mock_session.student_id,
+            CoachBrainTrigger::AttemptSubmitted,
+            14,
+        )?;
         Ok(MockAnswerResultDto {
             question_id: result.question_id,
             was_correct: result.was_correct,
@@ -140,18 +209,7 @@ pub fn pause_mock(state: &AppState, mock_session_id: i64) -> Result<MockSessionD
     state.with_connection(|conn| {
         let service = MockCentreService::new(conn);
         let session = service.pause_mock(mock_session_id)?;
-        Ok(MockSessionDto {
-            id: session.id,
-            subject_id: session.subject_id,
-            mock_type: session.mock_type,
-            status: session.status,
-            duration_minutes: session.duration_minutes,
-            question_count: session.question_count,
-            answered_count: session.answered_count,
-            time_remaining_seconds: session.time_remaining_seconds,
-            paper_year: session.paper_year,
-            blueprint_id: session.blueprint_id,
-        })
+        Ok(map_mock_session(session))
     })
 }
 
@@ -159,18 +217,7 @@ pub fn resume_mock(state: &AppState, mock_session_id: i64) -> Result<MockSession
     state.with_connection(|conn| {
         let service = MockCentreService::new(conn);
         let session = service.resume_mock(mock_session_id)?;
-        Ok(MockSessionDto {
-            id: session.id,
-            subject_id: session.subject_id,
-            mock_type: session.mock_type,
-            status: session.status,
-            duration_minutes: session.duration_minutes,
-            question_count: session.question_count,
-            answered_count: session.answered_count,
-            time_remaining_seconds: session.time_remaining_seconds,
-            paper_year: session.paper_year,
-            blueprint_id: session.blueprint_id,
-        })
+        Ok(map_mock_session(session))
     })
 }
 
@@ -237,18 +284,7 @@ pub fn start_first_mock(
         };
 
         let session = service.compile_mock(&input)?;
-        Ok(MockSessionDto {
-            id: session.id,
-            subject_id: session.subject_id,
-            mock_type: session.mock_type,
-            status: session.status,
-            duration_minutes: session.duration_minutes,
-            question_count: session.question_count,
-            answered_count: session.answered_count,
-            time_remaining_seconds: session.time_remaining_seconds,
-            paper_year: session.paper_year,
-            blueprint_id: session.blueprint_id,
-        })
+        Ok(map_mock_session(session))
     })
 }
 

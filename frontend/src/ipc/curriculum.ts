@@ -4,7 +4,7 @@ export interface SubjectDto {
   id: number; curriculum_version_id: number; code: string; name: string; display_order: number
 }
 export interface TopicDto {
-  id: number; subject_id: number; parent_topic_id: number | null; code: string | null; name: string; node_type: string; display_order: number
+  id: number; subject_id: number; parent_topic_id: number | null; code: string | null; name: string; description: string | null; node_type: string; display_order: number
 }
 
 export interface CurriculumVersionDto {

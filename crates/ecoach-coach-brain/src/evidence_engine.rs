@@ -99,11 +99,12 @@ impl<'a> EvidenceInterpretationEngine<'a> {
         let timed_delta = self.compute_timed_delta(&attempt);
         let evidence_weight = self.compute_evidence_weight(&attempt);
 
-        // Detect misconception signal from distractor choice
-        let misconception_signal = if !attempt.is_correct {
-            self.detect_misconception_signal(attempt.question_id, attempt.selected_option_id)?
-        } else {
-            None
+        // Detect misconception signal from distractor choice. Skipped
+        // and timed-out attempts carry no selection, so there's nothing
+        // to probe — short-circuit to None in those cases.
+        let misconception_signal = match (attempt.is_correct, attempt.selected_option_id) {
+            (false, Some(sid)) => self.detect_misconception_signal(attempt.question_id, sid)?,
+            _ => None,
         };
 
         // Determine hypothesis result
@@ -731,7 +732,7 @@ struct AttemptContext {
     confidence_level: Option<String>,
     hint_count: i64,
     attempt_number: i64,
-    selected_option_id: i64,
+    selected_option_id: Option<i64>,
     was_timed: bool,
     was_transfer_variant: bool,
     was_retention_check: bool,

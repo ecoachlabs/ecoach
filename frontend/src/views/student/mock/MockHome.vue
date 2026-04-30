@@ -3,8 +3,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getLearnerTruth, type LearnerTruthDto } from '@/ipc/coach'
-import { listMockSessions, type MockSessionSummaryDto } from '@/ipc/mock'
+import { listMockSessions, resumeMock, type MockSessionSummaryDto } from '@/ipc/mock'
 import { PhClockCountdown, PhSquaresFour, PhTarget, PhLightning } from '@phosphor-icons/vue'
+import { getReadinessColor, getReadinessLabel } from '@/utils/readiness'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -12,6 +13,7 @@ const router = useRouter()
 const loading = ref(true)
 const truth = ref<LearnerTruthDto | null>(null)
 const history = ref<MockSessionSummaryDto[]>([])
+const openingMockId = ref<number | null>(null)
 
 const mockTypes = [
   {
@@ -44,10 +46,6 @@ const mockTypes = [
   },
 ]
 
-const bandLabel: Record<string, string> = {
-  strong: 'Exam Ready', developing: 'Developing', weak: 'Needs Work', critical: 'Critical',
-}
-
 onMounted(async () => {
   if (!auth.currentAccount) return
   try {
@@ -74,11 +72,32 @@ function gradeColor(grade: string | null): { bg: string; text: string } {
   return { bg: 'rgba(194,65,12,0.1)', text: 'var(--warm)' }
 }
 
-function readinessColor() {
-  const band = truth.value?.overall_readiness_band ?? 'developing'
-  if (band === 'strong') return 'var(--accent)'
-  if (band === 'developing') return 'var(--gold)'
-  return 'var(--warm)'
+function isResumable(status: string) {
+  return status === 'active' || status === 'paused' || status === 'in_progress'
+}
+
+function canOpen(status: string) {
+  return status === 'completed' || isResumable(status)
+}
+
+async function openMock(entry: MockSessionSummaryDto) {
+  if (entry.status === 'completed') {
+    router.push(`/student/mock/review/${entry.id}`)
+    return
+  }
+  if (!isResumable(entry.status) || openingMockId.value === entry.id) return
+
+  openingMockId.value = entry.id
+  try {
+    if (entry.status === 'paused') {
+      await resumeMock(entry.id)
+    }
+    router.push(`/student/mock/hall/${entry.id}`)
+  } catch (e) {
+    console.error('Failed to reopen mock:', e)
+  } finally {
+    openingMockId.value = null
+  }
 }
 </script>
 
@@ -99,8 +118,8 @@ function readinessColor() {
       </div>
       <div class="flex items-center gap-4">
         <div v-if="!loading && truth" class="text-right">
-          <p class="text-lg font-black capitalize" :style="{ color: readinessColor() }">
-            {{ bandLabel[truth.overall_readiness_band] ?? truth.overall_readiness_band }}
+          <p class="text-lg font-black capitalize" :style="{ color: getReadinessColor(truth.overall_readiness_band) }">
+            {{ getReadinessLabel(truth.overall_readiness_band) }}
           </p>
           <p class="text-[10px] uppercase font-semibold" :style="{ color: 'var(--ink-muted)' }">Current Band</p>
         </div>
@@ -172,8 +191,8 @@ function readinessColor() {
             v-for="entry in history"
             :key="entry.id"
             class="hist-btn w-full text-left px-3 py-2.5 rounded-xl"
-            :disabled="entry.status !== 'completed'"
-            @click="entry.status === 'completed' ? router.push(`/student/mock/review/${entry.id}`) : null"
+            :disabled="!canOpen(entry.status)"
+            @click="openMock(entry)"
           >
             <div class="flex items-center gap-3">
               <div
@@ -187,7 +206,7 @@ function readinessColor() {
                   {{ entry.mock_type.replace(/_/g, ' ') }}
                 </p>
                 <p class="text-[9px]" :style="{ color: 'var(--ink-muted)' }">
-                  {{ entry.percentage != null ? entry.percentage.toFixed(0) + '%' : entry.status }}
+                  {{ openingMockId === entry.id ? 'opening...' : entry.percentage != null ? entry.percentage.toFixed(0) + '%' : entry.status }}
                 </p>
               </div>
               <span v-if="entry.status === 'completed'" :style="{ color: 'var(--ink-muted)' }" class="text-xs">→</span>

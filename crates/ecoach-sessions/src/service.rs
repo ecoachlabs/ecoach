@@ -86,6 +86,7 @@ impl<'a> SessionService<'a> {
         let mut selected_questions = selector.select_questions(&QuestionSelectionRequest {
             subject_id,
             topic_ids: topic_ids.clone(),
+            family_ids: Vec::new(),
             target_question_count,
             target_difficulty: target_difficulty_for_mission(&mission.activity_type),
             weakness_topic_ids: weakness_topic_ids_for_mission(&mission),
@@ -203,6 +204,7 @@ impl<'a> SessionService<'a> {
         let mut questions = selector.select_questions(&QuestionSelectionRequest {
             subject_id: input.subject_id,
             topic_ids: input.topic_ids.clone(),
+            family_ids: input.family_ids.clone(),
             target_question_count: input.question_count,
             target_difficulty: None,
             weakness_topic_ids: input.topic_ids.clone(),
@@ -214,16 +216,20 @@ impl<'a> SessionService<'a> {
             require_concept_guess_prompt: false,
         })?;
         let target_topic_counts = distribute_topic_targets(&input.topic_ids, input.question_count);
-        let reactor_generated_count = self.top_up_with_reactor(
-            input.subject_id,
-            &target_topic_counts,
-            &mut questions,
-            None,
-            input.is_timed,
-            choose_reactor_variant_mode(input.is_timed, None),
-            "slot_fill",
-            "Fill missing practice items with traced family variants",
-        )?;
+        let reactor_generated_count = if input.family_ids.is_empty() {
+            self.top_up_with_reactor(
+                input.subject_id,
+                &target_topic_counts,
+                &mut questions,
+                None,
+                input.is_timed,
+                choose_reactor_variant_mode(input.is_timed, None),
+                "slot_fill",
+                "Fill missing practice items with traced family variants",
+            )?
+        } else {
+            0
+        };
         if questions.is_empty() {
             return Err(EcoachError::NotFound(
                 "no questions available for requested practice session".to_string(),
@@ -266,6 +272,13 @@ impl<'a> SessionService<'a> {
                     "session_type": "practice",
                     "subject_id": input.subject_id,
                     "question_count": questions.len(),
+                    "topic_ids": input.topic_ids.clone(),
+                    "family_ids": input.family_ids.clone(),
+                    "session_focus": if input.family_ids.is_empty() {
+                        "topic_practice"
+                    } else {
+                        "question_family"
+                    },
                 }),
             ),
         )?;
@@ -321,6 +334,7 @@ impl<'a> SessionService<'a> {
         let mut questions = selector.select_questions(&QuestionSelectionRequest {
             subject_id: input.subject_id,
             topic_ids: topic_scope.clone(),
+            family_ids: Vec::new(),
             target_question_count: input.question_count,
             target_difficulty: input.target_difficulty,
             weakness_topic_ids,
@@ -869,6 +883,314 @@ impl<'a> SessionService<'a> {
         session_id: i64,
         input: &SessionAnswerInput,
     ) -> EcoachResult<SessionItem> {
+        self.record_answer_internal(session_id, input, true)
+    }
+
+    pub fn record_answer_without_attempt_row(
+        &self,
+        session_id: i64,
+        input: &SessionAnswerInput,
+    ) -> EcoachResult<SessionItem> {
+        self.record_answer_internal(session_id, input, false)
+    }
+
+    pub fn mark_deferred_completion_pending(
+        &self,
+        session_id: i64,
+        reason: &str,
+    ) -> EcoachResult<()> {
+        let session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        if session.deferred_completion_state == "processed" {
+            eprintln!(
+                "[recovery][deferred_completion] pending skipped session_id={} state=processed reason={}",
+                session_id, reason
+            );
+            return Ok(());
+        }
+
+        let now = Utc::now().to_rfc3339();
+        self.conn
+            .execute(
+                "UPDATE sessions
+                 SET deferred_completion_state = 'pending',
+                     deferred_completion_updated_at = ?1,
+                     deferred_completion_last_error = NULL,
+                     updated_at = datetime('now')
+                 WHERE id = ?2",
+                params![now, session_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if session.deferred_completion_state != "pending" {
+            self.append_runtime_event(
+                "session",
+                DomainEvent::new(
+                    "session.deferred_completion_pending",
+                    session_id.to_string(),
+                    json!({
+                        "session_id": session_id,
+                        "reason": reason,
+                        "previous_state": session.deferred_completion_state,
+                    }),
+                ),
+            )?;
+        }
+        eprintln!(
+            "[recovery][deferred_completion] pending session_id={} previous_state={} reason={}",
+            session_id, session.deferred_completion_state, reason
+        );
+        Ok(())
+    }
+
+    pub fn list_sessions_needing_deferred_completion(
+        &self,
+        student_id: i64,
+    ) -> EcoachResult<Vec<Session>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id
+                 FROM sessions
+                 WHERE student_id = ?1
+                   AND deferred_completion_state IN ('pending', 'failed')
+                 ORDER BY datetime(COALESCE(last_activity_at, updated_at, created_at)) ASC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let ids = statement
+            .query_map([student_id], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut sessions = Vec::new();
+        for id in ids {
+            let session_id = id.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if let Some(session) = self.get_session(session_id)? {
+                sessions.push(session);
+            }
+        }
+        Ok(sessions)
+    }
+
+    pub fn list_historical_deferred_completion_candidates(
+        &self,
+        student_id: i64,
+        stale_after_seconds: i64,
+    ) -> EcoachResult<Vec<Session>> {
+        let age_modifier = format!("-{} seconds", stale_after_seconds.max(0));
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT id
+                 FROM sessions
+                 WHERE student_id = ?1
+                   AND session_type = 'practice'
+                   AND status IN ('active', 'paused')
+                   AND completed_at IS NULL
+                   AND deferred_completion_state = 'idle'
+                   AND answered_questions > 0
+                   AND datetime(COALESCE(last_activity_at, updated_at, created_at))
+                        <= datetime('now', ?2)
+                 ORDER BY datetime(COALESCE(last_activity_at, updated_at, created_at)) ASC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let ids = statement
+            .query_map(params![student_id, age_modifier], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut sessions = Vec::new();
+        for id in ids {
+            let session_id = id.map_err(|err| EcoachError::Storage(err.to_string()))?;
+            if let Some(session) = self.get_session(session_id)? {
+                sessions.push(session);
+            }
+        }
+        Ok(sessions)
+    }
+
+    pub fn mark_deferred_completion_processed(
+        &self,
+        session_id: i64,
+        reason: &str,
+    ) -> EcoachResult<()> {
+        let now = Utc::now().to_rfc3339();
+        self.conn
+            .execute(
+                "UPDATE sessions
+                 SET deferred_completion_state = 'processed',
+                     deferred_completion_updated_at = ?1,
+                     deferred_completion_attempts = COALESCE(deferred_completion_attempts, 0) + 1,
+                     deferred_completion_last_error = NULL,
+                     updated_at = datetime('now')
+                 WHERE id = ?2",
+                params![now, session_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.deferred_completion_processed",
+                session_id.to_string(),
+                json!({
+                    "session_id": session_id,
+                    "reason": reason,
+                }),
+            ),
+        )?;
+        Ok(())
+    }
+
+    pub fn mark_deferred_completion_failed(
+        &self,
+        session_id: i64,
+        reason: &str,
+        error: &str,
+    ) -> EcoachResult<()> {
+        let now = Utc::now().to_rfc3339();
+        self.conn
+            .execute(
+                "UPDATE sessions
+                 SET deferred_completion_state = 'failed',
+                     deferred_completion_updated_at = ?1,
+                     deferred_completion_attempts = COALESCE(deferred_completion_attempts, 0) + 1,
+                     deferred_completion_last_error = ?2,
+                     updated_at = datetime('now')
+                 WHERE id = ?3",
+                params![now, error, session_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.deferred_completion_failed",
+                session_id.to_string(),
+                json!({
+                    "session_id": session_id,
+                    "reason": reason,
+                    "error": error,
+                }),
+            ),
+        )?;
+        Ok(())
+    }
+
+    pub fn record_nonanswer_outcome(
+        &self,
+        session_id: i64,
+        item_id: i64,
+        response_time_ms: Option<i64>,
+        timed_out: bool,
+    ) -> EcoachResult<SessionItem> {
+        self.ensure_session_status(session_id, &["active"])?;
+        let session_meta = self.load_session_runtime_meta(session_id)?;
+        let item = self
+            .get_session_item(item_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session item {} not found", item_id)))?;
+        if item.session_id != session_id {
+            return Err(EcoachError::Validation(format!(
+                "session item {} does not belong to session {}",
+                item_id, session_id
+            )));
+        }
+
+        let question = QuestionService::new(self.conn)
+            .get_question(item.question_id)?
+            .ok_or_else(|| {
+                EcoachError::NotFound(format!("question {} not found", item.question_id))
+            })?;
+        let variant_flags = self.load_question_variant_flags(item.question_id)?;
+        let answered_at = Utc::now().to_rfc3339();
+        let status = "skipped";
+        let answer_state_json = serde_json::json!({
+            "selected_option_id": Value::Null,
+            "response_time_ms": response_time_ms,
+            "skipped": !timed_out,
+            "timed_out": timed_out,
+        })
+        .to_string();
+
+        self.conn
+            .execute(
+                "UPDATE session_items
+                 SET status = ?1,
+                     selected_option_id = NULL,
+                     answer_state_json = ?2,
+                     answered_at = ?3,
+                     response_time_ms = ?4,
+                     is_correct = 0,
+                     updated_at = datetime('now')
+                 WHERE id = ?5",
+                params![status, answer_state_json, answered_at, response_time_ms, item_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        self.record_presence_event_internal(
+            session_id,
+            "meaningful_interaction",
+            &answered_at,
+            serde_json::json!({
+                "item_id": item.id,
+                "question_id": item.question_id,
+                "response_time_ms": response_time_ms,
+                "skipped": !timed_out,
+                "timed_out": timed_out,
+            }),
+        )?;
+        self.refresh_session_progress(session_id, item.display_order)?;
+        QuestionReactor::new(self.conn).record_instance_outcome(item.question_id)?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                if timed_out {
+                    "session.question_timed_out"
+                } else {
+                    "session.question_skipped"
+                },
+                session_id.to_string(),
+                serde_json::json!({
+                    "item_id": item.id,
+                    "question_id": item.question_id,
+                    "topic_id": question.topic_id,
+                    "response_time_ms": response_time_ms,
+                    "skipped": !timed_out,
+                    "timed_out": timed_out,
+                }),
+            ),
+        )?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.answer_interpreted",
+                session_id.to_string(),
+                serde_json::json!({
+                    "item_id": item.id,
+                    "question_id": item.question_id,
+                    "topic_id": question.topic_id,
+                    "node_id": question.primary_skill_id,
+                    "family_id": question.family_id,
+                    "question_format": question.question_format,
+                    "estimated_time_seconds": question.estimated_time_seconds,
+                    "response_time_ms": response_time_ms,
+                    "timed_session": session_meta.is_timed,
+                    "session_type": session_meta.session_type,
+                    "selected_option_id": Value::Null,
+                    "is_correct": false,
+                    "misconception_triggered": false,
+                    "timed_pressure_signal": session_meta.is_timed && timed_out,
+                    "was_transfer_variant": variant_flags.was_transfer_variant,
+                    "was_mixed_context": variant_flags.was_mixed_context,
+                    "skipped": !timed_out,
+                    "timed_out": timed_out,
+                }),
+            ),
+        )?;
+
+        self.get_session_item(item_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session item {} not found", item_id)))
+    }
+
+    fn record_answer_internal(
+        &self,
+        session_id: i64,
+        input: &SessionAnswerInput,
+        persist_attempt_row: bool,
+    ) -> EcoachResult<SessionItem> {
         self.ensure_session_status(session_id, &["active"])?;
         let session = self
             .get_session(session_id)?
@@ -943,7 +1265,9 @@ impl<'a> SessionService<'a> {
             }),
         )?;
 
-        self.insert_session_attempt(&session, &session_meta, &item, &question, &option, input)?;
+        if persist_attempt_row {
+            self.insert_session_attempt(&session, &session_meta, &item, &question, &option, input)?;
+        }
         self.refresh_session_progress(session_id, item.display_order)?;
         QuestionReactor::new(self.conn).record_instance_outcome(item.question_id)?;
         self.append_runtime_event(
@@ -1036,29 +1360,76 @@ impl<'a> SessionService<'a> {
         let session = self
             .get_session(session_id)?
             .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        if matches!(session.status.as_str(), "completed" | "abandoned") {
+            return self.build_summary(session_id);
+        }
         let summary = self.build_summary(session_id)?;
+        self.finalize_session_with_status(&session, &summary, "completed", None)
+    }
+
+    pub fn finalize_deferred_completion_session(
+        &self,
+        session_id: i64,
+    ) -> EcoachResult<SessionSummary> {
+        let session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        if matches!(session.status.as_str(), "completed" | "abandoned") {
+            return self.build_summary(session_id);
+        }
+        let summary = self.build_summary(session_id)?;
+        let session_meta = self.load_session_runtime_meta(session_id)?;
+        let final_status = if session_meta.total_questions > 0
+            && summary.answered_questions >= session_meta.total_questions
+        {
+            "completed"
+        } else {
+            "abandoned"
+        };
+        let reason = if final_status == "completed" {
+            None
+        } else {
+            Some("deferred_recovery")
+        };
+        self.finalize_session_with_status(&session, &summary, final_status, reason)
+    }
+
+    fn finalize_session_with_status(
+        &self,
+        session: &Session,
+        summary: &SessionSummary,
+        final_status: &str,
+        reason: Option<&str>,
+    ) -> EcoachResult<SessionSummary> {
+        let session_id = session.id;
         let completed_at = Utc::now().to_rfc3339();
+        let presence_event = if final_status == "completed" {
+            "session_completed"
+        } else {
+            "session_abandoned"
+        };
         self.record_presence_event_internal(
             session_id,
-            "session_completed",
+            presence_event,
             &completed_at,
-            serde_json::json!({}),
+            serde_json::json!({ "reason": reason }),
         )?;
         let (active_study_time_ms, idle_time_ms) =
             self.estimate_session_time_totals(session_id, session.started_at, &completed_at)?;
         self.conn
             .execute(
                 "UPDATE sessions
-                 SET status = 'completed', completed_at = ?1, last_activity_at = ?1,
-                     answered_questions = ?2, correct_questions = ?3, accuracy_score = ?4,
-                     active_study_time_ms = ?5, idle_time_ms = ?6,
+                 SET status = ?1, completed_at = ?2, last_activity_at = ?2,
+                     answered_questions = ?3, correct_questions = ?4, accuracy_score = ?5,
+                     active_study_time_ms = ?6, idle_time_ms = ?7,
                      coach_mode_exited_at = CASE
-                        WHEN session_type = 'coach_mission' THEN ?1
+                        WHEN session_type = 'coach_mission' AND ?1 = 'completed' THEN ?2
                         ELSE coach_mode_exited_at
                      END,
                      updated_at = datetime('now')
-                 WHERE id = ?7",
+                 WHERE id = ?8",
                 params![
+                    final_status,
                     completed_at,
                     summary.answered_questions,
                     summary.correct_questions,
@@ -1069,15 +1440,22 @@ impl<'a> SessionService<'a> {
                 ],
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let runtime_event_type = if final_status == "completed" {
+            "session.submitted"
+        } else {
+            "session.abandoned"
+        };
         self.append_runtime_event(
             "session",
             DomainEvent::new(
-                "session.submitted",
+                runtime_event_type,
                 session_id.to_string(),
                 serde_json::json!({
                     "answered_questions": summary.answered_questions,
                     "correct_questions": summary.correct_questions,
                     "accuracy_score": summary.accuracy_score,
+                    "status": final_status,
+                    "reason": reason,
                 }),
             ),
         )?;
@@ -1132,7 +1510,7 @@ impl<'a> SessionService<'a> {
                 ),
             )?;
         }
-        if session.session_type == "coach_mission" {
+        if final_status == "completed" && session.session_type == "coach_mission" {
             if let Some(mission_id) = self.load_mission_id_for_session(session_id)? {
                 PlanEngine::new(self.conn)
                     .complete_mission_from_session(mission_id, Some(session_id))?;
@@ -1452,18 +1830,20 @@ impl<'a> SessionService<'a> {
         self.conn
             .query_row(
                 "SELECT id, student_id, session_type, subject_id, status, active_item_index,
+                        deferred_completion_state, deferred_completion_updated_at,
+                        COALESCE(deferred_completion_attempts, 0), deferred_completion_last_error,
                         COALESCE(focus_mode, 0), focus_goal, break_schedule_json, ambient_profile,
                         started_at, paused_at, completed_at, last_activity_at
                  FROM sessions WHERE id = ?1",
                 [session_id],
                 |row| {
                     let break_schedule_json = row
-                        .get::<_, Option<String>>(8)?
+                        .get::<_, Option<String>>(12)?
                         .map(|raw| serde_json::from_str::<Value>(&raw))
                         .transpose()
                         .map_err(|err| {
                             rusqlite::Error::FromSqlConversionFailure(
-                                8,
+                                12,
                                 rusqlite::types::Type::Text,
                                 Box::new(EcoachError::Serialization(err.to_string())),
                             )
@@ -1475,14 +1855,18 @@ impl<'a> SessionService<'a> {
                         subject_id: row.get(3)?,
                         status: row.get(4)?,
                         active_item_index: row.get(5)?,
-                        focus_mode: row.get::<_, i64>(6)? == 1,
-                        focus_goal: row.get(7)?,
+                        deferred_completion_state: row.get(6)?,
+                        deferred_completion_updated_at: parse_datetime(row.get::<_, Option<String>>(7)?),
+                        deferred_completion_attempts: row.get(8)?,
+                        deferred_completion_last_error: row.get(9)?,
+                        focus_mode: row.get::<_, i64>(10)? == 1,
+                        focus_goal: row.get(11)?,
                         break_schedule_json,
-                        ambient_profile: row.get(9)?,
-                        started_at: parse_datetime(row.get::<_, Option<String>>(10)?),
-                        paused_at: parse_datetime(row.get::<_, Option<String>>(11)?),
-                        completed_at: parse_datetime(row.get::<_, Option<String>>(12)?),
-                        last_activity_at: parse_datetime(row.get::<_, Option<String>>(13)?),
+                        ambient_profile: row.get(13)?,
+                        started_at: parse_datetime(row.get::<_, Option<String>>(14)?),
+                        paused_at: parse_datetime(row.get::<_, Option<String>>(15)?),
+                        completed_at: parse_datetime(row.get::<_, Option<String>>(16)?),
+                        last_activity_at: parse_datetime(row.get::<_, Option<String>>(17)?),
                     })
                 },
             )
@@ -1579,7 +1963,8 @@ impl<'a> SessionService<'a> {
             .query_row(
                 "SELECT COUNT(*), COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0)
                  FROM session_items
-                 WHERE session_id = ?1 AND selected_option_id IS NOT NULL",
+                 WHERE session_id = ?1
+                   AND status IN ('answered', 'skipped', 'timed_out')",
                 [session_id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
@@ -3160,7 +3545,8 @@ impl<'a> SessionService<'a> {
                         COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0),
                         AVG(response_time_ms)
                  FROM session_items
-                 WHERE session_id = ?1 AND selected_option_id IS NOT NULL",
+                 WHERE session_id = ?1
+                   AND status IN ('answered', 'skipped', 'timed_out')",
                     [session_id],
                     |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
                 )
@@ -3235,6 +3621,120 @@ impl<'a> SessionService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         Ok(())
+    }
+
+    /// Start a practice session from an EXPLICIT, pre-ordered list of
+    /// question ids. Unlike `start_practice_session`, no selector
+    /// sampling happens — the caller already knows exactly which
+    /// questions it wants and in what order (past-paper replay, mistake
+    /// drill, custom test from a saved list, etc.). Session type stays
+    /// "practice" so downstream consumers (reporting, retry flows,
+    /// history views) treat it uniformly.
+    pub fn start_session_from_question_ids(
+        &self,
+        student_id: i64,
+        subject_id: i64,
+        question_ids: &[i64],
+        is_timed: bool,
+        session_focus: &str,
+    ) -> EcoachResult<(Session, Vec<SelectedQuestion>)> {
+        if question_ids.is_empty() {
+            return Err(EcoachError::NotFound(
+                "no questions supplied for session".to_string(),
+            ));
+        }
+
+        let questions_service = QuestionService::new(self.conn);
+        let mut selected: Vec<SelectedQuestion> = Vec::with_capacity(question_ids.len());
+        for question_id in question_ids {
+            let Some(question) = questions_service.get_question(*question_id)? else {
+                // Skip silently — a linked question that's been
+                // deactivated shouldn't poison the whole section.
+                continue;
+            };
+            selected.push(SelectedQuestion {
+                question,
+                fit_score: 10_000.0,
+            });
+        }
+        if selected.is_empty() {
+            return Err(EcoachError::NotFound(
+                "no active questions available for session".to_string(),
+            ));
+        }
+
+        // topic_ids_json captures the distinct topics in the selection —
+        // used by the session-detail view's "this session covers…" list.
+        let topic_ids: Vec<i64> = {
+            let mut seen = BTreeSet::new();
+            selected
+                .iter()
+                .filter_map(|s| {
+                    if seen.insert(s.question.topic_id) {
+                        Some(s.question.topic_id)
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        };
+        let topic_ids_json = serde_json::to_string(&topic_ids)
+            .map_err(|err| EcoachError::Serialization(err.to_string()))?;
+        let now = Utc::now().to_rfc3339();
+
+        self.conn
+            .execute(
+                "INSERT INTO sessions (
+                    student_id, session_type, subject_id, topic_ids, question_count, total_questions,
+                    is_timed, status, started_at, last_activity_at
+                 ) VALUES (?1, 'practice', ?2, ?3, ?4, ?5, ?6, 'active', ?7, ?7)",
+                params![
+                    student_id,
+                    subject_id,
+                    topic_ids_json,
+                    selected.len() as i64,
+                    selected.len() as i64,
+                    if is_timed { 1 } else { 0 },
+                    now,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let session_id = self.conn.last_insert_rowid();
+        self.persist_selected_items(session_id, &selected)?;
+        PedagogicalRuntimeService::new(self.conn).initialize_session_runtime(session_id)?;
+        self.ensure_presence_snapshot(session_id, Some(&now))?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.created",
+                session_id.to_string(),
+                serde_json::json!({
+                    "student_id": student_id,
+                    "session_type": "practice",
+                    "subject_id": subject_id,
+                    "question_count": selected.len(),
+                    "topic_ids": topic_ids,
+                    "session_focus": session_focus,
+                }),
+            ),
+        )?;
+        self.append_runtime_event(
+            "session",
+            DomainEvent::new(
+                "session.started",
+                session_id.to_string(),
+                serde_json::json!({
+                    "student_id": student_id,
+                    "started_at": now,
+                }),
+            ),
+        )?;
+
+        let session = self
+            .get_session(session_id)?
+            .ok_or_else(|| EcoachError::NotFound(format!("session {} not found", session_id)))?;
+        Ok((session, selected))
     }
 }
 
@@ -4029,6 +4529,7 @@ mod tests {
                 student_id: student.id,
                 subject_id,
                 topic_ids: vec![topic_id],
+                family_ids: Vec::new(),
                 question_count: 3,
                 is_timed: false,
             })
@@ -4104,6 +4605,7 @@ mod tests {
                     was_transfer_variant: false,
                     was_retention_check: false,
                     was_mixed_context: false,
+                    precomputed_is_correct: None,
                 },
             )
             .expect("answer processing should succeed");
@@ -4250,6 +4752,7 @@ mod tests {
                 student_id: student.id,
                 subject_id,
                 topic_ids: vec![topic_id],
+                family_ids: Vec::new(),
                 question_count: 2,
                 is_timed: false,
             })
@@ -4400,6 +4903,88 @@ mod tests {
     }
 
     #[test]
+    fn skipped_and_timed_out_items_count_as_completed_progress() {
+        let conn = open_test_database();
+        install_sample_pack(&conn);
+
+        let identity = IdentityService::new(&conn);
+        let student = identity
+            .create_account(CreateAccountInput {
+                account_type: AccountType::Student,
+                display_name: "Esi".to_string(),
+                pin: "1234".to_string(),
+                entitlement_tier: EntitlementTier::Standard,
+            })
+            .expect("student account should be created");
+
+        let (subject_id, topic_id) = load_fraction_scope(&conn);
+        let session_service = SessionService::new(&conn);
+        let (session, _) = session_service
+            .start_practice_session(&PracticeSessionStartInput {
+                student_id: student.id,
+                subject_id,
+                topic_ids: vec![topic_id],
+                family_ids: Vec::new(),
+                question_count: 2,
+                is_timed: true,
+            })
+            .expect("practice session should start");
+
+        let snapshot = session_service
+            .get_session_snapshot(session.id)
+            .expect("session snapshot should load")
+            .expect("session should exist");
+        assert_eq!(snapshot.items.len(), 2);
+
+        let skipped_item = session_service
+            .record_nonanswer_outcome(session.id, snapshot.items[0].id, Some(11_000), false)
+            .expect("skipped outcome should persist");
+        assert_eq!(skipped_item.status, "skipped");
+        assert_eq!(skipped_item.is_correct, Some(false));
+
+        let timed_out_item = session_service
+            .record_nonanswer_outcome(session.id, snapshot.items[1].id, Some(31_000), true)
+            .expect("timed out outcome should persist");
+        assert_eq!(timed_out_item.status, "skipped");
+        assert_eq!(timed_out_item.is_correct, Some(false));
+
+        let refreshed_snapshot = session_service
+            .get_session_snapshot(session.id)
+            .expect("refreshed session snapshot should load")
+            .expect("session should still exist");
+        assert!(
+            refreshed_snapshot
+                .items
+                .iter()
+                .all(|item| item.status == "skipped")
+        );
+
+        let summary = session_service
+            .complete_session(session.id)
+            .expect("session should complete");
+        assert_eq!(summary.answered_questions, 2);
+        assert_eq!(summary.correct_questions, 0);
+
+        let interpretation = session_service
+            .get_session_interpretation(session.id)
+            .expect("session interpretation should load")
+            .expect("session interpretation should exist");
+        assert_eq!(interpretation.unanswered_questions, 0);
+
+        let skipped_runtime_events: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM runtime_events
+                 WHERE aggregate_kind = 'session'
+                   AND aggregate_id = ?1
+                   AND event_type IN ('session.question_skipped', 'session.question_timed_out')",
+                [session.id.to_string()],
+                |row| row.get(0),
+            )
+            .expect("non-answer runtime events should be queryable");
+        assert_eq!(skipped_runtime_events, 2);
+    }
+
+    #[test]
     fn focus_mode_configuration_round_trips_on_session() {
         let conn = open_test_database();
         install_sample_pack(&conn);
@@ -4421,6 +5006,7 @@ mod tests {
                 student_id: student.id,
                 subject_id,
                 topic_ids: vec![topic_id],
+                family_ids: Vec::new(),
                 question_count: 2,
                 is_timed: false,
             })
@@ -4623,6 +5209,7 @@ mod tests {
                 student_id: student.id,
                 subject_id,
                 topic_ids: vec![topic_id],
+                family_ids: Vec::new(),
                 question_count: 2,
                 is_timed: true,
             })

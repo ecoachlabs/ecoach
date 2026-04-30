@@ -158,6 +158,7 @@ impl<'a> DiagnosticEngine<'a> {
         selector.select_questions(&QuestionSelectionRequest {
             subject_id,
             topic_ids: topic_ids.clone(),
+            family_ids: Vec::new(),
             target_question_count: count,
             target_difficulty: None,
             weakness_topic_ids: topic_ids,
@@ -2610,6 +2611,7 @@ impl<'a> DiagnosticEngine<'a> {
         let primary_selection = selector.select_questions(&QuestionSelectionRequest {
             subject_id,
             topic_ids: topic_ids.to_vec(),
+            family_ids: Vec::new(),
             target_question_count: template.question_count,
             target_difficulty: None,
             weakness_topic_ids: topic_ids.to_vec(),
@@ -2636,6 +2638,7 @@ impl<'a> DiagnosticEngine<'a> {
         selector.select_questions(&QuestionSelectionRequest {
             subject_id,
             topic_ids: topic_ids.to_vec(),
+            family_ids: Vec::new(),
             target_question_count: template.question_count,
             target_difficulty: None,
             weakness_topic_ids: topic_ids.to_vec(),
@@ -2882,7 +2885,7 @@ impl<'a> DiagnosticEngine<'a> {
                     ],
                 )
                 .map_err(|err| EcoachError::Storage(err.to_string()))?;
-            self.upsert_item_routing_profile(&selected.question)?;
+            self.ensure_item_routing_profile(&selected.question)?;
         }
 
         Ok(())
@@ -3019,10 +3022,75 @@ impl<'a> DiagnosticEngine<'a> {
         }
 
         let question_service = QuestionService::new(self.conn);
+        let existing_profile_ids = self.load_existing_routing_profile_ids(subject_id, topic_ids)?;
         for question in question_service.list_questions_for_scope(subject_id, topic_ids)? {
-            self.upsert_item_routing_profile(&question)?;
+            if !existing_profile_ids.contains(&question.id) {
+                self.upsert_item_routing_profile(&question)?;
+            }
         }
         Ok(())
+    }
+
+    fn ensure_item_routing_profile(&self, question: &Question) -> EcoachResult<()> {
+        let exists: i64 = self
+            .conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1
+                    FROM diagnostic_item_routing_profiles
+                    WHERE question_id = ?1
+                 )",
+                [question.id],
+                |row| row.get(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        if exists == 0 {
+            self.upsert_item_routing_profile(question)?;
+        }
+
+        Ok(())
+    }
+
+    fn load_existing_routing_profile_ids(
+        &self,
+        subject_id: i64,
+        topic_ids: &[i64],
+    ) -> EcoachResult<std::collections::BTreeSet<i64>> {
+        let mut existing = std::collections::BTreeSet::new();
+        if topic_ids.is_empty() {
+            return Ok(existing);
+        }
+
+        let placeholders = topic_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        let sql = format!(
+            "SELECT dirp.question_id
+             FROM diagnostic_item_routing_profiles dirp
+             INNER JOIN questions q ON q.id = dirp.question_id
+             WHERE q.subject_id = ? AND q.is_active = 1 AND q.topic_id IN ({})",
+            placeholders
+        );
+        let mut params_vec: Vec<rusqlite::types::Value> = Vec::with_capacity(topic_ids.len() + 1);
+        params_vec.push(subject_id.into());
+        for topic_id in topic_ids {
+            params_vec.push((*topic_id).into());
+        }
+
+        let mut statement = self
+            .conn
+            .prepare(&sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+                row.get::<_, i64>(0)
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        for row in rows {
+            existing.insert(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+
+        Ok(existing)
     }
 
     fn upsert_item_routing_profile(&self, question: &Question) -> EcoachResult<()> {
@@ -4804,6 +4872,31 @@ mod tests {
     }
 
     #[test]
+    fn ensuring_existing_routing_profiles_does_not_rewrite_the_scope() {
+        let conn = open_test_database();
+        seed_profiled_question_scope(&conn, 24);
+
+        DiagnosticEngine::new(&conn)
+            .ensure_routing_profiles_for_scope(1, &[10])
+            .expect("routing profile check should succeed");
+
+        let rewritten_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM diagnostic_item_routing_profiles
+                 WHERE updated_at <> '2000-01-01 00:00:00'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("profile count should load");
+
+        assert_eq!(
+            rewritten_count, 0,
+            "diagnostic launch should not refresh every existing routing profile"
+        );
+    }
+
+    #[test]
     fn constructed_response_diagnostic_attempts_can_submit_without_option_ids() {
         let conn = open_test_database();
         let pack_service = PackService::new(&conn);
@@ -5432,6 +5525,62 @@ mod tests {
             .expect("workspace root should exist")
             .join("packs")
             .join("math-bece-sample")
+    }
+
+    fn seed_profiled_question_scope(conn: &Connection, question_count: i64) {
+        conn.execute(
+            "INSERT INTO curriculum_versions (id, name, version_label)
+             VALUES (1, 'Test Curriculum', 'v1')",
+            [],
+        )
+        .expect("curriculum should insert");
+        conn.execute(
+            "INSERT INTO subjects (id, curriculum_version_id, code, name)
+             VALUES (1, 1, 'MATH', 'Mathematics')",
+            [],
+        )
+        .expect("subject should insert");
+        conn.execute(
+            "INSERT INTO topics (id, subject_id, code, name)
+             VALUES (10, 1, 'ALG', 'Algebra')",
+            [],
+        )
+        .expect("topic should insert");
+
+        for index in 0..question_count {
+            let family_id = 10_000 + index;
+            let question_id = 100_000 + index;
+            conn.execute(
+                "INSERT INTO question_families (id, family_code, family_name, subject_id, topic_id)
+                 VALUES (?1, ?2, ?3, 1, 10)",
+                params![
+                    family_id,
+                    format!("ALG_FAMILY_{index}"),
+                    format!("Algebra Family {index}"),
+                ],
+            )
+            .expect("family should insert");
+            conn.execute(
+                "INSERT INTO questions (
+                    id, subject_id, topic_id, family_id, stem, question_format,
+                    difficulty_level, estimated_time_seconds, marks, is_active
+                 ) VALUES (?1, 1, 10, ?2, ?3, 'mcq', 5200, 35, 1, 1)",
+                params![question_id, family_id, format!("Question {index}")],
+            )
+            .expect("question should insert");
+            conn.execute(
+                "INSERT INTO diagnostic_item_routing_profiles (
+                    question_id, subject_id, topic_id, family_id, item_family,
+                    recognition_suitable, recall_suitable, transfer_suitable, timed_suitable,
+                    confidence_prompt, recommended_stages_json, sibling_variant_modes_json,
+                    routing_notes_json, updated_at
+                 ) VALUES (?1, 1, 10, ?2, 'mcq', 1, 0, 0, 1,
+                    'sure_not_sure_guessed', '[\"baseline\"]', '[\"isomorphic\"]', '{}',
+                    '2000-01-01 00:00:00')",
+                params![question_id, family_id],
+            )
+            .expect("routing profile should insert");
+        }
     }
 
     fn run_pressure_heavy_diagnostic(

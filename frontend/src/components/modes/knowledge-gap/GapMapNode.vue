@@ -16,6 +16,10 @@ function gapColor(score: number): string {
   if (score > 0) return '#65a30d'
   return '#22c55e'
 }
+
+function stateLabel(state: string): string {
+  return state.replace(/_/g, ' ')
+}
 </script>
 
 <template>
@@ -29,6 +33,7 @@ function gapColor(score: number): string {
     @click="$emit('click')">
     <p class="text-[10px] font-bold truncate" :style="{ color: gapColor(gapScore) }">{{ (gapScore / 100).toFixed(0) }}%</p>
     <p class="text-[9px] font-medium truncate" :style="{ color: 'var(--text)' }">{{ name }}</p>
+    <p class="text-[7px] uppercase font-bold truncate" :style="{ color: 'var(--text-3)' }">{{ stateLabel(state) }}</p>
     <p v-if="isBlocker" class="text-[7px] uppercase font-bold" :style="{ color: '#7c3aed' }">blocker</p>
   </button>
 </template>

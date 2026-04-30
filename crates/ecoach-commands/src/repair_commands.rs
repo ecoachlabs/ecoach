@@ -1,5 +1,6 @@
 use ecoach_knowledge_gap::{
-    CreateGapRepairPlanInput, GapRepairPlan, KnowledgeGapService, RepairItemStatus,
+    CreateGapRepairPlanInput, GapFeedItem, GapRepairPlan, GapSnapshotResult, GapTrendPoint,
+    KnowledgeGapService, RepairItemStatus,
 };
 
 use crate::{error::CommandError, state::AppState};
@@ -31,6 +32,9 @@ pub struct GapRepairPlanDto {
 }
 
 pub type GapRepairPlanDetailDto = GapRepairPlan;
+pub type GapSnapshotResultDto = GapSnapshotResult;
+pub type GapTrendPointDto = GapTrendPoint;
+pub type GapFeedItemDto = GapFeedItem;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GapDashboardDto {
@@ -175,7 +179,7 @@ pub fn capture_gap_snapshot(
     state: &AppState,
     student_id: i64,
     subject_id: i64,
-) -> Result<ecoach_knowledge_gap::GapSnapshotResult, CommandError> {
+) -> Result<GapSnapshotResultDto, CommandError> {
     state.with_connection(|conn| {
         Ok(KnowledgeGapService::new(conn).capture_gap_snapshot(student_id, subject_id)?)
     })
@@ -186,7 +190,7 @@ pub fn list_gap_trend(
     student_id: i64,
     subject_id: i64,
     limit: usize,
-) -> Result<Vec<ecoach_knowledge_gap::GapTrendPoint>, CommandError> {
+) -> Result<Vec<GapTrendPointDto>, CommandError> {
     state.with_connection(|conn| {
         Ok(KnowledgeGapService::new(conn).list_gap_trend(student_id, subject_id, limit)?)
     })
@@ -197,7 +201,7 @@ pub fn list_gap_feed(
     student_id: i64,
     subject_id: i64,
     limit: usize,
-) -> Result<Vec<ecoach_knowledge_gap::GapFeedItem>, CommandError> {
+) -> Result<Vec<GapFeedItemDto>, CommandError> {
     state.with_connection(|conn| {
         Ok(KnowledgeGapService::new(conn).list_gap_feed(student_id, subject_id, limit)?)
     })

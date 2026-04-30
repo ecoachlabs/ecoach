@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { listSubjects, type SubjectDto } from '@/ipc/coach'
-import { getEliteProfile, listEliteTopicDomination, type EliteProfileDto, type EliteTopicProfileDto } from '@/ipc/elite'
+import {
+  getEliteProfile,
+  listEliteEarnedBadges,
+  listElitePersonalBests,
+  listEliteTopicDomination,
+  type EliteEarnedBadgeRow,
+  type ElitePersonalBestRow,
+  type EliteProfileDto,
+  type EliteTopicProfileDto,
+} from '@/ipc/elite'
 import EliteRecordsWall from '@/components/modes/elite/EliteRecordsWall.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import { buildEliteRecordsView } from '@/utils/eliteRecordsView'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -16,6 +26,8 @@ const subjects = ref<SubjectDto[]>([])
 const selectedSubjectId = ref<number | null>(null)
 const profile = ref<EliteProfileDto | null>(null)
 const topicDomination = ref<EliteTopicProfileDto[]>([])
+const personalBests = ref<ElitePersonalBestRow[]>([])
+const earnedBadges = ref<EliteEarnedBadgeRow[]>([])
 
 onMounted(async () => {
   if (!auth.currentAccount) return
@@ -33,9 +45,17 @@ onMounted(async () => {
 
 async function loadData(subjectId: number) {
   if (!auth.currentAccount) return
-  ;[profile.value, topicDomination.value] = await Promise.all([
+
+  ;[
+    profile.value,
+    topicDomination.value,
+    personalBests.value,
+    earnedBadges.value,
+  ] = await Promise.all([
     getEliteProfile(auth.currentAccount.id, subjectId),
     listEliteTopicDomination(auth.currentAccount.id, subjectId, 10),
+    listElitePersonalBests(auth.currentAccount.id, subjectId).catch(() => []),
+    listEliteEarnedBadges(auth.currentAccount.id, subjectId).catch(() => []),
   ])
 }
 
@@ -48,48 +68,17 @@ async function onSubjectChange(subjectId: number) {
   loading.value = false
 }
 
-// Derive records from real profile data
-const records = computed(() => {
-  if (!profile.value) return []
-  return [
-    { category: 'EPS Score', value: profile.value.eps_score.toString(), date: 'Current', isPersonalBest: true },
-    { category: 'Precision', value: Math.round(profile.value.precision_score / 100) + '%', date: 'Current', isPersonalBest: profile.value.precision_score >= 8000 },
-    { category: 'Speed', value: Math.round(profile.value.speed_score / 100) + '%', date: 'Current', isPersonalBest: profile.value.speed_score >= 8000 },
-    { category: 'Depth', value: Math.round(profile.value.depth_score / 100) + '%', date: 'Current', isPersonalBest: profile.value.depth_score >= 8000 },
-    { category: 'Composure', value: Math.round(profile.value.composure_score / 100) + '%', date: 'Current', isPersonalBest: profile.value.composure_score >= 8000 },
-    {
-      category: 'Best Topic',
-      value: topicDomination.value[0]?.topic_name ?? '—',
-      date: '',
-      isPersonalBest: (topicDomination.value[0]?.domination_score ?? 0) >= 7000,
-    },
-  ]
-})
+const recordsView = computed(() => {
+  if (!profile.value) {
+    return { records: [], badges: [], titles: [] }
+  }
 
-const badges = computed(() => {
-  const p = profile.value
-  return [
-    { name: 'Precision Master', icon: '◎', earned: !!p && p.precision_score >= 8000, description: '80%+ Precision' },
-    { name: 'Speed Demon', icon: '⚡', earned: !!p && p.speed_score >= 8000, description: '80%+ Speed' },
-    { name: 'Deep Thinker', icon: '◈', earned: !!p && p.depth_score >= 8000, description: '80%+ Depth' },
-    { name: 'Iron Composure', icon: '∞', earned: !!p && p.composure_score >= 8000, description: '80%+ Composure' },
-    { name: 'Elite Member', icon: '★', earned: !!p && p.eps_score >= 5000, description: '5000+ EPS' },
-    { name: 'Dominator', icon: '👑', earned: topicDomination.value.some(t => t.domination_score >= 9000), description: 'One topic at 90%+' },
-  ]
-})
-
-const titles = computed(() => {
-  const tier = profile.value?.tier ?? ''
-  const tierOrder = ['Foundation', 'Core', 'Prime', 'Apex', 'Master', 'Legend']
-  const tierIdx = tierOrder.findIndex(t => t.toLowerCase() === tier.toLowerCase())
-  return [
-    { title: 'Foundation Scholar', earned: tierIdx >= 0 },
-    { title: 'Core Contender', earned: tierIdx >= 1 },
-    { title: 'Prime Performer', earned: tierIdx >= 2 },
-    { title: 'Apex Achiever', earned: tierIdx >= 3 },
-    { title: 'Master Strategist', earned: tierIdx >= 4 },
-    { title: 'Legend', earned: tierIdx >= 5 },
-  ]
+  return buildEliteRecordsView(
+    profile.value,
+    topicDomination.value,
+    personalBests.value,
+    earnedBadges.value,
+  )
 })
 </script>
 
@@ -97,14 +86,13 @@ const titles = computed(() => {
   <div class="flex-1 overflow-y-auto p-7">
     <div class="flex items-center gap-3 mb-6">
       <button class="text-xs hover:underline" :style="{ color: 'var(--ink-muted)' }" @click="router.push('/student/elite')">
-        ← Elite Mode
+        Back to Elite Mode
       </button>
       <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
         Records Wall
       </h1>
     </div>
 
-    <!-- Subject picker -->
     <div class="mb-6 flex items-center gap-3 flex-wrap">
       <span class="text-xs font-semibold uppercase" :style="{ color: 'var(--ink-muted)' }">Subject:</span>
       <div class="flex gap-2 flex-wrap">
@@ -133,9 +121,9 @@ const titles = computed(() => {
 
     <template v-else-if="profile">
       <EliteRecordsWall
-        :records="records"
-        :badges="badges"
-        :titles="titles"
+        :records="recordsView.records"
+        :badges="recordsView.badges"
+        :titles="recordsView.titles"
       />
     </template>
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import katex from 'katex'
+import { computed } from 'vue'
 import 'katex/dist/katex.min.css'
+import { renderKatex } from '@/utils/mathCache'
+import { measureActivePerfSync } from '@/utils/perfTrace'
 
 const props = defineProps<{
   expression: string
@@ -9,35 +10,41 @@ const props = defineProps<{
   size?: 'sm' | 'md' | 'lg'
 }>()
 
-const container = ref<HTMLElement | null>(null)
-
-function render() {
-  if (!container.value || !props.expression) return
-  try {
-    katex.render(props.expression, container.value, {
-      throwOnError: false,
-      displayMode: props.display ?? false,
-      output: 'html',
-    })
-  } catch {
-    if (container.value) container.value.textContent = props.expression
-  }
-}
-
-onMounted(render)
-watch(() => props.expression, render)
+const renderedHtml = computed(() => {
+  if (!props.expression) return ''
+  return measureActivePerfSync(
+    'MathRenderer.renderedHtml',
+    () => renderKatex(props.expression, props.display ?? false),
+    {
+      chars: props.expression.length,
+      display: props.display ?? false,
+    },
+  )
+})
 </script>
 
 <template>
   <span
-    ref="container"
     class="math-renderer"
-    :class="[
-      size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-xl' : 'text-base',
-      display ? 'block text-center my-3' : 'inline',
-    ]"
-    :style="{ color: 'var(--text)' }"
-  >
-    {{ expression }}
-  </span>
+    :class="{ 'math-renderer--display': display }"
+    :style="{
+      color: 'inherit',
+      fontSize: size === 'sm' ? '0.95em' : size === 'lg' ? '1.12em' : '1em',
+    }"
+    v-html="renderedHtml"
+  />
 </template>
+
+<style scoped>
+.math-renderer {
+  display: inline-block;
+  vertical-align: baseline;
+  line-height: inherit;
+}
+
+.math-renderer--display {
+  display: block;
+  text-align: center;
+  margin: 0.65em 0;
+}
+</style>

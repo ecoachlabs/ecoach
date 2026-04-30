@@ -2,6 +2,7 @@ use ecoach_substrate::{EcoachError, EcoachResult};
 use rusqlite::{Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use std::time::Instant;
 
 use crate::constitution::CoachConstitutionService;
 use crate::plan_engine::{
@@ -431,19 +432,75 @@ pub fn evaluate_coach_brain(
     trigger: CoachBrainTrigger,
     horizon_days: usize,
 ) -> EcoachResult<CoachBrainOutput> {
+    let total_start = Instant::now();
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] enter student_id={} trigger={:?} horizon_days={}",
+        student_id, trigger, horizon_days
+    );
+    let content_readiness_start = Instant::now();
     let content_readiness = assess_content_readiness(conn, student_id)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] assess_content_readiness {:.1}ms",
+        content_readiness_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let state_start = Instant::now();
     let state = resolve_coach_state(conn, student_id)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] resolve_coach_state {:.1}ms",
+        state_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let orchestration_start = Instant::now();
     let orchestration =
         CoachConstitutionService::new(conn).build_orchestration_snapshot(student_id, None, None)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] build_orchestration_snapshot {:.1}ms",
+        orchestration_start.elapsed().as_secs_f64() * 1000.0
+    );
     let next_action = orchestration.next_action.clone();
     let plan_engine = PlanEngine::new(conn);
+    let roadmap_start = Instant::now();
     let roadmap = plan_engine.get_coach_roadmap(student_id, horizon_days.max(1))?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] get_coach_roadmap {:.1}ms",
+        roadmap_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let mission_start = Instant::now();
     let today_mission = plan_engine.get_today_mission_brief(student_id)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] get_today_mission_brief {:.1}ms",
+        mission_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let budget_start = Instant::now();
     let study_budget = plan_engine.build_study_budget_snapshot(student_id, None)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] build_study_budget_snapshot {:.1}ms",
+        budget_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let blockers_start = Instant::now();
     let blockers = plan_engine.list_active_blockers(student_id, 5)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] list_active_blockers {:.1}ms",
+        blockers_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let content_projection_start = Instant::now();
     sync_content_readiness_projection(conn, student_id, &content_readiness)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] sync_content_readiness_projection {:.1}ms",
+        content_projection_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let lifecycle_projection_start = Instant::now();
     sync_lifecycle_state_projection(conn, student_id, &state)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection {:.1}ms",
+        lifecycle_projection_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let next_action_projection_start = Instant::now();
     sync_next_action_projection(conn, student_id, &next_action)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] sync_next_action_projection {:.1}ms",
+        next_action_projection_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let recovery_projection_start = Instant::now();
     sync_recovery_state_projection(
         conn,
         student_id,
@@ -452,7 +509,17 @@ pub fn evaluate_coach_brain(
         &study_budget,
         !blockers.is_empty(),
     )?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] sync_recovery_state_projection {:.1}ms",
+        recovery_projection_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let recovery_states_start = Instant::now();
     let recovery_states = list_recovery_state_projection(conn, student_id)?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] list_recovery_state_projection {:.1}ms",
+        recovery_states_start.elapsed().as_secs_f64() * 1000.0
+    );
+    let decision_trace_start = Instant::now();
     write_decision_trace(
         conn,
         student_id,
@@ -468,6 +535,14 @@ pub fn evaluate_coach_brain(
             orchestration.governance_checks.len() as i64,
         )),
     )?;
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] write_decision_trace {:.1}ms",
+        decision_trace_start.elapsed().as_secs_f64() * 1000.0
+    );
+    eprintln!(
+        "[perf][coach.evaluate_coach_brain] total {:.1}ms",
+        total_start.elapsed().as_secs_f64() * 1000.0
+    );
 
     Ok(CoachBrainOutput {
         trigger: format!("{:?}", trigger),

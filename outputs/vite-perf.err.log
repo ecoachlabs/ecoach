@@ -1,0 +1,1063 @@
+[2m3:39:08 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m3:39:08 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m3:39:08 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m4:03:53 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m4:03:53 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m4:03:53 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m4:07:47 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"not_found","message":"attempt 127 not found: Invalid column type Null at index: 9, name: selected_option_id"}
+[2m4:11:10 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"not_found","message":"attempt 128 not found: Invalid column type Null at index: 9, name: selected_option_id"}
+[2m5:03:04 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m5:03:04 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m5:03:05 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m5:05:18 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"not_found","message":"attempt 139 not found: Invalid column type Null at index: 9, name: selected_option_id"}
+[2m5:12:05 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"not_found","message":"attempt 150 not found: Invalid column type Null at index: 9, name: selected_option_id"}
+[2m6:25:40 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m6:25:40 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m6:25:40 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m6:28:44 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] login_with_pin failed: {"code":"unauthorized","message":"invalid pin"}
+[2m6:28:55 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] login_with_pin failed: {"code":"unauthorized","message":"invalid pin"}
+[2m6:29:03 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] login_with_pin failed: {"code":"unauthorized","message":"invalid pin"}
+[2m6:38:31 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] login_with_pin failed: {"code":"unauthorized","message":"invalid pin"}
+[2m6:41:24 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] recover_deferred_session_completions failed: Command recover_deferred_session_completions not found
+[2m6:41:24 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mFailed to recover deferred session completions Command recover_deferred_session_completions not found
+[2m6:47:54 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m6:47:54 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m6:47:54 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m6:48:00 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m6:48:00 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m6:48:00 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m6:48:24 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] login_with_pin failed: {"code":"unauthorized","message":"invalid pin"}
+[2m6:49:26 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"not_found","message":"attempt 151 not found: Invalid column type Null at index: 9, name: selected_option_id"}
+[2m6:51:08 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m6:51:09 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"storage_error","message":"write_attempt failed: storage error: failed to write attempt for topic 90: CHECK constraint failed: confidence_level IN ('sure', 'not_sure', 'guessed')"}
+[2m6:51:20 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m6:51:20 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"storage_error","message":"write_attempt failed: storage error: failed to write attempt for topic 91: CHECK constraint failed: confidence_level IN ('sure', 'not_sure', 'guessed')"}
+[2m6:51:31 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m6:51:31 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"storage_error","message":"write_attempt failed: storage error: failed to write attempt for topic 92: CHECK constraint failed: confidence_level IN ('sure', 'not_sure', 'guessed')"}
+[2m6:51:42 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m6:51:43 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"storage_error","message":"write_attempt failed: storage error: failed to write attempt for topic 93: CHECK constraint failed: confidence_level IN ('sure', 'not_sure', 'guessed')"}
+[2m6:56:33 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m6:56:34 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"storage_error","message":"write_attempt failed: storage error: failed to write attempt for topic 90: CHECK constraint failed: confidence_level IN ('sure', 'not_sure', 'guessed')"}
+[2m6:56:48 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m6:56:48 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"storage_error","message":"write_attempt failed: storage error: failed to write attempt for topic 91: CHECK constraint failed: confidence_level IN ('sure', 'not_sure', 'guessed')"}
+[2m6:57:03 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m6:57:04 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"storage_error","message":"write_attempt failed: storage error: failed to write attempt for topic 92: CHECK constraint failed: confidence_level IN ('sure', 'not_sure', 'guessed')"}
+[2m6:57:19 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m6:57:19 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] submit_attempt failed: {"code":"storage_error","message":"write_attempt failed: storage error: failed to write attempt for topic 93: CHECK constraint failed: confidence_level IN ('sure', 'not_sure', 'guessed')"}
+[2m7:08:04 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:08:04 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:08:04 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m7:08:19 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:08:19 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:08:19 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m7:43:52 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:43:52 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:43:52 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m7:47:10 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:47:10 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:47:10 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m7:47:55 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:47:55 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:47:55 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m7:48:04 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:48:04 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:48:04 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m7:59:33 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:59:33 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:59:33 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m7:59:45 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:59:45 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:59:45 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m7:59:59 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m7:59:59 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m7:59:59 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m8:05:55 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m8:06:51 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] start_practice_session failed: {"code":"not_found","message":"no questions available for requested practice session"}
+[2m8:35:26 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mIPC custom protocol failed, Tauri will now use the postMessage interface instead TypeError: Failed to fetch
+    at Object.sendIpcMessage (<anonymous>:83:7)
+    at Object.<anonymous> (<anonymous>:177:38)
+    at action (<anonymous>:336:38)
+    at <anonymous>:345:11
+    at new Promise (<anonymous>)
+    at Object.value (<anonymous>:325:14)
+    at <anonymous>:1:28
+[2m8:35:27 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m8:35:27 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m8:35:27 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m8:35:39 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m8:35:39 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m8:35:39 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m8:42:14 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m8:42:14 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m8:42:14 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:09:56 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:09:56 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:09:56 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:15:31 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:15:31 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:15:32 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:15:41 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:15:41 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:15:41 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:15:53 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:15:53 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:15:53 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:16:01 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:16:01 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:16:01 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:16:10 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:16:10 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:16:10 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:17:20 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:17:20 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:17:20 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:17:47 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:17:47 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:17:47 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m10:27:40 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] login_with_pin failed: {"code":"unauthorized","message":"invalid pin"}
+[2m10:27:46 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] login_with_pin failed: {"code":"unauthorized","message":"invalid pin"}
+[2m10:34:12 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m10:34:12 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m10:34:13 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m12:01:52 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m12:01:52 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m12:01:52 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m12:02:01 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m12:02:01 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m12:02:01 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m3:15:10 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m3:15:11 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m3:15:11 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+
+[2m6:06:06 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[IPC] list_accounts failed: TypeError: Cannot read properties of undefined (reading 'invoke')
+    at invoke (http://localhost:1420/node_modules/.vite/deps/@tauri-apps_api_core.js?v=d3786e03:204:36)
+    at invokeCall (http://localhost:1420/src/ipc/index.ts:30:28)
+    at measureAsyncInternal (http://localhost:1420/src/utils/perfTrace.ts:88:16)
+    at Object.measureAsync (http://localhost:1420/src/utils/perfTrace.ts:141:11)
+    at measurePerfAsync (http://localhost:1420/src/utils/perfTrace.ts:169:22)
+    at ipc (http://localhost:1420/src/ipc/index.ts:34:16)
+    at Module.listAccounts (http://localhost:1420/src/ipc/identity.ts:3:9)
+    at Proxy.loadAccounts (http://localhost:1420/src/stores/auth.ts:10:38)
+    at Proxy.wrappedAction (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4799:14)
+    at store.<computed> (http://localhost:1420/node_modules/.vite/deps/pinia.js?v=d3786e03:4486:40)
+[2m6:06:06 AM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m[Vue warn]: Unhandled error during execution of mounted hook 
+  at <ProfileSwitcher onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< {} > > 
+  at <RouterView> 
+  at <App>
+[2m6:06:06 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled rejection] [1mTypeError[22m: Cannot read properties of undefined (reading 'invoke')
+[39m > invoke node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js:202:38
+ > invokeCall src/ipc/index.ts:51:29
+    49 |  
+    50 |    try {
+    51 |      const invokeCall = () => invoke<T>(command, args)
+       |                               ^
+    52 |      if (!perfEnabled) {
+    53 |        return await invokeCall()
+ > measureAsyncInternal src/utils/perfTrace.ts:142:17
+ > Object.measureAsync src/utils/perfTrace.ts:197:13
+ > measurePerfAsync src/utils/perfTrace.ts:232:23
+ > ipc src/ipc/index.ts:55:17
+ > Module.listAccounts src/ipc/identity.ts:5:9
+ > Proxy.loadAccounts src/stores/auth.ts:13:39
+ > Proxy.wrappedAction node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:1400:25
+ > store.<computed> node_modules/.pnpm/pinia@3.0.4_typescript@6.0.2_vue@3.5.31_typescript@6.0.2_/node_modules/pinia/dist/pinia.mjs:955:49
+

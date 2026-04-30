@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
+import MathText from './MathText.vue'
 
 defineProps<{
   selectedText: string
@@ -64,12 +65,14 @@ const layers = [
       <div v-if="expanded.has(layer.key)" class="px-4 pb-3">
         <!-- Special rendering for "what you chose" -->
         <div v-if="layer.key === 'chose'" class="text-sm p-3 rounded-[var(--radius-sm)] bg-red-50 text-red-700">
-          {{ selectedText }}
+          <MathText :text="selectedText" size="sm" />
         </div>
         <!-- Correct answer -->
         <div v-else-if="layer.key === 'correct' && correctText" class="text-sm p-3 rounded-[var(--radius-sm)] bg-emerald-50 text-emerald-700">
-          {{ correctText }}<br/>
-          <span v-if="whyCorrectWins" class="text-xs mt-1 block opacity-80">{{ whyCorrectWins }}</span>
+          <MathText :text="correctText" size="sm" /><br/>
+          <span v-if="whyCorrectWins" class="text-xs mt-1 block opacity-80">
+            <MathText :text="whyCorrectWins" size="sm" />
+          </span>
         </div>
         <!-- Mistake type badge -->
         <div v-else-if="layer.key === 'type' && mistakeType">
@@ -77,12 +80,12 @@ const layers = [
         </div>
         <!-- Generic text layers -->
         <p v-else class="text-sm leading-relaxed" :style="{ color: 'var(--text-2)' }">
-          {{ (layer.prop === 'whyItLookedReasonable' ? whyItLookedReasonable :
+          <MathText :text="(layer.prop === 'whyItLookedReasonable' ? whyItLookedReasonable :
               layer.prop === 'whyItFails' ? whyItFails :
               layer.prop === 'likelyThinking' ? likelyThinking :
               layer.prop === 'theLesson' ? theLesson :
               layer.prop === 'patternHistory' ? patternHistory :
-              layer.prop === 'repairAction' ? repairAction : '') || 'Analysis will be available after more data is collected.' }}
+              layer.prop === 'repairAction' ? repairAction : '') || 'Analysis will be available after more data is collected.'" size="sm" />
         </p>
       </div>
     </AppCard>

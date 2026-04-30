@@ -23,6 +23,32 @@ export interface GapRepairPlanDto {
   progress_percent: number
 }
 
+export interface GapSnapshotResultDto {
+  total_gap_percent: number
+  unknown_percent: number
+  weak_percent: number
+  declining_percent: number
+  forgetting_percent: number
+  critical_percent: number
+  total_skills: number
+  mastered_skills: number
+  critical_blockers: number
+}
+
+export interface GapTrendPointDto {
+  gap_percent: number
+  snapshot_at: string
+}
+
+export interface GapFeedItemDto {
+  id: number
+  topic_id: number | null
+  event_type: string
+  message: string
+  severity: string
+  created_at: string
+}
+
 export interface GapDashboardDto {
   critical_gap_count: number
   active_repair_count: number
@@ -45,4 +71,27 @@ export function advanceRepairItem(itemId: number, result: Record<string, unknown
 
 export function getGapDashboard(studentId: number): Promise<GapDashboardDto> {
   return ipc<GapDashboardDto>('get_gap_dashboard', { studentId })
+}
+
+export function captureGapSnapshot(
+  studentId: number,
+  subjectId: number,
+): Promise<GapSnapshotResultDto> {
+  return ipc<GapSnapshotResultDto>('capture_gap_snapshot', { studentId, subjectId })
+}
+
+export function listGapTrend(
+  studentId: number,
+  subjectId: number,
+  limit: number = 12,
+): Promise<GapTrendPointDto[]> {
+  return ipc<GapTrendPointDto[]>('list_gap_trend', { studentId, subjectId, limit })
+}
+
+export function listGapFeed(
+  studentId: number,
+  subjectId: number,
+  limit: number = 10,
+): Promise<GapFeedItemDto[]> {
+  return ipc<GapFeedItemDto[]>('list_gap_feed', { studentId, subjectId, limit })
 }

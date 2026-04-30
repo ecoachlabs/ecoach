@@ -1,0 +1,66 @@
+
+> frontend@1.0.0 dev C:\Users\surfaceSudio\OneDrive\ecoach\frontend
+> vite
+
+
+  [32m[1mVITE[22m v8.0.3[39m  [2mready in [0m[1m1032[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m1420[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m3:46:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHub.vue, /src/assets/css/main.css[22m
+[2m3:46:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHub.vue, /src/assets/css/main.css[22m
+[2m3:46:05 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV2.vue, /src/assets/css/main.css[22m
+[2m3:46:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV2.vue, /src/assets/css/main.css[22m
+[2m3:46:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV2.vue?vue&type=style&index=0&scoped=3b696fa0&lang.css, /src/assets/css/main.css[22m
+[2m4:22:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m4:22:26 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m4:22:29 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css, /src/views/admin/AdminHome.vue[22m
+[2m4:23:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m4:23:23 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m4:23:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m4:24:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m4:24:10 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m4:24:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m4:25:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m4:25:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m4:26:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m4:26:10 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m4:28:00 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m4:46:35 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m4:52:18 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/router/index.ts[22m
+[2m4:52:18 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.vue, /src/assets/css/main.css[22m
+[2m4:53:20 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m7:40:43 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m7:49:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHub.vue, /src/assets/css/main.css[22m
+[2m7:49:47 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHub.vue, /src/assets/css/main.css[22m
+[2m7:49:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHub.vue, /src/assets/css/main.css[22m
+[2m7:51:06 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHub.vue?vue&type=style&index=0&scoped=92c9de8b&lang.css, /src/assets/css/main.css[22m
+[2m7:51:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m7:51:38 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m7:51:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:30:28 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:30:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:30:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:30:36 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:31:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:31:57 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:31:59 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:32:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:32:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:32:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:32:40 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:33:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:33:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:33:57 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:34:00 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:34:02 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:34:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:34:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:44:19 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/router/index.ts[22m
+[2m8:44:21 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/router/index.ts[22m
+[2m8:44:43 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:45:10 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:48:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:48:18 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue, /src/assets/css/main.css[22m
+[2m8:48:26 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m
+[2m8:48:36 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/CoachHubV3.vue?vue&type=style&index=0&scoped=5bc5c802&lang.css, /src/assets/css/main.css[22m

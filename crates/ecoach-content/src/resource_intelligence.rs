@@ -2000,6 +2000,7 @@ impl<'a> ResourceIntelligenceService<'a> {
                 QuestionSelector::new(self.conn).select_questions(&QuestionSelectionRequest {
                     subject_id,
                     topic_ids: vec![topic_id],
+                    family_ids: Vec::new(),
                     target_question_count: 6,
                     target_difficulty: Some(objective.target_difficulty_bp),
                     weakness_topic_ids: if learner_signals.gap_score >= 5_000 {

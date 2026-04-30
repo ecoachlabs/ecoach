@@ -1,0 +1,560 @@
+warning: field `recent_actions` is never read
+   --> crates\ecoach-content\src\resource_intelligence.rs:230:5
+    |
+224 | struct LearnerSignals {
+    |        -------------- field in this struct
+...
+230 |     recent_actions: Vec<String>,
+    |     ^^^^^^^^^^^^^^
+    |
+    = note: `LearnerSignals` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `candidate` is never read
+   --> crates\ecoach-content\src\resource_intelligence.rs:238:5
+    |
+234 | struct SelectedRole {
+    |        ------------ field in this struct
+...
+238 |     candidate: Option<ResourceCandidate>,
+    |     ^^^^^^^^^
+    |
+    = note: `SelectedRole` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: `ecoach-content` (lib) generated 2 warnings
+warning: unused imports: `Value` and `json`
+ --> crates\ecoach-coach-brain\src\beat_yesterday_deep.rs:4:18
+  |
+4 | use serde_json::{Value, json};
+  |                  ^^^^^  ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `BasisPoints` and `clamp_bp`
+ --> crates\ecoach-coach-brain\src\goal_engine.rs:1:24
+  |
+1 | use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
+  |                        ^^^^^^^^^^^                             ^^^^^^^^
+
+warning: unused import: `OptionalExtension`
+ --> crates\ecoach-coach-brain\src\goal_engine.rs:2:28
+  |
+2 | use rusqlite::{Connection, OptionalExtension, params};
+  |                            ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `to_bp`
+ --> crates\ecoach-coach-brain\src\memory_intelligence.rs:1:74
+  |
+1 | use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, to_bp};
+  |                                                                          ^^^^^
+
+warning: unused imports: `BasisPoints` and `clamp_bp`
+ --> crates\ecoach-coach-brain\src\prerequisite_graph.rs:1:24
+  |
+1 | use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
+  |                        ^^^^^^^^^^^                             ^^^^^^^^
+
+warning: unnecessary parentheses around function argument
+   --> crates\ecoach-coach-brain\src\rise_mode_engine.rs:448:13
+    |
+448 |             ((foundation as f64 * 0.20
+    |             ^
+...
+454 |                 .round() as i64),
+    |                                ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+448 ~             (foundation as f64 * 0.20
+449 |                 + recall as f64 * 0.15
+...
+453 |                 + (10_000 - misconception as i64) as f64 * 0.10)
+454 ~                 .round() as i64 ,
+    |
+
+warning: unused imports: `BasisPoints` and `clamp_bp`
+ --> crates\ecoach-coach-brain\src\stepped_question_engine.rs:1:24
+  |
+1 | use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
+  |                        ^^^^^^^^^^^                             ^^^^^^^^
+
+warning: unused import: `OptionalExtension`
+ --> crates\ecoach-coach-brain\src\stepped_question_engine.rs:2:28
+  |
+2 | use rusqlite::{Connection, OptionalExtension, params};
+  |                            ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Value`
+ --> crates\ecoach-coach-brain\src\topic_action_engine.rs:4:18
+  |
+4 | use serde_json::{Value, json};
+  |                  ^^^^^
+
+warning: unused import: `OptionalExtension`
+ --> crates\ecoach-coach-brain\src\topic_proof_engine.rs:2:28
+  |
+2 | use rusqlite::{Connection, OptionalExtension, params};
+  |                            ^^^^^^^^^^^^^^^^^
+
+warning: unnecessary parentheses around function argument
+   --> crates\ecoach-coach-brain\src\topic_proof_engine.rs:107:13
+    |
+107 |             ((accuracy as f64 * 0.25
+    |             ^
+...
+114 |                 .round() as i64),
+    |                                ^
+    |
+help: remove these parentheses
+    |
+107 ~             (accuracy as f64 * 0.25
+108 |                 + speed as f64 * 0.15
+...
+113 |                 + reasoning as f64 * 0.10)
+114 ~                 .round() as i64 ,
+    |
+
+warning: unused variable: `signal`
+   --> crates\ecoach-coach-brain\src\evidence_engine.rs:146:21
+    |
+146 |         if let Some(ref signal) = misconception_signal {
+    |                     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_signal`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `mastery_delta`
+   --> crates\ecoach-coach-brain\src\evidence_engine.rs:549:9
+    |
+549 |         mastery_delta: i64,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mastery_delta`
+
+warning: unused variable: `urgency_str`
+   --> crates\ecoach-coach-brain\src\goal_engine.rs:181:40
+    |
+181 |         let (goal_type_str, exam_date, urgency_str, confidence): (
+    |                                        ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_urgency_str`
+
+warning: unused variable: `confidence`
+   --> crates\ecoach-coach-brain\src\goal_engine.rs:181:53
+    |
+181 |         let (goal_type_str, exam_date, urgency_str, confidence): (
+    |                                                     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_confidence`
+
+warning: unused variable: `current_route_type`
+   --> crates\ecoach-coach-brain\src\journey_adaptation.rs:262:47
+    |
+262 |         let Some((route_id, current_mode_str, current_route_type)) = route else {
+    |                                               ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_current_route_type`
+
+warning: unused variable: `gap`
+   --> crates\ecoach-coach-brain\src\journey_adaptation.rs:453:27
+    |
+453 |             let (mastery, gap, fragility, evidence_count, decay_risk): (i64, i64, i64, i64, i64) =
+    |                           ^^^ help: if this is intentional, prefix it with an underscore: `_gap`
+
+warning: unused variable: `student_id`
+   --> crates\ecoach-coach-brain\src\memory_intelligence.rs:733:41
+    |
+733 |     fn load_confidence_alignment(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
+    |                                         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_student_id`
+
+warning: unused variable: `node_id`
+   --> crates\ecoach-coach-brain\src\memory_intelligence.rs:733:58
+    |
+733 |     fn load_confidence_alignment(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
+    |                                                          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_node_id`
+
+warning: unused variable: `student_id`
+   --> crates\ecoach-coach-brain\src\rise_mode_engine.rs:504:9
+    |
+504 |         student_id: i64,
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_student_id`
+
+warning: unused variable: `subject_id`
+   --> crates\ecoach-coach-brain\src\rise_mode_engine.rs:505:9
+    |
+505 |         subject_id: i64,
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_subject_id`
+
+warning: variable does not need to be mutable
+   --> crates\ecoach-coach-brain\src\topic_action_engine.rs:403:13
+    |
+403 |         let mut steps = vec![
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `student_id`
+   --> crates\ecoach-coach-brain\src\topic_action_engine.rs:400:9
+    |
+400 |         student_id: i64,
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_student_id`
+
+warning: unused variable: `subtopics`
+   --> crates\ecoach-coach-brain\src\topic_action_engine.rs:401:9
+    |
+401 |         subtopics: &[(i64, String)],
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_subtopics`
+
+warning: unused variable: `subtopics`
+   --> crates\ecoach-coach-brain\src\topic_action_engine.rs:433:33
+    |
+433 |     fn build_expert_path(&self, subtopics: &[(i64, String)]) -> EcoachResult<Vec<RepairStep>> {
+    |                                 ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_subtopics`
+
+warning: fields `id` and `confidence_level` are never read
+   --> crates\ecoach-coach-brain\src\evidence_engine.rs:725:5
+    |
+724 | struct AttemptContext {
+    |        -------------- fields in this struct
+725 |     id: i64,
+    |     ^^
+...
+731 |     confidence_level: Option<String>,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `AttemptContext` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `session_id` is never read
+   --> crates\ecoach-coach-brain\src\exam_strategy.rs:521:5
+    |
+520 | struct StrategySessionRow {
+    |        ------------------ field in this struct
+521 |     session_id: Option<i64>,
+    |     ^^^^^^^^^^
+    |
+    = note: `StrategySessionRow` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `subject_code` is never read
+   --> crates\ecoach-coach-brain\src\intelligence_dome.rs:190:5
+    |
+188 | struct FocusContext {
+    |        ------------ field in this struct
+189 |     subject_id: i64,
+190 |     subject_code: String,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `FocusContext` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `confirmed_count` is never read
+   --> crates\ecoach-coach-brain\src\intelligence_dome.rs:215:5
+    |
+210 | struct EvidenceAggregate {
+    |        ----------------- field in this struct
+...
+215 |     confirmed_count: i64,
+    |     ^^^^^^^^^^^^^^^
+    |
+    = note: `EvidenceAggregate` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `load_topic_candidates` is never used
+   --> crates\ecoach-coach-brain\src\journey.rs:590:8
+    |
+ 55 | impl<'a> JourneyService<'a> {
+    | --------------------------- method in this implementation
+...
+590 |     fn load_topic_candidates(
+    |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `TopicCandidate` is never constructed
+   --> crates\ecoach-coach-brain\src\journey.rs:683:8
+    |
+683 | struct TopicCandidate {
+    |        ^^^^^^^^^^^^^^
+
+warning: fields `state_total_attempts`, `state_correct_attempts`, `is_urgent`, and `is_exam_critical` are never read
+   --> crates\ecoach-coach-brain\src\mastery_map.rs:379:5
+    |
+366 | struct TopicRollupRow {
+    |        -------------- fields in this struct
+...
+379 |     state_total_attempts: i64,
+    |     ^^^^^^^^^^^^^^^^^^^^
+380 |     state_correct_attempts: i64,
+    |     ^^^^^^^^^^^^^^^^^^^^^^
+381 |     is_blocked: i64,
+382 |     is_urgent: i64,
+    |     ^^^^^^^^^
+383 |     is_exam_critical: i64,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `TopicRollupRow` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `unit_key`, `title`, `content_type_primary`, and `representation_tags` are never read
+   --> crates\ecoach-coach-brain\src\pedagogical_runtime.rs:196:5
+    |
+194 | struct LearningUnitRow {
+    |        --------------- fields in this struct
+195 |     id: i64,
+196 |     unit_key: String,
+    |     ^^^^^^^^
+197 |     title: String,
+    |     ^^^^^
+198 |     content_type_primary: String,
+    |     ^^^^^^^^^^^^^^^^^^^^
+199 |     representation_tags: Vec<String>,
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `LearningUnitRow` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: `ecoach-coach-brain` (lib) generated 33 warnings (run `cargo fix --lib -p ecoach-coach-brain` to apply 25 suggestions)
+warning: unused import: `crate::forecast_engine::ForecastEngine`
+ --> crates\ecoach-forecast\src\calibration.rs:5:5
+  |
+5 | use crate::forecast_engine::ForecastEngine;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling ecoach-sessions v0.1.0 (C:\Users\surfaceSudio\OneDrive\ecoach\crates\ecoach-sessions)
+   Compiling ecoach-storage v0.1.0 (C:\Users\surfaceSudio\OneDrive\ecoach\crates\ecoach-storage)
+warning: `ecoach-forecast` (lib) generated 1 warning (run `cargo fix --lib -p ecoach-forecast` to apply 1 suggestion)
+warning: fields `display_order`, `skipped`, and `confidence_level` are never read
+    --> crates\ecoach-diagnostics\src\engine.rs:3306:5
+     |
+3305 | struct PhaseAttemptSnapshot {
+     |        -------------------- fields in this struct
+3306 |     display_order: i64,
+     |     ^^^^^^^^^^^^^
+...
+3310 |     skipped: bool,
+     |     ^^^^^^^
+...
+3314 |     confidence_level: Option<String>,
+     |     ^^^^^^^^^^^^^^^^
+     |
+     = note: `PhaseAttemptSnapshot` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `ecoach-diagnostics` (lib) generated 1 warning
+warning: function `parse_string_list` is never used
+   --> crates\ecoach-games\src\service.rs:113:4
+    |
+113 | fn parse_string_list(raw: &str) -> EcoachResult<Vec<String>> {
+    |    ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `mode_item_id` is never read
+    --> crates\ecoach-games\src\service.rs:1469:5
+     |
+1456 | struct StoredTrapRound {
+     |        --------------- field in this struct
+...
+1469 |     mode_item_id: Option<i64>,
+     |     ^^^^^^^^^^^^
+     |
+     = note: `StoredTrapRound` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: struct `StoredContrastModeItem` is never constructed
+    --> crates\ecoach-games\src\service.rs:1476:8
+     |
+1476 | struct StoredContrastModeItem {
+     |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary parentheses around function argument
+    --> crates\ecoach-goals-calendar\src\service.rs:2890:22
+     |
+2890 |             clamp_bp(((remaining_effective_minutes * 10_000) / usable_capacity_minutes.max(30)));
+     |                      ^                                                                        ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+2890 -             clamp_bp(((remaining_effective_minutes * 10_000) / usable_capacity_minutes.max(30)));
+2890 +             clamp_bp((remaining_effective_minutes * 10_000) / usable_capacity_minutes.max(30) );
+     |
+
+warning: unnecessary parentheses around function argument
+    --> crates\ecoach-goals-calendar\src\service.rs:2892:22
+     |
+2892 |             clamp_bp(((feasibility_score_bp as i64 + (10_000 - pressure_score_bp as i64)) / 2));
+     |                      ^                                                                       ^
+     |
+help: remove these parentheses
+     |
+2892 -             clamp_bp(((feasibility_score_bp as i64 + (10_000 - pressure_score_bp as i64)) / 2));
+2892 +             clamp_bp((feasibility_score_bp as i64 + (10_000 - pressure_score_bp as i64)) / 2 );
+     |
+
+warning: unnecessary parentheses around function argument
+    --> crates\ecoach-goals-calendar\src\service.rs:4855:17
+     |
+4855 |                 ((plan_state.pressure_score_bp as i64 + replan.pressure_score as i64) / 2),
+     |                 ^                                                                        ^
+     |
+help: remove these parentheses
+     |
+4855 -                 ((plan_state.pressure_score_bp as i64 + replan.pressure_score as i64) / 2),
+4855 +                 (plan_state.pressure_score_bp as i64 + replan.pressure_score as i64) / 2 ,
+     |
+
+warning: unused variable: `next_due`
+    --> crates\ecoach-goals-calendar\src\service.rs:6828:40
+     |
+6828 |                 Some((title_id, state, next_due))
+     |                                        ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_next_due`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `ecoach-games` (lib) generated 3 warnings
+warning: `ecoach-goals-calendar` (lib) generated 4 warnings (run `cargo fix --lib -p ecoach-goals-calendar` to apply 4 suggestions)
+warning: field `attempt_count` is never read
+    --> crates\ecoach-sessions\src\service.rs:3721:5
+     |
+3720 | struct AttemptMetrics {
+     |        -------------- field in this struct
+3721 |     attempt_count: i64,
+     |     ^^^^^^^^^^^^^
+     |
+     = note: `AttemptMetrics` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling ecoach-commands v0.1.0 (C:\Users\surfaceSudio\OneDrive\ecoach\crates\ecoach-commands)
+warning: `ecoach-sessions` (lib) generated 1 warning
+   Compiling ecoach-tauri v0.1.0 (C:\Users\surfaceSudio\OneDrive\ecoach\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 54s
+     Running `target\debug\ecoach-tauri.exe`
+[perf][tauri.recover_deferred_session_completions] enter student_id=2
+[perf][tauri.recover_deferred_session_completions] exit 12.9ms
+[perf][tauri.list_session_questions] session_id=145 items.query 1.7ms item_count=4
+[perf][tauri.list_session_questions] options.query 1.4ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.2ms
+[perf][tauri.list_session_questions] total 13.5ms
+[perf][tauri.submit_attempt] enter session_id=145 session_item_id=949 question_id=3842
+[perf][rust.submit_attempt] enter session_id=145 session_item_id=949 question_id=3842 selected_option_id=None
+[perf][rust.submit_attempt] session.lookup 0.7ms
+[perf][rust.submit_attempt] session.record_outcome 138.7ms
+[perf][rust.submit_attempt] student_model.process_answer 352.0ms
+[perf][tauri.submit_attempt] exit 510.7ms
+[perf][tauri.list_session_questions] session_id=146 items.query 0.6ms item_count=4
+[perf][tauri.list_session_questions] options.query 0.8ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 9.8ms
+[perf][tauri.submit_attempt] enter session_id=146 session_item_id=953 question_id=2875
+[perf][rust.submit_attempt] enter session_id=146 session_item_id=953 question_id=2875 selected_option_id=Some(11497)
+[perf][rust.submit_attempt] session.lookup 0.4ms
+[recovery][deferred_completion] pending session_id=146 previous_state=idle reason=submit_attempt.defer_coach_brain
+[perf][rust.submit_attempt] session.record_outcome 42.3ms
+[perf][tauri.submit_attempt] exit 62.4ms
+[recovery][deferred_completion] processing session_id=146 status=active state=pending reason=start_practice_session
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.1ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.1ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.2ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 0.2ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 3591.0ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 6632.0ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.2ms count=151
+[perf][coach.build_orchestration_snapshot] persist_snapshot 21.7ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 5.3ms
+[perf][coach.build_orchestration_snapshot] total 10298.2ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 10300.4ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.2ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 0.4ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 0.4ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.5ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 0.5ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 3.0ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 0.6ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 1.0ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 0.2ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 0.8ms
+[perf][coach.evaluate_coach_brain] total 10349.3ms
+[recovery][deferred_completion] success session_id=146 status=abandoned reason=start_practice_session
+[perf][tauri.list_session_questions] session_id=147 items.query 0.9ms item_count=4
+[perf][tauri.list_session_questions] options.query 0.9ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 23.4ms
+[perf][tauri.submit_attempt] enter session_id=147 session_item_id=957 question_id=2925
+[perf][rust.submit_attempt] enter session_id=147 session_item_id=957 question_id=2925 selected_option_id=Some(11697)
+[perf][rust.submit_attempt] session.lookup 0.7ms
+[recovery][deferred_completion] pending session_id=147 previous_state=idle reason=submit_attempt.defer_coach_brain
+[perf][rust.submit_attempt] session.record_outcome 32.4ms
+[perf][tauri.submit_attempt] exit 53.8ms
+[recovery][deferred_completion] processing session_id=147 status=active state=pending reason=start_practice_session
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.2ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.2ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.2ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 0.2ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 3299.5ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 6965.4ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.2ms count=151
+[perf][coach.build_orchestration_snapshot] persist_snapshot 17.8ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 1.5ms
+[perf][coach.build_orchestration_snapshot] total 10326.5ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 10332.5ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.4ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 0.4ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 0.4ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.4ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 0.7ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 0.4ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 0.5ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 0.8ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 0.3ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 2.9ms
+[perf][coach.evaluate_coach_brain] total 10383.0ms
+[recovery][deferred_completion] success session_id=147 status=abandoned reason=start_practice_session
+[perf][tauri.list_session_questions] session_id=148 items.query 1.3ms item_count=4
+[perf][tauri.list_session_questions] options.query 1.3ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 16.6ms
+[perf][tauri.submit_attempt] enter session_id=148 session_item_id=961 question_id=2975
+[perf][rust.submit_attempt] enter session_id=148 session_item_id=961 question_id=2975 selected_option_id=Some(11897)
+[perf][rust.submit_attempt] session.lookup 0.7ms
+[recovery][deferred_completion] pending session_id=148 previous_state=idle reason=submit_attempt.defer_coach_brain
+[perf][rust.submit_attempt] session.record_outcome 30.5ms
+[perf][tauri.submit_attempt] exit 68.8ms
+[recovery][deferred_completion] processing session_id=148 status=active state=pending reason=start_practice_session
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.2ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.4ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.2ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 0.2ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 3750.8ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 6967.9ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.3ms count=151
+[perf][coach.build_orchestration_snapshot] persist_snapshot 18.3ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 1.6ms
+[perf][coach.build_orchestration_snapshot] total 10793.4ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 10798.6ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.5ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 0.5ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 0.3ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.4ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 0.4ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 0.3ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 0.4ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 0.4ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 0.3ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 0.5ms
+[perf][coach.evaluate_coach_brain] total 10845.7ms
+[recovery][deferred_completion] success session_id=148 status=abandoned reason=start_practice_session
+[perf][tauri.list_session_questions] session_id=149 items.query 5.1ms item_count=4
+[perf][tauri.list_session_questions] options.query 1.3ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 24.9ms
+[perf][tauri.submit_attempt] enter session_id=149 session_item_id=965 question_id=3025
+[perf][rust.submit_attempt] enter session_id=149 session_item_id=965 question_id=3025 selected_option_id=Some(12097)
+[perf][rust.submit_attempt] session.lookup 0.4ms
+[recovery][deferred_completion] pending session_id=149 previous_state=idle reason=submit_attempt.defer_coach_brain
+[perf][rust.submit_attempt] session.record_outcome 37.8ms
+[perf][tauri.submit_attempt] exit 68.2ms

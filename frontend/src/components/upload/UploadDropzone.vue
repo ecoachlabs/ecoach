@@ -36,7 +36,7 @@ function triggerFileInput() {
     @drop.prevent="handleDrop"
     @click="triggerFileInput"
   >
-    <input ref="fileInput" type="file" multiple accept="image/*,.pdf" class="hidden" @change="handleInput" />
+    <input ref="fileInput" type="file" multiple accept="image/*,.pdf,.doc,.docx,.csv,.tsv,.json,.txt" class="hidden" @change="handleInput" />
     <div class="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
       :style="{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }">
       📄
@@ -45,7 +45,7 @@ function triggerFileInput() {
       {{ dragging ? 'Drop files here' : 'Drop files here or click to browse' }}
     </p>
     <p class="text-xs" :style="{ color: 'var(--text-3)' }">
-      Supports images, PDFs, and photos of exercise books
+      Supports images, PDFs, Word documents, text, CSV, and JSON
     </p>
   </div>
 </template>

@@ -9,11 +9,10 @@ use ecoach_content::{
     ContentRetrievalQueryInput, ContentRetrievalResult, ContentSnapshot, ContentSnapshotBuildInput,
     ContentSourceDetail, ContentSourceGovernanceInput, ContentSourcePolicy,
     ContentSourcePolicyInput, ContentSourceProfileInput, ContentSourceRegistryEntry,
-    ContentSourceSegment, ContentSourceSegmentInput,
-    FoundryCoordinatorService, PackService, ParseCandidateInput, RecordResourceLearningInput,
-    ResourceApplicabilityResolution, ResourceIntelligenceService, ResourceLearningRecord,
-    ResourceOrchestrationRequest, ResourceOrchestrationResult, SourceUploadInput,
-    TopicResourceIntelligenceSnapshot,
+    ContentSourceSegment, ContentSourceSegmentInput, FoundryCoordinatorService, PackService,
+    ParseCandidateInput, RecordResourceLearningInput, ResourceApplicabilityResolution,
+    ResourceIntelligenceService, ResourceLearningRecord, ResourceOrchestrationRequest,
+    ResourceOrchestrationResult, SourceUploadInput, TopicResourceIntelligenceSnapshot,
 };
 
 use crate::{
@@ -93,6 +92,24 @@ pub fn finalize_curriculum_source(
     state.with_connection(|conn| {
         let service = FoundryCoordinatorService::new(conn);
         let report = service.finalize_source_parse(source_upload_id)?;
+        Ok(ContentFoundrySourceReportDto::from(report))
+    })
+}
+
+pub fn get_curriculum_source_report(
+    state: &AppState,
+    source_upload_id: i64,
+) -> Result<ContentFoundrySourceReportDto, CommandError> {
+    state.with_connection(|conn| {
+        let service = FoundryCoordinatorService::new(conn);
+        let report = service
+            .get_source_report(source_upload_id)?
+            .ok_or_else(|| {
+                ecoach_substrate::EcoachError::NotFound(format!(
+                    "source upload {} not found",
+                    source_upload_id
+                ))
+            })?;
         Ok(ContentFoundrySourceReportDto::from(report))
     })
 }
@@ -933,5 +950,60 @@ mod tests {
             detail.governance_events[0].decided_by_account_id,
             Some(admin.id)
         );
+    }
+
+    #[test]
+    fn content_commands_surface_source_report_before_finalize() {
+        let state = AppState::in_memory().expect("in-memory state should build");
+        let admin = identity_commands::create_account(
+            &state,
+            CreateAccountInput {
+                account_type: AccountType::Admin,
+                display_name: "Extractor".to_string(),
+                pin: "2468".to_string(),
+                entitlement_tier: EntitlementTier::Elite,
+            },
+        )
+        .expect("admin should create");
+
+        let source = register_curriculum_source(
+            &state,
+            SourceUploadInput {
+                uploader_account_id: admin.id,
+                source_kind: "worksheet".to_string(),
+                title: "Raw algebra scan".to_string(),
+                source_path: Some("uploads/raw-algebra-scan.pdf".to_string()),
+                country_code: Some("GH".to_string()),
+                exam_board: None,
+                education_level: None,
+                subject_code: Some("MTH".to_string()),
+                academic_year: Some("2026".to_string()),
+                language_code: Some("en".to_string()),
+                version_label: None,
+                metadata: serde_json::json!({ "intake_mode": "manual_admin_upload" }),
+            },
+        )
+        .expect("source should register");
+
+        add_curriculum_parse_candidate(
+            &state,
+            source.id,
+            ParseCandidateInput {
+                candidate_type: "topic".to_string(),
+                parent_candidate_id: None,
+                raw_label: "Linear equations".to_string(),
+                normalized_label: Some("Linear Equations".to_string()),
+                payload: serde_json::json!({ "page": 4, "source": "manual_extraction" }),
+                confidence_score: 8_100,
+            },
+        )
+        .expect("candidate should add");
+
+        let report = get_curriculum_source_report(&state, source.id)
+            .expect("source report should load before finalize");
+        assert_eq!(report.source_upload.id, source.id);
+        assert_eq!(report.parse_candidates.len(), 1);
+        assert_eq!(report.parse_candidates[0].candidate_type, "topic");
+        assert_eq!(report.candidate_counts[0].count, 1);
     }
 }

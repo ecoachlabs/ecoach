@@ -47,6 +47,7 @@ pub struct TopicDto {
     pub parent_topic_id: Option<i64>,
     pub code: Option<String>,
     pub name: String,
+    pub description: Option<String>,
     pub node_type: String,
     pub display_order: i64,
 }
@@ -59,6 +60,7 @@ impl From<TopicSummary> for TopicDto {
             parent_topic_id: v.parent_topic_id,
             code: v.code,
             name: v.name,
+            description: v.description,
             node_type: v.node_type,
             display_order: v.display_order,
         }

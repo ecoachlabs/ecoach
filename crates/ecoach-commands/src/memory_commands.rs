@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecheckItemDto {
     pub id: i64,
+    pub topic_id: Option<i64>,
     pub node_id: Option<i64>,
     pub topic_name: Option<String>,
     pub node_title: Option<String>,
@@ -67,15 +68,17 @@ pub type TopicKnowledgeMapDto = TopicKnowledgeMap;
 pub fn get_review_queue(
     state: &AppState,
     student_id: i64,
+    subject_id: Option<i64>,
     limit: usize,
 ) -> Result<Vec<RecheckItemDto>, CommandError> {
     state.with_connection(|conn| {
         let service = MemoryService::new(conn);
-        let items = service.get_due_rechecks(student_id, limit)?;
+        let items = service.get_due_rechecks(student_id, subject_id, limit)?;
         Ok(items
             .into_iter()
             .map(|item| RecheckItemDto {
                 id: item.id,
+                topic_id: item.topic_id,
                 node_id: item.node_id,
                 topic_name: item.topic_name,
                 node_title: item.node_title,
@@ -112,10 +115,11 @@ pub fn record_retrieval_attempt(
 pub fn get_memory_dashboard(
     state: &AppState,
     student_id: i64,
+    subject_id: Option<i64>,
 ) -> Result<MemoryDashboardDto, CommandError> {
     state.with_connection(|conn| {
         let service = MemoryService::new(conn);
-        let dashboard = service.get_memory_dashboard(student_id)?;
+        let dashboard = service.get_memory_dashboard(student_id, subject_id)?;
         Ok(MemoryDashboardDto {
             total_items: dashboard.total_items,
             healthy_count: dashboard.healthy_count,
@@ -165,10 +169,11 @@ pub fn build_review_queue(
 pub fn list_memory_topic_summaries(
     state: &AppState,
     student_id: i64,
+    subject_id: Option<i64>,
     limit: usize,
 ) -> Result<Vec<TopicMemorySummaryDto>, CommandError> {
     state.with_connection(|conn| {
-        Ok(MemoryService::new(conn).list_topic_summaries(student_id, limit)?)
+        Ok(MemoryService::new(conn).list_topic_summaries(student_id, subject_id, limit)?)
     })
 }
 

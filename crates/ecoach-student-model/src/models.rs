@@ -22,6 +22,14 @@ pub struct AnswerSubmission {
     pub was_transfer_variant: bool,
     pub was_retention_check: bool,
     pub was_mixed_context: bool,
+    /// Externally-determined correctness. When Some, `process_answer`
+    /// uses this instead of deriving from `selected_option.is_correct` /
+    /// `answer_text` matching. Populated by `submit_attempt` when the
+    /// caller grades multi-correct MCQ (set equality) or fill-in-the-
+    /// blank (per-blank accept-list match) — these flows can't be
+    /// captured by a single `selected_option_id`.
+    #[serde(default)]
+    pub precomputed_is_correct: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -114,6 +122,7 @@ pub struct StudentTopicState {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnswerProcessingResult {
+    pub attempt_id: i64,
     pub is_correct: bool,
     pub error_type: Option<ErrorType>,
     pub diagnosis_summary: Option<String>,
@@ -180,6 +189,10 @@ pub struct LearnerTruthSnapshot {
     pub overall_readiness_band: String,
     pub pending_review_count: i64,
     pub due_memory_count: i64,
+    pub total_topic_count: usize,
+    pub total_skill_count: usize,
+    pub total_memory_count: usize,
+    pub recent_diagnosis_count: usize,
     pub topic_summaries: Vec<LearnerTruthTopicSummary>,
     pub skill_summaries: Vec<LearnerTruthSkillSummary>,
     pub memory_summaries: Vec<LearnerTruthMemorySummary>,

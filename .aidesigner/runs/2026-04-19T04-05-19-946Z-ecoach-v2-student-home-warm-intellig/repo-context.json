@@ -1,0 +1,17 @@
+{
+  "repoRoot": "C:\\Users\\surfaceSudio\\OneDrive\\ecoach",
+  "cwd": "C:\\Users\\surfaceSudio\\OneDrive\\ecoach",
+  "stack": {
+    "frameworks": [],
+    "componentLibraries": [],
+    "styling": [],
+    "componentDirectories": [],
+    "packageFiles": []
+  },
+  "routes": [],
+  "tokens": {
+    "sources": [],
+    "tokens": []
+  },
+  "summary": "Repo root: C:\\Users\\surfaceSudio\\OneDrive\\ecoach\nWorking directory: C:\\Users\\surfaceSudio\\OneDrive\\ecoach\nFrameworks: none detected\nStyling: none detected\nComponent libraries: none detected\nRoute roots: none detected\nRoute candidates: none detected\nComponent directories: none detected\nToken sources: none detected\nVisible design language hints: no strong hints detected"
+}

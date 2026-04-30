@@ -1,7 +1,7 @@
-use ecoach_student_model::{
-    LearnerTruthSnapshot, StudentModelService, StudentTopicState,
-};
+use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc};
+use ecoach_student_model::{LearnerTruthSnapshot, StudentModelService, StudentTopicState};
 use ecoach_substrate::LearnerEvidenceFabric;
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
 use crate::{error::CommandError, state::AppState};
@@ -20,6 +20,30 @@ pub struct LearnerTruthDto {
     pub diagnosis_count: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HomeLearningStatsDto {
+    pub streak_days: i64,
+    pub accuracy_percent: i64,
+    pub today_minutes: i64,
+    pub week_questions: i64,
+    pub total_attempts: i64,
+    pub correct_attempts: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StudentActivityHistoryItemDto {
+    pub id: i64,
+    pub type_key: String,
+    pub label: String,
+    pub subject: String,
+    pub score: i64,
+    pub answered_questions: i64,
+    pub total_questions: i64,
+    pub correct_questions: i64,
+    pub occurred_at: String,
+    pub status: String,
+}
+
 impl From<LearnerTruthSnapshot> for LearnerTruthDto {
     fn from(v: LearnerTruthSnapshot) -> Self {
         Self {
@@ -29,10 +53,10 @@ impl From<LearnerTruthSnapshot> for LearnerTruthDto {
             overall_readiness_band: v.overall_readiness_band,
             pending_review_count: v.pending_review_count,
             due_memory_count: v.due_memory_count,
-            topic_count: v.topic_summaries.len(),
-            skill_count: v.skill_summaries.len(),
-            memory_count: v.memory_summaries.len(),
-            diagnosis_count: v.recent_diagnoses.len(),
+            topic_count: v.total_topic_count,
+            skill_count: v.total_skill_count,
+            memory_count: v.total_memory_count,
+            diagnosis_count: v.recent_diagnosis_count,
         }
     }
 }
@@ -91,6 +115,32 @@ pub fn get_learner_truth(
     })
 }
 
+pub fn get_home_learning_stats(
+    state: &AppState,
+    student_id: i64,
+) -> Result<HomeLearningStatsDto, CommandError> {
+    state.with_connection(|conn| build_home_learning_stats(conn, student_id))
+}
+
+pub fn list_student_activity_history(
+    state: &AppState,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<StudentActivityHistoryItemDto>, CommandError> {
+    state.with_connection(|conn| {
+        let capped_limit = limit.clamp(1, 200);
+        let mut items = load_session_activity_history(conn, student_id, capped_limit)?;
+        items.extend(load_diagnostic_activity_history(conn, student_id, capped_limit)?);
+        items.extend(load_game_activity_history(conn, student_id, capped_limit)?);
+        items.extend(load_elite_activity_history(conn, student_id, capped_limit)?);
+        items.sort_by(|left, right| {
+            activity_timestamp_key(&right.occurred_at).cmp(&activity_timestamp_key(&left.occurred_at))
+        });
+        items.truncate(capped_limit);
+        Ok(items)
+    })
+}
+
 pub fn get_learner_evidence_fabric(
     state: &AppState,
     student_id: i64,
@@ -103,6 +153,447 @@ pub fn get_learner_evidence_fabric(
 }
 
 // ── idea3 instant-gratification features ──
+
+fn build_home_learning_stats(
+    conn: &Connection,
+    student_id: i64,
+) -> Result<HomeLearningStatsDto, CommandError> {
+    let today = Utc::now().date_naive();
+    let today_key = today.format("%Y-%m-%d").to_string();
+    let week_start = (today - Duration::days(6)).format("%Y-%m-%d").to_string();
+
+    let (week_questions, week_correct, today_response_ms, total_attempts, correct_attempts): (
+        i64,
+        i64,
+        i64,
+        i64,
+        i64,
+    ) = conn
+        .query_row(
+            "SELECT
+                COUNT(CASE WHEN date(COALESCE(submitted_at, created_at)) >= date(?2) THEN 1 END),
+                COALESCE(SUM(CASE
+                    WHEN date(COALESCE(submitted_at, created_at)) >= date(?2)
+                     AND is_correct = 1 THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE
+                    WHEN date(COALESCE(submitted_at, created_at)) = date(?3)
+                    THEN COALESCE(response_time_ms, 0) ELSE 0 END), 0),
+                COUNT(*),
+                COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0)
+             FROM student_question_attempts
+             WHERE student_id = ?1
+               AND COALESCE(skipped, 0) = 0",
+            params![student_id, week_start, today_key],
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                ))
+            },
+        )
+        .map_err(storage_error)?;
+
+    let streak_days = current_attempt_streak_days(conn, student_id, today)?;
+    let accuracy_percent = if week_questions > 0 {
+        ((week_correct * 100) + (week_questions / 2)) / week_questions
+    } else {
+        0
+    };
+    let today_minutes = if today_response_ms > 0 {
+        (today_response_ms + 59_999) / 60_000
+    } else {
+        0
+    };
+
+    Ok(HomeLearningStatsDto {
+        streak_days,
+        accuracy_percent,
+        today_minutes,
+        week_questions,
+        total_attempts,
+        correct_attempts,
+    })
+}
+
+fn load_session_activity_history(
+    conn: &Connection,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<StudentActivityHistoryItemDto>, CommandError> {
+    let mut statement = conn
+        .prepare(
+            "SELECT
+                s.id,
+                s.session_type,
+                COALESCE(sub.name, 'All Subjects'),
+                COALESCE(s.answered_questions, 0),
+                COALESCE(s.total_questions, s.question_count, 0),
+                COALESCE(s.correct_questions, 0),
+                s.accuracy_score,
+                COALESCE(s.completed_at, s.last_activity_at, s.started_at, datetime('now')),
+                s.status
+             FROM sessions s
+             LEFT JOIN subjects sub ON sub.id = s.subject_id
+             WHERE s.student_id = ?1
+             ORDER BY datetime(COALESCE(s.completed_at, s.last_activity_at, s.started_at)) DESC, s.id DESC
+             LIMIT ?2",
+        )
+        .map_err(storage_error)?;
+
+    let rows = statement
+        .query_map(params![student_id, limit as i64], |row| {
+            let session_type = row.get::<_, String>(1)?;
+            let answered_questions = row.get::<_, i64>(3)?;
+            let correct_questions = row.get::<_, i64>(5)?;
+            Ok(StudentActivityHistoryItemDto {
+                id: row.get(0)?,
+                type_key: history_type_key_for_session(&session_type).to_string(),
+                label: history_label_for_session(&session_type).to_string(),
+                subject: row.get(2)?,
+                answered_questions,
+                total_questions: row.get(4)?,
+                correct_questions,
+                score: score_from_basis_points(row.get(6)?, correct_questions, answered_questions),
+                occurred_at: row.get(7)?,
+                status: row.get(8)?,
+            })
+        })
+        .map_err(storage_error)?;
+
+    let mut items = Vec::new();
+    for row in rows {
+        items.push(row.map_err(storage_error)?);
+    }
+    Ok(items)
+}
+
+fn load_diagnostic_activity_history(
+    conn: &Connection,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<StudentActivityHistoryItemDto>, CommandError> {
+    let mut statement = conn
+        .prepare(
+            "SELECT
+                di.id,
+                di.session_mode,
+                COALESCE(sub.name, 'All Subjects'),
+                COALESCE(SUM(CASE
+                    WHEN dia.submitted_at IS NOT NULL
+                      OR dia.selected_option_id IS NOT NULL
+                      OR COALESCE(dia.skipped, 0) = 1
+                      OR COALESCE(dia.timed_out, 0) = 1
+                    THEN 1 ELSE 0 END), 0),
+                COUNT(dia.id),
+                COALESCE(SUM(CASE WHEN dia.is_correct = 1 THEN 1 ELSE 0 END), 0),
+                COALESCE(di.completed_at, di.started_at, datetime('now')),
+                di.status
+             FROM diagnostic_instances di
+             LEFT JOIN subjects sub ON sub.id = di.subject_id
+             LEFT JOIN diagnostic_item_attempts dia ON dia.diagnostic_id = di.id
+             WHERE di.student_id = ?1
+             GROUP BY di.id, di.session_mode, sub.name, di.completed_at, di.started_at, di.status
+             ORDER BY datetime(COALESCE(di.completed_at, di.started_at)) DESC, di.id DESC
+             LIMIT ?2",
+        )
+        .map_err(storage_error)?;
+
+    let rows = statement
+        .query_map(params![student_id, limit as i64], |row| {
+            let mode = row.get::<_, String>(1)?;
+            let answered_questions = row.get::<_, i64>(3)?;
+            let correct_questions = row.get::<_, i64>(5)?;
+            Ok(StudentActivityHistoryItemDto {
+                id: row.get(0)?,
+                type_key: "diagnostic".to_string(),
+                label: history_label_for_diagnostic(&mode).to_string(),
+                subject: row.get(2)?,
+                score: score_from_counts(correct_questions, answered_questions),
+                answered_questions,
+                total_questions: row.get(4)?,
+                correct_questions,
+                occurred_at: row.get(6)?,
+                status: row.get(7)?,
+            })
+        })
+        .map_err(storage_error)?;
+
+    let mut items = Vec::new();
+    for row in rows {
+        items.push(row.map_err(storage_error)?);
+    }
+    Ok(items)
+}
+
+fn load_game_activity_history(
+    conn: &Connection,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<StudentActivityHistoryItemDto>, CommandError> {
+    let mut statement = conn
+        .prepare(
+            "SELECT
+                gs.id,
+                gs.game_type,
+                COALESCE(sub.name, 'All Subjects'),
+                COALESCE(gae.answered_questions, gs.rounds_played, 0),
+                COALESCE(gs.rounds_total, 0),
+                COALESCE(gae.correct_questions, 0),
+                COALESCE(gs.completed_at, gs.created_at, datetime('now')),
+                gs.session_state
+             FROM game_sessions gs
+             LEFT JOIN subjects sub ON sub.id = gs.subject_id
+             LEFT JOIN (
+                SELECT
+                    game_session_id,
+                    COUNT(*) AS answered_questions,
+                    COALESCE(SUM(CASE WHEN was_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_questions
+                FROM game_answer_events
+                GROUP BY game_session_id
+             ) gae ON gae.game_session_id = gs.id
+             WHERE gs.student_id = ?1
+             ORDER BY datetime(COALESCE(gs.completed_at, gs.created_at)) DESC, gs.id DESC
+             LIMIT ?2",
+        )
+        .map_err(storage_error)?;
+
+    let rows = statement
+        .query_map(params![student_id, limit as i64], |row| {
+            let game_type = row.get::<_, String>(1)?;
+            let answered_questions = row.get::<_, i64>(3)?;
+            let correct_questions = row.get::<_, i64>(5)?;
+            Ok(StudentActivityHistoryItemDto {
+                id: row.get(0)?,
+                type_key: "games".to_string(),
+                label: history_label_for_game(&game_type).to_string(),
+                subject: row.get(2)?,
+                score: score_from_counts(correct_questions, answered_questions),
+                answered_questions,
+                total_questions: row.get(4)?,
+                correct_questions,
+                occurred_at: row.get(6)?,
+                status: row.get(7)?,
+            })
+        })
+        .map_err(storage_error)?;
+
+    let mut items = Vec::new();
+    for row in rows {
+        items.push(row.map_err(storage_error)?);
+    }
+    Ok(items)
+}
+
+fn load_elite_activity_history(
+    conn: &Connection,
+    student_id: i64,
+    limit: usize,
+) -> Result<Vec<StudentActivityHistoryItemDto>, CommandError> {
+    let mut statement = conn
+        .prepare(
+            "SELECT
+                esr.id,
+                esr.session_type,
+                COALESCE(sub.name, 'All Subjects'),
+                esr.metadata_json,
+                esr.created_at
+             FROM elite_session_records esr
+             LEFT JOIN subjects sub ON sub.id = esr.subject_id
+             WHERE esr.student_id = ?1
+             ORDER BY datetime(esr.created_at) DESC, esr.id DESC
+             LIMIT ?2",
+        )
+        .map_err(storage_error)?;
+
+    let rows = statement
+        .query_map(params![student_id, limit as i64], |row| {
+            let session_type = row.get::<_, String>(1)?;
+            let metadata_json = row.get::<_, String>(3)?;
+            let metadata = serde_json::from_str::<serde_json::Value>(&metadata_json)
+                .unwrap_or(serde_json::Value::Null);
+            let accuracy_score = metadata
+                .get("accuracy_score")
+                .and_then(serde_json::Value::as_i64);
+            let item_count = metadata
+                .get("item_count")
+                .and_then(serde_json::Value::as_i64)
+                .unwrap_or(0);
+            let correct_questions = accuracy_score
+                .map(|value| ((value * item_count) + 5_000) / 10_000)
+                .unwrap_or(0);
+            Ok(StudentActivityHistoryItemDto {
+                id: row.get(0)?,
+                type_key: "elite".to_string(),
+                label: history_label_for_elite(&session_type),
+                subject: row.get(2)?,
+                score: score_from_basis_points(accuracy_score, correct_questions, item_count),
+                answered_questions: item_count,
+                total_questions: item_count,
+                correct_questions,
+                occurred_at: row.get(4)?,
+                status: "completed".to_string(),
+            })
+        })
+        .map_err(storage_error)?;
+
+    let mut items = Vec::new();
+    for row in rows {
+        items.push(row.map_err(storage_error)?);
+    }
+    Ok(items)
+}
+
+fn history_type_key_for_session(session_type: &str) -> &'static str {
+    match session_type {
+        "mock" | "custom_test" => "mock",
+        _ => "practice",
+    }
+}
+
+fn history_label_for_session(session_type: &str) -> &'static str {
+    match session_type {
+        "coach_mission" => "Coach Mission",
+        "mock" => "Mock Session",
+        "custom_test" => "Custom Test",
+        "gap_repair" => "Solidify Session",
+        _ => "Practice Session",
+    }
+}
+
+fn history_label_for_diagnostic(mode: &str) -> &'static str {
+    match mode {
+        "pressure" => "Pressure Diagnostic",
+        "root_cause" => "Root-Cause Diagnostic",
+        _ => "Diagnostic Scan",
+    }
+}
+
+fn history_label_for_game(game_type: &str) -> &'static str {
+    match game_type {
+        "mindstack" => "MindStack",
+        "tug_of_war" => "Tug of War",
+        "traps" => "Traps",
+        _ => "Game Session",
+    }
+}
+
+fn history_label_for_elite(session_type: &str) -> String {
+    match session_type {
+        "elite_sprint" => "Elite Sprint".to_string(),
+        "precision_lab" => "Precision Lab".to_string(),
+        "depth_lab" => "Depth Lab".to_string(),
+        "endurance_track" => "Endurance Track".to_string(),
+        "apex_mock" => "Apex Mock".to_string(),
+        "trapsense" => "TrapSense".to_string(),
+        "perfect_run" => "Perfect Run".to_string(),
+        _ => titleize_history_key(session_type),
+    }
+}
+
+fn titleize_history_key(value: &str) -> String {
+    value
+        .split('_')
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                Some(first) => format!(
+                    "{}{}",
+                    first.to_ascii_uppercase(),
+                    chars.as_str().to_ascii_lowercase()
+                ),
+                None => String::new(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn score_from_basis_points(
+    accuracy_score: Option<i64>,
+    correct_questions: i64,
+    answered_questions: i64,
+) -> i64 {
+    accuracy_score
+        .map(|value| ((value + 50) / 100).clamp(0, 100))
+        .unwrap_or_else(|| score_from_counts(correct_questions, answered_questions))
+}
+
+fn score_from_counts(correct_questions: i64, answered_questions: i64) -> i64 {
+    if answered_questions > 0 {
+        ((correct_questions * 100) + (answered_questions / 2)) / answered_questions
+    } else {
+        0
+    }
+}
+
+fn activity_timestamp_key(raw: &str) -> i64 {
+    if let Ok(parsed) = DateTime::parse_from_rfc3339(raw) {
+        return parsed.timestamp();
+    }
+    if let Ok(parsed) = NaiveDateTime::parse_from_str(raw, "%Y-%m-%d %H:%M:%S") {
+        return DateTime::<Utc>::from_naive_utc_and_offset(parsed, Utc).timestamp();
+    }
+    if let Ok(parsed) = NaiveDate::parse_from_str(raw, "%Y-%m-%d") {
+        if let Some(at_midnight) = parsed.and_hms_opt(0, 0, 0) {
+            return DateTime::<Utc>::from_naive_utc_and_offset(at_midnight, Utc).timestamp();
+        }
+    }
+    0
+}
+
+fn current_attempt_streak_days(
+    conn: &Connection,
+    student_id: i64,
+    today: NaiveDate,
+) -> Result<i64, CommandError> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT DISTINCT date(COALESCE(submitted_at, created_at)) AS attempt_day
+             FROM student_question_attempts
+             WHERE student_id = ?1
+               AND COALESCE(skipped, 0) = 0
+             ORDER BY attempt_day DESC
+             LIMIT 60",
+        )
+        .map_err(storage_error)?;
+    let rows = stmt
+        .query_map(params![student_id], |row| row.get::<_, String>(0))
+        .map_err(storage_error)?;
+
+    let mut expected = today;
+    let mut streak = 0;
+    for row in rows {
+        let raw_day = row.map_err(storage_error)?;
+        let Ok(day) = NaiveDate::parse_from_str(&raw_day, "%Y-%m-%d") else {
+            continue;
+        };
+        if day == expected {
+            streak += 1;
+            expected = expected - Duration::days(1);
+            continue;
+        }
+        if streak == 0 && day == today - Duration::days(1) {
+            streak += 1;
+            expected = today - Duration::days(2);
+            continue;
+        }
+        if day < expected {
+            break;
+        }
+    }
+    Ok(streak)
+}
+
+fn storage_error(err: rusqlite::Error) -> CommandError {
+    CommandError {
+        code: "storage_error".to_string(),
+        message: err.to_string(),
+    }
+}
 
 /// Academic MRI / instant scan: run diagnostic and return instant insight summary.
 #[derive(Debug, Clone, Serialize, Deserialize)]

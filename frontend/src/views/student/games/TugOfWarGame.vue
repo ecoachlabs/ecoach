@@ -2,12 +2,19 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { listSubjects, getPriorityTopics, type SubjectDto } from '@/ipc/coach'
-import { startPracticeSession, completeSession } from '@/ipc/sessions'
-import { listSessionQuestions, submitAttempt, type SessionQuestionDto, type QuestionOptionDto } from '@/ipc/questions'
+import { listSubjects, listTopics, getPriorityTopics, type SubjectDto } from '@/ipc/coach'
+import { startPracticeSession, completeSession, completeSessionWithPipeline } from '@/ipc/sessions'
+import {
+  listSessionQuestions,
+  submitAttempt,
+  type QuestionOptionDto,
+  type SessionQuestionDto,
+  type SubmitAttemptInput,
+} from '@/ipc/questions'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppProgress from '@/components/ui/AppProgress.vue'
+import MathText from '@/components/question/MathText.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -30,6 +37,7 @@ const position = ref(0) // -10 = lost, +10 = won
 const score = ref(0)
 const streak = ref(0)
 const correctCount = ref(0)
+const attemptedCount = ref(0)
 const selectedOptionId = ref<number | null>(null)
 const answerResult = ref<{ correct: boolean; explanation?: string } | null>(null)
 const startTime = ref(0)
@@ -37,6 +45,8 @@ const startTime = ref(0)
 // Timer
 const timeLeft = ref(15)
 let timer: ReturnType<typeof setInterval> | null = null
+const pendingSubmissions = new Map<number, Promise<unknown>>()
+const unsavedInputs = new Map<number, SubmitAttemptInput>()
 
 const TUG_CORRECT = 2
 const TUG_INCORRECT = -3
@@ -61,8 +71,15 @@ async function startGame() {
   loading.value = true
   error.value = ''
   try {
-    const topics = await getPriorityTopics(auth.currentAccount.id, 10)
-    const topicIds = topics.slice(0, 5).map(t => t.topic_id)
+    const [priorityTopics, subjectTopics] = await Promise.all([
+      getPriorityTopics(auth.currentAccount.id, 20),
+      listTopics(selectedSubjectId.value).catch(() => []),
+    ])
+    const subjectTopicIds = new Set(subjectTopics.map(topic => topic.id))
+    const topicIds = priorityTopics
+      .filter(topic => subjectTopicIds.has(topic.topic_id))
+      .slice(0, 5)
+      .map(topic => topic.topic_id)
     const session = await startPracticeSession({
       student_id: auth.currentAccount.id,
       subject_id: selectedSubjectId.value,
@@ -82,6 +99,7 @@ async function startGame() {
     score.value = 0
     streak.value = 0
     correctCount.value = 0
+    attemptedCount.value = 0
     selectedOptionId.value = null
     answerResult.value = null
     phase.value = 'playing'
@@ -108,6 +126,37 @@ function startQuestionTimer() {
 
 function handleTimeout() {
   if (selectedOptionId.value !== null) return
+  selectedOptionId.value = -1
+  const q = questions.value[currentIndex.value]
+  if (sessionId.value && auth.currentAccount && q) {
+    const input: SubmitAttemptInput = {
+      student_id: auth.currentAccount.id,
+      session_id: sessionId.value,
+      session_item_id: q.item_id,
+      question_id: q.question_id,
+      selected_option_id: null,
+      response_time_ms: 15000,
+      confidence_level: null,
+      hint_count: 0,
+      changed_answer_count: 0,
+      skipped: false,
+      timed_out: true,
+      was_timed: true,
+    }
+    unsavedInputs.set(q.item_id, input)
+    const submission = submitAttempt(input)
+    pendingSubmissions.set(q.item_id, submission)
+    void submission
+      .then(() => {
+        unsavedInputs.delete(q.item_id)
+      })
+      .catch(() => {
+        // Retry during the end-of-game flush if needed.
+      })
+      .finally(() => {
+        pendingSubmissions.delete(q.item_id)
+      })
+  }
   applyResult(false, undefined, 15000)
   answerResult.value = { correct: false, explanation: "Time's up!" }
   setTimeout(() => nextQuestion(), 1200)
@@ -119,24 +168,34 @@ async function pickOption(option: QuestionOptionDto) {
   selectedOptionId.value = option.id
 
   const responseMs = Date.now() - startTime.value
-  const isCorrect = !!option.misconception_id === false && isOptionCorrect(option)
+  const isCorrect = option.is_correct
 
-  // Submit to session backend
   const q = questions.value[currentIndex.value]
-  try {
-    await submitAttempt({
-      student_id: auth.currentAccount!.id,
-      session_id: sessionId.value,
-      session_item_id: q.item_id,
-      question_id: q.question_id,
-      selected_option_id: option.id,
-      response_time_ms: responseMs,
-      confidence_level: undefined,
-      hint_count: 0,
-      changed_answer_count: 0,
-      was_timed: true,
+  const input: SubmitAttemptInput = {
+    student_id: auth.currentAccount!.id,
+    session_id: sessionId.value,
+    session_item_id: q.item_id,
+    question_id: q.question_id,
+    selected_option_id: option.id,
+    response_time_ms: responseMs,
+    confidence_level: null,
+    hint_count: 0,
+    changed_answer_count: 0,
+    was_timed: true,
+  }
+  unsavedInputs.set(q.item_id, input)
+  const submission = submitAttempt(input)
+  pendingSubmissions.set(q.item_id, submission)
+  void submission
+    .then(() => {
+      unsavedInputs.delete(q.item_id)
     })
-  } catch {}
+    .catch(() => {
+      // Retry during the end-of-game flush if needed.
+    })
+    .finally(() => {
+      pendingSubmissions.delete(q.item_id)
+    })
 
   applyResult(isCorrect, option.distractor_intent ?? undefined, responseMs)
   answerResult.value = { correct: isCorrect }
@@ -144,18 +203,8 @@ async function pickOption(option: QuestionOptionDto) {
   setTimeout(() => nextQuestion(), 1000)
 }
 
-function isOptionCorrect(option: QuestionOptionDto): boolean {
-  // In the options list, exactly one option is correct (the one with no misconception and is marked correct)
-  // We determine this by finding which option in the question has no misconception_id
-  // Actually — backend marks correct by position in options... but we don't have is_correct here.
-  // The options from list_session_questions include misconception_id for wrong answers.
-  // A correct option typically has misconception_id = null AND is the actual answer.
-  // We can infer: the option is correct if misconception_id is null and distractor_intent is null.
-  // This is a heuristic — the real check happens on the backend.
-  return option.misconception_id === null && option.distractor_intent === null
-}
-
 function applyResult(correct: boolean, _explanation: string | undefined, _responseMs: number) {
+  attemptedCount.value++
   if (correct) {
     const streakBonus = streak.value >= 3 ? 50 : 0
     score.value += 100 + streakBonus
@@ -185,8 +234,21 @@ function nextQuestion() {
 
 async function endGame() {
   clearTimer()
-  if (sessionId.value) {
-    await completeSession(sessionId.value).catch(() => null)
+  const inFlight = Array.from(pendingSubmissions.values())
+  if (inFlight.length > 0) {
+    await Promise.allSettled(inFlight)
+  }
+  for (const [itemId, input] of Array.from(unsavedInputs.entries())) {
+    try {
+      await submitAttempt(input)
+      unsavedInputs.delete(itemId)
+    } catch {
+      // Best effort only for the arcade layer.
+    }
+  }
+  if (sessionId.value && auth.currentAccount) {
+    await completeSessionWithPipeline(auth.currentAccount.id, sessionId.value)
+      .catch(() => completeSession(sessionId.value!).catch(() => null))
   }
   phase.value = 'summary'
 }
@@ -201,7 +263,7 @@ const ropePercent = computed(() => {
 const won = computed(() => position.value >= WIN_POSITION)
 const lost = computed(() => position.value <= LOSE_POSITION)
 const accuracy = computed(() =>
-  currentIndex.value > 0 ? Math.round((correctCount.value / currentIndex.value) * 100) : 0,
+  attemptedCount.value > 0 ? Math.round((correctCount.value / attemptedCount.value) * 100) : 0,
 )
 </script>
 
@@ -331,7 +393,7 @@ const accuracy = computed(() =>
       <AppCard v-if="currentQuestion" padding="lg" class="mb-4 flex-1">
         <p class="text-base font-medium leading-relaxed mb-6"
           :style="{ color: 'var(--ink)' }">
-          {{ currentQuestion.stem }}
+          <MathText :text="currentQuestion.stem" />
         </p>
 
         <!-- Result feedback -->
@@ -341,7 +403,7 @@ const accuracy = computed(() =>
             color: answerResult.correct ? 'var(--accent)' : 'var(--warm)',
           }">
           {{ answerResult.correct ? '✓ Correct! Pull! +' + TUG_CORRECT : '✗ Wrong! Slip ' + TUG_INCORRECT }}
-          <span v-if="answerResult.explanation"> — {{ answerResult.explanation }}</span>
+          <span v-if="answerResult.explanation"> - <MathText :text="answerResult.explanation" size="sm" /></span>
         </div>
 
         <!-- Options -->
@@ -368,7 +430,7 @@ const accuracy = computed(() =>
             @click="pickOption(opt)"
           >
             <span class="font-semibold mr-2" :style="{ color: 'var(--ink-muted)' }">{{ opt.label }}.</span>
-            {{ opt.text }}
+            <MathText :text="opt.text" size="sm" />
           </button>
         </div>
       </AppCard>

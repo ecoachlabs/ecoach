@@ -1006,6 +1006,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "ecoach-forecast",
+ "ecoach-storage",
  "ecoach-substrate",
  "rusqlite",
  "serde",
@@ -1118,6 +1119,7 @@ dependencies = [
  "ecoach-coach-brain",
  "ecoach-commands",
  "ecoach-content",
+ "ecoach-elite",
  "ecoach-games",
  "ecoach-identity",
  "ecoach-library",

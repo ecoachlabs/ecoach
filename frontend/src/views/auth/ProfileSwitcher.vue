@@ -18,6 +18,13 @@ const createError = ref('')
 const newName = ref('')
 const newType = ref('student')
 const newPin = ref('')
+const showAdminModal = ref(false)
+const adminCode = ref('')
+const adminError = ref('')
+const adminLoading = ref(false)
+const adminAccessCode = import.meta.env.VITE_SUPER_ADMIN_CODE
+  ?? localStorage.getItem('ecoach.superAdminCode')
+  ?? '2468'
 
 onMounted(async () => {
   await auth.loadAccounts()
@@ -77,6 +84,63 @@ async function createAccount() {
   }
 }
 
+const visibleAccounts = computed(() =>
+  auth.accounts.filter(account => account.account_type !== 'admin')
+)
+
+const adminAccounts = computed(() =>
+  auth.accounts.filter(account => account.account_type === 'admin')
+)
+
+function openAdminModal() {
+  adminCode.value = ''
+  adminError.value = ''
+  showAdminModal.value = true
+}
+
+function closeAdminModal() {
+  showAdminModal.value = false
+  adminCode.value = ''
+  adminError.value = ''
+  adminLoading.value = false
+}
+
+async function unlockAdmin() {
+  if (adminLoading.value) return
+  const submittedCode = adminCode.value.trim()
+  if (!isValidPin(submittedCode)) {
+    adminError.value = `Enter the ${PIN_LENGTH}-digit super admin code.`
+    return
+  }
+  if (submittedCode !== adminAccessCode) {
+    adminError.value = 'That code does not unlock admin access.'
+    adminCode.value = ''
+    return
+  }
+
+  adminLoading.value = true
+  adminError.value = ''
+  try {
+    let account = adminAccounts.value[0]
+    if (!account) {
+      account = await identityIpc.createAccount({
+        account_type: 'admin',
+        display_name: 'Super Admin',
+        pin: submittedCode,
+        entitlement_tier: 'elite',
+      })
+      await auth.loadAccounts()
+    }
+    await auth.login(account.id, submittedCode)
+    closeAdminModal()
+    router.push('/admin')
+  } catch (error) {
+    adminError.value = getErrorMessage(error)
+  } finally {
+    adminLoading.value = false
+  }
+}
+
 const greeting = computed(() => {
   const h = new Date().getHours()
   if (h < 12) return 'Good morning.'
@@ -84,15 +148,16 @@ const greeting = computed(() => {
   return 'Good evening.'
 })
 
-// Per-account avatar colors — deterministic from position
+// Student avatar palette — vibrant, contrast-rich colors that sing against warm amber.
+// No purples, no pinks, no near-black (black is reserved for parent accounts).
 const avatarPalette = [
-  'linear-gradient(135deg, #7C3AED, #A855F7)',  // violet
-  'linear-gradient(135deg, #92400E, #B45309)',  // terracotta brown
-  'linear-gradient(135deg, #166534, #22C55E)',  // forest green
-  'linear-gradient(135deg, #9A3412, #C2410C)',  // dark terracotta
-  'linear-gradient(135deg, #1D4ED8, #3B82F6)',  // blue
-  'linear-gradient(135deg, #BE185D, #EC4899)',  // pink
-  'linear-gradient(135deg, #0F766E, #0D9488)',  // teal
+  'linear-gradient(135deg, #1D4ED8, #3B82F6)',  // marine blue
+  'linear-gradient(135deg, #059669, #10B981)',  // emerald
+  'linear-gradient(135deg, #B91C1C, #DC2626)',  // vermilion
+  'linear-gradient(135deg, #0891B2, #06B6D4)',  // cyan
+  'linear-gradient(135deg, #166534, #15803D)',  // forest
+  'linear-gradient(135deg, #1E3A8A, #2563EB)',  // sapphire
+  'linear-gradient(135deg, #BE123C, #E11D48)',  // crimson
 ]
 
 function avatarGradient(idx: number): string {
@@ -145,23 +210,23 @@ const mathSymbols = [
     <div class="absolute top-5 left-6 flex items-center gap-2.5">
       <div class="w-9 h-9 rounded-xl flex items-center justify-center"
         style="background: rgba(255,255,255,0.22); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-        <span class="font-display font-black text-base" style="color: rgba(60,20,0,0.75);">e</span>
+        <span class="font-display text-lg" style="color: rgba(60,20,0,0.75); line-height: 1;">e</span>
       </div>
       <div>
-        <p class="font-display font-bold text-sm leading-none" style="color: rgba(30,10,0,0.80);">Adeo</p>
-        <p class="text-[9px] uppercase tracking-widest mt-0.5" style="color: rgba(30,10,0,0.45);">Exam Prep</p>
+        <p class="font-display text-base leading-none" style="color: rgba(30,10,0,0.82);">Adeo</p>
+        <p class="text-[9px] uppercase tracking-widest mt-0.5" style="color: rgba(30,10,0,0.42); font-weight: 500;">Exam Prep</p>
       </div>
     </div>
 
     <!-- Center content -->
     <div class="relative z-10 flex flex-col items-center w-full px-6">
 
-      <!-- Greeting — dark text matching screenshot -->
-      <h1 class="font-display text-5xl font-bold mb-2 greeting-text"
-        style="color: rgba(20,7,0,0.82); letter-spacing: -0.02em;">
+      <!-- Greeting — display serif at its natural weight, no forced bold -->
+      <h1 class="font-display text-6xl mb-3 greeting-text"
+        style="color: rgba(20,7,0,0.85); letter-spacing: -0.015em; line-height: 1;">
         {{ greeting }}
       </h1>
-      <p class="text-base font-medium mb-10" style="color: rgba(20,7,0,0.50);">
+      <p class="text-base mb-10" style="color: rgba(20,7,0,0.48); font-weight: 400;">
         Who's studying today?
       </p>
 
@@ -176,9 +241,9 @@ const mathSymbols = [
         </template>
 
         <!-- Profile buttons -->
-        <template v-else-if="auth.accounts.length > 0">
+        <template v-else-if="visibleAccounts.length > 0">
           <button
-            v-for="(account, i) in auth.accounts"
+            v-for="(account, i) in visibleAccounts"
             :key="account.id"
             class="profile-btn"
             @click="selectProfile(account.id)"
@@ -214,23 +279,25 @@ const mathSymbols = [
                 </div>
               </div>
 
-              <!-- Parent badge -->
+              <!-- Parent badge — heraldic gold shield with embossed P -->
               <div
                 v-if="account.account_type === 'parent'"
-                class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs"
-                style="background: rgba(30,10,0,0.55); border: 1.5px solid rgba(255,255,255,0.35); z-index: 2; color: white;"
-              >P</div>
+                class="parent-shield"
+                aria-label="Parent"
+              >
+                <span class="parent-shield-letter">P</span>
+              </div>
             </div>
 
-            <!-- Name & meta — dark text -->
+            <!-- Name & meta — dark text, light weights -->
             <div class="text-center mt-1">
-              <p class="text-sm font-semibold leading-tight" style="color: rgba(20,7,0,0.80);">
+              <p class="text-sm leading-tight" style="color: rgba(20,7,0,0.82); font-weight: 500;">
                 {{ account.display_name }}
               </p>
-              <p class="text-[11px] capitalize mt-0.5 font-medium" style="color: rgba(20,7,0,0.45);">
+              <p class="text-[11px] capitalize mt-0.5" style="color: rgba(20,7,0,0.45); font-weight: 400;">
                 {{ account.account_type }}
               </p>
-              <p v-if="account.last_active_label" class="text-[10px] mt-0.5" style="color: rgba(20,7,0,0.35);">
+              <p v-if="account.last_active_label" class="text-[10px] mt-0.5" style="color: rgba(20,7,0,0.32); font-weight: 400;">
                 {{ account.last_active_label }}
               </p>
             </div>
@@ -243,7 +310,17 @@ const mathSymbols = [
               style="border: 1.5px dashed rgba(30,10,0,0.22); color: rgba(30,10,0,0.30);"
             >+</div>
             <div class="text-center mt-1">
-              <p class="text-[12px] font-medium mt-0.5" style="color: rgba(20,7,0,0.38);">Add profile</p>
+              <p class="text-[12px] mt-0.5" style="color: rgba(20,7,0,0.38); font-weight: 400;">Add profile</p>
+            </div>
+          </button>
+
+          <button class="profile-btn add-profile-btn" @click="openAdminModal">
+            <div
+              class="w-20 h-20 rounded-full flex items-center justify-center text-xl font-bold"
+              style="border: 1.5px solid rgba(30,10,0,0.22); color: rgba(30,10,0,0.42); background: rgba(255,255,255,0.14);"
+            >#</div>
+            <div class="text-center mt-1">
+              <p class="text-[12px] mt-0.5" style="color: rgba(20,7,0,0.42); font-weight: 500;">Under the hood</p>
             </div>
           </button>
         </template>
@@ -260,14 +337,19 @@ const mathSymbols = [
               style="background: rgba(30,10,0,0.75); color: white;"
               @click="openCreateModal"
             >Get Started</button>
+            <button
+              class="mt-3 px-5 py-2 rounded-full font-semibold text-xs"
+              style="background: rgba(255,255,255,0.18); color: rgba(30,10,0,0.65);"
+              @click="openAdminModal"
+            >Under the hood</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Bottom tagline — dark -->
-    <p class="absolute bottom-6 text-[10px] uppercase tracking-[0.22em] font-semibold"
-      style="color: rgba(20,7,0,0.32);">
+    <p class="absolute bottom-6 text-[10px] uppercase tracking-[0.22em]"
+      style="color: rgba(20,7,0,0.32); font-weight: 500;">
       Where Futures Are Built
     </p>
 
@@ -281,7 +363,6 @@ const mathSymbols = [
           :options="[
             { value: 'student', label: 'Student' },
             { value: 'parent', label: 'Parent' },
-            { value: 'admin', label: 'Admin' },
           ]"
         />
         <AppInput v-model="newPin" label="PIN" type="password" placeholder="4 digits" />
@@ -295,6 +376,25 @@ const mathSymbols = [
           :disabled="!newName.trim() || !newPin.trim()"
           @click="createAccount"
         >Create</AppButton>
+      </template>
+    </AppModal>
+
+    <AppModal :open="showAdminModal" title="Super Admin Access" @close="closeAdminModal">
+      <div class="space-y-3">
+        <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">
+          Enter the under-the-hood access code to manage content, questions, sources, and system operations.
+        </p>
+        <AppInput v-model="adminCode" label="Access Code" type="password" placeholder="4 digits" />
+        <p v-if="adminError" class="text-sm" :style="{ color: 'var(--warm)' }">{{ adminError }}</p>
+      </div>
+      <template #footer>
+        <AppButton variant="ghost" @click="closeAdminModal">Cancel</AppButton>
+        <AppButton
+          variant="primary"
+          :loading="adminLoading"
+          :disabled="!adminCode.trim()"
+          @click="unlockAdmin"
+        >Unlock</AppButton>
       </template>
     </AppModal>
   </div>
@@ -374,69 +474,67 @@ const mathSymbols = [
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Profile card container — true frosted glass ── */
+/* ── Profile card — cool-tinted glass that stays neutral on warm amber ──
+ *
+ * The old card went yellow because:
+ *   1. Its white tint was too low-alpha, so the orange bg read right through it.
+ *   2. saturate(200%) pumped up every warm pixel passing through the blur.
+ *
+ * This version inverts both: high-alpha cool-tinted white (reads as paper, not
+ * as tinted amber) + saturate(75%) to bleach the warmth out of the backdrop.
+ */
 .profile-container {
   display: flex;
   align-items: flex-start;
-  gap: 0;
-  padding: 20px 20px;
-  border-radius: 26px;
+  justify-content: center;
+  gap: 28px;
+  padding: 28px 36px 24px;
+  border-radius: 28px;
+  flex-wrap: wrap;
+  max-width: 720px;
+  width: 100%;
+  position: relative;
 
-  /*
-   * The glass needs to be MEANINGFULLY lighter than the orange behind it.
-   * 0.42 white base is the floor — anything less disappears into the bg.
-   * Top-left corner is slightly brighter (light source).
-   */
+  /* Slight cool tint (252/253/255) counters the warm bleed from behind */
   background:
     linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.28) 0%,
-      rgba(255, 230, 170, 0.14) 55%,
-      rgba(255, 255, 255, 0.22) 100%
+      180deg,
+      rgba(252, 253, 255, 0.18) 0%,
+      rgba(248, 250, 253, 0.13) 100%
     );
 
-  backdrop-filter: blur(32px) saturate(200%) brightness(1.06);
-  -webkit-backdrop-filter: blur(32px) saturate(200%) brightness(1.06);
+  backdrop-filter: blur(44px) saturate(65%);
+  -webkit-backdrop-filter: blur(44px) saturate(65%);
 
-  /* Bright crisp glass edge — especially strong on top and left */
-  border: 1px solid rgba(255, 255, 255, 0.70);
+  /* Double border — inner crisp highlight + outer hairline for refinement */
+  border: 1px solid rgba(255, 255, 255, 0.85);
 
   box-shadow:
-    /* Neutral lift shadow — no warm tint */
-    0 16px 48px rgba(0, 0, 0, 0.14),
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    /* Strong inner top-edge highlight — glass surface catching overhead light */
-    inset 0 2px 0 rgba(255, 255, 255, 0.80),
-    /* Subtle inner side highlights */
-    inset 1px 0 0 rgba(255, 255, 255, 0.35),
-    /* Glass thickness — bottom inner shadow */
-    inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+    /* Warm-neutral lift shadow — sits on amber without muddying it */
+    0 22px 48px rgba(60, 25, 0, 0.16),
+    0 6px 14px rgba(60, 25, 0, 0.08),
+    /* Crisp inner top highlight — reads as overhead light on glass */
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    /* Subtle bottom edge to imply thickness */
+    inset 0 -1px 0 rgba(60, 25, 0, 0.04);
 
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 740px;
-  width: 100%;
   animation: greet-in 0.75s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
-  position: relative;
-  overflow: hidden;
 }
 
-/* Diagonal light sheen — brighter now that we have contrast to work with */
-.profile-container::before {
+/* Whisper-thin diagonal sheen — adds the "caught light" sparkle on glass */
+.profile-container::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: -20%;
-  width: 55%;
-  height: 100%;
+  inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
-    108deg,
-    transparent 25%,
-    rgba(255, 255, 255, 0.14) 50%,
-    transparent 75%
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 70%
   );
   pointer-events: none;
-  border-radius: inherit;
+  opacity: 0.5;
 }
 
 /* ── Individual profile button ── */
@@ -451,18 +549,19 @@ const mathSymbols = [
   background: transparent;
   cursor: pointer;
   min-width: 100px;
-  /* No transform — ring is the only hover signal */
+  position: relative;
+  z-index: 1;           /* sits above the container's ::after sheen */
   transition: background 180ms ease;
 }
 .profile-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(60, 25, 0, 0.045);   /* warm-neutral on white card, readable */
 }
 .profile-btn:active {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(60, 25, 0, 0.07);
 }
 
 .add-profile-btn:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(60, 25, 0, 0.03);
 }
 
 /* ── Avatar ring wrap ── */
@@ -474,41 +573,100 @@ const mathSymbols = [
   justify-content: center;
 }
 
-/* Ring as pseudo-element — hidden by default */
+/* Hover-only medallion rim — a drawn line appears around the avatar on interaction.
+ * On a white card surface a cream rim vanishes, so we use a warm-dark hairline. */
+.avatar-ring-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition: inset 220ms ease, border-color 220ms ease;
+}
+
+.profile-btn:hover .avatar-ring-wrap::before {
+  inset: -9px;
+  border-color: rgba(60, 25, 0, 0.18);
+}
+
+/* Legacy hover ring — disabled, the ::before rim is the only hover signal */
 .avatar-ring-wrap::after {
   content: '';
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2.5px solid transparent;
-  box-shadow: 0 0 0 0 transparent;
-  transition:
-    border-color 200ms ease,
-    box-shadow 200ms ease,
-    inset 200ms ease;
+  border: 2px solid transparent;
   pointer-events: none;
 }
 
-/* Student ring: clean white on hover */
-.profile-btn:hover .avatar-ring-wrap::after {
-  border-color: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.30);
+/* ── Parent heraldic shield badge ──
+ * Classic flat-top, pointed-bottom heraldic shield shape carved via clip-path.
+ * Brushed-gold gradient + embossed P (raised letter effect with dual text-shadow). */
+.parent-shield {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 24px;
+  height: 28px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+
+  /* Layered golden gradient — highlight top-left, body mid-gold, deep bronze lower-right.
+   * This is what makes it read as metallic instead of flat yellow. */
+  background:
+    linear-gradient(
+      150deg,
+      #FFF1BE 0%,
+      #F5CE52 22%,
+      #D4A017 50%,
+      #9A6F12 82%,
+      #6E4E0A 100%
+    );
+
+  /* Heraldic shield outline: flat top, squared shoulders, pointed chief at bottom */
+  clip-path: polygon(
+    0% 0%,
+    100% 0%,
+    100% 60%,
+    50% 100%,
+    0% 60%
+  );
+
+  /* drop-shadow works on the clipped shape (unlike box-shadow which would be clipped away) */
+  filter:
+    drop-shadow(0 2px 3px rgba(60, 35, 0, 0.45))
+    drop-shadow(0 0 0.5px rgba(40, 25, 0, 0.9));
 }
 
-/* Parent ring: same white ring as students on hover — no glow */
-.profile-btn:hover .avatar-ring-wrap.parent::after {
-  border-color: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.30);
+/* Embossed P — dark bronze letter with a bright cream top edge (raised-from-metal look) */
+.parent-shield-letter {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 900;
+  font-size: 12px;
+  line-height: 1;
+  color: #4A3209;
+  text-shadow:
+    0 1px 0 rgba(255, 245, 200, 0.85),     /* bright top edge — catches light */
+    0 -0.5px 0 rgba(40, 25, 0, 0.35);      /* faint bottom edge — carves depth */
+  letter-spacing: 0;
+  user-select: none;
 }
 
-/* Admin ring: violet on hover */
-.profile-btn:hover .avatar-ring-wrap.admin::after {
-  border-color: rgba(167, 139, 250, 0.80);
-  box-shadow: 0 0 14px rgba(167, 139, 250, 0.40);
-}
-
-/* Avatar — no drop shadow, inset only to keep edge definition */
+/* Avatar — grounded drop shadow on the warm bg + inset highlight for coin-like edge */
 .avatar {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    0 14px 32px rgba(40, 15, 0, 0.22),
+    0 4px 10px rgba(40, 15, 0, 0.12);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-btn:hover .avatar {
+  transform: translateY(-2px);
 }
 </style>

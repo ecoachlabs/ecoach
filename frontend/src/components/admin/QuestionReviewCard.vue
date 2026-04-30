@@ -2,6 +2,7 @@
 import AppCard from '@/components/ui/AppCard.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
+import MathText from '@/components/question/MathText.vue'
 
 defineProps<{
   questionId: number
@@ -23,7 +24,9 @@ defineEmits<{ approve: []; reject: []; edit: [] }>()
         #{{ questionId }}
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-sm mb-1 line-clamp-2" :style="{color:'var(--text)'}">{{ stem }}</p>
+        <p class="text-sm mb-1 line-clamp-2" :style="{color:'var(--text)'}">
+          <MathText :text="stem" size="sm" />
+        </p>
         <div class="flex items-center gap-2">
           <AppBadge color="accent" size="xs">{{ classification }}</AppBadge>
           <span class="text-[10px] tabular-nums" :style="{color: confidence >= 80 ? 'var(--success)' : confidence >= 50 ? 'var(--gold)' : 'var(--danger)'}">

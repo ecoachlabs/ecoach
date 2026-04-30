@@ -18,6 +18,7 @@ pub struct TopicSummary {
     pub parent_topic_id: Option<i64>,
     pub code: Option<String>,
     pub name: String,
+    pub description: Option<String>,
     pub node_type: String,
     pub display_order: i64,
 }

@@ -1,0 +1,57 @@
+[perf][tauri.submit_attempt] enter session_id=160 session_item_id=997 question_id=2875
+[perf][rust.submit_attempt] enter session_id=160 session_item_id=997 question_id=2875 selected_option_id=Some(11497)
+[perf][rust.submit_attempt] session.lookup 0.5ms
+[recovery][deferred_completion] pending session_id=160 previous_state=idle reason=submit_attempt.defer_coach_brain
+[perf][rust.submit_attempt] session.record_outcome 20.8ms
+[perf][rust.submit_attempt] student_model.process_answer 114.2ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 18.4ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 163.6ms
+[perf][rust.submit_attempt] session.get_session_snapshot 0.7ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 319.5ms
+[perf][rust.submit_attempt] outer_total 319.8ms
+[perf][tauri.submit_attempt] exit 320.6ms
+[perf][tauri.recover_deferred_session_completions] enter student_id=2 max_sessions=Some(1)
+[recovery][deferred_completion] processing session_id=159 status=active state=pending reason=app_entry
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.1ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.0ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.0ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 0.1ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 2358.1ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 5936.6ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.4ms count=158
+[perf][coach.build_orchestration_snapshot] persist_snapshot 15.2ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 1.3ms
+[perf][coach.build_orchestration_snapshot] total 8313.0ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 8313.5ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.4ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 0.4ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 0.4ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.4ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 0.5ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 0.4ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 0.3ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 0.3ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 0.1ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 0.4ms
+[perf][coach.evaluate_coach_brain] total 8318.4ms
+[recovery][deferred_completion] success session_id=159 status=abandoned reason=app_entry
+[perf][tauri.recover_deferred_session_completions] exit 8385.0ms
+[perf][tauri.submit_attempt] enter session_id=162 session_item_id=1005 question_id=2875
+[perf][rust.submit_attempt] enter session_id=162 session_item_id=1005 question_id=2875 selected_option_id=Some(11498)
+[perf][rust.submit_attempt] session.lookup 0.7ms
+[recovery][deferred_completion] pending session_id=162 previous_state=idle reason=submit_attempt.defer_coach_brain
+[perf][rust.submit_attempt] session.record_outcome 65.2ms
+[perf][rust.submit_attempt] student_model.process_answer 626.2ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 101.8ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 822.7ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.5ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 1619.7ms
+[perf][rust.submit_attempt] outer_total 1620.1ms
+[perf][tauri.submit_attempt] exit 1620.3ms

@@ -1614,7 +1614,10 @@ impl<'a> ContentIntelligenceService<'a> {
             )
             .map_err(storage_error)?;
         let rows = statement
-            .query_map(params![source_upload_id, limit.max(1) as i64], map_source_segment)
+            .query_map(
+                params![source_upload_id, limit.max(1) as i64],
+                map_source_segment,
+            )
             .map_err(storage_error)?;
         collect_rows(rows)
     }
@@ -1638,7 +1641,10 @@ impl<'a> ContentIntelligenceService<'a> {
             )
             .map_err(storage_error)?;
         let rows = statement
-            .query_map(params![source_upload_id, limit.max(1) as i64], map_research_mission)
+            .query_map(
+                params![source_upload_id, limit.max(1) as i64],
+                map_research_mission,
+            )
             .map_err(storage_error)?;
         collect_rows(rows)
     }
@@ -1663,7 +1669,10 @@ impl<'a> ContentIntelligenceService<'a> {
             )
             .map_err(storage_error)?;
         let rows = statement
-            .query_map(params![source_upload_id, limit.max(1) as i64], map_evidence_record)
+            .query_map(
+                params![source_upload_id, limit.max(1) as i64],
+                map_evidence_record,
+            )
             .map_err(storage_error)?;
         collect_rows(rows)
     }

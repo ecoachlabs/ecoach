@@ -8,6 +8,7 @@ use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, EngineRegistry, c
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use std::time::Instant;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoachGovernanceCheck {
@@ -83,17 +84,55 @@ impl<'a> CoachConstitutionService<'a> {
         subject_id: Option<i64>,
         topic_id: Option<i64>,
     ) -> EcoachResult<CoachOrchestrationSnapshot> {
+        let total_start = Instant::now();
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] enter student_id={} subject_id={:?} topic_id={:?}",
+            student_id, subject_id, topic_id
+        );
         let runtime_registry = EngineRegistry::core_runtime();
         let constitutional_registry = EngineRegistry::constitutional_runtime();
+        let content_start = Instant::now();
         let content = assess_content_readiness(self.conn, student_id)?;
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] assess_content_readiness {:.1}ms",
+            content_start.elapsed().as_secs_f64() * 1000.0
+        );
+        let state_start = Instant::now();
         let state = resolve_coach_state(self.conn, student_id)?;
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] resolve_coach_state {:.1}ms",
+            state_start.elapsed().as_secs_f64() * 1000.0
+        );
+        let action_start = Instant::now();
         let base_action = resolve_next_coach_action(self.conn, student_id)?;
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] resolve_next_coach_action {:.1}ms",
+            action_start.elapsed().as_secs_f64() * 1000.0
+        );
+        let dome_start = Instant::now();
         let dome = CoachIntelligenceDomeService::new(self.conn)
             .build_intelligence_dome(student_id, subject_id, topic_id)
             .ok();
-        let judgment = CoachJudgmentEngine::new(self.conn)
-            .build_judgment_snapshot(student_id, subject_id, topic_id)
-            .ok();
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] build_intelligence_dome {:.1}ms has_value={}",
+            dome_start.elapsed().as_secs_f64() * 1000.0,
+            dome.is_some()
+        );
+        let judgment_start = Instant::now();
+        let judgment_engine = CoachJudgmentEngine::new(self.conn);
+        let judgment = match dome.as_ref() {
+            Some(dome) => judgment_engine
+                .build_judgment_snapshot_with_dome(student_id, subject_id, topic_id, dome)
+                .ok(),
+            None => judgment_engine
+                .build_judgment_snapshot(student_id, subject_id, topic_id)
+                .ok(),
+        };
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] build_judgment_snapshot {:.1}ms has_value={}",
+            judgment_start.elapsed().as_secs_f64() * 1000.0,
+            judgment.is_some()
+        );
         let resolved_subject_id = subject_id
             .or_else(|| judgment.as_ref().and_then(|item| item.subject_id))
             .or_else(|| {
@@ -113,6 +152,10 @@ impl<'a> CoachConstitutionService<'a> {
             dome.as_ref(),
             judgment.as_ref(),
         );
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] build_checks count={}",
+            checks.len()
+        );
         let next_action = apply_guardrails(&base_action, &checks, dome.as_ref());
         let guardrail_status = derive_guardrail_status(&checks);
         let overall_confidence_score = average_bp([
@@ -131,13 +174,25 @@ impl<'a> CoachConstitutionService<'a> {
             },
         ]);
         let arbitrations = build_arbitrations(&checks);
+        let suggest_session_start = Instant::now();
         let suggested_session = self.suggest_session(
             student_id,
             resolved_subject_id,
             &next_action,
             judgment.as_ref(),
         )?;
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] suggest_session {:.1}ms has_value={}",
+            suggest_session_start.elapsed().as_secs_f64() * 1000.0,
+            suggested_session.is_some()
+        );
+        let attempts_start = Instant::now();
         let attempt_count = self.count_attempts(student_id)?;
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] count_attempts {:.1}ms count={}",
+            attempts_start.elapsed().as_secs_f64() * 1000.0,
+            attempt_count
+        );
         let engine_health = build_engine_health(
             &constitutional_registry,
             &checks,
@@ -153,6 +208,7 @@ impl<'a> CoachConstitutionService<'a> {
             overall_confidence_score,
         );
 
+        let persist_start = Instant::now();
         let snapshot = CoachOrchestrationSnapshot {
             student_id,
             subject_id: resolved_subject_id,
@@ -176,8 +232,21 @@ impl<'a> CoachConstitutionService<'a> {
             judgment,
         };
         self.persist_snapshot(&snapshot)?;
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] persist_snapshot {:.1}ms",
+            persist_start.elapsed().as_secs_f64() * 1000.0
+        );
+        let canonical_start = Instant::now();
         CanonicalIntelligenceStore::new(self.conn)
             .record_orchestration_cycle("constitution_snapshot", &snapshot)?;
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] record_orchestration_cycle {:.1}ms",
+            canonical_start.elapsed().as_secs_f64() * 1000.0
+        );
+        eprintln!(
+            "[perf][coach.build_orchestration_snapshot] total {:.1}ms",
+            total_start.elapsed().as_secs_f64() * 1000.0
+        );
         Ok(snapshot)
     }
 

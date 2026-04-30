@@ -1,15 +1,20 @@
 import { ref } from 'vue'
-import { getLibraryHome, saveLibraryItem } from '@/ipc/library'
+import {
+  getLibrarySnapshot,
+  saveLibraryItemWithMetadata,
+  type LibraryHomeSnapshotDto,
+  type SaveLibraryItemInputDto,
+} from '@/ipc/library'
 
 export function useLibrary(studentId: number) {
   const loading = ref(false)
   const error = ref('')
-  const home = ref<any>(null)
+  const home = ref<LibraryHomeSnapshotDto | null>(null)
 
   async function loadHome() {
     loading.value = true
     try {
-      home.value = await getLibraryHome(studentId)
+      home.value = await getLibrarySnapshot(studentId)
     } catch (e: any) {
       error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to load library'
     } finally {
@@ -17,9 +22,9 @@ export function useLibrary(studentId: number) {
     }
   }
 
-  async function saveItem(input: any) {
+  async function saveItem(input: SaveLibraryItemInputDto) {
     try {
-      return await saveLibraryItem(input)
+      return await saveLibraryItemWithMetadata(studentId, input)
     } catch (e: any) {
       error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to save item'
       return null

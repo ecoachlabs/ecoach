@@ -39,7 +39,7 @@ function handleAnswer(optionId: number, confidence: string, timeMs: number) {
   emit('answer', currentQuestion.value.id, optionId, confidence, timeMs)
 }
 
-function handleFlag() {
+function handleFlag(_flagged: boolean) {
   if (currentQuestion.value) {
     if (flaggedQuestions.value.has(currentIndex.value)) flaggedQuestions.value.delete(currentIndex.value)
     else flaggedQuestions.value.add(currentIndex.value)

@@ -62,10 +62,16 @@ impl<'a> StudentModelService<'a> {
         }
 
         let mut topic_state = self.get_or_create_topic_state(student_id, question.topic_id)?;
-        let is_correct = if let Some(selected_option) = selected_option.as_ref() {
-            selected_option.is_correct
-        } else if submission.skipped || submission.timed_out {
+        // Precomputed override (Phase 4): the caller has already graded
+        // the submission against a multi-correct set or a fill-in-the-
+        // blank accept-list. Skip the option/text-match logic in that
+        // case. `skipped` / `timed_out` still clamp to false.
+        let is_correct = if submission.skipped || submission.timed_out {
             false
+        } else if let Some(override_value) = submission.precomputed_is_correct {
+            override_value
+        } else if let Some(selected_option) = selected_option.as_ref() {
+            selected_option.is_correct
         } else {
             submitted_answer_text
                 .as_deref()
@@ -82,7 +88,7 @@ impl<'a> StudentModelService<'a> {
             ))
         };
         let evidence_weight = compute_evidence_weight(submission, is_correct);
-        self.write_attempt(
+        let attempt_id = self.write_attempt(
             student_id,
             submission,
             question.topic_id,
@@ -164,6 +170,7 @@ impl<'a> StudentModelService<'a> {
             .map_err(|err| EcoachError::Storage(format!("append_runtime_event failed: {}", err)))?;
 
         Ok(AnswerProcessingResult {
+            attempt_id,
             is_correct,
             error_type,
             diagnosis_summary: wrong_answer_diagnosis
@@ -198,16 +205,45 @@ impl<'a> StudentModelService<'a> {
         let skill_summaries = self.list_skill_summaries(student_id, 5)?;
         let memory_summaries = self.list_memory_summaries(student_id, 5)?;
         let recent_diagnoses = self.list_recent_diagnosis_summaries(student_id, 5)?;
+        let total_topic_count = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM student_topic_states WHERE student_id = ?1",
+                [student_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .max(0) as usize;
+        let total_skill_count = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM student_skill_states WHERE student_id = ?1",
+                [student_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .max(0) as usize;
+        let total_memory_count = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM memory_states WHERE student_id = ?1",
+                [student_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .max(0) as usize;
 
-        let overall_mastery_score = if topic_summaries.is_empty() {
-            0
-        } else {
-            (topic_summaries
-                .iter()
-                .map(|item| item.mastery_score as i64)
-                .sum::<i64>()
-                / topic_summaries.len() as i64) as BasisPoints
-        };
+        let overall_mastery_score = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(CAST(ROUND(AVG(mastery_score)) AS INTEGER), 0)
+                 FROM student_topic_states
+                 WHERE student_id = ?1",
+                [student_id],
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?
+            .clamp(0, 10_000) as BasisPoints;
         let pending_review_count: i64 = self
             .conn
             .query_row(
@@ -235,6 +271,10 @@ impl<'a> StudentModelService<'a> {
             overall_readiness_band: learner_truth_readiness_band(overall_mastery_score).to_string(),
             pending_review_count,
             due_memory_count,
+            total_topic_count,
+            total_skill_count,
+            total_memory_count,
+            recent_diagnosis_count: recent_diagnoses.len(),
             topic_summaries,
             skill_summaries,
             memory_summaries,
@@ -749,7 +789,7 @@ impl<'a> StudentModelService<'a> {
         error_type: Option<ErrorType>,
         misconception_id: Option<i64>,
         evidence_weight: BasisPoints,
-    ) -> EcoachResult<()> {
+    ) -> EcoachResult<i64> {
         let attempt_number = self.next_attempt_number(student_id, submission.question_id)?;
         self.conn
             .execute(
@@ -788,7 +828,7 @@ impl<'a> StudentModelService<'a> {
                 ],
             )
             .map_err(|err| EcoachError::Storage(format!("failed to write attempt for topic {}: {}", topic_id, err)))?;
-        Ok(())
+        Ok(self.conn.last_insert_rowid())
     }
 
     fn next_attempt_number(&self, student_id: i64, question_id: i64) -> EcoachResult<i64> {

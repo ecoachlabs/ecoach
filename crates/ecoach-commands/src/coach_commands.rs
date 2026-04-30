@@ -14,7 +14,7 @@ use ecoach_coach_brain::{
     GoalFeasibility, GoalRecommendation, InstructionalObjectEnvelope,
     InterventionEffectivenessProfile, InterventionLibraryService, InterventionModeDefinition,
     InterventionPrescription, JourneyAdaptationEngine, JourneyRouteSnapshot, JourneyService,
-    KnowledgeMapNode, LearnerMisconceptionSnapshot, MasteryMapNode, MasteryMapService,
+    KnowledgeMapNode, MasteryMapNode, MasteryMapService,
     PedagogicalRuntimeService, PersonalizationSnapshot, PlanEngine, PrerequisiteGraph,
     ProblemCauseFixCard, ReentryProbeResult, RiseModeEngine, RiseModeProfile, RouteMode,
     SessionComposer, StageTransitionResult, SteppedAttemptResult, SteppedQuestionEngine,
@@ -202,7 +202,18 @@ pub type ConsistencySnapshotDto = ConsistencySnapshot;
 pub type KnowledgeMapNodeDto = KnowledgeMapNode;
 pub type ComposedSessionDto = ComposedSession;
 pub type EvidenceEventDto = EvidenceEvent;
-pub type LearnerMisconceptionSnapshotDto = LearnerMisconceptionSnapshot;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LearnerMisconceptionSnapshotDto {
+    pub misconception_id: i64,
+    pub subject_id: i64,
+    pub topic_id: Option<i64>,
+    pub topic_name: Option<String>,
+    pub title: String,
+    pub current_status: String,
+    pub risk_score: i64,
+    pub times_detected: i64,
+    pub cleared_confidence: i64,
+}
 pub type ReentryProbeResultDto = ReentryProbeResult;
 pub type VelocitySnapshotDto = VelocitySnapshot;
 pub type GoalFeasibilityDto = GoalFeasibility;
@@ -610,7 +621,8 @@ pub fn list_goal_profiles(
     state: &AppState,
     student_id: i64,
 ) -> Result<Vec<GoalProfileDto>, CommandError> {
-    state.with_connection(|conn| Ok(GoalsCalendarService::new(conn).list_goal_profiles(student_id)?))
+    state
+        .with_connection(|conn| Ok(GoalsCalendarService::new(conn).list_goal_profiles(student_id)?))
 }
 
 pub fn update_goal_profile_state(
@@ -1224,10 +1236,64 @@ pub fn list_active_misconceptions(
     state: &AppState,
     student_id: i64,
     subject_id: i64,
-) -> Result<Vec<LearnerMisconceptionSnapshot>, CommandError> {
+) -> Result<Vec<LearnerMisconceptionSnapshotDto>, CommandError> {
     state.with_connection(|conn| {
-        Ok(EvidenceInterpretationEngine::new(conn)
-            .list_active_misconceptions(student_id, subject_id)?)
+        let snapshots = EvidenceInterpretationEngine::new(conn)
+            .list_active_misconceptions(student_id, subject_id)?;
+        let mut statement = conn
+            .prepare(
+                "SELECT mp.title, mp.topic_id, t.name
+                 FROM misconception_patterns mp
+                 LEFT JOIN topics t ON t.id = mp.topic_id
+                 WHERE mp.id = ?1",
+            )
+            .map_err(|err| {
+                CommandError::from(ecoach_substrate::EcoachError::Storage(err.to_string()))
+            })?;
+
+        let mut results = Vec::with_capacity(snapshots.len());
+        for snapshot in snapshots {
+            let metadata = match statement.query_row(
+                rusqlite::params![snapshot.misconception_id],
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, Option<i64>>(1)?,
+                        row.get::<_, Option<String>>(2)?,
+                    ))
+                },
+            ) {
+                Ok(value) => Some(value),
+                Err(rusqlite::Error::QueryReturnedNoRows) => None,
+                Err(err) => {
+                    return Err(CommandError::from(ecoach_substrate::EcoachError::Storage(
+                        err.to_string(),
+                    )));
+                }
+            };
+
+            let (title, topic_id, topic_name) = metadata.unwrap_or_else(|| {
+                (
+                    format!("Misconception {}", snapshot.misconception_id),
+                    None,
+                    None,
+                )
+            });
+
+            results.push(LearnerMisconceptionSnapshotDto {
+                misconception_id: snapshot.misconception_id,
+                subject_id: snapshot.subject_id,
+                topic_id,
+                topic_name,
+                title,
+                current_status: snapshot.current_status,
+                risk_score: snapshot.risk_score as i64,
+                times_detected: snapshot.times_detected,
+                cleared_confidence: snapshot.cleared_confidence as i64,
+            });
+        }
+
+        Ok(results)
     })
 }
 
@@ -1802,6 +1868,7 @@ mod tests {
                 student_id,
                 subject_id,
                 topic_ids: vec![topic_id],
+                family_ids: Vec::new(),
                 question_count: 1,
                 is_timed: false,
             },
@@ -1869,11 +1936,13 @@ mod tests {
                 session_id: practice.session_id,
                 session_item_id,
                 question_id,
-                selected_option_id,
+                selected_option_id: Some(selected_option_id),
                 response_time_ms: Some(38_000),
                 confidence_level: Some("sure".to_string()),
                 hint_count: 1,
                 changed_answer_count: 0,
+                skipped: false,
+                timed_out: false,
                 was_timed: false,
             },
         )

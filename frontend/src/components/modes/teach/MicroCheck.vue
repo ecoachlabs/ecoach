@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
+import MathText from '@/components/question/MathText.vue'
 
 defineProps<{
   question: string
@@ -22,7 +23,9 @@ function select(id: number, correct: boolean) {
 <template>
   <AppCard padding="md" class="border-l-4" :style="{borderLeftColor:'var(--accent)'}">
     <p class="text-[10px] font-semibold uppercase mb-2" :style="{color:'var(--accent)'}">✓ Quick Check</p>
-    <p class="text-sm mb-3" :style="{color:'var(--text)'}">{{ question }}</p>
+    <p class="text-sm mb-3" :style="{color:'var(--text)'}">
+      <MathText :text="question" size="sm" />
+    </p>
     <div class="space-y-1.5">
       <button v-for="opt in options" :key="opt.id"
         class="w-full text-left px-3 py-2 rounded-[var(--radius-sm)] text-xs border transition-all"
@@ -30,7 +33,7 @@ function select(id: number, correct: boolean) {
         :style="{backgroundColor: !answered && selected !== opt.id ? 'var(--card-bg)' : undefined, color:'var(--text)'}"
         :disabled="answered"
         @click="select(opt.id, opt.correct); $emit('answer', opt.correct)">
-        {{ opt.text }}
+        <MathText :text="opt.text" size="sm" />
       </button>
     </div>
   </AppCard>

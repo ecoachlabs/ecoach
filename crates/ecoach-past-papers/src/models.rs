@@ -10,6 +10,78 @@ pub struct PastPaperSet {
     pub title: String,
 }
 
+// ── Past Questions browser DTOs ──
+
+/// One-line-per-course row for the Past Questions accordion.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PastPaperCourseSummary {
+    pub subject_id: i64,
+    pub subject_name: String,
+    pub subject_code: String,
+    pub paper_count: i64,
+    pub first_year: Option<i64>,
+    pub last_year: Option<i64>,
+    pub total_questions: i64,
+}
+
+/// Kind of questions that dominate a paper section. Derived from
+/// question_format column: mcq/true_false → Objective, short_answer/numeric
+/// → Essay, mixed → Mixed.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PastPaperSectionKind {
+    Objective,
+    Essay,
+    Mixed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PastPaperSection {
+    pub section_label: String,
+    pub section_kind: PastPaperSectionKind,
+    pub question_count: i64,
+}
+
+/// One expanded-year row: all sections, plus topic/keyword tags for filtering.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PastPaperYear {
+    pub paper_id: i64,
+    pub exam_year: i64,
+    pub title: String,
+    pub paper_code: Option<String>,
+    pub sections: Vec<PastPaperSection>,
+    pub topic_ids: Vec<i64>,
+    pub keywords: Vec<String>,
+}
+
+/// Per-topic tally used by the Past Questions "Topic" view: how many
+/// questions across *all* past papers of a subject are tagged to each
+/// topic. Objective (mcq / true-false) and essay (everything else) are
+/// counted separately so the UI can offer two distinct session modes
+/// per topic — the formats stay unmixed.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PastPaperTopicCount {
+    pub topic_id: i64,
+    pub topic_name: String,
+    pub question_count: i64,
+    pub objective_count: i64,
+    pub essay_count: i64,
+}
+
+// ── Question assets (images) ──
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionAssetMeta {
+    pub asset_id: i64,
+    pub question_id: i64,
+    pub scope: String,
+    pub scope_ref: Option<i64>,
+    pub mime_type: String,
+    pub byte_size: i64,
+    pub position: i64,
+    pub alt_text: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PastPaperSetSummary {
     pub paper_id: i64,

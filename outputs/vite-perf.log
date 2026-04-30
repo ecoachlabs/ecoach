@@ -1,0 +1,68 @@
+
+> frontend@1.0.0 dev C:\Users\surfaceSudio\OneDrive\ecoach\frontend
+> vite "--" "--host" "localhost" "--port" "1420"
+
+
+  [32m[1mVITE[22m v8.0.3[39m  [2mready in [0m[1m602[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m1420[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m3:41:24 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css, /src/views/student/CoachHub.vue, /src/views/student/CoachHubV3.vue, /src/views/student/journey/JourneyHome.vue[22m
+[2m3:41:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/journey/JourneyHome.vue, /src/assets/css/main.css[22m
+[2m4:03:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/router/index.ts[22m
+[2m4:04:24 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/layouts/AdminLayout.vue, /src/assets/css/main.css[22m
+[2m4:04:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/layouts/AdminLayout.vue, /src/assets/css/main.css[22m
+[2m4:16:14 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/practice/PastQuestions.vue, /src/views/student/practice/PastQuestions.vue?vue&type=style&index=0&scoped=a9dba846&lang.css, /src/assets/css/main.css[22m
+[2m5:12:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/journey/JourneyHome.vue, /src/assets/css/main.css[22m
+[2m5:12:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/journey/JourneyHome.vue, /src/assets/css/main.css[22m
+[2m6:41:14 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css, /src/views/student/CoachHub.vue, /src/views/student/CoachHubV3.vue, /src/views/student/journey/JourneyHome.vue[22m
+[2m6:41:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/layouts/StudentLayout.vue, /src/assets/css/main.css[22m
+[2m6:45:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/practice/PastQuestions.vue, /src/assets/css/main.css[22m
+[2m6:48:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/views/student/practice/PastQuestions.vue, /src/assets/css/main.css[22m
+[2m6:48:42 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:49:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:49:22 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:49:22 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:49:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:49:42 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:50:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:50:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:52:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:53:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:53:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m6:53:37 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:09:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:09:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:09:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:10:01 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:10:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:44:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:44:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:45:28 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:45:39 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m7:48:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m8:02:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m8:09:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css, /src/views/student/CoachHub.vue, /src/views/student/CoachHubV3.vue, /src/views/student/journey/JourneyHome.vue, /src/layouts/StudentLayout.vue[22m
+[2m8:09:53 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/layouts/StudentLayout.vue, /src/assets/css/main.css[22m
+[2m8:10:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/layouts/StudentLayout.vue, /src/assets/css/main.css[22m
+[2m8:17:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m8:17:18 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m8:17:41 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m8:18:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m8:18:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m8:35:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css, /src/views/student/CoachHub.vue, /src/views/student/CoachHubV3.vue, /src/views/student/journey/JourneyHome.vue[22m
+[2m8:36:05 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:10:14 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:10:37 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:10:42 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:10:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:11:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:11:19 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:11:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:11:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:12:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:12:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:13:05 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m10:14:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/assets/css/main.css[22m
+[2m12:02:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/layouts/StudentLayout.vue, /src/assets/css/main.css[22m
+ ELIFECYCLE  Command failed with exit code 3221225786.

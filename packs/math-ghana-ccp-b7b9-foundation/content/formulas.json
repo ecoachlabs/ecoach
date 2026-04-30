@@ -4,11 +4,11 @@
     "topic_code": "B7.3.2.1",
     "entry_type": "formula",
     "canonical_name": "B7.3.2.1",
-    "short_text": "Formula and symbolic patterns for Demonstrate the ability to find the perimeter of plane shapes including circles using the concept of pi (π) to find the circumference of a circle.",
-    "full_text": "Compile and verify formulas for Demonstrate the ability to find the perimeter of plane shapes including circles using the concept of pi (π) to find the circumference of a circle before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Perimeter and Circumference.",
+    "full_text": "Compile and verify formulas for Perimeter and Circumference before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Demonstrate the ability to find the perimeter of plane shapes including circles using the concept of pi (π) to find the circumference of a circle"
+      "Perimeter and Circumference"
     ]
   },
   {
@@ -16,11 +16,11 @@
     "topic_code": "B7.3.2.2",
     "entry_type": "formula",
     "canonical_name": "B7.3.2.2",
-    "short_text": "Formula and symbolic patterns for Derive the formula for determining the area of a triangle and use it to solve problems.",
-    "full_text": "Compile and verify formulas for Derive the formula for determining the area of a triangle and use it to solve problems before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Area of Triangles.",
+    "full_text": "Compile and verify formulas for Area of Triangles before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Derive the formula for determining the area of a triangle and use it to solve problems"
+      "Area of Triangles"
     ]
   },
   {
@@ -28,11 +28,11 @@
     "topic_code": "B7.3.2.3",
     "entry_type": "formula",
     "canonical_name": "B7.3.2.3",
-    "short_text": "Formula and symbolic patterns for Demonstrate understanding of bearings, vector and its components using real life cases.",
-    "full_text": "Compile and verify formulas for Demonstrate understanding of bearings, vector and its components using real life cases before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Bearings and Vectors.",
+    "full_text": "Compile and verify formulas for Bearings and Vectors before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Demonstrate understanding of bearings, vector and its components using real life cases"
+      "Bearings and Vectors"
     ]
   },
   {
@@ -40,11 +40,11 @@
     "topic_code": "B7.4.1.2",
     "entry_type": "formula",
     "canonical_name": "B7.4.1.2",
-    "short_text": "Formula and symbolic patterns for Determine the measures of central tendency (mean, median, mode) for a given ungrouped data and use it to solve problems.",
-    "full_text": "Compile and verify formulas for Determine the measures of central tendency (mean, median, mode) for a given ungrouped data and use it to solve problems before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Mean, Median and Mode.",
+    "full_text": "Compile and verify formulas for Mean, Median and Mode before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Determine the measures of central tendency (mean, median, mode) for a given ungrouped data and use it to solve problems"
+      "Mean, Median and Mode"
     ]
   },
   {
@@ -52,11 +52,11 @@
     "topic_code": "B7.4.2.1",
     "entry_type": "formula",
     "canonical_name": "B7.4.2.1",
-    "short_text": "Formula and symbolic patterns for Identify the sample space for a probability experiment involving single events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems.",
-    "full_text": "Compile and verify formulas for Identify the sample space for a probability experiment involving single events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Probability of Single Events.",
+    "full_text": "Compile and verify formulas for Probability of Single Events before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Identify the sample space for a probability experiment involving single events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems"
+      "Probability of Single Events"
     ]
   },
   {
@@ -64,11 +64,11 @@
     "topic_code": "B8.1.2.3",
     "entry_type": "formula",
     "canonical_name": "B8.1.2.3",
-    "short_text": "Formula and symbolic patterns for Demonstrate understanding and the use of the laws of indices in solving problems (including real life problems) involving powers of natural numbers.",
-    "full_text": "Compile and verify formulas for Demonstrate understanding and the use of the laws of indices in solving problems (including real life problems) involving powers of natural numbers before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Laws of Indices.",
+    "full_text": "Compile and verify formulas for Laws of Indices before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Demonstrate understanding and the use of the laws of indices in solving problems (including real life problems) involving powers of natural numbers"
+      "Laws of Indices"
     ]
   },
   {
@@ -76,11 +76,11 @@
     "topic_code": "B8.1.4.1",
     "entry_type": "formula",
     "canonical_name": "B8.1.4.1",
-    "short_text": "Formula and symbolic patterns for Demonstrate an understanding of ratio, rate and proportions and use it these to solve real- world mathematical problems..",
-    "full_text": "Compile and verify formulas for Demonstrate an understanding of ratio, rate and proportions and use it these to solve real- world mathematical problems. before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Ratio, Rate and Proportion.",
+    "full_text": "Compile and verify formulas for Ratio, Rate and Proportion before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Demonstrate an understanding of ratio, rate and proportions and use it these to solve real- world mathematical problems."
+      "Ratio, Rate and Proportion"
     ]
   },
   {
@@ -88,11 +88,11 @@
     "topic_code": "B8.3.2.1",
     "entry_type": "formula",
     "canonical_name": "B8.3.2.1",
-    "short_text": "Formula and symbolic patterns for Apply the Pythagoras theorem, the primary trigonometric ratios and the formulas for determining the area of a circle to solve real problems..",
-    "full_text": "Compile and verify formulas for Apply the Pythagoras theorem, the primary trigonometric ratios and the formulas for determining the area of a circle to solve real problems. before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Pythagoras, Trigonometry and Circle Area.",
+    "full_text": "Compile and verify formulas for Pythagoras, Trigonometry and Circle Area before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Apply the Pythagoras theorem, the primary trigonometric ratios and the formulas for determining the area of a circle to solve real problems."
+      "Pythagoras, Trigonometry and Circle Area"
     ]
   },
   {
@@ -100,11 +100,11 @@
     "topic_code": "B8.4.1.2",
     "entry_type": "formula",
     "canonical_name": "B8.4.1.2",
-    "short_text": "Formula and symbolic patterns for Demonstrate an understanding of measures of central tendency (mean, median, mode) and range for grouped data and explain when it’s most appropriate to use the mean, median, or mode.",
-    "full_text": "Compile and verify formulas for Demonstrate an understanding of measures of central tendency (mean, median, mode) and range for grouped data and explain when it’s most appropriate to use the mean, median, or mode before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Measures of Central Tendency and Range.",
+    "full_text": "Compile and verify formulas for Measures of Central Tendency and Range before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Demonstrate an understanding of measures of central tendency (mean, median, mode) and range for grouped data and explain when it’s most appropriate to use the mean, median, or mode"
+      "Measures of Central Tendency and Range"
     ]
   },
   {
@@ -112,11 +112,11 @@
     "topic_code": "B8.4.2.1",
     "entry_type": "formula",
     "canonical_name": "B8.4.2.1",
-    "short_text": "Formula and symbolic patterns for Identify the sample space for a probability experiment involving two independent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems.",
-    "full_text": "Compile and verify formulas for Identify the sample space for a probability experiment involving two independent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Probability of Independent Events.",
+    "full_text": "Compile and verify formulas for Probability of Independent Events before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Identify the sample space for a probability experiment involving two independent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems"
+      "Probability of Independent Events"
     ]
   },
   {
@@ -124,11 +124,11 @@
     "topic_code": "B9.1.4.1",
     "entry_type": "formula",
     "canonical_name": "B9.1.4.1",
-    "short_text": "Formula and symbolic patterns for Apply the understanding of ratio, rate and proportions to solve problems that involve rates, ratios, and proportional reasoning and use it to solve real- world mathematical problems.",
-    "full_text": "Compile and verify formulas for Apply the understanding of ratio, rate and proportions to solve problems that involve rates, ratios, and proportional reasoning and use it to solve real- world mathematical problems before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Ratio, Rate and Proportion.",
+    "full_text": "Compile and verify formulas for Ratio, Rate and Proportion before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Apply the understanding of ratio, rate and proportions to solve problems that involve rates, ratios, and proportional reasoning and use it to solve real- world mathematical problems"
+      "Ratio, Rate and Proportion"
     ]
   },
   {
@@ -136,11 +136,11 @@
     "topic_code": "B9.3.2.1",
     "entry_type": "formula",
     "canonical_name": "B9.3.2.1",
-    "short_text": "Formula and symbolic patterns for Derive the formulas for determining the surface area of prisms (i.e..",
-    "full_text": "Compile and verify formulas for Derive the formulas for determining the surface area of prisms (i.e. before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Surface Area of Prisms.",
+    "full_text": "Compile and verify formulas for Surface Area of Prisms before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Derive the formulas for determining the surface area of prisms (i.e."
+      "Surface Area of Prisms"
     ]
   },
   {
@@ -148,11 +148,11 @@
     "topic_code": "B9.4.1.1",
     "entry_type": "formula",
     "canonical_name": "B9.4.1.1",
-    "short_text": "Formula and symbolic patterns for Select, justify, and use appropriate methods of collecting data (grouped/ungrouped), use the data to construct and interpret frequency tables and histogram and use it to determine the mode and to solve and/or pose problems.",
-    "full_text": "Compile and verify formulas for Select, justify, and use appropriate methods of collecting data (grouped/ungrouped), use the data to construct and interpret frequency tables and histogram and use it to determine the mode and to solve and/or pose problems before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Frequency Tables and Histograms.",
+    "full_text": "Compile and verify formulas for Frequency Tables and Histograms before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Select, justify, and use appropriate methods of collecting data (grouped/ungrouped), use the data to construct and interpret frequency tables and histogram and use it to determine the mode and to solve and/or pose problems"
+      "Frequency Tables and Histograms"
     ]
   },
   {
@@ -160,11 +160,11 @@
     "topic_code": "B9.4.2.1",
     "entry_type": "formula",
     "canonical_name": "B9.4.2.1",
-    "short_text": "Formula and symbolic patterns for Identify the sample space for a probability experiment involving two dependent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems.",
-    "full_text": "Compile and verify formulas for Identify the sample space for a probability experiment involving two dependent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems before assessment practice.",
+    "short_text": "Formula and symbolic patterns for Probability of Dependent Events.",
+    "full_text": "Compile and verify formulas for Probability of Dependent Events before assessment practice.",
     "importance_score": 6200,
     "aliases": [
-      "Identify the sample space for a probability experiment involving two dependent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems"
+      "Probability of Dependent Events"
     ]
   }
 ]

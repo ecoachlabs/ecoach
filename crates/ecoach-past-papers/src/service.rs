@@ -1,12 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
-use rusqlite::{Connection, OptionalExtension, params};
+use ecoach_substrate::{clamp_bp, BasisPoints, EcoachError, EcoachResult};
+use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::models::{
     CreateFamilyEdgeInput, FamilyRecurrenceMetric, FamilyRelationshipEdge, FamilyReplacementTrail,
-    FamilyStory, InverseAppearancePair, PaperDna, PastPaperComebackSignal,
-    PastPaperFamilyAnalytics, PastPaperInverseSignal, PastPaperSet, PastPaperSetSummary,
+    FamilyStory, InverseAppearancePair, PaperDna, PastPaperComebackSignal, PastPaperCourseSummary,
+    PastPaperFamilyAnalytics, PastPaperInverseSignal, PastPaperSection, PastPaperSectionKind,
+    PastPaperSet, PastPaperSetSummary, PastPaperTopicCount, PastPaperYear, QuestionAssetMeta,
     StudentFamilyPerformance,
 };
 
@@ -70,6 +71,65 @@ impl<'a> PastPapersService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         Ok(self.conn.last_insert_rowid())
+    }
+
+    /// Update the metadata row for an existing paper set. Used when the
+    /// admin edits a paper's title / year / paper_code after creation.
+    pub fn update_paper_set(
+        &self,
+        paper_id: i64,
+        exam_year: i64,
+        paper_code: Option<&str>,
+        title: &str,
+    ) -> EcoachResult<()> {
+        let changed = self
+            .conn
+            .execute(
+                "UPDATE past_paper_sets
+                 SET exam_year = ?2, paper_code = ?3, title = ?4
+                 WHERE id = ?1",
+                params![paper_id, exam_year, paper_code, title],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if changed == 0 {
+            return Err(EcoachError::NotFound(format!(
+                "past paper set {} not found",
+                paper_id
+            )));
+        }
+        Ok(())
+    }
+
+    /// Drop every question-link for a paper. Used before re-saving an
+    /// edited paper — we regenerate all links from the new question
+    /// list rather than diffing, which keeps the authoring code trivial.
+    pub fn delete_paper_question_links(&self, paper_id: i64) -> EcoachResult<i64> {
+        let removed = self
+            .conn
+            .execute(
+                "DELETE FROM past_paper_question_links WHERE paper_id = ?1",
+                [paper_id],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        Ok(removed as i64)
+    }
+
+    /// Delete a paper set. The `ON DELETE CASCADE` on
+    /// past_paper_question_links (migration 016) cleans up links. The
+    /// underlying `questions` rows are not removed — they keep
+    /// independent lifecycle and are shared with practice flows.
+    pub fn delete_paper_set(&self, paper_id: i64) -> EcoachResult<()> {
+        let removed = self
+            .conn
+            .execute("DELETE FROM past_paper_sets WHERE id = ?1", [paper_id])
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if removed == 0 {
+            return Err(EcoachError::NotFound(format!(
+                "past paper set {} not found",
+                paper_id
+            )));
+        }
+        Ok(())
     }
 
     pub fn recompute_family_analytics(
@@ -1284,6 +1344,731 @@ impl<'a> PastPapersService<'a> {
         }
         Ok(weak)
     }
+
+    // ── Past Questions browser ─────────────────────────────────────
+    //
+    // These feed the student-facing "Past Questions" page: a monochrome
+    // accordion of courses → years → sections. Keep the queries flat
+    // and aggregate-only; the view is a browser, not a detail page.
+    // ──────────────────────────────────────────────────────────────
+
+    /// One row per subject that has at least one linked past paper.
+    /// Powers the collapsed course list.
+    pub fn list_past_paper_courses(&self) -> EcoachResult<Vec<PastPaperCourseSummary>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT s.id, s.name, s.code,
+                        COUNT(DISTINCT pps.id) AS paper_count,
+                        MIN(pps.exam_year)     AS first_year,
+                        MAX(pps.exam_year)     AS last_year,
+                        COUNT(ppql.id)         AS total_questions
+                 FROM subjects s
+                 INNER JOIN past_paper_sets pps            ON pps.subject_id = s.id
+                 LEFT  JOIN past_paper_question_links ppql ON ppql.paper_id = pps.id
+                 WHERE s.is_active = 1
+                 GROUP BY s.id, s.name, s.code
+                 HAVING paper_count > 0
+                 ORDER BY s.display_order ASC, s.name ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let rows = statement
+            .query_map([], |row| {
+                Ok(PastPaperCourseSummary {
+                    subject_id: row.get(0)?,
+                    subject_name: row.get(1)?,
+                    subject_code: row.get(2)?,
+                    paper_count: row.get(3)?,
+                    first_year: row.get(4)?,
+                    last_year: row.get(5)?,
+                    total_questions: row.get(6)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+
+    /// All past papers for a subject, newest year first. Each paper
+    /// carries its section breakdown plus topic_ids / keyword tags so
+    /// the frontend can render filter chips without a second round-trip.
+    pub fn list_past_papers_for_subject(
+        &self,
+        subject_id: i64,
+    ) -> EcoachResult<Vec<PastPaperYear>> {
+        // Step 1: paper-level header rows.
+        let mut header_stmt = self
+            .conn
+            .prepare(
+                "SELECT id, exam_year, title, paper_code
+                 FROM past_paper_sets
+                 WHERE subject_id = ?1
+                 ORDER BY exam_year DESC, id DESC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let header_rows = header_stmt
+            .query_map([subject_id], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, i64>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, Option<String>>(3)?,
+                ))
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut papers: Vec<(i64, i64, String, Option<String>)> = Vec::new();
+        for row in header_rows {
+            papers.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        if papers.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // Step 2: per-paper, per-section aggregates. We fold format
+        // counts into a SectionKind.
+        let mut section_stmt = self
+            .conn
+            .prepare(
+                "SELECT COALESCE(ppql.section_label, '')       AS section_label,
+                        q.question_format,
+                        COUNT(*)                                AS cnt
+                 FROM past_paper_question_links ppql
+                 INNER JOIN questions q ON q.id = ppql.question_id
+                 WHERE ppql.paper_id = ?1
+                 GROUP BY section_label, q.question_format
+                 ORDER BY section_label ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        // Step 3: per-paper distinct topic_ids.
+        let mut topic_stmt = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT q.topic_id
+                 FROM past_paper_question_links ppql
+                 INNER JOIN questions q ON q.id = ppql.question_id
+                 WHERE ppql.paper_id = ?1 AND q.topic_id IS NOT NULL
+                 ORDER BY q.topic_id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        // Step 4a: family-name keywords when the questions belong to curated families.
+        let mut family_keyword_stmt = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT qf.family_name
+                 FROM past_paper_question_links ppql
+                 INNER JOIN questions q         ON q.id = ppql.question_id
+                 INNER JOIN question_families qf ON qf.id = q.family_id
+                 WHERE ppql.paper_id = ?1
+                 ORDER BY qf.family_name ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        // Step 4b: topic-name keywords. These guarantee useful filters even when
+        // the paper contains authored items without a question family.
+        let mut topic_keyword_stmt = self
+            .conn
+            .prepare(
+                "SELECT DISTINCT t.name
+                 FROM past_paper_question_links ppql
+                 INNER JOIN questions q ON q.id = ppql.question_id
+                 INNER JOIN topics t    ON t.id = q.topic_id
+                 WHERE ppql.paper_id = ?1
+                 ORDER BY t.name ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        // Step 4c: question text, used to derive searchable keyword chips such as
+        // 'profit', 'circle', or 'probability' when family metadata is absent.
+        let mut text_keyword_stmt = self
+            .conn
+            .prepare(
+                "SELECT q.stem, COALESCE(q.explanation_text, '')
+                 FROM past_paper_question_links ppql
+                 INNER JOIN questions q ON q.id = ppql.question_id
+                 WHERE ppql.paper_id = ?1
+                 ORDER BY ppql.id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut out: Vec<PastPaperYear> = Vec::with_capacity(papers.len());
+        for (paper_id, exam_year, title, paper_code) in papers {
+            // Sections: group format counts by label, classify kind.
+            let section_rows = section_stmt
+                .query_map([paper_id], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, i64>(2)?,
+                    ))
+                })
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            let mut section_map: BTreeMap<String, SectionAggregate> = BTreeMap::new();
+            for row in section_rows {
+                let (label, format, count) =
+                    row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+                let entry = section_map
+                    .entry(label.clone())
+                    .or_insert_with(|| SectionAggregate {
+                        label,
+                        total: 0,
+                        objective: 0,
+                        essay: 0,
+                    });
+                entry.total += count;
+                if is_objective_format(&format) {
+                    entry.objective += count;
+                } else {
+                    entry.essay += count;
+                }
+            }
+            let sections: Vec<PastPaperSection> = section_map
+                .into_values()
+                .map(|agg| PastPaperSection {
+                    section_label: agg.label,
+                    section_kind: classify_section(agg.objective, agg.essay),
+                    question_count: agg.total,
+                })
+                .collect();
+
+            // Topic ids.
+            let topic_rows = topic_stmt
+                .query_map([paper_id], |row| row.get::<_, i64>(0))
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let mut topic_ids: Vec<i64> = Vec::new();
+            for row in topic_rows {
+                topic_ids.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+            }
+
+            // Keyword chips from family names, topic names, and question text.
+            let family_keyword_rows = family_keyword_stmt
+                .query_map([paper_id], |row| row.get::<_, String>(0))
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let mut family_keywords: Vec<String> = Vec::new();
+            for row in family_keyword_rows {
+                family_keywords.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+            }
+
+            let topic_keyword_rows = topic_keyword_stmt
+                .query_map([paper_id], |row| row.get::<_, String>(0))
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let mut topic_keywords: Vec<String> = Vec::new();
+            for row in topic_keyword_rows {
+                topic_keywords.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+            }
+
+            let text_rows = text_keyword_stmt
+                .query_map([paper_id], |row| {
+                    Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                })
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let mut text_fragments: Vec<String> = Vec::new();
+            for row in text_rows {
+                let (stem, explanation) =
+                    row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+                text_fragments.push(stem);
+                if !explanation.trim().is_empty() {
+                    text_fragments.push(explanation);
+                }
+            }
+
+            let keywords = build_paper_keywords(&topic_keywords, &family_keywords, &text_fragments);
+
+            out.push(PastPaperYear {
+                paper_id,
+                exam_year,
+                title,
+                paper_code,
+                sections,
+                topic_ids,
+                keywords,
+            });
+        }
+
+        Ok(out)
+    }
+
+    /// Per-topic question tally across all past papers of a subject.
+    /// Drives the Past Questions "Topic" view: for each topic tagged to
+    /// at least one past-paper question, returns the topic name plus
+    /// question counts split by format — objectives (mcq, true/false)
+    /// vs essay (everything else). A topic appears in the list only if
+    /// it has at least one question in either bucket.
+    pub fn list_past_paper_topic_counts(
+        &self,
+        subject_id: i64,
+    ) -> EcoachResult<Vec<PastPaperTopicCount>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT t.id, t.name,
+                        COUNT(*) AS question_count,
+                        SUM(CASE WHEN q.question_format IN ('mcq','true_false') THEN 1 ELSE 0 END) AS objective_count,
+                        SUM(CASE WHEN q.question_format NOT IN ('mcq','true_false') THEN 1 ELSE 0 END) AS essay_count
+                 FROM past_paper_question_links ppql
+                 INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                 INNER JOIN questions q         ON q.id = ppql.question_id
+                 INNER JOIN topics t            ON t.id = q.topic_id
+                 WHERE pps.subject_id = ?1
+                   AND q.is_active = 1
+                   AND q.topic_id IS NOT NULL
+                 GROUP BY t.id, t.name
+                 ORDER BY question_count DESC, t.name ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let rows = statement
+            .query_map([subject_id], |row| {
+                Ok(PastPaperTopicCount {
+                    topic_id: row.get(0)?,
+                    topic_name: row.get(1)?,
+                    question_count: row.get(2)?,
+                    objective_count: row.get(3)?,
+                    essay_count: row.get(4)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut out: Vec<PastPaperTopicCount> = Vec::new();
+        for row in rows {
+            out.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(out)
+    }
+
+    /// Ordered question ids across *all* past papers of a subject that
+    /// are tagged to a specific topic, filtered by question format.
+    /// `format_filter` must be "objective", "essay", or "all" — the
+    /// Past Questions topic view never requests the mixed "all" bucket
+    /// (objectives and essays are exposed as two independent sessions
+    /// per the product rule), but the filter is kept permissive for
+    /// future callers. Ordered newest-year first, then by the paper's
+    /// own question-number string.
+    pub fn list_subject_topic_past_question_ids(
+        &self,
+        subject_id: i64,
+        topic_id: i64,
+        format_filter: &str,
+    ) -> EcoachResult<Vec<i64>> {
+        let sql = match format_filter {
+            "objective" => {
+                "SELECT ppql.question_id
+                 FROM past_paper_question_links ppql
+                 INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                 INNER JOIN questions q         ON q.id = ppql.question_id
+                 WHERE pps.subject_id = ?1
+                   AND q.topic_id = ?2
+                   AND q.is_active = 1
+                   AND q.question_format IN ('mcq','true_false')
+                 ORDER BY pps.exam_year DESC, ppql.question_number ASC, ppql.id ASC"
+            }
+            "essay" => {
+                "SELECT ppql.question_id
+                 FROM past_paper_question_links ppql
+                 INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                 INNER JOIN questions q         ON q.id = ppql.question_id
+                 WHERE pps.subject_id = ?1
+                   AND q.topic_id = ?2
+                   AND q.is_active = 1
+                   AND q.question_format NOT IN ('mcq','true_false')
+                 ORDER BY pps.exam_year DESC, ppql.question_number ASC, ppql.id ASC"
+            }
+            _ => {
+                "SELECT ppql.question_id
+                 FROM past_paper_question_links ppql
+                 INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                 INNER JOIN questions q         ON q.id = ppql.question_id
+                 WHERE pps.subject_id = ?1
+                   AND q.topic_id = ?2
+                   AND q.is_active = 1
+                 ORDER BY pps.exam_year DESC, ppql.question_number ASC, ppql.id ASC"
+            }
+        };
+
+        let mut statement = self
+            .conn
+            .prepare(sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![subject_id, topic_id], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut ids = Vec::new();
+        for row in rows {
+            ids.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(ids)
+    }
+
+    /// Ordered list of (question_id, display_order) for a given
+    /// paper+section. Used by SessionService to build a session that
+    /// exactly mirrors paper order — no selector sampling.
+    pub fn list_section_question_ids(
+        &self,
+        paper_id: i64,
+        section_label: &str,
+    ) -> EcoachResult<Vec<i64>> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT ppql.question_id
+                 FROM past_paper_question_links ppql
+                 INNER JOIN questions q ON q.id = ppql.question_id
+                 WHERE ppql.paper_id = ?1
+                   AND COALESCE(ppql.section_label, '') = ?2
+                   AND q.is_active = 1
+                 ORDER BY ppql.question_number ASC, ppql.id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let rows = statement
+            .query_map(params![paper_id, section_label], |row| row.get::<_, i64>(0))
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut ids = Vec::new();
+        for row in rows {
+            ids.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(ids)
+    }
+
+    // ── Image / asset attachments ────────────────────────────────────
+    //
+    // Past-paper diagrams and figures attach to a question. `scope`
+    // tells us WHERE the image appears (stem / option / explanation);
+    // `scope_ref` points at the specific option_id when scope='option'.
+    // Bytes live in SQLite as BLOB — simpler backup story, no
+    // file-system path leaks. See migration 103.
+    // ────────────────────────────────────────────────────────────────
+
+    pub fn attach_question_asset(
+        &self,
+        question_id: i64,
+        scope: &str,
+        scope_ref: Option<i64>,
+        mime_type: &str,
+        bytes: &[u8],
+        alt_text: Option<&str>,
+    ) -> EcoachResult<QuestionAssetMeta> {
+        if !matches!(scope, "stem" | "option" | "explanation") {
+            return Err(EcoachError::Validation(format!(
+                "invalid asset scope: {}",
+                scope
+            )));
+        }
+        if bytes.is_empty() {
+            return Err(EcoachError::Validation(
+                "attached file is empty".to_string(),
+            ));
+        }
+
+        // Highest existing position + 1 keeps insertion order stable for
+        // admins who attach images sequentially.
+        let next_position: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(MAX(position), 0) + 1
+                 FROM question_assets
+                 WHERE question_id = ?1 AND scope = ?2
+                   AND COALESCE(scope_ref, -1) = COALESCE(?3, -1)",
+                params![question_id, scope, scope_ref],
+                |row| row.get::<_, i64>(0),
+            )
+            .unwrap_or(1);
+
+        self.conn
+            .execute(
+                "INSERT INTO question_assets (
+                    question_id, scope, scope_ref, mime_type, byte_size, data,
+                    position, alt_text
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    question_id,
+                    scope,
+                    scope_ref,
+                    mime_type,
+                    bytes.len() as i64,
+                    bytes,
+                    next_position,
+                    alt_text,
+                ],
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let asset_id = self.conn.last_insert_rowid();
+        Ok(QuestionAssetMeta {
+            asset_id,
+            question_id,
+            scope: scope.to_string(),
+            scope_ref,
+            mime_type: mime_type.to_string(),
+            byte_size: bytes.len() as i64,
+            position: next_position,
+            alt_text: alt_text.map(str::to_string),
+        })
+    }
+
+    pub fn delete_question_asset(&self, asset_id: i64) -> EcoachResult<()> {
+        let removed = self
+            .conn
+            .execute("DELETE FROM question_assets WHERE id = ?1", [asset_id])
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        if removed == 0 {
+            return Err(EcoachError::NotFound(format!(
+                "asset {} not found",
+                asset_id
+            )));
+        }
+        Ok(())
+    }
+
+    pub fn list_question_assets(
+        &self,
+        question_id: i64,
+    ) -> EcoachResult<Vec<QuestionAssetMeta>> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id, question_id, scope, scope_ref, mime_type, byte_size,
+                        position, alt_text
+                 FROM question_assets
+                 WHERE question_id = ?1
+                 ORDER BY scope ASC, position ASC, id ASC",
+            )
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let rows = stmt
+            .query_map([question_id], |row| {
+                Ok(QuestionAssetMeta {
+                    asset_id: row.get(0)?,
+                    question_id: row.get(1)?,
+                    scope: row.get(2)?,
+                    scope_ref: row.get(3)?,
+                    mime_type: row.get(4)?,
+                    byte_size: row.get(5)?,
+                    position: row.get(6)?,
+                    alt_text: row.get(7)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+
+    /// Bulk fetch of assets for a batch of question ids — used by the
+    /// editor to show every thumbnail without an N+1 round-trip.
+    pub fn list_question_assets_for_questions(
+        &self,
+        question_ids: &[i64],
+    ) -> EcoachResult<Vec<QuestionAssetMeta>> {
+        if question_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let placeholders = question_ids
+            .iter()
+            .map(|_| "?")
+            .collect::<Vec<_>>()
+            .join(", ");
+        let sql = format!(
+            "SELECT id, question_id, scope, scope_ref, mime_type, byte_size,
+                    position, alt_text
+             FROM question_assets
+             WHERE question_id IN ({})
+             ORDER BY question_id, scope ASC, position ASC, id ASC",
+            placeholders
+        );
+        let mut stmt = self
+            .conn
+            .prepare(&sql)
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut params_vec: Vec<rusqlite::types::Value> =
+            Vec::with_capacity(question_ids.len());
+        for id in question_ids {
+            params_vec.push((*id).into());
+        }
+        let rows = stmt
+            .query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+                Ok(QuestionAssetMeta {
+                    asset_id: row.get(0)?,
+                    question_id: row.get(1)?,
+                    scope: row.get(2)?,
+                    scope_ref: row.get(3)?,
+                    mime_type: row.get(4)?,
+                    byte_size: row.get(5)?,
+                    position: row.get(6)?,
+                    alt_text: row.get(7)?,
+                })
+            })
+            .map_err(|err| EcoachError::Storage(err.to_string()))?;
+        let mut items = Vec::new();
+        for row in rows {
+            items.push(row.map_err(|err| EcoachError::Storage(err.to_string()))?);
+        }
+        Ok(items)
+    }
+
+    /// Raw bytes + mime for a single asset. The frontend wraps these
+    /// in a Blob + object URL for `<img>` rendering.
+    pub fn get_question_asset_bytes(
+        &self,
+        asset_id: i64,
+    ) -> EcoachResult<Option<(String, Vec<u8>)>> {
+        self.conn
+            .query_row(
+                "SELECT mime_type, data FROM question_assets WHERE id = ?1",
+                [asset_id],
+                |row| {
+                    let mime: String = row.get(0)?;
+                    let data: Vec<u8> = row.get(1)?;
+                    Ok((mime, data))
+                },
+            )
+            .optional()
+            .map_err(|err| EcoachError::Storage(err.to_string()))
+    }
+}
+
+struct SectionAggregate {
+    label: String,
+    total: i64,
+    objective: i64,
+    essay: i64,
+}
+
+fn is_objective_format(format: &str) -> bool {
+    matches!(format, "mcq" | "true_false")
+}
+
+fn build_paper_keywords(
+    topic_keywords: &[String],
+    family_keywords: &[String],
+    text_fragments: &[String],
+) -> Vec<String> {
+    let mut keywords: BTreeSet<String> = BTreeSet::new();
+
+    for phrase in topic_keywords.iter().chain(family_keywords.iter()) {
+        if let Some(cleaned) = normalize_keyword_phrase(phrase) {
+            keywords.insert(cleaned);
+        }
+    }
+
+    let mut token_counts: BTreeMap<String, i64> = BTreeMap::new();
+    for fragment in text_fragments {
+        for token in extract_search_tokens(fragment) {
+            *token_counts.entry(token).or_insert(0) += 1;
+        }
+    }
+
+    let mut ranked_tokens: Vec<(String, i64)> = token_counts.into_iter().collect();
+    ranked_tokens.sort_by(|left, right| right.1.cmp(&left.1).then(left.0.cmp(&right.0)));
+
+    for (token, _) in ranked_tokens.into_iter().take(18) {
+        keywords.insert(token);
+    }
+
+    keywords.into_iter().collect()
+}
+
+fn normalize_keyword_phrase(value: &str) -> Option<String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+
+fn extract_search_tokens(input: &str) -> Vec<String> {
+    input
+        .split(|ch: char| !ch.is_ascii_alphanumeric())
+        .filter_map(|part| {
+            let token = part.trim().to_ascii_lowercase();
+            if token.len() < 4
+                || token.chars().all(|ch| ch.is_ascii_digit())
+                || STOPWORDS.contains(&token.as_str())
+            {
+                None
+            } else {
+                Some(token)
+            }
+        })
+        .collect()
+}
+
+const STOPWORDS: &[&str] = &[
+    "about",
+    "above",
+    "after",
+    "again",
+    "altogether",
+    "among",
+    "answer",
+    "book",
+    "books",
+    "calculate",
+    "class",
+    "correct",
+    "decimal",
+    "degrees",
+    "determine",
+    "each",
+    "exercise",
+    "exterior",
+    "fair",
+    "find",
+    "following",
+    "from",
+    "given",
+    "interior",
+    "lowest",
+    "once",
+    "opposite",
+    "parallel",
+    "quantity",
+    "random",
+    "score",
+    "scored",
+    "section",
+    "side",
+    "sides",
+    "simplest",
+    "solve",
+    "student",
+    "students",
+    "table",
+    "take",
+    "their",
+    "there",
+    "these",
+    "total",
+    "travelled",
+    "value",
+    "written",
+    "what",
+    "when",
+    "which",
+    "wide",
+    "with",
+];
+
+fn classify_section(objective: i64, essay: i64) -> PastPaperSectionKind {
+    match (objective, essay) {
+        (o, 0) if o > 0 => PastPaperSectionKind::Objective,
+        (0, e) if e > 0 => PastPaperSectionKind::Essay,
+        (0, 0) => PastPaperSectionKind::Objective, // Empty section: default so UI doesn't read "Mixed" on 0 Q's
+        _ => PastPaperSectionKind::Mixed,
+    }
 }
 
 struct FamilyAggregate {
@@ -1358,7 +2143,7 @@ fn comeback_rationale(
 
 #[cfg(test)]
 mod tests {
-    use rusqlite::{Connection, params};
+    use rusqlite::{params, Connection};
 
     use super::*;
 
@@ -1396,6 +2181,71 @@ mod tests {
         assert!(comeback[0].rationale.contains("comeback"));
     }
 
+    #[test]
+    fn paper_years_include_topic_and_text_keywords_without_family_links() {
+        let conn = Connection::open_in_memory().expect("in-memory db should open");
+        seed_schema(&conn);
+
+        conn.execute(
+            "CREATE TABLE topics (
+                id INTEGER PRIMARY KEY,
+                subject_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                display_order INTEGER DEFAULT 0
+            )",
+            [],
+        )
+        .expect("topics schema should insert");
+
+        conn.execute(
+            "INSERT INTO topics (id, subject_id, name, display_order)
+             VALUES (100, 1, 'Fractions, Decimals and Percentages', 1)",
+            [],
+        )
+        .expect("topic should insert");
+        conn.execute(
+            "INSERT INTO past_paper_sets (id, subject_id, exam_year, title)
+             VALUES (7, 1, 2024, 'Paper 2024')",
+            [],
+        )
+        .expect("paper should insert");
+        conn.execute(
+            "INSERT INTO questions (id, subject_id, family_id, topic_id)
+             VALUES (700, 1, NULL, 100)",
+            [],
+        )
+        .expect("question shell should insert");
+        conn.execute(
+            "UPDATE questions
+             SET question_format = 'mcq',
+                 stem = 'Find the probability of picking a blue counter from a bag.',
+                 explanation_text = 'The probability is the favourable outcomes over total outcomes.'",
+            [],
+        )
+        .expect("question text should update");
+        conn.execute(
+            "INSERT INTO past_paper_question_links (paper_id, question_id, section_label, question_number)
+             VALUES (7, 700, 'A', '1')",
+            [],
+        )
+        .expect("link should insert");
+
+        let years = PastPapersService::new(&conn)
+            .list_past_papers_for_subject(1)
+            .expect("paper years should load");
+
+        assert_eq!(years.len(), 1);
+        assert!(years[0].topic_ids.contains(&100));
+        assert!(years[0]
+            .keywords
+            .iter()
+            .any(|keyword| keyword.contains("Fractions")));
+        assert!(years[0]
+            .keywords
+            .iter()
+            .any(|keyword| keyword == "probability"));
+    }
+
     fn seed_schema(conn: &Connection) {
         for sql in [
             "CREATE TABLE question_families (
@@ -1409,12 +2259,16 @@ mod tests {
                 id INTEGER PRIMARY KEY,
                 subject_id INTEGER NOT NULL,
                 family_id INTEGER,
-                topic_id INTEGER
+                topic_id INTEGER,
+                question_format TEXT DEFAULT 'mcq',
+                stem TEXT DEFAULT '',
+                explanation_text TEXT DEFAULT ''
             )",
             "CREATE TABLE past_paper_sets (
                 id INTEGER PRIMARY KEY,
                 subject_id INTEGER NOT NULL,
                 exam_year INTEGER NOT NULL,
+                paper_code TEXT,
                 title TEXT NOT NULL
             )",
             "CREATE TABLE past_paper_question_links (

@@ -14,7 +14,9 @@ export interface CompileMockInput {
 
 export interface MockSessionDto {
   id: number
+  student_id: number
   subject_id: number
+  session_id: number
   mock_type: string
   status: string
   duration_minutes: number
@@ -60,8 +62,11 @@ export interface MockSessionSummaryDto {
 export interface SubmitMockAnswerInput {
   mock_session_id: number
   question_id: number
-  selected_option_id: number
-  confidence_level: string | null
+  selected_option_id: number | null
+  confidence_level?: string | null
+  response_time_ms?: number | null
+  skipped?: boolean
+  timed_out?: boolean
 }
 
 export interface MockCentreSnapshotDto {
@@ -81,6 +86,10 @@ export function compileMock(input: CompileMockInput): Promise<MockSessionDto> {
 
 export function startMock(mockSessionId: number): Promise<MockSessionDto> {
   return ipc<MockSessionDto>('start_mock', { mockSessionId })
+}
+
+export function getMockSession(mockSessionId: number): Promise<MockSessionDto> {
+  return ipc<MockSessionDto>('get_mock_session', { mockSessionId })
 }
 
 export function submitMockAnswer(input: SubmitMockAnswerInput): Promise<MockAnswerResultDto> {

@@ -1,0 +1,19 @@
+{
+  "id": "2026-04-19T04-05-19-946Z-ecoach-v2-student-home-warm-intellig",
+  "createdAt": "2026-04-19T04:05:19.954Z",
+  "prompt": "eCoach v2 student home — Warm Intelligence editorial bento workspace with Coach Directive hero, Quick Check live card, vitals strip, mastery rings, priority cases, activity feed, leaderboard",
+  "mode": null,
+  "url": null,
+  "viewport": "desktop",
+  "repoRoot": "C:\\Users\\surfaceSudio\\OneDrive\\ecoach",
+  "cwd": "C:\\Users\\surfaceSudio\\OneDrive\\ecoach",
+  "requestPath": "C:\\Users\\surfaceSudio\\OneDrive\\ecoach\\.aidesigner\\runs\\2026-04-19T04-05-19-946Z-ecoach-v2-student-home-warm-intellig\\request.json",
+  "repoContextPath": "C:\\Users\\surfaceSudio\\OneDrive\\ecoach\\.aidesigner\\runs\\2026-04-19T04-05-19-946Z-ecoach-v2-student-home-warm-intellig\\repo-context.json",
+  "designHtmlPath": "C:\\Users\\surfaceSudio\\OneDrive\\ecoach\\.aidesigner\\runs\\2026-04-19T04-05-19-946Z-ecoach-v2-student-home-warm-intellig\\design.html",
+  "previewPath": null,
+  "previewError": "Preview rendering requires puppeteer. Install it in the repo or alongside @aidesigner/agent-skills.",
+  "parentRunId": null,
+  "usage": null,
+  "transport": "mcp",
+  "remoteRunId": "5cad1415-d485-4ad2-8d1e-983bd48b120b"
+}

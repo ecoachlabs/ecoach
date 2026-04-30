@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import MathText from '@/components/question/MathText.vue'
 
 defineProps<{
   stem: string
@@ -21,7 +22,9 @@ function select(id: number) {
 
 <template>
   <div class="p-4 rounded-[var(--radius-lg)]" :style="{ backgroundColor: 'var(--card-bg)' }">
-    <p class="text-sm font-medium mb-3 leading-relaxed" :style="{ color: 'var(--text)' }">{{ stem }}</p>
+    <p class="text-sm font-medium mb-3 leading-relaxed" :style="{ color: 'var(--text)' }">
+      <MathText :text="stem" size="sm" />
+    </p>
     <div class="space-y-1.5">
       <button v-for="opt in options" :key="opt.id"
         class="w-full px-3 py-2 rounded-[var(--radius-md)] border text-left text-sm transition-all"
@@ -30,7 +33,7 @@ function select(id: number) {
         :disabled="!active"
         @click="select(opt.id)">
         <span class="font-bold text-xs mr-2" :style="{ color: 'var(--text-3)' }">{{ opt.label }}</span>
-        {{ opt.text }}
+        <MathText :text="opt.text" size="sm" />
       </button>
     </div>
   </div>

@@ -1,0 +1,427 @@
+<!--
+aesthetic_dna: "Warm Intelligence" - Editorial, calm, high-knowledge environment. Subtle structural tension.
+ui_paradigm: Asymmetrical Bento Board Workspace over continuous fixed-rail navigation.
+palette_choice: Paper (#faf8f5) foundation, Ink (#1a1612) typography, Terracotta/Amber/Teal hierarchy accents.
+-->
+<!DOCTYPE html>
+<html lang="en" class="antialiased text-[#1a1612] bg-[#faf8f5] selection:bg-[#0d9488]/20 selection:text-[#0d9488]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eCoach - Student Workspace</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Lora', 'serif'],
+                    },
+                    colors: {
+                        paper: '#faf8f5',
+                        ink: { DEFAULT: '#1a1612', muted: '#9e958d', light: '#e2ddcd' },
+                        accent: { teal: '#0d9488', terracotta: '#c2410c', amber: '#b45309' },
+                        surface: '#ffffff'
+                    },
+                    boxShadow: {
+                        'paper': '0 4px 20px -2px rgba(26, 22, 18, 0.04), 0 1px 3px rgba(26, 22, 18, 0.02)',
+                        'paper-hover': '0 12px 30px -4px rgba(26, 22, 18, 0.08), 0 4px 6px rgba(26, 22, 18, 0.04)',
+                        'float': '0 20px 40px -8px rgba(13, 148, 136, 0.15)',
+                    },
+                    animation: {
+                        'timer-deplete': 'deplete 20s linear forwards',
+                        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        deplete: { '0%': { width: '100%' }, '100%': { width: '0%' } },
+                        pulseGlow: {
+                            '0%, 100%': { filter: 'drop-shadow(0 0 8px rgba(13, 148, 136, 0.2))' },
+                            '50%': { filter: 'drop-shadow(0 0 16px rgba(13, 148, 136, 0.6))' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2ddcd; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9e958d; }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.5s;
+            transform: rotate(-90deg); transform-origin: 50% 50%;
+        }
+        .kente-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm20 20h20v20H20V20zM20 0h4v20h-4V0zm4 0h16v4H24V0zM0 20h4v20H0V20zm4 0h16v4H4v-4z' fill='%23b45309' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        .kente-border {
+            background: repeating-linear-gradient(90deg, #c2410c, #c2410c 10px, #0d9488 10px, #0d9488 20px, #b45309 20px, #b45309 30px, #faf8f5 30px, #faf8f5 40px);
+        }
+        .row-hover { transition: background-color 0.2s ease; }
+        .row-hover:hover { background-color: rgba(250, 248, 245, 0.8); }
+        .qc-option input[type="radio"] { display: none; }
+        .qc-option input[type="radio"]:checked + div { border-color: #0d9488; background-color: rgba(13, 148, 136, 0.05); }
+        .qc-option input[type="radio"]:checked + div .letter-indicator { background-color: #0d9488; color: #ffffff; border-color: #0d9488; }
+    </style>
+</head>
+<body class="flex relative min-h-screen">
+    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+        <defs>
+            <linearGradient id="emberGlowHigh" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#b45309" /><stop offset="40%" stop-color="#0d9488" /><stop offset="100%" stop-color="#0d9488" />
+            </linearGradient>
+            <linearGradient id="emberGlowMid" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#9e958d" /><stop offset="50%" stop-color="#b45309" /><stop offset="100%" stop-color="#c2410c" />
+            </linearGradient>
+            <linearGradient id="emberGlowLow" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#e2ddcd" /><stop offset="100%" stop-color="#9e958d" />
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-6 lg:px-12 py-10 pb-20">
+        <header class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+                <p class="text-ink-muted text-sm font-medium tracking-wide uppercase mb-1 flex items-center gap-2">
+                    <i class="ph ph-calendar-blank text-lg"></i> Tuesday, October 24
+                </p>
+                <h1 class="font-serif text-4xl lg:text-5xl font-medium tracking-tight text-ink">Good morning, <span class="text-accent-terracotta">Kwame.</span></h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-[#e2ddcd] text-sm font-medium hover:bg-paper transition-colors shadow-sm">
+                    <i class="ph ph-sparkle text-accent-amber"></i> Ask AI Tutor
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface border border-[#e2ddcd] text-ink hover:bg-paper transition-colors relative shadow-sm">
+                    <i class="ph ph-bell text-lg"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-accent-terracotta rounded-full border-2 border-surface"></span>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-min">
+            <div class="lg:col-span-8 bg-surface rounded-[32px] overflow-hidden shadow-paper border border-[#faf8f5] flex flex-col relative group">
+                <div class="h-1.5 w-full kente-border opacity-70"></div>
+                <div class="absolute inset-0 kente-pattern z-0 pointer-events-none"></div>
+                <div class="p-8 lg:p-10 flex-1 flex flex-col justify-center relative z-10">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink/5 border border-ink/10 text-xs font-semibold tracking-widest uppercase text-ink-muted">
+                            <i class="ph-fill ph-target text-accent-terracotta"></i> Coach Directive
+                        </div>
+                        <div class="flex items-center gap-1.5 px-3 py-1 bg-surface shadow-sm border border-[#e2ddcd] rounded-lg text-xs font-medium text-ink-muted">
+                            <i class="ph ph-clock text-accent-amber"></i> ~18 min focus
+                        </div>
+                    </div>
+                    <h2 class="font-serif text-3xl lg:text-4xl text-ink leading-tight mb-4 max-w-xl">
+                        Synthesize your knowledge on <span class="italic text-accent-teal">Cellular Respiration pathways.</span>
+                    </h2>
+                    <p class="text-ink-muted text-lg max-w-2xl mb-8 leading-relaxed font-sans">
+                        Your recall speed dropped by 14% in recent bio drills. Let's rebuild the neural links connecting glycolysis outcomes to the Krebs cycle before moving on.
+                    </p>
+                    <div class="mt-auto flex items-center gap-4">
+                        <button class="px-8 py-4 bg-accent-terracotta text-white rounded-2xl font-medium shadow-[0_8px_20px_-6px_rgba(194,65,12,0.4)] hover:bg-[#a6370a] hover:-translate-y-[1px] transition-all flex items-center gap-3">
+                            Initiate Deep Dive <i class="ph-bold ph-arrow-right"></i>
+                        </button>
+                        <button class="px-6 py-4 rounded-2xl text-ink font-medium hover:bg-ink/5 transition-colors">Delay Intervention</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 bg-surface rounded-[32px] overflow-hidden shadow-paper border border-[#e2ddcd]/50 flex flex-col relative">
+                <div class="bg-ink px-6 py-4 flex justify-between items-center text-paper">
+                    <span class="text-xs font-bold tracking-widest uppercase flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-accent-amber animate-pulse"></span> Live Sync
+                    </span>
+                    <span class="text-xs font-medium flex items-center gap-1"><i class="ph-fill ph-fire text-accent-terracotta"></i> 3x Combo</span>
+                </div>
+                <div class="p-6 flex-1 flex flex-col">
+                    <div class="mb-4">
+                        <span class="text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-2 block">History / Mid-Century</span>
+                        <h3 class="font-serif text-lg leading-snug">Which geopolitical strategy defined the initial formation of the Non-Aligned Movement?</h3>
+                    </div>
+                    <form class="flex flex-col gap-2.5 mt-auto">
+                        <label class="qc-option cursor-pointer group">
+                            <input type="radio" name="quick_check" value="A">
+                            <div class="flex items-center gap-3 p-3 rounded-xl border border-[#e2ddcd] hover:border-accent-teal hover:bg-accent-teal/5 transition-all">
+                                <span class="letter-indicator w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-lg border border-[#e2ddcd] text-xs font-semibold text-ink-muted transition-colors">A</span>
+                                <span class="text-sm font-medium text-ink">Bipolar economic isolationism</span>
+                            </div>
+                        </label>
+                        <label class="qc-option cursor-pointer group">
+                            <input type="radio" name="quick_check" value="B">
+                            <div class="flex items-center gap-3 p-3 rounded-xl border border-[#e2ddcd] hover:border-accent-teal hover:bg-accent-teal/5 transition-all">
+                                <span class="letter-indicator w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-lg border border-[#e2ddcd] text-xs font-semibold text-ink-muted transition-colors">B</span>
+                                <span class="text-sm font-medium text-ink">Strategic neutrality between superpowers</span>
+                            </div>
+                        </label>
+                        <label class="qc-option cursor-pointer group">
+                            <input type="radio" name="quick_check" value="C">
+                            <div class="flex items-center gap-3 p-3 rounded-xl border border-[#e2ddcd] hover:border-accent-teal hover:bg-accent-teal/5 transition-all">
+                                <span class="letter-indicator w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-lg border border-[#e2ddcd] text-xs font-semibold text-ink-muted transition-colors">C</span>
+                                <span class="text-sm font-medium text-ink">Aggressive imperial expansion</span>
+                            </div>
+                        </label>
+                    </form>
+                </div>
+                <div class="h-1.5 w-full bg-[#f0ebd8]">
+                    <div class="h-full bg-accent-amber animate-timer-deplete origin-left rounded-r-full"></div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-[#faf8f5] flex items-center justify-between group cursor-default">
+                    <div>
+                        <p class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">Ember Streak</p>
+                        <p class="font-serif text-3xl text-ink tracking-tight">42 <span class="text-sm font-sans text-ink-muted font-normal tracking-normal">days</span></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-accent-terracotta/10 flex items-center justify-center text-accent-terracotta group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-fire text-2xl"></i>
+                    </div>
+                </div>
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-[#faf8f5] flex items-center justify-between group cursor-default">
+                    <div>
+                        <p class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">Avg Accuracy</p>
+                        <p class="font-serif text-3xl text-ink tracking-tight">86<span class="text-2xl">%</span></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-accent-teal/10 flex items-center justify-center text-accent-teal group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-target text-2xl"></i>
+                    </div>
+                </div>
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-[#faf8f5] flex items-center justify-between group cursor-default">
+                    <div>
+                        <p class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">Today's Focus</p>
+                        <p class="font-serif text-3xl text-ink tracking-tight">1h <span class="text-sm font-sans text-ink-muted font-normal tracking-normal">14m</span></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-accent-amber/10 flex items-center justify-center text-accent-amber group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-hourglass-high text-2xl"></i>
+                    </div>
+                </div>
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-[#faf8f5] flex items-center justify-between group cursor-default">
+                    <div>
+                        <p class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">Week Output</p>
+                        <p class="font-serif text-3xl text-ink tracking-tight">312 <span class="text-sm font-sans text-ink-muted font-normal tracking-normal">Qs</span></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-ink/5 flex items-center justify-center text-ink group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-lightning text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 bg-surface rounded-[32px] p-8 shadow-paper border border-[#faf8f5] flex flex-col">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 class="font-serif text-2xl text-ink">Cognitive Mastery</h3>
+                        <p class="text-sm text-ink-muted mt-1">Holistic readiness progression vs. syllabus targets.</p>
+                    </div>
+                    <button class="text-sm font-medium text-accent-teal hover:text-ink transition-colors flex items-center gap-1">
+                        Full analysis <i class="ph ph-caret-right"></i>
+                    </button>
+                </div>
+                <div class="flex flex-col lg:flex-row gap-8 items-center justify-center flex-1">
+                    <div class="relative w-48 h-48 flex-shrink-0">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="none" class="stroke-[#faf8f5]" stroke-width="8"></circle>
+                        </svg>
+                        <svg class="w-full h-full absolute inset-0 progress-ring__circle animate-pulse-glow" viewBox="0 0 100 100" style="stroke-dasharray: 283; stroke-dashoffset: 73.58;">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="url(#emberGlowHigh)" stroke-width="8" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <span class="font-serif text-5xl font-medium tracking-tighter text-ink">74<span class="text-2xl text-ink-muted">%</span></span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-ink-muted mt-1">Overall</span>
+                        </div>
+                    </div>
+                    <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-paper transition-colors group cursor-pointer border border-transparent hover:border-[#e2ddcd]/50">
+                            <div class="relative w-12 h-12 flex-shrink-0">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" class="stroke-[#faf8f5]" stroke-width="12"></circle></svg>
+                                <svg class="w-full h-full absolute inset-0 progress-ring__circle" viewBox="0 0 100 100" style="stroke-dasharray: 264; stroke-dashoffset: 42.24;">
+                                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#emberGlowHigh)" stroke-width="12" stroke-linecap="round"></circle>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-ink text-sm">Biology</h4>
+                                <p class="text-xs text-ink-muted mt-0.5">84% • <span class="text-accent-terracotta">1 weak area</span></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-paper transition-colors group cursor-pointer border border-transparent hover:border-[#e2ddcd]/50">
+                            <div class="relative w-12 h-12 flex-shrink-0">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" class="stroke-[#faf8f5]" stroke-width="12"></circle></svg>
+                                <svg class="w-full h-full absolute inset-0 progress-ring__circle" viewBox="0 0 100 100" style="stroke-dasharray: 264; stroke-dashoffset: 100.32;">
+                                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#emberGlowMid)" stroke-width="12" stroke-linecap="round"></circle>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-ink text-sm">Chemistry</h4>
+                                <p class="text-xs text-ink-muted mt-0.5">62% • <span class="text-accent-terracotta">4 weak areas</span></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-paper transition-colors group cursor-pointer border border-transparent hover:border-[#e2ddcd]/50">
+                            <div class="relative w-12 h-12 flex-shrink-0">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" class="stroke-[#faf8f5]" stroke-width="12"></circle></svg>
+                                <svg class="w-full h-full absolute inset-0 progress-ring__circle" viewBox="0 0 100 100" style="stroke-dasharray: 264; stroke-dashoffset: 23.76;">
+                                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#emberGlowHigh)" stroke-width="12" stroke-linecap="round"></circle>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-ink text-sm">Physics</h4>
+                                <p class="text-xs text-ink-muted mt-0.5">91% • Secure</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-paper transition-colors group cursor-pointer border border-transparent hover:border-[#e2ddcd]/50">
+                            <div class="relative w-12 h-12 flex-shrink-0">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" class="stroke-[#faf8f5]" stroke-width="12"></circle></svg>
+                                <svg class="w-full h-full absolute inset-0 progress-ring__circle" viewBox="0 0 100 100" style="stroke-dasharray: 264; stroke-dashoffset: 147.84;">
+                                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#emberGlowLow)" stroke-width="12" stroke-linecap="round"></circle>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-ink text-sm">Mathematics</h4>
+                                <p class="text-xs text-ink-muted mt-0.5">44% • <span class="text-accent-terracotta">Critical mass needed</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 bg-surface rounded-[32px] p-8 shadow-paper border border-[#faf8f5] flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-serif text-xl text-ink">Priority Cases</h3>
+                    <span class="px-2.5 py-1 bg-accent-terracotta/10 text-accent-terracotta text-[10px] font-bold uppercase tracking-wider rounded-md">3 Interventions</span>
+                </div>
+                <div class="flex flex-col gap-3 flex-1 overflow-y-auto pr-2">
+                    <div class="p-4 rounded-2xl border border-[#e2ddcd]/60 hover:border-accent-terracotta/40 bg-white hover:bg-paper transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-medium text-ink text-sm">Thermodynamics</h4>
+                            <span class="w-2 h-2 rounded-full bg-accent-terracotta mt-1.5 shadow-[0_0_8px_rgba(194,65,12,0.5)]"></span>
+                        </div>
+                        <p class="text-xs text-ink-muted mb-3">Formula application speed is well below cohort average.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 text-xs font-medium bg-ink/5 hover:bg-ink hover:text-white rounded-lg transition-colors">Drill Formulas</button>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-[#e2ddcd]/60 hover:border-accent-amber/40 bg-white hover:bg-paper transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-medium text-ink text-sm">Stoichiometry</h4>
+                            <span class="w-2 h-2 rounded-full bg-accent-amber mt-1.5"></span>
+                        </div>
+                        <p class="text-xs text-ink-muted mb-3">Frequent conceptual errors in limiting reactant calculations.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 text-xs font-medium bg-ink/5 hover:bg-ink hover:text-white rounded-lg transition-colors">Review Theory</button>
+                            <button class="px-3 py-1.5 text-xs font-medium bg-transparent text-ink-muted hover:text-ink rounded-lg transition-colors">Skip for now</button>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-[#e2ddcd]/60 hover:border-[#e2ddcd] bg-white hover:bg-paper transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-medium text-ink text-sm">Calculus: Integration</h4>
+                            <span class="w-2 h-2 rounded-full bg-ink-muted mt-1.5"></span>
+                        </div>
+                        <p class="text-xs text-ink-muted mb-3">Decay detected. Hasn't been reviewed in 14 days.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 text-xs font-medium bg-ink/5 hover:bg-ink hover:text-white rounded-lg transition-colors">Quick Refresh</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 bg-surface rounded-[32px] p-8 shadow-paper border border-[#faf8f5]">
+                <h3 class="font-serif text-xl text-ink mb-6">Learning Subroutines</h3>
+                <div class="relative pl-6 border-l-2 border-[#e2ddcd]/40 space-y-8">
+                    <div class="relative">
+                        <div class="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-accent-teal flex items-center justify-center shadow-sm">
+                            <div class="w-1.5 h-1.5 bg-accent-teal rounded-full"></div>
+                        </div>
+                        <p class="text-xs text-ink-muted font-medium mb-1">2 hours ago</p>
+                        <h4 class="text-sm font-medium text-ink mb-1">Neurological pathway fortified <i class="ph-fill ph-check-circle text-accent-teal ml-1"></i></h4>
+                        <p class="text-sm text-ink-muted mb-3">You correctly answered 15 consecutive Molecular Biology questions, raising mastery to 88%.</p>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-accent-terracotta flex items-center justify-center shadow-sm">
+                            <div class="w-1.5 h-1.5 bg-accent-terracotta rounded-full animate-pulse"></div>
+                        </div>
+                        <p class="text-xs text-ink-muted font-medium mb-1">Yesterday, 4:15 PM</p>
+                        <h4 class="text-sm font-medium text-ink mb-1">Accuracy divergence detected</h4>
+                        <p class="text-sm text-ink-muted mb-3">Performance on "Kinematics" slipped under the 70% threshold during the mixed simulator.</p>
+                        <button class="px-4 py-2 text-xs font-medium rounded-xl border border-accent-terracotta text-accent-terracotta hover:bg-accent-terracotta hover:text-white transition-colors">
+                            Enter Recovery Zone
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-surface border-2 border-[#e2ddcd] flex items-center justify-center">
+                            <i class="ph-fill ph-robot text-[10px] text-ink-muted"></i>
+                        </div>
+                        <p class="text-xs text-ink-muted font-medium mb-1">Yesterday, 9:00 AM</p>
+                        <h4 class="text-sm font-medium text-ink mb-1">Syllabus update applied</h4>
+                        <p class="text-sm text-ink-muted">Tutor AI recalibrated your weekend mock exam to include heavier weighting on Chemistry weak points.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 bg-surface rounded-[32px] p-6 shadow-paper border border-[#faf8f5] flex flex-col">
+                <div class="flex justify-between items-end mb-5 px-2">
+                    <h3 class="font-serif text-xl text-ink">Ember Ranks</h3>
+                    <span class="text-xs text-ink-muted font-medium">Cohort Alpha</span>
+                </div>
+                <div class="flex-1 flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between p-2 rounded-xl row-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 text-center text-xs font-bold text-accent-amber">1</span>
+                            <span class="text-sm font-medium text-ink">Amara O.</span>
+                        </div>
+                        <span class="text-xs font-serif text-ink-muted">14,200</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl row-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 text-center text-xs font-bold text-ink-muted">2</span>
+                            <span class="text-sm font-medium text-ink">Tariq M.</span>
+                        </div>
+                        <span class="text-xs font-serif text-ink-muted">13,850</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl row-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 text-center text-xs font-bold text-[#b45309]/60">3</span>
+                            <span class="text-sm font-medium text-ink">Elena V.</span>
+                        </div>
+                        <span class="text-xs font-serif text-ink-muted">13,100</span>
+                    </div>
+                    <div class="my-1 border-t border-[#e2ddcd]/50 w-8 mx-auto"></div>
+                    <div class="flex items-center justify-between p-2 rounded-xl row-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 text-center text-xs text-ink-muted">4</span>
+                            <span class="text-sm text-ink-muted">David K.</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl row-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 text-center text-xs text-ink-muted">5</span>
+                            <span class="text-sm text-ink-muted">Zoe F.</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-accent-amber/10 border border-accent-amber/20 mt-1 shadow-sm relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-accent-amber"></div>
+                        <div class="flex items-center gap-3 ml-1">
+                            <span class="w-6 text-center text-xs font-bold text-accent-amber">6</span>
+                            <span class="text-sm font-semibold text-ink">Kwame (You)</span>
+                        </div>
+                        <span class="text-xs font-serif font-medium text-accent-amber">11,420 <i class="ph-bold ph-caret-up text-[10px]"></i></span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl row-hover opacity-70">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 text-center text-xs text-ink-muted">7</span>
+                            <span class="text-sm text-ink-muted">Sam R.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

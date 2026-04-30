@@ -22,10 +22,11 @@ export function useUpload() {
     loading.value = true
     error.value = ''
     try {
-      // In real implementation, this uploads files and creates a bundle
-      const result = await ipc<any>('create_bundle', {
+      const result = await ipc<any>('create_submission_bundle', {
         studentId,
-        fileCount: files.value.length,
+        title: files.value.length === 1
+          ? files.value[0].name
+          : `Offline upload bundle (${files.value.length} files)`,
       })
       bundleId.value = result?.id ?? null
       step.value = 'classify'

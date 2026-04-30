@@ -250,7 +250,9 @@ fn map_goal_profile(row: &rusqlite::Row<'_>) -> rusqlite::Result<GoalProfile> {
             .map_err(to_sql_conversion_error)?,
         dependency_goal_ids: parse_i64_list(&dependency_goals_json)
             .map_err(to_sql_conversion_error)?,
-        risk_level: row.get::<_, Option<String>>(20)?.unwrap_or_else(|| "normal".to_string()),
+        risk_level: row
+            .get::<_, Option<String>>(20)?
+            .unwrap_or_else(|| "normal".to_string()),
         suggested_weekly_effort_minutes: row.get(21)?,
         current_momentum_bp: row.get(23)?,
         completion_criteria: parse_string_list(&completion_criteria_json)
@@ -1253,11 +1255,18 @@ impl<'a> GoalsCalendarService<'a> {
                 (clamp_bp(score), goal)
             })
             .collect();
-        ranked.sort_by(|left, right| right.0.cmp(&left.0).then_with(|| left.1.id.cmp(&right.1.id)));
+        ranked.sort_by(|left, right| {
+            right
+                .0
+                .cmp(&left.0)
+                .then_with(|| left.1.id.cmp(&right.1.id))
+        });
 
         let focus_goal_ids = ranked
             .iter()
-            .filter(|(_, goal)| !matches!(goal.goal_state.as_str(), "paused" | "blocked" | "completed"))
+            .filter(|(_, goal)| {
+                !matches!(goal.goal_state.as_str(), "paused" | "blocked" | "completed")
+            })
             .take(3)
             .map(|(_, goal)| goal.id)
             .collect::<Vec<_>>();
@@ -1310,7 +1319,9 @@ impl<'a> GoalsCalendarService<'a> {
             rationale.push("Some goals are competing for the same weekly capacity.".to_string());
         }
         if !blocked_goal_ids.is_empty() {
-            rationale.push("Blocked goals should be resolved before they re-enter the main queue.".to_string());
+            rationale.push(
+                "Blocked goals should be resolved before they re-enter the main queue.".to_string(),
+            );
         }
 
         Ok(GoalArbitrationSnapshot {
@@ -1332,15 +1343,19 @@ impl<'a> GoalsCalendarService<'a> {
         subject_id: Option<i64>,
         anchor_date: &str,
     ) -> EcoachResult<WeeklyPlanSnapshot> {
-        let anchor =
-            NaiveDate::parse_from_str(anchor_date, "%Y-%m-%d").map_err(|err| {
-                EcoachError::Validation(format!("invalid anchor_date {}: {}", anchor_date, err))
-            })?;
+        let anchor = NaiveDate::parse_from_str(anchor_date, "%Y-%m-%d").map_err(|err| {
+            EcoachError::Validation(format!("invalid anchor_date {}: {}", anchor_date, err))
+        })?;
         let arbitration = self.build_goal_arbitration_snapshot(student_id)?;
-        let prioritized_event = self.build_academic_calendar_snapshot(student_id, Some(anchor_date))?
+        let prioritized_event = self
+            .build_academic_calendar_snapshot(student_id, Some(anchor_date))?
             .prioritized_event;
         let prioritized_exam_id = prioritized_event.as_ref().map(|event| event.id);
-        let prioritized_subject_id = subject_id.or_else(|| prioritized_event.as_ref().and_then(|event| event.subject_id));
+        let prioritized_subject_id = subject_id.or_else(|| {
+            prioritized_event
+                .as_ref()
+                .and_then(|event| event.subject_id)
+        });
         let weak_topic_ids = if let Some(subject_id) = prioritized_subject_id {
             let mut statement = self
                 .conn
@@ -1451,7 +1466,8 @@ impl<'a> GoalsCalendarService<'a> {
                         duration_minutes: repair_minutes,
                         focus_topic_ids: weak_topic_ids.iter().copied().take(3).collect(),
                         exam_support_scope: "all_active_tracks".to_string(),
-                        rationale: "Repair recurring upload and learner-truth weaknesses.".to_string(),
+                        rationale: "Repair recurring upload and learner-truth weaknesses."
+                            .to_string(),
                     });
                 }
                 if maintenance_minutes > 0 {
@@ -1461,7 +1477,8 @@ impl<'a> GoalsCalendarService<'a> {
                         duration_minutes: maintenance_minutes,
                         focus_topic_ids: weak_topic_ids.iter().copied().skip(1).take(2).collect(),
                         exam_support_scope: "maintenance".to_string(),
-                        rationale: "Prevent fragile knowledge from slipping out of reach.".to_string(),
+                        rationale: "Prevent fragile knowledge from slipping out of reach."
+                            .to_string(),
                     });
                 }
                 if continuity_minutes > 0 {
@@ -1471,7 +1488,8 @@ impl<'a> GoalsCalendarService<'a> {
                         duration_minutes: continuity_minutes,
                         focus_topic_ids: Vec::new(),
                         exam_support_scope: "all_active_tracks".to_string(),
-                        rationale: "Keep momentum alive on the day, even if capacity is tight.".to_string(),
+                        rationale: "Keep momentum alive on the day, even if capacity is tight."
+                            .to_string(),
                     });
                 }
             }
@@ -1491,7 +1509,10 @@ impl<'a> GoalsCalendarService<'a> {
             .map(|goal| format!("{} ({})", goal.title, goal.goal_state))
             .collect::<Vec<_>>();
         if due_memory_count > 0 {
-            priorities.push(format!("{} memory items are due for return-loop work.", due_memory_count));
+            priorities.push(format!(
+                "{} memory items are due for return-loop work.",
+                due_memory_count
+            ));
         }
         if let Some(event) = prioritized_event.as_ref() {
             priorities.push(format!("{} is shaping this week.", event.title));

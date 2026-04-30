@@ -2,13 +2,14 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { listMockSessions, type MockSessionSummaryDto } from '@/ipc/mock'
+import { listMockSessions, resumeMock, type MockSessionSummaryDto } from '@/ipc/mock'
 
 const auth = useAuthStore()
 const router = useRouter()
 
 const loading = ref(true)
 const sessions = ref<MockSessionSummaryDto[]>([])
+const openingMockId = ref<number | null>(null)
 
 onMounted(async () => {
   if (!auth.currentAccount) return
@@ -39,6 +40,33 @@ const bestGrade = computed(() => {
   if (!grades.length) return '—'
   return grades.sort((a, b) => gradeOrder.indexOf(a) - gradeOrder.indexOf(b))[0]
 })
+function isResumable(status: string) {
+  return status === 'active' || status === 'paused' || status === 'in_progress'
+}
+
+function canOpen(status: string) {
+  return status === 'completed' || isResumable(status)
+}
+
+async function openMock(session: MockSessionSummaryDto) {
+  if (session.status === 'completed') {
+    router.push(`/student/mock/review/${session.id}`)
+    return
+  }
+  if (!isResumable(session.status) || openingMockId.value === session.id) return
+
+  openingMockId.value = session.id
+  try {
+    if (session.status === 'paused') {
+      await resumeMock(session.id)
+    }
+    router.push(`/student/mock/hall/${session.id}`)
+  } catch (e) {
+    console.error('Failed to reopen mock:', e)
+  } finally {
+    openingMockId.value = null
+  }
+}
 </script>
 
 <template>
@@ -98,8 +126,8 @@ const bestGrade = computed(() => {
           v-for="s in sessions"
           :key="s.id"
           class="session-row w-full text-left px-7 py-4 flex items-center gap-5"
-          :disabled="s.status !== 'completed'"
-          @click="s.status === 'completed' ? router.push(`/student/mock/review/${s.id}`) : null"
+          :disabled="!canOpen(s.status)"
+          @click="openMock(s)"
         >
           <div
             class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
@@ -115,14 +143,16 @@ const bestGrade = computed(() => {
                 :style="{ color: gradeColor(s.grade).text }">{{ s.percentage.toFixed(1) }}%</span>
               <span v-if="s.paper_year" class="text-[11px]"
                 :style="{ color: 'var(--ink-muted)' }">{{ s.paper_year }}</span>
+              <span v-if="openingMockId === s.id" class="text-[11px]"
+                :style="{ color: 'var(--accent)' }">opening...</span>
             </div>
           </div>
 
           <span
             class="text-[10px] font-bold px-3 py-1 rounded-full flex-shrink-0"
             :style="{
-              background: s.status === 'completed' ? 'rgba(13,148,136,0.1)' : s.status === 'in_progress' ? 'rgba(180,83,9,0.1)' : 'var(--paper)',
-              color: s.status === 'completed' ? 'var(--accent)' : s.status === 'in_progress' ? 'var(--gold)' : 'var(--ink-muted)',
+              background: s.status === 'completed' ? 'rgba(13,148,136,0.1)' : isResumable(s.status) ? 'rgba(180,83,9,0.1)' : 'var(--paper)',
+              color: s.status === 'completed' ? 'var(--accent)' : isResumable(s.status) ? 'var(--gold)' : 'var(--ink-muted)',
             }"
           >{{ s.status.replace(/_/g, ' ') }}</span>
 

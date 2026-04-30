@@ -33,6 +33,7 @@ pub struct QuestionOption {
 pub struct QuestionSelectionRequest {
     pub subject_id: i64,
     pub topic_ids: Vec<i64>,
+    pub family_ids: Vec<i64>,
     pub target_question_count: usize,
     pub target_difficulty: Option<BasisPoints>,
     pub weakness_topic_ids: Vec<i64>,

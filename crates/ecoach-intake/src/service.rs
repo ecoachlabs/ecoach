@@ -13,12 +13,12 @@ use serde_json::{Value, json};
 use zip::ZipArchive;
 
 use crate::models::{
-    AcquisitionEvidenceCandidate, AcquisitionJobReport, BundleCoachApplicationResult, BundleFile,
-    BundleInboxItem, BundleOcrPage, BundleOcrWorkspace, BundleProcessReport,
-    BundleReviewNote, BundleReviewReflectionInput, BundleSharedPromotion,
-    BundleConfirmationInput, CoachGoalSignal, ContentAcquisitionJob, ExtractedInsight,
-    FollowUpRecommendation, PersonalAcademicVaultEntry, PersonalAcademicVaultSnapshot,
-    SubmissionBundle, TopicActionSummary, UploadedPaperReviewSnapshot, UploadedReviewItem,
+    AcquisitionEvidenceCandidate, AcquisitionJobReport, BundleCoachApplicationResult,
+    BundleConfirmationInput, BundleFile, BundleInboxItem, BundleOcrPage, BundleOcrWorkspace,
+    BundleProcessReport, BundleReviewNote, BundleReviewReflectionInput, BundleSharedPromotion,
+    CoachGoalSignal, ContentAcquisitionJob, ExtractedInsight, FollowUpRecommendation,
+    PersonalAcademicVaultEntry, PersonalAcademicVaultSnapshot, SubmissionBundle,
+    TopicActionSummary, UploadedPaperReviewSnapshot, UploadedReviewItem,
 };
 
 pub struct IntakeService<'a> {
@@ -295,12 +295,8 @@ impl<'a> IntakeService<'a> {
             let (bundle_id, confirmation_state, coach_application_status) =
                 row.map_err(|err| EcoachError::Storage(err.to_string()))?;
             let report = self.get_bundle_report(bundle_id)?;
-            let mut summary_points: Vec<String> = report
-                .recommended_actions
-                .iter()
-                .take(2)
-                .cloned()
-                .collect();
+            let mut summary_points: Vec<String> =
+                report.recommended_actions.iter().take(2).cloned().collect();
             if summary_points.is_empty() {
                 summary_points.extend(report.review_reasons.iter().take(2).cloned());
             }
@@ -419,7 +415,8 @@ impl<'a> IntakeService<'a> {
                 .get("reason_codes")
                 .and_then(Value::as_array)
                 .map(|items| {
-                    items.iter()
+                    items
+                        .iter()
                         .filter_map(Value::as_str)
                         .map(str::to_string)
                         .collect::<Vec<_>>()
@@ -696,7 +693,11 @@ impl<'a> IntakeService<'a> {
 
         let subject_id = resolve_subject_id_from_labels(self.conn, &report.detected_subjects)?;
         let profile_snapshot = build_question_environment_snapshot(&report);
-        self.upsert_question_environment_profile(report.bundle.student_id, subject_id, &profile_snapshot)?;
+        self.upsert_question_environment_profile(
+            report.bundle.student_id,
+            subject_id,
+            &profile_snapshot,
+        )?;
 
         let mut created_goal_ids = Vec::new();
         for signal in &report.coach_goal_signals {
@@ -813,7 +814,10 @@ impl<'a> IntakeService<'a> {
         let parent_alert_count =
             self.create_parent_alerts_from_followups(report.bundle.student_id, &report)?;
         let summary = vec![
-            format!("{} goal signals were applied to CoachHub.", created_goal_ids.len()),
+            format!(
+                "{} goal signals were applied to CoachHub.",
+                created_goal_ids.len()
+            ),
             format!(
                 "{} topic action summaries were promoted into the planning layer.",
                 report.topic_action_summaries.len()
@@ -1370,7 +1374,9 @@ impl<'a> IntakeService<'a> {
             )
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let rows = statement
-            .query_map(params![student_id, limit.max(1) as i64], |row| row.get::<_, i64>(0))
+            .query_map(params![student_id, limit.max(1) as i64], |row| {
+                row.get::<_, i64>(0)
+            })
             .map_err(|err| EcoachError::Storage(err.to_string()))?;
         let mut bundle_ids = Vec::new();
         for row in rows {
@@ -1392,15 +1398,14 @@ impl<'a> IntakeService<'a> {
                 [bundle_id],
                 |row| {
                     let summary_json: String = row.get(5)?;
-                    let promotion_summary = serde_json::from_str::<Value>(&summary_json).map_err(
-                        |err| {
+                    let promotion_summary =
+                        serde_json::from_str::<Value>(&summary_json).map_err(|err| {
                             rusqlite::Error::FromSqlConversionFailure(
                                 5,
                                 rusqlite::types::Type::Text,
                                 Box::new(err),
                             )
-                        },
-                    )?;
+                        })?;
                     Ok(BundleSharedPromotion {
                         id: row.get(0)?,
                         bundle_id: row.get(1)?,
@@ -6771,10 +6776,11 @@ fn build_question_environment_snapshot(report: &BundleProcessReport) -> Value {
         .any(|role| matches!(role.as_str(), "teacher_comments" | "teacher_handout"))
     {
         "teacher_guided"
-    } else if report
-        .bundle_kind
-        .contains("exam")
-        || report.detected_document_roles.iter().any(|role| role.contains("mark"))
+    } else if report.bundle_kind.contains("exam")
+        || report
+            .detected_document_roles
+            .iter()
+            .any(|role| role.contains("mark"))
     {
         "exam_heavy"
     } else {
@@ -6785,12 +6791,12 @@ fn build_question_environment_snapshot(report: &BundleProcessReport) -> Value {
     } else {
         "direct"
     };
-    let answer_depth_expectation = if report.answer_like_file_count > report.question_like_file_count
-    {
-        "deep"
-    } else {
-        "balanced"
-    };
+    let answer_depth_expectation =
+        if report.answer_like_file_count > report.question_like_file_count {
+            "deep"
+        } else {
+            "balanced"
+        };
     let objective_vs_structured_balance = if report.answer_like_file_count > 0
         && report.estimated_answer_count > report.estimated_question_count / 2
     {
@@ -9004,12 +9010,10 @@ mod tests {
 
         assert_eq!(vault.total_bundle_count, 1);
         assert_eq!(vault.promoted_bundle_count, 1);
-        assert!(
-            vault.active_topics.iter().any(|topic| {
-                topic.to_ascii_lowercase().contains("osmosis")
-                    || topic.to_ascii_lowercase().contains("diffusion")
-            })
-        );
+        assert!(vault.active_topics.iter().any(|topic| {
+            topic.to_ascii_lowercase().contains("osmosis")
+                || topic.to_ascii_lowercase().contains("diffusion")
+        }));
         assert_eq!(workspace.bundle.id, bundle_id);
         assert_eq!(workspace.review_priority, report.review_priority);
         assert!(!workspace.pages.is_empty());
@@ -9046,5 +9050,70 @@ mod tests {
         path.file_name()
             .and_then(|value| value.to_str())
             .expect("file name should be unicode")
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Public text-extraction API
+//
+// Re-exported from the crate root so other modules (past-papers
+// authoring, future admin content ingestion) can run a file through
+// the same adapter chain the bundle intake pipeline uses, without
+// having to pull in the whole bundle machinery. Zero DB access — this
+// is a pure file → text function.
+// ═══════════════════════════════════════════════════════════════════
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RecoveredText {
+    /// Which adapter produced the result (e.g. "sidecar", "docx_package",
+    /// "native_binary_pdftotext", "native_binary_tesseract", "missing_file",
+    /// "pdf_requires_ocr").
+    pub source: String,
+    /// 0–100 heuristic confidence from the originating adapter.
+    pub confidence_score: i64,
+    /// Full recovered text (pages joined with form-feed \u{0C} preserved).
+    pub text: String,
+    pub page_count: i64,
+    pub recovered_from_ocr: bool,
+    pub pages: Vec<RecoveredTextPage>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RecoveredTextPage {
+    pub page_number: i64,
+    pub label: String,
+    pub confidence_score: i64,
+    pub text: String,
+    pub preview: Option<String>,
+}
+
+/// Run the intake adapter chain on a single file and return the
+/// recovered text. `file_name` is used to infer file kind when
+/// `mime_type` isn't given (usually just pass `None` for the mime).
+pub fn extract_text_from_file(
+    path: &Path,
+    file_name: &str,
+    mime_type: Option<&str>,
+) -> RecoveredText {
+    let file_kind = infer_file_kind(file_name, mime_type);
+    let exists = path.exists();
+    let recovery = recover_text_sample(path, &file_kind, exists);
+    RecoveredText {
+        source: recovery.source,
+        confidence_score: recovery.confidence_score,
+        text: recovery.text.unwrap_or_default(),
+        page_count: recovery.page_count,
+        recovered_from_ocr: recovery.recovered_from_ocr,
+        pages: recovery
+            .pages
+            .into_iter()
+            .map(|p| RecoveredTextPage {
+                page_number: p.page_number,
+                label: p.label,
+                confidence_score: p.confidence_score,
+                text: p.text,
+                preview: p.preview,
+            })
+            .collect(),
     }
 }

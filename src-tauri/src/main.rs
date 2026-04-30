@@ -6,6 +6,24 @@ use tauri::Manager;
 mod commands;
 
 fn main() {
+    if let Ok(port) = std::env::var("ECOACH_WEBVIEW_DEBUG_PORT") {
+        let port = port.trim();
+        if !port.is_empty() {
+            let debug_arg = format!("--remote-debugging-port={port}");
+            let existing = std::env::var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS").unwrap_or_default();
+            let combined = if existing.trim().is_empty() {
+                debug_arg
+            } else if existing.contains("--remote-debugging-port=") {
+                existing
+            } else {
+                format!("{existing} {debug_arg}")
+            };
+            unsafe {
+                std::env::set_var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", combined);
+            }
+        }
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
@@ -202,6 +220,8 @@ fn main() {
             commands::get_parent_curriculum_summary,
             // Student Model
             commands::get_learner_truth,
+            commands::get_home_learning_stats,
+            commands::list_student_activity_history,
             commands::get_learner_evidence_fabric,
             commands::get_academic_scan,
             commands::get_weekly_change_summary,
@@ -223,6 +243,7 @@ fn main() {
             commands::register_curriculum_source,
             commands::add_curriculum_parse_candidate,
             commands::finalize_curriculum_source,
+            commands::get_content_foundry_source_report,
             commands::resolve_curriculum_review_task,
             commands::mark_curriculum_source_reviewed,
             commands::stage_curriculum_publish_job,
@@ -276,6 +297,7 @@ fn main() {
             commands::start_coach_mission_session,
             commands::compose_custom_test,
             commands::complete_session,
+            commands::flag_session_item,
             commands::generate_mock_blueprint,
             commands::start_mock_session,
             commands::enable_focus_mode,
@@ -286,6 +308,8 @@ fn main() {
             commands::list_session_presence_events,
             commands::submit_attempt,
             commands::complete_session_with_pipeline,
+            commands::recover_deferred_session_completions,
+            commands::backfill_historical_deferred_session_completions,
             // Diagnostics
             commands::launch_diagnostic,
             commands::get_diagnostic_battery,
@@ -309,6 +333,15 @@ fn main() {
             commands::list_session_questions,
             commands::list_mock_questions,
             // Questions
+            commands::get_admin_question_bank_stats,
+            commands::list_admin_questions,
+            commands::get_admin_question_editor,
+            commands::get_admin_question_editor_any,
+            commands::list_admin_question_options,
+            commands::upsert_admin_question,
+            commands::archive_admin_question,
+            commands::restore_admin_question,
+            commands::bulk_update_admin_questions,
             commands::choose_reactor_family,
             commands::create_question_generation_request,
             commands::process_question_generation_request,
@@ -325,12 +358,30 @@ fn main() {
             commands::queue_question_reclassification,
             commands::list_inverse_pressure_families,
             commands::list_comeback_candidate_families,
+            commands::list_past_paper_courses,
+            commands::list_past_papers_for_subject,
+            commands::list_past_paper_topic_counts,
+            commands::start_past_paper_section,
+            commands::start_past_paper_topic_session,
+            commands::admin_save_past_paper,
+            commands::admin_list_past_papers,
+            commands::admin_get_past_paper,
+            commands::admin_delete_past_paper,
+            commands::admin_extract_past_paper_text,
+            commands::admin_attach_question_asset,
+            commands::admin_delete_question_asset,
+            commands::list_question_assets,
+            commands::get_question_asset_bytes,
             commands::list_session_remediation_plans,
             commands::get_session_evidence_fabric,
             commands::build_elite_session_blueprint,
             commands::get_elite_profile,
             commands::list_elite_topic_domination,
             commands::build_elite_session_blueprint_report,
+            commands::score_elite_session,
+            commands::check_elite_badges,
+            commands::list_elite_personal_bests,
+            commands::list_elite_earned_badges,
             // Games
             commands::start_game,
             commands::submit_game_answer,
@@ -440,6 +491,9 @@ fn main() {
             commands::get_repair_plan,
             commands::advance_repair_item,
             commands::get_gap_dashboard,
+            commands::capture_gap_snapshot,
+            commands::list_gap_trend,
+            commands::list_gap_feed,
             // Readiness and parent
             commands::get_readiness_report,
             commands::generate_parent_digest,
@@ -459,6 +513,7 @@ fn main() {
             // Mock centre
             commands::compile_mock,
             commands::start_mock,
+            commands::get_mock_session,
             commands::submit_mock_answer,
             commands::get_mock_report,
             commands::pause_mock,

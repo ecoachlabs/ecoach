@@ -2,7 +2,7 @@
 defineProps<{
   hover?: boolean
   padding?: 'none' | 'sm' | 'md' | 'lg'
-  glow?: 'accent' | 'warm' | 'gold' | null
+  glow?: 'accent' | 'warm' | 'gold' | 'success' | null
 }>()
 </script>
 
@@ -21,6 +21,7 @@ defineProps<{
       boxShadow: glow === 'accent' ? 'var(--shadow-glow-accent)' :
                   glow === 'warm' ? 'var(--shadow-glow-warm)' :
                   glow === 'gold' ? 'var(--shadow-glow-gold)' :
+                  glow === 'success' ? '0 0 20px rgba(22, 163, 74, 0.16)' :
                   'var(--shadow-xs)',
     }"
   >

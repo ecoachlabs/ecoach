@@ -3,7 +3,15 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getLearnerTruth, listSubjects, type LearnerTruthDto, type SubjectDto } from '@/ipc/coach'
-import { getEliteProfile, listEliteTopicDomination, buildEliteSessionBlueprint, type EliteProfileDto, type EliteTopicProfileDto } from '@/ipc/elite'
+import {
+  buildEliteSessionBlueprint,
+  eliteUiModeToSessionClass,
+  getEliteProfile,
+  listEliteTopicDomination,
+  rememberEliteSessionClass,
+  type EliteProfileDto,
+  type EliteTopicProfileDto,
+} from '@/ipc/elite'
 import { startPracticeSession } from '@/ipc/sessions'
 import AppProgress from '@/components/ui/AppProgress.vue'
 import EliteIdentityPanel from '@/components/modes/elite/EliteIdentityPanel.vue'
@@ -71,14 +79,21 @@ async function startSession() {
   error.value = ''
   try {
     const blueprint = await buildEliteSessionBlueprint(auth.currentAccount.id, selectedSubjectId.value)
+    const sessionClass = eliteUiModeToSessionClass[selectedSession.value] ?? blueprint.session_class
+    const questionCount = ({
+      endurance_track: 16,
+      apex_mock: 14,
+      depth_lab: 12,
+    } as Record<string, number>)[sessionClass] ?? blueprint.target_question_count
     const session = await startPracticeSession({
       student_id: auth.currentAccount.id,
       subject_id: selectedSubjectId.value,
       topic_ids: blueprint.target_topic_ids as number[],
-      question_count: blueprint.target_question_count,
-      is_timed: selectedSession.value === 'sprint' || selectedSession.value === 'endurance' || selectedSession.value === 'apex',
+      question_count: questionCount,
+      is_timed: ['elite_sprint', 'endurance_track', 'apex_mock', 'perfect_run'].includes(sessionClass),
     })
-    router.push(`/student/session/${session.session_id}`)
+    rememberEliteSessionClass(session.session_id, sessionClass)
+    router.push(`/student/elite/session/${session.session_id}`)
   } catch (e: any) {
     error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to start session'
     starting.value = false

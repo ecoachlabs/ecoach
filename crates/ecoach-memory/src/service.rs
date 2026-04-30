@@ -596,40 +596,43 @@ impl<'a> MemoryService<'a> {
     pub fn get_due_rechecks(
         &self,
         student_id: i64,
+        subject_id: Option<i64>,
         limit: usize,
     ) -> EcoachResult<Vec<RecheckItem>> {
         let now = Utc::now().to_rfc3339();
         let mut stmt = self
             .conn
             .prepare(
-                "SELECT rs.id, rs.student_id, rs.node_id, rs.due_at, rs.schedule_type, rs.status,
+                "SELECT rs.id, rs.student_id, COALESCE(ms.topic_id, an.topic_id), rs.node_id, rs.due_at, rs.schedule_type, rs.status,
                         ms.memory_state, ms.memory_strength, ms.decay_risk,
                         t.name AS topic_name, an.canonical_title AS node_title
                  FROM recheck_schedules rs
                  LEFT JOIN memory_states ms
                      ON ms.student_id = rs.student_id AND ms.node_id IS rs.node_id
                  LEFT JOIN academic_nodes an ON an.id = rs.node_id
-                 LEFT JOIN topics t ON t.id = ms.topic_id
+                 LEFT JOIN topics t ON t.id = COALESCE(ms.topic_id, an.topic_id)
                  WHERE rs.student_id = ?1 AND rs.status = 'pending' AND rs.due_at <= ?2
+                   AND (?3 IS NULL OR t.subject_id = ?3)
                  ORDER BY rs.due_at ASC
-                 LIMIT ?3",
+                 LIMIT ?4",
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let rows = stmt
-            .query_map(params![student_id, now, limit as i64], |row| {
+            .query_map(params![student_id, now, subject_id, limit as i64], |row| {
                 Ok(RecheckItem {
                     id: row.get(0)?,
                     student_id: row.get(1)?,
-                    node_id: row.get(2)?,
-                    due_at: row.get(3)?,
-                    schedule_type: row.get(4)?,
-                    status: row.get(5)?,
-                    memory_state: row.get(6)?,
-                    memory_strength: row.get(7)?,
-                    decay_risk: row.get(8)?,
-                    topic_name: row.get(9)?,
-                    node_title: row.get(10)?,
+                    topic_id: row.get(2)?,
+                    node_id: row.get(3)?,
+                    due_at: row.get(4)?,
+                    schedule_type: row.get(5)?,
+                    status: row.get(6)?,
+                    memory_state: row.get(7)?,
+                    memory_strength: row.get(8)?,
+                    decay_risk: row.get(9)?,
+                    topic_name: row.get(10)?,
+                    node_title: row.get(11)?,
                 })
             })
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
@@ -956,6 +959,7 @@ impl<'a> MemoryService<'a> {
     pub fn list_topic_summaries(
         &self,
         student_id: i64,
+        subject_id: Option<i64>,
         limit: usize,
     ) -> EcoachResult<Vec<TopicMemorySummary>> {
         let now = Utc::now().to_rfc3339();
@@ -969,25 +973,26 @@ impl<'a> MemoryService<'a> {
                     SUM(CASE WHEN ms.memory_state IN ('accessible', 'anchoring', 'confirmed', 'locked_in', 'recovered') THEN 1 ELSE 0 END),
                     SUM(CASE WHEN ms.memory_state IN ('fragile', 'at_risk', 'fading', 'rebuilding') THEN 1 ELSE 0 END),
                     SUM(CASE WHEN ms.memory_state = 'collapsed' THEN 1 ELSE 0 END),
-                    SUM(CASE WHEN ms.review_due_at IS NOT NULL AND ms.review_due_at <= ?2 THEN 1 ELSE 0 END),
+                    SUM(CASE WHEN ms.review_due_at IS NOT NULL AND ms.review_due_at <= ?3 THEN 1 ELSE 0 END),
                     CAST(COALESCE(AVG(ms.memory_strength), 0) AS INTEGER),
                     MIN(ms.review_due_at)
                  FROM memory_states ms
                  INNER JOIN topics t ON t.id = ms.topic_id
                  WHERE ms.student_id = ?1
+                   AND (?2 IS NULL OR t.subject_id = ?2)
                    AND ms.topic_id IS NOT NULL
                  GROUP BY ms.topic_id, t.name
                  ORDER BY
-                    SUM(CASE WHEN ms.review_due_at IS NOT NULL AND ms.review_due_at <= ?2 THEN 1 ELSE 0 END) DESC,
+                    SUM(CASE WHEN ms.review_due_at IS NOT NULL AND ms.review_due_at <= ?3 THEN 1 ELSE 0 END) DESC,
                     SUM(CASE WHEN ms.memory_state IN ('fragile', 'at_risk', 'fading', 'rebuilding') THEN 1 ELSE 0 END) DESC,
                     CAST(COALESCE(AVG(ms.memory_strength), 0) AS INTEGER) ASC,
                     t.name ASC
-                 LIMIT ?3",
+                 LIMIT ?4",
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let rows = stmt
-            .query_map(params![student_id, now, limit as i64], |row| {
+            .query_map(params![student_id, subject_id, now, limit as i64], |row| {
                 Ok(TopicMemorySummary {
                     topic_id: row.get(0)?,
                     topic_name: row.get(1)?,
@@ -1012,7 +1017,11 @@ impl<'a> MemoryService<'a> {
         Ok(summaries)
     }
 
-    pub fn get_memory_dashboard(&self, student_id: i64) -> EcoachResult<MemoryDashboard> {
+    pub fn get_memory_dashboard(
+        &self,
+        student_id: i64,
+        subject_id: Option<i64>,
+    ) -> EcoachResult<MemoryDashboard> {
         let now = Utc::now().to_rfc3339();
 
         let stats: (i64, i64, i64, i64, i64, i64, i64) = self
@@ -1026,8 +1035,12 @@ impl<'a> MemoryService<'a> {
                     SUM(CASE WHEN memory_state = 'collapsed' THEN 1 ELSE 0 END),
                     CAST(COALESCE(AVG(memory_strength), 0) AS INTEGER),
                     SUM(CASE WHEN review_due_at IS NOT NULL AND review_due_at < ?2 AND memory_state != 'collapsed' THEN 1 ELSE 0 END)
-                 FROM memory_states WHERE student_id = ?1",
-                params![student_id, now],
+                 FROM memory_states ms
+                 LEFT JOIN academic_nodes an ON an.id = ms.node_id
+                 LEFT JOIN topics t ON t.id = COALESCE(ms.topic_id, an.topic_id)
+                 WHERE ms.student_id = ?1
+                   AND (?3 IS NULL OR t.subject_id = ?3)",
+                params![student_id, now, subject_id],
                 |row| {
                     Ok((
                         row.get(0)?,
@@ -1045,9 +1058,14 @@ impl<'a> MemoryService<'a> {
         let next_review_due: Option<String> = self
             .conn
             .query_row(
-                "SELECT MIN(review_due_at) FROM memory_states
-                 WHERE student_id = ?1 AND memory_state != 'collapsed' AND review_due_at IS NOT NULL",
-                [student_id],
+                "SELECT MIN(ms.review_due_at) FROM memory_states ms
+                 LEFT JOIN academic_nodes an ON an.id = ms.node_id
+                 LEFT JOIN topics t ON t.id = COALESCE(ms.topic_id, an.topic_id)
+                 WHERE ms.student_id = ?1
+                   AND ms.memory_state != 'collapsed'
+                   AND ms.review_due_at IS NOT NULL
+                   AND (?2 IS NULL OR t.subject_id = ?2)",
+                params![student_id, subject_id],
                 |row| row.get(0),
             )
             .optional()
@@ -1076,8 +1094,8 @@ impl<'a> MemoryService<'a> {
     ) -> EcoachResult<MemoryReturnLoop> {
         let queue_limit = (limit.max(3) * 4).min(48);
         let queue = self.build_review_queue(student_id, queue_limit)?;
-        let summaries = self.list_topic_summaries(student_id, limit.max(6))?;
-        let dashboard = self.get_memory_dashboard(student_id)?;
+        let summaries = self.list_topic_summaries(student_id, None, limit.max(6))?;
+        let dashboard = self.get_memory_dashboard(student_id, None)?;
         let now = Utc::now().to_rfc3339();
         let repair_outcomes = self.list_recent_repair_outcomes(student_id, limit.max(8) * 2)?;
 

@@ -871,5 +871,745 @@
     "wrong_answer_pattern": null,
     "correction_hint": "Use guided examples, contrast cases, and step-by-step checks tied to source exemplars.",
     "severity": 5600
+  },
+  {
+    "topic_code": "B7.1.1.1",
+    "title": "B7.1.1.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.1.1",
+    "title": "B7.1.1.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.1.2",
+    "title": "B7.1.1.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.1.2",
+    "title": "B7.1.1.2 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.1.2",
+    "title": "B7.1.1.2 Misstep: Notation Or Representation Misread",
+    "misconception_statement": "Misreads notation, labels, units, signs, powers, coordinates, fractions, or graph information.",
+    "cause_type": "language_confusion",
+    "wrong_answer_pattern": "concept_label_confusion",
+    "correction_hint": "Translate the notation into words and check units, signs, labels, and order before calculating.",
+    "severity": 6500,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.2.1",
+    "title": "B7.1.2.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.2.1",
+    "title": "B7.1.2.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.2.2",
+    "title": "B7.1.2.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.2.2",
+    "title": "B7.1.2.2 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.2.3",
+    "title": "B7.1.2.3 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.2.3",
+    "title": "B7.1.2.3 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.3.1",
+    "title": "B7.1.3.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.3.1",
+    "title": "B7.1.3.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.3.2",
+    "title": "B7.1.3.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.3.2",
+    "title": "B7.1.3.2 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.3.3",
+    "title": "B7.1.3.3 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.1.3.3",
+    "title": "B7.1.3.3 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.2.1.1",
+    "title": "B7.2.1.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.2.1.1",
+    "title": "B7.2.1.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.2.2.1",
+    "title": "B7.2.2.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.2.2.1",
+    "title": "B7.2.2.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.2.3.1",
+    "title": "B7.2.3.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.2.3.1",
+    "title": "B7.2.3.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.3.1.1",
+    "title": "B7.3.1.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.3.1.2",
+    "title": "B7.3.1.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.3.2.1",
+    "title": "B7.3.2.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.3.2.1",
+    "title": "B7.3.2.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.3.2.2",
+    "title": "B7.3.2.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.3.2.3",
+    "title": "B7.3.2.3 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.3.2.3",
+    "title": "B7.3.2.3 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B7.4.1.2",
+    "title": "B7.4.1.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "title": "B8.1.1.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.1.1.1",
+    "title": "B8.1.1.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.1.2.1",
+    "title": "B8.1.2.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.1.2.1",
+    "title": "B8.1.2.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.1.2.2",
+    "title": "B8.1.2.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.1.2.3",
+    "title": "B8.1.2.3 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.1.2.3",
+    "title": "B8.1.2.3 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.1.4.1",
+    "title": "B8.1.4.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.2.1.1",
+    "title": "B8.2.1.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.2.2.1",
+    "title": "B8.2.2.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.2.3.1",
+    "title": "B8.2.3.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.2.3.1",
+    "title": "B8.2.3.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.3.1.1",
+    "title": "B8.3.1.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.3.1.2",
+    "title": "B8.3.1.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.3.2.2",
+    "title": "B8.3.2.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.3.2.2",
+    "title": "B8.3.2.2 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.4.1.2",
+    "title": "B8.4.1.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B8.4.1.2",
+    "title": "B8.4.1.2 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.1.1",
+    "title": "B9.1.1.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.1.1",
+    "title": "B9.1.1.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.1.2",
+    "title": "B9.1.1.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.1.2",
+    "title": "B9.1.1.2 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.2.1",
+    "title": "B9.1.2.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.2.1",
+    "title": "B9.1.2.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.2.1",
+    "title": "B9.1.2.1 Misstep: Notation Or Representation Misread",
+    "misconception_statement": "Misreads notation, labels, units, signs, powers, coordinates, fractions, or graph information.",
+    "cause_type": "language_confusion",
+    "wrong_answer_pattern": "concept_label_confusion",
+    "correction_hint": "Translate the notation into words and check units, signs, labels, and order before calculating.",
+    "severity": 6500,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.2.2",
+    "title": "B9.1.2.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.2.4",
+    "title": "B9.1.2.4 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.2.4",
+    "title": "B9.1.2.4 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.1.4.1",
+    "title": "B9.1.4.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.2.2.1",
+    "title": "B9.2.2.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.2.2.1",
+    "title": "B9.2.2.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.2.3.1",
+    "title": "B9.2.3.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.2.3.1",
+    "title": "B9.2.3.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.3.1.1",
+    "title": "B9.3.1.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.3.1.2",
+    "title": "B9.3.1.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.3.1.2",
+    "title": "B9.3.1.2 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.3.2.1",
+    "title": "B9.3.2.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.3.2.1",
+    "title": "B9.3.2.1 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.3.2.2",
+    "title": "B9.3.2.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.3.3.1",
+    "title": "B9.3.3.1 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.4.1.2",
+    "title": "B9.4.1.2 Misstep: Surface Value Copy",
+    "misconception_statement": "Chooses an answer because it repeats a visible number, keyword, or shape of the question without completing the required mathematical step.",
+    "cause_type": "surface_similarity",
+    "wrong_answer_pattern": "surface_pattern_copy",
+    "correction_hint": "Pause to identify what is being asked, list the given values, then perform the needed operation before comparing options.",
+    "severity": 5800,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.4.1.2",
+    "title": "B9.4.1.2 Misstep: Wrong Operation Or Formula",
+    "misconception_statement": "Uses a related operation, inverse operation, or familiar formula in the wrong context.",
+    "cause_type": "step_confusion",
+    "wrong_answer_pattern": "formula_selection_error",
+    "correction_hint": "Match the operation or formula to the condition in the stem before substituting values.",
+    "severity": 7000,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
+  },
+  {
+    "topic_code": "B9.4.1.2",
+    "title": "B9.4.1.2 Misstep: Notation Or Representation Misread",
+    "misconception_statement": "Misreads notation, labels, units, signs, powers, coordinates, fractions, or graph information.",
+    "cause_type": "language_confusion",
+    "wrong_answer_pattern": "concept_label_confusion",
+    "correction_hint": "Translate the notation into words and check units, signs, labels, and order before calculating.",
+    "severity": 6500,
+    "generated_by": "math-ccp-b7b9-analytics-v1"
   }
 ]

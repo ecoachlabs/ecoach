@@ -427,6 +427,14 @@ const RUNTIME_MIGRATIONS: &[Migration] = &[
         id: "101_identity_pin_policy",
         sql: include_str!("../../../migrations/runtime/101_identity_pin_policy.sql"),
     },
+    Migration {
+        id: "102_session_deferred_completion",
+        sql: include_str!("../../../migrations/runtime/102_session_deferred_completion.sql"),
+    },
+    Migration {
+        id: "103_question_assets",
+        sql: include_str!("../../../migrations/runtime/103_question_assets.sql"),
+    },
 ];
 
 pub fn run_runtime_migrations(connection: &mut Connection) -> EcoachResult<()> {

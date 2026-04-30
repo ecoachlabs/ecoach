@@ -1,0 +1,34 @@
+{
+  "id": "2026-04-19T04-05-19-946Z-ecoach-v2-student-home-warm-intellig",
+  "createdAt": "2026-04-19T04:05:24.273Z",
+  "repoRoot": "C:\\Users\\surfaceSudio\\OneDrive\\ecoach",
+  "prompt": "eCoach v2 student home — Warm Intelligence editorial bento workspace with Coach Directive hero, Quick Check live card, vitals strip, mastery rings, priority cases, activity feed, leaderboard",
+  "targetRouteHint": null,
+  "targetFileHint": null,
+  "detectedFrameworks": [],
+  "componentLibraries": [],
+  "stylingSystems": [],
+  "routeCandidates": [],
+  "tokenSources": [],
+  "componentDirectories": [],
+  "htmlStructure": {
+    "title": "eCoach - Student Workspace",
+    "primaryHeading": "Good morning, Kwame.",
+    "sectionCount": 0,
+    "buttonCount": 10,
+    "formCount": 1,
+    "cardLikeCount": 0,
+    "hasNavigation": false,
+    "hasFooter": false,
+    "hasPricingSignals": false,
+    "hasDashboardSignals": false
+  },
+  "recommendations": [
+    "Use the generated preview as the visual truth source while porting the layout."
+  ],
+  "warnings": [
+    "No frontend framework was detected. Validate the target surface manually before porting.",
+    "No obvious route targets were detected. Choose a target file deliberately before editing.",
+    "The artifact includes form markup. Reconnect validation, labels, and submit behavior using repo-native patterns."
+  ]
+}

@@ -194,6 +194,7 @@ pub struct MemoryStateRecord {
 pub struct RecheckItem {
     pub id: i64,
     pub student_id: i64,
+    pub topic_id: Option<i64>,
     pub node_id: Option<i64>,
     pub due_at: String,
     pub schedule_type: String,

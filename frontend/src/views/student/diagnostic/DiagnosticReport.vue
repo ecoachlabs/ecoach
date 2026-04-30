@@ -84,7 +84,7 @@ function handleExport() {
         <AppButton variant="secondary" size="sm" :loading="generating" @click="handleExport">
           Export PDF
         </AppButton>
-        <AppButton variant="primary" size="sm" @click="router.push('/student')">
+        <AppButton variant="primary" size="sm" @click="router.push('/student/coach')">
           Go to Coach Hub
         </AppButton>
       </template>
@@ -270,7 +270,7 @@ function handleExport() {
         </AppCard>
 
         <div class="mt-6">
-          <AppButton variant="primary" size="lg" @click="router.push('/student')">
+          <AppButton variant="primary" size="lg" @click="router.push('/student/coach')">
             Go to Coach Hub — Your Plan is Ready
           </AppButton>
         </div>

@@ -11,6 +11,7 @@ tauri-build = { version = "2", features = [] }
 ecoach-coach-brain = { path = "../crates/ecoach-coach-brain" }
 ecoach-commands = { path = "../crates/ecoach-commands" }
 ecoach-content = { path = "../crates/ecoach-content" }
+ecoach-elite = { path = "../crates/ecoach-elite" }
 ecoach-games = { path = "../crates/ecoach-games" }
 ecoach-identity = { path = "../crates/ecoach-identity" }
 ecoach-library = { path = "../crates/ecoach-library" }

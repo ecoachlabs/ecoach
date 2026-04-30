@@ -1,0 +1,90 @@
+[recovery][deferred_completion] processing session_id=162 status=active state=failed reason=start_practice_session
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.1ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.0ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 0.3ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 2778.8ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 6473.5ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.1ms count=159
+[perf][coach.build_orchestration_snapshot] persist_snapshot 21.6ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 1.1ms
+[perf][coach.build_orchestration_snapshot] total 9280.1ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 9280.3ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.2ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 0.2ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 0.1ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.2ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 0.3ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 0.2ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 0.1ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 0.4ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 0.1ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 0.4ms
+[perf][coach.evaluate_coach_brain] total 9283.4ms
+[recovery][deferred_completion] success session_id=162 status=abandoned reason=start_practice_session
+[perf][tauri.backfill_historical_deferred_session_completions] enter student_id=2 stale_after_seconds=3600 max_sessions=Some(1)
+[recovery][deferred_completion] pending session_id=3 previous_state=idle reason=historical_backfill
+[perf][tauri.backfill_historical_deferred_session_completions] exit 42.3ms
+[perf][tauri.recover_deferred_session_completions] enter student_id=2 max_sessions=Some(1)
+[recovery][deferred_completion] processing session_id=3 status=active state=pending reason=app_entry
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.1ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.2ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.2ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 0.7ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 4141.0ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 8479.5ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.2ms count=159
+[perf][coach.build_orchestration_snapshot] persist_snapshot 16.5ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 1.2ms
+[perf][coach.build_orchestration_snapshot] total 12641.2ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 12641.5ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.2ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 0.5ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 0.1ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.2ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 0.2ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 0.2ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 0.1ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 0.2ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 0.1ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 0.2ms
+[perf][coach.evaluate_coach_brain] total 12645.0ms
+[recovery][deferred_completion] success session_id=3 status=abandoned reason=app_entry
+[perf][tauri.recover_deferred_session_completions] exit 12779.7ms
+[perf][tauri.recover_deferred_session_completions] enter student_id=2 max_sessions=Some(1)
+[perf][tauri.recover_deferred_session_completions] exit 0.6ms
+[perf][tauri.recover_deferred_session_completions] enter student_id=2 max_sessions=Some(1)
+[perf][tauri.recover_deferred_session_completions] exit 1.1ms
+[perf][tauri.complete_session_with_pipeline] enter student_id=2 session_id=153
+[perf][rust.complete_session_with_pipeline] enter student_id=2 session_id=153
+[recovery][deferred_completion] skip_already_processed session_id=153 reason=explicit_completion
+[perf][rust.complete_session_with_pipeline] total 5.3ms
+[perf][tauri.complete_session_with_pipeline] exit 5.6ms
+[perf][tauri.complete_session_with_pipeline] enter student_id=2 session_id=153
+[perf][rust.complete_session_with_pipeline] enter student_id=2 session_id=153
+[recovery][deferred_completion] skip_already_processed session_id=153 reason=explicit_completion
+[perf][rust.complete_session_with_pipeline] total 5.8ms
+[perf][tauri.complete_session_with_pipeline] exit 6.1ms
+[perf][tauri.submit_attempt] enter session_id=164 session_item_id=1013 question_id=2875
+[perf][rust.submit_attempt] enter session_id=164 session_item_id=1013 question_id=2875 selected_option_id=Some(11497)
+[perf][rust.submit_attempt] session.lookup 0.2ms
+[recovery][deferred_completion] pending session_id=164 previous_state=idle reason=submit_attempt.defer_coach_brain
+[perf][rust.submit_attempt] session.record_outcome 11.1ms
+[perf][rust.submit_attempt] student_model.process_answer 146.8ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 67.0ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 182.5ms
+[perf][rust.submit_attempt] session.get_session_snapshot 0.3ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 408.3ms
+[perf][rust.submit_attempt] outer_total 408.6ms
+[perf][tauri.submit_attempt] exit 408.8ms

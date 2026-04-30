@@ -2849,11 +2849,7 @@ impl<'a> PackService<'a> {
     }
 
     fn validate_pack_shape(&self, pack_path: &Path) -> EcoachResult<()> {
-        let required_paths = [
-            "manifest.json",
-            "curriculum",
-            "curriculum/topics.json",
-        ];
+        let required_paths = ["manifest.json", "curriculum", "curriculum/topics.json"];
 
         for required in required_paths {
             let target = pack_path.join(required);
@@ -3125,9 +3121,7 @@ fn country_name_from_manifest(manifest: &PackManifest, country_code: &str) -> St
 }
 
 fn humanize_code_or_phrase(value: &str) -> String {
-    let normalized_value = value
-        .trim()
-        .replace(['_', '-'], " ");
+    let normalized_value = value.trim().replace(['_', '-'], " ");
     let normalized = normalized_value
         .split_whitespace()
         .map(|segment| segment.to_string())
@@ -3156,7 +3150,11 @@ fn titleize_token(token: &str) -> String {
             let Some(first) = chars.next() else {
                 return String::new();
             };
-            format!("{}{}", first.to_ascii_uppercase(), chars.as_str().to_ascii_lowercase())
+            format!(
+                "{}{}",
+                first.to_ascii_uppercase(),
+                chars.as_str().to_ascii_lowercase()
+            )
         }
     }
 }
@@ -3612,6 +3610,60 @@ mod tests {
         let question_count: i64 = conn
             .query_row("SELECT COUNT(*) FROM questions", [], |row| row.get(0))
             .expect("question count should be queryable");
+        let questions_per_topic_min: i64 = conn
+            .query_row(
+                "SELECT MIN(topic_question_count)
+                 FROM (
+                    SELECT t.id, COUNT(q.id) AS topic_question_count
+                    FROM topics t
+                    LEFT JOIN questions q ON q.topic_id = t.id
+                    WHERE t.node_type = 'topic'
+                    GROUP BY t.id
+                 )",
+                [],
+                |row| row.get(0),
+            )
+            .expect("minimum topic question count should be queryable");
+        let questions_per_topic_max: i64 = conn
+            .query_row(
+                "SELECT MAX(topic_question_count)
+                 FROM (
+                    SELECT t.id, COUNT(q.id) AS topic_question_count
+                    FROM topics t
+                    LEFT JOIN questions q ON q.topic_id = t.id
+                    WHERE t.node_type = 'topic'
+                    GROUP BY t.id
+                 )",
+                [],
+                |row| row.get(0),
+            )
+            .expect("maximum topic question count should be queryable");
+        let question_family_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM question_families", [], |row| {
+                row.get(0)
+            })
+            .expect("question family count should be queryable");
+        let intelligence_profile_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM question_intelligence_profiles",
+                [],
+                |row| row.get(0),
+            )
+            .expect("question intelligence profile count should be queryable");
+        let intelligence_link_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM question_intelligence_links",
+                [],
+                |row| row.get(0),
+            )
+            .expect("question intelligence link count should be queryable");
+        let approved_profile_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM question_intelligence_profiles WHERE review_status = 'approved'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("approved profile count should be queryable");
         let objective_count: i64 = conn
             .query_row("SELECT COUNT(*) FROM learning_objectives", [], |row| {
                 row.get(0)
@@ -3652,7 +3704,9 @@ mod tests {
             )
             .expect("curriculum version should exist");
         let curriculum_family_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM curriculum_families", [], |row| row.get(0))
+            .query_row("SELECT COUNT(*) FROM curriculum_families", [], |row| {
+                row.get(0)
+            })
             .expect("curriculum family count should be queryable");
         let curriculum_subject_track_count: i64 = conn
             .query_row(
@@ -3662,10 +3716,14 @@ mod tests {
             )
             .expect("curriculum subject track count should be queryable");
         let curriculum_level_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM curriculum_levels", [], |row| row.get(0))
+            .query_row("SELECT COUNT(*) FROM curriculum_levels", [], |row| {
+                row.get(0)
+            })
             .expect("curriculum level count should be queryable");
         let curriculum_node_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM curriculum_nodes", [], |row| row.get(0))
+            .query_row("SELECT COUNT(*) FROM curriculum_nodes", [], |row| {
+                row.get(0)
+            })
             .expect("curriculum node count should be queryable");
         let curriculum_prerequisite_count: i64 = conn
             .query_row(
@@ -3681,23 +3739,87 @@ mod tests {
                 |row| row.get(0),
             )
             .expect("topic description should be queryable");
+        let wrong_option_without_misconception_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM question_options
+                 WHERE is_correct = 0
+                   AND misconception_id IS NULL",
+                [],
+                |row| row.get(0),
+            )
+            .expect("wrong option misconception coverage should be queryable");
+        let generic_distractor_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM question_options
+                 WHERE is_correct = 0
+                   AND (
+                    distractor_intent IS NULL
+                    OR distractor_intent NOT LIKE '%Misstep:%'
+                    OR distractor_intent NOT LIKE '%Reveals:%'
+                    OR distractor_intent NOT LIKE '%Needs attention:%'
+                   )",
+                [],
+                |row| row.get(0),
+            )
+            .expect("distractor diagnostic coverage should be queryable");
+        let thin_explanation_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM questions
+                 WHERE explanation_text IS NULL
+                   OR explanation_text NOT LIKE 'How to solve:%'
+                   OR explanation_text NOT LIKE '%Step-by-step solution:%'
+                   OR explanation_text NOT LIKE '%Why each option is right or wrong:%'
+                   OR explanation_text NOT LIKE '%What each wrong answer reveals:%'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("question explanation quality should be queryable");
+        let missing_snapshot_payload_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*)
+                 FROM questions
+                 WHERE intelligence_snapshot IS NULL
+                   OR intelligence_snapshot NOT LIKE '%solution_breakdown%'
+                   OR intelligence_snapshot NOT LIKE '%latex_stem%'
+                   OR intelligence_snapshot NOT LIKE '%latex_options%'
+                   OR intelligence_snapshot NOT LIKE '%latex_answer%'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("question snapshot payload should be queryable");
 
         assert_eq!(status, "active");
         assert_eq!(topic_count, 73);
-        assert_eq!(question_count, 0);
+        assert_eq!(question_count, 2850);
+        assert_eq!(questions_per_topic_min, 50);
+        assert_eq!(questions_per_topic_max, 50);
+        assert_eq!(question_family_count, 342);
+        assert_eq!(intelligence_profile_count, question_count);
+        assert_eq!(approved_profile_count, question_count);
+        assert!(intelligence_link_count >= question_count * 7);
         assert_eq!(objective_count, 180);
         assert_eq!(node_count, 179);
-        assert_eq!(misconception_count, 97);
+        assert_eq!(misconception_count, 171);
         assert_eq!(knowledge_entry_count, 140);
         assert_eq!(strand_count, 4);
         assert_eq!(sub_strand_count, 12);
-        assert_eq!(curriculum_version_label, "Ghana NaCCA Mathematics CCP B7-B9 2020");
+        assert_eq!(
+            curriculum_version_label,
+            "Ghana NaCCA Mathematics CCP B7-B9 2020"
+        );
         assert_eq!(curriculum_family_count, 1);
         assert_eq!(curriculum_subject_track_count, 1);
         assert_eq!(curriculum_level_count, 3);
         assert_eq!(curriculum_node_count, 73);
         assert_eq!(curriculum_prerequisite_count, 56);
         assert_eq!(has_anchor_text, 1);
+        assert_eq!(wrong_option_without_misconception_count, 0);
+        assert_eq!(generic_distractor_count, 0);
+        assert_eq!(thin_explanation_count, 0);
+        assert_eq!(missing_snapshot_payload_count, 0);
     }
 
     #[test]
@@ -3732,7 +3854,9 @@ mod tests {
             )
             .expect("curriculum subject track count should be queryable");
         let curriculum_node_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM curriculum_nodes", [], |row| row.get(0))
+            .query_row("SELECT COUNT(*) FROM curriculum_nodes", [], |row| {
+                row.get(0)
+            })
             .expect("curriculum node count should be queryable");
         let curriculum_prerequisite_count: i64 = conn
             .query_row(

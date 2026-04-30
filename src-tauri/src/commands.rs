@@ -2,11 +2,15 @@ use ecoach_coach_brain::{
     AnswerRubricInput, ConstructedAnswerEvaluationInput, ExamStrategySessionInput,
 };
 use ecoach_commands::assessment_commands::{
-    EliteSessionBlueprintDto, PastPaperComebackSignalDto, PastPaperInverseSignalDto,
+    AdminPastPaperFullDto, AdminPastPaperListItem, AdminPastPaperSaveInput,
+    AdminPastPaperSaveResult, EliteSessionBlueprintDto, PastPaperComebackSignalDto,
+    PastPaperCourseSummaryDto, PastPaperInverseSignalDto, PastPaperTopicCountDto,
+    PastPaperYearDto, QuestionAssetBytesDto, QuestionAssetMetaDto, RecoveredTextDto,
     SessionEvidenceFabricDto, SessionRemediationPlanDto,
 };
 use ecoach_commands::attempt_commands::{
-    AttemptResultDto, SessionCompletionResultDto, SubmitAttemptInput,
+    AttemptResultDto, DeferredCompletionRecoveryResultDto, SessionCompletionResultDto,
+    SubmitAttemptInput,
 };
 use ecoach_commands::coach_commands::{
     AcademicCalendarEventDto, AcademicCalendarEventInputDto, AcademicCalendarSnapshotDto,
@@ -21,9 +25,9 @@ use ecoach_commands::coach_commands::{
     EngagementEventInputDto, EngagementRiskProfileDto, EngineRegistryDto, EvidenceEventDto,
     EvidenceProbeRecommendationDto, ExamStrategyProfileDto, GoalArbitrationSnapshotDto,
     GoalFeasibilityDto, GoalProfileDto, GoalProfileInputDto, GoalRecommendationDto,
-    InstructionalObjectEnvelopeDto, InterventionModeDefinitionDto,
-    JourneyRouteSnapshotDto, KnowledgeMapNodeDto, LearnerMisconceptionSnapshotDto,
-    MasteryMapNodeDto, ParentAccessSettingsDto, ParentAccessSettingsInputDto, ParentAlertRecordDto,
+    InstructionalObjectEnvelopeDto, InterventionModeDefinitionDto, JourneyRouteSnapshotDto,
+    KnowledgeMapNodeDto, LearnerMisconceptionSnapshotDto, MasteryMapNodeDto,
+    ParentAccessSettingsDto, ParentAccessSettingsInputDto, ParentAlertRecordDto,
     ParentFeedbackInputDto, ParentFeedbackRecordDto, PersonalizationSnapshotDto,
     PreparationIntensityProfileDto, ReminderScheduleDto, ReminderScheduleInputDto,
     RevengeQueueItemDto, RiseModeProfileDto, StageTransitionResultDto, SteppedAttemptResultDto,
@@ -34,19 +38,13 @@ use ecoach_commands::coach_commands::{
     TopicProofCertificationDto, TopicTeachingProfileDto, TopicTeachingStrategyDto,
     VelocitySnapshotDto, WeeklyPlanSnapshotDto,
 };
-use ecoach_commands::intake_commands::{
-    BundleCoachApplicationResultDto, BundleConfirmationInputDto, BundleInboxItemDto,
-    BundleOcrWorkspaceDto, BundleReviewReflectionInputDto, BundleSharedPromotionDto,
-    PersonalAcademicVaultSnapshotDto, UploadedPaperReviewSnapshotDto,
-};
 use ecoach_commands::content_commands::{
     ContentEvaluationRunDto, ContentEvidenceRecordDto, ContentIntelligenceOverviewDto,
     ContentPublishDecisionDto, ContentResearchCandidateDto, ContentResearchMissionDto,
     ContentRetrievalResultDto, ContentSnapshotDto, ContentSourceDetailDto,
-    ContentSourceGovernanceInputDto, ContentSourcePolicyDto,
-    ContentSourceRegistryEntryDto, ContentSourceSegmentDto,
-    RebuildContentIndexResult,
-    ResourceApplicabilityResolutionDto, ResourceLearningRecordDto, ResourceOrchestrationResultDto,
+    ContentSourceGovernanceInputDto, ContentSourcePolicyDto, ContentSourceRegistryEntryDto,
+    ContentSourceSegmentDto, RebuildContentIndexResult, ResourceApplicabilityResolutionDto,
+    ResourceLearningRecordDto, ResourceOrchestrationResultDto,
     TopicResourceIntelligenceSnapshotDto,
 };
 use ecoach_commands::curriculum_commands::{
@@ -76,6 +74,11 @@ use ecoach_commands::diagnostic_commands::{
 use ecoach_commands::game_commands::{
     DuelSessionDto, GameAnswerResultDto, GameSessionDto, GameSummaryDto, LeaderboardEntryDto,
     MindstackStateDto, TugOfWarStateDto,
+};
+use ecoach_commands::intake_commands::{
+    BundleCoachApplicationResultDto, BundleConfirmationInputDto, BundleInboxItemDto,
+    BundleOcrWorkspaceDto, BundleReviewReflectionInputDto, BundleSharedPromotionDto,
+    PersonalAcademicVaultSnapshotDto, UploadedPaperReviewSnapshotDto,
 };
 use ecoach_commands::library_commands::{
     AddLibraryNoteInputDto, AddShelfItemInputDto, BuildRevisionPackFromTemplateInputDto,
@@ -108,36 +111,42 @@ use ecoach_commands::premium_commands::{
     EntitlementSnapshotDto, InterventionDto, PremiumStrategySnapshotDto, RiskDashboardDto,
     RiskFlagDto,
 };
+use ecoach_commands::product_commands::{
+    ARealProfileDto, ARealProfileInputDto, ARealSurfaceDto, AdminProductSurfaceDto,
+    CapabilityRegistryDto, ContentHealthReadModelDto, EntitlementManagerSnapshotDto,
+    ParentProductSurfaceDto, PersonalAcademicVaultDto, SemanticsRegistryDto,
+    StudentProductSurfaceDto, SuperAdminControlTowerDto,
+};
+use ecoach_commands::question_commands::{
+    AdminQuestionArchiveResultDto, AdminQuestionBankStatsDto, AdminQuestionBulkActionInput,
+    AdminQuestionBulkActionResultDto, AdminQuestionEditorDto, AdminQuestionListFilter,
+    AdminQuestionListItemDto, AdminQuestionOptionDto, AdminQuestionUpsertInput,
+    AdminQuestionUpsertResultDto,
+};
 use ecoach_commands::readiness_commands::{ParentDigestDto, ReadinessReportDto};
 use ecoach_commands::recovery_commands::{
     DatabaseBackupResultDto, DatabaseBackupStatusDto, ExportRecoverySnapshotInputDto,
     RebuildWorkspaceStatusDto, RecoverySnapshotResultDto,
 };
 use ecoach_commands::repair_commands::{
-    GapDashboardDto, GapRepairPlanDetailDto, GapRepairPlanDto, GapScoreCardDto,
+    GapDashboardDto, GapFeedItemDto, GapRepairPlanDetailDto, GapRepairPlanDto,
+    GapScoreCardDto, GapSnapshotResultDto, GapTrendPointDto,
 };
 use ecoach_commands::reporting_commands::{
     AdminOversightSnapshotDto, HouseholdDashboardSnapshotDto, ParentDashboardSnapshotDto,
     ReportingStrategySummaryDto,
 };
 use ecoach_commands::session_commands::{CoachMissionSessionPlanDto, FocusModeConfigDto};
-use ecoach_commands::product_commands::{
-    ARealProfileDto, ARealProfileInputDto, ARealSurfaceDto, AdminProductSurfaceDto, CapabilityRegistryDto,
-    ContentHealthReadModelDto, EntitlementManagerSnapshotDto, ParentProductSurfaceDto,
-    PersonalAcademicVaultDto, SemanticsRegistryDto, StudentProductSurfaceDto,
-    SuperAdminControlTowerDto,
-};
 use ecoach_commands::student_commands::{
-    AcademicScanResult, AttentionNeededItem, LearnerEvidenceFabricDto, LearnerTruthDto,
-    WeeklyChangeDto,
+    AcademicScanResult, AttentionNeededItem, HomeLearningStatsDto, LearnerEvidenceFabricDto,
+    LearnerTruthDto, StudentActivityHistoryItemDto, WeeklyChangeDto,
 };
 use ecoach_commands::{
-    AppState, CommandError, assessment_commands, attempt_commands, coach_commands,
-    content_commands, curriculum_commands, diagnostic_commands, dtos::*, game_commands,
-    identity_commands, intake_commands, library_commands, memory_commands, mock_commands,
-    premium_commands, product_commands, question_commands, readiness_commands,
-    recovery_commands, repair_commands, reporting_commands, session_commands, student_commands,
-    traps_commands,
+    assessment_commands, attempt_commands, coach_commands, content_commands, curriculum_commands,
+    diagnostic_commands, dtos::*, game_commands, identity_commands, intake_commands,
+    library_commands, memory_commands, mock_commands, premium_commands, product_commands,
+    question_commands, readiness_commands, recovery_commands, repair_commands, reporting_commands,
+    session_commands, student_commands, traps_commands, AppState, CommandError,
 };
 use ecoach_content::{
     ContentEvaluationRunInput, ContentEvidenceRecordInput, ContentPublishDecisionInput,
@@ -163,6 +172,7 @@ use ecoach_questions::{
 use ecoach_sessions::{CustomTestStartInput, MockBlueprintInput, PracticeSessionStartInput};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::time::Instant;
 use tauri::State;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -182,6 +192,7 @@ pub struct QuestionOptionDto {
     pub id: i64,
     pub label: String,
     pub text: String,
+    pub is_correct: bool,
     pub misconception_id: Option<i64>,
     pub distractor_intent: Option<String>,
 }
@@ -189,17 +200,26 @@ pub struct QuestionOptionDto {
 /// A session item hydrated with its question stem and answer options.
 /// Returned by `list_session_questions` so the frontend can render a full
 /// question without making one request per option.
+///
+/// `paper_exam_year` and `paper_question_number` are populated when the
+/// underlying question originated from a past paper (via
+/// `past_paper_question_links`). For non-past-paper questions (coach-brain
+/// generated, mental math, etc.) they remain `None` and the UI hides the
+/// paper-origin strip.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionQuestionDto {
     pub item_id: i64,
     pub question_id: i64,
     pub display_order: i64,
     pub stem: String,
+    pub explanation_text: Option<String>,
     pub question_format: String,
     pub difficulty: i64,
     pub estimated_time_seconds: Option<i64>,
     pub is_answered: bool,
     pub flagged: bool,
+    pub paper_exam_year: Option<i64>,
+    pub paper_question_number: Option<String>,
     pub options: Vec<QuestionOptionDto>,
 }
 
@@ -216,7 +236,7 @@ pub fn get_question_options(
     state.with_connection(|conn| {
         let mut stmt = conn
             .prepare(
-                "SELECT id, option_label, option_text, misconception_id, distractor_intent
+                "SELECT id, option_label, option_text, is_correct, misconception_id, distractor_intent
                  FROM question_options
                  WHERE question_id = ?1
                  ORDER BY position ASC, id ASC",
@@ -228,8 +248,9 @@ pub fn get_question_options(
                     id: row.get(0)?,
                     label: row.get(1)?,
                     text: row.get(2)?,
-                    misconception_id: row.get(3)?,
-                    distractor_intent: row.get(4)?,
+                    is_correct: row.get::<_, i64>(3)? == 1,
+                    misconception_id: row.get(4)?,
+                    distractor_intent: row.get(5)?,
                 })
             })
             .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?
@@ -248,13 +269,36 @@ pub fn list_session_questions(
     session_id: i64,
 ) -> Result<Vec<SessionQuestionDto>, CommandError> {
     state.with_connection(|conn| {
+        let total_start = Instant::now();
         // 1. Fetch all session items joined with their questions
+        let item_query_start = Instant::now();
+        // Paper-origin columns: populated by a correlated subquery
+        // against `past_paper_question_links` so each question surfaces
+        // the year + paper question number when it came from a past
+        // paper. Non-past-paper questions yield NULLs and the UI hides
+        // the origin strip.
         let mut item_stmt = conn
             .prepare(
                 "SELECT si.id, si.question_id, si.display_order,
-                        q.stem, q.question_format, q.difficulty, q.estimated_time_seconds,
-                        CASE WHEN si.selected_option_id IS NOT NULL THEN 1 ELSE 0 END,
-                        si.flagged
+                        q.stem, q.explanation_text, q.question_format, q.difficulty_level, q.estimated_time_seconds,
+                        CASE
+                            WHEN si.status IN ('answered', 'skipped', 'timed_out')
+                              OR si.selected_option_id IS NOT NULL
+                            THEN 1 ELSE 0
+                        END,
+                        si.flagged,
+                        (SELECT pps.exam_year
+                           FROM past_paper_question_links ppql
+                           INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                          WHERE ppql.question_id = si.question_id
+                          ORDER BY pps.exam_year DESC, ppql.id ASC
+                          LIMIT 1)                                AS paper_exam_year,
+                        (SELECT ppql.question_number
+                           FROM past_paper_question_links ppql
+                           INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                          WHERE ppql.question_id = si.question_id
+                          ORDER BY pps.exam_year DESC, ppql.id ASC
+                          LIMIT 1)                                AS paper_question_number
                  FROM session_items si
                  INNER JOIN questions q ON q.id = si.question_id
                  WHERE si.session_id = ?1
@@ -269,19 +313,32 @@ pub fn list_session_questions(
                     question_id: row.get(1)?,
                     display_order: row.get(2)?,
                     stem: row.get(3)?,
-                    question_format: row.get(4)?,
-                    difficulty: row.get::<_, Option<i64>>(5)?.unwrap_or(5000),
-                    estimated_time_seconds: row.get(6)?,
-                    is_answered: row.get::<_, i64>(7)? == 1,
-                    flagged: row.get::<_, i64>(8)? == 1,
+                    explanation_text: row.get(4)?,
+                    question_format: row.get(5)?,
+                    difficulty: row.get::<_, Option<i64>>(6)?.unwrap_or(5000),
+                    estimated_time_seconds: row.get(7)?,
+                    is_answered: row.get::<_, i64>(8)? == 1,
+                    flagged: row.get::<_, i64>(9)? == 1,
+                    paper_exam_year: row.get(10)?,
+                    paper_question_number: row.get(11)?,
                     options: vec![],
                 })
             })
             .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?
             .filter_map(|r| r.ok())
             .collect();
+        eprintln!(
+            "[perf][tauri.list_session_questions] session_id={} items.query {:.1}ms item_count={}",
+            session_id,
+            item_query_start.elapsed().as_secs_f64() * 1000.0,
+            items.len()
+        );
 
         if items.is_empty() {
+            eprintln!(
+                "[perf][tauri.list_session_questions] total {:.1}ms",
+                total_start.elapsed().as_secs_f64() * 1000.0
+            );
             return Ok(items);
         }
 
@@ -293,13 +350,14 @@ pub fn list_session_questions(
             .collect::<Vec<_>>()
             .join(",");
         let opt_sql = format!(
-            "SELECT id, question_id, option_label, option_text, misconception_id, distractor_intent
+            "SELECT id, question_id, option_label, option_text, is_correct, misconception_id, distractor_intent
              FROM question_options
              WHERE question_id IN ({})
              ORDER BY question_id ASC, position ASC, id ASC",
             id_list
         );
 
+        let option_query_start = Instant::now();
         let mut opt_stmt = conn
             .prepare(&opt_sql)
             .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
@@ -312,17 +370,24 @@ pub fn list_session_questions(
                         id: row.get(0)?,
                         label: row.get(2)?,
                         text: row.get(3)?,
-                        misconception_id: row.get(4)?,
-                        distractor_intent: row.get(5)?,
+                        is_correct: row.get::<_, i64>(4)? == 1,
+                        misconception_id: row.get(5)?,
+                        distractor_intent: row.get(6)?,
                     },
                 ))
             })
             .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?
             .filter_map(|r| r.ok())
             .collect();
+        eprintln!(
+            "[perf][tauri.list_session_questions] options.query {:.1}ms option_count={}",
+            option_query_start.elapsed().as_secs_f64() * 1000.0,
+            options.len()
+        );
 
         // 3. Attach options to their respective items
         use std::collections::HashMap;
+        let attach_start = Instant::now();
         let mut opt_map: HashMap<i64, Vec<QuestionOptionDto>> = HashMap::new();
         for (qid, opt) in options {
             opt_map.entry(qid).or_default().push(opt);
@@ -332,6 +397,14 @@ pub fn list_session_questions(
                 item.options = opts;
             }
         }
+        eprintln!(
+            "[perf][tauri.list_session_questions] options.attach {:.1}ms",
+            attach_start.elapsed().as_secs_f64() * 1000.0
+        );
+        eprintln!(
+            "[perf][tauri.list_session_questions] total {:.1}ms",
+            total_start.elapsed().as_secs_f64() * 1000.0
+        );
 
         Ok(items)
     })
@@ -356,12 +429,33 @@ pub fn list_mock_questions(
             .map_err(|e| ecoach_substrate::EcoachError::Storage(e.to_string()))?;
 
         // 2. Fetch session items joined with questions
+        // Paper-origin columns: populated by a correlated subquery
+        // against `past_paper_question_links` so each question surfaces
+        // the year + paper question number when it came from a past
+        // paper. Non-past-paper questions yield NULLs and the UI hides
+        // the origin strip.
         let mut item_stmt = conn
             .prepare(
                 "SELECT si.id, si.question_id, si.display_order,
-                        q.stem, q.question_format, q.difficulty, q.estimated_time_seconds,
-                        CASE WHEN si.selected_option_id IS NOT NULL THEN 1 ELSE 0 END,
-                        si.flagged
+                        q.stem, q.explanation_text, q.question_format, q.difficulty_level, q.estimated_time_seconds,
+                        CASE
+                            WHEN si.status IN ('answered', 'skipped', 'timed_out')
+                              OR si.selected_option_id IS NOT NULL
+                            THEN 1 ELSE 0
+                        END,
+                        si.flagged,
+                        (SELECT pps.exam_year
+                           FROM past_paper_question_links ppql
+                           INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                          WHERE ppql.question_id = si.question_id
+                          ORDER BY pps.exam_year DESC, ppql.id ASC
+                          LIMIT 1)                                AS paper_exam_year,
+                        (SELECT ppql.question_number
+                           FROM past_paper_question_links ppql
+                           INNER JOIN past_paper_sets pps ON pps.id = ppql.paper_id
+                          WHERE ppql.question_id = si.question_id
+                          ORDER BY pps.exam_year DESC, ppql.id ASC
+                          LIMIT 1)                                AS paper_question_number
                  FROM session_items si
                  INNER JOIN questions q ON q.id = si.question_id
                  WHERE si.session_id = ?1
@@ -376,11 +470,14 @@ pub fn list_mock_questions(
                     question_id: row.get(1)?,
                     display_order: row.get(2)?,
                     stem: row.get(3)?,
-                    question_format: row.get(4)?,
-                    difficulty: row.get::<_, Option<i64>>(5)?.unwrap_or(5000),
-                    estimated_time_seconds: row.get(6)?,
-                    is_answered: row.get::<_, i64>(7)? == 1,
-                    flagged: row.get::<_, i64>(8)? == 1,
+                    explanation_text: row.get(4)?,
+                    question_format: row.get(5)?,
+                    difficulty: row.get::<_, Option<i64>>(6)?.unwrap_or(5000),
+                    estimated_time_seconds: row.get(7)?,
+                    is_answered: row.get::<_, i64>(8)? == 1,
+                    flagged: row.get::<_, i64>(9)? == 1,
+                    paper_exam_year: row.get(10)?,
+                    paper_question_number: row.get(11)?,
                     options: vec![],
                 })
             })
@@ -399,7 +496,7 @@ pub fn list_mock_questions(
             .collect::<Vec<_>>()
             .join(",");
         let opt_sql = format!(
-            "SELECT id, question_id, option_label, option_text, misconception_id, distractor_intent
+            "SELECT id, question_id, option_label, option_text, is_correct, misconception_id, distractor_intent
              FROM question_options
              WHERE question_id IN ({})
              ORDER BY question_id ASC, position ASC, id ASC",
@@ -418,8 +515,9 @@ pub fn list_mock_questions(
                         id: row.get(0)?,
                         label: row.get(2)?,
                         text: row.get(3)?,
-                        misconception_id: row.get(4)?,
-                        distractor_intent: row.get(5)?,
+                        is_correct: row.get::<_, i64>(4)? == 1,
+                        misconception_id: row.get(5)?,
+                        distractor_intent: row.get(6)?,
                     },
                 ))
             })
@@ -2146,16 +2244,29 @@ pub fn get_learner_truth(
 }
 
 #[tauri::command]
+pub fn get_home_learning_stats(
+    state: State<'_, AppState>,
+    student_id: i64,
+) -> Result<HomeLearningStatsDto, CommandError> {
+    student_commands::get_home_learning_stats(&state, student_id)
+}
+
+#[tauri::command]
+pub fn list_student_activity_history(
+    state: State<'_, AppState>,
+    student_id: i64,
+    limit: Option<usize>,
+) -> Result<Vec<StudentActivityHistoryItemDto>, CommandError> {
+    student_commands::list_student_activity_history(&state, student_id, limit.unwrap_or(32))
+}
+
+#[tauri::command]
 pub fn get_learner_evidence_fabric(
     state: State<'_, AppState>,
     student_id: i64,
     limit_per_stream: Option<usize>,
 ) -> Result<LearnerEvidenceFabricDto, CommandError> {
-    student_commands::get_learner_evidence_fabric(
-        &state,
-        student_id,
-        limit_per_stream.unwrap_or(8),
-    )
+    student_commands::get_learner_evidence_fabric(&state, student_id, limit_per_stream.unwrap_or(8))
 }
 
 #[tauri::command]
@@ -2306,6 +2417,14 @@ pub fn finalize_curriculum_source(
     source_upload_id: i64,
 ) -> Result<ContentFoundrySourceReportDto, CommandError> {
     content_commands::finalize_curriculum_source(&state, source_upload_id)
+}
+
+#[tauri::command]
+pub fn get_content_foundry_source_report(
+    state: State<'_, AppState>,
+    source_upload_id: i64,
+) -> Result<ContentFoundrySourceReportDto, CommandError> {
+    content_commands::get_curriculum_source_report(&state, source_upload_id)
 }
 
 #[tauri::command]
@@ -2610,7 +2729,9 @@ pub fn get_content_intelligence_overview(
 }
 
 #[tauri::command]
-pub fn rebuild_content_index(state: State<'_, AppState>) -> Result<RebuildContentIndexResult, CommandError> {
+pub fn rebuild_content_index(
+    state: State<'_, AppState>,
+) -> Result<RebuildContentIndexResult, CommandError> {
     content_commands::rebuild_content_index(&state)
 }
 
@@ -2769,6 +2890,16 @@ pub fn complete_session(
 }
 
 #[tauri::command]
+pub fn flag_session_item(
+    state: State<'_, AppState>,
+    session_id: i64,
+    item_id: i64,
+    flagged: bool,
+) -> Result<(), CommandError> {
+    session_commands::flag_session_item(&state, session_id, item_id, flagged)
+}
+
+#[tauri::command]
 pub fn generate_mock_blueprint(
     state: State<'_, AppState>,
     input: MockBlueprintInput,
@@ -2849,7 +2980,17 @@ pub fn submit_attempt(
     state: State<'_, AppState>,
     input: SubmitAttemptInput,
 ) -> Result<AttemptResultDto, CommandError> {
-    attempt_commands::submit_attempt(&state, input)
+    let total_start = Instant::now();
+    eprintln!(
+        "[perf][tauri.submit_attempt] enter session_id={} session_item_id={} question_id={}",
+        input.session_id, input.session_item_id, input.question_id
+    );
+    let result = attempt_commands::submit_attempt(&state, input);
+    eprintln!(
+        "[perf][tauri.submit_attempt] exit {:.1}ms",
+        total_start.elapsed().as_secs_f64() * 1000.0
+    );
+    result
 }
 
 #[tauri::command]
@@ -2858,7 +2999,66 @@ pub fn complete_session_with_pipeline(
     student_id: i64,
     session_id: i64,
 ) -> Result<SessionCompletionResultDto, CommandError> {
-    attempt_commands::complete_session_with_pipeline(&state, student_id, session_id)
+    let total_start = Instant::now();
+    eprintln!(
+        "[perf][tauri.complete_session_with_pipeline] enter student_id={} session_id={}",
+        student_id, session_id
+    );
+    let result = attempt_commands::complete_session_with_pipeline(&state, student_id, session_id);
+    eprintln!(
+        "[perf][tauri.complete_session_with_pipeline] exit {:.1}ms",
+        total_start.elapsed().as_secs_f64() * 1000.0
+    );
+    result
+}
+
+#[tauri::command]
+pub fn recover_deferred_session_completions(
+    state: State<'_, AppState>,
+    student_id: i64,
+    max_sessions: Option<usize>,
+) -> Result<DeferredCompletionRecoveryResultDto, CommandError> {
+    let total_start = Instant::now();
+    eprintln!(
+        "[perf][tauri.recover_deferred_session_completions] enter student_id={} max_sessions={:?}",
+        student_id, max_sessions
+    );
+    let result = attempt_commands::recover_deferred_completion_sessions(
+        &state,
+        student_id,
+        "app_entry",
+        max_sessions,
+    );
+    eprintln!(
+        "[perf][tauri.recover_deferred_session_completions] exit {:.1}ms",
+        total_start.elapsed().as_secs_f64() * 1000.0
+    );
+    result
+}
+
+#[tauri::command]
+pub fn backfill_historical_deferred_session_completions(
+    state: State<'_, AppState>,
+    student_id: i64,
+    stale_after_seconds: i64,
+    max_sessions: Option<usize>,
+) -> Result<DeferredCompletionRecoveryResultDto, CommandError> {
+    let total_start = Instant::now();
+    eprintln!(
+        "[perf][tauri.backfill_historical_deferred_session_completions] enter student_id={} stale_after_seconds={} max_sessions={:?}",
+        student_id, stale_after_seconds, max_sessions
+    );
+    let result = attempt_commands::backfill_historical_deferred_completion_sessions(
+        &state,
+        student_id,
+        stale_after_seconds,
+        max_sessions,
+    );
+    eprintln!(
+        "[perf][tauri.backfill_historical_deferred_session_completions] exit {:.1}ms",
+        total_start.elapsed().as_secs_f64() * 1000.0
+    );
+    result
 }
 
 // Diagnostics
@@ -3008,6 +3208,77 @@ pub fn list_diagnostic_cause_evolution(
 // Question intelligence
 
 #[tauri::command]
+pub fn get_admin_question_bank_stats(
+    state: State<'_, AppState>,
+) -> Result<AdminQuestionBankStatsDto, CommandError> {
+    question_commands::get_admin_question_bank_stats(&state)
+}
+
+#[tauri::command]
+pub fn list_admin_questions(
+    state: State<'_, AppState>,
+    filter: AdminQuestionListFilter,
+) -> Result<Vec<AdminQuestionListItemDto>, CommandError> {
+    question_commands::list_admin_questions(&state, filter)
+}
+
+#[tauri::command]
+pub fn get_admin_question_editor(
+    state: State<'_, AppState>,
+    question_id: i64,
+) -> Result<AdminQuestionEditorDto, CommandError> {
+    question_commands::get_admin_question_editor(&state, question_id)
+}
+
+#[tauri::command]
+pub fn get_admin_question_editor_any(
+    state: State<'_, AppState>,
+    question_id: i64,
+) -> Result<AdminQuestionEditorDto, CommandError> {
+    question_commands::get_admin_question_editor_any(&state, question_id)
+}
+
+#[tauri::command]
+pub fn list_admin_question_options(
+    state: State<'_, AppState>,
+    question_id: i64,
+) -> Result<Vec<AdminQuestionOptionDto>, CommandError> {
+    question_commands::list_admin_question_options(&state, question_id)
+}
+
+#[tauri::command]
+pub fn upsert_admin_question(
+    state: State<'_, AppState>,
+    input: AdminQuestionUpsertInput,
+) -> Result<AdminQuestionUpsertResultDto, CommandError> {
+    question_commands::upsert_admin_question(&state, input)
+}
+
+#[tauri::command]
+pub fn archive_admin_question(
+    state: State<'_, AppState>,
+    question_id: i64,
+) -> Result<AdminQuestionArchiveResultDto, CommandError> {
+    question_commands::archive_admin_question(&state, question_id)
+}
+
+#[tauri::command]
+pub fn restore_admin_question(
+    state: State<'_, AppState>,
+    question_id: i64,
+) -> Result<AdminQuestionArchiveResultDto, CommandError> {
+    question_commands::restore_admin_question(&state, question_id)
+}
+
+#[tauri::command]
+pub fn bulk_update_admin_questions(
+    state: State<'_, AppState>,
+    input: AdminQuestionBulkActionInput,
+) -> Result<AdminQuestionBulkActionResultDto, CommandError> {
+    question_commands::bulk_update_admin_questions(&state, input)
+}
+
+#[tauri::command]
 pub fn choose_reactor_family(
     state: State<'_, AppState>,
     slot_spec: QuestionSlotSpec,
@@ -3154,6 +3425,156 @@ pub fn list_comeback_candidate_families(
     assessment_commands::list_comeback_candidate_families(&state, subject_id, topic_id, limit)
 }
 
+// ── Past Questions browser ──
+
+#[tauri::command]
+pub fn list_past_paper_courses(
+    state: State<'_, AppState>,
+) -> Result<Vec<PastPaperCourseSummaryDto>, CommandError> {
+    assessment_commands::list_past_paper_courses(&state)
+}
+
+#[tauri::command]
+pub fn list_past_papers_for_subject(
+    state: State<'_, AppState>,
+    subject_id: i64,
+) -> Result<Vec<PastPaperYearDto>, CommandError> {
+    assessment_commands::list_past_papers_for_subject(&state, subject_id)
+}
+
+#[tauri::command]
+pub fn list_past_paper_topic_counts(
+    state: State<'_, AppState>,
+    subject_id: i64,
+) -> Result<Vec<PastPaperTopicCountDto>, CommandError> {
+    assessment_commands::list_past_paper_topic_counts(&state, subject_id)
+}
+
+#[tauri::command]
+pub fn start_past_paper_section(
+    state: State<'_, AppState>,
+    student_id: i64,
+    paper_id: i64,
+    section_label: String,
+    is_timed: bool,
+) -> Result<SessionSnapshotDto, CommandError> {
+    assessment_commands::start_past_paper_section(
+        &state,
+        student_id,
+        paper_id,
+        section_label,
+        is_timed,
+    )
+}
+
+#[tauri::command]
+pub fn start_past_paper_topic_session(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+    topic_id: i64,
+    format: String,
+    is_timed: bool,
+) -> Result<SessionSnapshotDto, CommandError> {
+    assessment_commands::start_past_paper_topic_session(
+        &state,
+        student_id,
+        subject_id,
+        topic_id,
+        format,
+        is_timed,
+    )
+}
+
+// ── Admin: past paper authoring ──
+
+#[tauri::command]
+pub fn admin_save_past_paper(
+    state: State<'_, AppState>,
+    input: AdminPastPaperSaveInput,
+) -> Result<AdminPastPaperSaveResult, CommandError> {
+    assessment_commands::admin_save_past_paper(&state, input)
+}
+
+#[tauri::command]
+pub fn admin_list_past_papers(
+    state: State<'_, AppState>,
+    subject_id: Option<i64>,
+) -> Result<Vec<AdminPastPaperListItem>, CommandError> {
+    assessment_commands::admin_list_past_papers(&state, subject_id)
+}
+
+#[tauri::command]
+pub fn admin_get_past_paper(
+    state: State<'_, AppState>,
+    paper_id: i64,
+) -> Result<AdminPastPaperFullDto, CommandError> {
+    assessment_commands::admin_get_past_paper(&state, paper_id)
+}
+
+#[tauri::command]
+pub fn admin_delete_past_paper(
+    state: State<'_, AppState>,
+    paper_id: i64,
+) -> Result<(), CommandError> {
+    assessment_commands::admin_delete_past_paper(&state, paper_id)
+}
+
+#[tauri::command]
+pub fn admin_extract_past_paper_text(
+    state: State<'_, AppState>,
+    file_name: String,
+    mime_type: Option<String>,
+    file_bytes: Vec<u8>,
+) -> Result<RecoveredTextDto, CommandError> {
+    assessment_commands::admin_extract_past_paper_text(&state, file_name, mime_type, file_bytes)
+}
+
+#[tauri::command]
+pub fn admin_attach_question_asset(
+    state: State<'_, AppState>,
+    question_id: i64,
+    scope: String,
+    scope_ref: Option<i64>,
+    mime_type: String,
+    file_bytes: Vec<u8>,
+    alt_text: Option<String>,
+) -> Result<QuestionAssetMetaDto, CommandError> {
+    assessment_commands::admin_attach_question_asset(
+        &state,
+        question_id,
+        scope,
+        scope_ref,
+        mime_type,
+        file_bytes,
+        alt_text,
+    )
+}
+
+#[tauri::command]
+pub fn admin_delete_question_asset(
+    state: State<'_, AppState>,
+    asset_id: i64,
+) -> Result<(), CommandError> {
+    assessment_commands::admin_delete_question_asset(&state, asset_id)
+}
+
+#[tauri::command]
+pub fn list_question_assets(
+    state: State<'_, AppState>,
+    question_id: i64,
+) -> Result<Vec<QuestionAssetMetaDto>, CommandError> {
+    assessment_commands::list_question_assets(&state, question_id)
+}
+
+#[tauri::command]
+pub fn get_question_asset_bytes(
+    state: State<'_, AppState>,
+    asset_id: i64,
+) -> Result<QuestionAssetBytesDto, CommandError> {
+    assessment_commands::get_question_asset_bytes(&state, asset_id)
+}
+
 #[tauri::command]
 pub fn list_session_remediation_plans(
     state: State<'_, AppState>,
@@ -3207,6 +3628,43 @@ pub fn build_elite_session_blueprint_report(
     subject_id: i64,
 ) -> Result<EliteBlueprintReportDto, CommandError> {
     assessment_commands::build_elite_session_blueprint_report(&state, student_id, subject_id)
+}
+
+#[tauri::command]
+pub fn score_elite_session(
+    state: State<'_, AppState>,
+    student_id: i64,
+    session_id: i64,
+    session_class: String,
+) -> Result<ecoach_elite::EliteSessionScore, CommandError> {
+    assessment_commands::score_elite_session(&state, student_id, session_id, &session_class)
+}
+
+#[tauri::command]
+pub fn check_elite_badges(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<String>, CommandError> {
+    assessment_commands::check_elite_badges(&state, student_id, subject_id)
+}
+
+#[tauri::command]
+pub fn list_elite_personal_bests(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<(String, i64, String)>, CommandError> {
+    assessment_commands::list_elite_personal_bests(&state, student_id, subject_id)
+}
+
+#[tauri::command]
+pub fn list_elite_earned_badges(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<Vec<(String, String, String)>, CommandError> {
+    assessment_commands::list_elite_earned_badges(&state, student_id, subject_id)
 }
 
 // Games
@@ -3978,9 +4436,10 @@ pub fn list_topic_relationship_hints(
 pub fn get_review_queue(
     state: State<'_, AppState>,
     student_id: i64,
+    subject_id: Option<i64>,
     limit: usize,
 ) -> Result<Vec<RecheckItemDto>, CommandError> {
-    memory_commands::get_review_queue(&state, student_id, limit)
+    memory_commands::get_review_queue(&state, student_id, subject_id, limit)
 }
 
 #[tauri::command]
@@ -3995,8 +4454,9 @@ pub fn record_retrieval_attempt(
 pub fn get_memory_dashboard(
     state: State<'_, AppState>,
     student_id: i64,
+    subject_id: Option<i64>,
 ) -> Result<MemoryDashboardDto, CommandError> {
-    memory_commands::get_memory_dashboard(&state, student_id)
+    memory_commands::get_memory_dashboard(&state, student_id, subject_id)
 }
 
 #[tauri::command]
@@ -4025,9 +4485,10 @@ pub fn build_memory_review_queue(
 pub fn list_memory_topic_summaries(
     state: State<'_, AppState>,
     student_id: i64,
+    subject_id: Option<i64>,
     limit: usize,
 ) -> Result<Vec<TopicMemorySummaryDto>, CommandError> {
-    memory_commands::list_memory_topic_summaries(&state, student_id, limit)
+    memory_commands::list_memory_topic_summaries(&state, student_id, subject_id, limit)
 }
 
 #[tauri::command]
@@ -4153,6 +4614,35 @@ pub fn get_gap_dashboard(
     student_id: i64,
 ) -> Result<GapDashboardDto, CommandError> {
     repair_commands::get_gap_dashboard(&state, student_id)
+}
+
+#[tauri::command]
+pub fn capture_gap_snapshot(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+) -> Result<GapSnapshotResultDto, CommandError> {
+    repair_commands::capture_gap_snapshot(&state, student_id, subject_id)
+}
+
+#[tauri::command]
+pub fn list_gap_trend(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+    limit: usize,
+) -> Result<Vec<GapTrendPointDto>, CommandError> {
+    repair_commands::list_gap_trend(&state, student_id, subject_id, limit)
+}
+
+#[tauri::command]
+pub fn list_gap_feed(
+    state: State<'_, AppState>,
+    student_id: i64,
+    subject_id: i64,
+    limit: usize,
+) -> Result<Vec<GapFeedItemDto>, CommandError> {
+    repair_commands::list_gap_feed(&state, student_id, subject_id, limit)
 }
 
 // Readiness and parent reporting
@@ -4288,6 +4778,14 @@ pub fn start_mock(
     mock_session_id: i64,
 ) -> Result<MockSessionDto, CommandError> {
     mock_commands::start_mock(&state, mock_session_id)
+}
+
+#[tauri::command]
+pub fn get_mock_session(
+    state: State<'_, AppState>,
+    mock_session_id: i64,
+) -> Result<MockSessionDto, CommandError> {
+    mock_commands::get_mock_session(&state, mock_session_id)
 }
 
 #[tauri::command]

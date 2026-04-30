@@ -11,7 +11,11 @@ import ParentLayout from '@/layouts/ParentLayout.vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 
 // Student views
+// v1 and v2 are commented out — v3 is now the default home.
+// import CoachHub from '@/views/student/CoachHub.vue'
+// import CoachHubV2 from '@/views/student/CoachHubV2.vue'
 import CoachHub from '@/views/student/CoachHub.vue'
+import CoachHubV3 from '@/views/student/CoachHubV3.vue'
 
 // Parent views
 import ParentHome from '@/views/parent/ParentHome.vue'
@@ -23,11 +27,11 @@ function resolveCoachRoute(path: string): string {
   const normalized = path.replace(/\/+$/, '') || '/coach'
 
   const directRedirects: Record<string, string> = {
-    '/coach': '/student',
+    '/coach': '/student/coach',
     '/coach/onboarding': '/student/onboarding/welcome',
     '/coach/onboarding/subjects': '/student/onboarding/subjects',
     '/coach/content': '/student/onboarding/content-packs',
-    '/coach/diagnostic': '/student/onboarding/diagnostic',
+    '/coach/diagnostic': '/student/diagnostic',
     '/coach/plan': '/student/journey',
     '/coach/plan/refresh': '/student/journey',
     '/coach/repair': '/student/knowledge-gap',
@@ -50,7 +54,7 @@ function resolveCoachRoute(path: string): string {
     return '/student/journey'
   }
 
-  return '/student'
+  return '/student/coach'
 }
 
 function resolveRoleHome(): string {
@@ -96,13 +100,19 @@ const routes: RouteRecordRaw[] = [
     meta: { role: 'student' },
     children: [
       { path: '', name: 'student-home', component: CoachHub },
+      // v1 and v2 disabled — v3 is the main home.
+      // { path: '', name: 'student-home', component: CoachHub },
+      // { path: 'v2', name: 'student-home-v2', component: CoachHubV2 },
+      { path: 'coach', name: 'coach-hub', component: CoachHubV3 },
+      { path: 'v3', redirect: { name: 'coach-hub' } },
       // Onboarding
       { path: 'onboarding/welcome', name: 'onboarding-welcome', component: () => import('@/views/student/onboarding/Welcome.vue') },
       { path: 'onboarding/subjects', name: 'onboarding-subjects', component: () => import('@/views/student/onboarding/Subjects.vue') },
       { path: 'onboarding/content-packs', name: 'onboarding-packs', component: () => import('@/views/student/onboarding/ContentPacks.vue') },
       { path: 'onboarding/diagnostic', name: 'onboarding-diagnostic', component: () => import('@/views/student/onboarding/Diagnostic.vue') },
-      // Practice
-      { path: 'practice', name: 'practice', component: () => import('@/views/student/practice/PracticeHub.vue') },
+      // Past Questions — the nav item labelled "Past Questions" lands here.
+      // PracticeHub.vue is kept on disk for future reuse at a different route.
+      { path: 'practice', name: 'practice', component: () => import('@/views/student/practice/PastQuestions.vue') },
       { path: 'practice/custom-test', name: 'custom-test', component: () => import('@/views/student/practice/CustomTest.vue') },
       // Sessions
       { path: 'session/:id', name: 'session', component: () => import('@/views/student/session/SessionView.vue'), props: true },
@@ -138,6 +148,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'memory', name: 'memory', component: () => import('@/views/student/memory/MemoryHome.vue') },
       // Content
       { path: 'curriculum', name: 'student-curriculum', component: () => import('@/views/student/curriculum/CurriculumHome.vue') },
+      { path: 'quick-links', name: 'quick-links', component: () => import('@/views/student/QuickLinksHome.vue') },
       { path: 'glossary', name: 'glossary', component: () => import('@/views/student/glossary/GlossaryHome.vue') },
       { path: 'glossary/entry/:id', name: 'glossary-entry', component: () => import('@/views/student/glossary/GlossaryEntry.vue'), props: true },
       { path: 'glossary/audio', name: 'glossary-audio', component: () => import('@/views/student/glossary/GlossaryAudio.vue') },
@@ -188,13 +199,18 @@ const routes: RouteRecordRaw[] = [
     meta: { role: 'admin' },
     children: [
       { path: '', name: 'admin-home', component: AdminHome },
+      { path: 'content-editor', name: 'admin-content-editor', component: () => import('@/views/admin/content-editor/ContentEditorHome.vue') },
+      { path: 'content-editor/question/:id?', name: 'admin-content-editor-question', component: () => import('@/views/admin/content-editor/ContentEditorHome.vue'), props: true },
+      { path: 'remote-updates', name: 'admin-remote-updates', component: () => import('@/views/admin/remote/RemoteUpdates.vue') },
       { path: 'curriculum', name: 'admin-curriculum', component: () => import('@/views/admin/curriculum/CurriculumHome.vue') },
       { path: 'curriculum/upload', name: 'admin-curriculum-upload', component: () => import('@/views/admin/curriculum/CurriculumUpload.vue') },
       { path: 'curriculum/review', name: 'admin-curriculum-review', component: () => import('@/views/admin/curriculum/CurriculumReview.vue') },
       { path: 'curriculum/editor', name: 'admin-curriculum-editor', component: () => import('@/views/admin/curriculum/CurriculumEditor.vue') },
       { path: 'questions', name: 'admin-questions', component: () => import('@/views/admin/questions/QuestionsHome.vue') },
-      { path: 'questions/author', name: 'admin-question-author', component: () => import('@/views/admin/questions/QuestionAuthor.vue') },
+      { path: 'questions/author', redirect: to => ({ path: '/admin/content-editor', query: { ...to.query, type: 'question' } }) },
       { path: 'questions/review', name: 'admin-question-review', component: () => import('@/views/admin/questions/QuestionReview.vue') },
+      { path: 'past-papers', name: 'admin-past-papers', component: () => import('@/views/admin/past-papers/PastPaperList.vue') },
+      { path: 'past-papers/:id', name: 'admin-past-paper-editor', component: () => import('@/views/admin/past-papers/PastPaperAuthor.vue'), props: true },
       { path: 'content', name: 'admin-content', component: () => import('@/views/admin/content/ContentPipeline.vue') },
       { path: 'content/coverage', name: 'admin-coverage', component: () => import('@/views/admin/content/CoverageHeatmap.vue') },
       { path: 'students', name: 'admin-students', component: () => import('@/views/admin/students/StudentMonitor.vue') },

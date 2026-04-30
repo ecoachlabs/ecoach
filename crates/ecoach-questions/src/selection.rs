@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, from_bp};
-use rusqlite::{Connection, params};
+use rusqlite::Connection;
 use serde_json::Value;
 
 use crate::models::{Question, QuestionSelectionRequest, SelectedQuestion};
@@ -55,26 +55,42 @@ impl<'a> QuestionSelector<'a> {
             })
             .collect::<Vec<_>>();
 
-        Ok(self.select_diverse_mix(scored, request.target_question_count))
+        self.select_diverse_mix(scored, request.target_question_count)
     }
 
     fn get_candidate_pool(
         &self,
         request: &QuestionSelectionRequest,
     ) -> EcoachResult<Vec<CandidateContext>> {
-        if request.topic_ids.is_empty() {
+        if request.topic_ids.is_empty() && request.family_ids.is_empty() {
             return Ok(Vec::new());
         }
 
         let (subject_latest_exam_year, subject_year_span) =
             self.load_subject_year_bounds(request.subject_id)?;
 
-        let placeholders = request
-            .topic_ids
-            .iter()
-            .map(|_| "?")
-            .collect::<Vec<_>>()
-            .join(", ");
+        let topic_filter = if request.topic_ids.is_empty() {
+            String::new()
+        } else {
+            let placeholders = request
+                .topic_ids
+                .iter()
+                .map(|_| "?")
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(" AND q.topic_id IN ({})", placeholders)
+        };
+        let family_filter = if request.family_ids.is_empty() {
+            String::new()
+        } else {
+            let placeholders = request
+                .family_ids
+                .iter()
+                .map(|_| "?")
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(" AND q.family_id IN ({})", placeholders)
+        };
         let sql = format!(
             "SELECT q.id, q.subject_id, q.topic_id, q.subtopic_id, q.family_id, q.stem, q.question_format,
                     q.explanation_text, q.difficulty_level, q.estimated_time_seconds, q.marks, q.primary_skill_id,
@@ -109,16 +125,19 @@ impl<'a> QuestionSelector<'a> {
              LEFT JOIN question_family_health qfh ON qfh.family_id = q.family_id
              LEFT JOIN question_family_analytics qfa ON qfa.family_id = q.family_id
              LEFT JOIN diagnostic_item_routing_profiles dirp ON dirp.question_id = q.id
-             WHERE q.is_active = 1 AND q.subject_id = ?1 AND q.topic_id IN ({})
+             WHERE q.is_active = 1 AND q.subject_id = ?1{}{}
              ORDER BY q.updated_at DESC, q.id DESC",
-            placeholders
+            topic_filter, family_filter
         );
 
         let mut params_vec: Vec<rusqlite::types::Value> =
-            Vec::with_capacity(request.topic_ids.len() + 1);
+            Vec::with_capacity(request.topic_ids.len() + request.family_ids.len() + 1);
         params_vec.push(request.subject_id.into());
         for topic_id in &request.topic_ids {
             params_vec.push((*topic_id).into());
+        }
+        for family_id in &request.family_ids {
+            params_vec.push((*family_id).into());
         }
 
         let mut statement = self
@@ -201,11 +220,28 @@ impl<'a> QuestionSelector<'a> {
         request: &QuestionSelectionRequest,
     ) -> f64 {
         let question = &candidate.question;
-        let scope_match = if request.topic_ids.contains(&question.topic_id) {
+        let topic_scope_match = if request.topic_ids.is_empty()
+            || request.topic_ids.contains(&question.topic_id)
+        {
             1.0
         } else {
             0.0
         };
+        let family_scope_match = if request.family_ids.is_empty() {
+            1.0
+        } else {
+            question
+                .family_id
+                .map(|family_id| {
+                    if request.family_ids.contains(&family_id) {
+                        1.0
+                    } else {
+                        0.0
+                    }
+                })
+                .unwrap_or(0.0)
+        };
+        let scope_match = 0.65 * topic_scope_match + 0.35 * family_scope_match;
         let difficulty_fit = request
             .target_difficulty
             .map(|target| {
@@ -392,8 +428,18 @@ impl<'a> QuestionSelector<'a> {
         &self,
         mut scored: Vec<SelectedQuestion>,
         target_count: usize,
-    ) -> Vec<SelectedQuestion> {
+    ) -> EcoachResult<Vec<SelectedQuestion>> {
         let target_count = target_count.max(1);
+        let similarity_scores: BTreeMap<(i64, i64), BasisPoints> =
+            if scored.len() <= 1 || target_count <= 1 {
+                BTreeMap::new()
+            } else {
+                let question_ids = scored
+                    .iter()
+                    .map(|candidate| candidate.question.id)
+                    .collect::<Vec<_>>();
+                self.load_similarity_scores(&question_ids)?
+            };
         let mut selected = Vec::new();
         let mut family_counts = BTreeMap::new();
 
@@ -408,10 +454,13 @@ impl<'a> QuestionSelector<'a> {
                     .and_then(|family_id| family_counts.get(&family_id).copied())
                     .unwrap_or(0) as f64
                     * 0.14;
-                let similarity_penalty = self
-                    .max_similarity_to_selected(candidate.question.id, &selected)
-                    .map(|score| score as f64 / 10_000.0 * 0.20)
-                    .unwrap_or(0.0);
+                let similarity_penalty = max_similarity_to_selected(
+                    candidate.question.id,
+                    &selected,
+                    &similarity_scores,
+                )
+                .map(|score| score as f64 / 10_000.0 * 0.20)
+                .unwrap_or(0.0);
                 let adjusted_score =
                     candidate.fit_score - family_repeat_penalty - similarity_penalty;
                 if adjusted_score > best_score {
@@ -428,37 +477,90 @@ impl<'a> QuestionSelector<'a> {
             selected.push(winner);
         }
 
-        selected
+        Ok(selected)
     }
 
-    fn max_similarity_to_selected(
+    fn load_similarity_scores(
         &self,
-        question_id: i64,
-        selected: &[SelectedQuestion],
-    ) -> Option<i64> {
-        if selected.is_empty() {
-            return None;
+        question_ids: &[i64],
+    ) -> EcoachResult<BTreeMap<(i64, i64), BasisPoints>> {
+        let mut scores = BTreeMap::new();
+        if question_ids.is_empty() {
+            return Ok(scores);
         }
 
-        let mut best = None;
-        for item in selected {
-            let similarity = self
+        for chunk in question_ids.chunks(500) {
+            let placeholders = chunk.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+            let sql = format!(
+                "SELECT from_question_id, to_question_id, MAX(similarity_score)
+                 FROM question_graph_edges
+                 WHERE from_question_id IN ({0}) OR to_question_id IN ({0})
+                 GROUP BY from_question_id, to_question_id",
+                placeholders
+            );
+            let mut params_vec: Vec<rusqlite::types::Value> = Vec::with_capacity(chunk.len() * 2);
+            for question_id in chunk {
+                params_vec.push((*question_id).into());
+            }
+            for question_id in chunk {
+                params_vec.push((*question_id).into());
+            }
+
+            let mut statement = self
                 .conn
-                .query_row(
-                    "SELECT MAX(similarity_score)
-                     FROM question_graph_edges
-                     WHERE (from_question_id = ?1 AND to_question_id = ?2)
-                        OR (from_question_id = ?2 AND to_question_id = ?1)",
-                    params![question_id, item.question.id],
-                    |row| row.get::<_, Option<i64>>(0),
-                )
-                .ok()
-                .flatten()
-                .map(clamp_bp)
-                .unwrap_or(0);
-            best = Some(best.map_or(similarity, |current: BasisPoints| current.max(similarity)));
+                .prepare(&sql)
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+            let rows = statement
+                .query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, i64>(2)?,
+                    ))
+                })
+                .map_err(|err| EcoachError::Storage(err.to_string()))?;
+
+            for row in rows {
+                let (from_question_id, to_question_id, similarity_score) =
+                    row.map_err(|err| EcoachError::Storage(err.to_string()))?;
+                let key = similarity_key(from_question_id, to_question_id);
+                let score = clamp_bp(similarity_score);
+                scores
+                    .entry(key)
+                    .and_modify(|existing| *existing = (*existing).max(score))
+                    .or_insert(score);
+            }
         }
-        best.map(|v| v as i64)
+
+        Ok(scores)
+    }
+}
+
+fn max_similarity_to_selected(
+    question_id: i64,
+    selected: &[SelectedQuestion],
+    similarity_scores: &BTreeMap<(i64, i64), BasisPoints>,
+) -> Option<i64> {
+    if selected.is_empty() {
+        return None;
+    }
+
+    let mut best = None;
+    for item in selected {
+        let similarity = similarity_scores
+            .get(&similarity_key(question_id, item.question.id))
+            .copied()
+            .unwrap_or(0);
+        best = Some(best.map_or(similarity, |current: BasisPoints| current.max(similarity)));
+    }
+    best.map(|value| value as i64)
+}
+
+fn similarity_key(left: i64, right: i64) -> (i64, i64) {
+    if left <= right {
+        (left, right)
+    } else {
+        (right, left)
     }
 }
 
@@ -558,6 +660,7 @@ mod tests {
             .select_questions(&QuestionSelectionRequest {
                 subject_id: 1,
                 topic_ids: vec![10],
+                family_ids: Vec::new(),
                 target_question_count: 2,
                 target_difficulty: Some(5_200),
                 weakness_topic_ids: vec![10],
@@ -615,6 +718,7 @@ mod tests {
             .select_questions(&QuestionSelectionRequest {
                 subject_id: 1,
                 topic_ids: vec![10],
+                family_ids: Vec::new(),
                 target_question_count: 1,
                 target_difficulty: Some(5_100),
                 weakness_topic_ids: vec![10],
@@ -629,6 +733,69 @@ mod tests {
 
         assert_eq!(selected.len(), 1);
         assert_eq!(selected[0].question.family_id, Some(200));
+    }
+
+    #[test]
+    fn selector_filters_to_target_family() {
+        let conn = Connection::open_in_memory().expect("in-memory db should open");
+        seed_selection_schema(&conn);
+        seed_selection_fixture(&conn);
+
+        let selector = QuestionSelector::new(&conn);
+        let selected = selector
+            .select_questions(&QuestionSelectionRequest {
+                subject_id: 1,
+                topic_ids: vec![10],
+                family_ids: vec![200],
+                target_question_count: 3,
+                target_difficulty: Some(5_000),
+                weakness_topic_ids: vec![10],
+                recently_seen_question_ids: Vec::new(),
+                timed: false,
+                diagnostic_stage: None,
+                condition_type: None,
+                require_confidence_prompt: false,
+                require_concept_guess_prompt: false,
+            })
+            .expect("selection should succeed");
+
+        assert_eq!(selected.len(), 1);
+        assert!(selected
+            .iter()
+            .all(|question| question.question.family_id == Some(200)));
+    }
+
+    #[test]
+    fn selector_handles_large_empty_similarity_graph_quickly() {
+        let conn = Connection::open_in_memory().expect("in-memory db should open");
+        seed_selection_schema(&conn);
+        seed_large_empty_graph_fixture(&conn, 1_200);
+
+        let selector = QuestionSelector::new(&conn);
+        let started = std::time::Instant::now();
+        let selected = selector
+            .select_questions(&QuestionSelectionRequest {
+                subject_id: 1,
+                topic_ids: vec![10],
+                family_ids: Vec::new(),
+                target_question_count: 8,
+                target_difficulty: Some(5_200),
+                weakness_topic_ids: vec![10],
+                recently_seen_question_ids: Vec::new(),
+                timed: true,
+                diagnostic_stage: Some("baseline".to_string()),
+                condition_type: Some("normal".to_string()),
+                require_confidence_prompt: false,
+                require_concept_guess_prompt: false,
+            })
+            .expect("selection should succeed");
+
+        assert_eq!(selected.len(), 8);
+        assert!(
+            started.elapsed() < std::time::Duration::from_millis(500),
+            "large empty graph selection should not issue per-pair database queries; took {:?}",
+            started.elapsed()
+        );
     }
 
     fn seed_selection_schema(conn: &Connection) {
@@ -864,6 +1031,52 @@ mod tests {
         .expect("routing profiles should insert");
     }
 
+    fn seed_large_empty_graph_fixture(conn: &Connection, question_count: i64) {
+        conn.execute(
+            "INSERT INTO curriculum_versions (id, name, version_label) VALUES (1, 'Test', 'v1')",
+            [],
+        )
+        .expect("curriculum version should insert");
+        conn.execute(
+            "INSERT INTO subjects (id, curriculum_version_id, code, name) VALUES (1, 1, 'MATH', 'Math')",
+            [],
+        )
+        .expect("subject should insert");
+        conn.execute(
+            "INSERT INTO topics (id, subject_id, code, name) VALUES (10, 1, 'ALG', 'Algebra')",
+            [],
+        )
+        .expect("topic should insert");
+
+        for index in 0..question_count {
+            let family_id = 10_000 + index;
+            let question_id = 100_000 + index;
+            conn.execute(
+                "INSERT INTO question_families (id, family_code, family_name, subject_id, topic_id)
+                 VALUES (?1, ?2, ?3, 1, 10)",
+                params![
+                    family_id,
+                    format!("ALG_FAMILY_{index}"),
+                    format!("Algebra Family {index}"),
+                ],
+            )
+            .expect("family should insert");
+            conn.execute(
+                "INSERT INTO questions (
+                    id, subject_id, topic_id, family_id, stem, question_format,
+                    difficulty_level, estimated_time_seconds, marks, is_active
+                 ) VALUES (?1, 1, 10, ?2, ?3, 'mcq', ?4, 35, 1, 1)",
+                params![
+                    question_id,
+                    family_id,
+                    format!("Solve algebra question {index}"),
+                    4_000 + (index % 3_000),
+                ],
+            )
+            .expect("question should insert");
+        }
+    }
+
     #[test]
     fn selector_prefers_routing_aligned_transfer_items_for_diagnostic_phase() {
         let conn = Connection::open_in_memory().expect("in-memory db should open");
@@ -875,6 +1088,7 @@ mod tests {
             .select_questions(&QuestionSelectionRequest {
                 subject_id: 1,
                 topic_ids: vec![10],
+                family_ids: Vec::new(),
                 target_question_count: 1,
                 target_difficulty: Some(5_100),
                 weakness_topic_ids: vec![10],

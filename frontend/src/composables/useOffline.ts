@@ -1,31 +1,11 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useConnectivityStore } from '@/stores/connectivity'
 
 export function useOffline() {
-  const isOnline = ref(navigator.onLine)
-  const wasOffline = ref(false)
+  const connectivity = useConnectivityStore()
+  const { isOnline, wasOffline } = storeToRefs(connectivity)
 
-  function handleOnline() {
-    isOnline.value = true
-    if (wasOffline.value) {
-      // Could trigger sync here
-      wasOffline.value = false
-    }
-  }
-
-  function handleOffline() {
-    isOnline.value = false
-    wasOffline.value = true
-  }
-
-  onMounted(() => {
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-  })
-
-  onUnmounted(() => {
-    window.removeEventListener('online', handleOnline)
-    window.removeEventListener('offline', handleOffline)
-  })
+  connectivity.startMonitoring()
 
   return { isOnline, wasOffline }
 }

@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use chrono::Utc;
 use ecoach_substrate::{BasisPoints, DomainEvent, EcoachError, EcoachResult, to_bp};
 use rusqlite::{Connection, OptionalExtension, params};
-use serde_json::json;
+use serde_json::{Value, json};
 
 use ecoach_forecast::{BlueprintResolver, ForecastEngine, MockType};
 
@@ -559,6 +559,21 @@ impl<'a> MockCentreService<'a> {
                 "mock session is not active".to_string(),
             ));
         }
+        if input.selected_option_id.is_none() && !input.skipped && !input.timed_out {
+            return Err(EcoachError::Validation(
+                "mock answer requires a selected option, skip, or timeout".to_string(),
+            ));
+        }
+        if input.skipped && input.timed_out {
+            return Err(EcoachError::Validation(
+                "mock answer cannot be both skipped and timed out".to_string(),
+            ));
+        }
+        if input.selected_option_id.is_some() && (input.skipped || input.timed_out) {
+            return Err(EcoachError::Validation(
+                "mock answer cannot include both an answer and a non-answer outcome".to_string(),
+            ));
+        }
 
         // Check time remaining
         if let Some(remaining) = mock.time_remaining_seconds {
@@ -568,56 +583,173 @@ impl<'a> MockCentreService<'a> {
             }
         }
 
-        // Check correctness
-        let is_correct: bool = self
-            .conn
-            .query_row(
-                "SELECT is_correct FROM question_options WHERE id = ?1 AND question_id = ?2",
-                params![input.selected_option_id, input.question_id],
-                |row| Ok(row.get::<_, i64>(0)? == 1),
-            )
-            .map_err(|e| EcoachError::Storage(e.to_string()))?;
-
-        // Update session_item
         let now = Utc::now().to_rfc3339();
-        self.conn
-            .execute(
-                "UPDATE session_items
-                 SET status = 'answered', selected_option_id = ?1, is_correct = ?2,
-                     answered_at = ?3, updated_at = ?3
-                 WHERE session_id = ?4 AND question_id = ?5 AND status IN ('queued', 'presented')",
-                params![
-                    input.selected_option_id,
-                    if is_correct { 1 } else { 0 },
-                    now,
-                    mock.session_id,
-                    input.question_id,
-                ],
-            )
-            .map_err(|e| EcoachError::Storage(e.to_string()))?;
+        let response_time_ms = input.response_time_ms.map(|value| value.max(0));
 
-        // Update counters on underlying session
+        let was_correct = if let Some(selected_option_id) = input.selected_option_id {
+            let is_correct: bool = self
+                .conn
+                .query_row(
+                    "SELECT is_correct FROM question_options WHERE id = ?1 AND question_id = ?2",
+                    params![selected_option_id, input.question_id],
+                    |row| Ok(row.get::<_, i64>(0)? == 1),
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            let answer_state_json = json!({
+                "selected_option_id": selected_option_id,
+                "response_time_ms": response_time_ms,
+                "skipped": false,
+                "timed_out": false,
+            })
+            .to_string();
+            let affected = self
+                .conn
+                .execute(
+                    "UPDATE session_items
+                     SET status = 'answered',
+                         selected_option_id = ?1,
+                         answer_state_json = ?2,
+                         answered_at = ?3,
+                         response_time_ms = ?4,
+                         is_correct = ?5,
+                         updated_at = ?3
+                     WHERE session_id = ?6 AND question_id = ?7 AND status IN ('queued', 'presented')",
+                    params![
+                        selected_option_id,
+                        answer_state_json,
+                        now,
+                        response_time_ms,
+                        if is_correct { 1 } else { 0 },
+                        mock.session_id,
+                        input.question_id,
+                    ],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            if affected == 0 {
+                return Err(EcoachError::Validation(
+                    "question is not available for answering".to_string(),
+                ));
+            }
+
+            self.append_aggregate_event(
+                "session",
+                DomainEvent::new(
+                    "session.answer_recorded",
+                    mock.session_id.to_string(),
+                    json!({
+                        "question_id": input.question_id,
+                        "selected_option_id": selected_option_id,
+                        "response_time_ms": response_time_ms,
+                        "is_correct": is_correct,
+                    }),
+                ),
+            )?;
+            self.append_aggregate_event(
+                "session",
+                DomainEvent::new(
+                    "session.answer_interpreted",
+                    mock.session_id.to_string(),
+                    json!({
+                        "question_id": input.question_id,
+                        "selected_option_id": selected_option_id,
+                        "response_time_ms": response_time_ms,
+                        "is_correct": is_correct,
+                        "skipped": false,
+                        "timed_out": false,
+                    }),
+                ),
+            )?;
+            is_correct
+        } else {
+            let answer_state_json = json!({
+                "selected_option_id": Value::Null,
+                "response_time_ms": response_time_ms,
+                "skipped": !input.timed_out,
+                "timed_out": input.timed_out,
+            })
+            .to_string();
+            let affected = self
+                .conn
+                .execute(
+                    "UPDATE session_items
+                     SET status = 'skipped',
+                         selected_option_id = NULL,
+                         answer_state_json = ?1,
+                         answered_at = ?2,
+                         response_time_ms = ?3,
+                         is_correct = 0,
+                         updated_at = ?2
+                     WHERE session_id = ?4 AND question_id = ?5 AND status IN ('queued', 'presented')",
+                    params![
+                        answer_state_json,
+                        now,
+                        response_time_ms,
+                        mock.session_id,
+                        input.question_id,
+                    ],
+                )
+                .map_err(|e| EcoachError::Storage(e.to_string()))?;
+            if affected == 0 {
+                return Err(EcoachError::Validation(
+                    "question is not available for answering".to_string(),
+                ));
+            }
+
+            self.append_aggregate_event(
+                "session",
+                DomainEvent::new(
+                    if input.timed_out {
+                        "session.question_timed_out"
+                    } else {
+                        "session.question_skipped"
+                    },
+                    mock.session_id.to_string(),
+                    json!({
+                        "question_id": input.question_id,
+                        "selected_option_id": Value::Null,
+                        "response_time_ms": response_time_ms,
+                        "skipped": !input.timed_out,
+                        "timed_out": input.timed_out,
+                    }),
+                ),
+            )?;
+            self.append_aggregate_event(
+                "session",
+                DomainEvent::new(
+                    "session.answer_interpreted",
+                    mock.session_id.to_string(),
+                    json!({
+                        "question_id": input.question_id,
+                        "selected_option_id": Value::Null,
+                        "response_time_ms": response_time_ms,
+                        "is_correct": false,
+                        "skipped": !input.timed_out,
+                        "timed_out": input.timed_out,
+                    }),
+                ),
+            )?;
+            false
+        };
+
         self.conn
             .execute(
                 "UPDATE sessions SET answered_questions = answered_questions + 1,
                      correct_questions = correct_questions + CASE WHEN ?1 THEN 1 ELSE 0 END,
                      updated_at = ?2
                  WHERE id = ?3",
-                params![is_correct, now, mock.session_id],
+                params![was_correct, now, mock.session_id],
             )
             .map_err(|e| EcoachError::Storage(e.to_string()))?;
 
         let answered_count = mock.answered_count + 1;
         let remaining_count = mock.question_count - answered_count;
-
-        // Check if mock is done
         if remaining_count <= 0 {
             self.complete_mock(input.mock_session_id)?;
         }
 
         Ok(MockAnswerResult {
             question_id: input.question_id,
-            was_correct: is_correct,
+            was_correct,
             answered_count,
             remaining_count,
             time_remaining_seconds: self
@@ -1136,16 +1268,21 @@ impl<'a> MockCentreService<'a> {
     // ── Internal ──
 
     fn append_event(&self, event: DomainEvent) -> EcoachResult<()> {
+        self.append_aggregate_event("mock", event)
+    }
+
+    fn append_aggregate_event(&self, aggregate_kind: &str, event: DomainEvent) -> EcoachResult<()> {
         let payload_json = serde_json::to_string(&event.payload)
             .map_err(|e| EcoachError::Serialization(e.to_string()))?;
         self.conn
             .execute(
                 "INSERT INTO runtime_events (
                     event_id, event_type, aggregate_kind, aggregate_id, trace_id, payload_json, occurred_at
-                 ) VALUES (?1, ?2, 'mock', ?3, ?4, ?5, ?6)",
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                 params![
                     event.event_id,
                     event.event_type,
+                    aggregate_kind,
                     event.aggregate_id,
                     event.trace_id,
                     payload_json,
@@ -1187,4 +1324,167 @@ fn score_mock_candidate(candidate: &MockCandidate) -> i64 {
         + (candidate.recurrence_score / 4)
         + (candidate.replacement_score / 3)
         + pacing_bonus
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ecoach_storage::migrations::run_runtime_migrations;
+    use rusqlite::Connection;
+    use serde_json::{Value, json};
+
+    #[test]
+    fn skip_payload_deserializes_and_persists_mock_progress() {
+        let mut conn = Connection::open_in_memory().expect("in-memory sqlite should open");
+        run_runtime_migrations(&mut conn).expect("runtime migrations should apply");
+        seed_mock_scope(&conn);
+
+        let service = MockCentreService::new(&conn);
+        let mock = service
+            .compile_mock(&CompileMockInput {
+                student_id: 1,
+                subject_id: 1,
+                duration_minutes: 30,
+                question_count: 1,
+                topic_ids: vec![1],
+                paper_year: None,
+                mock_type: Some("diagnostic".to_string()),
+                blueprint_id: None,
+            })
+            .expect("mock should compile");
+        let active_mock = service.start_mock(mock.id).expect("mock should start");
+
+        let input: SubmitMockAnswerInput = serde_json::from_value(json!({
+            "mock_session_id": active_mock.id,
+            "question_id": 1,
+            "skipped": true,
+            "response_time_ms": 4200
+        }))
+        .expect("skip payload should deserialize");
+
+        let result = service
+            .submit_answer(&input)
+            .expect("skip submission should succeed");
+
+        assert!(!result.was_correct);
+        assert_eq!(result.answered_count, 1);
+        assert_eq!(result.remaining_count, 0);
+
+        let (status, selected_option_id, answer_state_json, response_time_ms, is_correct): (
+            String,
+            Option<i64>,
+            String,
+            Option<i64>,
+            Option<i64>,
+        ) = conn
+            .query_row(
+                "SELECT status, selected_option_id, answer_state_json, response_time_ms, is_correct
+                 FROM session_items
+                 WHERE session_id = ?1 AND question_id = ?2",
+                rusqlite::params![active_mock.session_id, 1_i64],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                    ))
+                },
+            )
+            .expect("session item should be queryable");
+        let answer_state: Value =
+            serde_json::from_str(&answer_state_json).expect("answer state should be valid json");
+
+        assert_eq!(status, "skipped");
+        assert_eq!(selected_option_id, None);
+        assert_eq!(response_time_ms, Some(4200));
+        assert_eq!(is_correct, Some(0));
+        assert_eq!(answer_state["selected_option_id"], Value::Null);
+        assert_eq!(answer_state["response_time_ms"], json!(4200));
+        assert_eq!(answer_state["skipped"], Value::Bool(true));
+        assert_eq!(answer_state["timed_out"], Value::Bool(false));
+
+        let (answered_questions, correct_questions, session_status): (i64, i64, String) = conn
+            .query_row(
+                "SELECT answered_questions, correct_questions, status
+                 FROM sessions
+                 WHERE id = ?1",
+                [active_mock.session_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("session counters should be queryable");
+        assert_eq!(answered_questions, 1);
+        assert_eq!(correct_questions, 0);
+        assert_eq!(session_status, "completed");
+
+        let mock_status: String = conn
+            .query_row(
+                "SELECT status FROM mock_sessions WHERE id = ?1",
+                [active_mock.id],
+                |row| row.get(0),
+            )
+            .expect("mock status should be queryable");
+        assert_eq!(mock_status, "completed");
+
+        let runtime_events = collect_runtime_events(&conn, active_mock.session_id);
+        assert!(runtime_events.contains(&(
+            "session.question_skipped".to_string(),
+            "session".to_string(),
+        )));
+        assert!(runtime_events.contains(&(
+            "session.answer_interpreted".to_string(),
+            "session".to_string(),
+        )));
+    }
+
+    fn seed_mock_scope(conn: &Connection) {
+        conn.execute(
+            "INSERT INTO accounts (id, account_type, display_name, pin_hash, pin_salt)
+             VALUES (1, 'student', 'Kofi', 'hash', 'salt')",
+            [],
+        )
+        .expect("student account should insert");
+        conn.execute(
+            "INSERT INTO curriculum_versions (id, name, version_label)
+             VALUES (1, 'Test Curriculum', 'v1')",
+            [],
+        )
+        .expect("curriculum version should insert");
+        conn.execute(
+            "INSERT INTO subjects (id, curriculum_version_id, code, name)
+             VALUES (1, 1, 'MATH', 'Mathematics')",
+            [],
+        )
+        .expect("subject should insert");
+        conn.execute(
+            "INSERT INTO topics (id, subject_id, code, name)
+             VALUES (1, 1, 'ALG', 'Algebra')",
+            [],
+        )
+        .expect("topic should insert");
+        conn.execute(
+            "INSERT INTO questions (id, subject_id, topic_id, stem, question_format)
+             VALUES (1, 1, 1, '2 + 2 = ?', 'mcq')",
+            [],
+        )
+        .expect("question should insert");
+    }
+
+    fn collect_runtime_events(conn: &Connection, session_id: i64) -> Vec<(String, String)> {
+        let mut stmt = conn
+            .prepare(
+                "SELECT event_type, aggregate_kind
+                 FROM runtime_events
+                 WHERE aggregate_id = ?1
+                 ORDER BY id ASC",
+            )
+            .expect("runtime event query should prepare");
+        let rows = stmt
+            .query_map([session_id.to_string()], |row| Ok((row.get(0)?, row.get(1)?)))
+            .expect("runtime events should be queryable");
+
+        rows.collect::<Result<Vec<_>, _>>()
+            .expect("runtime event rows should collect")
+    }
 }

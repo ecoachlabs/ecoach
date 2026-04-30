@@ -93,8 +93,14 @@ pub struct CompileMockInput {
 pub struct SubmitMockAnswerInput {
     pub mock_session_id: i64,
     pub question_id: i64,
-    pub selected_option_id: i64,
+    pub selected_option_id: Option<i64>,
     pub confidence_level: Option<String>,
+    #[serde(default)]
+    pub response_time_ms: Option<i64>,
+    #[serde(default)]
+    pub skipped: bool,
+    #[serde(default)]
+    pub timed_out: bool,
 }
 
 // ── Outputs ──

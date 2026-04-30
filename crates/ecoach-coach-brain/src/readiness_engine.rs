@@ -152,22 +152,33 @@ impl<'a> ReadinessEngine<'a> {
         let mut statement = self
             .conn
             .prepare(
-                "SELECT t.id, t.name,
+                "WITH question_counts AS (
+                    SELECT topic_id, COUNT(*) AS question_count
+                    FROM questions
+                    WHERE is_active = 1
+                    GROUP BY topic_id
+                 ),
+                 active_blockers AS (
+                    SELECT DISTINCT topic_id
+                    FROM coach_blockers
+                    WHERE student_id = ?1
+                      AND resolved_at IS NULL
+                 )
+                 SELECT t.id, t.name,
                         COALESCE(sts.mastery_score, 0),
                         COALESCE(sts.gap_score, 10000),
                         COALESCE(sts.fragility_score, 0),
                         COALESCE(sts.memory_strength, 0),
-                        (SELECT COUNT(*) FROM questions q WHERE q.topic_id = t.id AND q.is_active = 1),
-                        EXISTS(
-                            SELECT 1 FROM coach_blockers cb
-                            WHERE cb.student_id = ?1
-                              AND cb.topic_id = t.id
-                              AND cb.resolved_at IS NULL
-                        )
+                        COALESCE(qc.question_count, 0),
+                        ab.topic_id IS NOT NULL
                  FROM topics t
                  LEFT JOIN student_topic_states sts
                     ON sts.topic_id = t.id
                    AND sts.student_id = ?1
+                 LEFT JOIN question_counts qc
+                    ON qc.topic_id = t.id
+                 LEFT JOIN active_blockers ab
+                    ON ab.topic_id = t.id
                  WHERE t.subject_id = ?2
                  ORDER BY COALESCE(sts.priority_score, 0) DESC, COALESCE(sts.gap_score, 10000) DESC, t.display_order ASC, t.id ASC",
             )

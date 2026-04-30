@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MathText from '../MathText.vue'
+
 defineProps<{
   selected: number | null
   answered: boolean
@@ -24,7 +26,7 @@ defineEmits<{ select: [id: number] }>()
       :disabled="answered"
       @click="!answered && $emit('select', opt.id)"
     >
-      {{ opt.text }}
+      <MathText :text="opt.text" />
     </button>
   </div>
 </template>

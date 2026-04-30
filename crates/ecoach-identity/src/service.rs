@@ -487,10 +487,7 @@ fn parse_datetime_value(value: &str) -> Option<DateTime<Utc>> {
         })
 }
 
-fn parse_required_datetime_column(
-    index: usize,
-    value: &str,
-) -> rusqlite::Result<DateTime<Utc>> {
+fn parse_required_datetime_column(index: usize, value: &str) -> rusqlite::Result<DateTime<Utc>> {
     parse_datetime_value(value).ok_or_else(|| {
         rusqlite::Error::FromSqlConversionFailure(
             index,

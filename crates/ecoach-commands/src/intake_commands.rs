@@ -90,7 +90,9 @@ pub fn list_submission_bundle_inbox(
 ) -> Result<Vec<BundleInboxItemDto>, CommandError> {
     state.with_connection(|conn| {
         let service = IntakeService::new(conn);
-        service.list_bundle_inbox(student_id, limit).map_err(Into::into)
+        service
+            .list_bundle_inbox(student_id, limit)
+            .map_err(Into::into)
     })
 }
 
@@ -124,7 +126,9 @@ pub fn get_uploaded_paper_review(
 ) -> Result<UploadedPaperReviewSnapshotDto, CommandError> {
     state.with_connection(|conn| {
         let service = IntakeService::new(conn);
-        service.build_uploaded_paper_review(bundle_id).map_err(Into::into)
+        service
+            .build_uploaded_paper_review(bundle_id)
+            .map_err(Into::into)
     })
 }
 
@@ -179,29 +183,27 @@ pub fn promote_submission_bundle_to_shared_source(
         })?;
         let source_kind =
             source_kind_override.unwrap_or_else(|| infer_bundle_source_kind(&report.bundle_kind));
-        let source = FoundryCoordinatorService::new(conn).register_source_upload(SourceUploadInput {
-            uploader_account_id: requested_by_account_id.unwrap_or(report.bundle.student_id),
-            source_kind,
-            title: format!("Vault Candidate: {}", report.bundle.title),
-            source_path: Some(primary_file.file_path.clone()),
-            country_code: None,
-            exam_board: None,
-            education_level: None,
-            subject_code: detect_subject_code(conn, &report.detected_subjects)?,
-            academic_year: report
-                .detected_exam_years
-                .first()
-                .map(ToString::to_string),
-            language_code: Some("en".to_string()),
-            version_label: Some("vault_candidate".to_string()),
-            metadata: json!({
-                "origin": "personal_academic_vault",
-                "bundle_id": bundle_id,
-                "student_id": report.bundle.student_id,
-                "detected_topics": report.detected_topics,
-                "recommended_actions": report.recommended_actions,
-            }),
-        })?;
+        let source =
+            FoundryCoordinatorService::new(conn).register_source_upload(SourceUploadInput {
+                uploader_account_id: requested_by_account_id.unwrap_or(report.bundle.student_id),
+                source_kind,
+                title: format!("Vault Candidate: {}", report.bundle.title),
+                source_path: Some(primary_file.file_path.clone()),
+                country_code: None,
+                exam_board: None,
+                education_level: None,
+                subject_code: detect_subject_code(conn, &report.detected_subjects)?,
+                academic_year: report.detected_exam_years.first().map(ToString::to_string),
+                language_code: Some("en".to_string()),
+                version_label: Some("vault_candidate".to_string()),
+                metadata: json!({
+                    "origin": "personal_academic_vault",
+                    "bundle_id": bundle_id,
+                    "student_id": report.bundle.student_id,
+                    "detected_topics": report.detected_topics,
+                    "recommended_actions": report.recommended_actions,
+                }),
+            })?;
         intake
             .record_bundle_shared_promotion(
                 bundle_id,
@@ -356,8 +358,8 @@ mod tests {
 
         let workspace = get_submission_bundle_ocr_workspace(&state, bundle.id)
             .expect("ocr workspace should load");
-        let vault =
-            get_personal_academic_vault(&state, 1, 10).expect("personal academic vault should load");
+        let vault = get_personal_academic_vault(&state, 1, 10)
+            .expect("personal academic vault should load");
         let promotion = promote_submission_bundle_to_shared_source(
             &state,
             bundle.id,

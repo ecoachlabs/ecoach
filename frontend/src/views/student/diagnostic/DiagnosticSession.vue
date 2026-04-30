@@ -54,6 +54,7 @@ const lastResult = ref<{
 
 const questionCardRef = ref<InstanceType<typeof QuestionCard> | null>(null)
 const startTime = ref(Date.now())
+const questionFocusedAt = ref(new Date().toISOString())
 
 // ── Computed helpers ─────────────────────────────────────────────────────────
 
@@ -111,6 +112,7 @@ async function startPhase() {
     currentItemIndex.value = 0
     await loadCurrentOptions()
     startTime.value = Date.now()
+    questionFocusedAt.value = new Date().toISOString()
     stage.value = 'question'
   } catch (e: any) {
     error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to load questions'
@@ -146,11 +148,17 @@ async function handleAnswer(optionId: number, confidence: string, responseTimeMs
       changed_answer_count: 0,
       skipped: false,
       timed_out: false,
-      first_focus_at: null,
-      first_input_at: null,
+      first_focus_at: questionFocusedAt.value,
+      first_input_at: new Date().toISOString(),
       concept_guess: null,
       final_answer: null,
-      interaction_log: null,
+      interaction_log: {
+        source: 'diagnostic_session',
+        events: [
+          { type: 'question_presented', at: questionFocusedAt.value },
+          { type: 'answer_submitted', at: new Date().toISOString() },
+        ],
+      },
     })
 
     // Simple correctness check — diagnostic doesn't reveal correct answer in real time
@@ -172,12 +180,83 @@ async function handleAnswer(optionId: number, confidence: string, responseTimeMs
   }
 }
 
+async function handleSkip() {
+  if (!currentItem.value) return
+  stage.value = 'loading'
+
+  try {
+    await submitDiagnosticAttempt(diagnosticId.value, {
+      attempt_id: currentItem.value.attempt_id,
+      selected_option_id: null,
+      response_time_ms: Math.max(0, Date.now() - startTime.value),
+      confidence_level: null,
+      changed_answer_count: 0,
+      skipped: true,
+      timed_out: false,
+      first_focus_at: questionFocusedAt.value,
+      first_input_at: null,
+      concept_guess: null,
+      final_answer: null,
+      interaction_log: {
+        source: 'diagnostic_session',
+        events: [
+          { type: 'question_presented', at: questionFocusedAt.value },
+          { type: 'question_skipped', at: new Date().toISOString() },
+        ],
+      },
+    })
+
+    lastResult.value = null
+    await nextQuestion()
+  } catch (e: any) {
+    error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to skip question'
+    stage.value = 'question'
+  }
+}
+
+async function handleTimeout() {
+  if (!currentItem.value) return
+  stage.value = 'loading'
+
+  try {
+    await submitDiagnosticAttempt(diagnosticId.value, {
+      attempt_id: currentItem.value.attempt_id,
+      selected_option_id: null,
+      response_time_ms: currentPhase.value?.time_limit_seconds
+        ? currentPhase.value.time_limit_seconds * 1000
+        : Math.max(0, Date.now() - startTime.value),
+      confidence_level: null,
+      changed_answer_count: 0,
+      skipped: false,
+      timed_out: true,
+      first_focus_at: questionFocusedAt.value,
+      first_input_at: null,
+      concept_guess: null,
+      final_answer: null,
+      interaction_log: {
+        source: 'diagnostic_session',
+        events: [
+          { type: 'question_presented', at: questionFocusedAt.value },
+          { type: 'question_timed_out', at: new Date().toISOString() },
+        ],
+      },
+    })
+
+    lastResult.value = null
+    await nextQuestion()
+  } catch (e: any) {
+    error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to record timeout'
+    stage.value = 'question'
+  }
+}
+
 async function nextQuestion() {
   questionCardRef.value?.reset()
   if (currentItemIndex.value < phaseItems.value.length - 1) {
     currentItemIndex.value++
     await loadCurrentOptions()
     startTime.value = Date.now()
+    questionFocusedAt.value = new Date().toISOString()
     stage.value = 'question'
   } else {
     // Phase complete — try to advance
@@ -348,8 +427,10 @@ const phaseColors: Record<string, string> = {
           :question-number="currentItemIndex + 1"
           :total-questions="totalQuestionsInPhase"
           :show-timer="currentPhase?.condition_type === 'timed'"
+          :timer-seconds="currentPhase?.time_limit_seconds ?? undefined"
           @answer="handleAnswer"
-          @skip="nextQuestion"
+          @skip="handleSkip"
+          @timeout="handleTimeout"
         />
       </div>
 
@@ -371,7 +452,7 @@ const phaseColors: Record<string, string> = {
           <AppButton variant="primary" size="lg" class="w-full mb-3" @click="goToReport">
             View My Report →
           </AppButton>
-          <AppButton variant="ghost" size="sm" @click="router.push('/student')">
+          <AppButton variant="ghost" size="sm" @click="router.push('/student/coach')">
             Go to Coach Hub
           </AppButton>
         </AppCard>

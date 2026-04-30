@@ -31,29 +31,31 @@ fn run() -> Result<(), CommandError> {
     let state = AppState::open_runtime(Path::new(&db_path))?;
     let install = content_commands::install_pack(&state, pack_path.clone())?;
 
-    let (topic_count, objective_count, node_count, misconception_count, question_count) =
-        state.with_connection(|conn| {
+    let (topic_count, objective_count, node_count, misconception_count, question_count) = state
+        .with_connection(|conn| {
             let storage_err = |err: rusqlite::Error| CommandError {
                 code: "storage_error".to_string(),
                 message: err.to_string(),
             };
-            let topic_count: i64 = conn.query_row("SELECT COUNT(*) FROM topics", [], |row| {
-                row.get(0)
-            }).map_err(storage_err)?;
-            let objective_count: i64 =
-                conn.query_row("SELECT COUNT(*) FROM learning_objectives", [], |row| {
+            let topic_count: i64 = conn
+                .query_row("SELECT COUNT(*) FROM topics", [], |row| row.get(0))
+                .map_err(storage_err)?;
+            let objective_count: i64 = conn
+                .query_row("SELECT COUNT(*) FROM learning_objectives", [], |row| {
                     row.get(0)
-                }).map_err(storage_err)?;
-            let node_count: i64 =
-                conn.query_row("SELECT COUNT(*) FROM academic_nodes", [], |row| row.get(0))
-                    .map_err(storage_err)?;
-            let misconception_count: i64 =
-                conn.query_row("SELECT COUNT(*) FROM misconception_patterns", [], |row| {
+                })
+                .map_err(storage_err)?;
+            let node_count: i64 = conn
+                .query_row("SELECT COUNT(*) FROM academic_nodes", [], |row| row.get(0))
+                .map_err(storage_err)?;
+            let misconception_count: i64 = conn
+                .query_row("SELECT COUNT(*) FROM misconception_patterns", [], |row| {
                     row.get(0)
-                }).map_err(storage_err)?;
-            let question_count: i64 =
-                conn.query_row("SELECT COUNT(*) FROM questions", [], |row| row.get(0))
-                    .map_err(storage_err)?;
+                })
+                .map_err(storage_err)?;
+            let question_count: i64 = conn
+                .query_row("SELECT COUNT(*) FROM questions", [], |row| row.get(0))
+                .map_err(storage_err)?;
             Ok((
                 topic_count,
                 objective_count,

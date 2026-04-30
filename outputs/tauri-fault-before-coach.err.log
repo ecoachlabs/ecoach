@@ -1,0 +1,37 @@
+[perf][tauri.recover_deferred_session_completions] enter student_id=2 max_sessions=Some(1)
+[recovery][deferred_completion] processing session_id=160 status=active state=pending reason=app_entry
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.2ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.1ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.1ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 0.2ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 4364.0ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 7556.3ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.2ms count=159
+[perf][coach.build_orchestration_snapshot] persist_snapshot 16.4ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 1.9ms
+[perf][coach.build_orchestration_snapshot] total 11941.4ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 11941.8ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.2ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 0.2ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 0.3ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.7ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 4.0ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 0.4ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 0.3ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 0.5ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 0.1ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 0.3ms
+[perf][coach.evaluate_coach_brain] total 11953.1ms
+[recovery][deferred_completion] success session_id=160 status=abandoned reason=app_entry
+[perf][tauri.recover_deferred_session_completions] exit 12088.6ms
+[perf][tauri.recover_deferred_session_completions] enter student_id=2 max_sessions=Some(1)
+[recovery][deferred_completion] processing session_id=162 status=active state=pending reason=app_entry
+[chaos][deferred_completion] injected_failure stage=before_coach session_id=162
+[recovery][deferred_completion] failed session_id=162 reason=app_entry error=injected deferred completion failure at stage=before_coach for session 162
+[recovery][deferred_completion] retry_failed session_id=162 reason=app_entry error=injected deferred completion failure at stage=before_coach for session 162
+[perf][tauri.recover_deferred_session_completions] exit 138.4ms

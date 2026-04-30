@@ -1,0 +1,791 @@
+warning: field `recent_actions` is never read
+   --> crates\ecoach-content\src\resource_intelligence.rs:230:5
+    |
+224 | struct LearnerSignals {
+    |        -------------- field in this struct
+...
+230 |     recent_actions: Vec<String>,
+    |     ^^^^^^^^^^^^^^
+    |
+    = note: `LearnerSignals` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `candidate` is never read
+   --> crates\ecoach-content\src\resource_intelligence.rs:238:5
+    |
+234 | struct SelectedRole {
+    |        ------------ field in this struct
+...
+238 |     candidate: Option<ResourceCandidate>,
+    |     ^^^^^^^^^
+    |
+    = note: `SelectedRole` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: `ecoach-content` (lib) generated 2 warnings
+warning: unused imports: `Value` and `json`
+ --> crates\ecoach-coach-brain\src\beat_yesterday_deep.rs:4:18
+  |
+4 | use serde_json::{Value, json};
+  |                  ^^^^^  ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `BasisPoints` and `clamp_bp`
+ --> crates\ecoach-coach-brain\src\goal_engine.rs:1:24
+  |
+1 | use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
+  |                        ^^^^^^^^^^^                             ^^^^^^^^
+
+warning: unused import: `OptionalExtension`
+ --> crates\ecoach-coach-brain\src\goal_engine.rs:2:28
+  |
+2 | use rusqlite::{Connection, OptionalExtension, params};
+  |                            ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `to_bp`
+ --> crates\ecoach-coach-brain\src\memory_intelligence.rs:1:74
+  |
+1 | use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp, to_bp};
+  |                                                                          ^^^^^
+
+warning: unused imports: `BasisPoints` and `clamp_bp`
+ --> crates\ecoach-coach-brain\src\prerequisite_graph.rs:1:24
+  |
+1 | use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
+  |                        ^^^^^^^^^^^                             ^^^^^^^^
+
+warning: unnecessary parentheses around function argument
+   --> crates\ecoach-coach-brain\src\rise_mode_engine.rs:448:13
+    |
+448 |             ((foundation as f64 * 0.20
+    |             ^
+...
+454 |                 .round() as i64),
+    |                                ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+448 ~             (foundation as f64 * 0.20
+449 |                 + recall as f64 * 0.15
+...
+453 |                 + (10_000 - misconception as i64) as f64 * 0.10)
+454 ~                 .round() as i64 ,
+    |
+
+warning: unused imports: `BasisPoints` and `clamp_bp`
+ --> crates\ecoach-coach-brain\src\stepped_question_engine.rs:1:24
+  |
+1 | use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
+  |                        ^^^^^^^^^^^                             ^^^^^^^^
+
+warning: unused import: `OptionalExtension`
+ --> crates\ecoach-coach-brain\src\stepped_question_engine.rs:2:28
+  |
+2 | use rusqlite::{Connection, OptionalExtension, params};
+  |                            ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Value`
+ --> crates\ecoach-coach-brain\src\topic_action_engine.rs:4:18
+  |
+4 | use serde_json::{Value, json};
+  |                  ^^^^^
+
+warning: unused import: `OptionalExtension`
+ --> crates\ecoach-coach-brain\src\topic_proof_engine.rs:2:28
+  |
+2 | use rusqlite::{Connection, OptionalExtension, params};
+  |                            ^^^^^^^^^^^^^^^^^
+
+warning: unnecessary parentheses around function argument
+   --> crates\ecoach-coach-brain\src\topic_proof_engine.rs:107:13
+    |
+107 |             ((accuracy as f64 * 0.25
+    |             ^
+...
+114 |                 .round() as i64),
+    |                                ^
+    |
+help: remove these parentheses
+    |
+107 ~             (accuracy as f64 * 0.25
+108 |                 + speed as f64 * 0.15
+...
+113 |                 + reasoning as f64 * 0.10)
+114 ~                 .round() as i64 ,
+    |
+
+warning: unused variable: `signal`
+   --> crates\ecoach-coach-brain\src\evidence_engine.rs:146:21
+    |
+146 |         if let Some(ref signal) = misconception_signal {
+    |                     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_signal`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `mastery_delta`
+   --> crates\ecoach-coach-brain\src\evidence_engine.rs:549:9
+    |
+549 |         mastery_delta: i64,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mastery_delta`
+
+warning: unused variable: `urgency_str`
+   --> crates\ecoach-coach-brain\src\goal_engine.rs:181:40
+    |
+181 |         let (goal_type_str, exam_date, urgency_str, confidence): (
+    |                                        ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_urgency_str`
+
+warning: unused variable: `confidence`
+   --> crates\ecoach-coach-brain\src\goal_engine.rs:181:53
+    |
+181 |         let (goal_type_str, exam_date, urgency_str, confidence): (
+    |                                                     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_confidence`
+
+warning: unused variable: `current_route_type`
+   --> crates\ecoach-coach-brain\src\journey_adaptation.rs:262:47
+    |
+262 |         let Some((route_id, current_mode_str, current_route_type)) = route else {
+    |                                               ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_current_route_type`
+
+warning: unused variable: `gap`
+   --> crates\ecoach-coach-brain\src\journey_adaptation.rs:453:27
+    |
+453 |             let (mastery, gap, fragility, evidence_count, decay_risk): (i64, i64, i64, i64, i64) =
+    |                           ^^^ help: if this is intentional, prefix it with an underscore: `_gap`
+
+warning: unused variable: `student_id`
+   --> crates\ecoach-coach-brain\src\memory_intelligence.rs:733:41
+    |
+733 |     fn load_confidence_alignment(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
+    |                                         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_student_id`
+
+warning: unused variable: `node_id`
+   --> crates\ecoach-coach-brain\src\memory_intelligence.rs:733:58
+    |
+733 |     fn load_confidence_alignment(&self, student_id: i64, node_id: i64) -> EcoachResult<f64> {
+    |                                                          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_node_id`
+
+warning: unused variable: `student_id`
+   --> crates\ecoach-coach-brain\src\rise_mode_engine.rs:504:9
+    |
+504 |         student_id: i64,
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_student_id`
+
+warning: unused variable: `subject_id`
+   --> crates\ecoach-coach-brain\src\rise_mode_engine.rs:505:9
+    |
+505 |         subject_id: i64,
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_subject_id`
+
+warning: variable does not need to be mutable
+   --> crates\ecoach-coach-brain\src\topic_action_engine.rs:403:13
+    |
+403 |         let mut steps = vec![
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `student_id`
+   --> crates\ecoach-coach-brain\src\topic_action_engine.rs:400:9
+    |
+400 |         student_id: i64,
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_student_id`
+
+warning: unused variable: `subtopics`
+   --> crates\ecoach-coach-brain\src\topic_action_engine.rs:401:9
+    |
+401 |         subtopics: &[(i64, String)],
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_subtopics`
+
+warning: unused variable: `subtopics`
+   --> crates\ecoach-coach-brain\src\topic_action_engine.rs:433:33
+    |
+433 |     fn build_expert_path(&self, subtopics: &[(i64, String)]) -> EcoachResult<Vec<RepairStep>> {
+    |                                 ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_subtopics`
+
+warning: fields `id` and `confidence_level` are never read
+   --> crates\ecoach-coach-brain\src\evidence_engine.rs:725:5
+    |
+724 | struct AttemptContext {
+    |        -------------- fields in this struct
+725 |     id: i64,
+    |     ^^
+...
+731 |     confidence_level: Option<String>,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `AttemptContext` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `session_id` is never read
+   --> crates\ecoach-coach-brain\src\exam_strategy.rs:521:5
+    |
+520 | struct StrategySessionRow {
+    |        ------------------ field in this struct
+521 |     session_id: Option<i64>,
+    |     ^^^^^^^^^^
+    |
+    = note: `StrategySessionRow` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `subject_code` is never read
+   --> crates\ecoach-coach-brain\src\intelligence_dome.rs:190:5
+    |
+188 | struct FocusContext {
+    |        ------------ field in this struct
+189 |     subject_id: i64,
+190 |     subject_code: String,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `FocusContext` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `confirmed_count` is never read
+   --> crates\ecoach-coach-brain\src\intelligence_dome.rs:215:5
+    |
+210 | struct EvidenceAggregate {
+    |        ----------------- field in this struct
+...
+215 |     confirmed_count: i64,
+    |     ^^^^^^^^^^^^^^^
+    |
+    = note: `EvidenceAggregate` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `load_topic_candidates` is never used
+   --> crates\ecoach-coach-brain\src\journey.rs:590:8
+    |
+ 55 | impl<'a> JourneyService<'a> {
+    | --------------------------- method in this implementation
+...
+590 |     fn load_topic_candidates(
+    |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `TopicCandidate` is never constructed
+   --> crates\ecoach-coach-brain\src\journey.rs:683:8
+    |
+683 | struct TopicCandidate {
+    |        ^^^^^^^^^^^^^^
+
+warning: fields `state_total_attempts`, `state_correct_attempts`, `is_urgent`, and `is_exam_critical` are never read
+   --> crates\ecoach-coach-brain\src\mastery_map.rs:379:5
+    |
+366 | struct TopicRollupRow {
+    |        -------------- fields in this struct
+...
+379 |     state_total_attempts: i64,
+    |     ^^^^^^^^^^^^^^^^^^^^
+380 |     state_correct_attempts: i64,
+    |     ^^^^^^^^^^^^^^^^^^^^^^
+381 |     is_blocked: i64,
+382 |     is_urgent: i64,
+    |     ^^^^^^^^^
+383 |     is_exam_critical: i64,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `TopicRollupRow` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `unit_key`, `title`, `content_type_primary`, and `representation_tags` are never read
+   --> crates\ecoach-coach-brain\src\pedagogical_runtime.rs:196:5
+    |
+194 | struct LearningUnitRow {
+    |        --------------- fields in this struct
+195 |     id: i64,
+196 |     unit_key: String,
+    |     ^^^^^^^^
+197 |     title: String,
+    |     ^^^^^
+198 |     content_type_primary: String,
+    |     ^^^^^^^^^^^^^^^^^^^^
+199 |     representation_tags: Vec<String>,
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `LearningUnitRow` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: `ecoach-coach-brain` (lib) generated 33 warnings (run `cargo fix --lib -p ecoach-coach-brain` to apply 25 suggestions)
+warning: unused import: `crate::forecast_engine::ForecastEngine`
+ --> crates\ecoach-forecast\src\calibration.rs:5:5
+  |
+5 | use crate::forecast_engine::ForecastEngine;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `attempt_count` is never read
+    --> crates\ecoach-sessions\src\service.rs:3519:5
+     |
+3518 | struct AttemptMetrics {
+     |        -------------- field in this struct
+3519 |     attempt_count: i64,
+     |     ^^^^^^^^^^^^^
+     |
+     = note: `AttemptMetrics` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `ecoach-forecast` (lib) generated 1 warning (run `cargo fix --lib -p ecoach-forecast` to apply 1 suggestion)
+warning: `ecoach-sessions` (lib) generated 1 warning
+warning: fields `display_order`, `skipped`, and `confidence_level` are never read
+    --> crates\ecoach-diagnostics\src\engine.rs:3306:5
+     |
+3305 | struct PhaseAttemptSnapshot {
+     |        -------------------- fields in this struct
+3306 |     display_order: i64,
+     |     ^^^^^^^^^^^^^
+...
+3310 |     skipped: bool,
+     |     ^^^^^^^
+...
+3314 |     confidence_level: Option<String>,
+     |     ^^^^^^^^^^^^^^^^
+     |
+     = note: `PhaseAttemptSnapshot` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `ecoach-diagnostics` (lib) generated 1 warning
+warning: unnecessary parentheses around function argument
+    --> crates\ecoach-goals-calendar\src\service.rs:2890:22
+     |
+2890 |             clamp_bp(((remaining_effective_minutes * 10_000) / usable_capacity_minutes.max(30)));
+     |                      ^                                                                        ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+2890 -             clamp_bp(((remaining_effective_minutes * 10_000) / usable_capacity_minutes.max(30)));
+2890 +             clamp_bp((remaining_effective_minutes * 10_000) / usable_capacity_minutes.max(30) );
+     |
+
+warning: unnecessary parentheses around function argument
+    --> crates\ecoach-goals-calendar\src\service.rs:2892:22
+     |
+2892 |             clamp_bp(((feasibility_score_bp as i64 + (10_000 - pressure_score_bp as i64)) / 2));
+     |                      ^                                                                       ^
+     |
+help: remove these parentheses
+     |
+2892 -             clamp_bp(((feasibility_score_bp as i64 + (10_000 - pressure_score_bp as i64)) / 2));
+2892 +             clamp_bp((feasibility_score_bp as i64 + (10_000 - pressure_score_bp as i64)) / 2 );
+     |
+
+warning: unnecessary parentheses around function argument
+    --> crates\ecoach-goals-calendar\src\service.rs:4855:17
+     |
+4855 |                 ((plan_state.pressure_score_bp as i64 + replan.pressure_score as i64) / 2),
+     |                 ^                                                                        ^
+     |
+help: remove these parentheses
+     |
+4855 -                 ((plan_state.pressure_score_bp as i64 + replan.pressure_score as i64) / 2),
+4855 +                 (plan_state.pressure_score_bp as i64 + replan.pressure_score as i64) / 2 ,
+     |
+
+warning: unused variable: `next_due`
+    --> crates\ecoach-goals-calendar\src\service.rs:6828:40
+     |
+6828 |                 Some((title_id, state, next_due))
+     |                                        ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_next_due`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `parse_string_list` is never used
+   --> crates\ecoach-games\src\service.rs:113:4
+    |
+113 | fn parse_string_list(raw: &str) -> EcoachResult<Vec<String>> {
+    |    ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `mode_item_id` is never read
+    --> crates\ecoach-games\src\service.rs:1469:5
+     |
+1456 | struct StoredTrapRound {
+     |        --------------- field in this struct
+...
+1469 |     mode_item_id: Option<i64>,
+     |     ^^^^^^^^^^^^
+     |
+     = note: `StoredTrapRound` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: struct `StoredContrastModeItem` is never constructed
+    --> crates\ecoach-games\src\service.rs:1476:8
+     |
+1476 | struct StoredContrastModeItem {
+     |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `ecoach-goals-calendar` (lib) generated 4 warnings (run `cargo fix --lib -p ecoach-goals-calendar` to apply 4 suggestions)
+warning: `ecoach-games` (lib) generated 3 warnings
+   Compiling ecoach-commands v0.1.0 (C:\Users\surfaceSudio\OneDrive\ecoach\crates\ecoach-commands)
+   Compiling ecoach-tauri v0.1.0 (C:\Users\surfaceSudio\OneDrive\ecoach\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 27.28s
+     Running `target\debug\ecoach-tauri.exe`
+[perf][tauri.list_session_questions] session_id=138 items.query 0.6ms item_count=4
+[perf][tauri.list_session_questions] options.query 0.6ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.2ms
+[perf][tauri.list_session_questions] total 6.8ms
+[perf][tauri.submit_attempt] enter session_id=138 session_item_id=909 question_id=3934
+[perf][rust.submit_attempt] enter session_id=138 session_item_id=909 question_id=3934 selected_option_id=None
+[perf][rust.submit_attempt] session.lookup 0.3ms
+[perf][rust.submit_attempt] session.record_outcome 47.5ms
+[perf][rust.submit_attempt] student_model.process_answer 159.2ms
+[perf][tauri.submit_attempt] exit 214.1ms
+[perf][tauri.list_session_questions] session_id=139 items.query 0.6ms item_count=4
+[perf][tauri.list_session_questions] options.query 0.9ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.0ms
+[perf][tauri.list_session_questions] total 5.1ms
+[perf][tauri.list_session_questions] session_id=140 items.query 0.6ms item_count=10
+[perf][tauri.list_session_questions] options.query 1.2ms option_count=40
+[perf][tauri.list_session_questions] options.attach 0.2ms
+[perf][tauri.list_session_questions] total 6.6ms
+[perf][tauri.list_session_questions] session_id=140 items.query 1.9ms item_count=10
+[perf][tauri.list_session_questions] options.query 1.6ms option_count=40
+[perf][tauri.list_session_questions] options.attach 0.2ms
+[perf][tauri.list_session_questions] total 22.2ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=917 question_id=2866
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=917 question_id=2866 selected_option_id=Some(11462)
+[perf][rust.submit_attempt] session.lookup 1.0ms
+[perf][rust.submit_attempt] session.record_outcome 141.7ms
+[perf][rust.submit_attempt] student_model.process_answer 242.1ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 57.8ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 354.1ms
+[perf][rust.submit_attempt] session.get_session_snapshot 2.5ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 827.9ms
+[perf][rust.submit_attempt] outer_total 838.4ms
+[perf][tauri.submit_attempt] exit 846.7ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=918 question_id=4816
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=918 question_id=4816 selected_option_id=Some(19261)
+[perf][rust.submit_attempt] session.lookup 1.1ms
+[perf][rust.submit_attempt] session.record_outcome 128.6ms
+[perf][rust.submit_attempt] student_model.process_answer 273.8ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 43.8ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 231.9ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.0ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 707.5ms
+[perf][rust.submit_attempt] outer_total 712.5ms
+[perf][tauri.submit_attempt] exit 718.7ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=919 question_id=4825
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=919 question_id=4825 selected_option_id=Some(19297)
+[perf][rust.submit_attempt] session.lookup 0.8ms
+[perf][rust.submit_attempt] session.record_outcome 136.7ms
+[perf][rust.submit_attempt] student_model.process_answer 238.7ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 61.4ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 233.7ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.7ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 692.8ms
+[perf][rust.submit_attempt] outer_total 706.2ms
+[perf][tauri.submit_attempt] exit 716.0ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=920 question_id=2900
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=920 question_id=2900 selected_option_id=Some(11597)
+[perf][rust.submit_attempt] session.lookup 0.9ms
+[perf][rust.submit_attempt] session.record_outcome 143.3ms
+[perf][rust.submit_attempt] student_model.process_answer 284.0ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 34.5ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 351.3ms
+[perf][rust.submit_attempt] session.get_session_snapshot 0.6ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 836.3ms
+[perf][rust.submit_attempt] outer_total 847.9ms
+[perf][tauri.submit_attempt] exit 857.8ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=921 question_id=4834
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=921 question_id=4834 selected_option_id=Some(19336)
+[perf][rust.submit_attempt] session.lookup 0.7ms
+[perf][rust.submit_attempt] session.record_outcome 112.6ms
+[perf][rust.submit_attempt] student_model.process_answer 212.6ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 43.6ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 228.1ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.2ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 616.2ms
+[perf][rust.submit_attempt] outer_total 624.9ms
+[perf][tauri.submit_attempt] exit 632.1ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=922 question_id=2855
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=922 question_id=2855 selected_option_id=Some(11418)
+[perf][rust.submit_attempt] session.lookup 0.8ms
+[perf][rust.submit_attempt] session.record_outcome 140.7ms
+[perf][rust.submit_attempt] student_model.process_answer 307.0ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 41.6ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 374.3ms
+[perf][rust.submit_attempt] session.get_session_snapshot 0.9ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 890.8ms
+[perf][rust.submit_attempt] outer_total 902.1ms
+[perf][tauri.submit_attempt] exit 913.3ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=923 question_id=2875
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=923 question_id=2875 selected_option_id=Some(11497)
+[perf][rust.submit_attempt] session.lookup 0.9ms
+[perf][rust.submit_attempt] session.record_outcome 134.8ms
+[perf][rust.submit_attempt] student_model.process_answer 210.7ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 76.1ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 363.2ms
+[perf][rust.submit_attempt] session.get_session_snapshot 0.9ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 807.8ms
+[perf][rust.submit_attempt] outer_total 824.7ms
+[perf][tauri.submit_attempt] exit 836.8ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=924 question_id=2884
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=924 question_id=2884 selected_option_id=Some(11533)
+[perf][rust.submit_attempt] session.lookup 0.8ms
+[perf][rust.submit_attempt] session.record_outcome 140.8ms
+[perf][rust.submit_attempt] student_model.process_answer 284.2ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 37.1ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 348.1ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.2ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 835.0ms
+[perf][rust.submit_attempt] outer_total 845.3ms
+[perf][tauri.submit_attempt] exit 854.5ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=925 question_id=4850
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=925 question_id=4850 selected_option_id=Some(19400)
+[perf][rust.submit_attempt] session.lookup 0.7ms
+[perf][rust.submit_attempt] session.record_outcome 135.4ms
+[perf][rust.submit_attempt] student_model.process_answer 242.1ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 57.5ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 234.4ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.3ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 697.3ms
+[perf][rust.submit_attempt] outer_total 709.1ms
+[perf][tauri.submit_attempt] exit 718.4ms
+[perf][tauri.submit_attempt] enter session_id=140 session_item_id=926 question_id=4808
+[perf][rust.submit_attempt] enter session_id=140 session_item_id=926 question_id=4808 selected_option_id=Some(19229)
+[perf][rust.submit_attempt] session.lookup 0.8ms
+[perf][rust.submit_attempt] session.record_outcome 130.3ms
+[perf][rust.submit_attempt] student_model.process_answer 289.9ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 35.8ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 225.2ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.3ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 706.9ms
+[perf][rust.submit_attempt] outer_total 718.5ms
+[perf][tauri.submit_attempt] exit 726.2ms
+[perf][tauri.complete_session_with_pipeline] enter student_id=2 session_id=140
+[perf][rust.complete_session_with_pipeline] enter student_id=2 session_id=140
+[perf][rust.complete_session_with_pipeline] session.complete_session 263.1ms
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.8ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.5ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.4ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.4ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 1.4ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 3702.9ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 6950.5ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.4ms count=138
+[perf][coach.build_orchestration_snapshot] persist_snapshot 144.0ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 34.2ms
+[perf][coach.build_orchestration_snapshot] total 10889.4ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 10891.9ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.8ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 0.8ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 0.7ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.9ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 9.5ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 9.8ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 9.4ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 24.8ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 0.7ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 10.1ms
+[perf][coach.evaluate_coach_brain] total 11002.7ms
+[perf][rust.complete_session_with_pipeline] coach.evaluate_coach_brain 11007.9ms
+[perf][rust.complete_session_with_pipeline] total 11283.3ms
+[perf][tauri.complete_session_with_pipeline] exit 11289.1ms
+[perf][tauri.list_session_questions] session_id=140 items.query 1.7ms item_count=10
+[perf][tauri.list_session_questions] options.query 1.7ms option_count=40
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 27.2ms
+[perf][tauri.list_session_questions] session_id=141 items.query 0.6ms item_count=4
+[perf][tauri.list_session_questions] options.query 1.3ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.0ms
+[perf][tauri.list_session_questions] total 15.3ms
+[perf][tauri.submit_attempt] enter session_id=141 session_item_id=927 question_id=3916
+[perf][rust.submit_attempt] enter session_id=141 session_item_id=927 question_id=3916 selected_option_id=None
+[perf][rust.submit_attempt] session.lookup 0.5ms
+[perf][rust.submit_attempt] session.record_outcome 144.7ms
+[perf][rust.submit_attempt] student_model.process_answer 351.4ms
+[perf][tauri.submit_attempt] exit 530.4ms
+[perf][tauri.list_session_questions] session_id=142 items.query 1.7ms item_count=10
+[perf][tauri.list_session_questions] options.query 3.2ms option_count=40
+[perf][tauri.list_session_questions] options.attach 0.2ms
+[perf][tauri.list_session_questions] total 20.8ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=931 question_id=4808
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=931 question_id=4808 selected_option_id=Some(19230)
+[perf][rust.submit_attempt] session.lookup 0.6ms
+[perf][rust.submit_attempt] session.record_outcome 242.9ms
+[perf][rust.submit_attempt] student_model.process_answer 294.0ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 45.8ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 294.1ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.3ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 902.3ms
+[perf][rust.submit_attempt] outer_total 911.3ms
+[perf][tauri.submit_attempt] exit 925.9ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=932 question_id=4825
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=932 question_id=4825 selected_option_id=Some(19297)
+[perf][rust.submit_attempt] session.lookup 0.9ms
+[perf][rust.submit_attempt] session.record_outcome 178.0ms
+[perf][rust.submit_attempt] student_model.process_answer 279.9ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 64.6ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 270.3ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.1ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 817.7ms
+[perf][rust.submit_attempt] outer_total 828.0ms
+[perf][tauri.submit_attempt] exit 842.5ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=933 question_id=4816
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=933 question_id=4816 selected_option_id=Some(19262)
+[perf][rust.submit_attempt] session.lookup 0.7ms
+[perf][rust.submit_attempt] session.record_outcome 191.0ms
+[perf][rust.submit_attempt] student_model.process_answer 254.6ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 66.9ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 294.7ms
+[perf][rust.submit_attempt] session.get_session_snapshot 2.1ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 835.0ms
+[perf][rust.submit_attempt] outer_total 845.4ms
+[perf][tauri.submit_attempt] exit 857.9ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=934 question_id=2866
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=934 question_id=2866 selected_option_id=Some(11462)
+[perf][rust.submit_attempt] session.lookup 1.1ms
+[perf][rust.submit_attempt] session.record_outcome 167.3ms
+[perf][rust.submit_attempt] student_model.process_answer 272.4ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 93.2ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 675.7ms
+[perf][rust.submit_attempt] session.get_session_snapshot 6.1ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 1280.9ms
+[perf][rust.submit_attempt] outer_total 1299.8ms
+[perf][tauri.submit_attempt] exit 1316.6ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=935 question_id=2900
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=935 question_id=2900 selected_option_id=Some(11600)
+[perf][rust.submit_attempt] session.lookup 1.6ms
+[perf][rust.submit_attempt] session.record_outcome 212.1ms
+[perf][rust.submit_attempt] student_model.process_answer 310.8ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 98.5ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 589.4ms
+[perf][rust.submit_attempt] session.get_session_snapshot 6.6ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 1265.8ms
+[perf][rust.submit_attempt] outer_total 1280.9ms
+[perf][tauri.submit_attempt] exit 1291.1ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=936 question_id=2875
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=936 question_id=2875 selected_option_id=Some(11497)
+[perf][rust.submit_attempt] session.lookup 0.9ms
+[perf][rust.submit_attempt] session.record_outcome 173.3ms
+[perf][rust.submit_attempt] student_model.process_answer 283.9ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 60.2ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 418.9ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.2ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 964.6ms
+[perf][rust.submit_attempt] outer_total 979.4ms
+[perf][tauri.submit_attempt] exit 990.1ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=937 question_id=4834
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=937 question_id=4834 selected_option_id=Some(19336)
+[perf][rust.submit_attempt] session.lookup 0.7ms
+[perf][rust.submit_attempt] session.record_outcome 169.9ms
+[perf][rust.submit_attempt] student_model.process_answer 308.8ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 58.3ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 314.8ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.0ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 884.4ms
+[perf][rust.submit_attempt] outer_total 897.7ms
+[perf][tauri.submit_attempt] exit 907.3ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=938 question_id=2857
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=938 question_id=2857 selected_option_id=Some(11427)
+[perf][rust.submit_attempt] session.lookup 0.9ms
+[perf][rust.submit_attempt] session.record_outcome 253.7ms
+[perf][rust.submit_attempt] student_model.process_answer 265.1ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 59.2ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 479.2ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.2ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 1090.9ms
+[perf][rust.submit_attempt] outer_total 1099.8ms
+[perf][tauri.submit_attempt] exit 1109.6ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=939 question_id=2892
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=939 question_id=2892 selected_option_id=Some(11568)
+[perf][rust.submit_attempt] session.lookup 0.9ms
+[perf][rust.submit_attempt] session.record_outcome 173.8ms
+[perf][rust.submit_attempt] student_model.process_answer 301.7ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 47.3ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 427.3ms
+[perf][rust.submit_attempt] session.get_session_snapshot 1.6ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 974.3ms
+[perf][rust.submit_attempt] outer_total 986.0ms
+[perf][tauri.submit_attempt] exit 996.9ms
+[perf][tauri.submit_attempt] enter session_id=142 session_item_id=940 question_id=4842
+[perf][rust.submit_attempt] enter session_id=142 session_item_id=940 question_id=4842 selected_option_id=Some(19368)
+[perf][rust.submit_attempt] session.lookup 0.8ms
+[perf][rust.submit_attempt] session.record_outcome 175.6ms
+[perf][rust.submit_attempt] student_model.process_answer 280.5ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 51.9ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 323.9ms
+[perf][rust.submit_attempt] session.get_session_snapshot 3.1ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 860.9ms
+[perf][rust.submit_attempt] outer_total 872.9ms
+[perf][tauri.submit_attempt] exit 882.2ms
+[perf][tauri.complete_session_with_pipeline] enter student_id=2 session_id=142
+[perf][rust.complete_session_with_pipeline] enter student_id=2 session_id=142
+[perf][rust.complete_session_with_pipeline] session.complete_session 109.3ms
+[perf][coach.evaluate_coach_brain] enter student_id=2 trigger=SessionCompleted horizon_days=14
+[perf][coach.evaluate_coach_brain] assess_content_readiness 0.6ms
+[perf][coach.evaluate_coach_brain] resolve_coach_state 0.5ms
+[perf][coach.build_orchestration_snapshot] enter student_id=2 subject_id=None topic_id=None
+[perf][coach.build_orchestration_snapshot] assess_content_readiness 0.6ms
+[perf][coach.build_orchestration_snapshot] resolve_coach_state 0.5ms
+[perf][coach.build_orchestration_snapshot] resolve_next_coach_action 0.8ms
+[perf][coach.build_orchestration_snapshot] build_intelligence_dome 5185.9ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_judgment_snapshot 8796.9ms has_value=true
+[perf][coach.build_orchestration_snapshot] build_checks count=3
+[perf][coach.build_orchestration_snapshot] suggest_session 0.0ms has_value=false
+[perf][coach.build_orchestration_snapshot] count_attempts 0.6ms count=149
+[perf][coach.build_orchestration_snapshot] persist_snapshot 207.7ms
+[perf][coach.build_orchestration_snapshot] record_orchestration_cycle 37.9ms
+[perf][coach.build_orchestration_snapshot] total 14277.9ms
+[perf][coach.evaluate_coach_brain] build_orchestration_snapshot 14283.5ms
+[perf][coach.evaluate_coach_brain] get_coach_roadmap 0.8ms
+[perf][coach.evaluate_coach_brain] get_today_mission_brief 1.3ms
+[perf][coach.evaluate_coach_brain] build_study_budget_snapshot 1.0ms
+[perf][coach.evaluate_coach_brain] list_active_blockers 0.9ms
+[perf][coach.evaluate_coach_brain] sync_content_readiness_projection 14.0ms
+[perf][coach.evaluate_coach_brain] sync_lifecycle_state_projection 14.8ms
+[perf][coach.evaluate_coach_brain] sync_next_action_projection 11.1ms
+[perf][coach.evaluate_coach_brain] sync_recovery_state_projection 31.5ms
+[perf][coach.evaluate_coach_brain] list_recovery_state_projection 3.2ms
+[perf][coach.evaluate_coach_brain] write_decision_trace 14.9ms
+[perf][coach.evaluate_coach_brain] total 14421.1ms
+[perf][rust.complete_session_with_pipeline] coach.evaluate_coach_brain 14428.2ms
+[perf][rust.complete_session_with_pipeline] total 14547.2ms
+[perf][tauri.complete_session_with_pipeline] exit 14555.7ms
+[perf][tauri.list_session_questions] session_id=142 items.query 2.7ms item_count=10
+[perf][tauri.list_session_questions] options.query 2.4ms option_count=40
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 27.4ms
+[perf][tauri.list_session_questions] session_id=141 items.query 1.0ms item_count=4
+[perf][tauri.list_session_questions] options.query 1.0ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 32.1ms
+[perf][tauri.list_session_questions] session_id=142 items.query 2.5ms item_count=10
+[perf][tauri.list_session_questions] options.query 1.6ms option_count=40
+[perf][tauri.list_session_questions] options.attach 0.3ms
+[perf][tauri.list_session_questions] total 28.8ms
+[perf][tauri.list_session_questions] session_id=143 items.query 1.2ms item_count=4
+[perf][tauri.list_session_questions] options.query 0.4ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 23.0ms
+[perf][tauri.submit_attempt] enter session_id=143 session_item_id=941 question_id=3908
+[perf][rust.submit_attempt] enter session_id=143 session_item_id=941 question_id=3908 selected_option_id=None
+[perf][rust.submit_attempt] session.lookup 3.9ms
+[perf][rust.submit_attempt] session.record_outcome 315.7ms
+[perf][rust.submit_attempt] student_model.process_answer 1403.1ms
+[perf][tauri.submit_attempt] exit 1774.7ms
+[perf][tauri.list_session_questions] session_id=144 items.query 0.5ms item_count=4
+[perf][tauri.list_session_questions] options.query 0.9ms option_count=16
+[perf][tauri.list_session_questions] options.attach 0.1ms
+[perf][tauri.list_session_questions] total 6.5ms

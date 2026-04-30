@@ -1,1 +1,2738 @@
-[]
+[
+  {
+    "family_code": "B7_1_1_1_FOUNDATION_V1",
+    "family_name": "B7.1.1.1 Foundation Checks",
+    "topic_code": "B7.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.1.1 Foundation Checks for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_1_1_WORKED_V1",
+    "family_name": "B7.1.1.1 Worked Pattern",
+    "topic_code": "B7.1.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.1.1 Worked Pattern for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_1_1_TRANSFER_V1",
+    "family_name": "B7.1.1.1 Transfer Checks",
+    "topic_code": "B7.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.1.1 Transfer Checks for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_1_1_MISCONCEPTION_V1",
+    "family_name": "B7.1.1.1 Misconception Probes",
+    "topic_code": "B7.1.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.1.1 Misconception Probes for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_1_1_EXAM_V1",
+    "family_name": "B7.1.1.1 Exam Patterns",
+    "topic_code": "B7.1.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.1.1 Exam Patterns for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_1_1_SPEED_V1",
+    "family_name": "B7.1.1.1 Speed Builders",
+    "topic_code": "B7.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.1.1 Speed Builders for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_1_1_2_FOUNDATION_V1",
+    "family_name": "B7.1.1.2 Foundation Checks",
+    "topic_code": "B7.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.1.2 Foundation Checks for Comparing and Ordering Whole Numbers",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_1_2_WORKED_V1",
+    "family_name": "B7.1.1.2 Worked Pattern",
+    "topic_code": "B7.1.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.1.2 Worked Pattern for Comparing and Ordering Whole Numbers",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_1_2_TRANSFER_V1",
+    "family_name": "B7.1.1.2 Transfer Checks",
+    "topic_code": "B7.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.1.2 Transfer Checks for Comparing and Ordering Whole Numbers",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_1_2_MISCONCEPTION_V1",
+    "family_name": "B7.1.1.2 Misconception Probes",
+    "topic_code": "B7.1.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.1.2 Misconception Probes for Comparing and Ordering Whole Numbers",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_1_2_EXAM_V1",
+    "family_name": "B7.1.1.2 Exam Patterns",
+    "topic_code": "B7.1.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.1.2 Exam Patterns for Comparing and Ordering Whole Numbers",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_1_2_SPEED_V1",
+    "family_name": "B7.1.1.2 Speed Builders",
+    "topic_code": "B7.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.1.2 Speed Builders for Comparing and Ordering Whole Numbers",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_1_2_1_FOUNDATION_V1",
+    "family_name": "B7.1.2.1 Foundation Checks",
+    "topic_code": "B7.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.1 Foundation Checks for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_1_WORKED_V1",
+    "family_name": "B7.1.2.1 Worked Pattern",
+    "topic_code": "B7.1.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.2.1 Worked Pattern for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_1_TRANSFER_V1",
+    "family_name": "B7.1.2.1 Transfer Checks",
+    "topic_code": "B7.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.1 Transfer Checks for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_1_MISCONCEPTION_V1",
+    "family_name": "B7.1.2.1 Misconception Probes",
+    "topic_code": "B7.1.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.2.1 Misconception Probes for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_2_1_EXAM_V1",
+    "family_name": "B7.1.2.1 Exam Patterns",
+    "topic_code": "B7.1.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.2.1 Exam Patterns for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_2_1_SPEED_V1",
+    "family_name": "B7.1.2.1 Speed Builders",
+    "topic_code": "B7.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.1 Speed Builders for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_1_2_2_FOUNDATION_V1",
+    "family_name": "B7.1.2.2 Foundation Checks",
+    "topic_code": "B7.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.2 Foundation Checks for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_2_WORKED_V1",
+    "family_name": "B7.1.2.2 Worked Pattern",
+    "topic_code": "B7.1.2.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.2.2 Worked Pattern for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_2_TRANSFER_V1",
+    "family_name": "B7.1.2.2 Transfer Checks",
+    "topic_code": "B7.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.2 Transfer Checks for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_2_MISCONCEPTION_V1",
+    "family_name": "B7.1.2.2 Misconception Probes",
+    "topic_code": "B7.1.2.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.2.2 Misconception Probes for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_2_2_EXAM_V1",
+    "family_name": "B7.1.2.2 Exam Patterns",
+    "topic_code": "B7.1.2.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.2.2 Exam Patterns for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_2_2_SPEED_V1",
+    "family_name": "B7.1.2.2 Speed Builders",
+    "topic_code": "B7.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.2 Speed Builders for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_1_2_3_FOUNDATION_V1",
+    "family_name": "B7.1.2.3 Foundation Checks",
+    "topic_code": "B7.1.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.3 Foundation Checks for Powers and Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.3; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_3_WORKED_V1",
+    "family_name": "B7.1.2.3 Worked Pattern",
+    "topic_code": "B7.1.2.3",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.2.3 Worked Pattern for Powers and Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.3; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_3_TRANSFER_V1",
+    "family_name": "B7.1.2.3 Transfer Checks",
+    "topic_code": "B7.1.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.3 Transfer Checks for Powers and Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.3; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_2_3_MISCONCEPTION_V1",
+    "family_name": "B7.1.2.3 Misconception Probes",
+    "topic_code": "B7.1.2.3",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.2.3 Misconception Probes for Powers and Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.3; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_2_3_EXAM_V1",
+    "family_name": "B7.1.2.3 Exam Patterns",
+    "topic_code": "B7.1.2.3",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.2.3 Exam Patterns for Powers and Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.3; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_2_3_SPEED_V1",
+    "family_name": "B7.1.2.3 Speed Builders",
+    "topic_code": "B7.1.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.2.3 Speed Builders for Powers and Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.2.3; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_1_3_1_FOUNDATION_V1",
+    "family_name": "B7.1.3.1 Foundation Checks",
+    "topic_code": "B7.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.1 Foundation Checks for Fractions, Decimals and Percentages",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_1_WORKED_V1",
+    "family_name": "B7.1.3.1 Worked Pattern",
+    "topic_code": "B7.1.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.3.1 Worked Pattern for Fractions, Decimals and Percentages",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_1_TRANSFER_V1",
+    "family_name": "B7.1.3.1 Transfer Checks",
+    "topic_code": "B7.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.1 Transfer Checks for Fractions, Decimals and Percentages",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_1_MISCONCEPTION_V1",
+    "family_name": "B7.1.3.1 Misconception Probes",
+    "topic_code": "B7.1.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.3.1 Misconception Probes for Fractions, Decimals and Percentages",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_3_1_EXAM_V1",
+    "family_name": "B7.1.3.1 Exam Patterns",
+    "topic_code": "B7.1.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.3.1 Exam Patterns for Fractions, Decimals and Percentages",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_3_1_SPEED_V1",
+    "family_name": "B7.1.3.1 Speed Builders",
+    "topic_code": "B7.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.1 Speed Builders for Fractions, Decimals and Percentages",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_1_3_2_FOUNDATION_V1",
+    "family_name": "B7.1.3.2 Foundation Checks",
+    "topic_code": "B7.1.3.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.2 Foundation Checks for Addition and Subtraction of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_2_WORKED_V1",
+    "family_name": "B7.1.3.2 Worked Pattern",
+    "topic_code": "B7.1.3.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.3.2 Worked Pattern for Addition and Subtraction of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_2_TRANSFER_V1",
+    "family_name": "B7.1.3.2 Transfer Checks",
+    "topic_code": "B7.1.3.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.2 Transfer Checks for Addition and Subtraction of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_2_MISCONCEPTION_V1",
+    "family_name": "B7.1.3.2 Misconception Probes",
+    "topic_code": "B7.1.3.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.3.2 Misconception Probes for Addition and Subtraction of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_3_2_EXAM_V1",
+    "family_name": "B7.1.3.2 Exam Patterns",
+    "topic_code": "B7.1.3.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.3.2 Exam Patterns for Addition and Subtraction of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_3_2_SPEED_V1",
+    "family_name": "B7.1.3.2 Speed Builders",
+    "topic_code": "B7.1.3.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.2 Speed Builders for Addition and Subtraction of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_1_3_3_FOUNDATION_V1",
+    "family_name": "B7.1.3.3 Foundation Checks",
+    "topic_code": "B7.1.3.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.3 Foundation Checks for Multiplication and Division of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.3; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_3_WORKED_V1",
+    "family_name": "B7.1.3.3 Worked Pattern",
+    "topic_code": "B7.1.3.3",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.3.3 Worked Pattern for Multiplication and Division of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.3; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_3_TRANSFER_V1",
+    "family_name": "B7.1.3.3 Transfer Checks",
+    "topic_code": "B7.1.3.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.3 Transfer Checks for Multiplication and Division of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.3; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_3_3_MISCONCEPTION_V1",
+    "family_name": "B7.1.3.3 Misconception Probes",
+    "topic_code": "B7.1.3.3",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.3.3 Misconception Probes for Multiplication and Division of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.3; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_3_3_EXAM_V1",
+    "family_name": "B7.1.3.3 Exam Patterns",
+    "topic_code": "B7.1.3.3",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.3.3 Exam Patterns for Multiplication and Division of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.3; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_3_3_SPEED_V1",
+    "family_name": "B7.1.3.3 Speed Builders",
+    "topic_code": "B7.1.3.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.3.3 Speed Builders for Multiplication and Division of Fractions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.3.3; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_1_4_1_FOUNDATION_V1",
+    "family_name": "B7.1.4.1 Foundation Checks",
+    "topic_code": "B7.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.4.1 Foundation Checks for Ratio and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.4.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_4_1_WORKED_V1",
+    "family_name": "B7.1.4.1 Worked Pattern",
+    "topic_code": "B7.1.4.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.1.4.1 Worked Pattern for Ratio and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.4.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_1_4_1_TRANSFER_V1",
+    "family_name": "B7.1.4.1 Transfer Checks",
+    "topic_code": "B7.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.4.1 Transfer Checks for Ratio and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.4.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_1_4_1_MISCONCEPTION_V1",
+    "family_name": "B7.1.4.1 Misconception Probes",
+    "topic_code": "B7.1.4.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.1.4.1 Misconception Probes for Ratio and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.4.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_1_4_1_EXAM_V1",
+    "family_name": "B7.1.4.1 Exam Patterns",
+    "topic_code": "B7.1.4.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.1.4.1 Exam Patterns for Ratio and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.4.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_1_4_1_SPEED_V1",
+    "family_name": "B7.1.4.1 Speed Builders",
+    "topic_code": "B7.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.1.4.1 Speed Builders for Ratio and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.1.4.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_2_1_1_FOUNDATION_V1",
+    "family_name": "B7.2.1.1 Foundation Checks",
+    "topic_code": "B7.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.1.1 Foundation Checks for Patterns and Relations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_2_1_1_WORKED_V1",
+    "family_name": "B7.2.1.1 Worked Pattern",
+    "topic_code": "B7.2.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.2.1.1 Worked Pattern for Patterns and Relations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_2_1_1_TRANSFER_V1",
+    "family_name": "B7.2.1.1 Transfer Checks",
+    "topic_code": "B7.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.1.1 Transfer Checks for Patterns and Relations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_2_1_1_MISCONCEPTION_V1",
+    "family_name": "B7.2.1.1 Misconception Probes",
+    "topic_code": "B7.2.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.2.1.1 Misconception Probes for Patterns and Relations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_2_1_1_EXAM_V1",
+    "family_name": "B7.2.1.1 Exam Patterns",
+    "topic_code": "B7.2.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.2.1.1 Exam Patterns for Patterns and Relations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_2_1_1_SPEED_V1",
+    "family_name": "B7.2.1.1 Speed Builders",
+    "topic_code": "B7.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.1.1 Speed Builders for Patterns and Relations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_2_2_1_FOUNDATION_V1",
+    "family_name": "B7.2.2.1 Foundation Checks",
+    "topic_code": "B7.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.2.1 Foundation Checks for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_2_2_1_WORKED_V1",
+    "family_name": "B7.2.2.1 Worked Pattern",
+    "topic_code": "B7.2.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.2.2.1 Worked Pattern for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_2_2_1_TRANSFER_V1",
+    "family_name": "B7.2.2.1 Transfer Checks",
+    "topic_code": "B7.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.2.1 Transfer Checks for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_2_2_1_MISCONCEPTION_V1",
+    "family_name": "B7.2.2.1 Misconception Probes",
+    "topic_code": "B7.2.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.2.2.1 Misconception Probes for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_2_2_1_EXAM_V1",
+    "family_name": "B7.2.2.1 Exam Patterns",
+    "topic_code": "B7.2.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.2.2.1 Exam Patterns for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_2_2_1_SPEED_V1",
+    "family_name": "B7.2.2.1 Speed Builders",
+    "topic_code": "B7.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.2.1 Speed Builders for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_2_3_1_FOUNDATION_V1",
+    "family_name": "B7.2.3.1 Foundation Checks",
+    "topic_code": "B7.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.3.1 Foundation Checks for Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_2_3_1_WORKED_V1",
+    "family_name": "B7.2.3.1 Worked Pattern",
+    "topic_code": "B7.2.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.2.3.1 Worked Pattern for Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_2_3_1_TRANSFER_V1",
+    "family_name": "B7.2.3.1 Transfer Checks",
+    "topic_code": "B7.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.3.1 Transfer Checks for Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_2_3_1_MISCONCEPTION_V1",
+    "family_name": "B7.2.3.1 Misconception Probes",
+    "topic_code": "B7.2.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.2.3.1 Misconception Probes for Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_2_3_1_EXAM_V1",
+    "family_name": "B7.2.3.1 Exam Patterns",
+    "topic_code": "B7.2.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.2.3.1 Exam Patterns for Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_2_3_1_SPEED_V1",
+    "family_name": "B7.2.3.1 Speed Builders",
+    "topic_code": "B7.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.2.3.1 Speed Builders for Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.2.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_3_1_1_FOUNDATION_V1",
+    "family_name": "B7.3.1.1 Foundation Checks",
+    "topic_code": "B7.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.1.1 Foundation Checks for Angle Relationships",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_1_1_WORKED_V1",
+    "family_name": "B7.3.1.1 Worked Pattern",
+    "topic_code": "B7.3.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.3.1.1 Worked Pattern for Angle Relationships",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_1_1_TRANSFER_V1",
+    "family_name": "B7.3.1.1 Transfer Checks",
+    "topic_code": "B7.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.1.1 Transfer Checks for Angle Relationships",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_3_1_1_MISCONCEPTION_V1",
+    "family_name": "B7.3.1.1 Misconception Probes",
+    "topic_code": "B7.3.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.3.1.1 Misconception Probes for Angle Relationships",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_3_1_1_EXAM_V1",
+    "family_name": "B7.3.1.1 Exam Patterns",
+    "topic_code": "B7.3.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.3.1.1 Exam Patterns for Angle Relationships",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_3_1_1_SPEED_V1",
+    "family_name": "B7.3.1.1 Speed Builders",
+    "topic_code": "B7.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.1.1 Speed Builders for Angle Relationships",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_3_1_2_FOUNDATION_V1",
+    "family_name": "B7.3.1.2 Foundation Checks",
+    "topic_code": "B7.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.1.2 Foundation Checks for Geometric Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_1_2_WORKED_V1",
+    "family_name": "B7.3.1.2 Worked Pattern",
+    "topic_code": "B7.3.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.3.1.2 Worked Pattern for Geometric Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_1_2_TRANSFER_V1",
+    "family_name": "B7.3.1.2 Transfer Checks",
+    "topic_code": "B7.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.1.2 Transfer Checks for Geometric Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_3_1_2_MISCONCEPTION_V1",
+    "family_name": "B7.3.1.2 Misconception Probes",
+    "topic_code": "B7.3.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.3.1.2 Misconception Probes for Geometric Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_3_1_2_EXAM_V1",
+    "family_name": "B7.3.1.2 Exam Patterns",
+    "topic_code": "B7.3.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.3.1.2 Exam Patterns for Geometric Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_3_1_2_SPEED_V1",
+    "family_name": "B7.3.1.2 Speed Builders",
+    "topic_code": "B7.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.1.2 Speed Builders for Geometric Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_3_2_1_FOUNDATION_V1",
+    "family_name": "B7.3.2.1 Foundation Checks",
+    "topic_code": "B7.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.1 Foundation Checks for Perimeter and Circumference",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_1_WORKED_V1",
+    "family_name": "B7.3.2.1 Worked Pattern",
+    "topic_code": "B7.3.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.3.2.1 Worked Pattern for Perimeter and Circumference",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_1_TRANSFER_V1",
+    "family_name": "B7.3.2.1 Transfer Checks",
+    "topic_code": "B7.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.1 Transfer Checks for Perimeter and Circumference",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_1_MISCONCEPTION_V1",
+    "family_name": "B7.3.2.1 Misconception Probes",
+    "topic_code": "B7.3.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.3.2.1 Misconception Probes for Perimeter and Circumference",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_3_2_1_EXAM_V1",
+    "family_name": "B7.3.2.1 Exam Patterns",
+    "topic_code": "B7.3.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.3.2.1 Exam Patterns for Perimeter and Circumference",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_3_2_1_SPEED_V1",
+    "family_name": "B7.3.2.1 Speed Builders",
+    "topic_code": "B7.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.1 Speed Builders for Perimeter and Circumference",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_3_2_2_FOUNDATION_V1",
+    "family_name": "B7.3.2.2 Foundation Checks",
+    "topic_code": "B7.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.2 Foundation Checks for Area of Triangles",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_2_WORKED_V1",
+    "family_name": "B7.3.2.2 Worked Pattern",
+    "topic_code": "B7.3.2.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.3.2.2 Worked Pattern for Area of Triangles",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_2_TRANSFER_V1",
+    "family_name": "B7.3.2.2 Transfer Checks",
+    "topic_code": "B7.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.2 Transfer Checks for Area of Triangles",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_2_MISCONCEPTION_V1",
+    "family_name": "B7.3.2.2 Misconception Probes",
+    "topic_code": "B7.3.2.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.3.2.2 Misconception Probes for Area of Triangles",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_3_2_2_EXAM_V1",
+    "family_name": "B7.3.2.2 Exam Patterns",
+    "topic_code": "B7.3.2.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.3.2.2 Exam Patterns for Area of Triangles",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_3_2_2_SPEED_V1",
+    "family_name": "B7.3.2.2 Speed Builders",
+    "topic_code": "B7.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.2 Speed Builders for Area of Triangles",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_3_2_3_FOUNDATION_V1",
+    "family_name": "B7.3.2.3 Foundation Checks",
+    "topic_code": "B7.3.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.3 Foundation Checks for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.3; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_3_WORKED_V1",
+    "family_name": "B7.3.2.3 Worked Pattern",
+    "topic_code": "B7.3.2.3",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.3.2.3 Worked Pattern for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.3; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_3_TRANSFER_V1",
+    "family_name": "B7.3.2.3 Transfer Checks",
+    "topic_code": "B7.3.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.3 Transfer Checks for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.3; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_3_2_3_MISCONCEPTION_V1",
+    "family_name": "B7.3.2.3 Misconception Probes",
+    "topic_code": "B7.3.2.3",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.3.2.3 Misconception Probes for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.3; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_3_2_3_EXAM_V1",
+    "family_name": "B7.3.2.3 Exam Patterns",
+    "topic_code": "B7.3.2.3",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.3.2.3 Exam Patterns for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.3; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_3_2_3_SPEED_V1",
+    "family_name": "B7.3.2.3 Speed Builders",
+    "topic_code": "B7.3.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.2.3 Speed Builders for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.2.3; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_3_3_1_FOUNDATION_V1",
+    "family_name": "B7.3.3.1 Foundation Checks",
+    "topic_code": "B7.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.3.1 Foundation Checks for Reflection and Translation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_3_1_WORKED_V1",
+    "family_name": "B7.3.3.1 Worked Pattern",
+    "topic_code": "B7.3.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.3.3.1 Worked Pattern for Reflection and Translation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_3_3_1_TRANSFER_V1",
+    "family_name": "B7.3.3.1 Transfer Checks",
+    "topic_code": "B7.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.3.1 Transfer Checks for Reflection and Translation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_3_3_1_MISCONCEPTION_V1",
+    "family_name": "B7.3.3.1 Misconception Probes",
+    "topic_code": "B7.3.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.3.3.1 Misconception Probes for Reflection and Translation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_3_3_1_EXAM_V1",
+    "family_name": "B7.3.3.1 Exam Patterns",
+    "topic_code": "B7.3.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.3.3.1 Exam Patterns for Reflection and Translation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_3_3_1_SPEED_V1",
+    "family_name": "B7.3.3.1 Speed Builders",
+    "topic_code": "B7.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.3.3.1 Speed Builders for Reflection and Translation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.3.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_4_1_1_FOUNDATION_V1",
+    "family_name": "B7.4.1.1 Foundation Checks",
+    "topic_code": "B7.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.1.1 Foundation Checks for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_4_1_1_WORKED_V1",
+    "family_name": "B7.4.1.1 Worked Pattern",
+    "topic_code": "B7.4.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.4.1.1 Worked Pattern for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_4_1_1_TRANSFER_V1",
+    "family_name": "B7.4.1.1 Transfer Checks",
+    "topic_code": "B7.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.1.1 Transfer Checks for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_4_1_1_MISCONCEPTION_V1",
+    "family_name": "B7.4.1.1 Misconception Probes",
+    "topic_code": "B7.4.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.4.1.1 Misconception Probes for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_4_1_1_EXAM_V1",
+    "family_name": "B7.4.1.1 Exam Patterns",
+    "topic_code": "B7.4.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.4.1.1 Exam Patterns for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_4_1_1_SPEED_V1",
+    "family_name": "B7.4.1.1 Speed Builders",
+    "topic_code": "B7.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.1.1 Speed Builders for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_4_1_2_FOUNDATION_V1",
+    "family_name": "B7.4.1.2 Foundation Checks",
+    "topic_code": "B7.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.1.2 Foundation Checks for Mean, Median and Mode",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_4_1_2_WORKED_V1",
+    "family_name": "B7.4.1.2 Worked Pattern",
+    "topic_code": "B7.4.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.4.1.2 Worked Pattern for Mean, Median and Mode",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_4_1_2_TRANSFER_V1",
+    "family_name": "B7.4.1.2 Transfer Checks",
+    "topic_code": "B7.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.1.2 Transfer Checks for Mean, Median and Mode",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_4_1_2_MISCONCEPTION_V1",
+    "family_name": "B7.4.1.2 Misconception Probes",
+    "topic_code": "B7.4.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.4.1.2 Misconception Probes for Mean, Median and Mode",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_4_1_2_EXAM_V1",
+    "family_name": "B7.4.1.2 Exam Patterns",
+    "topic_code": "B7.4.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.4.1.2 Exam Patterns for Mean, Median and Mode",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_4_1_2_SPEED_V1",
+    "family_name": "B7.4.1.2 Speed Builders",
+    "topic_code": "B7.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.1.2 Speed Builders for Mean, Median and Mode",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B7_4_2_1_FOUNDATION_V1",
+    "family_name": "B7.4.2.1 Foundation Checks",
+    "topic_code": "B7.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.2.1 Foundation Checks for Probability of Single Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_4_2_1_WORKED_V1",
+    "family_name": "B7.4.2.1 Worked Pattern",
+    "topic_code": "B7.4.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B7.4.2.1 Worked Pattern for Probability of Single Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B7_4_2_1_TRANSFER_V1",
+    "family_name": "B7.4.2.1 Transfer Checks",
+    "topic_code": "B7.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.2.1 Transfer Checks for Probability of Single Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B7_4_2_1_MISCONCEPTION_V1",
+    "family_name": "B7.4.2.1 Misconception Probes",
+    "topic_code": "B7.4.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B7.4.2.1 Misconception Probes for Probability of Single Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B7_4_2_1_EXAM_V1",
+    "family_name": "B7.4.2.1 Exam Patterns",
+    "topic_code": "B7.4.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B7.4.2.1 Exam Patterns for Probability of Single Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B7_4_2_1_SPEED_V1",
+    "family_name": "B7.4.2.1 Speed Builders",
+    "topic_code": "B7.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B7.4.2.1 Speed Builders for Probability of Single Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B7.4.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_1_1_1_FOUNDATION_V1",
+    "family_name": "B8.1.1.1 Foundation Checks",
+    "topic_code": "B8.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.1.1 Foundation Checks for Standard Form and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_1_1_WORKED_V1",
+    "family_name": "B8.1.1.1 Worked Pattern",
+    "topic_code": "B8.1.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.1.1.1 Worked Pattern for Standard Form and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_1_1_TRANSFER_V1",
+    "family_name": "B8.1.1.1 Transfer Checks",
+    "topic_code": "B8.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.1.1 Transfer Checks for Standard Form and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_1_1_1_MISCONCEPTION_V1",
+    "family_name": "B8.1.1.1 Misconception Probes",
+    "topic_code": "B8.1.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.1.1.1 Misconception Probes for Standard Form and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_1_1_1_EXAM_V1",
+    "family_name": "B8.1.1.1 Exam Patterns",
+    "topic_code": "B8.1.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.1.1.1 Exam Patterns for Standard Form and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_1_1_1_SPEED_V1",
+    "family_name": "B8.1.1.1 Speed Builders",
+    "topic_code": "B8.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.1.1 Speed Builders for Standard Form and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_1_1_2_FOUNDATION_V1",
+    "family_name": "B8.1.1.2 Foundation Checks",
+    "topic_code": "B8.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.1.2 Foundation Checks for Sets, Perfect Squares and Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_1_2_WORKED_V1",
+    "family_name": "B8.1.1.2 Worked Pattern",
+    "topic_code": "B8.1.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.1.1.2 Worked Pattern for Sets, Perfect Squares and Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_1_2_TRANSFER_V1",
+    "family_name": "B8.1.1.2 Transfer Checks",
+    "topic_code": "B8.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.1.2 Transfer Checks for Sets, Perfect Squares and Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_1_1_2_MISCONCEPTION_V1",
+    "family_name": "B8.1.1.2 Misconception Probes",
+    "topic_code": "B8.1.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.1.1.2 Misconception Probes for Sets, Perfect Squares and Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_1_1_2_EXAM_V1",
+    "family_name": "B8.1.1.2 Exam Patterns",
+    "topic_code": "B8.1.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.1.1.2 Exam Patterns for Sets, Perfect Squares and Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_1_1_2_SPEED_V1",
+    "family_name": "B8.1.1.2 Speed Builders",
+    "topic_code": "B8.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.1.2 Speed Builders for Sets, Perfect Squares and Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_1_2_1_FOUNDATION_V1",
+    "family_name": "B8.1.2.1 Foundation Checks",
+    "topic_code": "B8.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.1 Foundation Checks for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_1_WORKED_V1",
+    "family_name": "B8.1.2.1 Worked Pattern",
+    "topic_code": "B8.1.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.1.2.1 Worked Pattern for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_1_TRANSFER_V1",
+    "family_name": "B8.1.2.1 Transfer Checks",
+    "topic_code": "B8.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.1 Transfer Checks for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_1_MISCONCEPTION_V1",
+    "family_name": "B8.1.2.1 Misconception Probes",
+    "topic_code": "B8.1.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.1.2.1 Misconception Probes for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_1_2_1_EXAM_V1",
+    "family_name": "B8.1.2.1 Exam Patterns",
+    "topic_code": "B8.1.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.1.2.1 Exam Patterns for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_1_2_1_SPEED_V1",
+    "family_name": "B8.1.2.1 Speed Builders",
+    "topic_code": "B8.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.1 Speed Builders for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_1_2_2_FOUNDATION_V1",
+    "family_name": "B8.1.2.2 Foundation Checks",
+    "topic_code": "B8.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.2 Foundation Checks for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_2_WORKED_V1",
+    "family_name": "B8.1.2.2 Worked Pattern",
+    "topic_code": "B8.1.2.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.1.2.2 Worked Pattern for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_2_TRANSFER_V1",
+    "family_name": "B8.1.2.2 Transfer Checks",
+    "topic_code": "B8.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.2 Transfer Checks for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_2_MISCONCEPTION_V1",
+    "family_name": "B8.1.2.2 Misconception Probes",
+    "topic_code": "B8.1.2.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.1.2.2 Misconception Probes for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_1_2_2_EXAM_V1",
+    "family_name": "B8.1.2.2 Exam Patterns",
+    "topic_code": "B8.1.2.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.1.2.2 Exam Patterns for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_1_2_2_SPEED_V1",
+    "family_name": "B8.1.2.2 Speed Builders",
+    "topic_code": "B8.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.2 Speed Builders for Whole Number and Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_1_2_3_FOUNDATION_V1",
+    "family_name": "B8.1.2.3 Foundation Checks",
+    "topic_code": "B8.1.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.3 Foundation Checks for Laws of Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.3; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_3_WORKED_V1",
+    "family_name": "B8.1.2.3 Worked Pattern",
+    "topic_code": "B8.1.2.3",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.1.2.3 Worked Pattern for Laws of Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.3; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_3_TRANSFER_V1",
+    "family_name": "B8.1.2.3 Transfer Checks",
+    "topic_code": "B8.1.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.3 Transfer Checks for Laws of Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.3; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_1_2_3_MISCONCEPTION_V1",
+    "family_name": "B8.1.2.3 Misconception Probes",
+    "topic_code": "B8.1.2.3",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.1.2.3 Misconception Probes for Laws of Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.3; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_1_2_3_EXAM_V1",
+    "family_name": "B8.1.2.3 Exam Patterns",
+    "topic_code": "B8.1.2.3",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.1.2.3 Exam Patterns for Laws of Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.3; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_1_2_3_SPEED_V1",
+    "family_name": "B8.1.2.3 Speed Builders",
+    "topic_code": "B8.1.2.3",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.2.3 Speed Builders for Laws of Indices",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.2.3; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_1_3_1_FOUNDATION_V1",
+    "family_name": "B8.1.3.1 Foundation Checks",
+    "topic_code": "B8.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.3.1 Foundation Checks for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_3_1_WORKED_V1",
+    "family_name": "B8.1.3.1 Worked Pattern",
+    "topic_code": "B8.1.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.1.3.1 Worked Pattern for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_3_1_TRANSFER_V1",
+    "family_name": "B8.1.3.1 Transfer Checks",
+    "topic_code": "B8.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.3.1 Transfer Checks for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_1_3_1_MISCONCEPTION_V1",
+    "family_name": "B8.1.3.1 Misconception Probes",
+    "topic_code": "B8.1.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.1.3.1 Misconception Probes for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_1_3_1_EXAM_V1",
+    "family_name": "B8.1.3.1 Exam Patterns",
+    "topic_code": "B8.1.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.1.3.1 Exam Patterns for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_1_3_1_SPEED_V1",
+    "family_name": "B8.1.3.1 Speed Builders",
+    "topic_code": "B8.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.3.1 Speed Builders for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_1_4_1_FOUNDATION_V1",
+    "family_name": "B8.1.4.1 Foundation Checks",
+    "topic_code": "B8.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.4.1 Foundation Checks for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.4.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_4_1_WORKED_V1",
+    "family_name": "B8.1.4.1 Worked Pattern",
+    "topic_code": "B8.1.4.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.1.4.1 Worked Pattern for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.4.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_1_4_1_TRANSFER_V1",
+    "family_name": "B8.1.4.1 Transfer Checks",
+    "topic_code": "B8.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.4.1 Transfer Checks for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.4.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_1_4_1_MISCONCEPTION_V1",
+    "family_name": "B8.1.4.1 Misconception Probes",
+    "topic_code": "B8.1.4.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.1.4.1 Misconception Probes for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.4.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_1_4_1_EXAM_V1",
+    "family_name": "B8.1.4.1 Exam Patterns",
+    "topic_code": "B8.1.4.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.1.4.1 Exam Patterns for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.4.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_1_4_1_SPEED_V1",
+    "family_name": "B8.1.4.1 Speed Builders",
+    "topic_code": "B8.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.1.4.1 Speed Builders for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.1.4.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_2_1_1_FOUNDATION_V1",
+    "family_name": "B8.2.1.1 Foundation Checks",
+    "topic_code": "B8.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.1.1 Foundation Checks for Linear Graphs and Gradient",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_2_1_1_WORKED_V1",
+    "family_name": "B8.2.1.1 Worked Pattern",
+    "topic_code": "B8.2.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.2.1.1 Worked Pattern for Linear Graphs and Gradient",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_2_1_1_TRANSFER_V1",
+    "family_name": "B8.2.1.1 Transfer Checks",
+    "topic_code": "B8.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.1.1 Transfer Checks for Linear Graphs and Gradient",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_2_1_1_MISCONCEPTION_V1",
+    "family_name": "B8.2.1.1 Misconception Probes",
+    "topic_code": "B8.2.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.2.1.1 Misconception Probes for Linear Graphs and Gradient",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_2_1_1_EXAM_V1",
+    "family_name": "B8.2.1.1 Exam Patterns",
+    "topic_code": "B8.2.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.2.1.1 Exam Patterns for Linear Graphs and Gradient",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_2_1_1_SPEED_V1",
+    "family_name": "B8.2.1.1 Speed Builders",
+    "topic_code": "B8.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.1.1 Speed Builders for Linear Graphs and Gradient",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_2_2_1_FOUNDATION_V1",
+    "family_name": "B8.2.2.1 Foundation Checks",
+    "topic_code": "B8.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.2.1 Foundation Checks for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_2_2_1_WORKED_V1",
+    "family_name": "B8.2.2.1 Worked Pattern",
+    "topic_code": "B8.2.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.2.2.1 Worked Pattern for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_2_2_1_TRANSFER_V1",
+    "family_name": "B8.2.2.1 Transfer Checks",
+    "topic_code": "B8.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.2.1 Transfer Checks for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_2_2_1_MISCONCEPTION_V1",
+    "family_name": "B8.2.2.1 Misconception Probes",
+    "topic_code": "B8.2.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.2.2.1 Misconception Probes for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_2_2_1_EXAM_V1",
+    "family_name": "B8.2.2.1 Exam Patterns",
+    "topic_code": "B8.2.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.2.2.1 Exam Patterns for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_2_2_1_SPEED_V1",
+    "family_name": "B8.2.2.1 Speed Builders",
+    "topic_code": "B8.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.2.1 Speed Builders for Algebraic Expressions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_2_3_1_FOUNDATION_V1",
+    "family_name": "B8.2.3.1 Foundation Checks",
+    "topic_code": "B8.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.3.1 Foundation Checks for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_2_3_1_WORKED_V1",
+    "family_name": "B8.2.3.1 Worked Pattern",
+    "topic_code": "B8.2.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.2.3.1 Worked Pattern for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_2_3_1_TRANSFER_V1",
+    "family_name": "B8.2.3.1 Transfer Checks",
+    "topic_code": "B8.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.3.1 Transfer Checks for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_2_3_1_MISCONCEPTION_V1",
+    "family_name": "B8.2.3.1 Misconception Probes",
+    "topic_code": "B8.2.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.2.3.1 Misconception Probes for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_2_3_1_EXAM_V1",
+    "family_name": "B8.2.3.1 Exam Patterns",
+    "topic_code": "B8.2.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.2.3.1 Exam Patterns for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_2_3_1_SPEED_V1",
+    "family_name": "B8.2.3.1 Speed Builders",
+    "topic_code": "B8.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.2.3.1 Speed Builders for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.2.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_3_1_1_FOUNDATION_V1",
+    "family_name": "B8.3.1.1 Foundation Checks",
+    "topic_code": "B8.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.1.1 Foundation Checks for Angles in Parallel Lines and Polygons",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_1_1_WORKED_V1",
+    "family_name": "B8.3.1.1 Worked Pattern",
+    "topic_code": "B8.3.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.3.1.1 Worked Pattern for Angles in Parallel Lines and Polygons",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_1_1_TRANSFER_V1",
+    "family_name": "B8.3.1.1 Transfer Checks",
+    "topic_code": "B8.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.1.1 Transfer Checks for Angles in Parallel Lines and Polygons",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_3_1_1_MISCONCEPTION_V1",
+    "family_name": "B8.3.1.1 Misconception Probes",
+    "topic_code": "B8.3.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.3.1.1 Misconception Probes for Angles in Parallel Lines and Polygons",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_3_1_1_EXAM_V1",
+    "family_name": "B8.3.1.1 Exam Patterns",
+    "topic_code": "B8.3.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.3.1.1 Exam Patterns for Angles in Parallel Lines and Polygons",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_3_1_1_SPEED_V1",
+    "family_name": "B8.3.1.1 Speed Builders",
+    "topic_code": "B8.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.1.1 Speed Builders for Angles in Parallel Lines and Polygons",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_3_1_2_FOUNDATION_V1",
+    "family_name": "B8.3.1.2 Foundation Checks",
+    "topic_code": "B8.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.1.2 Foundation Checks for Geometric Constructions and Loci",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_1_2_WORKED_V1",
+    "family_name": "B8.3.1.2 Worked Pattern",
+    "topic_code": "B8.3.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.3.1.2 Worked Pattern for Geometric Constructions and Loci",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_1_2_TRANSFER_V1",
+    "family_name": "B8.3.1.2 Transfer Checks",
+    "topic_code": "B8.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.1.2 Transfer Checks for Geometric Constructions and Loci",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_3_1_2_MISCONCEPTION_V1",
+    "family_name": "B8.3.1.2 Misconception Probes",
+    "topic_code": "B8.3.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.3.1.2 Misconception Probes for Geometric Constructions and Loci",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_3_1_2_EXAM_V1",
+    "family_name": "B8.3.1.2 Exam Patterns",
+    "topic_code": "B8.3.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.3.1.2 Exam Patterns for Geometric Constructions and Loci",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_3_1_2_SPEED_V1",
+    "family_name": "B8.3.1.2 Speed Builders",
+    "topic_code": "B8.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.1.2 Speed Builders for Geometric Constructions and Loci",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_3_2_1_FOUNDATION_V1",
+    "family_name": "B8.3.2.1 Foundation Checks",
+    "topic_code": "B8.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.2.1 Foundation Checks for Pythagoras, Trigonometry and Circle Area",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_2_1_WORKED_V1",
+    "family_name": "B8.3.2.1 Worked Pattern",
+    "topic_code": "B8.3.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.3.2.1 Worked Pattern for Pythagoras, Trigonometry and Circle Area",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_2_1_TRANSFER_V1",
+    "family_name": "B8.3.2.1 Transfer Checks",
+    "topic_code": "B8.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.2.1 Transfer Checks for Pythagoras, Trigonometry and Circle Area",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_3_2_1_MISCONCEPTION_V1",
+    "family_name": "B8.3.2.1 Misconception Probes",
+    "topic_code": "B8.3.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.3.2.1 Misconception Probes for Pythagoras, Trigonometry and Circle Area",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_3_2_1_EXAM_V1",
+    "family_name": "B8.3.2.1 Exam Patterns",
+    "topic_code": "B8.3.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.3.2.1 Exam Patterns for Pythagoras, Trigonometry and Circle Area",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_3_2_1_SPEED_V1",
+    "family_name": "B8.3.2.1 Speed Builders",
+    "topic_code": "B8.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.2.1 Speed Builders for Pythagoras, Trigonometry and Circle Area",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_3_2_2_FOUNDATION_V1",
+    "family_name": "B8.3.2.2 Foundation Checks",
+    "topic_code": "B8.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.2.2 Foundation Checks for Vector Addition and Subtraction",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_2_2_WORKED_V1",
+    "family_name": "B8.3.2.2 Worked Pattern",
+    "topic_code": "B8.3.2.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.3.2.2 Worked Pattern for Vector Addition and Subtraction",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_2_2_TRANSFER_V1",
+    "family_name": "B8.3.2.2 Transfer Checks",
+    "topic_code": "B8.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.2.2 Transfer Checks for Vector Addition and Subtraction",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_3_2_2_MISCONCEPTION_V1",
+    "family_name": "B8.3.2.2 Misconception Probes",
+    "topic_code": "B8.3.2.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.3.2.2 Misconception Probes for Vector Addition and Subtraction",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_3_2_2_EXAM_V1",
+    "family_name": "B8.3.2.2 Exam Patterns",
+    "topic_code": "B8.3.2.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.3.2.2 Exam Patterns for Vector Addition and Subtraction",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_3_2_2_SPEED_V1",
+    "family_name": "B8.3.2.2 Speed Builders",
+    "topic_code": "B8.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.2.2 Speed Builders for Vector Addition and Subtraction",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.2.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_3_3_1_FOUNDATION_V1",
+    "family_name": "B8.3.3.1 Foundation Checks",
+    "topic_code": "B8.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.3.1 Foundation Checks for Rotation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_3_1_WORKED_V1",
+    "family_name": "B8.3.3.1 Worked Pattern",
+    "topic_code": "B8.3.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.3.3.1 Worked Pattern for Rotation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_3_3_1_TRANSFER_V1",
+    "family_name": "B8.3.3.1 Transfer Checks",
+    "topic_code": "B8.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.3.1 Transfer Checks for Rotation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_3_3_1_MISCONCEPTION_V1",
+    "family_name": "B8.3.3.1 Misconception Probes",
+    "topic_code": "B8.3.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.3.3.1 Misconception Probes for Rotation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_3_3_1_EXAM_V1",
+    "family_name": "B8.3.3.1 Exam Patterns",
+    "topic_code": "B8.3.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.3.3.1 Exam Patterns for Rotation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_3_3_1_SPEED_V1",
+    "family_name": "B8.3.3.1 Speed Builders",
+    "topic_code": "B8.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.3.3.1 Speed Builders for Rotation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.3.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_4_1_1_FOUNDATION_V1",
+    "family_name": "B8.4.1.1 Foundation Checks",
+    "topic_code": "B8.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.1.1 Foundation Checks for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_4_1_1_WORKED_V1",
+    "family_name": "B8.4.1.1 Worked Pattern",
+    "topic_code": "B8.4.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.4.1.1 Worked Pattern for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_4_1_1_TRANSFER_V1",
+    "family_name": "B8.4.1.1 Transfer Checks",
+    "topic_code": "B8.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.1.1 Transfer Checks for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_4_1_1_MISCONCEPTION_V1",
+    "family_name": "B8.4.1.1 Misconception Probes",
+    "topic_code": "B8.4.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.4.1.1 Misconception Probes for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_4_1_1_EXAM_V1",
+    "family_name": "B8.4.1.1 Exam Patterns",
+    "topic_code": "B8.4.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.4.1.1 Exam Patterns for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_4_1_1_SPEED_V1",
+    "family_name": "B8.4.1.1 Speed Builders",
+    "topic_code": "B8.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.1.1 Speed Builders for Data Collection and Representation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_4_1_2_FOUNDATION_V1",
+    "family_name": "B8.4.1.2 Foundation Checks",
+    "topic_code": "B8.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.1.2 Foundation Checks for Measures of Central Tendency and Range",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_4_1_2_WORKED_V1",
+    "family_name": "B8.4.1.2 Worked Pattern",
+    "topic_code": "B8.4.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.4.1.2 Worked Pattern for Measures of Central Tendency and Range",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_4_1_2_TRANSFER_V1",
+    "family_name": "B8.4.1.2 Transfer Checks",
+    "topic_code": "B8.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.1.2 Transfer Checks for Measures of Central Tendency and Range",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_4_1_2_MISCONCEPTION_V1",
+    "family_name": "B8.4.1.2 Misconception Probes",
+    "topic_code": "B8.4.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.4.1.2 Misconception Probes for Measures of Central Tendency and Range",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_4_1_2_EXAM_V1",
+    "family_name": "B8.4.1.2 Exam Patterns",
+    "topic_code": "B8.4.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.4.1.2 Exam Patterns for Measures of Central Tendency and Range",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_4_1_2_SPEED_V1",
+    "family_name": "B8.4.1.2 Speed Builders",
+    "topic_code": "B8.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.1.2 Speed Builders for Measures of Central Tendency and Range",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B8_4_2_1_FOUNDATION_V1",
+    "family_name": "B8.4.2.1 Foundation Checks",
+    "topic_code": "B8.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.2.1 Foundation Checks for Probability of Independent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_4_2_1_WORKED_V1",
+    "family_name": "B8.4.2.1 Worked Pattern",
+    "topic_code": "B8.4.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B8.4.2.1 Worked Pattern for Probability of Independent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B8_4_2_1_TRANSFER_V1",
+    "family_name": "B8.4.2.1 Transfer Checks",
+    "topic_code": "B8.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.2.1 Transfer Checks for Probability of Independent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B8_4_2_1_MISCONCEPTION_V1",
+    "family_name": "B8.4.2.1 Misconception Probes",
+    "topic_code": "B8.4.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B8.4.2.1 Misconception Probes for Probability of Independent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B8_4_2_1_EXAM_V1",
+    "family_name": "B8.4.2.1 Exam Patterns",
+    "topic_code": "B8.4.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B8.4.2.1 Exam Patterns for Probability of Independent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B8_4_2_1_SPEED_V1",
+    "family_name": "B8.4.2.1 Speed Builders",
+    "topic_code": "B8.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B8.4.2.1 Speed Builders for Probability of Independent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B8.4.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_1_1_1_FOUNDATION_V1",
+    "family_name": "B9.1.1.1 Foundation Checks",
+    "topic_code": "B9.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.1.1 Foundation Checks for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_1_1_WORKED_V1",
+    "family_name": "B9.1.1.1 Worked Pattern",
+    "topic_code": "B9.1.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.1.1.1 Worked Pattern for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_1_1_TRANSFER_V1",
+    "family_name": "B9.1.1.1 Transfer Checks",
+    "topic_code": "B9.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.1.1 Transfer Checks for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_1_1_1_MISCONCEPTION_V1",
+    "family_name": "B9.1.1.1 Misconception Probes",
+    "topic_code": "B9.1.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.1.1.1 Misconception Probes for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_1_1_1_EXAM_V1",
+    "family_name": "B9.1.1.1 Exam Patterns",
+    "topic_code": "B9.1.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.1.1.1 Exam Patterns for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_1_1_1_SPEED_V1",
+    "family_name": "B9.1.1.1 Speed Builders",
+    "topic_code": "B9.1.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.1.1 Speed Builders for Place Value and Rounding",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_1_1_2_FOUNDATION_V1",
+    "family_name": "B9.1.1.2 Foundation Checks",
+    "topic_code": "B9.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.1.2 Foundation Checks for Rational Numbers and Sets",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_1_2_WORKED_V1",
+    "family_name": "B9.1.1.2 Worked Pattern",
+    "topic_code": "B9.1.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.1.1.2 Worked Pattern for Rational Numbers and Sets",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_1_2_TRANSFER_V1",
+    "family_name": "B9.1.1.2 Transfer Checks",
+    "topic_code": "B9.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.1.2 Transfer Checks for Rational Numbers and Sets",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_1_1_2_MISCONCEPTION_V1",
+    "family_name": "B9.1.1.2 Misconception Probes",
+    "topic_code": "B9.1.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.1.1.2 Misconception Probes for Rational Numbers and Sets",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_1_1_2_EXAM_V1",
+    "family_name": "B9.1.1.2 Exam Patterns",
+    "topic_code": "B9.1.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.1.1.2 Exam Patterns for Rational Numbers and Sets",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_1_1_2_SPEED_V1",
+    "family_name": "B9.1.1.2 Speed Builders",
+    "topic_code": "B9.1.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.1.2 Speed Builders for Rational Numbers and Sets",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_1_2_1_FOUNDATION_V1",
+    "family_name": "B9.1.2.1 Foundation Checks",
+    "topic_code": "B9.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.1 Foundation Checks for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_1_WORKED_V1",
+    "family_name": "B9.1.2.1 Worked Pattern",
+    "topic_code": "B9.1.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.1.2.1 Worked Pattern for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_1_TRANSFER_V1",
+    "family_name": "B9.1.2.1 Transfer Checks",
+    "topic_code": "B9.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.1 Transfer Checks for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_1_MISCONCEPTION_V1",
+    "family_name": "B9.1.2.1 Misconception Probes",
+    "topic_code": "B9.1.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.1.2.1 Misconception Probes for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_1_2_1_EXAM_V1",
+    "family_name": "B9.1.2.1 Exam Patterns",
+    "topic_code": "B9.1.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.1.2.1 Exam Patterns for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_1_2_1_SPEED_V1",
+    "family_name": "B9.1.2.1 Speed Builders",
+    "topic_code": "B9.1.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.1 Speed Builders for Mental Mathematics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_1_2_2_FOUNDATION_V1",
+    "family_name": "B9.1.2.2 Foundation Checks",
+    "topic_code": "B9.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.2 Foundation Checks for Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_2_WORKED_V1",
+    "family_name": "B9.1.2.2 Worked Pattern",
+    "topic_code": "B9.1.2.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.1.2.2 Worked Pattern for Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_2_TRANSFER_V1",
+    "family_name": "B9.1.2.2 Transfer Checks",
+    "topic_code": "B9.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.2 Transfer Checks for Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_2_MISCONCEPTION_V1",
+    "family_name": "B9.1.2.2 Misconception Probes",
+    "topic_code": "B9.1.2.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.1.2.2 Misconception Probes for Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_1_2_2_EXAM_V1",
+    "family_name": "B9.1.2.2 Exam Patterns",
+    "topic_code": "B9.1.2.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.1.2.2 Exam Patterns for Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_1_2_2_SPEED_V1",
+    "family_name": "B9.1.2.2 Speed Builders",
+    "topic_code": "B9.1.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.2 Speed Builders for Decimal Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_1_2_4_FOUNDATION_V1",
+    "family_name": "B9.1.2.4 Foundation Checks",
+    "topic_code": "B9.1.2.4",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.4 Foundation Checks for Surds and Approximate Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.4; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_4_WORKED_V1",
+    "family_name": "B9.1.2.4 Worked Pattern",
+    "topic_code": "B9.1.2.4",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.1.2.4 Worked Pattern for Surds and Approximate Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.4; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_4_TRANSFER_V1",
+    "family_name": "B9.1.2.4 Transfer Checks",
+    "topic_code": "B9.1.2.4",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.4 Transfer Checks for Surds and Approximate Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.4; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_1_2_4_MISCONCEPTION_V1",
+    "family_name": "B9.1.2.4 Misconception Probes",
+    "topic_code": "B9.1.2.4",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.1.2.4 Misconception Probes for Surds and Approximate Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.4; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_1_2_4_EXAM_V1",
+    "family_name": "B9.1.2.4 Exam Patterns",
+    "topic_code": "B9.1.2.4",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.1.2.4 Exam Patterns for Surds and Approximate Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.4; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_1_2_4_SPEED_V1",
+    "family_name": "B9.1.2.4 Speed Builders",
+    "topic_code": "B9.1.2.4",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.2.4 Speed Builders for Surds and Approximate Square Roots",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.2.4; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_1_3_1_FOUNDATION_V1",
+    "family_name": "B9.1.3.1 Foundation Checks",
+    "topic_code": "B9.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.3.1 Foundation Checks for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_3_1_WORKED_V1",
+    "family_name": "B9.1.3.1 Worked Pattern",
+    "topic_code": "B9.1.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.1.3.1 Worked Pattern for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_3_1_TRANSFER_V1",
+    "family_name": "B9.1.3.1 Transfer Checks",
+    "topic_code": "B9.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.3.1 Transfer Checks for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_1_3_1_MISCONCEPTION_V1",
+    "family_name": "B9.1.3.1 Misconception Probes",
+    "topic_code": "B9.1.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.1.3.1 Misconception Probes for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_1_3_1_EXAM_V1",
+    "family_name": "B9.1.3.1 Exam Patterns",
+    "topic_code": "B9.1.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.1.3.1 Exam Patterns for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_1_3_1_SPEED_V1",
+    "family_name": "B9.1.3.1 Speed Builders",
+    "topic_code": "B9.1.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.3.1 Speed Builders for Fraction Operations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_1_4_1_FOUNDATION_V1",
+    "family_name": "B9.1.4.1 Foundation Checks",
+    "topic_code": "B9.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.4.1 Foundation Checks for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.4.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_4_1_WORKED_V1",
+    "family_name": "B9.1.4.1 Worked Pattern",
+    "topic_code": "B9.1.4.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.1.4.1 Worked Pattern for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.4.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_1_4_1_TRANSFER_V1",
+    "family_name": "B9.1.4.1 Transfer Checks",
+    "topic_code": "B9.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.4.1 Transfer Checks for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.4.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_1_4_1_MISCONCEPTION_V1",
+    "family_name": "B9.1.4.1 Misconception Probes",
+    "topic_code": "B9.1.4.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.1.4.1 Misconception Probes for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.4.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_1_4_1_EXAM_V1",
+    "family_name": "B9.1.4.1 Exam Patterns",
+    "topic_code": "B9.1.4.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.1.4.1 Exam Patterns for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.4.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_1_4_1_SPEED_V1",
+    "family_name": "B9.1.4.1 Speed Builders",
+    "topic_code": "B9.1.4.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.1.4.1 Speed Builders for Ratio, Rate and Proportion",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.1.4.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_2_1_1_FOUNDATION_V1",
+    "family_name": "B9.2.1.1 Foundation Checks",
+    "topic_code": "B9.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.1.1 Foundation Checks for Simultaneous Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_2_1_1_WORKED_V1",
+    "family_name": "B9.2.1.1 Worked Pattern",
+    "topic_code": "B9.2.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.2.1.1 Worked Pattern for Simultaneous Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_2_1_1_TRANSFER_V1",
+    "family_name": "B9.2.1.1 Transfer Checks",
+    "topic_code": "B9.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.1.1 Transfer Checks for Simultaneous Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_2_1_1_MISCONCEPTION_V1",
+    "family_name": "B9.2.1.1 Misconception Probes",
+    "topic_code": "B9.2.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.2.1.1 Misconception Probes for Simultaneous Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_2_1_1_EXAM_V1",
+    "family_name": "B9.2.1.1 Exam Patterns",
+    "topic_code": "B9.2.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.2.1.1 Exam Patterns for Simultaneous Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_2_1_1_SPEED_V1",
+    "family_name": "B9.2.1.1 Speed Builders",
+    "topic_code": "B9.2.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.1.1 Speed Builders for Simultaneous Linear Equations",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_2_2_1_FOUNDATION_V1",
+    "family_name": "B9.2.2.1 Foundation Checks",
+    "topic_code": "B9.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.2.1 Foundation Checks for Formula Manipulation and Factorisation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_2_2_1_WORKED_V1",
+    "family_name": "B9.2.2.1 Worked Pattern",
+    "topic_code": "B9.2.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.2.2.1 Worked Pattern for Formula Manipulation and Factorisation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_2_2_1_TRANSFER_V1",
+    "family_name": "B9.2.2.1 Transfer Checks",
+    "topic_code": "B9.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.2.1 Transfer Checks for Formula Manipulation and Factorisation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_2_2_1_MISCONCEPTION_V1",
+    "family_name": "B9.2.2.1 Misconception Probes",
+    "topic_code": "B9.2.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.2.2.1 Misconception Probes for Formula Manipulation and Factorisation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_2_2_1_EXAM_V1",
+    "family_name": "B9.2.2.1 Exam Patterns",
+    "topic_code": "B9.2.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.2.2.1 Exam Patterns for Formula Manipulation and Factorisation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_2_2_1_SPEED_V1",
+    "family_name": "B9.2.2.1 Speed Builders",
+    "topic_code": "B9.2.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.2.1 Speed Builders for Formula Manipulation and Factorisation",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_2_3_1_FOUNDATION_V1",
+    "family_name": "B9.2.3.1 Foundation Checks",
+    "topic_code": "B9.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.3.1 Foundation Checks for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_2_3_1_WORKED_V1",
+    "family_name": "B9.2.3.1 Worked Pattern",
+    "topic_code": "B9.2.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.2.3.1 Worked Pattern for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_2_3_1_TRANSFER_V1",
+    "family_name": "B9.2.3.1 Transfer Checks",
+    "topic_code": "B9.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.3.1 Transfer Checks for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_2_3_1_MISCONCEPTION_V1",
+    "family_name": "B9.2.3.1 Misconception Probes",
+    "topic_code": "B9.2.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.2.3.1 Misconception Probes for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_2_3_1_EXAM_V1",
+    "family_name": "B9.2.3.1 Exam Patterns",
+    "topic_code": "B9.2.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.2.3.1 Exam Patterns for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_2_3_1_SPEED_V1",
+    "family_name": "B9.2.3.1 Speed Builders",
+    "topic_code": "B9.2.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.2.3.1 Speed Builders for Linear Inequalities",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.2.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_3_1_1_FOUNDATION_V1",
+    "family_name": "B9.3.1.1 Foundation Checks",
+    "topic_code": "B9.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.1.1 Foundation Checks for Angle Properties and Polygon Sums",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_1_1_WORKED_V1",
+    "family_name": "B9.3.1.1 Worked Pattern",
+    "topic_code": "B9.3.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.3.1.1 Worked Pattern for Angle Properties and Polygon Sums",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_1_1_TRANSFER_V1",
+    "family_name": "B9.3.1.1 Transfer Checks",
+    "topic_code": "B9.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.1.1 Transfer Checks for Angle Properties and Polygon Sums",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_3_1_1_MISCONCEPTION_V1",
+    "family_name": "B9.3.1.1 Misconception Probes",
+    "topic_code": "B9.3.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.3.1.1 Misconception Probes for Angle Properties and Polygon Sums",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_3_1_1_EXAM_V1",
+    "family_name": "B9.3.1.1 Exam Patterns",
+    "topic_code": "B9.3.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.3.1.1 Exam Patterns for Angle Properties and Polygon Sums",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_3_1_1_SPEED_V1",
+    "family_name": "B9.3.1.1 Speed Builders",
+    "topic_code": "B9.3.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.1.1 Speed Builders for Angle Properties and Polygon Sums",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_3_1_2_FOUNDATION_V1",
+    "family_name": "B9.3.1.2 Foundation Checks",
+    "topic_code": "B9.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.1.2 Foundation Checks for Inscribed and Circumscribed Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_1_2_WORKED_V1",
+    "family_name": "B9.3.1.2 Worked Pattern",
+    "topic_code": "B9.3.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.3.1.2 Worked Pattern for Inscribed and Circumscribed Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_1_2_TRANSFER_V1",
+    "family_name": "B9.3.1.2 Transfer Checks",
+    "topic_code": "B9.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.1.2 Transfer Checks for Inscribed and Circumscribed Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_3_1_2_MISCONCEPTION_V1",
+    "family_name": "B9.3.1.2 Misconception Probes",
+    "topic_code": "B9.3.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.3.1.2 Misconception Probes for Inscribed and Circumscribed Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_3_1_2_EXAM_V1",
+    "family_name": "B9.3.1.2 Exam Patterns",
+    "topic_code": "B9.3.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.3.1.2 Exam Patterns for Inscribed and Circumscribed Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_3_1_2_SPEED_V1",
+    "family_name": "B9.3.1.2 Speed Builders",
+    "topic_code": "B9.3.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.1.2 Speed Builders for Inscribed and Circumscribed Constructions",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_3_2_1_FOUNDATION_V1",
+    "family_name": "B9.3.2.1 Foundation Checks",
+    "topic_code": "B9.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.2.1 Foundation Checks for Surface Area of Prisms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_2_1_WORKED_V1",
+    "family_name": "B9.3.2.1 Worked Pattern",
+    "topic_code": "B9.3.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.3.2.1 Worked Pattern for Surface Area of Prisms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_2_1_TRANSFER_V1",
+    "family_name": "B9.3.2.1 Transfer Checks",
+    "topic_code": "B9.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.2.1 Transfer Checks for Surface Area of Prisms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_3_2_1_MISCONCEPTION_V1",
+    "family_name": "B9.3.2.1 Misconception Probes",
+    "topic_code": "B9.3.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.3.2.1 Misconception Probes for Surface Area of Prisms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_3_2_1_EXAM_V1",
+    "family_name": "B9.3.2.1 Exam Patterns",
+    "topic_code": "B9.3.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.3.2.1 Exam Patterns for Surface Area of Prisms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_3_2_1_SPEED_V1",
+    "family_name": "B9.3.2.1 Speed Builders",
+    "topic_code": "B9.3.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.2.1 Speed Builders for Surface Area of Prisms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_3_2_2_FOUNDATION_V1",
+    "family_name": "B9.3.2.2 Foundation Checks",
+    "topic_code": "B9.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.2.2 Foundation Checks for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_2_2_WORKED_V1",
+    "family_name": "B9.3.2.2 Worked Pattern",
+    "topic_code": "B9.3.2.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.3.2.2 Worked Pattern for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_2_2_TRANSFER_V1",
+    "family_name": "B9.3.2.2 Transfer Checks",
+    "topic_code": "B9.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.2.2 Transfer Checks for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_3_2_2_MISCONCEPTION_V1",
+    "family_name": "B9.3.2.2 Misconception Probes",
+    "topic_code": "B9.3.2.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.3.2.2 Misconception Probes for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_3_2_2_EXAM_V1",
+    "family_name": "B9.3.2.2 Exam Patterns",
+    "topic_code": "B9.3.2.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.3.2.2 Exam Patterns for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_3_2_2_SPEED_V1",
+    "family_name": "B9.3.2.2 Speed Builders",
+    "topic_code": "B9.3.2.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.2.2 Speed Builders for Bearings and Vectors",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.2.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_3_3_1_FOUNDATION_V1",
+    "family_name": "B9.3.3.1 Foundation Checks",
+    "topic_code": "B9.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.3.1 Foundation Checks for Enlargement",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.3.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_3_1_WORKED_V1",
+    "family_name": "B9.3.3.1 Worked Pattern",
+    "topic_code": "B9.3.3.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.3.3.1 Worked Pattern for Enlargement",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.3.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_3_3_1_TRANSFER_V1",
+    "family_name": "B9.3.3.1 Transfer Checks",
+    "topic_code": "B9.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.3.1 Transfer Checks for Enlargement",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.3.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_3_3_1_MISCONCEPTION_V1",
+    "family_name": "B9.3.3.1 Misconception Probes",
+    "topic_code": "B9.3.3.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.3.3.1 Misconception Probes for Enlargement",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.3.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_3_3_1_EXAM_V1",
+    "family_name": "B9.3.3.1 Exam Patterns",
+    "topic_code": "B9.3.3.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.3.3.1 Exam Patterns for Enlargement",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.3.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_3_3_1_SPEED_V1",
+    "family_name": "B9.3.3.1 Speed Builders",
+    "topic_code": "B9.3.3.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.3.3.1 Speed Builders for Enlargement",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.3.3.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_4_1_1_FOUNDATION_V1",
+    "family_name": "B9.4.1.1 Foundation Checks",
+    "topic_code": "B9.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.1.1 Foundation Checks for Frequency Tables and Histograms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_4_1_1_WORKED_V1",
+    "family_name": "B9.4.1.1 Worked Pattern",
+    "topic_code": "B9.4.1.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.4.1.1 Worked Pattern for Frequency Tables and Histograms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_4_1_1_TRANSFER_V1",
+    "family_name": "B9.4.1.1 Transfer Checks",
+    "topic_code": "B9.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.1.1 Transfer Checks for Frequency Tables and Histograms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_4_1_1_MISCONCEPTION_V1",
+    "family_name": "B9.4.1.1 Misconception Probes",
+    "topic_code": "B9.4.1.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.4.1.1 Misconception Probes for Frequency Tables and Histograms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_4_1_1_EXAM_V1",
+    "family_name": "B9.4.1.1 Exam Patterns",
+    "topic_code": "B9.4.1.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.4.1.1 Exam Patterns for Frequency Tables and Histograms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_4_1_1_SPEED_V1",
+    "family_name": "B9.4.1.1 Speed Builders",
+    "topic_code": "B9.4.1.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.1.1 Speed Builders for Frequency Tables and Histograms",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_4_1_2_FOUNDATION_V1",
+    "family_name": "B9.4.1.2 Foundation Checks",
+    "topic_code": "B9.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.1.2 Foundation Checks for Descriptive Statistics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.2; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_4_1_2_WORKED_V1",
+    "family_name": "B9.4.1.2 Worked Pattern",
+    "topic_code": "B9.4.1.2",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.4.1.2 Worked Pattern for Descriptive Statistics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.2; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_4_1_2_TRANSFER_V1",
+    "family_name": "B9.4.1.2 Transfer Checks",
+    "topic_code": "B9.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.1.2 Transfer Checks for Descriptive Statistics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.2; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_4_1_2_MISCONCEPTION_V1",
+    "family_name": "B9.4.1.2 Misconception Probes",
+    "topic_code": "B9.4.1.2",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.4.1.2 Misconception Probes for Descriptive Statistics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.2; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_4_1_2_EXAM_V1",
+    "family_name": "B9.4.1.2 Exam Patterns",
+    "topic_code": "B9.4.1.2",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.4.1.2 Exam Patterns for Descriptive Statistics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.2; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_4_1_2_SPEED_V1",
+    "family_name": "B9.4.1.2 Speed Builders",
+    "topic_code": "B9.4.1.2",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.1.2 Speed Builders for Descriptive Statistics",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.1.2; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  },
+  {
+    "family_code": "B9_4_2_1_FOUNDATION_V1",
+    "family_name": "B9.4.2.1 Foundation Checks",
+    "topic_code": "B9.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.2.1 Foundation Checks for Probability of Dependent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.2.1; supports key_concept, comprehension, direct_retrieval, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_4_2_1_WORKED_V1",
+    "family_name": "B9.4.2.1 Worked Pattern",
+    "topic_code": "B9.4.2.1",
+    "family_type": "worked_example_template",
+    "canonical_pattern": "B9.4.2.1 Worked Pattern for Probability of Dependent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.2.1; supports worked_example, application, substitute_and_solve, and foundation_check analytics."
+  },
+  {
+    "family_code": "B9_4_2_1_TRANSFER_V1",
+    "family_name": "B9.4.2.1 Transfer Checks",
+    "topic_code": "B9.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.2.1 Transfer Checks for Probability of Dependent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.2.1; supports application, application, multi_step_reasoning, and transfer_check analytics."
+  },
+  {
+    "family_code": "B9_4_2_1_MISCONCEPTION_V1",
+    "family_name": "B9.4.2.1 Misconception Probes",
+    "topic_code": "B9.4.2.1",
+    "family_type": "misconception_cluster",
+    "canonical_pattern": "B9.4.2.1 Misconception Probes for Probability of Dependent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.2.1; supports comparison, analysis, multi_step_reasoning, and misconception_diagnosis analytics."
+  },
+  {
+    "family_code": "B9_4_2_1_EXAM_V1",
+    "family_name": "B9.4.2.1 Exam Patterns",
+    "topic_code": "B9.4.2.1",
+    "family_type": "exam_structure",
+    "canonical_pattern": "B9.4.2.1 Exam Patterns for Probability of Dependent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.2.1; supports procedure, analysis, pattern_spotting, and exam_pattern_familiarization analytics."
+  },
+  {
+    "family_code": "B9_4_2_1_SPEED_V1",
+    "family_name": "B9.4.2.1 Speed Builders",
+    "topic_code": "B9.4.2.1",
+    "family_type": "recurring_pattern",
+    "canonical_pattern": "B9.4.2.1 Speed Builders for Probability of Dependent Events",
+    "description": "Deterministic math-ccp-b7b9-analytics-v1 family for B9.4.2.1; supports procedure, recall, direct_retrieval, and speed_build analytics."
+  }
+]

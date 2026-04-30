@@ -17,7 +17,7 @@ defineEmits<{ cellClick: [topic: number, contentType: number, value: number] }>(
       :rows="topics.map((t, i) => ({ label: t, values: coverage[i] || [] }))"
       :columns="contentTypes"
       color-scale="mastery"
-      @cell-click="$emit('cellClick', $event.row, $event.col, $event.value)"
+      @cell-click="(row, col, value) => $emit('cellClick', row, col, value)"
     />
     <div class="flex items-center gap-4 mt-3 text-[9px]" :style="{ color: 'var(--text-3)' }">
       <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-[#e5e5e5]" /> No content</span>

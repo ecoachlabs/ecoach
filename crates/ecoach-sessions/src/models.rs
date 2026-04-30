@@ -14,6 +14,10 @@ pub struct Session {
     pub subject_id: Option<i64>,
     pub status: String,
     pub active_item_index: i64,
+    pub deferred_completion_state: String,
+    pub deferred_completion_updated_at: Option<DateTime<Utc>>,
+    pub deferred_completion_attempts: i64,
+    pub deferred_completion_last_error: Option<String>,
     pub focus_mode: bool,
     pub focus_goal: Option<String>,
     pub break_schedule_json: Option<Value>,
@@ -79,6 +83,8 @@ pub struct PracticeSessionStartInput {
     pub student_id: i64,
     pub subject_id: i64,
     pub topic_ids: Vec<i64>,
+    #[serde(default)]
+    pub family_ids: Vec<i64>,
     pub question_count: usize,
     pub is_timed: bool,
 }

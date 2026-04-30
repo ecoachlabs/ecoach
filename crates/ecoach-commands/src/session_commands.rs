@@ -95,6 +95,18 @@ pub fn complete_session(
     })
 }
 
+pub fn flag_session_item(
+    state: &AppState,
+    session_id: i64,
+    item_id: i64,
+    flagged: bool,
+) -> Result<(), CommandError> {
+    state.with_connection(|conn| {
+        SessionService::new(conn).flag_session_item(session_id, item_id, flagged)?;
+        Ok(())
+    })
+}
+
 pub type FocusModeConfigDto = FocusModeConfig;
 pub type SessionPresenceEventDto = SessionPresenceEvent;
 pub type SessionPresenceEventInputDto = SessionPresenceEventInput;

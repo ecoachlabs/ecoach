@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MathText from '../MathText.vue'
+
 defineProps<{
   problem: string
   options: { id: number; label: string; text: string; is_correct?: boolean }[]
@@ -13,7 +15,9 @@ defineEmits<{ select: [id: number] }>()
   <div>
     <div class="p-4 rounded-[var(--radius-lg)] mb-4" :style="{ backgroundColor: 'var(--card-bg)' }">
       <p class="text-xs font-semibold uppercase tracking-wider mb-2" :style="{ color: 'var(--accent)' }">What is the correct first step?</p>
-      <p class="text-sm leading-relaxed" :style="{ color: 'var(--text)' }">{{ problem }}</p>
+      <p class="text-sm leading-relaxed" :style="{ color: 'var(--text)' }">
+        <MathText :text="problem" size="sm" />
+      </p>
     </div>
 
     <div class="space-y-2">
@@ -33,7 +37,9 @@ defineEmits<{ select: [id: number] }>()
           :style="(!answered && selected !== opt.id) ? { backgroundColor: 'var(--primary-light)', color: 'var(--text-3)' } : {}">
           {{ opt.label }}
         </span>
-        <span :style="{ color: 'var(--text)' }">{{ opt.text }}</span>
+        <span :style="{ color: 'var(--text)' }">
+          <MathText :text="opt.text" size="sm" />
+        </span>
       </button>
     </div>
   </div>

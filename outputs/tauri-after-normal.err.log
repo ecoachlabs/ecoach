@@ -1,0 +1,13 @@
+[perf][tauri.submit_attempt] enter session_id=166 session_item_id=1021 question_id=2875
+[perf][rust.submit_attempt] enter session_id=166 session_item_id=1021 question_id=2875 selected_option_id=Some(11497)
+[perf][rust.submit_attempt] session.lookup 0.3ms
+[recovery][deferred_completion] pending session_id=166 previous_state=idle reason=submit_attempt.defer_coach_brain
+[perf][rust.submit_attempt] session.record_outcome 14.2ms
+[perf][rust.submit_attempt] student_model.process_answer 110.3ms
+[perf][rust.submit_attempt] evidence.interpret_attempt 23.5ms
+[perf][rust.submit_attempt] pedagogical_runtime.record_attempt_feedback 160.3ms
+[perf][rust.submit_attempt] session.get_session_snapshot 0.3ms
+[perf][rust.submit_attempt] coach.evaluate_coach_brain skipped by defer_coach_brain
+[perf][rust.submit_attempt] total 309.8ms
+[perf][rust.submit_attempt] outer_total 309.9ms
+[perf][tauri.submit_attempt] exit 310.2ms

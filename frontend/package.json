@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "offline:verify": "node ../scripts/validate_offline_readiness.mjs",
     "preview": "vite preview",
     "tauri": "tauri"
   },

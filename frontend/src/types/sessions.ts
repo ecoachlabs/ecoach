@@ -16,11 +16,24 @@ export interface SessionSummaryDto {
   status: string
 }
 
+/** Matches SessionCompletionResultDto from ecoach-commands */
+export interface SessionCompletionResultDto {
+  session_id: number
+  accuracy_score: number | null
+  answered_questions: number
+  correct_questions: number
+  status: string
+  next_action_type: string
+  next_action_title: string
+  next_action_route: string
+}
+
 /** Matches PracticeSessionStartInput from ecoach-sessions */
 export interface PracticeSessionStartInput {
   student_id: number
   subject_id: number
   topic_ids: number[]
+  family_ids?: number[]
   question_count: number
   is_timed: boolean
 }

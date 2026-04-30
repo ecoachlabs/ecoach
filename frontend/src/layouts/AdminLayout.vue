@@ -5,18 +5,22 @@ import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
 import ErrorBoundary from '@/components/layout/ErrorBoundary.vue'
 import {
-  PhBook,
+  PhArrowsClockwise,
   PhBooks,
   PhChartLineUp,
+  PhCheckCircle,
+  PhDatabase,
   PhGear,
-  PhGraduationCap,
   PhHouseLine,
   PhMagnifyingGlass,
   PhMoon,
   PhNewspaper,
+  PhNotePencil,
   PhPencilSimple,
   PhSignOut,
   PhSun,
+  PhTreeStructure,
+  PhUploadSimple,
   PhUsers,
 } from '@phosphor-icons/vue'
 
@@ -69,53 +73,49 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
   {
     label: 'Overview',
     items: [
-      { to: '/admin', label: 'Command Center', icon: PhHouseLine, color: '#7C3AED', match: 'exact' },
-      { to: '/admin/students', label: 'Students', icon: PhUsers, color: '#0EA5E9', match: 'prefix' },
-      { to: '/admin/users', label: 'Users', icon: PhUsers, color: '#14B8A6', match: 'exact' },
+      { to: '/admin', label: 'Dashboard', icon: PhHouseLine, color: '#0F766E', match: 'exact' },
     ],
   },
   {
-    label: 'Curriculum',
+    label: 'Manage Content',
     items: [
-      { to: '/admin/curriculum', label: 'Curriculum Hub', icon: PhGraduationCap, color: '#10B981', match: 'exact' },
-      { to: '/admin/curriculum/upload', label: 'Upload Sources', icon: PhBook, color: '#22C55E', match: 'exact' },
-      { to: '/admin/curriculum/review', label: 'Review Extractions', icon: PhMagnifyingGlass, color: '#16A34A', match: 'exact' },
-      { to: '/admin/curriculum/editor', label: 'Tree Editor', icon: PhPencilSimple, color: '#15803D', match: 'exact' },
+      { to: '/admin/content-editor', label: 'Content Editor', icon: PhPencilSimple, color: '#0F766E', match: 'prefix' },
+      { to: '/admin/questions', label: 'Question Bank', icon: PhDatabase, color: '#B45309', match: 'exact' },
+      { to: '/admin/past-papers', label: 'Past Papers', icon: PhNotePencil, color: '#F59E0B', match: 'prefix' },
+      { to: '/admin/content', label: 'Sources & Ingestion', icon: PhUploadSimple, color: '#2563EB', match: 'exact' },
+      { to: '/admin/questions', hash: '#seeding', activeHash: '#seeding', label: 'Seeding Engine', icon: PhTreeStructure, color: '#7C2D12', match: 'exact' },
     ],
   },
   {
-    label: 'Questions',
+    label: 'Quality',
     items: [
-      { to: '/admin/questions', label: 'Question Hub', icon: PhBook, color: '#F59E0B', match: 'exact' },
-      { to: '/admin/questions/author', label: 'Question Author', icon: PhPencilSimple, color: '#FB923C', match: 'exact' },
-      { to: '/admin/questions/review', label: 'Review Queue', icon: PhMagnifyingGlass, color: '#F97316', match: 'exact' },
+      { to: '/admin/questions/review', label: 'Review Queue', icon: PhCheckCircle, color: '#CA8A04', match: 'exact' },
+      { to: '/admin/content/coverage', label: 'Coverage & Stats', icon: PhChartLineUp, color: '#166534', match: 'exact' },
+      { to: '/admin/quality', label: 'Quality Dashboard', icon: PhMagnifyingGlass, color: '#991B1B', match: 'exact' },
     ],
   },
   {
-    label: 'Content',
+    label: 'Distribution',
     items: [
-      { to: '/admin/content', label: 'Content Pipeline', icon: PhBooks, color: '#6366F1', match: 'exact' },
-      { to: '/admin/content/coverage', label: 'Coverage Heatmap', icon: PhChartLineUp, color: '#4F46E5', match: 'exact' },
-      { to: '/admin/packs', label: 'Packs', icon: PhNewspaper, color: '#8B5CF6', match: 'exact' },
+      { to: '/admin/remote-updates', label: 'Remote Updates', icon: PhArrowsClockwise, color: '#0369A1', match: 'exact' },
+      { to: '/admin/packs', label: 'Packs & Publishing', icon: PhNewspaper, color: '#4D7C0F', match: 'exact' },
     ],
   },
   {
-    label: 'Governance',
+    label: 'System',
     items: [
-      { to: '/admin/quality', label: 'Quality', icon: PhChartLineUp, color: '#EF4444', match: 'exact' },
+      { to: '/admin/students', label: 'Students', icon: PhUsers, color: '#0E7490', match: 'prefix' },
+      { to: '/admin/users', label: 'Users', icon: PhUsers, color: '#0F766E', match: 'exact' },
       {
         to: '/admin/settings',
-        label: 'Settings Hub',
+        label: 'Settings',
         icon: PhGear,
-        color: '#64748B',
+        color: '#525252',
         match: 'exact',
         excludeHashes: ['#system', '#health', '#backup', '#tuning', '#entitlements'],
       },
-      { to: '/admin/settings', hash: '#system', activeHash: '#system', label: 'System Config', icon: PhGear, color: '#475569', match: 'exact' },
-      { to: '/admin/settings', hash: '#health', activeHash: '#health', label: 'System Health', icon: PhChartLineUp, color: '#0EA5E9', match: 'exact' },
-      { to: '/admin/settings', hash: '#backup', activeHash: '#backup', label: 'Backup & Restore', icon: PhBooks, color: '#8B5CF6', match: 'exact' },
-      { to: '/admin/settings', hash: '#tuning', activeHash: '#tuning', label: 'Coach Tuning', icon: PhPencilSimple, color: '#F59E0B', match: 'exact' },
-      { to: '/admin/settings', hash: '#entitlements', activeHash: '#entitlements', label: 'Entitlements', icon: PhUsers, color: '#14B8A6', match: 'exact' },
+      { to: '/admin/settings', hash: '#health', activeHash: '#health', label: 'System Health', icon: PhChartLineUp, color: '#0369A1', match: 'exact' },
+      { to: '/admin/settings', hash: '#backup', activeHash: '#backup', label: 'Backup & Restore', icon: PhBooks, color: '#525252', match: 'exact' },
     ],
   },
 ]
@@ -128,12 +128,12 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
       :style="{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }"
     >
       <div class="px-4 py-3 flex items-center gap-2.5 shrink-0" :style="{ borderBottom: '1px solid var(--card-border)' }">
-        <div class="w-8 h-8 rounded-[10px] bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-sm">
+        <div class="w-8 h-8 rounded-[8px] bg-[var(--accent)] flex items-center justify-center shadow-sm">
           <span class="text-white font-display font-bold text-sm">e</span>
         </div>
         <div>
           <p class="font-display font-bold text-sm leading-none" :style="{ color: 'var(--text)' }">eCoach</p>
-          <p class="text-[9px] uppercase tracking-widest mt-0.5" :style="{ color: 'var(--text-3)' }">Admin Portal</p>
+          <p class="text-[9px] uppercase tracking-widest mt-0.5" :style="{ color: 'var(--text-3)' }">CMS Console</p>
         </div>
       </div>
 
@@ -184,7 +184,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
         >
           <div
             class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-            style="background: linear-gradient(135deg, #7C3AED, #4338CA);"
+            style="background: var(--accent);"
           >
             {{ auth.currentAccount.display_name.charAt(0).toUpperCase() }}
           </div>

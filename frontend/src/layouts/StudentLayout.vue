@@ -1,64 +1,27 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
+import { getHomeLearningStats, type HomeLearningStatsDto } from '@/ipc/coach'
+import { recoverDeferredSessionCompletions } from '@/ipc/sessions'
 import ErrorBoundary from '@/components/layout/ErrorBoundary.vue'
 import {
-  PhArrowFatLinesUp,
-  PhArrowsCounterClockwise,
-  PhBookOpenText,
-  PhBooks,
+  appShortcut,
+  isNavItemActive,
+  studentNavSections,
+  type NavLinkItem,
+} from './studentNav'
+import {
   PhBrain,
-  PhBug,
-  PhCalendar,
-  PhChartBar,
-  PhChartLineDown,
-  PhChartLineUp,
-  PhClipboardText,
-  PhClockCounterClockwise,
-  PhClockCountdown,
-  PhCompass,
-  PhCrown,
-  PhDna,
-  PhDrop,
   PhFlame,
-  PhFlask,
-  PhGameController,
   PhGear,
-  PhHouse,
-  PhLightbulbFilament,
   PhLightning,
-  PhMapTrifold,
-  PhMagnifyingGlass,
   PhMedal,
   PhMoon,
-  PhNotePencil,
-  PhPersonSimpleRun,
-  PhRocketLaunch,
-  PhSealCheck,
-  PhShuffleAngular,
-  PhSquaresFour,
   PhStar,
-  PhStudent,
   PhSun,
-  PhTarget,
-  PhUploadSimple,
 } from '@phosphor-icons/vue'
-
-type NavItem = {
-  name: string
-  to: string
-  hash?: string
-  icon: any
-  color: string
-  label: string
-  match: 'exact' | 'prefix'
-  activeBase?: string
-  activeHash?: string
-  excludeBases?: string[]
-  excludeHashes?: string[]
-}
 
 type WebAudioWindow = Window & { webkitAudioContext?: typeof AudioContext }
 
@@ -68,67 +31,6 @@ const router = useRouter()
 const route = useRoute()
 
 onMounted(() => ui.setTheme('student'))
-
-const navSections: NavItem[][] = [
-  [
-    { name: 'home', label: 'Home', to: '/student', icon: PhHouse, color: '#FF6B35', match: 'exact' },
-    { name: 'explore', label: 'Explore', to: '/student/journey', icon: PhCompass, color: '#2563EB', match: 'prefix' },
-    { name: 'teach', label: 'Teach', to: '/student/spark', icon: PhStudent, color: '#8B5CF6', match: 'exact' },
-    { name: 'past-questions', label: 'Past Questions', to: '/student/practice', icon: PhNotePencil, color: '#F59E0B', match: 'exact' },
-    { name: 'custom-test', label: 'Custom Test', to: '/student/practice/custom-test', icon: PhClipboardText, color: '#D97706', match: 'exact' },
-    { name: 'prepare-test', label: 'Prepare Test', to: '/student/mock', icon: PhClockCountdown, color: '#F97316', match: 'prefix', excludeBases: ['/student/mock/history'] },
-    { name: 'mock-history', label: 'Mock History', to: '/student/mock/history', icon: PhClockCounterClockwise, color: '#D97706', match: 'exact' },
-    { name: 'examples', label: 'Examples', to: '/student/glossary/compare', icon: PhSquaresFour, color: '#06B6D4', match: 'exact' },
-  ],
-  [
-    { name: 'diagnostic', label: 'Diagnostic DNA', to: '/student/diagnostic', icon: PhDna, color: '#7C3AED', match: 'prefix' },
-    { name: 'knowledge-gap', label: 'Knowledge Gap', to: '/student/knowledge-gap', icon: PhChartLineDown, color: '#22C55E', match: 'prefix', excludeBases: ['/student/knowledge-gap/scan'] },
-    { name: 'gap-scan', label: 'Gap Scan', to: '/student/knowledge-gap/scan', icon: PhMagnifyingGlass, color: '#0EA5E9', match: 'exact' },
-    { name: 'mistake-lab', label: 'Mistake Lab', to: '/student/mistakes', icon: PhBug, color: '#F43F5E', match: 'exact', excludeHashes: ['#retry-zone'] },
-    { name: 'retry-zone', label: 'Retry Zone', to: '/student/mistakes', hash: '#retry-zone', activeHash: '#retry-zone', icon: PhTarget, color: '#EF4444', match: 'exact' },
-  ],
-  [
-    { name: 'library', label: 'Library', to: '/student/library', icon: PhBooks, color: '#6366F1', match: 'prefix', excludeHashes: ['#revision-box'] },
-    { name: 'curriculum', label: 'Curriculum', to: '/student/curriculum', icon: PhBookOpenText, color: '#2563EB', match: 'exact' },
-    { name: 'revision-box', label: 'Revision Box', to: '/student/library', hash: '#revision-box', activeHash: '#revision-box', icon: PhChartLineUp, color: '#6366F1', match: 'exact' },
-    { name: 'glossary', label: 'Glossary', to: '/student/glossary', icon: PhBookOpenText, color: '#4F46E5', match: 'prefix', excludeBases: ['/student/glossary/compare'] },
-    { name: 'audio-glossary', label: 'Audio Glossary', to: '/student/glossary/audio', icon: PhBookOpenText, color: '#0F766E', match: 'exact' },
-    { name: 'formula-lab', label: 'Formula Lab', to: '/student/glossary/formula-lab', icon: PhFlask, color: '#0EA5E9', match: 'exact' },
-    { name: 'mental', label: 'Mental', to: '/student/memory', icon: PhLightning, color: '#F59E0B', match: 'exact', excludeHashes: ['#reviews'] },
-    { name: 'review-queue', label: 'Review Queue', to: '/student/memory', hash: '#reviews', activeHash: '#reviews', icon: PhArrowsCounterClockwise, color: '#7C3AED', match: 'exact' },
-    { name: 'memory', label: 'Memory', to: '/student/memory', icon: PhBrain, color: '#EC4899', match: 'exact', excludeHashes: ['#reviews'] },
-  ],
-  [
-    { name: 'progress', label: 'Progress', to: '/student/progress', icon: PhChartBar, color: '#84CC16', match: 'exact' },
-    { name: 'analytics', label: 'Analytics', to: '/student/progress/analytics', icon: PhChartBar, color: '#3B82F6', match: 'exact' },
-    { name: 'mastery-map', label: 'Mastery Map', to: '/student/progress/mastery-map', icon: PhMapTrifold, color: '#22C55E', match: 'exact' },
-    { name: 'history', label: 'History', to: '/student/progress/history', icon: PhClockCounterClockwise, color: '#64748B', match: 'exact' },
-    { name: 'calendar', label: 'Calendar', to: '/student/calendar', icon: PhCalendar, color: '#22C55E', match: 'exact' },
-    { name: 'exam-intel', label: 'Exam Intel', to: '/student/exam-intel', icon: PhLightbulbFilament, color: '#7C3AED', match: 'prefix' },
-  ],
-  [
-    { name: 'onboarding', label: 'Onboarding', to: '/student/onboarding/welcome', icon: PhMapTrifold, color: '#0EA5E9', match: 'prefix', activeBase: '/student/onboarding' },
-    { name: 'beat-yesterday', label: 'Beat Yesterday', to: '/student/beat-yesterday', icon: PhArrowFatLinesUp, color: '#EF4444', match: 'exact' },
-    { name: 'marathon', label: 'Marathon', to: '/student/rise', icon: PhPersonSimpleRun, color: '#FB923C', match: 'exact' },
-    { name: 'rise', label: 'Rise', to: '/student/rise', icon: PhRocketLaunch, color: '#3B82F6', match: 'exact' },
-    { name: 'elite', label: 'Elite', to: '/student/elite', icon: PhCrown, color: '#FBBF24', match: 'prefix', excludeBases: ['/student/elite/arena', '/student/elite/records', '/student/elite/insights'] },
-    { name: 'answer-lab', label: 'Answer Lab', to: '/student/elite/arena', icon: PhFlask, color: '#14B8A6', match: 'exact' },
-    { name: 'speed-lab', label: 'Speed Lab', to: '/student/elite/records', icon: PhDrop, color: '#0EA5E9', match: 'exact' },
-    { name: 'games', label: 'Games', to: '/student/games', icon: PhGameController, color: '#7C3AED', match: 'prefix', excludeBases: ['/student/games/mindstack', '/student/games/tugofwar', '/student/games/traps'] },
-    { name: 'traps', label: 'Traps', to: '/student/games/traps', icon: PhShuffleAngular, color: '#EF4444', match: 'exact' },
-    { name: 'uploads', label: 'Uploads', to: '/student/upload', icon: PhUploadSimple, color: '#6366F1', match: 'exact' },
-    { name: 'settings', label: 'Settings', to: '/student/settings', icon: PhGear, color: '#475569', match: 'exact' },
-  ],
-]
-
-const appShortcut: NavItem = {
-  name: 'adeo',
-  label: 'Adeo v2',
-  to: '/student/settings',
-  icon: PhSealCheck,
-  color: '#F97316',
-  match: 'exact',
-}
 
 let navAudioContext: AudioContext | null = null
 let lastNavSoundAt = 0
@@ -177,21 +79,82 @@ function playNavSelectSound() {
   }
 }
 
-function isActive(item: NavItem): boolean {
-  if (item.excludeBases?.some(base => route.path === base || route.path.startsWith(`${base}/`))) return false
-  if (item.excludeHashes?.includes(route.hash)) return false
-  if (item.match === 'prefix') {
-    const base = item.activeBase ?? item.to
-    if (item.activeHash && route.hash !== item.activeHash) return false
-    return route.path === base || route.path.startsWith(`${base}/`)
-  }
-  if (route.path !== item.to) return false
-  if (item.activeHash) return route.hash === item.activeHash
-  return true
+function isActive(item: NavLinkItem): boolean {
+  return isNavItemActive(item, route.path, route.hash)
 }
+
+const flatNavItems = studentNavSections.flatMap(section => section.items)
+const activeNavItem = computed(() => flatNavItems.find(item => isActive(item)) ?? null)
 
 const displayName = computed(() => auth.currentAccount?.display_name ?? 'Kofi')
 const initials = computed(() => auth.currentAccount?.display_name?.charAt(0).toUpperCase() ?? 'K')
+const isCoachHubActive = computed(() => route.path === '/student/coach' || route.path === '/student/v3')
+const coachToggleLabel = computed(() => isCoachHubActive.value ? 'Coach Active' : 'Activate Coach')
+const homeLearningStats = ref<HomeLearningStatsDto | null>(null)
+const shellStats = computed(() => ({
+  streakDays: homeLearningStats.value?.streak_days ?? 0,
+  todayMinutes: homeLearningStats.value?.today_minutes ?? 0,
+  weekQuestions: homeLearningStats.value?.week_questions ?? 0,
+  accuracyPercent: homeLearningStats.value?.accuracy_percent ?? 0,
+}))
+
+let statsRefreshHandle: number | null = null
+let deferredRecoveryHandle: number | null = null
+
+const DEFERRED_RECOVERY_INITIAL_DELAY_MS = 1500
+const DEFERRED_RECOVERY_DRAIN_DELAY_MS = 5000
+const DEFERRED_RECOVERY_RETRY_DELAY_MS = 60000
+
+async function refreshShellStats() {
+  const studentId = auth.currentAccount?.id
+  if (!studentId) {
+    homeLearningStats.value = null
+    return
+  }
+
+  try {
+    homeLearningStats.value = await getHomeLearningStats(studentId)
+  } catch (error) {
+    console.warn('Failed to load student shell stats', error)
+    homeLearningStats.value = null
+  }
+}
+
+async function recoverDeferredCompletions(studentId: number) {
+  try {
+    const result = await recoverDeferredSessionCompletions(studentId, 1)
+    if (result.succeeded > 0 || result.failed > 0) {
+      void refreshShellStats()
+    }
+    if (auth.currentAccount?.id === studentId) {
+      if (result.remaining > 0) {
+        scheduleDeferredRecovery(studentId, DEFERRED_RECOVERY_DRAIN_DELAY_MS)
+      } else if (result.failed > 0) {
+        scheduleDeferredRecovery(studentId, DEFERRED_RECOVERY_RETRY_DELAY_MS)
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to recover deferred session completions', error)
+    if (auth.currentAccount?.id === studentId) {
+      scheduleDeferredRecovery(studentId, DEFERRED_RECOVERY_RETRY_DELAY_MS)
+    }
+  }
+}
+
+function scheduleDeferredRecovery(studentId: number, delayMs: number) {
+  if (typeof window === 'undefined') return
+  if (deferredRecoveryHandle !== null) {
+    window.clearTimeout(deferredRecoveryHandle)
+  }
+  deferredRecoveryHandle = window.setTimeout(() => {
+    deferredRecoveryHandle = null
+    void recoverDeferredCompletions(studentId)
+  }, delayMs)
+}
+
+function toggleCoachHub() {
+  router.push(isCoachHubActive.value ? '/student' : '/student/coach')
+}
 
 // ── Sliding glass pill ────────────────────────────────────────────
 const navRef = ref<HTMLElement | null>(null)
@@ -209,12 +172,43 @@ async function updatePill() {
   pillTop.value = active.offsetTop
   pillHeight.value = active.offsetHeight
   pillVisible.value = true
-  const found = navSections.flat().find(item => isActive(item))
-  if (found) pillColor.value = found.color
+  if (activeNavItem.value) pillColor.value = activeNavItem.value.color
 }
 
 onMounted(updatePill)
-watch(() => route.fullPath, updatePill)
+onMounted(() => {
+  if (typeof window === 'undefined') return
+  statsRefreshHandle = window.setInterval(() => {
+    void refreshShellStats()
+  }, 15000)
+})
+
+onUnmounted(() => {
+  if (typeof window === 'undefined') return
+  if (statsRefreshHandle !== null) {
+    window.clearInterval(statsRefreshHandle)
+    statsRefreshHandle = null
+  }
+  if (deferredRecoveryHandle !== null) {
+    window.clearTimeout(deferredRecoveryHandle)
+    deferredRecoveryHandle = null
+  }
+})
+
+watch(() => route.fullPath, () => {
+  void updatePill()
+  void refreshShellStats()
+})
+watch(() => auth.currentAccount?.id, (studentId) => {
+  void refreshShellStats()
+  if (typeof window !== 'undefined' && deferredRecoveryHandle !== null) {
+    window.clearTimeout(deferredRecoveryHandle)
+    deferredRecoveryHandle = null
+  }
+  if (studentId) {
+    scheduleDeferredRecovery(studentId, DEFERRED_RECOVERY_INITIAL_DELAY_MS)
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -226,8 +220,8 @@ watch(() => route.fullPath, updatePill)
           <p class="profile-name">{{ displayName }}</p>
           <p class="profile-stats">
             <PhStar :size="10" weight="fill" />
-            <span>7</span>
-            <span class="profile-goal">0/20</span>
+            <span>{{ shellStats.streakDays }}d</span>
+            <span class="profile-goal">{{ shellStats.accuracyPercent }}%</span>
           </p>
         </div>
       </div>
@@ -239,26 +233,29 @@ watch(() => route.fullPath, updatePill)
           :class="{ 'glass-pill--visible': pillVisible }"
           :style="{ '--pc': pillColor, top: pillTop + 'px', height: pillHeight + 'px' }"
         />
-        <div v-for="(section, sectionIndex) in navSections" :key="`sec-${sectionIndex}`" class="nav-section">
-          <RouterLink
-            v-for="item in section"
-            :key="item.hash ? `${item.to}${item.hash}` : item.name"
-            :to="item.hash ? { path: item.to, hash: item.hash } : item.to"
-            class="nav-link"
-            :class="{ 'nav-link--active': isActive(item) }"
-            :style="{ '--item-color': item.color }"
-            @click="playNavSelectSound"
-          >
-            <component
-              :is="item.icon"
-              :size="15"
-              weight="fill"
-              class="nav-icon"
-              :style="{ color: item.color }"
-            />
-            <span class="nav-label">{{ item.label }}</span>
-          </RouterLink>
-          <div v-if="sectionIndex < navSections.length - 1" class="nav-divider" />
+        <div v-for="(section, sectionIndex) in studentNavSections" :key="section.title" class="nav-section">
+          <p class="nav-section-title">{{ section.title }}</p>
+          <div class="nav-section-items">
+            <RouterLink
+              v-for="item in section.items"
+              :key="item.hash ? `${item.to}${item.hash}` : item.name"
+              :to="item.hash ? { path: item.to, hash: item.hash } : item.to"
+              class="nav-link"
+              :class="{ 'nav-link--active': isActive(item) }"
+              :style="{ '--item-color': item.color }"
+              @click="playNavSelectSound"
+            >
+              <component
+                :is="item.icon"
+                :size="15"
+                weight="fill"
+                class="nav-icon"
+                :style="{ color: item.color }"
+              />
+              <span class="nav-label">{{ item.label }}</span>
+            </RouterLink>
+          </div>
+          <div v-if="sectionIndex < studentNavSections.length - 1" class="nav-divider" />
         </div>
       </nav>
 
@@ -280,19 +277,28 @@ watch(() => route.fullPath, updatePill)
       <header class="top-bar">
         <div class="top-spacer" />
         <div class="top-right">
-          <div class="top-stat">
+          <div class="top-stat" title="Current streak">
             <PhFlame :size="15" weight="fill" style="color: #FF6B35;" />
-            <span class="top-stat-val">7</span>
+            <span class="top-stat-val">{{ shellStats.streakDays }}</span>
           </div>
-          <div class="top-stat">
+          <div class="top-stat" title="Questions answered this week">
             <PhLightning :size="15" weight="fill" style="color: #FBBF24;" />
-            <span class="top-stat-val">5,299</span>
+            <span class="top-stat-val">{{ shellStats.weekQuestions }}</span>
           </div>
-          <div class="level-badge">
+          <div class="level-badge" :title="`${shellStats.todayMinutes} minutes studied today`">
             <PhMedal :size="13" weight="fill" style="color: #7C3AED;" />
-            <span class="level-text">Scholar Lv.8</span>
+            <span class="level-text">{{ shellStats.todayMinutes }}m today</span>
           </div>
           <div class="top-sep" />
+          <button
+            class="coach-toggle"
+            :class="{ 'coach-toggle--active': isCoachHubActive }"
+            :title="coachToggleLabel"
+            @click="toggleCoachHub"
+          >
+            <PhBrain :size="15" weight="fill" />
+            <span>{{ coachToggleLabel }}</span>
+          </button>
           <button class="top-icon-btn dark-toggle" :title="ui.isDark ? 'Light mode' : 'Dark mode'" @click="ui.toggleDark()">
             <Transition name="dark-icon" mode="out-in">
               <PhSun v-if="ui.isDark" :key="'sun'" :size="17" weight="fill" style="color: #FBBF24;" />
@@ -325,7 +331,7 @@ watch(() => route.fullPath, updatePill)
 }
 
 .sidebar {
-  width: 182px;
+  width: 198px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -477,6 +483,25 @@ watch(() => route.fullPath, updatePill)
   display: block;
 }
 
+.nav-section-title {
+  margin: 10px 18px 6px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  transition: color 240ms ease;
+}
+
+.nav-section:first-child .nav-section-title {
+  margin-top: 6px;
+}
+
+.nav-section-items {
+  display: block;
+}
+
 .nav-link {
   position: relative;
   display: flex;
@@ -556,7 +581,7 @@ watch(() => route.fullPath, updatePill)
 }
 
 .nav-divider {
-  margin: 8px 10px;
+  margin: 10px 14px 6px;
   height: 1px;
   background: var(--border-soft);
   transition: background-color 240ms ease;
@@ -710,6 +735,36 @@ watch(() => route.fullPath, updatePill)
   width: 1px;
   height: 18px;
   background: var(--border-soft);
+}
+
+.coach-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, #f59e0b 24%, var(--border-soft));
+  background: color-mix(in srgb, #f59e0b 8%, var(--surface));
+  color: #8a4b07;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.coach-toggle:hover {
+  background: color-mix(in srgb, #f59e0b 14%, var(--surface));
+  transform: translateY(-0.5px);
+}
+
+.coach-toggle:active {
+  transform: translateY(0);
+}
+
+.coach-toggle--active {
+  border-color: color-mix(in srgb, #7c3aed 30%, var(--border-soft));
+  background: color-mix(in srgb, #7c3aed 12%, var(--surface));
+  color: #6d28d9;
 }
 
 .top-icon-btn {

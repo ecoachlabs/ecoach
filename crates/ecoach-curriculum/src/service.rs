@@ -64,7 +64,7 @@ impl<'a> CurriculumService<'a> {
         let mut statement = self
             .conn
             .prepare(
-                "SELECT id, subject_id, parent_topic_id, code, name, node_type, display_order
+                "SELECT id, subject_id, parent_topic_id, code, name, description, node_type, display_order
                  FROM topics
                  WHERE subject_id = ?1 AND is_active = 1
                  ORDER BY display_order ASC, name ASC",
@@ -88,7 +88,7 @@ impl<'a> CurriculumService<'a> {
             let mut statement = self
                 .conn
                 .prepare(
-                    "SELECT id, subject_id, parent_topic_id, code, name, node_type, display_order
+                    "SELECT id, subject_id, parent_topic_id, code, name, description, node_type, display_order
                      FROM topics
                      WHERE is_active = 1 AND subject_id = ?1 AND name LIKE ?2
                      ORDER BY display_order ASC, name ASC",
@@ -104,7 +104,7 @@ impl<'a> CurriculumService<'a> {
             let mut statement = self
                 .conn
                 .prepare(
-                    "SELECT id, subject_id, parent_topic_id, code, name, node_type, display_order
+                    "SELECT id, subject_id, parent_topic_id, code, name, description, node_type, display_order
                      FROM topics
                      WHERE is_active = 1 AND name LIKE ?1
                      ORDER BY display_order ASC, name ASC",
@@ -3016,8 +3016,9 @@ fn map_topic(row: &rusqlite::Row<'_>) -> rusqlite::Result<TopicSummary> {
         parent_topic_id: row.get(2)?,
         code: row.get(3)?,
         name: row.get(4)?,
-        node_type: row.get(5)?,
-        display_order: row.get(6)?,
+        description: row.get(5)?,
+        node_type: row.get(6)?,
+        display_order: row.get(7)?,
     })
 }
 

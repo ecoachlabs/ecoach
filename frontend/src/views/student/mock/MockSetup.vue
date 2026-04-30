@@ -2,14 +2,22 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { listSubjects, type SubjectDto } from '@/ipc/coach'
+import { listSubjects, listTopics, type SubjectDto } from '@/ipc/coach'
 import { compileMock, startMock } from '@/ipc/mock'
+import {
+  buildLearnerTopicTree,
+  expandLearnerTopicIds,
+  flattenLearnerTopics,
+  type LearnerTopic,
+} from '@/utils/learnerTopics'
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
 const subjects = ref<SubjectDto[]>([])
+const topics = ref<LearnerTopic[]>([])
+const selectedTopicIds = ref<number[]>([])
 const selectedSubjectId = ref<number | null>(null)
 const loading = ref(true)
 const starting = ref(false)
@@ -33,25 +41,55 @@ onMounted(async () => {
   durationMinutes.value = config.value.duration
   questionCount.value = config.value.count
   try {
-    subjects.value = await listSubjects(1)
-    if (subjects.value.length > 0) selectedSubjectId.value = subjects.value[0].id
+    subjects.value = await listSubjects()
+    if (subjects.value.length > 0) {
+      selectedSubjectId.value = subjects.value[0].id
+      await loadTopics(subjects.value[0].id)
+    }
   } catch (e) {
     console.error('Failed to load subjects:', e)
   }
   loading.value = false
 })
 
+async function loadTopics(subjectId: number) {
+  const rawTopics = await listTopics(subjectId)
+  topics.value = flattenLearnerTopics(buildLearnerTopicTree(rawTopics))
+  selectedTopicIds.value = []
+}
+
+async function selectSubject(subjectId: number) {
+  selectedSubjectId.value = subjectId
+  await loadTopics(subjectId)
+}
+
+function toggleTopic(topicId: number) {
+  const index = selectedTopicIds.value.indexOf(topicId)
+  if (index >= 0) {
+    selectedTopicIds.value.splice(index, 1)
+    return
+  }
+  selectedTopicIds.value.push(topicId)
+}
+
 async function enterHall() {
   if (!auth.currentAccount || selectedSubjectId.value === null || starting.value) return
+  if (mockType.value === 'topic' && selectedTopicIds.value.length === 0) {
+    error.value = 'Choose at least one topic for a topic mock.'
+    return
+  }
   starting.value = true
   error.value = ''
   try {
+    const topicIds = mockType.value === 'topic'
+      ? expandLearnerTopicIds(selectedTopicIds.value, topics.value)
+      : []
     const session = await compileMock({
       student_id: auth.currentAccount.id,
       subject_id: selectedSubjectId.value,
       duration_minutes: durationMinutes.value,
       question_count: questionCount.value,
-      topic_ids: [],
+      topic_ids: topicIds,
       paper_year: null,
       mock_type: mockType.value,
       blueprint_id: null,
@@ -110,9 +148,36 @@ async function enterHall() {
               :key="s.id"
               class="option-chip"
               :class="{ active: selectedSubjectId === s.id }"
-              @click="selectedSubjectId = s.id"
+              @click="selectSubject(s.id)"
             >{{ s.name }}</button>
           </div>
+        </div>
+
+        <div v-if="mockType === 'topic'" class="config-section">
+          <div class="flex items-center justify-between mb-4 gap-3">
+            <p class="section-label">Topics</p>
+            <span class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">
+              {{ selectedTopicIds.length }} selected
+            </span>
+          </div>
+          <div v-if="loading" class="flex flex-wrap gap-2">
+            <div v-for="i in 6" :key="i" class="h-9 w-28 rounded-xl animate-pulse"
+              :style="{ backgroundColor: 'var(--border-soft)' }" />
+          </div>
+          <div v-else-if="topics.length" class="flex flex-wrap gap-2">
+            <button
+              v-for="topic in topics"
+              :key="topic.id"
+              class="option-chip topic-chip"
+              :class="{ active: selectedTopicIds.includes(topic.id) }"
+              @click="toggleTopic(topic.id)"
+            >
+              {{ topic.name }}
+            </button>
+          </div>
+          <p v-else class="text-[11px]" :style="{ color: 'var(--ink-muted)' }">
+            No topics are ready for this subject yet.
+          </p>
         </div>
 
         <!-- Duration -->
@@ -173,6 +238,11 @@ async function enterHall() {
             </span>
           </div>
 
+          <div v-if="mockType === 'topic'" class="summary-row">
+            <span class="summary-label">Topics</span>
+            <span class="summary-val">{{ selectedTopicIds.length }}</span>
+          </div>
+
           <div class="pt-2 border-t" :style="{ borderColor: 'var(--border-soft)' }">
             <div class="text-center py-4">
               <p class="text-3xl font-black tabular-nums" :style="{ color: 'var(--ink)' }">{{ questionCount }}</p>
@@ -184,7 +254,7 @@ async function enterHall() {
         <div class="p-5 border-t space-y-2" :style="{ borderColor: 'var(--border-soft)' }">
           <button
             class="launch-btn w-full"
-            :disabled="!selectedSubjectId || loading || starting"
+            :disabled="!selectedSubjectId || loading || starting || (mockType === 'topic' && selectedTopicIds.length === 0)"
             @click="enterHall"
           >
             {{ starting ? 'Preparing Hall…' : 'Enter Exam Hall →' }}

@@ -1,8 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { getLearnerTruth, type LearnerTruthDto } from '@/ipc/coach'
+import {
+  generateDailyClimbTarget,
+  getBeatYesterdayDashboard,
+  getPriorityTopics,
+  listClimbTrend,
+  listSubjects,
+  type BeatYesterdayDashboardDto,
+  type BeatYesterdayDailySummaryDto,
+  type BeatYesterdayDailyTargetDto,
+  type ClimbTrendPointDto,
+} from '@/ipc/coach'
 import ComparisonCard from '@/components/viz/ComparisonCard.vue'
 import StreakCounter from '@/components/viz/StreakCounter.vue'
 import MicroGainIndicator from '@/components/modes/beat-yesterday/MicroGainIndicator.vue'
@@ -13,54 +23,274 @@ import WeeklyTrends from '@/components/modes/beat-yesterday/WeeklyTrends.vue'
 const auth = useAuthStore()
 const router = useRouter()
 const loading = ref(true)
-const truth = ref<LearnerTruthDto | null>(null)
+const error = ref('')
 const showTrends = ref(false)
 const showBadges = ref(false)
-
-const yesterday = ref({ attempted: 12, correct: 8, avgTime: 34 })
-const targets = ref({ attempted: 14, correct: 10, avgTime: 31 })
-const today = ref({ attempted: 0, correct: 0, avgTime: 0 })
-const streak = ref(12)
-const growthMode = ref('accuracy')
-
-const blocks = [
-  { name: 'Warm Start', duration: '2 min', icon: '☀', questionCount: 3 },
-  { name: 'Core Climb', duration: '5 min', icon: '△', questionCount: 7 },
-  { name: 'Speed Burst', duration: '1 min', icon: '⚡', questionCount: 5 },
-  { name: 'Finish Strong', duration: '1 min', icon: '★', questionCount: 3 },
-]
-
-const weekData = [
-  { day: 'Mon', attempted: 14, correct: 10, avgTime: 32 },
-  { day: 'Tue', attempted: 12, correct: 9, avgTime: 28 },
-  { day: 'Wed', attempted: 15, correct: 12, avgTime: 30 },
-  { day: 'Thu', attempted: 13, correct: 10, avgTime: 29 },
-  { day: 'Fri', attempted: 12, correct: 8, avgTime: 34 },
-]
-
-const badges = [
-  { name: '7-Day Streak', icon: '🔥', earned: true, requirement: '7 days' },
-  { name: 'Speed Demon', icon: '⚡', earned: true, requirement: 'Sub-25s avg' },
-  { name: 'Perfect Day', icon: '★', earned: false, requirement: '100% accuracy' },
-  { name: '30-Day Warrior', icon: '🏅', earned: false, requirement: '30 day streak' },
-]
+const selectedSubjectId = ref<number | null>(null)
+const selectedSubjectName = ref('Focused Subject')
+const dashboard = ref<BeatYesterdayDashboardDto | null>(null)
+const trend = ref<ClimbTrendPointDto[]>([])
 
 const modeLabels: Record<string, string> = {
-  volume: 'Volume Day', accuracy: 'Accuracy Day',
-  speed: 'Speed Day', mixed: 'Mixed Day', recovery: 'Recovery Day',
+  volume: 'Volume Day',
+  accuracy: 'Accuracy Day',
+  speed: 'Speed Day',
+  mixed: 'Mixed Day',
+  recovery: 'Recovery Day',
 }
 
-onMounted(async () => {
-  if (!auth.currentAccount) return
-  try { truth.value = await getLearnerTruth(auth.currentAccount.id) } catch {}
-  loading.value = false
+const todayLabel = computed(() => localDateIso(new Date()))
+const target = computed<BeatYesterdayDailyTargetDto | null>(() => dashboard.value?.target ?? null)
+const growthMode = computed(() => target.value?.mode ?? dashboard.value?.profile.current_mode ?? 'mixed')
+const streak = computed(() => dashboard.value?.profile.streak_days ?? 0)
+
+const yesterday = computed(() => summarizeDaily(dashboard.value?.previous_summary))
+const today = computed(() => {
+  const latest = dashboard.value?.latest_summary
+  if (!latest || latest.summary_date !== todayLabel.value) {
+    return { attempted: 0, correct: 0, avgTime: 0 }
+  }
+  return summarizeDaily(latest)
 })
+
+const targets = computed(() => ({
+  attempted: target.value?.target_attempts ?? 0,
+  correct: target.value?.target_correct ?? 0,
+  avgTime: secondsFromMs(target.value?.target_avg_response_time_ms),
+}))
+
+const blocks = computed(() => {
+  const attemptSplit = splitAttempts(target.value?.target_attempts ?? 0)
+  return [
+    {
+      name: 'Warm Start',
+      duration: formatMinutes(target.value?.warm_start_minutes ?? 0),
+      icon: 'W',
+      questionCount: attemptSplit[0],
+    },
+    {
+      name: 'Core Climb',
+      duration: formatMinutes(target.value?.core_climb_minutes ?? 0),
+      icon: 'C',
+      questionCount: attemptSplit[1],
+    },
+    {
+      name: 'Speed Burst',
+      duration: formatMinutes(target.value?.speed_burst_minutes ?? 0),
+      icon: 'S',
+      questionCount: attemptSplit[2],
+    },
+    {
+      name: 'Finish Strong',
+      duration: formatMinutes(target.value?.finish_strong_minutes ?? 0),
+      icon: 'F',
+      questionCount: attemptSplit[3],
+    },
+  ]
+})
+
+const weekData = computed(() =>
+  trend.value
+    .slice()
+    .sort((left, right) => left.summary_date.localeCompare(right.summary_date))
+    .map(point => ({
+      day: new Date(`${point.summary_date}T00:00:00`).toLocaleDateString('en-US', {
+        weekday: 'short',
+      }),
+      attempted: point.actual_attempts,
+      correct: point.actual_correct,
+      avgTime: secondsFromMs(point.actual_avg_response_time_ms),
+    })),
+)
+
+const weekBarScale = computed(() =>
+  Math.max(1, ...weekData.value.map(day => day.correct), targets.value.correct, yesterday.value.correct),
+)
+
+const weeklyGains = computed(() => ({
+  volume: today.value.attempted - yesterday.value.attempted,
+  accuracy: accuracyPercent(today.value) - accuracyPercent(yesterday.value),
+  speed:
+    today.value.avgTime > 0 && yesterday.value.avgTime > 0
+      ? yesterday.value.avgTime - today.value.avgTime
+      : 0,
+}))
+
+const badges = computed(() => [
+  {
+    name: '7-Day Streak',
+    icon: '7D',
+    earned: streak.value >= 7,
+    requirement: '7 day streak',
+  },
+  {
+    name: 'Accuracy Gain',
+    icon: 'ACC',
+    earned: weeklyGains.value.accuracy > 0,
+    requirement: 'Improve accuracy',
+  },
+  {
+    name: 'Fast Recall',
+    icon: 'SPD',
+    earned:
+      targets.value.avgTime > 0 &&
+      today.value.avgTime > 0 &&
+      today.value.avgTime <= targets.value.avgTime,
+    requirement: 'Beat pace target',
+  },
+  {
+    name: '30-Day Warrior',
+    icon: '30D',
+    earned: streak.value >= 30,
+    requirement: '30 day streak',
+  },
+])
+
+const targetMinutes = computed(
+  () =>
+    (target.value?.warm_start_minutes ?? 0) +
+    (target.value?.core_climb_minutes ?? 0) +
+    (target.value?.speed_burst_minutes ?? 0) +
+    (target.value?.finish_strong_minutes ?? 0),
+)
+
+const targetNote = computed(() => extractRationaleLine(target.value?.rationale))
+
+onMounted(() => {
+  void loadBeatYesterday()
+})
+
+async function loadBeatYesterday() {
+  if (!auth.currentAccount) {
+    loading.value = false
+    return
+  }
+
+  loading.value = true
+  error.value = ''
+
+  try {
+    const studentId = auth.currentAccount.id
+    const [priorityTopics, subjects] = await Promise.all([
+      getPriorityTopics(studentId, 1),
+      listSubjects(1),
+    ])
+
+    const focusedSubject =
+      subjects.find(subject => subject.code === priorityTopics[0]?.subject_code) ??
+      subjects[0] ??
+      null
+
+    if (!focusedSubject) {
+      dashboard.value = null
+      trend.value = []
+      selectedSubjectId.value = null
+      selectedSubjectName.value = 'No subject linked yet'
+      return
+    }
+
+    selectedSubjectId.value = focusedSubject.id
+    selectedSubjectName.value = focusedSubject.name
+
+    let nextDashboard = await getBeatYesterdayDashboard(studentId, focusedSubject.id, todayLabel.value)
+    if (!nextDashboard.target) {
+      const generatedTarget = await generateDailyClimbTarget(studentId, focusedSubject.id, todayLabel.value)
+      nextDashboard = {
+        ...nextDashboard,
+        target: generatedTarget,
+      }
+    }
+
+    const nextTrend = await listClimbTrend(studentId, focusedSubject.id, 7)
+    dashboard.value = nextDashboard
+    trend.value = nextTrend
+  } catch (cause: any) {
+    error.value = typeof cause === 'string' ? cause : cause?.message ?? 'Failed to load Beat Yesterday'
+  } finally {
+    loading.value = false
+  }
+}
+
+function launchDailyClimb() {
+  const query: Record<string, string> = { mode: 'beat-yesterday' }
+  if (selectedSubjectId.value != null) {
+    query.subjectId = String(selectedSubjectId.value)
+  }
+  if (target.value?.focus_topic_ids[0] != null) {
+    query.topicId = String(target.value.focus_topic_ids[0])
+  }
+  if (target.value?.id != null) {
+    query.targetId = String(target.value.id)
+  }
+  if (target.value?.target_attempts != null) {
+    query.questionCount = String(target.value.target_attempts)
+  }
+  void router.push({ name: 'custom-test', query })
+}
+
+function summarizeDaily(summary?: BeatYesterdayDailySummaryDto | null) {
+  return {
+    attempted: summary?.actual_attempts ?? 0,
+    correct: summary?.actual_correct ?? 0,
+    avgTime: secondsFromMs(summary?.actual_avg_response_time_ms),
+  }
+}
+
+function secondsFromMs(value?: number | null) {
+  return value == null ? 0 : Math.round(value / 1000)
+}
+
+function formatMinutes(value: number) {
+  return `${value} min`
+}
+
+function localDateIso(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function accuracyPercent(metrics: { attempted: number; correct: number }) {
+  if (metrics.attempted <= 0) return 0
+  return Math.round((metrics.correct / metrics.attempted) * 100)
+}
+
+function splitAttempts(total: number) {
+  if (total <= 0) return [0, 0, 0, 0]
+  const weights = [0.2, 0.45, 0.2, 0.15]
+  const buckets = weights.map(weight => Math.floor(total * weight))
+  let assigned = buckets.reduce((sum, value) => sum + value, 0)
+  let cursor = 0
+  while (assigned < total) {
+    buckets[cursor % buckets.length] += 1
+    assigned += 1
+    cursor += 1
+  }
+  return buckets
+}
+
+function extractRationaleLine(value: unknown) {
+  if (Array.isArray(value)) {
+    const firstLine = value.find(entry => typeof entry === 'string' && entry.trim().length > 0)
+    return typeof firstLine === 'string' ? firstLine : 'Built from your latest performance pattern.'
+  }
+
+  if (value && typeof value === 'object') {
+    const rationale = (value as Record<string, unknown>).rationale
+    if (Array.isArray(rationale)) {
+      const firstLine = rationale.find(entry => typeof entry === 'string' && entry.trim().length > 0)
+      if (typeof firstLine === 'string') return firstLine
+    }
+  }
+
+  return 'Built from your latest performance pattern.'
+}
 </script>
 
 <template>
   <div class="h-full flex flex-col overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
 
-    <!-- Header -->
     <div
       class="flex-shrink-0 flex items-center justify-between px-7 pt-6 pb-5 border-b"
       :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
@@ -70,6 +300,9 @@ onMounted(async () => {
         <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
           Small gains. Big transformation.
         </h1>
+        <p class="text-xs mt-1" :style="{ color: 'var(--ink-muted)' }">
+          {{ selectedSubjectName }}
+        </p>
       </div>
       <div class="flex items-center gap-4">
         <div class="px-3 py-1.5 rounded-lg text-xs font-semibold"
@@ -86,17 +319,20 @@ onMounted(async () => {
     </div>
 
     <template v-else>
-      <div class="flex-1 overflow-hidden flex">
+      <div v-if="error" class="mx-6 mt-4 rounded-xl px-4 py-3 text-sm"
+        :style="{ backgroundColor: 'var(--surface)', color: 'var(--ink-secondary)' }">
+        {{ error }}
+      </div>
 
-        <!-- Left: comparison + session -->
+      <div class="flex-1 overflow-hidden flex">
         <div class="flex-1 overflow-y-auto p-6 space-y-5">
           <ComparisonCard
             left-label="Yesterday"
             right-label="Today's Target"
-            :left-value="yesterday.correct + '/' + yesterday.attempted"
-            :right-value="targets.correct + '/' + targets.attempted"
-            :left-subtext="yesterday.avgTime + 's avg'"
-            :right-subtext="targets.avgTime + 's avg'"
+            :left-value="`${yesterday.correct}/${yesterday.attempted}`"
+            :right-value="`${targets.correct}/${targets.attempted}`"
+            :left-subtext="`${yesterday.avgTime}s avg`"
+            :right-subtext="`${targets.avgTime}s avg`"
             highlight="right"
           />
 
@@ -112,34 +348,34 @@ onMounted(async () => {
             <button
               class="w-full py-3.5 rounded-2xl font-bold text-sm"
               :style="{ backgroundColor: 'var(--ink)', color: 'var(--paper)' }"
-              @click="router.push('/student/session/beat-yesterday')"
-            >Start Today's Climb →</button>
+              @click="launchDailyClimb"
+            >Start Today's Climb</button>
             <p class="text-xs text-center mt-2" :style="{ color: 'var(--ink-muted)' }">
-              ~9 minutes · {{ targets.attempted }} questions
+              {{ targetMinutes }} minutes · {{ targets.attempted }} questions
+            </p>
+            <p class="text-[11px] text-center mt-1" :style="{ color: 'var(--ink-muted)' }">
+              {{ targetNote }}
             </p>
           </div>
         </div>
 
-        <!-- Right: weekly + badges -->
         <div
           class="w-72 flex-shrink-0 border-l flex flex-col overflow-hidden"
           :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
         >
-          <!-- Weekly bars -->
           <div class="px-5 pt-5 pb-4 border-b" :style="{ borderColor: 'var(--border-soft)' }">
             <p class="section-label mb-4">This Week</p>
             <div class="flex items-end justify-between gap-2" style="height: 64px;">
               <div v-for="day in weekData" :key="day.day" class="flex-1 flex flex-col items-center gap-1">
                 <div class="flex-1 w-full flex flex-col justify-end">
                   <div class="w-full rounded-t-sm"
-                    :style="{ height: (day.correct / 15 * 100) + '%', minHeight: '4px', backgroundColor: 'var(--accent-glow)', border: '1px solid var(--accent)' }" />
+                    :style="{ height: `${(day.correct / weekBarScale) * 100}%`, minHeight: '4px', backgroundColor: 'var(--accent-glow)', border: '1px solid var(--accent)' }" />
                 </div>
                 <span class="text-[9px] font-semibold" :style="{ color: 'var(--ink-muted)' }">{{ day.day }}</span>
               </div>
             </div>
           </div>
 
-          <!-- Badges -->
           <div class="flex-1 overflow-y-auto p-4">
             <p class="section-label mb-3">Badges</p>
             <div class="grid grid-cols-2 gap-2">
@@ -168,7 +404,7 @@ onMounted(async () => {
       <div v-if="showTrends || showBadges"
         class="flex-shrink-0 border-t p-6"
         :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }">
-        <WeeklyTrends v-if="showTrends" :week-data="weekData" :weekly-gains="{ volume: 3, accuracy: 2, speed: -2 }" class="mb-4" />
+        <WeeklyTrends v-if="showTrends" :week-data="weekData" :weekly-gains="weeklyGains" class="mb-4" />
         <GrowthBadges v-if="showBadges" :streak-days="streak" :badges="badges" />
       </div>
     </template>
@@ -204,10 +440,12 @@ onMounted(async () => {
   border: 1px solid transparent;
   background: var(--paper);
 }
+
 .badge-card.earned {
   background: var(--surface);
   border-color: transparent;
 }
+
 .badge-card.locked {
   opacity: 0.4;
 }
@@ -223,11 +461,10 @@ onMounted(async () => {
   border: 1px solid transparent;
   transition: all 120ms;
 }
+
 .toggle-btn.on {
   background: var(--accent-glow);
   color: var(--accent);
   border-color: var(--accent);
 }
 </style>
-
-

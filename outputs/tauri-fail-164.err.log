@@ -1,0 +1,6 @@
+[perf][tauri.recover_deferred_session_completions] enter student_id=2 max_sessions=Some(1)
+[recovery][deferred_completion] processing session_id=164 status=active state=pending reason=app_entry
+[chaos][deferred_completion] injected_failure stage=before_coach session_id=164
+[recovery][deferred_completion] failed session_id=164 reason=app_entry error=injected deferred completion failure at stage=before_coach for session 164
+[recovery][deferred_completion] retry_failed session_id=164 reason=app_entry error=injected deferred completion failure at stage=before_coach for session 164
+[perf][tauri.recover_deferred_session_completions] exit 32.4ms

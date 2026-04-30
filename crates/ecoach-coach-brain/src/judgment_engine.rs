@@ -2,6 +2,7 @@ use ecoach_substrate::{BasisPoints, EcoachError, EcoachResult, clamp_bp};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use std::time::Instant;
 
 use crate::{
     CanonicalIntelligenceStore, CoachIntelligenceDomeService, CoachIntelligenceDomeSnapshot,
@@ -114,8 +115,64 @@ impl<'a> CoachJudgmentEngine<'a> {
         subject_id: Option<i64>,
         topic_id: Option<i64>,
     ) -> EcoachResult<CoachJudgmentSnapshot> {
+        let total_start = Instant::now();
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] enter student_id={} subject_id={:?} topic_id={:?}",
+            student_id, subject_id, topic_id
+        );
+        let dome_start = Instant::now();
         let dome = CoachIntelligenceDomeService::new(self.conn)
             .build_intelligence_dome(student_id, subject_id, topic_id)?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] build_intelligence_dome {:.1}ms intervention_profiles={} evidence_probes={} interference_cases={} surprise_events={} reflections={}",
+            dome_start.elapsed().as_secs_f64() * 1000.0,
+            dome.intervention_effectiveness.len(),
+            dome.best_next_evidence.len(),
+            dome.interference_cases.len(),
+            dome.surprise_events.len(),
+            dome.reflection_cycles.len()
+        );
+        self.build_judgment_snapshot_from_dome(
+            student_id,
+            subject_id,
+            topic_id,
+            &dome,
+            total_start,
+        )
+    }
+
+    pub fn build_judgment_snapshot_with_dome(
+        &self,
+        student_id: i64,
+        subject_id: Option<i64>,
+        topic_id: Option<i64>,
+        dome: &CoachIntelligenceDomeSnapshot,
+    ) -> EcoachResult<CoachJudgmentSnapshot> {
+        let total_start = Instant::now();
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] enter student_id={} subject_id={:?} topic_id={:?} dome=reused",
+            student_id, subject_id, topic_id
+        );
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] reuse_intelligence_dome intervention_profiles={} evidence_probes={} interference_cases={} surprise_events={} reflections={}",
+            dome.intervention_effectiveness.len(),
+            dome.best_next_evidence.len(),
+            dome.interference_cases.len(),
+            dome.surprise_events.len(),
+            dome.reflection_cycles.len()
+        );
+        self.build_judgment_snapshot_from_dome(student_id, subject_id, topic_id, dome, total_start)
+    }
+
+    fn build_judgment_snapshot_from_dome(
+        &self,
+        student_id: i64,
+        subject_id: Option<i64>,
+        topic_id: Option<i64>,
+        dome: &CoachIntelligenceDomeSnapshot,
+        total_start: Instant,
+    ) -> EcoachResult<CoachJudgmentSnapshot> {
+        let resolve_ids_start = Instant::now();
         let resolved_topic_id = topic_id
             .or_else(|| dome.topic_strategy.as_ref().map(|item| item.topic_id))
             .or_else(|| dome.uncertainty_profile.as_ref().map(|item| item.topic_id));
@@ -129,21 +186,75 @@ impl<'a> CoachJudgmentEngine<'a> {
         if resolved_subject_id.is_none() {
             resolved_subject_id = self.lookup_subject_for_topic(resolved_topic_id)?;
         }
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] resolve_ids {:.1}ms resolved_subject_id={:?} resolved_topic_id={:?}",
+            resolve_ids_start.elapsed().as_secs_f64() * 1000.0,
+            resolved_subject_id,
+            resolved_topic_id
+        );
 
+        let content_start = Instant::now();
         let content_readiness = assess_content_readiness(self.conn, student_id)?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] assess_content_readiness {:.1}ms",
+            content_start.elapsed().as_secs_f64() * 1000.0
+        );
+        let readiness_start = Instant::now();
         let readiness = match resolved_subject_id {
             Some(subject_id) => Some(
                 ReadinessEngine::new(self.conn).build_subject_readiness(student_id, subject_id)?,
             ),
             None => None,
         };
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] build_subject_readiness {:.1}ms has_value={} topic_slices={}",
+            readiness_start.elapsed().as_secs_f64() * 1000.0,
+            readiness.is_some(),
+            readiness
+                .as_ref()
+                .map(|item| item.topic_slices.len())
+                .unwrap_or(0)
+        );
+        let next_action_start = Instant::now();
         let next_action = resolve_next_coach_action(self.conn, student_id)?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] resolve_next_coach_action {:.1}ms",
+            next_action_start.elapsed().as_secs_f64() * 1000.0
+        );
+        let content_governor_start = Instant::now();
         let content_governor =
             self.sync_content_governor(resolved_subject_id, resolved_topic_id)?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] sync_content_governor {:.1}ms has_value={} blocking_issues={}",
+            content_governor_start.elapsed().as_secs_f64() * 1000.0,
+            content_governor.is_some(),
+            content_governor
+                .as_ref()
+                .map(|item| item.blocking_issues.len())
+                .unwrap_or(0)
+        );
+        let improvement_start = Instant::now();
         let improvement = self.load_improvement_aggregate(student_id, resolved_topic_id)?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] load_improvement_aggregate {:.1}ms event_count={}",
+            improvement_start.elapsed().as_secs_f64() * 1000.0,
+            improvement.event_count
+        );
+        let motivation_start = Instant::now();
         let motivation = self.load_motivation_snapshot(student_id)?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] load_motivation_snapshot {:.1}ms",
+            motivation_start.elapsed().as_secs_f64() * 1000.0
+        );
+        let pressure_start = Instant::now();
         let pressure =
             self.load_pressure_snapshot(student_id, resolved_topic_id, readiness.as_ref())?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] load_pressure_snapshot {:.1}ms timed_attempt_count={}",
+            pressure_start.elapsed().as_secs_f64() * 1000.0,
+            pressure.timed_attempt_count
+        );
+        let evidence_start = Instant::now();
         let evidence_ledger = self.sync_evidence_ledger(
             student_id,
             resolved_subject_id,
@@ -156,6 +267,12 @@ impl<'a> CoachJudgmentEngine<'a> {
             &motivation,
             &pressure,
         )?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] sync_evidence_ledger {:.1}ms entries={}",
+            evidence_start.elapsed().as_secs_f64() * 1000.0,
+            evidence_ledger.len()
+        );
+        let feature_start = Instant::now();
         let feature_activations = self.sync_feature_activations(
             student_id,
             resolved_subject_id,
@@ -170,6 +287,12 @@ impl<'a> CoachJudgmentEngine<'a> {
             next_action.title.as_str(),
             next_action.subtitle.as_str(),
         )?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] sync_feature_activations {:.1}ms decisions={}",
+            feature_start.elapsed().as_secs_f64() * 1000.0,
+            feature_activations.len()
+        );
+        let capability_start = Instant::now();
         let capability_reviews = self.build_capability_reviews(
             &dome,
             &content_readiness,
@@ -179,6 +302,12 @@ impl<'a> CoachJudgmentEngine<'a> {
             &feature_activations,
             &motivation,
         );
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] build_capability_reviews {:.1}ms reviews={}",
+            capability_start.elapsed().as_secs_f64() * 1000.0,
+            capability_reviews.len()
+        );
+        let scoring_start = Instant::now();
         let overall_judgment_score = clamp_bp(average_bp(
             capability_reviews
                 .iter()
@@ -204,7 +333,14 @@ impl<'a> CoachJudgmentEngine<'a> {
             .map(|item| format!("{}: {}", item.feature_label, item.rationale))
             .unwrap_or_else(|| next_action.title.clone());
         let independence_band = independence_band(overall_judgment_score).to_string();
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] score_and_summarize {:.1}ms overall={} confidence={}",
+            scoring_start.elapsed().as_secs_f64() * 1000.0,
+            overall_judgment_score,
+            judgment_confidence_score
+        );
 
+        let independence_start = Instant::now();
         self.upsert_independence_review(
             student_id,
             resolved_subject_id,
@@ -222,6 +358,10 @@ impl<'a> CoachJudgmentEngine<'a> {
                 "feature_count": feature_activations.len(),
             }),
         )?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] upsert_independence_review {:.1}ms",
+            independence_start.elapsed().as_secs_f64() * 1000.0
+        );
 
         let snapshot = CoachJudgmentSnapshot {
             student_id,
@@ -237,7 +377,16 @@ impl<'a> CoachJudgmentEngine<'a> {
             capability_reviews,
             content_governor,
         };
+        let risk_start = Instant::now();
         CanonicalIntelligenceStore::new(self.conn).sync_risk_snapshot(&snapshot)?;
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] sync_risk_snapshot {:.1}ms",
+            risk_start.elapsed().as_secs_f64() * 1000.0
+        );
+        eprintln!(
+            "[perf][coach.build_judgment_snapshot] total {:.1}ms",
+            total_start.elapsed().as_secs_f64() * 1000.0
+        );
         Ok(snapshot)
     }
 

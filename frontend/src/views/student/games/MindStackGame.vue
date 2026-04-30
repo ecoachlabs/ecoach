@@ -2,12 +2,20 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { listSubjects, getPriorityTopics, type SubjectDto } from '@/ipc/coach'
-import { startPracticeSession, completeSession } from '@/ipc/sessions'
-import { listSessionQuestions, submitAttempt, type SessionQuestionDto } from '@/ipc/questions'
+import { listSubjects, listTopics, getPriorityTopics, type SubjectDto } from '@/ipc/coach'
+import { startPracticeSession, completeSession, completeSessionWithPipeline } from '@/ipc/sessions'
+import {
+  listSessionQuestions,
+  submitAttempt,
+  type AttemptResultDto,
+  type QuestionOptionDto,
+  type SessionQuestionDto,
+  type SubmitAttemptInput,
+} from '@/ipc/questions'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppProgress from '@/components/ui/AppProgress.vue'
+import MathText from '@/components/question/MathText.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -30,6 +38,7 @@ const clearedRows = ref(0)
 const score = ref(0)
 const streak = ref(0)
 const correctCount = ref(0)
+const attemptedCount = ref(0)
 const selectedOptionId = ref<number | null>(null)
 const answerResult = ref<{ correct: boolean } | null>(null)
 const startTime = ref(0)
@@ -40,6 +49,8 @@ const INCORRECT_STACK = 2
 
 const timeLeft = ref(15)
 let timer: ReturnType<typeof setInterval> | null = null
+const pendingSubmissions = new Map<number, Promise<AttemptResultDto>>()
+const unsavedInputs = new Map<number, SubmitAttemptInput>()
 
 onMounted(async () => {
   subjects.value = await listSubjects().catch(() => [])
@@ -57,8 +68,15 @@ async function startGame() {
   loading.value = true
   error.value = ''
   try {
-    const topics = await getPriorityTopics(auth.currentAccount.id, 10)
-    const topicIds = topics.slice(0, 5).map(t => t.topic_id)
+    const [priorityTopics, subjectTopics] = await Promise.all([
+      getPriorityTopics(auth.currentAccount.id, 20),
+      listTopics(selectedSubjectId.value).catch(() => []),
+    ])
+    const subjectTopicIds = new Set(subjectTopics.map(topic => topic.id))
+    const topicIds = priorityTopics
+      .filter(topic => subjectTopicIds.has(topic.topic_id))
+      .slice(0, 5)
+      .map(topic => topic.topic_id)
     const session = await startPracticeSession({
       student_id: auth.currentAccount.id,
       subject_id: selectedSubjectId.value,
@@ -76,6 +94,7 @@ async function startGame() {
     score.value = 0
     streak.value = 0
     correctCount.value = 0
+    attemptedCount.value = 0
     selectedOptionId.value = null
     answerResult.value = null
     phase.value = 'playing'
@@ -92,32 +111,84 @@ function startQuestionTimer() {
   startTime.value = Date.now()
   timer = setInterval(() => {
     timeLeft.value--
-    if (timeLeft.value <= 0) { clearTimer(); applyResult(false); answerResult.value = { correct: false }; setTimeout(nextQuestion, 1000) }
+    if (timeLeft.value <= 0) {
+      clearTimer()
+      handleTimeout()
+    }
   }, 1000)
 }
 
-async function pickOption(option: { id: number; misconception_id: number | null; distractor_intent: string | null; label: string; text: string }) {
+function handleTimeout() {
+  if (selectedOptionId.value !== null) return
+  selectedOptionId.value = -1
+  const q = questions.value[currentIndex.value]
+  if (sessionId.value && auth.currentAccount && q) {
+    const input: SubmitAttemptInput = {
+      student_id: auth.currentAccount.id,
+      session_id: sessionId.value,
+      session_item_id: q.item_id,
+      question_id: q.question_id,
+      selected_option_id: null,
+      response_time_ms: 15000,
+      confidence_level: null,
+      hint_count: 0,
+      changed_answer_count: 0,
+      skipped: false,
+      timed_out: true,
+      was_timed: true,
+    }
+    unsavedInputs.set(q.item_id, input)
+    const submission = submitAttempt(input)
+    pendingSubmissions.set(q.item_id, submission)
+    void submission
+      .then(() => {
+        unsavedInputs.delete(q.item_id)
+      })
+      .catch(() => {
+        // Retry during the end-of-game flush if needed.
+      })
+      .finally(() => {
+        pendingSubmissions.delete(q.item_id)
+      })
+  }
+  applyResult(false)
+  answerResult.value = { correct: false }
+  setTimeout(nextQuestion, 1000)
+}
+
+async function pickOption(option: QuestionOptionDto) {
   if (selectedOptionId.value !== null || !sessionId.value) return
   clearTimer()
   selectedOptionId.value = option.id
   const q = questions.value[currentIndex.value]
   const responseMs = Date.now() - startTime.value
-  const isCorrect = option.misconception_id === null && option.distractor_intent === null
+  const isCorrect = option.is_correct
 
-  try {
-    await submitAttempt({
+  const input: SubmitAttemptInput = {
       student_id: auth.currentAccount!.id,
       session_id: sessionId.value,
       session_item_id: q.item_id,
       question_id: q.question_id,
       selected_option_id: option.id,
       response_time_ms: responseMs,
-      confidence_level: undefined,
+      confidence_level: null,
       hint_count: 0,
       changed_answer_count: 0,
-      was_timed: false,
+      was_timed: true,
+  }
+  unsavedInputs.set(q.item_id, input)
+  const submission = submitAttempt(input)
+  pendingSubmissions.set(q.item_id, submission)
+  void submission
+    .then(() => {
+      unsavedInputs.delete(q.item_id)
     })
-  } catch {}
+    .catch(() => {
+      // Retry during the end-of-game flush if needed.
+    })
+    .finally(() => {
+      pendingSubmissions.delete(q.item_id)
+    })
 
   applyResult(isCorrect)
   answerResult.value = { correct: isCorrect }
@@ -125,6 +196,7 @@ async function pickOption(option: { id: number; misconception_id: number | null;
 }
 
 function applyResult(correct: boolean) {
+  attemptedCount.value++
   if (correct) {
     streak.value++
     correctCount.value++
@@ -151,7 +223,22 @@ function nextQuestion() {
 
 async function endGame() {
   clearTimer()
-  if (sessionId.value) await completeSession(sessionId.value).catch(() => null)
+  const inFlight = Array.from(pendingSubmissions.values())
+  if (inFlight.length > 0) {
+    await Promise.allSettled(inFlight)
+  }
+  for (const [itemId, input] of Array.from(unsavedInputs.entries())) {
+    try {
+      await submitAttempt(input)
+      unsavedInputs.delete(itemId)
+    } catch {
+      // Best effort only for the arcade layer.
+    }
+  }
+  if (sessionId.value && auth.currentAccount) {
+    await completeSessionWithPipeline(auth.currentAccount.id, sessionId.value)
+      .catch(() => completeSession(sessionId.value!).catch(() => null))
+  }
   phase.value = 'summary'
 }
 
@@ -159,7 +246,7 @@ const currentQuestion = computed(() => questions.value[currentIndex.value] ?? nu
 const heightPercent = computed(() => (boardHeight.value / MAX_HEIGHT) * 100)
 const survived = computed(() => boardHeight.value < MAX_HEIGHT)
 const accuracy = computed(() =>
-  currentIndex.value > 0 ? Math.round((correctCount.value / currentIndex.value) * 100) : 0,
+  attemptedCount.value > 0 ? Math.round((correctCount.value / attemptedCount.value) * 100) : 0,
 )
 
 // Block visualization: rows of height MAX_HEIGHT
@@ -291,7 +378,7 @@ const blocks = computed(() => {
           </div>
 
           <p class="text-sm font-medium leading-relaxed mb-4" :style="{ color: 'var(--ink)' }">
-            {{ currentQuestion.stem }}
+            <MathText :text="currentQuestion.stem" size="sm" />
           </p>
 
           <div class="space-y-2">
@@ -314,7 +401,8 @@ const blocks = computed(() => {
               }"
               @click="pickOption(opt)"
             >
-              <span class="font-semibold mr-2" :style="{ color: 'var(--ink-muted)' }">{{ opt.label }}.</span>{{ opt.text }}
+              <span class="font-semibold mr-2" :style="{ color: 'var(--ink-muted)' }">{{ opt.label }}.</span>
+              <MathText :text="opt.text" size="sm" />
             </button>
           </div>
         </AppCard>

@@ -2,6 +2,7 @@ import { ipc } from '.'
 
 export interface RecheckItemDto {
   id: number
+  topic_id: number | null
   node_id: number | null
   topic_name: string | null
   node_title: string | null
@@ -36,26 +37,37 @@ export interface TopicMemorySummaryDto {
   recommended_action: string
 }
 
-export function getMemoryDashboard(studentId: number): Promise<MemoryDashboardDto> {
-  return ipc<MemoryDashboardDto>('get_memory_dashboard', { studentId })
+export function getMemoryDashboard(
+  studentId: number,
+  subjectId?: number | null,
+): Promise<MemoryDashboardDto> {
+  return ipc<MemoryDashboardDto>('get_memory_dashboard', { studentId, subjectId })
 }
 
-export function getReviewQueue(studentId: number, limit: number = 30): Promise<RecheckItemDto[]> {
-  return ipc<RecheckItemDto[]>('get_review_queue', { studentId, limit })
+export function getReviewQueue(
+  studentId: number,
+  limit: number = 30,
+  subjectId?: number | null,
+): Promise<RecheckItemDto[]> {
+  return ipc<RecheckItemDto[]>('get_review_queue', { studentId, limit, subjectId })
 }
 
-export function listMemoryTopicSummaries(studentId: number, limit: number = 20): Promise<TopicMemorySummaryDto[]> {
-  return ipc<TopicMemorySummaryDto[]>('list_memory_topic_summaries', { studentId, limit })
+export function listMemoryTopicSummaries(
+  studentId: number,
+  limit: number = 20,
+  subjectId?: number | null,
+): Promise<TopicMemorySummaryDto[]> {
+  return ipc<TopicMemorySummaryDto[]>('list_memory_topic_summaries', { studentId, limit, subjectId })
 }
 
 export function recordRetrievalAttempt(input: Record<string, unknown>): Promise<unknown> {
   return ipc('record_retrieval_attempt', { input })
 }
 
-export function processDecayBatch(studentId: number): Promise<unknown> {
-  return ipc('process_decay_batch', { studentId })
+export function processDecayBatch(limit: number = 100): Promise<unknown> {
+  return ipc('process_decay_batch', { limit })
 }
 
-export function completeRecheck(input: Record<string, unknown>): Promise<unknown> {
-  return ipc('complete_recheck', { input })
+export function completeRecheck(recheckId: number): Promise<unknown> {
+  return ipc('complete_recheck', { recheckId })
 }

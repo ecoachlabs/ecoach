@@ -1,48 +1,31 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useUiStore } from '@/stores/ui'
 import { listSubjects, listTopics, type SubjectDto } from '@/ipc/coach'
 import { getReadinessReport, type SubjectReadinessDto } from '@/ipc/readiness'
-import { startPracticeSession } from '@/ipc/sessions'
+import { buildLearnerTopicTree, flattenLearnerTopics } from '@/utils/learnerTopics'
+import { startPracticeSessionWithQuestions } from '@/utils/sessionQuestions'
+import { getReadinessColor, getReadinessLabel, isPositiveReadinessBand } from '@/utils/readiness'
 
 const auth = useAuthStore()
-const ui = useUiStore()
+const route = useRoute()
 const router = useRouter()
 
 const subjects = ref<SubjectDto[]>([])
 const readiness = ref<SubjectReadinessDto[]>([])
 const loading = ref(true)
 const starting = ref<number | null>(null)
+const selectedSubjectId = ref<number | null>(null)
 const error = ref('')
 const searchQuery = ref('')
-const activeLevel = ref('JHS 1')
-
-const levels = [
-  { label: 'Junior High JHS 1', key: 'JHS 1', count: 11 },
-  { label: 'Junior High JHS 2', key: 'JHS 2', count: 10 },
-  { label: 'Junior High JHS 3', key: 'JHS 3', count: 9 },
-  { label: 'Primary 1', key: 'P1', count: 8 },
-  { label: 'Primary 2', key: 'P2', count: 9 },
-  { label: 'Primary 3', key: 'P3', count: 10 },
-  { label: 'Primary 4', key: 'P4', count: 11 },
-  { label: 'Primary 5', key: 'P5', count: 11 },
-  { label: 'Primary 6', key: 'P6', count: 11 },
-  { label: 'Senior High SHS 1', key: 'SHS 1', count: 9 },
-  { label: 'Senior High SHS 2', key: 'SHS 2', count: 8 },
-  { label: 'Senior High SHS 3', key: 'SHS 3', count: 7 },
-  { label: 'BECE', key: 'BECE', count: 24 },
-  { label: 'WASSCE SHS', key: 'WASSCE', count: 30 },
-  { label: 'BECE Mocks', key: 'BECE Mocks', count: 7 },
-]
 
 const subjectConfig: Record<string, { category: string; color: string; bg: string; symbolBig: string }> = {
-  MATH: { category: 'Mathematics', color: 'var(--gold)',         bg: 'rgba(180,83,9,0.07)',    symbolBig: 'Σ'  },
+  MATH: { category: 'Mathematics', color: 'var(--gold)',         bg: 'rgba(180,83,9,0.07)',    symbolBig: 'M'  },
   ENG:  { category: 'English',     color: 'var(--accent)',       bg: 'rgba(13,148,136,0.07)',  symbolBig: 'Aa' },
-  SCI:  { category: 'Science',     color: '#0891b2',             bg: 'rgba(8,145,178,0.07)',   symbolBig: '⚛'  },
-  SS:   { category: 'Social Stud.', color: 'var(--warm)',        bg: 'rgba(194,65,12,0.07)',   symbolBig: '⊕'  },
-  ICT:  { category: 'ICT',         color: '#7c3aed',             bg: 'rgba(124,58,237,0.07)', symbolBig: '⌘'  },
+  SCI:  { category: 'Science',     color: '#0891b2',             bg: 'rgba(8,145,178,0.07)',   symbolBig: 'S'  },
+  SS:   { category: 'Social Stud.', color: 'var(--warm)',        bg: 'rgba(194,65,12,0.07)',   symbolBig: 'SS'  },
+  ICT:  { category: 'ICT',         color: '#7c3aed',             bg: 'rgba(124,58,237,0.07)', symbolBig: 'PC'  },
   FR:   { category: 'French',      color: '#be185d',             bg: 'rgba(190,24,93,0.07)',   symbolBig: 'Fr' },
   TWI:  { category: 'General',     color: 'var(--ink-secondary)', bg: 'rgba(92,86,80,0.07)',  symbolBig: 'Tw' },
   RME:  { category: 'General',     color: 'var(--ink-secondary)', bg: 'rgba(92,86,80,0.07)',  symbolBig: 'Re' },
@@ -68,6 +51,10 @@ onMounted(async () => {
     ])
     subjects.value = subs
     readiness.value = rdns.subjects
+    const requestedTopicId = Number(route.query.topic)
+    if (Number.isFinite(requestedTopicId) && requestedTopicId > 0) {
+      await openTopic(requestedTopicId)
+    }
   } catch {
     error.value = 'Failed to load courses'
   }
@@ -96,12 +83,44 @@ const filtered = computed(() => {
   )
 })
 
-const levelsPanelStyle = computed(() => {
-  return {
-    background: '#1e2130',
-    borderColor: 'rgba(255,255,255,0.06)',
-    boxShadow: '0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3)',
-  }
+const practiceSummary = computed(() => {
+  return readiness.value.reduce((summary, subject) => {
+    summary.trackedTopics += subject.total_topic_count
+    summary.masteredTopics += subject.mastered_topic_count
+    summary.weakTopics += Math.max(0, subject.total_topic_count - subject.mastered_topic_count)
+    if (isPositiveReadinessBand(subject.readiness_band)) {
+      summary.strongSubjects += 1
+    }
+    return summary
+  }, {
+    trackedTopics: 0,
+    masteredTopics: 0,
+    weakTopics: 0,
+    strongSubjects: 0,
+  })
+})
+
+const subjectReadinessRows = computed(() => {
+  return subjects.value
+    .map(subject => {
+      const readinessState = readinessFor(subject.id)
+      return {
+        id: subject.id,
+        name: subject.name,
+        band: readinessState?.readiness_band ?? 'not_ready',
+        weakTopics: readinessState
+          ? Math.max(0, readinessState.total_topic_count - readinessState.mastered_topic_count)
+          : 0,
+        totalTopics: readinessState?.total_topic_count ?? 0,
+        pct: completionPct(subject.id) ?? 0,
+      }
+    })
+    .sort((left, right) => {
+      if (left.totalTopics === 0 && right.totalTopics > 0) return 1
+      if (right.totalTopics === 0 && left.totalTopics > 0) return -1
+      if (left.pct !== right.pct) return left.pct - right.pct
+      return right.weakTopics - left.weakTopics
+    })
 })
 
 async function open(subjectId: number) {
@@ -109,315 +128,747 @@ async function open(subjectId: number) {
   starting.value = subjectId
   error.value = ''
   try {
-    const topics = await listTopics(subjectId)
-    const topicIds = topics.slice(0, 5).map(t => t.id)
+    const topics = flattenLearnerTopics(buildLearnerTopicTree(await listTopics(subjectId)))
+    const topicIds = Array.from(new Set(topics.slice(0, 5).flatMap(topic => topic.sourceTopicIds)))
     if (topicIds.length === 0) throw new Error('No topics available')
-    const session = await startPracticeSession({
+    const fallbackTopicSets = topicIds.length > 1 ? [[topicIds[0]]] : []
+    const session = await startPracticeSessionWithQuestions({
       student_id: auth.currentAccount.id,
       subject_id: subjectId,
       topic_ids: topicIds,
       question_count: 10,
       is_timed: false,
-    })
-    router.push(`/student/session/${session.session_id}`)
+    }, fallbackTopicSets)
+    router.push(`/student/session/${session.sessionId}`)
   } catch (e: any) {
     error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to start'
     starting.value = null
   }
 }
+
+async function openTopic(topicId: number) {
+  if (!auth.currentAccount || starting.value !== null) return
+
+  error.value = ''
+  const resolvedSubjectId = await resolveSubjectIdForTopic(topicId)
+  if (resolvedSubjectId == null) {
+    error.value = 'That topic is not available yet.'
+    return
+  }
+
+  starting.value = resolvedSubjectId
+  selectedSubjectId.value = resolvedSubjectId
+
+  try {
+    const session = await startPracticeSessionWithQuestions({
+      student_id: auth.currentAccount.id,
+      subject_id: resolvedSubjectId,
+      topic_ids: [topicId],
+      question_count: 10,
+      is_timed: false,
+    })
+    router.push(`/student/session/${session.sessionId}`)
+  } catch (e: any) {
+    error.value = typeof e === 'string' ? e : e?.message ?? 'Failed to start topic practice'
+    starting.value = null
+  }
+}
+
+async function resolveSubjectIdForTopic(topicId: number): Promise<number | null> {
+  for (const subject of subjects.value) {
+    const topics = await listTopics(subject.id).catch(() => [])
+    if (topics.some(topic => topic.id === topicId)) {
+      return subject.id
+    }
+  }
+  return null
+}
 </script>
 
 <template>
-  <div class="h-full flex flex-col overflow-hidden" :style="{ backgroundColor: 'var(--paper)' }">
-
-    <!-- Header -->
-    <div
-      class="flex-shrink-0 px-7 pt-6 pb-5 border-b"
-      :style="{ borderColor: 'transparent', backgroundColor: 'var(--surface)' }"
-    >
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <p class="eyebrow">Explore</p>
-          <h1 class="font-display text-2xl font-bold tracking-tight" :style="{ color: 'var(--ink)' }">
-            Courses
-          </h1>
-          <p class="text-xs mt-0.5" :style="{ color: 'var(--ink-muted)' }">
-            {{ subjects.length }} courses in Junior High JHS 1
-          </p>
-        </div>
-        <div class="flex gap-2">
-          <button class="nav-pill" @click="router.push('/student/practice/custom-test')">Custom Test</button>
-          <button class="nav-pill" @click="router.push('/student/progress/mastery')">Mastery Map</button>
-        </div>
+  <div class="practice-shell">
+    <header class="practice-header">
+      <div class="practice-header__copy">
+        <p class="eyebrow">Explore</p>
+        <h1 class="practice-title">Courses</h1>
+        <p class="practice-subtitle">
+          {{ subjects.length }} real courses · {{ practiceSummary.trackedTopics }} tracked topics
+        </p>
       </div>
 
-      <!-- Search -->
-      <div class="relative">
-        <span class="search-icon">⌕</span>
+      <div class="practice-actions">
+        <button class="nav-pill nav-pill--secondary" @click="router.push('/student/practice/custom-test')">
+          Custom Test
+        </button>
+        <button class="nav-pill nav-pill--primary" @click="router.push('/student/progress/mastery-map')">
+          Mastery Map
+        </button>
+      </div>
+    </header>
+
+    <section class="search-panel">
+      <label class="search-label" for="course-search">Course Search</label>
+      <div class="search-field">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5" />
+          <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
         <input
+          id="course-search"
           v-model="searchQuery"
           type="text"
-          placeholder="Search courses…"
-          class="search-input w-full"
+          placeholder="Search courses..."
+          class="search-input"
         />
       </div>
-    </div>
+    </section>
 
-    <div v-if="error" class="px-7 py-2 text-xs flex-shrink-0"
-      :style="{ background: 'rgba(194,65,12,0.08)', color: 'var(--warm)' }">{{ error }}</div>
+    <p v-if="error" class="inline-status inline-status--error">[ ERROR ] {{ error }}</p>
 
-    <!-- Body -->
-    <div class="flex-1 overflow-hidden flex">
-
-      <!-- Course grid -->
-      <div class="flex-1 overflow-y-auto p-6">
-
-        <!-- Skeleton -->
-        <div v-if="loading" class="grid grid-cols-2 gap-4">
-          <div v-for="i in 8" :key="i" class="h-32 rounded-2xl animate-pulse"
-            :style="{ backgroundColor: 'var(--border-soft)' }" />
+    <div class="practice-content">
+      <section class="courses-pane">
+        <div v-if="loading" class="courses-loading">
+          <p class="loading-tag">[ LOADING COURSES ]</p>
+          <p class="loading-copy">Building your practice map.</p>
         </div>
 
-        <!-- Cards -->
-        <div v-else class="grid grid-cols-2 gap-4">
+        <div v-else-if="filtered.length" class="courses-grid">
           <button
             v-for="subject in filtered"
             :key="subject.id"
-            class="course-card text-left"
+            class="course-card"
             :disabled="starting !== null"
             @click="open(subject.id)"
           >
-            <!-- Left: text -->
-            <div class="card-text flex-1 flex flex-col justify-between py-5 pl-5 pr-3">
-              <div>
-                <p class="category-label mb-1.5"
-                  :style="{ color: subjectCfg(subject.code).color }">
+            <div class="course-card__content">
+              <div class="course-card__copy">
+                <p class="category-label" :style="{ color: subjectCfg(subject.code).color }">
                   {{ subjectCfg(subject.code).category }}
                 </p>
-                <h3 class="text-[13px] font-bold leading-snug mb-3"
-                  :style="{ color: 'var(--ink)' }">
-                  {{ subject.name }}
-                </h3>
+                <h3 class="course-title">{{ subject.name }}</h3>
               </div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <span v-if="topicCount(subject.id)" class="stat-chip">
-                  {{ topicCount(subject.id) }} topics
-                </span>
-                <span class="stat-chip">10 Q's</span>
-                <span v-if="starting === subject.id"
-                  class="text-[10px]" :style="{ color: 'var(--ink-muted)' }">
-                  Starting…
-                </span>
+
+              <div class="course-card__footer">
+                <div class="course-chip-row">
+                  <span v-if="topicCount(subject.id)" class="stat-chip">
+                    {{ topicCount(subject.id) }} topics
+                  </span>
+                  <span class="stat-chip">10 Q's</span>
+                  <span v-if="starting === subject.id" class="stat-chip stat-chip--muted">Starting...</span>
+                </div>
+
+                <div v-if="completionPct(subject.id) !== null" class="course-readiness">
+                  <span class="course-readiness__label">Readiness</span>
+                  <span class="course-readiness__value">{{ completionPct(subject.id) }}%</span>
+                </div>
+                <div v-else class="course-readiness course-readiness--muted">
+                  <span class="course-readiness__label">Readiness</span>
+                  <span class="course-readiness__value">--</span>
+                </div>
               </div>
             </div>
 
-            <!-- Right: visual -->
-            <div class="card-visual" :style="{ background: subjectCfg(subject.code).bg }">
-              <span class="symbol-watermark"
-                :style="{ color: subjectCfg(subject.code).color }">
+            <div class="card-visual" :style="{ '--subject-bg': subjectCfg(subject.code).bg }">
+              <span class="symbol-watermark" :style="{ color: subjectCfg(subject.code).color }">
                 {{ subjectCfg(subject.code).symbolBig }}
               </span>
               <div v-if="completionPct(subject.id) !== null" class="completion-badge">
-                {{ completionPct(subject.id) }}%
+                <span class="completion-badge__label">Track</span>
+                <span class="completion-badge__value">{{ completionPct(subject.id) }}%</span>
               </div>
             </div>
           </button>
         </div>
 
-        <div v-if="!loading && filtered.length === 0" class="py-16 text-center">
-          <p class="text-sm" :style="{ color: 'var(--ink-muted)' }">No courses match your search.</p>
+        <div v-else class="courses-empty">
+          <p class="loading-tag">[ NO COURSES ]</p>
+          <p class="loading-copy">No courses match "{{ searchQuery }}".</p>
         </div>
-      </div>
+      </section>
 
-      <!-- Right: dark Levels sidebar -->
-      <div
-        class="levels-panel flex-shrink-0 w-52 flex flex-col overflow-hidden"
-        :style="levelsPanelStyle"
-      >
-        <div class="px-5 py-4 flex-shrink-0" style="border-bottom: 1px solid rgba(255,255,255,0.07)">
-          <p class="text-[10px] font-bold uppercase tracking-widest"
-            style="color: rgba(255,255,255,0.35)">Levels</p>
-          <p class="text-[11px] font-semibold mt-0.5"
-            style="color: rgba(255,255,255,0.5)">{{ levels.length }} available</p>
+      <aside class="signals-panel">
+        <div class="signals-panel__header">
+          <p class="practice-section-label">Practice Signals</p>
+          <p class="signals-panel__sub">{{ practiceSummary.trackedTopics }} topics tracked</p>
         </div>
-        <div class="flex-1 overflow-y-auto py-1.5">
-          <button
-            v-for="level in levels"
-            :key="level.key"
-            class="level-item w-full text-left"
-            :class="{ active: activeLevel === level.key }"
-            @click="activeLevel = level.key"
-          >
-            <span class="flex-1 truncate">{{ level.label }}</span>
-            <span class="level-count">{{ level.count }}</span>
-          </button>
+
+        <div class="signals-panel__metrics">
+          <div class="practice-metric-card">
+            <span class="practice-metric-label">Mastered</span>
+            <strong class="practice-metric-value">{{ practiceSummary.masteredTopics }}</strong>
+          </div>
+          <div class="practice-metric-card">
+            <span class="practice-metric-label">Weak</span>
+            <strong class="practice-metric-value">{{ practiceSummary.weakTopics }}</strong>
+          </div>
+          <div class="practice-metric-card">
+            <span class="practice-metric-label">Strong</span>
+            <strong class="practice-metric-value">{{ practiceSummary.strongSubjects }}</strong>
+          </div>
+          <div class="practice-metric-card">
+            <span class="practice-metric-label">Courses</span>
+            <strong class="practice-metric-value">{{ subjects.length }}</strong>
+          </div>
         </div>
-        <div class="px-4 py-4 flex-shrink-0" style="border-top: 1px solid rgba(255,255,255,0.07)">
-          <button
-            class="w-full py-2.5 rounded-xl text-[11px] font-bold"
-            style="background: var(--accent); color: white; border: none; cursor: pointer;"
-            @click="router.push('/student/practice/custom-test')"
-          >
-            Custom Test →
-          </button>
+
+        <div class="signals-panel__body">
+          <p class="practice-section-label">Subject readiness</p>
+          <div v-if="subjectReadinessRows.length" class="signals-list">
+            <div
+              v-for="subject in subjectReadinessRows"
+              :key="subject.id"
+              class="practice-row"
+            >
+              <div class="practice-row__copy">
+                <p class="practice-row-title">{{ subject.name }}</p>
+                <p class="practice-row-sub" :style="{ color: getReadinessColor(subject.band) }">
+                  {{ getReadinessLabel(subject.band) }} · {{ subject.weakTopics }} weak
+                </p>
+              </div>
+              <span class="practice-row-pct" :style="{ color: getReadinessColor(subject.band) }">{{ subject.pct }}%</span>
+            </div>
+          </div>
+          <p v-else class="practice-empty">[ NO SNAPSHOT ]</p>
         </div>
-      </div>
+
+        <button class="panel-cta" @click="router.push('/student/practice/custom-test')">
+          Custom Test
+        </button>
+      </aside>
     </div>
   </div>
 </template>
 
 <style scoped>
+.practice-shell {
+  --nothing-bg: #f5f5f5;
+  --nothing-surface: #ffffff;
+  --nothing-surface-muted: #f0f0f0;
+  --nothing-border: #e8e8e8;
+  --nothing-border-strong: #cccccc;
+  --nothing-text: #111111;
+  --nothing-secondary: #666666;
+  --nothing-disabled: #999999;
+  --nothing-accent: #d71921;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  background: var(--nothing-bg);
+  color: var(--nothing-text);
+  font-family: 'Space Grotesk', var(--font-body);
+}
+
+.practice-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.practice-header__copy {
+  display: grid;
+  gap: 6px;
+}
+
 .eyebrow {
-  font-size: 10px;
+  margin: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--ink-muted);
-  margin-bottom: 4px;
+  letter-spacing: 0.08em;
+  color: var(--nothing-secondary);
+}
+
+.practice-title {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #000000;
+}
+
+.practice-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--nothing-secondary);
+}
+
+.practice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .nav-pill {
-  padding: 5px 12px;
+  min-height: 44px;
+  padding: 12px 18px;
   border-radius: 999px;
+  border: 1px solid var(--nothing-border-strong);
+  background: transparent;
+  color: var(--nothing-text);
+  font-family: 'Space Mono', monospace;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  background: var(--paper);
-  color: var(--ink-secondary);
-  border: 1px solid transparent;
-  transition: all 120ms;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
-.nav-pill:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+.nav-pill:hover { border-color: #000000; }
+
+.nav-pill--primary {
+  border-color: #000000;
+  background: #000000;
+  color: #ffffff;
+}
+
+.search-panel {
+  display: grid;
+  gap: 8px;
+  max-width: 720px;
+}
+
+.search-label,
+.practice-section-label,
+.category-label,
+.practice-metric-label,
+.course-readiness__label,
+.completion-badge__label,
+.practice-row-sub,
+.loading-tag {
+  font-family: 'Space Mono', monospace;
+}
+
+.search-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nothing-secondary);
+}
+
+.search-field {
+  position: relative;
+}
 
 .search-icon {
   position: absolute;
   left: 14px;
   top: 50%;
+  width: 18px;
+  height: 18px;
   transform: translateY(-50%);
-  font-size: 15px;
-  color: var(--ink-muted);
+  color: var(--nothing-secondary);
   pointer-events: none;
 }
 
 .search-input {
-  padding: 10px 16px 10px 38px;
-  border-radius: 12px;
-  font-size: 13px;
-  border: 1px solid transparent;
-  background: var(--paper);
-  color: var(--ink);
+  width: 100%;
+  min-height: 52px;
+  padding: 0 18px 0 44px;
+  border-radius: 8px;
+  border: 1px solid var(--nothing-border-strong);
+  background: var(--nothing-surface);
+  color: var(--nothing-text);
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
   outline: none;
-  transition: border-color 120ms;
+  transition: border-color 160ms ease;
 }
-.search-input::placeholder { color: var(--ink-muted); }
-.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--nothing-disabled); }
+.search-input:focus { border-color: #000000; }
 
-/* Course card: horizontal split */
-.course-card {
+.inline-status {
+  margin: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.inline-status--error {
+  color: var(--nothing-accent);
+}
+
+.practice-content {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.courses-pane {
+  min-height: 0;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.courses-loading,
+.courses-empty {
+  min-height: 280px;
   display: flex;
-  border-radius: 18px;
-  border: 1px solid transparent;
-  background: var(--surface);
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px;
+  border: 1px solid var(--nothing-border);
+  border-radius: 12px;
+  background: var(--nothing-surface);
+}
+
+.loading-tag {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nothing-secondary);
+}
+
+.loading-copy {
+  margin: 0;
+  font-size: 14px;
+  color: var(--nothing-secondary);
+}
+
+.course-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 116px;
+  min-height: 172px;
+  border-radius: 14px;
+  border: 1px solid var(--nothing-border);
+  background: var(--nothing-surface);
   cursor: pointer;
-  min-height: 120px;
   overflow: hidden;
-  transition: border-color 130ms ease, transform 130ms ease, box-shadow 130ms ease;
+  text-align: left;
+  transition: border-color 160ms ease, background-color 160ms ease;
 }
 .course-card:hover:not(:disabled) {
-  border-color: var(--ink-muted);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  border-color: #000000;
+  background: #fcfcfc;
 }
 .course-card:disabled { opacity: 0.55; cursor: not-allowed; }
 
+.course-card__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+}
+
+.course-card__copy {
+  display: grid;
+  gap: 10px;
+}
+
 .category-label {
-  font-size: 9px;
-  font-weight: 800;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
+}
+
+.course-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.15;
+  font-weight: 500;
+  color: #000000;
+}
+
+.course-card__footer {
+  display: grid;
+  gap: 14px;
+}
+
+.course-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .stat-chip {
-  font-size: 9px;
-  font-weight: 600;
-  padding: 2px 7px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: var(--paper);
-  color: var(--ink-secondary);
-  border: 1px solid transparent;
+  border: 1px solid var(--nothing-border-strong);
+  background: transparent;
+  color: var(--nothing-secondary);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-/* Right visual panel of card */
-.card-visual {
-  width: 110px;
-  flex-shrink: 0;
+.stat-chip--muted {
+  color: var(--nothing-disabled);
+}
+
+.course-readiness {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--nothing-border);
+}
+
+.course-readiness__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nothing-secondary);
+}
+
+.course-readiness__value {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.course-readiness--muted .course-readiness__value {
+  color: var(--nothing-disabled);
+}
+
+.card-visual {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
   position: relative;
   overflow: hidden;
+  padding: 16px;
+  border-left: 1px solid var(--nothing-border);
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.03), transparent 60%),
+    var(--subject-bg, var(--nothing-surface-muted));
+}
+
+.card-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.16) 1px, transparent 0);
+  background-size: 14px 14px;
 }
 
 .symbol-watermark {
-  font-size: 56px;
-  font-weight: 900;
-  opacity: 0.16;
+  position: relative;
+  z-index: 1;
+  font-family: 'Space Mono', monospace;
+  font-size: 48px;
+  font-weight: 700;
+  opacity: 0.34;
   user-select: none;
   line-height: 1;
 }
 
 .completion-badge {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--gold);
-  background: rgba(180,83,9,0.12);
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
   border-radius: 8px;
-  padding: 3px 8px;
-  border: 1px solid rgba(180,83,9,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.86);
 }
 
-/* Dark levels sidebar */
-.levels-panel {
-  border: 1px solid transparent;
-  box-shadow: none;
-}
-
-.level-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 20px;
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255,255,255,0.45);
-  cursor: pointer;
-  transition: all 100ms;
-  border: none;
-  background: transparent;
-}
-.level-item:hover {
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.8);
-}
-.level-item.active {
-  background: rgba(13,148,136,0.14);
-  color: var(--accent);
-}
-.level-item.active .level-count {
-  background: rgba(13,148,136,0.25);
-  color: var(--accent);
-}
-
-.level-count {
-  font-size: 9px;
+.completion-badge__label {
+  font-size: 10px;
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nothing-secondary);
+}
+
+.completion-badge__value {
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.signals-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  border: 1px solid #000000;
+  border-radius: 14px;
+  background: var(--nothing-surface);
+}
+
+.signals-panel__header {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--nothing-border);
+}
+
+.signals-panel__sub {
+  margin: 0;
+  font-size: 14px;
+  color: var(--nothing-secondary);
+}
+
+.signals-panel__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.practice-metric-card {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--nothing-surface-muted);
+  border: 1px solid var(--nothing-border);
+}
+
+.practice-metric-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nothing-secondary);
+}
+
+.practice-metric-value {
+  display: block;
+  margin-top: 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 700;
+  color: #000000;
+}
+
+.practice-section-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nothing-secondary);
+}
+
+.signals-panel__body {
+  display: grid;
+  gap: 12px;
+}
+
+.practice-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--nothing-border);
+}
+
+.signals-list .practice-row:last-child {
+  border-bottom: none;
+}
+
+.practice-row__copy {
+  min-width: 0;
+}
+
+.practice-row-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--nothing-text);
+}
+
+.practice-row-sub {
+  margin: 3px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.practice-row-pct {
   flex-shrink: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.practice-empty {
+  margin: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nothing-disabled);
+}
+
+.panel-cta {
+  margin-top: auto;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid #000000;
+  background: #000000;
+  color: #ffffff;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+@media (max-width: 1120px) {
+  .practice-content {
+    grid-template-columns: 1fr;
+  }
+
+  .signals-panel {
+    order: -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .practice-shell {
+    padding: 20px;
+  }
+
+  .practice-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .course-card {
+    grid-template-columns: 1fr;
+  }
+
+  .card-visual {
+    min-height: 112px;
+    border-left: none;
+    border-top: 1px solid var(--nothing-border);
+  }
 }
 </style>
+

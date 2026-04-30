@@ -107,7 +107,7 @@
   "topics": [
     {
       "topic_code": "B7.1.1.1",
-      "topic_name": "Demonstrate understanding and the use of place value for expressing quantities recorded as base ten numerals as well as rounding these to given decimal places and significant figures",
+      "topic_name": "Place Value and Rounding",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -142,7 +142,7 @@
     },
     {
       "topic_code": "B7.1.1.2",
-      "topic_name": "Compare and order whole numbers more than1,000,000,000 and represent the comparison using \">, <, or=\"",
+      "topic_name": "Comparing and Ordering Whole Numbers",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -165,7 +165,7 @@
     },
     {
       "topic_code": "B7.1.2.1",
-      "topic_name": "Apply mental mathematics strategies and number properties used to solve problems",
+      "topic_name": "Mental Mathematics",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -193,7 +193,7 @@
     },
     {
       "topic_code": "B7.1.2.2",
-      "topic_name": "Demonstrate an understanding of addition, subtraction, multiplication and division of (i) whole numbers, and (ii) decimal numbers, to solve problems.",
+      "topic_name": "Whole Number and Decimal Operations",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -226,7 +226,7 @@
     },
     {
       "topic_code": "B7.1.2.3",
-      "topic_name": "Demonstrate understanding and the use of powers of natural numbers in solving problems",
+      "topic_name": "Powers and Indices",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -261,7 +261,7 @@
     },
     {
       "topic_code": "B7.1.3.1",
-      "topic_name": "Simplify, compare and order a mixture of positive fractions (i.e.",
+      "topic_name": "Fractions, Decimals and Percentages",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -290,7 +290,7 @@
     },
     {
       "topic_code": "B7.1.3.2",
-      "topic_name": "Demonstrate an understanding of the process of addition and/or subtraction of fractions and apply this in solving problems",
+      "topic_name": "Addition and Subtraction of Fractions",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -318,7 +318,7 @@
     },
     {
       "topic_code": "B7.1.3.3",
-      "topic_name": "Demonstrate an understanding of the process of multiplying and dividing positive fractions and apply this in solving problems",
+      "topic_name": "Multiplication and Division of Fractions",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -350,7 +350,7 @@
     },
     {
       "topic_code": "B7.1.4.1",
-      "topic_name": "Demonstrate an understanding of the concept of ratios and its relationship to fractions and use it to solve problems that involve rates, ratios, and proportional reasoning",
+      "topic_name": "Ratio and Proportion",
       "grade": "B7",
       "strand_code": 1,
       "strand_name": "Number",
@@ -381,7 +381,7 @@
     },
     {
       "topic_code": "B7.2.1.1",
-      "topic_name": "Derive the rule for a set of points of a relation, draw a table of values to graph the relation in a number plane and make predictions about subsequent elements of the relation",
+      "topic_name": "Patterns and Relations",
       "grade": "B7",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -421,7 +421,7 @@
     },
     {
       "topic_code": "B7.2.2.1",
-      "topic_name": "Simplify algebraic expressions involving the four basic operations and substituting values to evaluate algebraic expressions.",
+      "topic_name": "Algebraic Expressions",
       "grade": "B7",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -458,7 +458,7 @@
     },
     {
       "topic_code": "B7.2.3.1",
-      "topic_name": "Demonstrate an understanding of linear equations of the form x + a = b (where a and b are integers) by modelling problems as a linear equation and solving the problems concretely, pictorially, and symbolically",
+      "topic_name": "Linear Equations",
       "grade": "B7",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -494,7 +494,7 @@
     },
     {
       "topic_code": "B7.3.1.1",
-      "topic_name": "Demonstrate understanding of angles including adjacent, vertically opposite, complementary, supplementary and use them to solve problems",
+      "topic_name": "Angle Relationships",
       "grade": "B7",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -526,7 +526,7 @@
     },
     {
       "topic_code": "B7.3.1.2",
-      "topic_name": "Demonstrate how to construct a perpendicular to a line from a given point, bisect a line, bisect angles, and construct angles of the following sizes: 30˚, 45˚, 60˚, 75˚ and 90˚",
+      "topic_name": "Geometric Constructions",
       "grade": "B7",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -568,7 +568,7 @@
     },
     {
       "topic_code": "B7.3.2.1",
-      "topic_name": "Demonstrate the ability to find the perimeter of plane shapes including circles using the concept of pi (π) to find the circumference of a circle",
+      "topic_name": "Perimeter and Circumference",
       "grade": "B7",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -602,7 +602,7 @@
     },
     {
       "topic_code": "B7.3.2.2",
-      "topic_name": "Derive the formula for determining the area of a triangle and use it to solve problems",
+      "topic_name": "Area of Triangles",
       "grade": "B7",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -633,7 +633,7 @@
     },
     {
       "topic_code": "B7.3.2.3",
-      "topic_name": "Demonstrate understanding of bearings, vector and its components using real life cases",
+      "topic_name": "Bearings and Vectors",
       "grade": "B7",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -668,7 +668,7 @@
     },
     {
       "topic_code": "B7.3.3.1",
-      "topic_name": "Perform a single transformation (i.e. reflection and translation) on a 2D shape using graph paper (including technology) and describe the properties of the image under the transformation (i.e. congruence, similarity, etc.)",
+      "topic_name": "Reflection and Translation",
       "grade": "B7",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -702,7 +702,7 @@
     },
     {
       "topic_code": "B7.4.1.1",
-      "topic_name": "Select, justify, and use appropriate methods to collect data (quantitative and qualitative), display and analyse the data (grouped/ungrouped) presented in frequency tables, line graphs, pie graphs, bar graphs or pictographs and use these to solve and/or pose problems",
+      "topic_name": "Data Collection and Representation",
       "grade": "B7",
       "strand_code": 4,
       "strand_name": "Handling Data",
@@ -738,7 +738,7 @@
     },
     {
       "topic_code": "B7.4.1.2",
-      "topic_name": "Determine the measures of central tendency (mean, median, mode) for a given ungrouped data and use it to solve problems",
+      "topic_name": "Mean, Median and Mode",
       "grade": "B7",
       "strand_code": 4,
       "strand_name": "Handling Data",
@@ -768,7 +768,7 @@
     },
     {
       "topic_code": "B7.4.2.1",
-      "topic_name": "Identify the sample space for a probability experiment involving single events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+      "topic_name": "Probability of Single Events",
       "grade": "B7",
       "strand_code": 4,
       "strand_name": "Handling Data",
@@ -797,7 +797,7 @@
     },
     {
       "topic_code": "B8.1.1.1",
-      "topic_name": "Demonstrate understanding and the use of place value for expressing quantities in standard form and rounding numbers and decimals to significant figures and a given number of decimal places",
+      "topic_name": "Standard Form and Rounding",
       "grade": "B8",
       "strand_code": 1,
       "strand_name": "Number",
@@ -830,7 +830,7 @@
     },
     {
       "topic_code": "B8.1.1.2",
-      "topic_name": "Apply the concepts and vocabulary of sets on sets of factors of numbers to identify perfect squares, determine their square root and solve real life problems involving union and intersection of two sets",
+      "topic_name": "Sets, Perfect Squares and Square Roots",
       "grade": "B8",
       "strand_code": 1,
       "strand_name": "Number",
@@ -859,7 +859,7 @@
     },
     {
       "topic_code": "B8.1.2.1",
-      "topic_name": "Apply mental mathematics strategies and number properties used to solve problems",
+      "topic_name": "Mental Mathematics",
       "grade": "B8",
       "strand_code": 1,
       "strand_name": "Number",
@@ -887,7 +887,7 @@
     },
     {
       "topic_code": "B8.1.2.2",
-      "topic_name": "Apply the understanding of the addition, subtraction, multiplication and division of (i) whole numbers within 10,000, and (ii) decimals up to 1/1000, to solve problems and round answers to given decimal places",
+      "topic_name": "Whole Number and Decimal Operations",
       "grade": "B8",
       "strand_code": 1,
       "strand_name": "Number",
@@ -924,7 +924,7 @@
     },
     {
       "topic_code": "B8.1.2.3",
-      "topic_name": "Demonstrate understanding and the use of the laws of indices in solving problems (including real life problems) involving powers of natural numbers",
+      "topic_name": "Laws of Indices",
       "grade": "B8",
       "strand_code": 1,
       "strand_name": "Number",
@@ -953,7 +953,7 @@
     },
     {
       "topic_code": "B8.1.3.1",
-      "topic_name": "Apply the understanding of operation on fractions to solve problems involving fractions of given quantities and round the results to given decimal and significant places.",
+      "topic_name": "Fraction Operations",
       "grade": "B8",
       "strand_code": 1,
       "strand_name": "Number",
@@ -984,7 +984,7 @@
     },
     {
       "topic_code": "B8.1.4.1",
-      "topic_name": "Demonstrate an understanding of ratio, rate and proportions and use it these to solve real- world mathematical problems.",
+      "topic_name": "Ratio, Rate and Proportion",
       "grade": "B8",
       "strand_code": 1,
       "strand_name": "Number",
@@ -1025,7 +1025,7 @@
     },
     {
       "topic_code": "B8.2.1.1",
-      "topic_name": "Demonstrate the ability to draw table of values for a linear relation, graph the relation in a number plane, determine the gradient of the line and use it to write equation of a line of the form y = mx + c",
+      "topic_name": "Linear Graphs and Gradient",
       "grade": "B8",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -1062,7 +1062,7 @@
     },
     {
       "topic_code": "B8.2.2.1",
-      "topic_name": "Solve problems involving algebraic expressions (including multiplication of binomial expressions) factorise given expressions and substitute values to evaluate algebraic expressions",
+      "topic_name": "Algebraic Expressions",
       "grade": "B8",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -1094,7 +1094,7 @@
     },
     {
       "topic_code": "B8.2.3.1",
-      "topic_name": "Demonstrate an understanding of linear inequalities of the form x + a ≥ b (where a and b are integers) by modelling problems as a linear inequalities and solving the problems concretely, pictorially, and symbolically",
+      "topic_name": "Linear Inequalities",
       "grade": "B8",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -1123,7 +1123,7 @@
     },
     {
       "topic_code": "B8.3.1.1",
-      "topic_name": "Demonstrate understanding and use of the relationship between parallel lines and alternate and corresponding angles and use the sum of angles in a triangle to deduce the angle sum in any polygon",
+      "topic_name": "Angles in Parallel Lines and Polygons",
       "grade": "B8",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1152,7 +1152,7 @@
     },
     {
       "topic_code": "B8.3.1.2",
-      "topic_name": "Demonstrate the ability to perform geometric constructions of the angles (75˚, 105˚, 60˚, 135˚ and 150˚), and construct triangles and find locus of points under given conditions",
+      "topic_name": "Geometric Constructions and Loci",
       "grade": "B8",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1212,7 +1212,7 @@
     },
     {
       "topic_code": "B8.3.2.1",
-      "topic_name": "Apply the Pythagoras theorem, the primary trigonometric ratios and the formulas for determining the area of a circle to solve real problems.",
+      "topic_name": "Pythagoras, Trigonometry and Circle Area",
       "grade": "B8",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1254,7 +1254,7 @@
     },
     {
       "topic_code": "B8.3.2.2",
-      "topic_name": "Demonstrate understanding of addition and subtraction of vectors and their applications in solving basic problems",
+      "topic_name": "Vector Addition and Subtraction",
       "grade": "B8",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1283,7 +1283,7 @@
     },
     {
       "topic_code": "B8.3.3.1",
-      "topic_name": "Perform a single transformation (i.e. rotation) on a 2D shape using graph paper (including technology) and describe the properties of the image under the transformation (i.e. congruence)",
+      "topic_name": "Rotation",
       "grade": "B8",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1312,7 +1312,7 @@
     },
     {
       "topic_code": "B8.4.1.1",
-      "topic_name": "Select, justify, and use appropriate methods to collect data (quantitative and qualitative), use the data (grouped/ungrouped) to construct and interpret frequency tables, bar charts, pie charts, and pictograms to solve and/or pose problems",
+      "topic_name": "Data Collection and Representation",
       "grade": "B8",
       "strand_code": 4,
       "strand_name": "Handling Data",
@@ -1348,7 +1348,7 @@
     },
     {
       "topic_code": "B8.4.1.2",
-      "topic_name": "Demonstrate an understanding of measures of central tendency (mean, median, mode) and range for grouped data and explain when it’s most appropriate to use the mean, median, or mode",
+      "topic_name": "Measures of Central Tendency and Range",
       "grade": "B8",
       "strand_code": 4,
       "strand_name": "Handling Data",
@@ -1379,7 +1379,7 @@
     },
     {
       "topic_code": "B8.4.2.1",
-      "topic_name": "Identify the sample space for a probability experiment involving two independent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+      "topic_name": "Probability of Independent Events",
       "grade": "B8",
       "strand_code": 4,
       "strand_name": "Handling Data",
@@ -1409,7 +1409,7 @@
     },
     {
       "topic_code": "B9.1.1.1",
-      "topic_name": "Apply the understanding of place value in solving real life problems involving integers of any size, rounding this to given decimal places and significant figures",
+      "topic_name": "Place Value and Rounding",
       "grade": "B9",
       "strand_code": 1,
       "strand_name": "Number",
@@ -1435,7 +1435,7 @@
     },
     {
       "topic_code": "B9.1.1.2",
-      "topic_name": "Demonstrate an understanding of the relationship between members of the rational number system and solve real life problems involving union and intersection of three sets",
+      "topic_name": "Rational Numbers and Sets",
       "grade": "B9",
       "strand_code": 1,
       "strand_name": "Number",
@@ -1462,7 +1462,7 @@
     },
     {
       "topic_code": "B9.1.2.1",
-      "topic_name": "Apply mental mathematics and properties to determine answers for addition and subtraction of basic facts",
+      "topic_name": "Mental Mathematics",
       "grade": "B9",
       "strand_code": 1,
       "strand_name": "Number",
@@ -1490,7 +1490,7 @@
     },
     {
       "topic_code": "B9.1.2.2",
-      "topic_name": "Apply the understanding of addition, subtraction, multiplication and division of decimal numbers to solve problems, and round answers to given decimal places and significant figures",
+      "topic_name": "Decimal Operations",
       "grade": "B9",
       "strand_code": 1,
       "strand_name": "Number",
@@ -1517,7 +1517,7 @@
     },
     {
       "topic_code": "B9.1.2.4",
-      "topic_name": "Demonstrate understanding of surds as real numbers, the process of adding and subtracting of surds as well as determining (using a calculator) the approximate square root of a number that is not a perfect square",
+      "topic_name": "Surds and Approximate Square Roots",
       "grade": "B9",
       "strand_code": 1,
       "strand_name": "Number",
@@ -1544,7 +1544,7 @@
     },
     {
       "topic_code": "B9.1.3.1",
-      "topic_name": "Apply the understanding of operations on fractions to solve problems involving fractions of given quantities and round the results to given decimal and significant places",
+      "topic_name": "Fraction Operations",
       "grade": "B9",
       "strand_code": 1,
       "strand_name": "Number",
@@ -1573,7 +1573,7 @@
     },
     {
       "topic_code": "B9.1.4.1",
-      "topic_name": "Apply the understanding of ratio, rate and proportions to solve problems that involve rates, ratios, and proportional reasoning and use it to solve real- world mathematical problems",
+      "topic_name": "Ratio, Rate and Proportion",
       "grade": "B9",
       "strand_code": 1,
       "strand_name": "Number",
@@ -1605,7 +1605,7 @@
     },
     {
       "topic_code": "B9.2.1.1",
-      "topic_name": "Demonstrate the ability to construct tables of values for pairs of linear relations, graph the relations in a number plane and determine the intersection of the lines to solve simultaneous linear equations",
+      "topic_name": "Simultaneous Linear Equations",
       "grade": "B9",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -1634,7 +1634,7 @@
     },
     {
       "topic_code": "B9.2.2.1",
-      "topic_name": "Demonstrate an understanding of (i) change of subject (ii) substituting values to evaluate expressions, and (iii) factorize expressions that have simple binomial as a factor",
+      "topic_name": "Formula Manipulation and Factorisation",
       "grade": "B9",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -1672,7 +1672,7 @@
     },
     {
       "topic_code": "B9.2.3.1",
-      "topic_name": "Demonstrate understanding of single variable linear inequalities with rational coefficients including: • solving inequalities • verifying • comparing • graphing ii.",
+      "topic_name": "Linear Inequalities",
       "grade": "B9",
       "strand_code": 2,
       "strand_name": "Algebra",
@@ -1707,7 +1707,7 @@
     },
     {
       "topic_code": "B9.3.1.1",
-      "topic_name": "Apply the properties of angles at a point, angles on a straight line, vertically opposite angles, corresponding, angles to` solve problems",
+      "topic_name": "Angle Properties and Polygon Sums",
       "grade": "B9",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1737,7 +1737,7 @@
     },
     {
       "topic_code": "B9.3.1.2",
-      "topic_name": "Construct inscribed and circumscribed triangles and parallelograms with given dimensions",
+      "topic_name": "Inscribed and Circumscribed Constructions",
       "grade": "B9",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1772,7 +1772,7 @@
     },
     {
       "topic_code": "B9.3.2.1",
-      "topic_name": "Derive the formulas for determining the surface area of prisms (i.e.",
+      "topic_name": "Surface Area of Prisms",
       "grade": "B9",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1804,7 +1804,7 @@
     },
     {
       "topic_code": "B9.3.2.2",
-      "topic_name": "Solve problems involving bearings and addition/subtraction of vectors",
+      "topic_name": "Bearings and Vectors",
       "grade": "B9",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1829,7 +1829,7 @@
     },
     {
       "topic_code": "B9.3.3.1",
-      "topic_name": "Demonstrate understanding of how to perform an enlargement on a geometrical shape given a scale factor and describe the properties of the image under the transformation (i.e.",
+      "topic_name": "Enlargement",
       "grade": "B9",
       "strand_code": 3,
       "strand_name": "Geometry and Measurement",
@@ -1856,7 +1856,7 @@
     },
     {
       "topic_code": "B9.4.1.1",
-      "topic_name": "Select, justify, and use appropriate methods of collecting data (grouped/ungrouped), use the data to construct and interpret frequency tables and histogram and use it to determine the mode and to solve and/or pose problems",
+      "topic_name": "Frequency Tables and Histograms",
       "grade": "B9",
       "strand_code": 4,
       "strand_name": "Handling Data",
@@ -1889,7 +1889,7 @@
     },
     {
       "topic_code": "B9.4.1.2",
-      "topic_name": "Select, justify, and use appropriate methods of collecting data (quantitative and qualitative), organise and analyse the data (grouped/ungrouped) to interpret the results using the descriptive statistics (measures of central tendency and range)",
+      "topic_name": "Descriptive Statistics",
       "grade": "B9",
       "strand_code": 4,
       "strand_name": "Handling Data",
@@ -1921,7 +1921,7 @@
     },
     {
       "topic_code": "B9.4.2.1",
-      "topic_name": "Identify the sample space for a probability experiment involving two dependent events and express the probabilities of given events as fractions, decimals, percentages and/or ratios to solve problems",
+      "topic_name": "Probability of Dependent Events",
       "grade": "B9",
       "strand_code": 4,
       "strand_name": "Handling Data",
